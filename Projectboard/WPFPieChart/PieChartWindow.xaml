@@ -1,0 +1,22 @@
+﻿<Window x:Class="WPFPieChart.PieChartWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:ScottLogic.Controls.PieChart"
+    xmlns:b="clr-namespace:ScottLogic.Shapes"
+    Title="Pie Chart" MinWidth="480" MinHeight="360" Width="480" Height="360" Closing="isClosing" ResizeMode="NoResize" Topmost="True" Loaded="isloaded">
+    <Grid>
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+            <c:PieChartLayout HorizontalAlignment="Center" Grid.Row="0" Grid.Column="0"
+                              x:Name="piePlotter" Margin="10,30,10,10" PlottedProperty="Variabel">
+                <c:PieChartLayout.ColorSelector>
+                    
+                    <c:IndexedColourSelector Brushes="{StaticResource mycolors}"/>
+                </c:PieChartLayout.ColorSelector>
+            </c:PieChartLayout>
+            
+            
+            <CheckBox x:Name="keepSymbols" Content="Symbole behalten" IsChecked="False" Margin="30,10,0,0"/>
+
+        </StackPanel>        
+    </Grid>
+</Window>

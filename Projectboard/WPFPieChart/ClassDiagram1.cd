@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="WPFPieChart.App" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>App.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WPFPieChart.PieChartWindow" Collapsed="true">
+    <Position X="7.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAABAAAAAAAAAAEAAAAAAAAEAAQABAA=</HashCode>
+      <FileName>PieChartWindow.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WPFPieChart.AssetClass" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAAEAAAABAAAAIAAAAAgAEAAAAAAAAIAAAAAAA=</HashCode>
+      <FileName>TestData\AssetClass.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="WPFPieChart.Properties.Resources" Collapsed="true">
+    <Position X="0.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAABEAAAAQAAAAAAAAAAAAAAAIA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="WPFPieChart.Properties.Settings" Collapsed="true">
+    <Position X="2.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAABAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BaseWPFHelpers.Helpers" Collapsed="true">
+    <Position X="0.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAABABAAACAAAAQMAGAAIAAAAAAwAABAJAAAAAAAQ=</HashCode>
+      <FileName>ScottLogic\BaseWPFHelpers.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ScottLogic.Controls.PieChart.ColourConverter" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="4" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ScottLogic\PieChart\ColourConverter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ScottLogic.Controls.PieChart.IndexedColourSelector" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="2.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAgA=</HashCode>
+      <FileName>ScottLogic\PieChart\IndexedColourSelector.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ScottLogic.Controls.PieChart.Legend" Collapsed="true">
+    <Position X="4" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAABAACAwAAACAAAAgAEAAAAAAAAAA=</HashCode>
+      <FileName>ScottLogic\PieChart\Legend.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ScottLogic.Controls.PieChart.LegendConverter" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="5.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ScottLogic\PieChart\LegendConverter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ScottLogic.Controls.PieChart.PieChartLayout" Collapsed="true">
+    <Position X="0.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAIAAAAEgAAACAAAAAAgIAAAAAgAAA=</HashCode>
+      <FileName>ScottLogic\PieChart\PieChartLayout.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ScottLogic.Controls.PieChart.PiePlotter" Collapsed="true">
+    <Position X="5.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAQRQgECAABAACAwAAAGAAAAgIIAAAAAAAAAA=</HashCode>
+      <FileName>ScottLogic\PieChart\PiePlotter.xaml.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ScottLogic.Shapes.PiePiece" Collapsed="true">
+    <Position X="4" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAUIAAAAAAAACABSAAAiIDAAIAgAABQAAAEACAAAAAg=</HashCode>
+      <FileName>ScottLogic\Shapes\PiePiece.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ScottLogic.Util.FormattingConverter" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="5.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ScottLogic\Util\FormattingConverter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ScottLogic.Util.Utils" Collapsed="true">
+    <Position X="4" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAA=</HashCode>
+      <FileName>ScottLogic\Util\Utils.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="ScottLogic.ScottLogic.PieChart.IColorSelector" Collapsed="true">
+    <Position X="0.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>ScottLogic\PieChart\IColorSelector.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

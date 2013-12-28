@@ -1,0 +1,97 @@
+﻿Public Class clsBewertung
+
+    Private _color As Integer
+    Public Property description As String
+    Public Property bewerterName As String
+    Public Property datum As Date
+
+
+    Public Property colorIndex As Integer
+        Get
+            colorIndex = _color
+        End Get
+
+        Set(value As Integer)
+
+            If value >= 0 And value <= 3 Then
+                _color = value
+            Else
+                _color = 0
+            End If
+
+        End Set
+    End Property
+
+
+
+    ''' <summary>
+    ''' kann die Werte 0,1,2,3 annehmen 
+    ''' 0:keine Bewertung; 1:grün; 2:gelb; 3: rot
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property color As Long
+        Get
+            If _color = 0 Then
+                color = awinSettings.AmpelNichtBewertet
+            ElseIf _color = 1 Then
+                color = awinSettings.AmpelGruen
+            ElseIf _color = 2 Then
+                color = awinSettings.AmpelGelb
+            ElseIf _color = 3 Then
+                color = awinSettings.AmpelRot
+            Else
+                color = awinSettings.AmpelNichtBewertet
+            End If
+        End Get
+        Set(value As Long)
+
+            If value = 0 Or value = awinSettings.AmpelNichtBewertet Then
+                _color = 0
+            ElseIf value = 1 Or value = awinSettings.AmpelGruen Then
+                _color = 1
+            ElseIf value = 2 Or value = awinSettings.AmpelGelb Then
+                _color = 2
+            ElseIf value = 3 Or value = awinSettings.AmpelRot Then
+                _color = 3
+            Else
+                _color = 0
+            End If
+
+        End Set
+    End Property
+    
+
+
+    Public Sub copyto(ByRef newb As clsBewertung)
+
+        With newb
+            .description = Me.description
+            .color = Me.color
+            .bewerterName = Me.bewerterName
+            .datum = Me.datum
+        End With
+
+    End Sub
+
+    Public Sub copyfrom(ByVal newb As clsBewertung)
+
+        With newb
+            Me.description = .description
+            Me.color = .color
+            Me.bewerterName = .bewerterName
+            Me.datum = .datum
+        End With
+
+    End Sub
+
+
+    Public Sub New()
+        bewerterName = ""
+        datum = Nothing
+        color = awinSettings.AmpelNichtBewertet
+        description = ""
+    End Sub
+
+End Class

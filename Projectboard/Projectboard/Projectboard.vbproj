@@ -1,0 +1,326 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <ProjectTypeGuids>{BAA0C2D2-18E2-41B9-852F-F413020CAA33};{F184B08F-C81C-45F6-A57F-5ABD9991F28F}</ProjectTypeGuids>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ExcelWorkbook1</RootNamespace>
+    <AssemblyName>Projectboard</AssemblyName>
+    <VSTO_HostDocumentName>Projectboard.xlsx</VSTO_HostDocumentName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <DefineConstants>VSTO40</DefineConstants>
+    <OfficeApplication>Excel</OfficeApplication>
+    <ProjectGuid>{3CDE9F31-6693-4AF9-AF7F-81FAC9D0A600}</ProjectGuid>
+    <SolutionID>9c1e2ee7-a36c-4ca8-b8fd-97bdf04a0cd8</SolutionID>
+    <IsWebBootstrapper>False</IsWebBootstrapper>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <PublishUrl>C:\Users\tom\Documents\TJKS\Sales &amp; Marketing\Demo Systeme\telair\app.publish\</PublishUrl>
+    <InstallUrl />
+    <TargetCulture>en</TargetCulture>
+    <ApplicationVersion>1.0.0.1</ApplicationVersion>
+    <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>days</UpdateIntervalUnits>
+    <ProductName>Projectboard</ProductName>
+    <PublisherName />
+    <SupportUrl />
+    <FriendlyName>Projectboard</FriendlyName>
+    <OfficeApplicationDescription />
+  </PropertyGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 4.5</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <PropertyGroup>
+    <VSTO_EmbedTypeLibraryInAssembly>false</VSTO_EmbedTypeLibraryInAssembly>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DefineConstants>$(DefineConstants)</DefineConstants>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>Projectboard.xml</DocumentationFile>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DefineConstants>
+    </DefineConstants>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>Projectboard.xml</DocumentationFile>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <!--
+    This section specifies references for the project.
+  -->
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Office.Tools.v4.0.Framework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Tools.Applications.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Office.Tools, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Office.Tools.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Office.Tools.Excel, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Office.Tools.Common.v4.0.Utilities, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Office.Tools.Excel.v4.0.Utilities, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Office, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+      <Private>False</Private>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.Vbe.Interop, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+      <Private>False</Private>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.Office.Interop.Excel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+      <Private>False</Private>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Text" />
+    <Import Include="System.Windows.Forms" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="Microsoft.Office.Tools.Excel" />
+    <Import Include="Microsoft.VisualStudio.Tools.Applications.Runtime" />
+    <Import Include="Office = Microsoft.Office.Core" />
+    <Import Include="Excel = Microsoft.Office.Interop.Excel" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="awinGeneralModules.vb" />
+    <Compile Include="frmAmpelBewertung.Designer.vb">
+      <DependentUpon>frmAmpelBewertung.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmAmpelBewertung.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmCreateRolloutProject.Designer.vb">
+      <DependentUpon>frmCreateRolloutProject.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmCreateRolloutProject.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmShowProjCharacteristics.Designer.vb">
+      <DependentUpon>frmShowProjCharacteristics.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmShowProjCharacteristics.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="Ribbon1.vb" />
+    <Compile Include="Tabelle1.Designer.vb">
+      <DependentUpon>Tabelle1.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle1.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle2.Designer.vb">
+      <DependentUpon>Tabelle2.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle2.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle3.Designer.vb">
+      <DependentUpon>Tabelle3.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="Tabelle3.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
+    <Compile Include="ThisWorkbook.Designer.vb">
+      <DependentUpon>ThisWorkbook.Designer.xml</DependentUpon>
+    </Compile>
+    <Compile Include="ThisWorkbook.vb">
+      <DependentUpon>Projectboard.xlsx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="frmAmpelBewertung.resx">
+      <DependentUpon>frmAmpelBewertung.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmCreateRolloutProject.resx">
+      <DependentUpon>frmCreateRolloutProject.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmShowProjCharacteristics.resx">
+      <DependentUpon>frmShowProjCharacteristics.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <None Include="Projectboard.xlsx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Projectboard_TemporaryKey.pfx" />
+    <None Include="ThisWorkbook.Designer.xml">
+      <DependentUpon>ThisWorkbook.vb</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Tabelle1.Designer.xml">
+      <DependentUpon>Tabelle1.vb</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Tabelle2.Designer.xml">
+      <DependentUpon>Tabelle2.vb</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Tabelle3.Designer.xml">
+      <DependentUpon>Tabelle3.vb</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Ribbon1.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ClassLibrary1\ClassLibrary1.vbproj">
+      <Project>{e20c6d16-b28d-481a-b4ff-52fa762d0156}</Project>
+      <Name>ClassLibrary1</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MongoDbAccess\MongoDbAccess.csproj">
+      <Project>{352a645d-d9c8-4902-9b8c-20f832ac8cdb}</Project>
+      <Name>MongoDbAccess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProjectBoardDefinitions\ProjectBoardDefinitions.vbproj">
+      <Project>{b833e439-5c8b-41b3-8526-c8300e50d8da}</Project>
+      <Name>ProjectBoardDefinitions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WPFPieChart\WPFPieChart.csproj">
+      <Project>{59210896-68d1-4a34-91cc-8d015eca7061}</Project>
+      <Name>WPFPieChart</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WpfWindow\WpfWindow.csproj">
+      <Project>{0934cc5e-361f-443e-8af2-2468a38214a1}</Project>
+      <Name>WpfWindow</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pfeil links 32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pfeil rechts 32x32.png" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>Projectboard_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>04F761BB9C946EBD6343D182E3A2F26DD8E15E77</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+  <Import Project="$(VSToolsPath)\OfficeTools\Microsoft.VisualStudio.Tools.Office.targets" Condition="'$(VSToolsPath)' != ''" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
+        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{825100CF-0BA7-47EA-A084-DCF3308DAF74}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\Office14\Excel.exe" DebugInfoCommandLine="&quot;[$OUTPUT]Projectboard.xlsx&quot;" />
+        <Host Name="Excel Document" Path=".\Projectboard.xlsx" PublishedHash="453AD57C08540C0F42079FCA83BE658033F2D2F9">
+          <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="82ADB180198A3C1EDCF257AE533322806316B8E0" DisplayName="Tabelle1" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
+          <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="1477224DA095CF7893DCD4FB2D03FFF48FFAABFD" DisplayName="Tabelle2" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
+          <HostItem Name="Tabelle3" Code="Tabelle3.vb" CanonicalName="Tabelle3" PublishedHash="DE7A0950FFC3E84E4DA8A5A71C629AD397B55F54" DisplayName="Tabelle3" Blueprint="Tabelle3.Designer.xml" GeneratedCode="Tabelle3.Designer.vb" />
+          <HostItem Name="ThisWorkbook" Code="ThisWorkbook.vb" CanonicalName="ThisWorkbook" PublishedHash="67CC96EE61C2022380542DAF45AC1511EF78460F" Blueprint="ThisWorkbook.Designer.xml" GeneratedCode="ThisWorkbook.Designer.vb" />
+        </Host>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <!--
+    To modify your build process, add your task inside one of the targets below and uncomment it.
+    Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
