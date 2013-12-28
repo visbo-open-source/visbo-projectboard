@@ -6,22 +6,30 @@
 *.user
 *.sln.docstates
 
-# Build results
+# Build results (debug, release und bin werden unten speziell behandelt) #Philipp
 
-[Dd]ebug/
-[Rr]elease/
+#[Dd]ebug/
+#[Rr]elease/
 x64/
 build/
 #[Bb]in/
 [Oo]bj/
 
+# Enable "requirements/" folder in the "debug/" and "release/" folders for static required files (like customization file)  #Philipp
+
+[Bb]in/*
+/**/**/[Bb]in/[Dd]ebug/*
+!/**/**/[Bb]in/[Dd]ebug/requirements/
+!/**/**/[Bb]in/[Dd]ebug/requirements/*
+
+/**/**/[Bb]in/[Rr]elease/*
+!/**/**/[Bb]in/[Rr]elease/requirements/
+!/**/**/[Bb]in/[Rr]elease/requirements/*
+
+
+
 # Enable "build/" folder in the NuGet Packages folder since NuGet packages use it for MSBuild targets
 !packages/*/build/
-
-bin/*
-!bin/Debug/
-bin/Debug/*
-!bin/Debug/requirements/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
