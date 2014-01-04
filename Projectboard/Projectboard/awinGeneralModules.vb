@@ -795,11 +795,11 @@ Public Module awinGeneralModules
                     startDate = CDate(activeWSListe.Cells(zeile, 3).value)
                     endDate = CDate(activeWSListe.Cells(zeile, 4).value)
 
-                    duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
+                    duration = DateDiff(DateInterval.Day, startDate, endDate)
                     If duration < 0 Then
                         startDate = endDate
                         duration = -1 * duration
-                        endDate = startDate.AddDays(duration - 1)
+                        endDate = startDate.AddDays(duration)
                     End If
 
                     tmpStr = aktuelleZeile.Trim.Split(New Char() {"[", "]"}, 5)
@@ -1579,7 +1579,7 @@ Public Module awinGeneralModules
 
                                 ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
                                 If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
-                                    resultDate = hproj.startDate.AddMonths(hproj.getPhase(phaseName).relEnde).AddDays(-1)
+                                    resultDate = hproj.startDate.AddMonths(hproj.getPhase(phaseName).relEnde).AddDays(-3)
                                 End If
 
                                 ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
