@@ -115,7 +115,7 @@ Public Class clsProjekt
                         If phase.name = phaseName Then
 
                             phaseStart = Me.startDate.AddDays(phase.startOffsetinDays)
-                            phaseEnd = Me.startDate.AddDays(phase.startOffsetinDays + phase.dauerInDays)
+                            phaseEnd = Me.startDate.AddDays(phase.startOffsetinDays + phase.dauerInDays - 1)
 
                             ReDim phaseValues(phase.relEnde - phase.relStart)
 
@@ -175,8 +175,8 @@ Public Class clsProjekt
 
                 With Me.getPhase(i)
 
-                    If max < .startOffsetinDays + .dauerInDays Then
-                        max = .startOffsetinDays + .dauerInDays
+                    If max < .startOffsetinDays + .dauerInDays - 1 Then
+                        max = .startOffsetinDays + .dauerInDays - 1
                     End If
 
                     For m = 1 To .CountResults

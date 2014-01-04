@@ -23,7 +23,7 @@
 
         With phase
 
-            phaseEnde = .startOffsetinDays + .dauerInDays
+            phaseEnde = .startOffsetinDays + .dauerInDays - 1
 
         End With
 
@@ -152,7 +152,7 @@
 
             Next i
 
-            maxM = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(max)) + 1
+            maxM = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(max - 1)) + 1
 
 
             If maxM <> _Dauer Then

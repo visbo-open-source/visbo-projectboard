@@ -25,6 +25,9 @@
         Dim projektStartdate As Date
         Dim projektstartColumn As Integer
 
+        Dim phaseStartdate As Date
+        Dim phaseEndDate As Date
+
 
         If dauer < 0 Then
             Throw New ArgumentException("Dauer kann nicht negativ sein")
@@ -45,7 +48,7 @@
                 ' dann sind die Werte initial noch nicht gesetzt worden 
                 _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
                 _dauerInDays = DateDiff(DateInterval.Day, projektStartdate.AddMonths(_relStart - 1), _
-                                        projektStartdate.AddMonths(_relEnde).AddDays(-1))
+                                        projektStartdate.AddMonths(_relEnde).AddDays(-1)) + 1
 
 
             ElseIf dauer = 0 And _relEnde = 0 Then
@@ -61,10 +64,14 @@
                 Dim oldlaenge As Integer = _relEnde - _relStart + 1
                 Dim newlaenge As Integer
 
-                '_relStart = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(startOffset)) + 1
+                '_relStart = DateDiff(DateInterval.Month, projektStartdate, projektStartdate .AddDays(startOffset)) + 1
                 '_relEnde = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(startOffset + _dauerInDays)) + 1
-                _relStart = DateDiff(DateInterval.Month, StartofCalendar, projektStartdate.AddDays(startOffset)) + 1 - projektstartColumn + 1
-                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, projektStartdate.AddDays(startOffset + _dauerInDays)) + 1 - projektstartColumn + 1
+
+                phaseStartdate = projektStartdate.AddDays(startOffset)
+                phaseEndDate = projektStartdate.AddDays(startOffset + _dauerInDays - 1)
+
+                _relStart = DateDiff(DateInterval.Month, StartofCalendar, phaseStartdate) + 1 - projektstartColumn + 1
+                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, phaseEndDate) + 1 - projektstartColumn + 1
 
 
                 newlaenge = _relEnde - _relStart + 1
@@ -111,7 +118,7 @@
                 ' dann sind die Werte initial noch nicht gesetzt worden 
                 _startOffsetinDays = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1))
                 _dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
-                                        StartofCalendar.AddMonths(_relEnde).AddDays(-1))
+                                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
 
 
             Else
@@ -120,7 +127,7 @@
                 _dauerInDays = dauer
 
                 _relStart = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1
-                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays)) + 1
+                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1
 
 
             End If

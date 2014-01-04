@@ -369,15 +369,21 @@
 
                 If anzLoops > 0 Then
 
-                    tempArray = hproj.getRessourcenBedarf(roleID)
+                    Try
 
-                    For i = 0 To anzLoops - 1
-                        roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)
-                    Next i
+                        tempArray = hproj.getRessourcenBedarf(roleID)
 
+                        For i = 0 To anzLoops - 1
+                            roleValues(ixZeitraum + i) = roleValues(ixZeitraum + i) + tempArray(ix + i)
+                        Next i
+
+                    Catch ex As Exception
+
+                    End Try
+                    
 
                 End If
-                'hproj = Nothing
+
             Next kvp
 
 
