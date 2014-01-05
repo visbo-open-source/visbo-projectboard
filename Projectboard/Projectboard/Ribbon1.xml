@@ -18,11 +18,11 @@
           <button id="PTXG1B2" label="Ziele-Bewertung" onAction="PT0ShowZieleUebersicht" />
           <separator id="PTXG1s2"/>
           <!--<button id="PTXG1B3" label="alle roten Meilensteine" onAction="Tom2G2M5M2B3ShowMilestones" />
-          <separator id="PTXG1s3"/>
+          <separator id="PTXG1s3"/>-->
           <button id="PTXG1B4" label="Auslastung" onAction="PT0ShowAuslastung" />
           <separator id="PTXG1s4"/>
           <button id="PTXG1B5" label="Engpass" onAction="PTXShowEngpass" />
-          <separator id="PTXG1s5"/>-->
+          <separator id="PTXG1s5"/>
           <button id="PTXG1B6" label="Symbole löschen" onAction="Tom2G2M5B3NoShowSymbols" />
         </group>
       </tab>

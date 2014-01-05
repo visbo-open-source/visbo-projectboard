@@ -3,6 +3,10 @@
 Public Class clsProjekt
     Inherits clsProjektvorlage
 
+    ' diese Variable würde die Variable aus der inherited Klasse clsProjektvorlage überschatten .. 
+    ' deshalb auskommentiert 
+    'Private _Dauer As Integer
+
 
     'Private AllPhases As List(Of clsPhase)
     Private relStart As Integer
@@ -19,9 +23,9 @@ Public Class clsProjekt
     Private _latestStartDate As Date
     Private _ampelStatus As Integer
     Private _ampelErlaeuterung As String
-    Private _Dauer As Integer
+
     Private NullDatum As Date = "23.6.1914"
-    'Private _tfSpalte As Integer
+
 
 
     ' Deklarationen der Events 

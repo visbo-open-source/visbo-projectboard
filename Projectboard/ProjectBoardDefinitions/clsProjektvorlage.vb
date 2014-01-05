@@ -5,7 +5,8 @@
     Public AllPhases As List(Of clsPhase)
     Private relStart As Integer
     Private uuid As Long
-    Private _Dauer As Integer
+    ' als Friend deklariert, damit sie aus der Klasse clsProjekt, die von clsProjektvorlage erbt , erreichbar ist
+    Friend _Dauer As Integer
     Private _earliestStart As Integer
     Private _latestStart As Integer
 
@@ -374,7 +375,7 @@
             'Dim ende As Integer
 
 
-            If _Dauer > 0 Then
+            If Me._Dauer > 0 Then
 
                 For p = 0 To AllPhases.Count - 1
                     phase = AllPhases.Item(p)
@@ -391,7 +392,7 @@
                                 Catch ex As Exception
 
                                 End Try
-                                
+
                             End If
                         Next r
                     End With
