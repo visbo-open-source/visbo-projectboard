@@ -1353,7 +1353,7 @@ Public Module awinGeneralModules
                                         .name = phaseName
                                         ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                                         Dim startOffset As Integer = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
-                                        Dim dauerIndays As Integer = DateDiff(DateInterval.Day, hproj.startDate.AddDays(startOffset), hproj.startDate.AddMonths(ende).AddDays(-1)) + 1
+                                        Dim dauerIndays As Integer = DateDiff(DateInterval.Day, hproj.startDate.AddDays(startOffset), hproj.startDate.AddMonths(ende - 1).AddDays(-1)) + 1
                                         .changeStartandDauer(startOffset, dauerIndays)
                                         '.relStart = anfang
                                         '.relEnde = ende
