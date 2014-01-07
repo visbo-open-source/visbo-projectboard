@@ -248,11 +248,11 @@ Public Class frmProjektEingabe1
             Call MsgBox("Vorlagen Dauer konnte nicht bestimmt werden ...")
         End Try
 
-        
+
     End Sub
 
-   
-   
+
+
     Private Sub DateTimeProject_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeProject.ValueChanged
 
 
