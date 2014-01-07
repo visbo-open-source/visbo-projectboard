@@ -3,6 +3,10 @@
 Public Class clsProjekt
     Inherits clsProjektvorlage
 
+    ' diese Variable würde die Variable aus der inherited Klasse clsProjektvorlage überschatten .. 
+    ' deshalb auskommentiert 
+    'Private _Dauer As Integer
+
 
     'Private AllPhases As List(Of clsPhase)
     Private relStart As Integer
@@ -19,9 +23,9 @@ Public Class clsProjekt
     Private _latestStartDate As Date
     Private _ampelStatus As Integer
     Private _ampelErlaeuterung As String
-    Private _Dauer As Integer
+
     Private NullDatum As Date = "23.6.1914"
-    'Private _tfSpalte As Integer
+
 
 
     ' Deklarationen der Events 
@@ -115,7 +119,7 @@ Public Class clsProjekt
                         If phase.name = phaseName Then
 
                             phaseStart = Me.startDate.AddDays(phase.startOffsetinDays)
-                            phaseEnd = Me.startDate.AddDays(phase.startOffsetinDays + phase.dauerInDays)
+                            phaseEnd = Me.startDate.AddDays(phase.startOffsetinDays + phase.dauerInDays - 1)
 
                             ReDim phaseValues(phase.relEnde - phase.relStart)
 
@@ -175,8 +179,8 @@ Public Class clsProjekt
 
                 With Me.getPhase(i)
 
-                    If max < .startOffsetinDays + .dauerInDays Then
-                        max = .startOffsetinDays + .dauerInDays
+                    If max < .startOffsetinDays + .dauerInDays - 1 Then
+                        max = .startOffsetinDays + .dauerInDays - 1
                     End If
 
                     For m = 1 To .CountResults

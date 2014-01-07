@@ -5,7 +5,8 @@
     Public AllPhases As List(Of clsPhase)
     Private relStart As Integer
     Private uuid As Long
-    Private _Dauer As Integer
+    ' als Friend deklariert, damit sie aus der Klasse clsProjekt, die von clsProjektvorlage erbt , erreichbar ist
+    Friend _Dauer As Integer
     Private _earliestStart As Integer
     Private _latestStart As Integer
 
@@ -23,7 +24,7 @@
 
         With phase
 
-            phaseEnde = .startOffsetinDays + .dauerInDays
+            phaseEnde = .startOffsetinDays + .dauerInDays - 1
 
         End With
 
@@ -152,7 +153,7 @@
 
             Next i
 
-            maxM = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(max)) + 1
+            maxM = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(max - 1)) + 1
 
 
             If maxM <> _Dauer Then
@@ -374,7 +375,7 @@
             'Dim ende As Integer
 
 
-            If _Dauer > 0 Then
+            If Me._Dauer > 0 Then
 
                 For p = 0 To AllPhases.Count - 1
                     phase = AllPhases.Item(p)

@@ -802,19 +802,19 @@ Public Module Projekte
 
             ElseIf qualifier = "Beauftragung" Then
                 titelTeile(0) = "Beauftragung " & hproj.startDate.ToShortDateString & _
-                                     " - " & hproj.startDate.AddDays(hproj.dauerInDays).ToShortDateString & vbLf
+                                     " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
                 kennung = hproj.name.Trim & "Beauftragung" & "#Phasen#1"
 
             ElseIf qualifier = "letzter Stand" Then
                 titelTeile(0) = "letzter Stand " & hproj.startDate.ToShortDateString & _
-                                     " - " & hproj.startDate.AddDays(hproj.dauerInDays).ToShortDateString & vbLf
+                                     " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
                 kennung = hproj.name.Trim & "letzter Stand" & "#Phasen#1"
 
             Else
                 titelTeile(0) = hproj.name & " ,  " & hproj.startDate.ToShortDateString & _
-                                     " - " & hproj.startDate.AddDays(hproj.dauerInDays).ToShortDateString & vbLf
+                                     " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
 
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
                 kennung = hproj.name.Trim & "#Phasen#1"
@@ -1026,7 +1026,7 @@ Public Module Projekte
                             With .Points(px)
 
                                 bis = tdatenreihe1(px - 1) + tdatenreihe2(px - 1)
-                                .Datalabel.Text = hproj.startDate.AddDays(bis).ToShortDateString
+                                .Datalabel.Text = hproj.startDate.AddDays(bis - 1).ToShortDateString
 
                             End With
 
@@ -1158,7 +1158,7 @@ Public Module Projekte
 
 
         titelTeile(0) = hproj.name & " ,  " & hproj.startDate.ToShortDateString & _
-                                      " - " & hproj.startDate.AddDays(hproj.dauerInDays).ToShortDateString & vbLf
+                                      " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
 
@@ -1303,7 +1303,7 @@ Public Module Projekte
                     With .Points(px)
 
                         bis = tdatenreihe1(px - 1) + tdatenreihe2(px - 1)
-                        .Datalabel.Text = hproj.startDate.AddDays(bis).ToShortDateString
+                        .Datalabel.Text = hproj.startDate.AddDays(bis - 1).ToShortDateString
 
                     End With
 
@@ -9814,7 +9814,7 @@ Public Module Projekte
 
                 ' Ende
 
-                .range("EndeDatum").value = hproj.startDate.AddDays(hproj.dauerInDays)
+                .range("EndeDatum").value = hproj.startDate.AddDays(hproj.dauerInDays - 1)
 
 
                 'Projektleiter
@@ -10267,13 +10267,13 @@ Public Module Projekte
 
                 If awinSettings.zeitEinheit = "PM" Then
                     phaseStart = hproj.startDate.AddDays(cphase.startOffsetinDays)
-                    phaseEnde = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
+                    phaseEnde = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
                 ElseIf awinSettings.zeitEinheit = "PW" Then
                     phaseStart = hproj.startDate.AddDays((cphase.relStart - 1) * 7)
                     phaseEnde = hproj.startDate.AddDays((cphase.relEnde - 1) * 7)
                 ElseIf awinSettings.zeitEinheit = "PT" Then
                     phaseStart = hproj.startDate.AddDays(cphase.relStart - 1)
-                    phaseStart = hproj.startDate.AddDays(cphase.relEnde - 1)
+                    phaseEnde = hproj.startDate.AddDays(cphase.relEnde - 1)
                 End If
 
 

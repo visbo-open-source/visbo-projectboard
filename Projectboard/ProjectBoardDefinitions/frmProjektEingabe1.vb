@@ -125,7 +125,7 @@ Public Class frmProjektEingabe1
             calcProjektStart = DateTimeProject.Value
         Else
             'vorlagendauer As Integer = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex).dauerInDays
-            calcProjektStart = DateTimeProject.Value.AddDays(-1 * vorlagenDauer)
+            calcProjektStart = DateTimeProject.Value.AddDays(-1 * (vorlagenDauer - 1))
         End If
 
         DialogResult = System.Windows.Forms.DialogResult.OK
@@ -241,7 +241,7 @@ Public Class frmProjektEingabe1
             diff = vorlagenDauer - oldVorlagenDauer
 
             If Not dateIsStart.Checked Then
-                DateTimeProject.Value = DateTimeProject.Value.AddDays(diff)
+                DateTimeProject.Value = DateTimeProject.Value.AddDays(diff - 1)
             End If
 
         Catch ex As Exception
@@ -263,9 +263,9 @@ Public Class frmProjektEingabe1
                 DateTimeProject.Value = Date.Now.AddMonths(1)
             End If
         Else
-            If DateDiff(DateInterval.Month, StartofCalendar.AddDays(vorlagenDauer), DateTimeProject.Value) < 0 Then
+            If DateDiff(DateInterval.Month, StartofCalendar.AddDays(vorlagenDauer - 1), DateTimeProject.Value) < 0 Then
                 Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
-                DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer).AddMonths(1)
+                DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
             End If
         End If
 
@@ -277,11 +277,11 @@ Public Class frmProjektEingabe1
         If dateIsStart.Checked Then
             ' es war vorher auf Datum = End-Datum
             kennzeichnungDate.Text = "Start"
-            DateTimeProject.Value = DateTimeProject.Value.AddDays(-1 * vorlagenDauer)
+            DateTimeProject.Value = DateTimeProject.Value.AddDays(-1 * (vorlagenDauer - 1))
         Else
             ' es war vorher auf Datum = Start-Datum
             kennzeichnungDate.Text = "Ende"
-            DateTimeProject.Value = DateTimeProject.Value.AddDays(vorlagenDauer)
+            DateTimeProject.Value = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
 
         End If
     End Sub
