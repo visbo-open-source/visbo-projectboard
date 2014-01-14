@@ -7,7 +7,13 @@ Imports xlNS = Microsoft.Office.Interop.Excel
 
 Public Module testModule
 
-    Public Sub createPPTSlidesFromProject(ByRef hproj As clsprojekt)
+    ''' <summary>
+    ''' erzeugt den Bericht Report auf Grundlage des Templates templatedossier.pptx
+    ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie des Projektes steht 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <remarks></remarks>
+    Public Sub createPPTSlidesFromProject(ByRef hproj As clsProjekt)
         Dim pptApp As pptNS.Application = Nothing
         Dim pptPresentation As pptNS.Presentation = Nothing
         Dim pptSlide As pptNS.Slide = Nothing
@@ -193,7 +199,7 @@ Public Module testModule
 
                 End With
             Next
-           
+
 
 
             For Each tmpShape As pptNS.Shape In listofShapes
@@ -414,7 +420,7 @@ Public Module testModule
                                 Dim repObj1 As xlNS.ChartObject, repObj2 As xlNS.ChartObject
 
 
-                                
+
                                 ' jetzt die Aktion durchführen ...
 
 
@@ -423,7 +429,7 @@ Public Module testModule
                                 End If
 
                                 cproj = lastproj
-                                
+
 
 
                                 htop = 150

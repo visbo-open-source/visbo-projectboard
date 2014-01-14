@@ -1,5 +1,12 @@
 ﻿Public Class clsProjektHistorie
 
+    ' Methoden für Behandlung der Projekthistorie 
+    ' die Projekthistorie ist eine aufsteigend nach dem Datum sortierte Liste all der Planungs-Stände
+    ' eines bestimmten Projektes 
+    ' _currentIndex ist ein Zeiger auf das Element der Historie, das zuletzt bearbeitet wurd
+    ' _currentIndex ist insbesondere für prevdiff und nextdiff wichtig: Methoden, die auf das nächste Element "springen", 
+    ' das sich im angegebenen Kriterium vom ElementAt(_currentIndex) unterscheiden 
+
     Private _liste As New SortedList(Of Date, clsProjekt)
     Private _currentIndex As Integer
 
@@ -21,16 +28,29 @@
             Else
                 Throw New ArgumentException("Historie enthält weniger als 2 Einträge")
             End If
-            
+
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die Anzahl an Historien Elementen zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property Count As Integer
         Get
             Count = _liste.Count
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt das Projekt zurück , das relativ zur aktuellen Position den status "freigegeben/beauftragt" hat 
+    ''' falls es das nicht gibt, wird eine Exception geworfen
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property letzteFreigabe As clsProjekt
         Get
 
@@ -59,6 +79,13 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt das Element zurück , das das erste Mal den Status "Beauftragung/freigegeben" hat
+    ''' setzt den Index auf dieses Element
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property beauftragung As clsProjekt
         Get
 
@@ -87,25 +114,150 @@
         End Get
     End Property
 
-    Public ReadOnly Property item(ByVal index As Integer) As clsProjekt
-        Get
 
-            If index >= 0 And index <= _liste.Count - 1 Then
-                ' ein element mit diesem Index existiert ... 
-                item = _liste.ElementAt(index).Value
-                _currentIndex = index
-            Else
-                Throw New ArgumentException("index liegt ausserhalb der zulässigen Grenze: " & index)
-            End If
-
-        End Get
-    End Property
-
+    ''' <summary>
+    ''' löscht die Historie
+    ''' </summary>
+    ''' <remarks></remarks>
     Public Sub clear()
 
         _liste.Clear()
 
     End Sub
+
+    ''' <summary>
+    ''' gibt für den Aufbau einer Milestone Trendanalyse einen Array mit den Plan-Daten eines ausgewählten Meilensteins zurück
+    ''' der array hat die Dimension (Start-Monat des Projektes) bis (aktueller Monat)
+    ''' wenn es für einen bestimmten Monat keine Werte gibt, dann wird der Vormonats Wert genommen 
+    ''' </summary>
+    ''' <param name="milestoneName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMtaDates(ByVal milestoneName As String) As Date()
+        Get
+            Dim tmpValues As Date()
+            Dim heute As Date = Date.Now
+            Dim milestoneDate As Date
+            Dim beauftragung As clsProjekt
+            Dim oldIndex As Integer = _currentIndex
+            Dim earliestStart As Date
+            Dim laenge As Integer
+            Dim von As Integer, bis As Integer
+            Dim currentproj As clsProjekt
+            Dim aufzeichnungsStart As Date
+
+
+            Try
+
+                currentproj = Me.Last
+                beauftragung = Me.beauftragung
+
+                ' wann wurde mit der Aufzeichnung der Projekt-Historie begonnen ? 
+                aufzeichnungsStart = _liste.ElementAt(0).Key
+
+                '
+                ' bestimme den seit Beauftragung frühesten Start-Monat 
+                '
+                Try
+                    earliestStart = beauftragung.startDate
+                Catch ex As Exception
+                    ' wenn es noch keine Beauftragung gibt, wird das erste Element der Liste verwendet 
+                    earliestStart = _liste.ElementAt(0).Value.startDate
+                    _currentIndex = 0
+                End Try
+
+                For i = _currentIndex + 1 To _liste.Count - 1
+                    If DateDiff(DateInterval.Day, _liste.ElementAt(i).Value.startDate, earliestStart) > 0 Then
+                        earliestStart = _liste.ElementAt(i).Value.startDate
+                    End If
+                Next
+
+                ' jetzt wird geprüft, ob der Meilenstein bereits abgeschlossen ist 
+                ' das steuert  die Dimensionierung des Arrays
+                '
+                milestoneDate = currentproj.getMilestoneDate(milestoneName)
+
+                If DateDiff(DateInterval.Month, heute, milestoneDate) < 0 Then
+                    bis = getColumnOfDate(milestoneDate)
+                Else
+                    bis = getColumnOfDate(heute)
+                End If
+
+                ' jetzt wird geprüft, ob zum Beginn des Projektes bereits mit der Projekt-Tafel gearbeitet wurde 
+                ' das steuert  die Dimensionierung des Arrays
+                '
+                If DateDiff(DateInterval.Month, aufzeichnungsStart, earliestStart) < 0 Then
+                    von = getColumnOfDate(aufzeichnungsStart)
+                Else
+                    von = getColumnOfDate(earliestStart)
+                End If
+
+                laenge = bis - von
+
+                If laenge < 0 Then
+                    Throw New Exception("heute liegt vor Projekt-Start")
+                End If
+
+                ReDim tmpValues(laenge)
+
+                Dim tmpDate As Date
+                For i = 0 To laenge
+                    tmpDate = StartofCalendar.AddMonths(von + i).AddDays(-1)
+
+                    Try
+                        currentproj = Me.ElementAtorBefore(tmpDate)
+
+                    Catch ex As Exception
+                        currentproj = Nothing
+                    End Try
+
+
+                    If currentproj Is Nothing Then
+
+                        milestoneDate = awinSettings.nullDatum
+
+                    ElseIf DateDiff(DateInterval.Month, tmpDate, currentproj.timeStamp) = 0 Then
+                        ' in diesem Fall wurde ein Planungs-Stand im gesuchten Monat gefunden ...
+                        Try
+
+                            milestoneDate = currentproj.getMilestoneDate(milestoneName)
+
+                        Catch ex As Exception
+
+                            ' in diesem Fall existiert in diesem Planungsstand der angegebene Meilenstein nicht 
+                            If i > 0 Then
+                                milestoneDate = tmpValues(i - 1)
+                            Else
+                                milestoneDate = awinSettings.nullDatum
+                            End If
+
+                        End Try
+                    Else
+                        ' in diesem Fall wurde kein Planungs-Stand im gesuchten Monat gefunden ...
+                        If i > 0 Then
+                            milestoneDate = tmpValues(i - 1)
+                        Else
+                            milestoneDate = awinSettings.nullDatum
+                        End If
+
+                    End If
+
+
+                    tmpValues(i) = milestoneDate
+
+                Next
+
+                _currentIndex = oldIndex
+                getMtaDates = tmpValues
+
+            Catch ex As Exception
+                Throw New Exception(ex.Message)
+            End Try
+
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' holt das Item aus der History, das vor dem aktuellen liegt und im ChangeCriteria einen anderen Wert hat
@@ -421,6 +573,13 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt das erste Element der Historie zurück 
+    ''' setzt _currentIndex auf dieses Element 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property First As clsProjekt
         Get
             First = _liste.First.Value
@@ -428,6 +587,13 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt das letzte Element der Historie zurück
+    ''' setzt _currentIndex auf dieses Element 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property Last As clsProjekt
         Get
             Last = _liste.Last.Value
@@ -436,6 +602,14 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt das Projekt aus der Historie an der Position index zurück; 
+    ''' setzt _currentIndex auf dieses Element  
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property ElementAt(ByVal index As Integer) As clsProjekt
         Get
             If index < 0 Or index > _liste.Count - 1 Then
@@ -447,6 +621,12 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' löscht das Element an der Position index aus der Historie
+    ''' lässt den Index unverändert 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <remarks></remarks>
     Public Sub RemoveAt(ByVal index As Integer)
 
         If index < 0 Or index > _liste.Count - 1 Then
@@ -460,10 +640,17 @@
 
     End Sub
 
+    ''' <summary>
+    ''' gibt das Element zurück, das als letztes vor dem angegebenen Datum liegt  
+    ''' </summary>
+    ''' <param name="suchDatum"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property ElementAtorBefore(ByVal suchDatum As Date) As clsProjekt
 
         Get
-            
+
 
             ' die Ausschlusskriterien vorher prüfen 
             If suchDatum < _liste.First.Value.timeStamp Then
@@ -506,11 +693,17 @@
 
             End If
 
-            
-            
+
+
         End Get
     End Property
 
+    ''' <summary>
+    ''' fügt ein Element der Historie hinzu 
+    ''' </summary>
+    ''' <param name="datum"></param>
+    ''' <param name="value"></param>
+    ''' <remarks></remarks>
     Public Sub Add(ByVal datum As Date, ByVal value As clsProjekt)
 
         Try
@@ -523,11 +716,18 @@
         Catch ex As Exception
             Throw New ArgumentException("es gibt keine Einträge in der Datenbank")
         End Try
-        
+
 
 
     End Sub
 
+    ''' <summary>
+    ''' setzt den _currentIndex auf das entsprechende Element
+    ''' oder gibt den Index des aktuellen Elements zurück  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property currentIndex As Integer
 
         Get

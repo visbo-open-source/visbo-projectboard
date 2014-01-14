@@ -927,7 +927,7 @@
                         anzRollen = .CountRoles
                         phasenStart = .relStart - 1
                         phasenEnde = .relEnde - 1
-                        ReDim tempArray(phasenEnde - phasenStart)
+                        ReDim tempArray(phasenEnde - phasenStart) ' xxxxx prüfen !!!
 
                         For r = 1 To anzRollen
                             role = .getRole(r)

@@ -81,6 +81,87 @@ Public Class clsProjekt
     End Sub
 
     ''' <summary>
+    ''' gibt zum betreffenden Projekt eine nach dem Datum aufsteigend sortierte Liste der Meilensteine zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>nach Datum sortierte Liste der MEilensteine im Projekt </returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestones As SortedList(Of Date, String)
+        Get
+            Dim tmpValues As New SortedList(Of Date, String)
+            Dim tmpDate As Date
+            Dim cphase As clsPhase
+            Dim cresult As clsResult
+
+            For p = 1 To Me.CountPhases
+                cphase = Me.getPhase(p)
+
+                For r = 1 To cphase.CountResults
+                    cresult = cphase.getResult(r)
+                    tmpDate = Me.startDate.AddDays(cphase.startOffsetinDays + cresult.offset)
+
+                    Dim ok As Boolean = False
+                    Do Until ok
+                        Try
+                            tmpValues.Add(tmpDate, cresult.name)
+                            ok = True
+                        Catch ex As Exception
+                            tmpDate = tmpDate.AddSeconds(1)
+                        End Try
+                    Loop
+
+                Next r
+
+            Next p
+
+            getMilestones = tmpValues
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert zu einem gegebenen Meilenstein das definierte Datum zurück
+    ''' Fehler, wenn Meilenstein nicht existiert
+    ''' Existieren mehrere Meilensteine desselben Namens so wird nur der erste zurückgebracht 
+    ''' </summary>
+    ''' <param name="milestoneName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneDate(ByVal milestoneName As String) As Date
+        Get
+            Dim found As Boolean = False
+            Dim cphase As clsPhase
+            Dim cresult As clsResult
+            Dim tmpDate As Date
+            Dim p As Integer = 1
+
+            Do While p <= Me.CountPhases And Not found
+
+                cphase = Me.getPhase(p)
+
+                Try
+                    cresult = cphase.getResult(milestoneName)
+                    tmpDate = Me.startDate.AddDays(cphase.startOffsetinDays + cresult.offset)
+                    found = True
+                Catch ex As Exception
+
+                End Try
+
+                p = p + 1
+
+            Loop
+
+            If found Then
+                getMilestoneDate = tmpDate
+            Else
+                Throw New Exception("Meilenstein existiert nicht")
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' diese Routine berücksichtigt, wieviel von der phase im Start- bzw End Monat liegt; 
     ''' es wird für Start und Ende Monat nicht automatisch 1 gesetzt, sondern ein anteiliger Wert, der sich daran bemisst, 
     ''' wieviel Phase im Start bzw End Monat liegt; 

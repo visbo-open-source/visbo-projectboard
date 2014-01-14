@@ -27,6 +27,7 @@
     Property bestFit As clsBestFitObject
 
     ' Settings für Grundeinstellungen 
+    Property nullDatum As Date
     Property kalenderStart As Date
     Property zeitEinheit As String
     Property kapaEinheit As String
@@ -68,6 +69,7 @@
         _bestFit = New clsBestFitObject
 
         ' Settings für Grundeinstellungen
+        _nullDatum = #6/23/1914#
         _kalenderStart = #1/1/2012#
         _kapaEinheit = "PT"
         _zeitEinheit = "PM"
