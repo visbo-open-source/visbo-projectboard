@@ -8826,8 +8826,6 @@ Public Module Projekte
 
         Dim onlyFew As Boolean
         Dim nameIstInListe As Boolean
-        Dim phaseStart As Date
-        Dim phaseEnd As Date
         Dim linienDicke As Double = 2.0
 
 
@@ -8863,8 +8861,6 @@ Public Module Projekte
                     nameIstInListe = False
                 End Try
 
-                phaseStart = hproj.startDate.AddMonths(cphase.relStart - 1)
-                phaseEnd = hproj.startDate.AddMonths(cphase.relEnde - 1)
 
 
                 If onlyFew And Not nameIstInListe Then
@@ -8976,8 +8972,6 @@ Public Module Projekte
 
         Dim onlyFew As Boolean
         Dim nameIstInListe As Boolean
-        Dim phaseStart As Date
-        Dim phaseEnd As Date
         Dim linienDicke As Double = 2.0
         Dim ok As Boolean = True
 
@@ -9027,8 +9021,6 @@ Public Module Projekte
                     nameIstInListe = False
                 End Try
 
-                phaseStart = hproj.startDate.AddMonths(cphase.relStart - 1)
-                phaseEnd = hproj.startDate.AddMonths(cphase.relEnde - 1)
 
 
                 If onlyFew And Not nameIstInListe Then
@@ -10186,6 +10178,7 @@ Public Module Projekte
                 Dim r As Integer
                 Dim d As Integer
                 Dim itemName As String
+                Dim dimension As Integer
 
                 ' evtl hier vorher prüfen, ob es eine Phase mit Name hproj.name oder hproj.vorlagenName gibt; wenn nein , 
                 ' muss hier der Projektname mit farbiger Gesamtdauer stehen 
@@ -10237,16 +10230,20 @@ Public Module Projekte
                     rowOffset = rowOffset + 1
 
 
-                    ReDim values(cphase.relEnde - cphase.relStart)
+
                     anzahlItems = cphase.CountRoles
 
 
                     ' jetzt werden Rollen geschrieben 
                     For r = 1 To anzahlItems
                         itemName = cphase.getRole(r).name
+                        dimension = cphase.getRole(r).getDimension
+                        'ReDim values(cphase.relEnde - cphase.relStart)
+                        ReDim values(dimension)
                         values = cphase.getRole(r).Xwerte
                         .range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset).value = itemName
-                        For d = 1 To cphase.relEnde - cphase.relStart + 1
+
+                        For d = 1 To dimension + 1
                             .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
                             .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Value = values(d - 1)
                         Next d
@@ -10255,14 +10252,16 @@ Public Module Projekte
 
 
                     ' jetzt werden Kosten geschrieben 
-                    ReDim values(cphase.relEnde - cphase.relStart)
+
                     anzahlItems = cphase.CountCosts
 
                     For k = 1 To anzahlItems
                         itemName = cphase.getCost(k).name
+                        dimension = cphase.getCost(k).getDimension
+                        ReDim values(dimension)
                         values = cphase.getCost(k).Xwerte
                         .range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset).value = itemName
-                        For d = 1 To cphase.relEnde - cphase.relStart + 1
+                        For d = 1 To dimension + 1
                             .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
                             .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Value = values(d - 1)
                         Next d
@@ -10745,6 +10744,7 @@ Public Module Projekte
             Dim anzahlItems As Integer
             Dim r As Integer
             Dim itemName As String
+            Dim dimension As Integer
             'Dim atleastOne As Boolean = False
 
 
@@ -10775,29 +10775,33 @@ Public Module Projekte
                 End If
 
 
-                ReDim values(cphase.relEnde - cphase.relStart)
+
                 anzahlItems = cphase.CountRoles
 
 
                 For r = 1 To anzahlItems
                     itemName = cphase.getRole(r).name
+                    dimension = cphase.getRole(r).getDimension
+                    ReDim values(dimension)
                     values = cphase.getRole(r).Xwerte
                     .cells(zeile, spalte + 1).value = itemName
-                    rng = .Range(.Cells(zeile, spalte + 1 + cphase.relStart), .Cells(zeile, spalte + 1 + cphase.relEnde))
+                    rng = .Range(.Cells(zeile, spalte + 1 + cphase.relStart), .Cells(zeile, spalte + 1 + cphase.relStart + dimension))
                     rng.Value = values
                     zeile = zeile + 1
                 Next r
 
 
                 ' jetzt werden Kosten geschrieben 
-                ReDim values(cphase.relEnde - cphase.relStart)
+
                 anzahlItems = cphase.CountCosts
 
                 For k = 1 To anzahlItems
                     itemName = cphase.getCost(k).name
+                    dimension = cphase.getCost(k).getDimension
+                    ReDim values(dimension)
                     values = cphase.getCost(k).Xwerte
                     .cells(zeile, spalte + 1).value = itemName
-                    rng = .Range(.Cells(zeile, spalte + 1 + cphase.relStart), .Cells(zeile, spalte + 1 + cphase.relEnde))
+                    rng = .Range(.Cells(zeile, spalte + 1 + cphase.relStart), .Cells(zeile, spalte + 1 + cphase.relStart + dimension))
                     rng.Value = values
                     zeile = zeile + 1
                 Next k
@@ -11079,8 +11083,7 @@ Public Module Projekte
                                         Dim dauerIndays As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(anfang - 1), _
                                                                                                 StartofCalendar.AddMonths(ende).AddDays(-1)) + 1
                                         .changeStartandDauer(startOffset, dauerIndays)
-                                        '.relStart = anfang
-                                        '.relEnde = ende
+                                        
                                         .Offset = 0
                                     End With
 
@@ -11206,7 +11209,7 @@ Public Module Projekte
                         phaseName = zelle.Value.trim
 
                         tmpPhase = hproj.getPhase(phaseName)
-                        defaultOffset = tmpPhase.DauerM * 30
+                        defaultOffset = tmpPhase.dauerInDays
                     Catch ex As Exception
 
                     End Try

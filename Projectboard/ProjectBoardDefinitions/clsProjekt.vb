@@ -48,6 +48,47 @@ Public Class clsProjekt
     Public Property businessUnit As String
 
 
+    Public ReadOnly Property isConsistent As Boolean
+
+        Get
+            Dim tmpValue As Boolean = True
+            Dim cphase As clsPhase
+            Dim dimension As Integer
+            Dim phaseStart As Date, phaseEnd As Date
+
+
+            If Me.Dauer <> getColumnOfDate(Me.startDate.AddDays(dauerInDays - 1)) - getColumnOfDate(Me.startDate) + 1 Then
+                tmpValue = False
+            End If
+
+            ' prüfen, ob die Gesamtlänge übereinstimmt  
+            For p = 1 To Me.CountPhases
+                cphase = Me.getPhase(p)
+                phaseEnd = Me.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
+                phaseStart = Me.startDate.AddDays(cphase.startOffsetinDays)
+
+                dimension = getColumnOfDate(phaseEnd) - getColumnOfDate(phaseStart)
+
+                For r = 1 To cphase.CountRoles
+                    If dimension <> cphase.getRole(r).Xwerte.Length - 1 Then
+                        tmpValue = False
+                    End If
+                Next
+
+                For k = 1 To cphase.CountCosts
+                    If dimension <> cphase.getCost(k).Xwerte.Length - 1 Then
+                        tmpValue = False
+                    End If
+                Next
+
+            Next
+
+            isConsistent = tmpValue
+
+        End Get
+
+    End Property
+
     Public Overrides Sub AddPhase(ByVal phase As clsPhase)
 
         Dim phaseEnde As Double
@@ -264,11 +305,14 @@ Public Class clsProjekt
                         max = .startOffsetinDays + .dauerInDays - 1
                     End If
 
-                    For m = 1 To .CountResults
-                        If max < .startOffsetinDays + .getResult(m).offset Then
-                            max = .startOffsetinDays + .getResult(m).offset
-                        End If
-                    Next
+                    ' Änderung 16.1.2014: Meilensteine wirken nicht Dauer-Verlängernd ! 
+                    ' ausserdem wird in phase.add(result) sichergestellt , dass kein Meilenstein vor Projektstart 
+                    ' bzw. nach Projektende ist 
+                    'For m = 1 To .CountResults
+                    '    If max < .startOffsetinDays + .getResult(m).offset Then
+                    '        max = .startOffsetinDays + .getResult(m).offset
+                    '    End If
+                    'Next
 
                 End With
 
@@ -875,15 +919,15 @@ Public Class clsProjekt
                             monatsIndex = DateDiff(DateInterval.Month, Me.startDate, result.getDate)
                             ' Sicherstellen, daß Ergebnisse, die vor oder auch nach dem Projekt erreicht werden sollen, richtig behandelt werden 
 
-                            If monatsIndex < 0 Then
-                                monatsIndex = 0
-                            ElseIf monatsIndex > Me.Dauer - 1 Then
-                                monatsIndex = Me.Dauer - 1
+                            If monatsIndex >= 0 And monatsIndex <= Me.Dauer - 1 Then
+
+                                ResultValues(monatsIndex) = ResultValues(monatsIndex) & vbLf & result.name & _
+                                                        " (" & result.getDate.ToShortDateString & ")"
+
                             End If
 
 
-                            ResultValues(monatsIndex) = ResultValues(monatsIndex) & vbLf & result.name & _
-                                                        " (" & result.getDate.ToShortDateString & ")"
+                            
 
 
                         Next r

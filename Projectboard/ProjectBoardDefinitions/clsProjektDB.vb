@@ -170,6 +170,7 @@
                 Me.startOffsetinDays = .startOffsetinDays
                 Me.dauerInDays = .dauerInDays
                 Me.name = .name
+                Dim dimension As Integer
 
                 ' Änderung 18.6 , weil Querschnittsphasen Namen jetzt der Projekt-Name ist ...
                 Try
@@ -180,7 +181,9 @@
 
 
                 For r = 1 To .CountRoles
-                    Dim newRole As New clsRolleDB(.relEnde - .relStart)
+                    'Dim newRole As New clsRolleDB(.relEnde - .relStart)
+                    dimension = .getRole(r).getDimension
+                    Dim newRole As New clsRolleDB(dimension)
                     newRole.copyFrom(.getRole(r))
                     AllRoles.Add(newRole)
                 Next
@@ -198,7 +201,9 @@
                 Next
 
                 For k = 1 To .CountCosts
-                    Dim newCost As New clsKostenartDB(.relEnde - relStart)
+                    'Dim newCost As New clsKostenartDB(.relEnde - relStart)
+                    dimension = .getCost(k).getDimension
+                    Dim newCost As New clsKostenartDB(dimension)
                     newCost.copyFrom(.getCost(k))
                     AllCosts.Add(newCost)
                 Next
@@ -288,16 +293,29 @@
                     startoffset = Me.startOffsetinDays
                     dauer = Me.dauerInDays
                 End If
-                .changeStartandDauer(startoffset, dauer)
 
+                Dim dimension As Integer
 
                 ' in der Datenbank wird es konsistent gespeichert
                 For r = 1 To Me.AllRoles.Count
-                    Dim newRole As New clsRolle(.relEnde - .relStart)
+                    'Dim newRole As New clsRolle(.relEnde - .relStart)
+
+                    dimension = Me.AllRoles.Item(r - 1).Bedarf.Length - 1
+                    Dim newRole As New clsRolle(dimension)
                     Me.AllRoles.Item(r - 1).copyto(newRole)
                     .AddRole(newRole)
 
                 Next
+
+                For k = 1 To Me.AllCosts.Count
+                    'Dim newCost As New clsKostenart(.relEnde - relStart)
+                    dimension = Me.AllCosts.Item(k - 1).Bedarf.Length - 1
+                    Dim newCost As New clsKostenart(dimension)
+                    Me.AllCosts.Item(k - 1).copyto(newCost)
+                    .AddCost(newCost)
+                Next
+
+                .changeStartandDauer(startoffset, dauer)
 
                 Try
                     Dim tstAnzahl As Integer = Me.AllResults.Count
@@ -319,11 +337,7 @@
 
 
 
-                For k = 1 To Me.AllCosts.Count
-                    Dim newCost As New clsKostenart(.relEnde - relStart)
-                    Me.AllCosts.Item(k - 1).copyto(newCost)
-                    .AddCost(newCost)
-                Next
+                
 
             End With
 

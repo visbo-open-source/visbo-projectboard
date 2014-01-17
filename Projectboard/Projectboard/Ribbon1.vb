@@ -102,14 +102,28 @@ Imports Microsoft.Office.Interop.Excel
     ''' <remarks></remarks>
     Sub awinTestNewFunctions(control As IRibbonControl)
         'Call MsgBox("Anzahl Aufrufe: " & anzahlCalls)
+        Dim ok As Boolean = True
 
+        
 
-        Dim anzProjekte As Integer = ShowProjekte.Liste.Count
-        Dim anzShapes As Integer = ShowProjekte.shpListe.Count
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-        Call MsgBox("Test ---" & vbLf & _
-                    "Projekte: " & anzProjekte & _
-                    "Shapes  : " & anzShapes)
+            If Not kvp.Value.isConsistent Then
+                Call MsgBox("inkonsistenz: " & kvp.Key)
+                ok = False
+            End If
+
+        Next
+
+        If ok Then
+            Call MsgBox("keine Inkonsistenz gefunden ...")
+        End If
+
+        'Dim anzProjekte As Integer = ShowProjekte.Liste.Count
+        'Dim anzShapes As Integer = ShowProjekte.shpListe.Count
+        'Call MsgBox("Test ---" & vbLf & _
+        '            "Projekte: " & anzProjekte & _
+        '            "Shapes  : " & anzShapes)
 
         'Dim hws As Excel.Worksheet
         'hws = appInstance.Worksheets(arrWsNames(11))
@@ -690,9 +704,15 @@ Imports Microsoft.Office.Interop.Excel
 
                         If vglName.Trim <> pName.Trim Then
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                            
+                            Try
+                                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                            projekthistorie.Add(Date.Now, hproj)
+                                projekthistorie.Add(Date.Now, hproj)
+                            Catch ex As Exception
+                                projekthistorie = Nothing
+                            End Try
+
                         Else
                             ' der aktuelle Stand hproj muss hinzugefügt werden 
                             Dim lastElem As Integer = projekthistorie.Count - 1

@@ -1360,8 +1360,7 @@ Public Module awinGeneralModules
                                         Dim startOffset As Integer = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
                                         Dim dauerIndays As Integer = DateDiff(DateInterval.Day, hproj.startDate.AddDays(startOffset), hproj.startDate.AddMonths(ende - 1).AddDays(-1)) + 1
                                         .changeStartandDauer(startOffset, dauerIndays)
-                                        '.relStart = anfang
-                                        '.relEnde = ende
+                                        
                                         .Offset = 0
                                     End With
 
@@ -1584,7 +1583,8 @@ Public Module awinGeneralModules
 
                                 ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
                                 If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
-                                    resultDate = hproj.startDate.AddMonths(hproj.getPhase(phaseName).relEnde).AddDays(-3)
+                                    'resultDate = hproj.startDate.AddMonths(hproj.getPhase(phaseName).relEnde).AddDays(-3)
+                                    resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
                                 End If
 
                                 ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
@@ -1750,6 +1750,12 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
 
                 Try
+                    If Not kvp.Value.isConsistent Then
+
+                        Call MsgBox("Inkonsistent: " & kvp.Value.name)
+
+                    End If
+
                     ShowProjekte.Add(kvp.Value)
                     Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile, False)
 

@@ -39,11 +39,13 @@ Public Module testModule
         Dim lproj As clsProjekt
         Dim bproj As clsProjekt
         Dim lastproj As clsProjekt
-        Dim lastElem As Integer = projekthistorie.Count - 1
+        Dim lastElem As Integer
 
         Try
+            lastElem = projekthistorie.Count - 1
             lastproj = projekthistorie.ElementAt(lastElem - 1)
         Catch ex As Exception
+            lastElem = -1
             lastproj = Nothing
         End Try
 

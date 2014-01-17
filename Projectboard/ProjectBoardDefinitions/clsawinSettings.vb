@@ -36,6 +36,11 @@
     Property zeilenhoehe2 As Double
     Property spaltenbreite As Double
     Property offsetEinheit As String
+    ' sollen Meilensteine auch ausserhalb des Projekts liegen dürfen ? 
+    Property milestoneFreeFloat As Boolean
+    ' sollen Bedarfe automatisch in der Array Länge angepasst werden, wenn sich das Projekt verschiebt und in Folge die array Länge 
+    ' nicht mehr ganz passt 
+    Property autoCorrectBedarfe As Boolean
 
     ' Settings für die letzte User Selektion in der Tafel 
     Property selectedColumn As Integer
@@ -76,6 +81,8 @@
         _databaseName = "projectboard"
         _selectedColumn = 1
         _offsetEinheit = "d"
+        _milestoneFreeFloat = False
+        _autoCorrectBedarfe = False
 
         ' Settings für Import / Export 
         _EinzelRessExport = 0
