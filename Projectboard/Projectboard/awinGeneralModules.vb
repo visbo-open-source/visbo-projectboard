@@ -1631,7 +1631,7 @@ Public Module awinGeneralModules
                                     If startdiff <> 0 Or endediff <> 0 Then
                                         anzFehler = anzFehler + 1
                                         Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
-                                                             "Korrigieren Sie gegebenenfalls diese Inkonsitenz in der Datei '" & hproj.name & ".xlsx'")
+                                                             "Korrigieren Sie bitte gegebenenfalls diese Inkonsitenz in der Datei '" & hproj.name & ".xlsx'")
 
 
                                     ElseIf duration < 0 Or offset < 0 Then
