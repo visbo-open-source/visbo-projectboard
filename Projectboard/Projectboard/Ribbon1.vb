@@ -831,9 +831,11 @@ Imports Microsoft.Office.Interop.Excel
                             Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
                         End Try
 
-                        appInstance.ActiveWorkbook.Close()
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
 
                     Catch ex1 As Exception
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                        Call MsgBox(ex1.Message)
                         Call MsgBox("Fehler bei Import von Projekt " & hproj.name)
                     End Try
 
@@ -928,7 +930,8 @@ Imports Microsoft.Office.Interop.Excel
                         End If
                     End With
                     Try
-                        appInstance.ActiveWorkbook.Close(Filename:=awinPath & projektAustausch)
+                        ' Schließen der Datei ProjektSteckbrief ohne abspeichern der Änderungen, original Zustand bleibt erhalten
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=False, Filename:=awinPath & projektAustausch)
                     Catch ex As Exception
 
                         Call MsgBox("Fehler beim Schließen der Projektaustausch Vorlage")

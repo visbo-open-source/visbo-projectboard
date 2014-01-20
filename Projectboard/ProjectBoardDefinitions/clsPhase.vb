@@ -23,6 +23,8 @@
     Public Sub changeStartandDauer(ByVal startOffset As Integer, ByVal dauer As Integer)
 
         Dim projektStartdate As Date
+        Dim phaseStartdate As Date, phaseEnddate As Date
+
         Dim projektstartColumn As Integer
 
 
@@ -63,8 +65,11 @@
 
                 '_relStart = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(startOffset)) + 1
                 '_relEnde = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(startOffset + _dauerInDays)) + 1
-                _relStart = DateDiff(DateInterval.Month, StartofCalendar, projektStartdate.AddDays(startOffset)) + 1 - projektstartColumn + 1
-                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, projektStartdate.AddDays(startOffset + _dauerInDays)) + 1 - projektstartColumn + 1
+
+                phaseStartdate = projektStartdate.AddDays(startOffset)
+                phaseEnddate = projektStartdate.AddDays(startOffset + _dauerInDays - 1)
+                _relStart = DateDiff(DateInterval.Month, StartofCalendar, phaseStartdate) + 1 - projektstartColumn + 1
+                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, phaseEnddate) + 1 - projektstartColumn + 1
 
 
                 newlaenge = _relEnde - _relStart + 1

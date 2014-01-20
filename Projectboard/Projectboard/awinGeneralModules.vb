@@ -1181,6 +1181,7 @@ Public Module awinGeneralModules
                 hproj.startDate = CType(.Range("StartDatum").Value, Date)
 
                 ' Ende
+
                 ' hproj.dauerInDays = CType(.Range("EndeDatum").Value, Date) - CType(.Range("StartDatum").Value, Date)  ' oder so ähnlich
 
 
@@ -1205,8 +1206,6 @@ Public Module awinGeneralModules
 
             End With
         Catch ex As Exception
-            ' Blattschutz setzen
-            appInstance.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
             Throw New ArgumentException("Fehler in awinImportProject, Lesen Stammdaten")
         End Try
 
@@ -1266,13 +1265,10 @@ Public Module awinGeneralModules
                 '    hproj.volume = 10 ' Default
                 'End Try
 
-                ' Blattschutz setzen
-                .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+              
 
             End With
         Catch ex As Exception
-            ' Blattschutz setzen
-            appInstance.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
             Throw New ArgumentException("Fehler in awinImportProject, Lesen Attribute")
         End Try
 
@@ -1297,7 +1293,7 @@ Public Module awinGeneralModules
                 Dim farbeAktuell As Object
                 Dim hv1 As Integer, hv2 As Integer
                 Dim r As Integer, k As Integer
-                'Dim valueRange As Excel.Range
+                Dim valueRange As Excel.Range
 
                 .Unprotect(Password:="x")       ' Blattschutz aufheben
 
@@ -1306,14 +1302,17 @@ Public Module awinGeneralModules
 
                 ' d = appInstance.WorksheetFunction.CountA(.range("Phasen_des_Projekts"))
 
+                Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
+                hv1 = tmpws.Rows.Count
+                hv2 = CInt(.Range("RollenKosten_des_Projekts").Row)
                 hv1 = CInt(.Range("Phasen_des_Projekts").End(XlDirection.xlUp).Row)
                 hv2 = CInt(.Range("RollenKosten_des_Projekts").End(XlDirection.xlUp).Row)
                 lastRow = System.Math.Max(hv1, hv2)
 
                 lastRow = System.Math.Max(CInt(.Range("Phasen_des_Projekts").End(XlDirection.xlUp).Row), CInt(.Range("RollenKosten_des_Projekts").End(XlDirection.xlUp).Row)) + 1
 
-                'lastRow = System.Math.Max(CInt(.Cells(2000, 1).End(XlDirection.xlUp).row), CInt(.Cells(2000, 2).End(XlDirection.xlUp).row)) + 1
-                'rng = .Range(.Cells(zeile, 2), .Cells(lastRow, 2))
+                lastRow = System.Math.Max(CInt(.Cells(2000, 1).End(XlDirection.xlUp).row), CInt(.Cells(2000, 2).End(XlDirection.xlUp).row)) + 1
+                rng = .Range(.Cells(zeile, 2), .Cells(lastRow, 2))
                 rng = .Range("Phasen_des_Projekts")
 
                 If CStr(.Range("Phasen_des_Projekts").Cells(1).value) <> hproj.name Then
@@ -1335,16 +1334,28 @@ Public Module awinGeneralModules
 
                                     ' Auslesen der Phasen Dauer
                                     anfang = 1
-                                    While CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142
+                                    While CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142 And
+                                        Not (CType(zelle.Offset(0, anfang + 1).Value, String) = "x")
+
                                         anfang = anfang + 1
                                     End While
 
                                     ende = anfang + 1
-                                    farbeAktuell = zelle.Offset(0, ende).Interior.Color
-                                    While CInt(zelle.Offset(0, ende + 1).Interior.Color) = CInt(farbeAktuell)
-                                        ende = ende + 1
-                                    End While
-                                    ende = ende - 1
+
+                                    If CInt(zelle.Offset(0, ende).Interior.ColorIndex) = -4142 Then
+                                        While CType(zelle.Offset(0, ende + 1).Value, String) = "x"
+                                            ende = ende + 1
+                                        End While
+                                        ende = ende - 1
+                                    Else
+                                        farbeAktuell = zelle.Offset(0, ende + 1).Interior.Color
+                                        While CInt(zelle.Offset(0, ende + 1).Interior.Color) = CInt(farbeAktuell)
+
+                                            ende = ende + 1
+                                        End While
+                                        ende = ende - 1
+                                    End If
+
 
                                     chkPhase = False
 
@@ -1353,7 +1364,9 @@ Public Module awinGeneralModules
                                         .name = phaseName
                                         ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                                         Dim startOffset As Integer = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
-                                        Dim dauerIndays As Integer = DateDiff(DateInterval.Day, hproj.startDate.AddDays(startOffset), hproj.startDate.AddMonths(ende).AddDays(-1)) + 1
+                                        Dim dauerIndays As Integer = DateDiff(DateInterval.Day, hproj.startDate.AddDays(startOffset), hproj.startDate.AddMonths(ende - 1).AddDays(-1)) + 1
+                                        Dim phaseStartdate As Date = hproj.startDate.AddDays(startOffset)
+                                        Dim phaseEnddate As Date = hproj.startDate.AddDays(startOffset + dauerIndays - 1)
                                         .changeStartandDauer(startOffset, dauerIndays)
                                         '.relStart = anfang
                                         '.relEnde = ende
@@ -1452,198 +1465,263 @@ Public Module awinGeneralModules
                     zeile = zeile + 1
                 Next zelle
 
-                ' Blattschutz setzen
-                .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             End With
         Catch ex As Exception
-            ' Blattschutz setzen
-            appInstance.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
             Throw New ArgumentException("Fehler in awinImportProject, Lesen Ressourcen" & vbLf & ex.Message)
         End Try
 
 
         '' hier wurde jetzt die Reihenfolge geändert - erst werden die Phasen Definitionen eingelesen ..
 
-        '' jetzt werden die Daten für die Phasen sowie die Ergebnisse/Deliverables eingelesen 
+        '' jetzt werden die Daten für die Phasen sowie die Termine/Deliverables eingelesen 
 
         Try
-            With CType(appInstance.ActiveWorkbook.Worksheets("Ergebnisse"), Excel.Worksheet)
-                Dim lastrow As Integer
-                Dim phaseName As String
-                Dim resultName As String
-                Dim resultDate As Date
-                Dim resultVerantwortlich As String = ""
-                Dim bewertungsAmpel As Integer
-                Dim explanation As String
-                Dim bewertungsdatum As Date = importDatum
-                Dim Nummer As String
-                Dim tbl As Excel.Range
-                Dim rowOffset As Integer
-                Dim columnOffset As Integer
+
+            Dim wsTermine As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Termine"), _
+                                                         Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Try
+                With wsTermine
+                    Dim lastrow As Integer
+                    Dim lastcolumn As Integer
+                    Dim phaseName As String
+                    Dim resultName As String
+                    Dim resultDate As Date
+                    Dim resultVerantwortlich As String = ""
+                    Dim bewertungsAmpel As Integer
+                    Dim explanation As String
+                    Dim bewertungsdatum As Date = importDatum
+                    Dim Nummer As String
+                    Dim tbl As Excel.Range
+                    Dim sortBereich As Excel.Range
+                    Dim sortKey As Excel.Range
+                    Dim rowOffset As Integer
+                    Dim columnOffset As Integer
 
 
-                .Unprotect(Password:="x")       ' Blattschutz aufheben
+                    .Unprotect(Password:="x")       ' Blattschutz aufheben
 
-                lastrow = System.Math.Max(CInt(.Cells(2000, 2).End(XlDirection.xlUp).row), _
-                                          CInt(.Cells(2000, 3).End(XlDirection.xlUp).row))
+                    tbl = .ListObjects("ErgebnTabelle").Range
+                    rowOffset = tbl.Row             ' ist die erste Zeile der ErgebnTabelle = Überschriftszeile
+                    columnOffset = tbl.Column
 
-                tbl = .ListObjects("ErgebnTabelle").Range
-                rowOffset = tbl.Row
-                columnOffset = tbl.Column
+                    ' hiermit soll die Tabelle der Termine nach der laufenden Nummer sortiert werden
 
-                For zeile = rowOffset + 1 To lastrow
+                    lastrow = CInt(.Cells(2000, columnOffset).End(XlDirection.xlUp).row)
+                    lastcolumn = CInt(.Cells(rowOffset, 2000).End(XlDirection.xlToLeft).column)
 
-                    Dim cResult As clsResult
-                    Dim cBewertung As clsBewertung
-                    Dim cphase As clsPhase
-                    Dim objectName As String
-                    Dim startDate As Date, endeDate As Date
-                    Dim bezug As String
-                    Dim isPhase As Boolean = False
+                    'sortBereich ist der Inhalt der ErgebnTabelle
+                    sortBereich = .Range(.Cells(rowOffset + 1, columnOffset), .Cells(lastrow, lastcolumn))
+                    ' sortKey ist die erste Spalte der ErgebnTabelle
+                    sortKey = .Range(.Cells(rowOffset + 1, columnOffset), .Cells(lastrow, columnOffset))
 
+                    With .Sort
+                        ' Bestehende Sortierebenen löschen
+                        .SortFields.Clear()
+                        ' Sortierung nach der laufenden Nummer in der ErgebnTabelle also erste Spalte 
+                        .SortFields.Add(Key:=sortKey, Order:=XlSortOrder.xlAscending)
+                        .SetRange(sortBereich)
+                        .Apply()
+                    End With
 
-                    Try
-                        Nummer = CType(.Cells(zeile, columnOffset).value, String).Trim
+                    For zeile = rowOffset + 1 To lastrow
 
-                        ' bestimme, worum es sich handelt: Phase oder Meilenstein
-                        objectName = CType(.Cells(zeile, columnOffset + 1).value, String).Trim
+                        Dim cResult As clsResult
+                        Dim cBewertung As clsBewertung
+                        Dim cphase As clsPhase
+                        Dim objectName As String
+                        Dim startDate As Date, endeDate As Date
+                        Dim bezug As String
+                        Dim isPhase As Boolean = False
+
 
                         Try
-                            bezug = CType(.Cells(zeile, columnOffset + 2).value, String).Trim
-                        Catch ex As Exception
-                            bezug = Nothing
-                        End Try
-
-                        Try
-                            startDate = CDate(.Cells(zeile, columnOffset + 3).value)
-                        Catch ex As Exception
-                            startDate = Date.MinValue
-                        End Try
-
-                        endeDate = CDate(.Cells(zeile, columnOffset + 4).value)
-
-                        If DateDiff(DateInterval.Month, hproj.startDate, startDate) < 0 Then
-
                             Try
-                                cphase = hproj.getPhase(bezug)
+                                Nummer = CType(.Cells(zeile, columnOffset).value, String).Trim
                             Catch ex As Exception
-                                cphase = hproj.getPhase(1)
-                            End Try
-
-                            isPhase = False
-                        Else
-
-                            isPhase = True
-
-                            Try
-                                cphase = hproj.getPhase(objectName)
-                            Catch ex As Exception
-                                Call MsgBox("phase " & objectName & " nicht vorhanden ...")
-                                Throw New Exception("es gibt keine Phase mit Namen " & objectName)
+                                Nummer = Nothing
+                                Exit For ' Ende der For-Schleife, wenn keine laufende Nummer mehr existiert
                             End Try
 
 
-                        End If
+                            ' bestimme, worum es sich handelt: Phase oder Meilenstein
+                            objectName = CType(.Cells(zeile, columnOffset + 1).value, String).Trim
 
-                        If isPhase Then
+                            Try
+                                bezug = CType(.Cells(zeile, columnOffset + 2).value, String).Trim
+                            Catch ex As Exception
+                                bezug = Nothing
+                            End Try
 
-                            Dim duration As Integer
-                            Dim offset As Integer
+                            Try
+                                startDate = CDate(.Cells(zeile, columnOffset + 3).value)
+                            Catch ex As Exception
+                                startDate = Date.MinValue
+                            End Try
+
+                            endeDate = CDate(.Cells(zeile, columnOffset + 4).value)
+
+                            If DateDiff(DateInterval.Month, hproj.startDate, startDate) < 0 Then
+                                If startDate <> Date.MinValue Then
+                                    Throw New Exception("Die Phase '" & objectName & "' beginnt vor dem Projekt !" & vbLf &
+                                                 "Bitte korrigieren Sie dies in der Datei'" & hproj.name & ".xlsx'")
+                                Else
+                                    ' objectName ist ein Meilenstein
+                                    Try
+                                        cphase = hproj.getPhase(bezug)
+                                    Catch ex As Exception
+                                        ' Meilenstein gehört zum Projekt aber zu keiner spez. Phase
+                                        cphase = hproj.getPhase(1)
 
 
-                            duration = DateDiff(DateInterval.Day, startDate, endeDate)
-                            offset = DateDiff(DateInterval.Day, hproj.startDate, startDate)
+                                    End Try
+                                End If
 
-                            ' controlDate = hproj.startDate.AddDays(offset + duration)
+                                isPhase = False
+                            Else
+                                'objectName ist eine Phase
+                                isPhase = True
 
-                            If duration < 0 Or offset < 0 Then
-                                Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
-                                                    offset.ToString & ", " & duration.ToString)
+                                Try
+                                    cphase = hproj.getPhase(objectName)
+                                Catch ex As Exception
+
+                                End Try
+
+
                             End If
 
-                            cphase.changeStartandDauer(offset, duration)
+                            If isPhase Then  'xxxx Phase
+                                Try
+
+                                    Dim duration As Integer
+                                    Dim offset As Integer
+
+                                    Dim ressourceDuration As Integer
+                                    Dim ressourceOffset As Integer
+                                    'Dim controlDate As Date
+
+                                    Dim phaseStart As Date
+                                    Dim phaseEnde As Date
+                                    Dim startdiff As Integer
+                                    Dim endediff As Integer
 
 
-                        Else
+                                    duration = DateDiff(DateInterval.Day, startDate, endeDate)
+                                    offset = DateDiff(DateInterval.Day, hproj.startDate, startDate)
 
-                            Try
+                                    'controlDate = hproj.startDate.AddDays(offset + duration)
 
-
-                                phaseName = cphase.name
-                                cResult = New clsResult(parent:=cphase)
-                                cBewertung = New clsBewertung
-
-                                resultName = objectName.Trim
-                                resultDate = endeDate
-
-                                ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
-                                If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
-                                    resultDate = hproj.startDate.AddMonths(hproj.getPhase(phaseName).relEnde).AddDays(-3)
-                                End If
-
-                                ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
-                                bewertungsAmpel = CType(.Cells(zeile, columnOffset + 5).value, Integer)
-                                explanation = CType(.Cells(zeile, columnOffset + 6).value, String)
-
-                                If bewertungsAmpel <= 0 Or bewertungsAmpel > 3 Then
-                                    ' es gibt keine Bewertung 
-                                Else
-                                    With cBewertung
-                                        '.bewerterName = resultVerantwortlich
-                                        .colorIndex = bewertungsAmpel
-                                        .datum = importDatum
-                                        .description = explanation
-                                    End With
-                                End If
-
-
-                                With cResult
-                                    .setDate = resultDate
-                                    '.verantwortlich = resultVerantwortlich
-                                    .name = resultName
-                                    If Not cBewertung Is Nothing Then
-                                        .addBewertung(cBewertung)
+                                    If awinSettings.zeitEinheit = "PM" Then
+                                        phaseStart = hproj.startDate.AddDays(cphase.startOffsetinDays)
+                                        phaseEnde = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
+                                    ElseIf awinSettings.zeitEinheit = "PW" Then
+                                        phaseStart = hproj.startDate.AddDays((cphase.relStart - 1) * 7)
+                                        phaseEnde = hproj.startDate.AddDays((cphase.relEnde - 1) * 7)
+                                    ElseIf awinSettings.zeitEinheit = "PT" Then
+                                        phaseStart = hproj.startDate.AddDays(cphase.relStart - 1)
+                                        phaseStart = hproj.startDate.AddDays(cphase.relEnde - 1)
                                     End If
-                                End With
 
-                                With hproj.getPhase(phaseName)
-                                    .AddResult(cResult)
-                                End With
+                                    ressourceDuration = cphase.dauerInDays
+                                    ressourceOffset = cphase.startOffsetinDays
+                                    startdiff = DateDiff(DateInterval.Month, startDate, phaseStart)
+                                    endediff = DateDiff(DateInterval.Month, endeDate, phaseEnde)
+
+                                    If startdiff <> 0 Or endediff <> 0 Then
+                                        anzFehler = anzFehler + 1
+                                        Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
+                                                             "Korrigieren Sie gegebenenfalls diese Inkonsitenz in der Datei '" & hproj.name & ".xlsx'")
 
 
-                            Catch ex As Exception
-                                ' Schreiben des Fehlers in das Fehlerprotokoll - muss noch ergänzt werden 
-                                anzFehler = anzFehler + 1
-                            End Try
+                                    ElseIf duration < 0 Or offset < 0 Then
+                                        anzFehler = anzFehler + 1
+                                        Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
+                                                            offset.ToString & ", " & duration.ToString)
 
-                        End If
+                                    Else
+                                        cphase.changeStartandDauer(offset, duration)
+                                    End If
 
-                    Catch ex As Exception
-                        ' letzte belegte Zeile wurde bereits bearbeitet.
-                        zeile = lastrow + 1 ' erzwingt das Ende der For - Schleife
-                        Nummer = Nothing
-                    End Try
+                                Catch ex As Exception
+                                    Throw New Exception(ex.Message)
+                                End Try
 
-                Next
+                            Else
 
-                ' Blattschutz setzen
-                .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                                Try
 
-            End With
+                                    phaseName = cphase.name
+                                    cResult = New clsResult(parent:=cphase)
+                                    cBewertung = New clsBewertung
+
+                                    resultName = objectName.Trim
+                                    resultDate = endeDate
+
+                                    ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
+                                    If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
+                                        resultDate = hproj.startDate.AddMonths(hproj.getPhase(phaseName).relEnde).AddDays(-3)
+                                    End If
+
+                                    ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
+                                    bewertungsAmpel = CType(.Cells(zeile, columnOffset + 5).value, Integer)
+                                    explanation = CType(.Cells(zeile, columnOffset + 6).value, String)
+
+                                    If bewertungsAmpel <= 0 Or bewertungsAmpel > 3 Then
+                                        ' es gibt keine Bewertung 
+                                    Else
+                                        With cBewertung
+                                            '.bewerterName = resultVerantwortlich
+                                            .colorIndex = bewertungsAmpel
+                                            .datum = importDatum
+                                            .description = explanation
+                                        End With
+                                    End If
+
+
+                                    With cResult
+                                        .setDate = resultDate
+                                        '.verantwortlich = resultVerantwortlich
+                                        .name = resultName
+                                        If Not cBewertung Is Nothing Then
+                                            .addBewertung(cBewertung)
+                                        End If
+                                    End With
+
+                                    With hproj.getPhase(phaseName)
+                                        .AddResult(cResult)
+                                    End With
+
+
+                                Catch ex As Exception
+                                    ' Schreiben des Fehlers in das Fehlerprotokoll - muss noch ergänzt werden 
+                                    anzFehler = anzFehler + 1
+                                End Try
+
+                            End If
+
+                        Catch ex As Exception
+                            ' letzte belegte Zeile wurde bereits bearbeitet.
+                            zeile = lastrow + 1 ' erzwingt das Ende der For - Schleife
+                            Nummer = Nothing
+                            Throw New Exception(ex.Message)
+                        End Try
+
+                    Next
+
+                End With
+            Catch ex As Exception
+                Throw New Exception(ex.Message)
+            End Try
+
+            If anzFehler > 0 Then
+                Call MsgBox("Anzahl Fehler bei Import der Termine von" & hproj.name & " : " & anzFehler)
+            End If
+
         Catch ex As Exception
-            ' Blattschutz setzen
-            appInstance.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
             Throw New Exception(ex.Message)
         End Try
-
-
-        ' die erste Phase wird ja nicht explizit gesetzt - deshalb muss hier noch 
-        ' ImportProjekte.Add(hproj)
-
-        If anzFehler > 0 Then
-            Call MsgBox("Anzahl Fehler bei Import der Ergebnisse von" & hproj.name & " : " & anzFehler)
-        End If
+       
 
 
     End Sub

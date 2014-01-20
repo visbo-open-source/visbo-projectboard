@@ -5938,7 +5938,7 @@ Public Module Projekte
             Exit Sub
         End Try
 
-        ' Anpassen der Daten für die Ergebnisse 
+        ' Anpassen der Daten für die Termine 
         ' wenn Samstag oder Sonntag, dann auf den Freitag davor legen   
 
 
@@ -9748,31 +9748,10 @@ Public Module Projekte
         appInstance.EnableEvents = False
 
 
-        ' als erstes werden alle definierten Namen gelöscht ... 
-        '
-        ' Dim anzNames As Integer
-        ' Dim i As Integer
-
-        ' Try
-        ' With appInstance.ActiveWorkbook
-        ' anzNames = .Names.Count
-
-        ' For i = 1 To anzNames
-        ' .Names(0).Delete()
-        ' Next
-
-        ' End With
-        ' Catch ex As Exception
-        ' appInstance.EnableEvents = formerEE
-        ' Throw New ArgumentException("Fehler in awinExportProject, Namen löschen")
-        ' End Try
-
-
-
-
         zeile = 1
         spalte = 1
 
+        ' Dateiname des Projectfiles '
         fileName = hproj.name & ".xlsx"
 
         ' -------------------------------------------------
@@ -9790,23 +9769,6 @@ Public Module Projekte
                 .range("Projekt_Name").font.size = hproj.Schrift
                 .range("Projekt_Name").font.color = hproj.Schriftfarbe
 
-                ' Varianten-Name
-                '.cells(zeile, spalte).value = "Variant Name"
-                'If hproj.variantName Is Nothing Then
-                '.cells(zeile, spalte + 1).value = " "
-                'Else
-                '.cells(zeile, spalte + 1).value = hproj.variantName
-                'End If
-                '.cells(zeile, spalte + 1).value = hproj.variantName
-                'rng = .cells(zeile, spalte + 1)
-                'With rng
-                '.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                '.IndentLevel = 1
-                '.WrapText = False
-                'End With
-                'appInstance.ActiveWorkbook.Names.Add(Name:="VariantName", RefersTo:=rng)
-                'zeile = zeile + 1
-
 
                 ' Start
 
@@ -9814,7 +9776,7 @@ Public Module Projekte
 
                 ' Ende
 
-                .range("EndeDatum").value = hproj.startDate.AddDays(hproj.dauerInDays)
+                .range("EndeDatum").value = CDate(hproj.startDate.AddDays(hproj.dauerInDays))
 
 
                 'Projektleiter
@@ -9833,17 +9795,6 @@ Public Module Projekte
 
                 .range("Bewertung").interior.color = awinSettings.AmpelNichtBewertet
                 .range("Bewertung").value = hproj.ampelStatus
-
-                'Select Case hproj.ampelStatus
-                '    Case 0
-                '        .cells(zeile, spalte + 1).interior.color = awinSettings.AmpelNichtBewertet
-                '    Case 1
-                '        .cells(zeile, spalte + 1).interior.color = awinSettings.AmpelGruen
-                '    Case 2
-                '        .cells(zeile, spalte + 1).interior.color = awinSettings.AmpelGelb
-                '    Case 3
-                '        .cells(zeile, spalte + 1).interior.color = awinSettings.AmpelRot
-                'End Select
 
 
                 ' Ampel-Bewertung 
@@ -9865,9 +9816,13 @@ Public Module Projekte
 
         ' --------------------------------------------------
         ' jetzt werden die Ressourcen Bedarfe weggeschrieben 
-        '
+
+        ' --------------------------------------------------
+
         Try
             With appInstance.ActiveWorkbook.Worksheets("Ressourcen")
+
+                Dim tbl As Excel.Range
 
                 .Unprotect(Password:="x")       ' Blattschutz aufheben
 
@@ -9877,15 +9832,30 @@ Public Module Projekte
                 ' die Monate eintragen 
 
                 If awinSettings.zeitEinheit = "PM" Then
-                    Dim htxt As String = hproj.startDate.ToShortDateString
-                    .range("Zeitleiste").Offset(rowOffset:=0, columnOffset:=0).value = hproj.startDate
-                    .range("Zeitleiste").Offset(rowOffset, columnOffset + 1).value = hproj.startDate.AddMonths(1)
-                    'rng = .range("Zeitleiste")(.cells(rowOffset, columnOffset), .cells(rowOffset, columnOffset + 1))
-                    rng = .Range(.cells(10, 3 + 1), .cells(10, 3 + 2))
+
+                    ' Dim htxt As String = hproj.startDate.ToShortDateString
+
+                    ' Zeilen und Spalten-Offset für die Zeitleiste herausfinden
+                    tbl = .Range("Zeitleiste")
+                    rowOffset = tbl.Row         ' Reihen-Offset für die Zeitleiste
+                    columnOffset = tbl.Column   ' Spalten-Offset für die Zeitleiste
+
+                    ' Monat und Jahreszahl in die ersten beiden Felder der Zeitleiste eintragen'
+                    '.range("Zeitleiste").Offset(rowOffset:=0, columnOffset:=0).value = hproj.startDate
+                    .range("Zeitleiste").Cells(rowOffset, columnOffset).value = "= StartDatum"
+
+                    '.range("Zeitleiste").Offset(rowOffset, columnOffset + 1).value = hproj.startDate.AddMonths(1)
+                    .range("Zeitleiste").Cells(rowOffset, columnOffset + 1).value = "= EDATUM(D" & rowOffset & ",1"
+                    .range("Zeitleiste").Cells(rowOffset, columnOffset + 2).value = "= EDATUM(E" & rowOffset & ",1"
+
+                    
+
+                    ' die ersten beiden Felder der Zeitleiste formatieren
+                    rng = .Range(.Cells(rowOffset, columnOffset + 1), .Cells(rowOffset, columnOffset + 2))
                     rng.NumberFormat = "mmm-yy"
-
-                    destinationRange = .range("Zeitleiste")
-
+                    ' Die restliche Zeitleiste  formatieren
+                    'rng = .range(.cells(startZeile, spalte), .cells(endZeile, spalte))
+                    destinationRange = .range(.Cells(rowOffset, columnOffset + 1), .Cells(rowOffset, columnOffset + 10))
                     With destinationRange
                         .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
@@ -9900,7 +9870,9 @@ Public Module Projekte
                         .ColumnWidth = 4
                     End With
 
-                    rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
+                    ' die Zeitleiste mit den Monatsangaben automatisch befüllen
+                    rng.AutoFill(Destination:=destinationRange, Type:=XlAutoFillType.xlFillDefault)
+
 
                 ElseIf awinSettings.zeitEinheit = "PW" Then
                 ElseIf awinSettings.zeitEinheit = "PT" Then
@@ -10121,21 +10093,7 @@ Public Module Projekte
 
                 End If
 
-                '' Schreiben des Delimiters
-                '.cells(zeile, spalte).value = delimiter
-                'zeile = zeile + 1
-
-
-                ' ----------------------------------------- 
-                ' Schreiben der Kostenarten
-                '
-
-
-                '.cells(zeile, spalte).value = "Kostenarten"
-                '.cells(zeile, spalte).interior.color = RGB(180, 180, 180)
-
-                'zeile = zeile + 1
-                'startZeile = zeile
+             
                 startKosten = zeile
 
                 For i = 1 To CostDefinitions.Count - 1
@@ -10218,10 +10176,10 @@ Public Module Projekte
         End Try
 
         ' ----------------------------------------------
-        ' jetzt werden die Ergebnisse weggeschrieben ....
+        ' jetzt werden die Termine weggeschrieben ....
 
         Try
-            With appInstance.ActiveWorkbook.Worksheets("Ergebnisse")
+            With appInstance.ActiveWorkbook.Worksheets("Termine")
 
 
                 .Unprotect(Password:="x")       ' Blattschutz aufheben
@@ -10232,17 +10190,17 @@ Public Module Projekte
             End With
         Catch ex As Exception
             With appInstance.ActiveWorkbook.Worksheets.Add
-                .name = "Ergebnisse"
+                .name = "Termine"
                 ' Tabelle ErgebnTabelle muss hier eigentlich erzeugt werden
                 appInstance.EnableEvents = formerEE
-                Throw New ArgumentException("Fehler in awinExportProject, Schreiben Ergebnisse, Worksheet Ergebnisse existiert nicht")
+                Throw New ArgumentException("Fehler in awinExportProject, Schreiben Termine, Worksheet Termine existiert nicht")
             End With
         End Try
 
         ' --------------------------------------
-        ' Worksheet Ergebnisse existriert jetzt ...
+        ' Worksheet Termine existriert jetzt ...
 
-        With CType(appInstance.ActiveWorkbook.Worksheets("Ergebnisse"), Excel.Worksheet)
+        With CType(appInstance.ActiveWorkbook.Worksheets("Termine"), Excel.Worksheet)
 
             .Unprotect(Password:="x")       ' Blattschutz aufheben
 
@@ -10301,7 +10259,7 @@ Public Module Projekte
                         cBewertung = New clsBewertung
                     End Try
                     ' --------------------------------------------------------------------------------
-                    ' Ergebnisse müssen in Tabelle eingetragen werden
+                    ' Termine müssen in Tabelle eingetragen werden
                     '----------------------------------------------------------------------------------
 
                     .Cells(rowOffset + zeile, columnOffset).value = zeile
