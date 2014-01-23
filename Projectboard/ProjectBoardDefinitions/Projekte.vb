@@ -9841,21 +9841,17 @@ Public Module Projekte
                     columnOffset = tbl.Column   ' Spalten-Offset für die Zeitleiste
 
                     ' Monat und Jahreszahl in die ersten beiden Felder der Zeitleiste eintragen'
-                    '.range("Zeitleiste").Offset(rowOffset:=0, columnOffset:=0).value = hproj.startDate
-                    .range("Zeitleiste").Cells(rowOffset, columnOffset).value = "= StartDatum"
+                    .range("Zeitleiste").Cells(columnOffset).value = "= StartDatum"
 
-                    '.range("Zeitleiste").Offset(rowOffset, columnOffset + 1).value = hproj.startDate.AddMonths(1)
-                    .range("Zeitleiste").Cells(rowOffset, columnOffset + 1).value = "= EDATUM(D" & rowOffset & ",1"
-                    .range("Zeitleiste").Cells(rowOffset, columnOffset + 2).value = "= EDATUM(E" & rowOffset & ",1"
-
-                    
+                    .range("Zeitleiste").Cells(columnOffset + 1).value = "= EDATUM(D" & rowOffset & ",1"
+                    .range("Zeitleiste").Cells(columnOffset + 2).value = "= EDATUM(E" & rowOffset & ",1"
 
                     ' die ersten beiden Felder der Zeitleiste formatieren
                     rng = .Range(.Cells(rowOffset, columnOffset + 1), .Cells(rowOffset, columnOffset + 2))
                     rng.NumberFormat = "mmm-yy"
                     ' Die restliche Zeitleiste  formatieren
                     'rng = .range(.cells(startZeile, spalte), .cells(endZeile, spalte))
-                    destinationRange = .range(.Cells(rowOffset, columnOffset + 1), .Cells(rowOffset, columnOffset + 10))
+                    destinationRange = .range(.Cells(rowOffset, columnOffset + 1), .Cells(rowOffset, columnOffset + 200))
                     With destinationRange
                         .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
