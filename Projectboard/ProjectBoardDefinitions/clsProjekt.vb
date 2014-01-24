@@ -162,6 +162,8 @@ Public Class clsProjekt
 
     ''' <summary>
     ''' liefert zu einem gegebenen Meilenstein das definierte Datum zurück
+    ''' die Ampelfarbe wird ebenfalls in das Datum als Ablauf von Sekunden nach Mitternacht integriert
+    ''' 0-nicht bewertet, 1-grün, 2-gelb, 3-rot
     ''' Fehler, wenn Meilenstein nicht existiert
     ''' Existieren mehrere Meilensteine desselben Namens so wird nur der erste zurückgebracht 
     ''' </summary>
@@ -176,6 +178,8 @@ Public Class clsProjekt
             Dim cresult As clsResult
             Dim tmpDate As Date
             Dim p As Integer = 1
+            Dim colorIndex As Integer
+
 
             Do While p <= Me.CountPhases And Not found
 
@@ -183,8 +187,25 @@ Public Class clsProjekt
 
                 Try
                     cresult = cphase.getResult(milestoneName)
-                    tmpDate = Me.startDate.AddDays(cphase.startOffsetinDays + cresult.offset)
+                    Try
+                        colorIndex = cresult.getBewertung(1).colorIndex
+                    Catch ex1 As Exception
+                        colorIndex = 0
+                    End Try
+
+                    tmpDate = Me.startDate.AddDays(cphase.startOffsetinDays + cresult.offset).Date
+                    ' jetzt wird die Ampelfarbe ins Datum kodiert 
+                    tmpDate = tmpDate.AddSeconds(colorIndex)
                     found = True
+
+                    ' jetzt wird in das Datum kodiert, ob der Meilenstein abgeschlossen sein sollte
+                    ' wenn timestamp nach dem Meilenstein-Datum steht, sollte der Meilenstein abgeschlossen sein 
+                    If DateDiff(DateInterval.Day, Me.timeStamp, tmpDate) < 0 Then
+
+                        ' Meilenstein Datum liegt vor dem Datum, an dem dieser Planungs-Stand abgegeben wurde
+                        tmpDate = tmpDate.AddHours(6)
+
+                    End If
                 Catch ex As Exception
 
                 End Try

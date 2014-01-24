@@ -2643,23 +2643,28 @@ Public Module Projekte
         Dim i As Integer
         Dim Xdatenreihe() As String
         Dim tdatenreihe() As Double
+        Dim milestoneReached() As Boolean
+        Dim prevValueTaken() As Boolean
+        Dim ampelfarben() As Long
         Dim tmpdatenreihe() As Date
         Dim chtTitle As String
         Dim pkIndex As Integer = CostDefinitions.Count
-        Dim pstart As Integer
         Dim chtobj As Excel.ChartObject
         Dim ErgebnisListeR As New Collection
         Dim msName As String
         Dim zE As String = "(" & awinSettings.kapaEinheit & ")"
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
-        Dim heuteColumn As Integer
         Dim anzMilestones As Integer
+        Dim aufzeichnungsStart As Date
+        Dim earliestStart As Date
+        Dim von As Integer, bis As Integer
+
 
         Dim formerEE As Boolean = appInstance.EnableEvents
-        'Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
         appInstance.EnableEvents = False
-        'appInstance.ScreenUpdating = False
+
 
 
         Dim pname As String = hproj.name
@@ -2670,36 +2675,44 @@ Public Module Projekte
         titelTeilLaengen(1) = titelTeile(1).Length
         diagramTitle = titelTeile(0) & titelTeile(1)
         kennung = "MTA"
-        
-        If DateDiff(DateInterval.Month, projekthistorie.First.timeStamp, projekthistorie.beauftragung.timeStamp) < 0 Then
-            ' Beauftragung liegt vor Beginn der Aufzeichnung
-            pstart = getColumnOfDate(projekthistorie.First.timeStamp)
-        Else
-            ' Aufzeichnung liegt vor Beauftragung - also nehme den Beauftragungszeitpunkt
-            pstart = getColumnOfDate(projekthistorie.beauftragung.timeStamp)
-        End If
 
-        heuteColumn = getColumnOfDate(Date.Now)
+
+        ' neu - neu - neu - neu 
+
+        ' wann wurde mit der Aufzeichnung der Projekt-Historie begonnen ? 
+        aufzeichnungsStart = projekthistorie.ElementAt(0).timeStamp
 
         '
-        ' hole die Dimension 
+        ' bestimme den seit Beauftragung frühesten Start-Monat 
         '
+        Try
+            earliestStart = projekthistorie.beauftragung.startDate
+        Catch ex As Exception
+            ' wenn es noch keine Beauftragung gibt, wird das erste Element der Liste verwendet 
+            earliestStart = projekthistorie.ElementAt(0).timeStamp
+            projekthistorie.currentIndex = 0
+        End Try
 
-        plen = heuteColumn - pstart + 1
+
+        ' es beginnt entweder mit dem Monat, wo die Aufzeichnung begann oder mit dem Projekt-Start : nimm das größere von beidem 
+        von = System.Math.Max(getColumnOfDate(aufzeichnungsStart), getColumnOfDate(earliestStart))
+
+        ' es endet entweder mit heute oder dem Ende des Projektes : nimm das kleinere von beidem 
+        With hproj
+            bis = System.Math.Min(getColumnOfDate(Date.Now), getColumnOfDate(.startDate.AddDays(.dauerInDays - 1)))
+        End With
 
 
-        If plen < 0 Then
+        ' bestimme die Dimension
+        plen = bis - von + 1
+
+        ' wenn nicht mindestens zwei Elemente darstellbar sind, ist kein Trend darzustellen 
+        If plen < 2 Then
             appInstance.EnableEvents = formerEE
-            Throw New Exception("Start liegt in der Zukunft ...")
+            Throw New Exception("es gibt noch keinen Trend")
         End If
 
-
-        ' Korrektur von width:
-        If plen < 10 Then
-            width = 10 * boxWidth + 10
-        Else
-            width = plen * boxWidth + 10
-        End If
+        ' neu - neu - neu - neu 
 
 
         anzMilestones = myCollection.Count
@@ -2712,10 +2725,13 @@ Public Module Projekte
 
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
+        ReDim ampelfarben(plen - 1)
+        ReDim milestoneReached(plen - 1)
+        ReDim prevValueTaken(plen - 1)
 
 
         For i = 1 To plen
-            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy")
+            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(von + i - 2).ToString("MMM yy")
         Next i
 
 
@@ -2743,12 +2759,14 @@ Public Module Projekte
             End While
 
             If found Then
-                'Call MsgBox("Chart wird bereits angezeigt ...")
+
                 appInstance.EnableEvents = formerEE
-                'appInstance.ScreenUpdating = formerSU
+
                 repObj = .ChartObjects(i)
                 Exit Sub
             Else
+                appInstance.ScreenUpdating = False
+
                 With appInstance.Charts.Add
                     ' remove extra series
                     Do Until .SeriesCollection.Count = 0
@@ -2769,49 +2787,242 @@ Public Module Projekte
             End If
 
             Dim ms As Integer
-            With chtobj.Chart
+            With CType(chtobj.Chart, Excel.Chart)
 
                 .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                     titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
+                ' remove extra series
+                Do Until .SeriesCollection.Count = 0
+                    .SeriesCollection(1).Delete()
+                Loop
+
+                Dim colorIndex As Integer
+                Dim drawnDates As New SortedList(Of Date, Date)
+                Dim drawnMilestones As Integer = 0
+                Dim tmpMinScale As Date, tmpMaxScale As Date
+
+
                 For ms = 1 To anzMilestones
                     msName = myCollection.Item(ms)
 
+                    Try
+                        tmpdatenreihe = projekthistorie.getMtaDates(msName, von, bis)
+                        drawnMilestones = drawnMilestones + 1
 
-                    tmpdatenreihe = projekthistorie.getMtaDates(msName)
-                    'ReDim tdatenreihe(plen - 1)
-                    ReDim tdatenreihe(tmpdatenreihe.Length - 1)
-                    For qx = 0 To tmpdatenreihe.Length - 1
-                        tdatenreihe(qx) = tmpdatenreihe(qx).ToOADate
-                    Next
+                        ' tmpMinScale und tmpMaxScale werden zur Bestimmung des optimalen Skalierungsfaktors für das Diagramm benötigt 
+                        If ms = 1 Then
+                            tmpMinScale = tmpdatenreihe.Min
+                            tmpMaxScale = tmpdatenreihe.Max
+                        Else
+                            If tmpMinScale > tmpdatenreihe.Min Then
+                                tmpMinScale = tmpdatenreihe.Min
+                            End If
 
-                    'series
-                    With .SeriesCollection.NewSeries
-                        .name = msName
-                        'If ms = 1 Then
-                        '    .Interior.color = awinSettings.AmpelNichtBewertet
-                        'ElseIf ms = 2 Then
-                        '    .Interior.color = awinSettings.AmpelGruen
-                        'ElseIf ms = 3 Then
-                        '    .Interior.color = awinSettings.AmpelGelb
-                        'ElseIf ms = 4 Then
-                        '    .Interior.color = awinSettings.AmpelRot
-                        'Else
-                        '    .Interior.color = awinSettings.AmpelNichtBewertet
-                        'End If
+                            If tmpMaxScale < tmpdatenreihe.Max Then
+                                tmpMaxScale = tmpdatenreihe.Max
+                            End If
+                        End If
 
-                        .Values = tdatenreihe
-                        .XValues = Xdatenreihe
-                        .ChartType = Excel.XlChartType.xlLineMarkers
-                    End With
+                        ReDim tdatenreihe(tmpdatenreihe.Length - 1)
+                        For qx = 0 To tmpdatenreihe.Length - 1
+                            ' nur der Datums-Wert ohne Zeit-Anteil - die Farbe ist als Anzahl Sekunden nach Tagesstart in das Datum kodiert ...
+                            tdatenreihe(qx) = tmpdatenreihe(qx).Date.ToOADate
+
+                            ' prüfen, ob der Wert vonm Vormonat übernommen wurde 
+                            If DateDiff(DateInterval.Hour, tmpdatenreihe(qx).Date, tmpdatenreihe(qx)) > 11 Then
+                                prevValueTaken(qx) = True
+                                tmpdatenreihe(qx) = tmpdatenreihe(qx).AddHours(-12) ' Kodierung für "Wert des Vormonats" rausnehmen, sonst ist nachher Farbe auf alle Fälle rot
+                            Else
+                                prevValueTaken(qx) = False
+                            End If
+
+                            If DateDiff(DateInterval.Hour, tmpdatenreihe(qx).Date, tmpdatenreihe(qx)) = 6 Then
+                                milestoneReached(qx) = True
+                                tmpdatenreihe(qx) = tmpdatenreihe(qx).AddHours(-6) ' Kodierung für "milestone abgeschlossen" rausnehmen, sonst ist nachher Farbe auf alle Fälle rot
+                            Else
+                                milestoneReached(qx) = False
+                            End If
+
+                            colorIndex = DateDiff(DateInterval.Second, tmpdatenreihe(qx).Date, tmpdatenreihe(qx))
+                            If colorIndex = 0 Then
+                                ampelfarben(qx) = awinSettings.AmpelNichtBewertet
+                            ElseIf colorIndex = 1 Then
+                                ampelfarben(qx) = awinSettings.AmpelGruen
+                            ElseIf colorIndex = 2 Then
+                                ampelfarben(qx) = awinSettings.AmpelGelb
+                            Else
+                                ampelfarben(qx) = awinSettings.AmpelRot
+                            End If
+                        Next
+
+                        'series
+                        With CType(.SeriesCollection.NewSeries, Excel.Series)
+                            .Name = drawnMilestones.ToString & " - " & msName
+                            .ChartType = Excel.XlChartType.xlLineMarkers
+                            .Interior.Color = awinSettings.AmpelNichtBewertet
+                            .Values = tdatenreihe
+                            .XValues = Xdatenreihe
+                            .HasDataLabels = False
+                            .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleCircle
+                            .MarkerForegroundColor = awinSettings.AmpelNichtBewertet
+                            .MarkerBackgroundColor = awinSettings.AmpelNichtBewertet
+
+                            With .Format.Line
+                                .Visible = MsoTriState.msoTrue
+                                .ForeColor.RGB = awinSettings.AmpelNichtBewertet
+                                .DashStyle = MsoLineDashStyle.msoLineDashDot
+                            End With
+                        End With
+
+
+                        For px = 1 To tdatenreihe.Length
+                            With CType(.SeriesCollection(drawnMilestones).Points(px), Point)
+                                .Interior.Color = ampelfarben(px - 1)
+                                .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleCircle
+                                .MarkerForegroundColor = ampelfarben(px - 1)
+                                .MarkerBackgroundColor = ampelfarben(px - 1)
+                                .MarkerSize = 10
+
+                                ' Schreiben des ersten Planungs-Standes
+                                If px = 1 Then
+
+                                    ' wenn es der Wert aus dem Vormonat ist: einen kleineren Marker zeichnen 
+                                    If prevValueTaken(px - 1) Then
+                                        .MarkerSize = 5
+                                    End If
+
+                                    ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er auch so markiert
+                                    If milestoneReached(px - 1) Then
+                                        .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleSquare
+                                    End If
+
+                                    .HasDataLabel = True
+                                    If anzMilestones > 1 Then
+                                        .DataLabel.Text = drawnMilestones.ToString & " - " & tmpdatenreihe(px - 1).ToShortDateString
+                                    Else
+                                        .DataLabel.Text = msName & vbLf & tmpdatenreihe(px - 1).ToShortDateString
+                                    End If
+
+                                    .DataLabel.Font.Size = awinSettings.fontsizeItems
+                                    Try
+                                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionLeft
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    Try
+                                        drawnDates.Add(tmpdatenreihe(px - 1).Date, tmpdatenreihe(px - 1))
+                                    Catch ex As Exception
+
+                                    End Try
+
+
+                                End If
+
+                                ' wenn mittendrin Daten auftauchen, die noch nicht geschrieben wurden ... 
+                                If px > 1 And px < tdatenreihe.Length Then
+
+                                    ' wenn es der Wert aus dem Vormonat ist: einen kleineren Marker zeichnen 
+                                    If prevValueTaken(px - 1) Then
+                                        .MarkerSize = 5
+                                    End If
+
+                                    ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er auch so markiert
+                                    If milestoneReached(px - 1) Then
+                                        .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleSquare
+                                    End If
+
+                                    If Not drawnDates.ContainsKey(tmpdatenreihe(px - 1).Date) And _
+                                        tmpdatenreihe(px - 1).Date <> tmpdatenreihe(tdatenreihe.Length - 1).Date Then
+
+                                        .HasDataLabel = True
+                                        .DataLabel.Text = tmpdatenreihe(px - 1).ToShortDateString
+                                        '.DataLabel.Text = msName & ": " & tmpdatenreihe(px - 1).ToShortDateString
+                                        .DataLabel.Font.Size = awinSettings.fontsizeItems
+                                        Try
+                                            .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                        Try
+                                            drawnDates.Add(tmpdatenreihe(px - 1).Date, tmpdatenreihe(px - 1))
+                                        Catch ex As Exception
+
+                                        End Try
+
+
+                                    End If
+                                End If
+
+                                ' Schreiben des letzten Planungs-Standes
+                                If px > 1 And px = tdatenreihe.Length Then
+
+                                    ' wenn es der Wert aus dem Vormonat ist: einen kleineren Marker zeichnen 
+                                    If prevValueTaken(px - 1) Then
+                                        .MarkerSize = 5
+                                    End If
+
+                                    ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er auch so markiert
+                                    If milestoneReached(px - 1) Then
+                                        .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleSquare
+                                    End If
+
+                                    .HasDataLabel = True
+                                    If anzMilestones > 1 Then
+                                        .DataLabel.Text = drawnMilestones.ToString & " - " & tmpdatenreihe(px - 1).ToShortDateString
+                                    Else
+                                        .DataLabel.Text = msName & vbLf & tmpdatenreihe(px - 1).ToShortDateString
+                                    End If
+                                    .DataLabel.Font.Size = awinSettings.fontsizeItems
+                                    Try
+                                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionRight
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    Try
+                                        drawnDates.Add(tmpdatenreihe(px - 1).Date, tmpdatenreihe(px - 1))
+                                    Catch ex As Exception
+
+                                    End Try
+
+
+                                End If
+
+                            End With
+                        Next
+
+                        drawnDates.Clear()
+
+
+                    Catch ex As Exception
+
+                    End Try
+
+
+
 
                 Next ms
 
+                ' Bestimmen des optimlaen skalierungsfaktors 
+                Dim spread As Integer
+                spread = DateDiff(DateInterval.Day, tmpMinScale, tmpMaxScale) / 10
+                If spread < 1 Then
+                    spread = 1
+                End If
+
+                tmpMinScale = tmpMinScale.AddDays(-1 * spread)
+                tmpMaxScale = tmpMaxScale.AddDays(spread)
+
                 .HasAxis(Excel.XlAxisType.xlCategory) = True
-                .HasAxis(Excel.XlAxisType.xlValue) = True
+                .HasAxis(Excel.XlAxisType.xlValue) = False
 
                 With CType(.Axes(Excel.XlAxisType.xlCategory), Excel.Axis)
-                    .HasTitle = False
+                    .HasTitle = True
+                    .AxisTitle.Text = "Planungs-Stände"
+                    .AxisTitle.Format.TextFrame2.TextRange.Font.Size = 14
                     .BaseUnit = Excel.XlTimeUnit.xlMonths
                     .CategoryType = Excel.XlCategoryType.xlTimeScale
                 End With
@@ -2819,8 +3030,8 @@ Public Module Projekte
                 With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                     .HasMajorGridlines = False
                     .HasTitle = False
-                    .MaximumScale = hproj.startDate.AddDays(hproj.dauerInDays + 50).ToOADate
-                    .MinimumScale = hproj.startDate.ToOADate
+                    .MaximumScale = tmpMaxScale.ToOADate
+                    .MinimumScale = tmpMinScale.ToOADate
                     .MajorUnit = 61
 
                     Try
@@ -2829,43 +3040,38 @@ Public Module Projekte
 
                     End Try
 
-                    
+
                 End With
 
-                .HasLegend = True
-                With .Legend
-                    .Position = Excel.Constants.xlTop
-                    .Font.Size = awinSettings.fontsizeLegend
-                End With
+                If anzMilestones > 1 Then
+                    .HasLegend = True
+                    With .Legend
+                        .Position = Excel.Constants.xlTop
+                        .Font.Size = awinSettings.fontsizeLegend
+                    End With
+                Else
+                    .HasLegend = False
+                End If
 
+                
 
             End With
 
             ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
             With chtobj
                 .Top = top
-                .Height = 2 * height
-
-                Dim axleft As Double, axwidth As Double
-                If .Chart.HasAxis(Excel.XlAxisType.xlValue) = True Then
-                    With .Chart.Axes(Excel.XlAxisType.xlValue)
-                        axleft = .left
-                        axwidth = .width
-                    End With
-                    If left - axwidth < 1 Then
-                        left = 1
-                        width = width + left + 9
-                    Else
-                        left = left - axwidth
-                        width = width + axwidth + 9
-                    End If
-
-                End If
-
+                .Height = height
                 .Left = left
                 .Width = width
+            End With
 
-
+            With chtobj.Chart
+                ' jetzt wird die Plot-Area so verkleinert, daß links und rechts ausreichend Platz 
+                ' für die Bennenung der Meilensteine ist 
+                .PlotArea.Left = 0.2 * width
+                .PlotArea.Width = 0.8 * width
+                '.PlotArea.Height = 0.9 * height
+                '.PlotArea.Top = 0.08 * height
             End With
 
         End With
@@ -2874,7 +3080,7 @@ Public Module Projekte
 
         'Call awinScrollintoView()
         appInstance.EnableEvents = formerEE
-        'appInstance.ScreenUpdating = formerSU
+        appInstance.ScreenUpdating = formerSU
 
         repObj = chtobj
 

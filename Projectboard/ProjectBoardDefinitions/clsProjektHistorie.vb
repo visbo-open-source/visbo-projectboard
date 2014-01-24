@@ -127,77 +127,28 @@
 
     ''' <summary>
     ''' gibt für den Aufbau einer Milestone Trendanalyse einen Array mit den Plan-Daten eines ausgewählten Meilensteins zurück
-    ''' der array hat die Dimension (Start-Monat des Projektes) bis (aktueller Monat)
+    ''' der array hat die Dimension (Start-Monat des Projektes/Aufzeichnungs-Start) bis (aktueller Monat)
     ''' wenn es für einen bestimmten Monat keine Werte gibt, dann wird der Vormonats Wert genommen 
     ''' </summary>
     ''' <param name="milestoneName"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMtaDates(ByVal milestoneName As String) As Date()
+    Public ReadOnly Property getMtaDates(ByVal milestoneName As String, ByVal von As Integer, ByVal bis As Integer) As Date()
         Get
             Dim tmpValues As Date()
             Dim heute As Date = Date.Now
             Dim milestoneDate As Date
-            Dim beauftragung As clsProjekt
             Dim oldIndex As Integer = _currentIndex
-            Dim earliestStart As Date
             Dim laenge As Integer
-            Dim von As Integer, bis As Integer
             Dim currentproj As clsProjekt
-            Dim aufzeichnungsStart As Date
+
 
 
             Try
 
-                currentproj = Me.Last
-                beauftragung = Me.beauftragung
-
-                ' wann wurde mit der Aufzeichnung der Projekt-Historie begonnen ? 
-                aufzeichnungsStart = _liste.ElementAt(0).Key
-
-                '
-                ' bestimme den seit Beauftragung frühesten Start-Monat 
-                '
-                Try
-                    earliestStart = beauftragung.startDate
-                Catch ex As Exception
-                    ' wenn es noch keine Beauftragung gibt, wird das erste Element der Liste verwendet 
-                    earliestStart = _liste.ElementAt(0).Value.startDate
-                    _currentIndex = 0
-                End Try
-
-                For i = _currentIndex + 1 To _liste.Count - 1
-                    If DateDiff(DateInterval.Day, _liste.ElementAt(i).Value.startDate, earliestStart) > 0 Then
-                        earliestStart = _liste.ElementAt(i).Value.startDate
-                    End If
-                Next
-
-                ' jetzt wird geprüft, ob der Meilenstein bereits abgeschlossen ist 
-                ' das steuert  die Dimensionierung des Arrays
-                '
-                milestoneDate = currentproj.getMilestoneDate(milestoneName)
-
-                If DateDiff(DateInterval.Month, heute, milestoneDate) < 0 Then
-                    bis = getColumnOfDate(milestoneDate)
-                Else
-                    bis = getColumnOfDate(heute)
-                End If
-
-                ' jetzt wird geprüft, ob zum Beginn des Projektes bereits mit der Projekt-Tafel gearbeitet wurde 
-                ' das steuert  die Dimensionierung des Arrays
-                '
-                If DateDiff(DateInterval.Month, aufzeichnungsStart, earliestStart) < 0 Then
-                    von = getColumnOfDate(aufzeichnungsStart)
-                Else
-                    von = getColumnOfDate(earliestStart)
-                End If
-
+                ' bestimme die Dimension; es ist bereits sichergestellt, daß laenge > 0 ist 
                 laenge = bis - von
-
-                If laenge < 0 Then
-                    Throw New Exception("heute liegt vor Projekt-Start")
-                End If
 
                 ReDim tmpValues(laenge)
 
@@ -225,18 +176,14 @@
 
                         Catch ex As Exception
 
-                            ' in diesem Fall existiert in diesem Planungsstand der angegebene Meilenstein nicht 
-                            If i > 0 Then
-                                milestoneDate = tmpValues(i - 1)
-                            Else
-                                milestoneDate = awinSettings.nullDatum
-                            End If
+                            milestoneDate = awinSettings.nullDatum
 
                         End Try
                     Else
                         ' in diesem Fall wurde kein Planungs-Stand im gesuchten Monat gefunden ...
                         If i > 0 Then
-                            milestoneDate = tmpValues(i - 1)
+                            ' jetzt wird gekennzeichnet, dass einfach die Bewertung des Vormonats übernommen wurde: + 12 Std
+                            milestoneDate = tmpValues(i - 1).AddHours(12)
                         Else
                             milestoneDate = awinSettings.nullDatum
                         End If

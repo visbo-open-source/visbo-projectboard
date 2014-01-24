@@ -117,6 +117,7 @@ namespace WpfWindow
 
                                 myCollection.Add(name, name);
                                 object repObj = null;
+                                
                                 awinDiagrams.awinCreateprcCollectionDiagram(ref myCollection, ref repObj, chTop, chLeft,
                                                                                chWidth, chHeight, false, chTyp, false);
 
@@ -175,7 +176,7 @@ namespace WpfWindow
                 {
                     
                     VBCollection myCollection = new VBCollection();
-                    
+                    clsProjekt hproj = Module1.selectedProjekte.get_getProject(1);
 
                     foreach (string name in this.listbox.SelectedItems)
                     {
@@ -183,7 +184,10 @@ namespace WpfWindow
                     }
 
                     // hier wird die Aktion durchgeführt 
-                    
+                    object repObj = null;
+                    Projekte.createMsTrendAnalysisOfProject(ref hproj, ref repObj, ref myCollection, this.chTop, this.chLeft, this.chHeight, this.chWidth);
+
+                    //clsProjekt hproj = Module1.selectedProjekte.get_getProject(1);
 
                     Module1.appInstance.EnableEvents = true;
                     Module1.enableOnUpdate = true;

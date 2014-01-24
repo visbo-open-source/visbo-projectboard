@@ -1750,11 +1750,11 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
 
                 Try
-                    If Not kvp.Value.isConsistent Then
+                    'If Not kvp.Value.isConsistent Then
 
-                        Call MsgBox("Inkonsistent: " & kvp.Value.name)
+                    'Call MsgBox("Inkonsistent: " & kvp.Value.name)
 
-                    End If
+                    'End If
 
                     ShowProjekte.Add(kvp.Value)
                     Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile, False)

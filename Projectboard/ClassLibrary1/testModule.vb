@@ -150,6 +150,7 @@ Public Module testModule
                     If kennzeichnung = "Projekt-Name" Or _
                         kennzeichnung = "Soll-Ist & Prognose" Or _
                         kennzeichnung = "Projekt-Grafik" Or _
+                        kennzeichnung = "Meilenstein Trendanalyse" Or _
                         kennzeichnung = "Vergleich mit letztem Stand" Or _
                         kennzeichnung = "Vergleich mit Vorlage" Or _
                         kennzeichnung = "Tabelle Projektziele" Or _
@@ -290,6 +291,61 @@ Public Module testModule
                                 Try
 
                                     Call zeichneProjektGrafik(pptSlide, pptShape, hproj)
+
+                                Catch ex As Exception
+
+                                End Try
+
+                            Case "Meilenstein Trendanalyse"
+
+                                Dim nameList As New SortedList(Of Date, String)
+                                Dim listOfItems As New Collection
+
+                                Try
+                                    ' Aufruf 
+                                    If qualifier = "" Then
+                                        ' alle Meilensteine anzeigen
+                                        nameList = hproj.getMilestones
+
+                                        If nameList.Count > 0 Then
+                                            For Each kvp As KeyValuePair(Of Date, String) In nameList
+                                                listOfItems.Add(kvp.Value)
+                                            Next
+                                        End If
+
+
+                                    Else
+                                        ' nur die anzeigen, die im qualifier mit # voneinander getrennt stehen  
+                                        Dim tmpStr(20) As String
+                                        Try
+
+                                            tmpStr = qualifier.Trim.Split(New Char() {"(", ")"}, 20)
+                                            kennzeichnung = tmpStr(0).Trim
+
+                                        Catch ex As Exception
+                                            
+                                        End Try
+
+                                        For i = 1 To tmpStr.Count
+                                            listOfItems.Add(tmpStr(i - 1).Trim)
+                                        Next
+
+                                    End If
+
+                                    ' jetzt ist listofItems entsprechend gefüllt 
+                                    If listOfItems.Count > 0 Then
+                                        htop = 100
+                                        hleft = 50
+                                        hheight = 2 * ((listOfItems.Count - 1) * 20 + 110)
+                                        hwidth = System.Math.Max(hproj.Dauer * boxWidth + 10, 24 * boxWidth + 10)
+
+                                        Call createMsTrendAnalysisOfProject(hproj, obj, listOfItems, htop, hleft, hheight, hwidth)
+
+                                        reportObj = obj
+                                        notYetDone = True
+                                    Else
+                                        .TextFrame2.TextRange.Text = "es gibt keine Meilensteine im Projekt" & vbLf & hproj.name
+                                    End If
 
                                 Catch ex As Exception
 

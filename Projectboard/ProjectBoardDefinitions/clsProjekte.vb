@@ -196,6 +196,24 @@
 
     End Property
 
+    ''' <summary>
+    ''' gibt das Element an der Stelle mit Index zurück; das 1. Element hat den Index 1
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProject(index As Integer) As clsProjekt
+        Get
+            Try
+                getProject = AllProjects.ElementAt(index - 1).Value
+            Catch ex As Exception
+                Throw New ArgumentException("Index nicht vorhanden:" & index.ToString)
+            End Try
+        End Get
+    End Property
+
+
     Public ReadOnly Property getProject(projectname As String) As clsProjekt
 
         Get

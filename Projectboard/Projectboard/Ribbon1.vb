@@ -2293,7 +2293,7 @@ Imports Microsoft.Office.Interop.Excel
 
         If Not awinSelection Is Nothing Then
 
-
+            ' eingangs-prüfung, ob auch nur ein Element selektiert wurde ...
             If awinSelection.Count = 1 Then
                 ' Aktion durchführen ...
 
@@ -2304,16 +2304,9 @@ Imports Microsoft.Office.Interop.Excel
                     nameList = hproj.getMilestones
 
                     ' jetzt muss die ProjektHistorie aufgebaut werden 
-
                     With hproj
                         pName = .name
                         variantName = .variantName
-                        'Try
-                        '    variantName = .variantName.Trim
-                        'Catch ex As Exception
-                        '    variantName = ""
-                        'End Try
-
                     End With
 
                     If Not projekthistorie Is Nothing Then
@@ -2340,7 +2333,7 @@ Imports Microsoft.Office.Interop.Excel
 
                         appInstance.EnableEvents = False
                         enableOnUpdate = False
-                        appInstance.ScreenUpdating = False
+
                         repObj = Nothing
 
 
@@ -2354,28 +2347,36 @@ Imports Microsoft.Office.Interop.Excel
                             left = .Left - 5
                         End With
 
-                        height = (nameList.Count - 1) * 20 + 110
-                        width = hproj.Dauer * boxWidth + 10
+                        height = 2 * ((nameList.Count - 1) * 20 + 110)
+                        width = System.Math.Max(hproj.Dauer * boxWidth + 10, 24 * boxWidth + 10)
 
-                        Try
-                            Call createMsTrendAnalysisOfProject(hproj, repObj, listOfItems, top, left, height, width)
-                        Catch ex As Exception
-                            Call MsgBox("Diagramm konnte nicht erzeugt werden ...")
-                        End Try
+                        'Try
+
+                        '    Call createMsTrendAnalysisOfProject(hproj, repObj, listOfItems, top, left, height, width)
+
+                        'Catch ex As Exception
+
+                        '    Call MsgBox(ex.Message)
+
+                        'End Try
 
 
 
                         ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-                        'Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+                        Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
 
 
-                        'With auswahlFenster
+                        With auswahlFenster
 
-                        '    .kennung = " "
-                        '    .chTyp = DiagrammTypen(6)
+                            .kennung = " "
+                            .chTyp = DiagrammTypen(6)
+                            .chTop = top
+                            .chLeft = left
+                            .chWidth = width
+                            .chHeight = height
 
-                        'End With
-                        'auswahlFenster.Show()
+                        End With
+                        auswahlFenster.Show()
 
                     Else
                         Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
@@ -2396,7 +2397,6 @@ Imports Microsoft.Office.Interop.Excel
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
-        appInstance.ScreenUpdating = True
 
 
 
