@@ -1631,7 +1631,8 @@ Public Module awinGeneralModules
                                 isPhase = True
                                 cphase = hproj.getPhase(objectName)
                                 If IsNothing(cphase) Then
-                                    Throw New Exception("Phase '" & objectName & "' ist nicht definiert!")
+                                    Throw New Exception("Phase '" & objectName & "' ist nicht definiert!" & vbLf &
+                                                        "Bitte löschen Sie diese Phase aus '" & hproj.name & "'.xlsx, Tabellenblatt 'Termine'")
                                 End If
                             End If
 
