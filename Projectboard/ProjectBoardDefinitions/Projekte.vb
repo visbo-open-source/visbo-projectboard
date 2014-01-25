@@ -2699,7 +2699,7 @@ Public Module Projekte
 
         ' es endet entweder mit heute oder dem Ende des Projektes : nimm das kleinere von beidem 
         With hproj
-            bis = System.Math.Min(getColumnOfDate(Date.Now), getColumnOfDate(.startDate.AddDays(.dauerInDays - 1)))
+            bis = System.Math.Min(getColumnOfDate(Date.Now), getColumnOfDate(.endeDate))
         End With
 
 
@@ -6418,12 +6418,11 @@ Public Module Projekte
 
 
         Dim cphase As clsPhase
-        Dim phaseStart As Date
+
         Dim resultDate As Date
 
         For p = 1 To hproj.CountPhases
             cphase = hproj.getPhase(p)
-            phaseStart = hproj.startDate.AddMonths(cphase.relStart - 1)
             For r = 1 To cphase.CountResults
 
                 With cphase.getResult(r)
@@ -8863,7 +8862,7 @@ Public Module Projekte
             For p = 1 To hproj.CountPhases
 
                 Dim cphase As clsPhase = hproj.getPhase(p)
-                Dim phaseStart As Date = hproj.startDate.AddMonths(cphase.relStart - 1)
+
 
                 For r = 1 To cphase.CountResults
                     Dim cResult As clsResult
@@ -8872,18 +8871,14 @@ Public Module Projekte
 
                     cResult = cphase.getResult(r)
 
-                    Try
-                        nameIstInListe = namenListe.ContainsKey(cResult.name)
-                    Catch ex As Exception
+                    If namenListe.ContainsKey(cResult.name) Then
+                        nameIstInListe = True
+                    Else
                         nameIstInListe = False
-                    End Try
+                    End If
 
                     cBewertung = cResult.getBewertung(1)
-                    'Try
-                    '    cBewertung = cResult.getBewertung(1)
-                    'Catch ex As Exception
-                    '    cBewertung = New clsBewertung
-                    'End Try
+                    
 
                     resultColumn = getColumnOfDate(cResult.getDate)
 
@@ -11088,11 +11083,10 @@ Public Module Projekte
                                     Dim startOffset As Integer
                                     Dim dauerIndays As Integer
                                     startOffset = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
-                                    dauerIndays = DateDiff(DateInterval.Day, hproj.startDate.AddMonths(anfang - 1), hproj.startDate.AddMonths(ende).AddDays(-1)) + 1
+                                    dauerIndays = calcDauerIndays(hproj.startDate, ende, True)
+
 
                                     .changeStartandDauer(startOffset, dauerIndays)
-                                    '.relStart = anfang
-                                    '.relEnde = ende
                                     .Offset = 0
                                 End With
 
@@ -11821,8 +11815,6 @@ Public Module Projekte
 
             If ok Then
 
-                ' Änderung - braucht man hier nicht ... 
-                ' cPhase = New clsPhase(hproj)
                 Try
                     phaseName = tmpstr(1).Trim
                     cPhase = hproj.getPhase(phaseName)
@@ -11830,39 +11822,46 @@ Public Module Projekte
                     resultName = .Title
                     cResult = cPhase.getResult(resultName)
 
-                    With formMilestone
-                        .bewertungsListe = cResult.bewertungsListe
-                        .projectName.Text = hproj.name
-                        .phaseName.Text = cPhase.name
+                    If IsNothing(cResult) Then
+                    Else
 
-                        .resultDate.Text = cResult.getDate.ToShortDateString
-                        .resultName.Text = cResult.name
+                        With formMilestone
+                            .bewertungsListe = cResult.bewertungsListe
+                            .projectName.Text = hproj.name
+                            .phaseName.Text = cPhase.name
 
-
-                        If .bewertungsListe.Count > 0 Then
-                            Dim hb As clsBewertung = .bewertungsListe.ElementAt(0).Value
-
-                            Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(hb.color)
-
-                            .bewertungsText.Text = hb.description
+                            .resultDate.Text = cResult.getDate.ToShortDateString
+                            .resultName.Text = cResult.name
 
 
-                        Else
+                            If .bewertungsListe.Count > 0 Then
+                                Dim hb As clsBewertung = .bewertungsListe.ElementAt(0).Value
 
-                            Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(awinSettings.AmpelNichtBewertet)
+                                Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(hb.color)
 
-                            .bewertungsText.Text = "es existiert noch keine Bewertung ...."
+                                .bewertungsText.Text = hb.description
 
 
-                        End If
+                            Else
 
-                        If .Visible Then
-                        Else
-                            .Visible = True
-                            .Show()
-                        End If
+                                Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(awinSettings.AmpelNichtBewertet)
 
-                    End With
+                                .bewertungsText.Text = "es existiert noch keine Bewertung ...."
+
+
+                            End If
+
+                            If .Visible Then
+                            Else
+                                .Visible = True
+                                .Show()
+                            End If
+
+                        End With
+
+
+                    End If
+
 
 
 
@@ -11924,8 +11923,9 @@ Public Module Projekte
                 phaseName = tmpstr(1).Trim
                 cPhase = hproj.getPhase(phaseName)
                 'phaseStartdate = hproj.startDate.AddMonths(cPhase.relStart - 1)
-                phaseStartdate = hproj.startDate.AddDays(cPhase.startOffsetinDays)
-                phaseEnddate = hproj.startDate.AddDays(cPhase.startOffsetinDays + cPhase.dauerInDays - 1)
+
+                phaseStartdate = cPhase.getStartDate
+                phaseEnddate = cPhase.getEndDate
                 phaseDauerDays = cPhase.dauerInDays
 
 

@@ -3472,6 +3472,17 @@ Public Module testModule
     End Sub
 
 
+    ''' <summary>
+    ''' zeichnet in die Shape Tabelle die Projekt Termin-Änderungen 
+    ''' übergeben wird cproj asl current Projekt
+    ''' bproj als das Projekt, das den Stand zur Beauftragung repräsentierte
+    ''' lproj als das Projekt, das den letzten Stand repräsentiert
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="cproj"></param>
+    ''' <param name="bproj"></param>
+    ''' <param name="lproj"></param>
+    ''' <remarks></remarks>
     Sub zeichneProjektTerminAenderungen(ByRef pptShape As pptNS.Shape, ByVal cproj As clsProjekt, ByVal bproj As clsProjekt, ByVal lproj As clsProjekt)
 
         Dim heute As Date = Date.Now
@@ -3591,25 +3602,28 @@ Public Module testModule
                     cResult = cphase.getResult(r)
                     currentDate = cResult.getDate
 
+                    If IsNothing(bphase) Then
+                    Else
 
-                    Try
+                    End If
 
-                        bResult = bphase.getResult(cResult.name)
+                    bResult = bphase.getResult(cResult.name)
+                    If IsNothing(bResult) Then
+                        bdiff = -9999
+                    Else
                         bDate = bResult.getDate
                         bdiff = DateDiff(DateInterval.Day, bDate, currentDate)
+                    End If
 
-                    Catch ex As Exception
 
-                    End Try
-
-                    Try
-                        lResult = lphase.getResult(cResult.name)
+                    lResult = lphase.getResult(cResult.name)
+                    If IsNothing(lResult) Then
+                        ldiff = -9999
+                    Else
                         lDate = lResult.getDate
                         ldiff = DateDiff(DateInterval.Day, lDate, currentDate)
+                    End If
 
-                    Catch ex As Exception
-
-                    End Try
 
                     cBewertung = cResult.getBewertung(1)
                     'Try
