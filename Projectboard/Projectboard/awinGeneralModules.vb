@@ -1183,7 +1183,7 @@ Public Module awinGeneralModules
                 hproj.startDate = CType(.Range("StartDatum").Value, Date)
 
                 ' Ende
-                endedateProjekt = CType(.Range("EndeDatum").Value, Date)
+                endedateProjekt = CType(.Range("EndeDatum").Value, Date)  ' Projekt-Ende für spätere Verwendung merken
                 ProjektdauerIndays = DateDiff(DateInterval.Day, CType(.Range("StartDatum").Value, Date), CType(.Range("EndeDatum").Value, Date)) + 1
                 Dim startOffset As Integer = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(0))
 
@@ -1267,7 +1267,7 @@ Public Module awinGeneralModules
                 '    hproj.volume = 10 ' Default
                 'End Try
 
-              
+
 
             End With
         Catch ex As Exception
@@ -1368,7 +1368,7 @@ Public Module awinGeneralModules
                     Else
                     End If
 
-                
+
                     If Len(phaseName) > 0 And Len(hname) > 0 Then
                         chkPhase = True
                         chkRolle = True
@@ -1705,7 +1705,7 @@ Public Module awinGeneralModules
 
                                     ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
                                     If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
-                                        resultDate = hproj.startDate.Adddays(cphase.startOffsetinDays+cphase.dauerInDays)
+                                        resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
                                     Else
                                         If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
                                             Call MsgBox("der Meilenstein '" & resultName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
