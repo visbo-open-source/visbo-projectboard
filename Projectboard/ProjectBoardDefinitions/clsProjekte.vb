@@ -90,13 +90,64 @@
 
     End Sub
 
+
+    ''' <summary>
+    ''' gibt eine sortierte Liste der vorkommenden Phasen Namen in der Menge von Projekten zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseNames() As SortedList(Of String, String)
+
+        Get
+
+            Dim tmpListe As New SortedList(Of String, String)
+            Dim cphase As clsPhase
+            
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+
+                Try
+                    ' beginnt bei 2, weil die 1.Phase immer die mit der Projektlänge identische Phase ist ...
+                    For p = 2 To kvp.Value.CountPhases
+
+                        cphase = kvp.Value.getPhase(p)
+                        
+                            Try
+                            tmpListe.Add(cphase.name, cphase.name)
+                            Catch ex1 As Exception
+
+                            End Try
+
+
+
+                    Next
+                Catch ex As Exception
+
+                End Try
+
+
+            Next
+
+            getPhaseNames = tmpListe
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt eine Liste der vorkommenden Meilenstein Namen in der Menge von Projekte zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getMilestoneNames() As SortedList(Of String, String)
 
         Get
 
             Dim tmpListe As New SortedList(Of String, String)
             Dim cphase As clsPhase
-            Dim cresult As clsResult
+
+            Dim msName As String
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
 
@@ -106,12 +157,11 @@
                         cphase = kvp.Value.getPhase(p)
                         For r = 1 To cphase.CountResults
 
-                            cresult = cphase.getResult(r)
-                            Try
-                                tmpListe.Add(cresult.name, cresult.name)
-                            Catch ex1 As Exception
-
-                            End Try
+                            msName = cphase.getResult(r).name
+                            If tmpListe.ContainsKey(msName) Then
+                            Else
+                                tmpListe.Add(msName, msName)
+                            End If
 
                         Next
 
@@ -145,6 +195,24 @@
         End Get
 
     End Property
+
+    ''' <summary>
+    ''' gibt das Element an der Stelle mit Index zurück; das 1. Element hat den Index 1
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProject(index As Integer) As clsProjekt
+        Get
+            Try
+                getProject = AllProjects.ElementAt(index - 1).Value
+            Catch ex As Exception
+                Throw New ArgumentException("Index nicht vorhanden:" & index.ToString)
+            End Try
+        End Get
+    End Property
+
 
     Public ReadOnly Property getProject(projectname As String) As clsProjekt
 
@@ -224,11 +292,100 @@
             Next
 
             withinTimeFrame = tmpListe
+
         End Get
     End Property
-    '
-    ' gibt einen Array zurück, der angibt, wie oft die angegebene Phase vorkommt
-    '
+
+    ''' <summary>
+    ''' gibt einen Array zurück, der angibt wie oft der übergebene Milestone im jeweiligen Monat vorkommt 
+    ''' showrangeleft und showrangeright spannen den Betrachtungszeitraum auf
+    ''' es wird ein Array der Dimension (3,zeitraum) zurückgegeben: 
+    ''' 0: nicht bewertet, 1: grün, 2:gelb, 3: rot
+    ''' </summary>
+    ''' <param name="milestoneName">Name des Meilensteins</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCountMilestonesInMonth(milestoneName As String) As Double(,)
+        Get
+
+            Dim milestoneValues(,) As Double
+            Dim zeitraum As Integer
+            Dim anzProjekte As Integer
+
+            Dim cphase As clsPhase
+            Dim cresult As clsResult
+            Dim hproj As clsProjekt
+            Dim milestoneDate As Date
+            Dim ix As Integer
+            Dim idFarbe As Integer
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim milestoneValues(3, zeitraum)
+
+            anzProjekte = AllProjects.Count
+
+            ' Schleife über alle Projekte 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+
+                hproj = kvp.Value
+
+                ' alle Phasen durchgehen und nach dem Meilenstein-Namen suchen 
+                Dim p As Integer
+                For p = 1 To hproj.CountPhases
+
+                    Try
+
+                        cphase = hproj.getPhase(p)
+                        cresult = cphase.getResult(milestoneName)
+                        milestoneDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cresult.offset)
+
+                        ' bestimme den monatsbezogenen Index im Array 
+                        ix = getColumnOfDate(milestoneDate) - showRangeLeft
+
+                        If ix >= 0 And ix <= zeitraum Then
+                            ' bestimme des farbbezogenen Index im Array
+
+                            idFarbe = cresult.getBewertung(1).colorIndex
+                            'Try
+                            '    idFarbe = cresult.getBewertung(1).colorIndex
+                            'Catch ex As Exception
+                            '    ' wenn es noch keine Bewertung gibt ...
+                            '    idFarbe = 0
+                            'End Try
+
+                            milestoneValues(idFarbe, ix) = milestoneValues(idFarbe, ix) + 1
+
+                        End If
+                       
+
+                    Catch ex As Exception
+                        ' in dieser Phase gibt es diesen Meilenstein nicht - 
+                        ' also einfach weitermachen 
+                    End Try
+
+                Next
+
+
+            Next kvp
+
+
+            getCountMilestonesInMonth = milestoneValues
+
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt einen Array zurück, der angibt, wie oft die angegebene Phase vorkommt
+    ''' showrangeleft und showrangeright spannen den Betrachtungszeitraum auf 
+    ''' </summary>
+    ''' <param name="phaseName">Name der Phase</param>
+    ''' <value></value>
+    ''' <returns>gibt einen Array der Länge (showrangeright-showrangeleft+1) zurück </returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getCountPhasesInMonth(phaseName As String) As Double()
 
         Get
@@ -262,7 +419,7 @@
 
                 hproj = kvp.Value
 
-                
+
 
                 Try
                     hphase = hproj.getPhase(phaseName)
@@ -526,7 +683,7 @@
                         colorsInMonth(i) = 0
                     Next
                 End If
-                
+
             End If
 
 

@@ -116,13 +116,14 @@ Public Module awinGeneralModules
         DiagrammTypen(3) = "Portfolio"
         DiagrammTypen(4) = "Ergebnis"
         DiagrammTypen(5) = "Meilenstein"
+        DiagrammTypen(6) = "Meilenstein Trendanalyse"
 
         ergebnisChartName(0) = "Earned Value"
         ergebnisChartName(1) = "Earned Value - gewichtet"
         ergebnisChartName(2) = "Verbesserungs-Potential"
         ergebnisChartName(3) = "Risiko-Abschlag"
 
-        ReDim portfolioDiagrammtitel(11)
+        ReDim portfolioDiagrammtitel(12)
         portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
@@ -135,6 +136,8 @@ Public Module awinGeneralModules
         portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
         portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
         portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
+        portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
+
 
         windowNames(0) = "Cockpit Phasen"
         windowNames(1) = "Cockpit Rollen"
@@ -760,7 +763,9 @@ Public Module awinGeneralModules
 
 
         Try
-            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Tabelle1"), _
+            'Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Tabelle1"), _
+            '                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.ActiveSheet, _
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
             With activeWSListe
 
@@ -795,7 +800,7 @@ Public Module awinGeneralModules
                     startDate = CDate(activeWSListe.Cells(zeile, 3).value)
                     endDate = CDate(activeWSListe.Cells(zeile, 4).value)
 
-                    duration = DateDiff(DateInterval.Day, startDate, endDate)
+                    duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
                     If duration < 0 Then
                         startDate = endDate
                         duration = -1 * duration
@@ -913,7 +918,7 @@ Public Module awinGeneralModules
                     cphase = New clsPhase(parent:=hproj)
                     cphase.name = pName
                     startoffset = 0
-                    duration = DateDiff(DateInterval.Day, startDate, endDate)
+                    duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
                     cphase.changeStartandDauer(startoffset, duration)
 
                     cresult = New clsResult(parent:=cphase)
@@ -932,7 +937,7 @@ Public Module awinGeneralModules
                     cphase = New clsPhase(parent:=hproj)
                     cphase.name = "SOP"
                     startoffset = DateDiff(DateInterval.Day, hproj.startDate, tmpStartSop)
-                    duration = DateDiff(DateInterval.Day, tmpStartSop, sopDate)
+                    duration = DateDiff(DateInterval.Day, tmpStartSop, sopDate) + 1
                     cphase.changeStartandDauer(startoffset, duration)
                     hproj.AddPhase(cphase)
 
@@ -997,11 +1002,11 @@ Public Module awinGeneralModules
                         pStartDate = CDate(.Cells(i, 3).value)
                         pEndDate = CDate(.Cells(i, 4).value)
                         startoffset = DateDiff(DateInterval.Day, hproj.startDate, pStartDate)
-                        duration = DateDiff(DateInterval.Day, pStartDate, pEndDate)
+                        duration = DateDiff(DateInterval.Day, pStartDate, pEndDate) + 1
 
-                        ' es werden nur Phasen aufgenommen, die auch tasächlich eine Länge haben  
+                        ' es werden nur Phasen aufgenommen, die auch tasächlich eine Länge über einen Tag haben  
 
-                        If duration > 0 Then
+                        If duration > 1 Then
                             cphase.changeStartandDauer(startoffset, duration)
                             hproj.AddPhase(cphase)
                         End If
@@ -1355,8 +1360,7 @@ Public Module awinGeneralModules
                                         Dim startOffset As Integer = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
                                         Dim dauerIndays As Integer = DateDiff(DateInterval.Day, hproj.startDate.AddDays(startOffset), hproj.startDate.AddMonths(ende - 1).AddDays(-1)) + 1
                                         .changeStartandDauer(startOffset, dauerIndays)
-                                        '.relStart = anfang
-                                        '.relEnde = ende
+                                        
                                         .Offset = 0
                                     End With
 
@@ -1552,12 +1556,12 @@ Public Module awinGeneralModules
                             Dim offset As Integer
 
 
-                            duration = DateDiff(DateInterval.Day, startDate, endeDate)
+                            duration = DateDiff(DateInterval.Day, startDate, endeDate) + 1
                             offset = DateDiff(DateInterval.Day, hproj.startDate, startDate)
 
                             ' controlDate = hproj.startDate.AddDays(offset + duration)
 
-                            If duration < 0 Or offset < 0 Then
+                            If duration < 1 Or offset < 0 Then
                                 Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
                                                     offset.ToString & ", " & duration.ToString)
                             End If
@@ -1579,7 +1583,8 @@ Public Module awinGeneralModules
 
                                 ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
                                 If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
-                                    resultDate = hproj.startDate.AddMonths(hproj.getPhase(phaseName).relEnde).AddDays(-3)
+                                    'resultDate = hproj.startDate.AddMonths(hproj.getPhase(phaseName).relEnde).AddDays(-3)
+                                    resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
                                 End If
 
                                 ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
@@ -1745,6 +1750,12 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
 
                 Try
+                    'If Not kvp.Value.isConsistent Then
+
+                    'Call MsgBox("Inkonsistent: " & kvp.Value.name)
+
+                    'End If
+
                     ShowProjekte.Add(kvp.Value)
                     Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile, False)
 

@@ -115,6 +115,7 @@ Public Module Module1
         ErgebnisWasserfall = 9
         ComplexRisiko = 10
         ZeitRisiko = 11
+        Meilenstein = 12
     End Enum
 
     
@@ -129,6 +130,14 @@ Public Module Module1
         projektampel = 7
         resultampel = 8
         phasen = 9
+    End Enum
+
+    ' Enumeration für die Farbe 
+    Public Enum PTfarbe
+        none = 0
+        green = 1
+        yellow = 2
+        red = 3
     End Enum
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
@@ -193,7 +202,7 @@ Public Module Module1
     ' portfolio
 
     ' Variable nimmt die Namen der Diagramm-Typen auf 
-    Public DiagrammTypen(5) As String
+    Public DiagrammTypen(6) As String
 
     ' Variable nimmt die Namen der Windows auf  
     Public windowNames(5) As String

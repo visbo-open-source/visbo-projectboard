@@ -687,9 +687,11 @@ Public Module awinDiagrams
         Dim nr_pts As Integer
         Dim diagramTitle As String
         Dim objektFarbe As Object
+        Dim ampelfarbe(3) As Long
         Dim Xdatenreihe() As String
         Dim datenreihe() As Double, edatenreihe() As Double, seriesSumDatenreihe() As Double
         Dim kdatenreihe() As Double ' nimmt die Kapa-Werte für das Diagramm auf
+        Dim msdatenreihe(,) As Double
         Dim prcName As String
         Dim startdate As Date
         Dim diff As Object
@@ -712,9 +714,13 @@ Public Module awinDiagrams
         ' Farbe Null auf Standard zuweisen; wird dann später überschrieben; dient hier nur als definierter Start-Wert
         objektFarbe = 0
 
-
-
-
+        With awinSettings
+            ampelfarbe(0) = .AmpelNichtBewertet
+            ampelfarbe(1) = .AmpelGruen
+            ampelfarbe(2) = .AmpelGelb
+            ampelfarbe(3) = .AmpelRot
+        End With
+        
         von = showRangeLeft
         bis = showRangeRight
         einheit = " "
@@ -726,15 +732,15 @@ Public Module awinDiagrams
         ReDim kdatenreihe(bis - von)
         ReDim seriesSumDatenreihe(bis - von)
         ReDim VarValues(bis - von)
+        ReDim msdatenreihe(3, bis - von)
 
 
 
         If myCollection.Count = 0 Then
-            MsgBox("keine Phase / Rolle / Kostenart / Ergebnisart ausgewählt ...")
+            MsgBox("keine Phase / Rolle / Kostenart / Ergebnisart / Meilenstein ausgewählt ...")
             Exit Sub
         End If
 
-        'StartofCalendar = "1.1.2012"
         diff = -1
         startdate = StartofCalendar.AddMonths(diff)
 
@@ -780,6 +786,16 @@ Public Module awinDiagrams
         ElseIf prcTyp = DiagrammTypen(4) Then
             chtobjName = "Ergebnis-Übersicht"
             diagramTitle = "Ergebnis-Übersicht"
+
+        ElseIf prcTyp = DiagrammTypen(5) Then
+            chtobjName = getKennung("pf", PTpfdk.Meilenstein, myCollection)
+
+            If myCollection.Count > 1 Then
+                diagramTitle = portfolioDiagrammtitel(PTpfdk.Meilenstein)
+            Else
+                diagramTitle = myCollection.Item(1)
+            End If
+
         Else
             chtobjName = "Übersicht"
             diagramTitle = "Übersicht"
@@ -934,6 +950,10 @@ Public Module awinDiagrams
                                 isWeightedValues = False
                             End If
 
+                        ElseIf prcTyp = DiagrammTypen(5) Then
+
+                            einheit = " "
+                            msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName)
 
                         End If
 
@@ -962,23 +982,57 @@ Public Module awinDiagrams
                                 .HasDataLabels = False
                             End With
                         Else
-                            With .SeriesCollection.NewSeries
-                                
-                                .name = prcName
-                                .Interior.color = objektFarbe
-                                .Values = datenreihe
-                                .XValues = Xdatenreihe
-                                If myCollection.Count = 1 Then
-                                    If isWeightedValues Then
+
+                            If prcTyp = DiagrammTypen(5) Then
+
+                                For c = 0 To 3
+
+                                    For i = 0 To bis - von
+                                        datenreihe(i) = msdatenreihe(c, i)
+                                    Next
+
+                                    With .SeriesCollection.NewSeries
+                                        If c = 0 Then
+                                            .name = prcName & ", ohne Ampel"
+                                        ElseIf c = 1 Then
+                                            .name = prcName & ", grüne Ampel"
+                                        ElseIf c = 2 Then
+                                            .name = prcName & ", gelbe Ampel"
+                                        Else
+                                            .name = prcName & ", rote Ampel"
+                                        End If
+                                        .Interior.color = ampelfarbe(c)
+                                        .Values = datenreihe
+                                        .XValues = Xdatenreihe
                                         .ChartType = Excel.XlChartType.xlColumnStacked
+                                        .HasDataLabels = False
+                                    End With
+
+
+                                Next
+
+                            Else
+
+                                With .SeriesCollection.NewSeries
+                                    .name = prcName
+                                    .Interior.color = objektFarbe
+                                    .Values = datenreihe
+                                    .XValues = Xdatenreihe
+                                    If myCollection.Count = 1 Then
+                                        If isWeightedValues Then
+                                            .ChartType = Excel.XlChartType.xlColumnStacked
+                                        Else
+                                            .ChartType = Excel.XlChartType.xlColumnClustered
+                                        End If
                                     Else
-                                        .ChartType = Excel.XlChartType.xlColumnClustered
+                                        .ChartType = Excel.XlChartType.xlColumnStacked
                                     End If
-                                Else
-                                    .ChartType = Excel.XlChartType.xlColumnStacked
-                                End If
-                                .HasDataLabels = False
-                            End With
+                                    .HasDataLabels = False
+                                End With
+
+                            End If
+
+                            
                         End If
 
                     Next r
@@ -1101,11 +1155,15 @@ Public Module awinDiagrams
                         End With
                     End If
                     .HasTitle = True
-                    If prcTyp = DiagrammTypen(0) Or awinSettings.kapaEinheit = "ST" Then
+
+                    If prcTyp = DiagrammTypen(0) Or _
+                        prcTyp = DiagrammTypen(5) Or _
+                        awinSettings.kapaEinheit = "ST" Then
                         titleSumme = ""
                     Else
                         titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
                     End If
+
                     .ChartTitle.Text = diagramTitle & titleSumme
 
                     If isCockpitChart Then
@@ -1241,8 +1299,10 @@ Public Module awinDiagrams
         Dim diagramTitle As String
 
         Dim objektFarbe As Object
+        Dim ampelfarbe(3) As Long
         Dim Xdatenreihe() As String
         Dim datenreihe() As Double, edatenreihe() As Double, seriesSumDatenreihe() As Double
+        Dim msdatenreihe(,) As Double
         ' nimmt die Daten der selektierten Werte auf 
         Dim seldatenreihe() As Double, tmpdatenreihe() As Double
         Dim kdatenreihe() As Double
@@ -1292,6 +1352,14 @@ Public Module awinDiagrams
         ' Default Zuweisung ; wird später überschrieben ; verhindert , daß sie verwendet wird, ohne einen Wert zu haben 
         objektFarbe = 0
 
+        With awinSettings
+            ampelfarbe(0) = .AmpelNichtBewertet
+            ampelfarbe(1) = .AmpelGruen
+            ampelfarbe(2) = .AmpelGelb
+            ampelfarbe(3) = .AmpelRot
+        End With
+
+
 
         If istCockpitDiagramm(chtobj) Then
             ' dann ist es ein Cockpit Chart ....
@@ -1311,6 +1379,7 @@ Public Module awinDiagrams
         ReDim tmpdatenreihe(bis - von)
         ReDim seriesSumDatenreihe(bis - von)
         ReDim VarValues(bis - von)
+        ReDim msdatenreihe(3, bis - von)
 
 
         found = False
@@ -1358,6 +1427,14 @@ Public Module awinDiagrams
                 diagramTitle = "Kosten-Übersicht"
             ElseIf prcTyp = DiagrammTypen(4) Then
                 diagramTitle = "Ergebnis-Übersicht"
+            ElseIf prcTyp = DiagrammTypen(5) Then
+                chtobjName = getKennung("pf", PTpfdk.Meilenstein, myCollection)
+
+                If myCollection.Count > 1 Then
+                    diagramTitle = portfolioDiagrammtitel(PTpfdk.Meilenstein)
+                Else
+                    diagramTitle = myCollection.Item(1)
+                End If
             Else
                 diagramTitle = "Übersicht"
             End If
@@ -1454,6 +1531,11 @@ Public Module awinDiagrams
                             isWeightedValues = False
                         End If
 
+                    ElseIf prcTyp = DiagrammTypen(5) Then
+
+                        einheit = " "
+                        msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName)
+
                     End If
 
                     For i = 0 To bis - von
@@ -1481,23 +1563,55 @@ Public Module awinDiagrams
                             .HasDataLabels = False
                         End With
                     Else
-                        With .SeriesCollection.NewSeries
-                            
-                            .name = prcName
-                            .Interior.color = objektFarbe
-                            .Values = datenreihe
-                            .XValues = Xdatenreihe
-                            If myCollection.Count = 1 Then
-                                If isWeightedValues Then
+                        If prcTyp = DiagrammTypen(5) Then
+
+                            For c = 0 To 3
+
+                                For i = 0 To bis - von
+                                    datenreihe(i) = msdatenreihe(c, i)
+                                Next
+
+                                With .SeriesCollection.NewSeries
+                                    If c = 0 Then
+                                        .name = prcName & ", ohne Ampel"
+                                    ElseIf c = 1 Then
+                                        .name = prcName & ", grüne Ampel"
+                                    ElseIf c = 2 Then
+                                        .name = prcName & ", gelbe Ampel"
+                                    Else
+                                        .name = prcName & ", rote Ampel"
+                                    End If
+                                    .Interior.color = ampelfarbe(c)
+                                    .Values = datenreihe
+                                    .XValues = Xdatenreihe
                                     .ChartType = Excel.XlChartType.xlColumnStacked
+                                    .HasDataLabels = False
+                                End With
+
+
+                            Next
+
+                        Else
+
+                            With .SeriesCollection.NewSeries
+                                .name = prcName
+                                .Interior.color = objektFarbe
+                                .Values = datenreihe
+                                .XValues = Xdatenreihe
+                                If myCollection.Count = 1 Then
+                                    If isWeightedValues Then
+                                        .ChartType = Excel.XlChartType.xlColumnStacked
+                                    Else
+                                        .ChartType = Excel.XlChartType.xlColumnClustered
+                                    End If
                                 Else
-                                    .ChartType = Excel.XlChartType.xlColumnClustered
+                                    .ChartType = Excel.XlChartType.xlColumnStacked
                                 End If
-                            Else
-                                .ChartType = Excel.XlChartType.xlColumnStacked
-                            End If
-                            .HasDataLabels = False
-                        End With
+                                .HasDataLabels = False
+                            End With
+
+                        End If
+
                     End If
 
                 Next r
@@ -1637,7 +1751,9 @@ Public Module awinDiagrams
 
                 .HasTitle = True
                
-                If prcTyp = DiagrammTypen(0) Or awinSettings.kapaEinheit = "ST" Then
+                If prcTyp = DiagrammTypen(0) Or _
+                        prcTyp = DiagrammTypen(5) Or _
+                        awinSettings.kapaEinheit = "ST" Then
                     titleSumme = ""
                 Else
                     titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"

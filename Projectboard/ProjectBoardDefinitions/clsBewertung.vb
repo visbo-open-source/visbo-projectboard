@@ -6,6 +6,12 @@
     Public Property datum As Date
 
 
+    ''' <summary>
+    ''' kann die Werte 0, 1, 2, 3 annehmen 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property colorIndex As Integer
         Get
             colorIndex = _color
@@ -25,7 +31,7 @@
 
 
     ''' <summary>
-    ''' kann die Werte 0,1,2,3 annehmen 
+    ''' liest / schreibt die Ampelfarben wie in awinsettings definiert  
     ''' 0:keine Bewertung; 1:grün; 2:gelb; 3: rot
     ''' </summary>
     ''' <value></value>

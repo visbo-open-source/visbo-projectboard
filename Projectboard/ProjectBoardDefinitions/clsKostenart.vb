@@ -14,6 +14,12 @@
 
     End Property
 
+    Public ReadOnly Property getDimension As Integer
+        Get
+            getDimension = Xwerte.Length - 1
+        End Get
+    End Property
+
     Public Property Xwerte() As Double()
         Get
             Xwerte = Bedarf
