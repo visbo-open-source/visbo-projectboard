@@ -694,6 +694,15 @@
 
     End Property
 
+    ''' <summary>
+    ''' gibt das Objekt Meilenstein mit dem angegebenen NAmen zurück. 
+    ''' Wenn der Meilenstein nicht existiert, wird Nothing zurückgegeben 
+    ''' </summary>
+    ''' <param name="key">Name des Meilensteines</param>
+    ''' <value></value>
+    ''' <returns>Objekt vom Typ Result</returns>
+    ''' <remarks>
+    ''' Rückgabe von Nothing ist schneller als über Throw Exception zu arbeiten</remarks>
     Public ReadOnly Property getResult(ByVal key As String) As clsResult
 
         Get

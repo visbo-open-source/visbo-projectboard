@@ -187,11 +187,12 @@ Public Class clsProjekt
 
                 Try
                     cresult = cphase.getResult(milestoneName)
-                    Try
-                        colorIndex = cresult.getBewertung(1).colorIndex
-                    Catch ex1 As Exception
-                        colorIndex = 0
-                    End Try
+                    colorIndex = cresult.getBewertung(1).colorIndex
+                    'Try
+                    '    colorIndex = cresult.getBewertung(1).colorIndex
+                    'Catch ex1 As Exception
+                    '    colorIndex = 0
+                    'End Try
 
                     tmpDate = Me.startDate.AddDays(cphase.startOffsetinDays + cresult.offset).Date
                     ' jetzt wird die Ampelfarbe ins Datum kodiert 
@@ -861,16 +862,20 @@ Public Class clsProjekt
 
                                 ' hier muss noch unterschieden werden, ob der ColorIndex = 0 ist: dann muss auch mitgezählt werden, wenn ein Result ohne Bewertung da ist ...
 
-                                Try
-                                    If result.getBewertung(1).colorIndex = colorIndex Then
-                                        resultValues(monatsIndex) = resultValues(monatsIndex) + 1
-                                    End If
-                                Catch ex1 As Exception
-                                    ' hierher kommt er, wenn es ein Result, aber keine Bewertung gibt 
-                                    If colorIndex = 0 Then
-                                        resultValues(monatsIndex) = resultValues(monatsIndex) + 1
-                                    End If
-                                End Try
+                                If result.getBewertung(1).colorIndex = colorIndex Then
+                                    resultValues(monatsIndex) = resultValues(monatsIndex) + 1
+                                End If
+
+                                'Try
+                                '    If result.getBewertung(1).colorIndex = colorIndex Then
+                                '        resultValues(monatsIndex) = resultValues(monatsIndex) + 1
+                                '    End If
+                                'Catch ex1 As Exception
+                                '    ' hierher kommt er, wenn es ein Result, aber keine Bewertung gibt 
+                                '    If colorIndex = 0 Then
+                                '        resultValues(monatsIndex) = resultValues(monatsIndex) + 1
+                                '    End If
+                                'End Try
 
 
 

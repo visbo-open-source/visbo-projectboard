@@ -8878,11 +8878,12 @@ Public Module Projekte
                         nameIstInListe = False
                     End Try
 
-                    Try
-                        cBewertung = cResult.getBewertung(1)
-                    Catch ex As Exception
-                        cBewertung = New clsBewertung
-                    End Try
+                    cBewertung = cResult.getBewertung(1)
+                    'Try
+                    '    cBewertung = cResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    cBewertung = New clsBewertung
+                    'End Try
 
                     resultColumn = getColumnOfDate(cResult.getDate)
 
@@ -10769,11 +10770,12 @@ Public Module Projekte
                 For r = 1 To cphase.CountResults
                     cResult = cphase.getResult(r)
 
-                    Try
-                        cBewertung = cResult.getBewertung(1)
-                    Catch ex As Exception
-                        cBewertung = New clsBewertung
-                    End Try
+                    cBewertung = cResult.getBewertung(1)
+                    'Try
+                    '    cBewertung = cResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    cBewertung = New clsBewertung
+                    'End Try
                     ' --------------------------------------------------------------------------------
                     ' Ergebnisse müssen in Tabelle eingetragen werden
                     '----------------------------------------------------------------------------------

@@ -146,7 +146,8 @@
 
             Dim tmpListe As New SortedList(Of String, String)
             Dim cphase As clsPhase
-            Dim cresult As clsResult
+
+            Dim msName As String
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
 
@@ -156,12 +157,11 @@
                         cphase = kvp.Value.getPhase(p)
                         For r = 1 To cphase.CountResults
 
-                            cresult = cphase.getResult(r)
-                            Try
-                                tmpListe.Add(cresult.name, cresult.name)
-                            Catch ex1 As Exception
-
-                            End Try
+                            msName = cphase.getResult(r).name
+                            If tmpListe.ContainsKey(msName) Then
+                            Else
+                                tmpListe.Add(msName, msName)
+                            End If
 
                         Next
 
@@ -348,12 +348,13 @@
                         If ix >= 0 And ix <= zeitraum Then
                             ' bestimme des farbbezogenen Index im Array
 
-                            Try
-                                idFarbe = cresult.getBewertung(1).colorIndex
-                            Catch ex As Exception
-                                ' wenn es noch keine Bewertung gibt ...
-                                idFarbe = 0
-                            End Try
+                            idFarbe = cresult.getBewertung(1).colorIndex
+                            'Try
+                            '    idFarbe = cresult.getBewertung(1).colorIndex
+                            'Catch ex As Exception
+                            '    ' wenn es noch keine Bewertung gibt ...
+                            '    idFarbe = 0
+                            'End Try
 
                             milestoneValues(idFarbe, ix) = milestoneValues(idFarbe, ix) + 1
 

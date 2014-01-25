@@ -3306,11 +3306,12 @@ Public Module testModule
 
                     cResult = cphase.getResult(r)
 
-                    Try
-                        cBewertung = cResult.getBewertung(1)
-                    Catch ex As Exception
-                        cBewertung = New clsBewertung
-                    End Try
+                    cBewertung = cResult.getBewertung(1)
+                    'Try
+                    '    cBewertung = cResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    cBewertung = New clsBewertung
+                    'End Try
 
                     resultColumn = getColumnOfDate(cResult.getDate)
 
@@ -3610,24 +3611,26 @@ Public Module testModule
 
                     End Try
 
+                    cBewertung = cResult.getBewertung(1)
+                    'Try
+                    '    cBewertung = cResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    cBewertung = New clsBewertung
+                    'End Try
 
-                    Try
-                        cBewertung = cResult.getBewertung(1)
-                    Catch ex As Exception
-                        cBewertung = New clsBewertung
-                    End Try
+                    bbewertung = bResult.getBewertung(1)
+                    'Try
+                    '    bbewertung = bResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    bbewertung = New clsBewertung
+                    'End Try
 
-                    Try
-                        bbewertung = bResult.getBewertung(1)
-                    Catch ex As Exception
-                        bbewertung = New clsBewertung
-                    End Try
-
-                    Try
-                        lbewertung = lResult.getBewertung(1)
-                    Catch ex As Exception
-                        lbewertung = New clsBewertung
-                    End Try
+                    lbewertung = lResult.getBewertung(1)
+                    'Try
+                    '    lbewertung = lResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    lbewertung = New clsBewertung
+                    'End Try
 
                     If bdiff <> 0 Or ldiff <> 0 Then
                         With tabelle
@@ -3744,12 +3747,13 @@ Public Module testModule
                     Dim cBewertung As clsBewertung
 
                     cResult = cphase.getResult(r)
+                    cBewertung = cResult.getBewertung(1)
 
-                    Try
-                        cBewertung = cResult.getBewertung(1)
-                    Catch ex As Exception
-                        cBewertung = New clsBewertung
-                    End Try
+                    'Try
+                    '    cBewertung = cResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    cBewertung = New clsBewertung
+                    'End Try
 
 
                     With tabelle
