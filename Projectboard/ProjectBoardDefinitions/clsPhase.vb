@@ -47,7 +47,7 @@
                 ' dann sind die Werte initial noch nicht gesetzt worden 
                 _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
                 _dauerInDays = DateDiff(DateInterval.Day, projektStartdate.AddMonths(_relStart - 1), _
-                                        projektStartdate.AddMonths(_relEnde).AddDays(-1))
+                                        projektStartdate.AddMonths(_relEnde).AddDays(-1)) + 1
 
 
             ElseIf dauer = 0 And _relEnde = 0 Then
@@ -63,18 +63,18 @@
                 Dim oldlaenge As Integer = _relEnde - _relStart + 1
                 Dim newlaenge As Integer
 
-                '_relStart = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(startOffset)) + 1
-                '_relEnde = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(startOffset + _dauerInDays)) + 1
-
                 phaseStartdate = projektStartdate.AddDays(startOffset)
-                phaseEnddate = projektStartdate.AddDays(startOffset + _dauerInDays - 1)
-                _relStart = DateDiff(DateInterval.Month, StartofCalendar, phaseStartdate) + 1 - projektstartColumn + 1
-                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, phaseEnddate) + 1 - projektstartColumn + 1
+                phaseEndDate = projektStartdate.AddDays(startOffset + _dauerInDays - 1)
 
 
-                newlaenge = _relEnde - _relStart + 1
+                _relStart = getColumnOfDate(phaseStartdate) - projektstartColumn + 1
+                _relEnde = getColumnOfDate(phaseEndDate) - projektstartColumn + 1
 
-                If newlaenge <> oldlaenge Then
+
+                If awinSettings.autoCorrectBedarfe Then
+
+                    newlaenge = _relEnde - _relStart + 1
+
                     Dim newvalues() As Double
                     Dim oldvalues() As Double
 
@@ -83,19 +83,23 @@
 
                         For r = 1 To Me.CountRoles
                             oldvalues = Me.getRole(r).Xwerte
-                            newvalues = adjustArrayLength(newlaenge, oldvalues, False)
-                            ' wahrscheinlich muss dafür eine .XwerteReDim Property gemacht werden
-                            ' die den Redim macht ... 
-                            Me.getRole(r).Xwerte = newvalues
+                            oldlaenge = oldvalues.Length
+                            If newlaenge <> oldlaenge Then
+                                newvalues = adjustArrayLength(newlaenge, oldvalues, False)
+                                Me.getRole(r).Xwerte = newvalues
+                            End If
+
                         Next
 
 
                         For k = 1 To Me.CountCosts
                             oldvalues = Me.getCost(k).Xwerte
-                            newvalues = adjustArrayLength(newlaenge, oldvalues, False)
-                            ' wahrscheionlich muss dafür eine .XwerteReDim Property gemacht werden
-                            ' die den Redim macht ... 
-                            Me.getCost(k).Xwerte = newvalues
+                            oldlaenge = oldvalues.Length
+                            If newlaenge <> oldlaenge Then
+                                newvalues = adjustArrayLength(newlaenge, oldvalues, False)
+                                Me.getCost(k).Xwerte = newvalues
+                            End If
+
                         Next
 
                     Catch ex As Exception
@@ -103,6 +107,9 @@
                     End Try
 
                 End If
+
+
+
 
             End If
 
@@ -116,7 +123,7 @@
                 ' dann sind die Werte initial noch nicht gesetzt worden 
                 _startOffsetinDays = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1))
                 _dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
-                                        StartofCalendar.AddMonths(_relEnde).AddDays(-1))
+                                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
 
 
             Else
@@ -125,7 +132,7 @@
                 _dauerInDays = dauer
 
                 _relStart = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1
-                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays)) + 1
+                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1
 
 
             End If
@@ -161,72 +168,72 @@
         '        projektStartdate = Me.Parent.startDate
 
         '        If value < 0 Then
-        '            Throw New ArgumentException("Phase kann nicht vor dem Projekt-Anfang sein")
+                '            Throw New ArgumentException("Phase kann nicht vor dem Projekt-Anfang sein")
 
-        '        ElseIf value = 0 And _relStart - 1 > 0 Then
-        '            ' wenn z.B nur relstart und relende gesetzt sind 
-        '            _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
+                '        ElseIf value = 0 And _relStart - 1 > 0 Then
+                '            ' wenn z.B nur relstart und relende gesetzt sind 
+                '            _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
 
-        '        Else
-        '            ' jetzt 
-        '            Dim oldlaenge As Integer = _relEnde - _relStart + 1
-        '            Dim newlaenge As Integer
-        '            _startOffsetinDays = value
-        '            _relStart = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(value))
-        '            _relEnde = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(value + _dauerInDays - 1))
-
-
-        '            newlaenge = _relEnde - _relStart + 1
-
-        '            If newlaenge <> oldlaenge Then
-        '                Dim newvalues() As Double
-        '                Dim oldvalues() As Double
-
-        '                For r = 1 To Me.CountRoles
-        '                    oldvalues = Me.getRole(r).Xwerte
-        '                    newvalues = adjustArrayLength(newlaenge, oldvalues, False)
-        '                    ' wahrscheionlich muss dafür eine .XwerteReDim Property gemacht werden
-        '                    ' die den Redim macht ... 
-        '                    Me.getRole(r).Xwerte = newvalues
-        '                Next
+                '        Else
+                '            ' jetzt 
+                '            Dim oldlaenge As Integer = _relEnde - _relStart + 1
+                '            Dim newlaenge As Integer
+                '            _startOffsetinDays = value
+                '            _relStart = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(value))
+                '            _relEnde = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(value + _dauerInDays - 1))
 
 
-        '                For k = 1 To Me.CountCosts
-        '                    oldvalues = Me.getCost(k).Xwerte
-        '                    newvalues = adjustArrayLength(newlaenge, oldvalues, False)
-        '                    ' wahrscheionlich muss dafür eine .XwerteReDim Property gemacht werden
-        '                    ' die den Redim macht ... 
-        '                    Me.getCost(k).Xwerte = newvalues
-        '                Next
-        '            End If
+                '            newlaenge = _relEnde - _relStart + 1
 
-        '        End If
+                '            If newlaenge <> oldlaenge Then
+                '                Dim newvalues() As Double
+                '                Dim oldvalues() As Double
 
-        '    Catch ex As Exception
-
-        '        ' bei einer Projektvorlage gibt es kein Datum - es soll aber der Wert für den Start-Offset übernommen werden
-
-        '        If value = 0 And (_relStart - 1 > 0) Then
-        '            _startOffsetinDays = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(relStart - 1)) - 1
-
-        '            ' wenn negativ: zurücksetzen auf NULL
-        '            If _startOffsetinDays < 0 Then
-        '                _startOffsetinDays = 0
-        '            End If
-
-        '        ElseIf value >= 0 Then
-        '            _startOffsetinDays = value
-        '        Else
-
-        '            Throw New ArgumentException("Phase kann nicht negativen Offset haben, d.h vor dem Projekt beginnen ")
-
-        '        End If
+                '                For r = 1 To Me.CountRoles
+                '                    oldvalues = Me.getRole(r).Xwerte
+                '                    newvalues = adjustArrayLength(newlaenge, oldvalues, False)
+                '                    ' wahrscheionlich muss dafür eine .XwerteReDim Property gemacht werden
+                '                    ' die den Redim macht ... 
+                '                    Me.getRole(r).Xwerte = newvalues
+                '                Next
 
 
-        '    End Try
+                '                For k = 1 To Me.CountCosts
+                '                    oldvalues = Me.getCost(k).Xwerte
+                '                    newvalues = adjustArrayLength(newlaenge, oldvalues, False)
+                '                    ' wahrscheionlich muss dafür eine .XwerteReDim Property gemacht werden
+                '                    ' die den Redim macht ... 
+                '                    Me.getCost(k).Xwerte = newvalues
+                '                Next
+                '            End If
+
+                '        End If
+
+                '    Catch ex As Exception
+
+                '        ' bei einer Projektvorlage gibt es kein Datum - es soll aber der Wert für den Start-Offset übernommen werden
+
+                '        If value = 0 And (_relStart - 1 > 0) Then
+                '            _startOffsetinDays = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(relStart - 1)) - 1
+
+                '            ' wenn negativ: zurücksetzen auf NULL
+                '            If _startOffsetinDays < 0 Then
+                '                _startOffsetinDays = 0
+                '            End If
+
+                '        ElseIf value >= 0 Then
+                '            _startOffsetinDays = value
+                '        Else
+
+                '            Throw New ArgumentException("Phase kann nicht negativen Offset haben, d.h vor dem Projekt beginnen ")
+
+                '        End If
 
 
-        'End Set
+                '    End Try
+
+
+                'End Set
 
     End Property
 
@@ -358,100 +365,83 @@
         End Set
     End Property
 
-    
+
     Public ReadOnly Property relStart As Integer
         Get
-            relStart = _relStart + _Offset
+
+            Dim isVorlage As Boolean
+            Dim tmpValue As Integer
+            'Dim checkValue As Integer = _relStart + _Offset
+
+            Try
+
+                If Me.Parent Is Nothing Then
+                    isVorlage = True
+                Else
+                    isVorlage = False
+                End If
+            Catch ex As Exception
+                isVorlage = True
+            End Try
+
+            If isVorlage Then
+                tmpValue = getColumnOfDate(StartofCalendar.AddDays(Me.startOffsetinDays))
+            Else
+                tmpValue = getColumnOfDate(Me.Parent.startDate.AddDays(Me.startOffsetinDays)) - Me.Parent.Start + 1
+            End If
+
+            'If checkValue <> tmpValue Then 
+            '    Call MsgBox("oops in relStart")
+            'End If
+
+            ' kann später eliminiert werden - vorläufig bleibt das zur Sicherheit noch drin ... 
+            _relStart = tmpValue
+
+            ' Return Wert
+            relStart = tmpValue
+
+
+
+
         End Get
 
-        'Set(value As Integer)
 
-        '    If value >= 0 Then
-
-        '        _relStart = value
-        '        '_startOffsetinDays = DateDiff(DateInterval.Day, projektStart, projektStart.AddMonths(value))
-
-        '    Else
-
-        '        Throw New ApplicationException("Phasen-Start kann nicht negativ sein ..")
-
-        '    End If
-
-        'End Set
-        'Set(value As Integer)
-        '    If value >= 0 Then
-        '        If _earliestStart <> -999 And _latestStart <> -999 Then
-        '            If value + _Offset >= _earliestStart And value + _Offset <= _latestStart Then
-        '                If _relEnde <> -999 Then
-        '                    If value <= _relEnde Then
-        '                        _relStart = value
-        '                    Else
-        '                        Throw New ApplicationException("Start liegt nach dem Ende")
-        '                    End If
-        '                    _relStart = value
-        '                End If
-        '            Else
-        '                Throw New ApplicationException("Start liegt ausserhalb des zugelassenen Korridors")
-        '            End If
-        '        Else
-        '            _relStart = value
-        '        End If
-        '    Else
-        '        Throw New ApplicationException("Phasen-Start kann nicht negativ sein ..")
-        '    End If
-
-        'End Set
     End Property
 
-    'Public WriteOnly Property relEnde(projektStartDate As Date) As Integer
 
-    '    Set(value As Integer)
-
-    '        If value >= _relStart Then
-
-    '            _relEnde = value
-    '            _dauerInDays = DateDiff(DateInterval.Day, projektStartDate, projektStartDate.AddMonths(value))
-
-    '        Else
-
-    '            Throw New ApplicationException("Phasen-Start kann nicht negativ sein ..")
-
-    '        End If
-
-    '    End Set
-    'End Property
 
     Public ReadOnly Property relEnde As Integer
         Get
-            relEnde = _relEnde + _Offset
+
+            Dim isVorlage As Boolean
+            Dim tmpValue As Integer
+            'Dim checkValue As Integer = _relEnde + _Offset
+
+            Try
+
+                If Me.Parent Is Nothing Then
+                    isVorlage = True
+                Else
+                    isVorlage = False
+                End If
+            Catch ex As Exception
+                isVorlage = True
+            End Try
+
+            If isVorlage Then
+                tmpValue = getColumnOfDate(StartofCalendar.AddDays(Me.startOffsetinDays))
+            Else
+                tmpValue = getColumnOfDate(Me.Parent.startDate.AddDays(Me.startOffsetinDays + Me.dauerInDays - 1)) - Me.Parent.Start + 1
+            End If
+
+            ' kann später eliminiert werden - vorläufig bleibt das zur Sicherheit noch drin ... 
+            _relEnde = tmpValue
+
+            ' Return Wert
+            relEnde = tmpValue
+
         End Get
 
-        'Set(value As Integer)
-
-        '    If value >= _relStart Then
-
-        '        _relEnde = value
-        '        '_dauerInDays = DateDiff(DateInterval.Day, projektStartDate, projektStartDate.AddMonths(value))
-
-        '    Else
-
-        '        Throw New ApplicationException("Phasen-Start kann nicht negativ sein ..")
-
-        '    End If
-
-        'End Set
-        'Set(value As Integer)
-        '    If value >= 0 Then
-        '        If value >= _relStart Then
-        '            _relEnde = value
-        '        Else
-        '            Throw New ApplicationException("das Ende kann nicht vor dem Start sein ")
-        '        End If
-        '    Else
-        '        Throw New ApplicationException("das Ende kann nicht negativ sein ")
-        '    End If
-
-        'End Set
     End Property
 
     Public Property name As String
@@ -475,7 +465,7 @@
         Try
 
             Dim projektStartdate As Date = Me.Parent.startDate
-            
+
             Dim korrPosition As Double = nummer / gesamtZahl
             Dim faktor As Double = linienDicke / boxHeight
             Dim startpunkt As Integer = DateDiff(DateInterval.Day, StartofCalendar, projektStartdate)
@@ -506,7 +496,7 @@
             ' ausrechnen des Korrekturfaktors
 
             korrPosition = nummer / (gesamtZahl + 1)
-            
+
 
             If phasenStart >= 0 And phasenDauer > 0 Then
 
@@ -541,7 +531,24 @@
 
     Public Sub AddResult(ByVal result As clsResult)
 
+        ' in Abhängigkeit von milestoneFreeFloat: 
+        ' es wird geprüft, ob der Meilenstein innerhalb der Projektgrenzen ist 
+        ' wenn nein , wird entweder auf Projektstart gesetzt, wenn er vor dem Projektstart liegt 
+        ' oder auf Projektende, wenn er nach dem Projektende liegt 
+
+        If awinSettings.milestoneFreeFloat Then
+            ' nichts verändern ....
+        Else
+            If result.offset + Me.startOffsetinDays > Me.Parent.dauerInDays - 1 Then
+                'result.offset = result.offset - (result.offset + Me.startOffsetinDays - (Me.Parent.dauerInDays - 1))
+                result.offset = Me.Parent.dauerInDays - 1 - Me.startOffsetinDays
+            ElseIf result.offset + Me.startOffsetinDays < 0 Then
+                result.offset = -1 * Me.startOffsetinDays
+            End If
+        End If
+
         AllResults.Add(result)
+
 
     End Sub
 
@@ -586,13 +593,6 @@
 
     End Property
 
-    Public ReadOnly Property DauerM() As Integer
-
-        Get
-            DauerM = _relEnde - _relStart + 1
-        End Get
-
-    End Property
 
 
     Public Sub CopyTo(ByRef newphase As clsPhase)
@@ -600,6 +600,10 @@
         Dim newrole As clsRolle
         Dim newcost As clsKostenart
         Dim newresult As clsResult
+        ' Dimension ist die Länge des Arrays , der kopiert werden soll; 
+        ' mit der eingeführten Unschärfe ist nicht mehr gewährleistet, 
+        ' daß relende-relstart die tatsächliche Dimension des Arrays wiedergibt 
+        Dim dimension As Integer
 
         With newphase
             .minDauer = Me._minDauer
@@ -608,29 +612,41 @@
             .latestStart = Me._latestStart
             .Offset = Me._Offset
 
-           
-            .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
 
             .name = _name
 
             For r = 1 To Me.CountRoles
-                newrole = New clsRolle(relEnde - relStart)
+                'newrole = New clsRolle(relEnde - relStart)
+
+                dimension = Me.getRole(r).getDimension
+                newrole = New clsRolle(dimension)
                 Me.getRole(r).CopyTo(newrole)
                 .AddRole(newrole)
             Next r
+
+
+            For k = 1 To Me.CountCosts
+                'newcost = New clsKostenart(relEnde - relStart)
+
+                dimension = Me.getCost(k).getDimension
+                newcost = New clsKostenart(dimension)
+                Me.getCost(k).CopyTo(newcost)
+                .AddCost(newcost)
+            Next k
+
+
+            ' Änderung 16.1.2014: zuerst die Rollen und Kosten übertragen, dann die relStart und RelEnde, dann die Results
+            ' die evtrl enstehende Inkonsistenz zwischen Länder der Arrays der Rollen/Kostenarten und dem neuen relende/relstart wird in Kauf genommen 
+            ' und nur korrigiert , wenn explizit gewünscht (Parameter awinsettings.autoCorrectBedarfe = true 
+
+            .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
             For r = 1 To Me.AllResults.Count
                 newresult = New clsResult(parent:=newphase)
                 Me.getResult(r).CopyTo(newresult)
                 .AddResult(newresult)
             Next
-
-            For k = 1 To Me.CountCosts
-                newcost = New clsKostenart(relEnde - relStart)
-                Me.getCost(k).CopyTo(newcost)
-                .AddCost(newcost)
-            Next k
 
         End With
 
@@ -674,6 +690,15 @@
 
     End Property
 
+    ''' <summary>
+    ''' gibt das Objekt Meilenstein mit dem angegebenen NAmen zurück. 
+    ''' Wenn der Meilenstein nicht existiert, wird Nothing zurückgegeben 
+    ''' </summary>
+    ''' <param name="key">Name des Meilensteines</param>
+    ''' <value></value>
+    ''' <returns>Objekt vom Typ Result</returns>
+    ''' <remarks>
+    ''' Rückgabe von Nothing ist schneller als über Throw Exception zu arbeiten</remarks>
     Public ReadOnly Property getResult(ByVal key As String) As clsResult
 
         Get

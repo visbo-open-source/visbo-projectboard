@@ -102,14 +102,28 @@ Imports Microsoft.Office.Interop.Excel
     ''' <remarks></remarks>
     Sub awinTestNewFunctions(control As IRibbonControl)
         'Call MsgBox("Anzahl Aufrufe: " & anzahlCalls)
+        Dim ok As Boolean = True
 
 
-        Dim anzProjekte As Integer = ShowProjekte.Liste.Count
-        Dim anzShapes As Integer = ShowProjekte.shpListe.Count
 
-        Call MsgBox("Test ---" & vbLf & _
-                    "Projekte: " & anzProjekte & _
-                    "Shapes  : " & anzShapes)
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            If Not kvp.Value.isConsistent Then
+                Call MsgBox("inkonsistenz: " & kvp.Key)
+                ok = False
+            End If
+
+        Next
+
+        If ok Then
+            Call MsgBox("keine Inkonsistenz gefunden ...")
+        End If
+
+        'Dim anzProjekte As Integer = ShowProjekte.Liste.Count
+        'Dim anzShapes As Integer = ShowProjekte.shpListe.Count
+        'Call MsgBox("Test ---" & vbLf & _
+        '            "Projekte: " & anzProjekte & _
+        '            "Shapes  : " & anzShapes)
 
         'Dim hws As Excel.Worksheet
         'hws = appInstance.Worksheets(arrWsNames(11))
@@ -690,9 +704,15 @@ Imports Microsoft.Office.Interop.Excel
 
                         If vglName.Trim <> pName.Trim Then
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+
+                            Try
+                                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                            projekthistorie.Add(Date.Now, hproj)
+                                projekthistorie.Add(Date.Now, hproj)
+                            Catch ex As Exception
+                                projekthistorie = Nothing
+                            End Try
+
                         Else
                             ' der aktuelle Stand hproj muss hinzugefügt werden 
                             Dim lastElem As Integer = projekthistorie.Count - 1
@@ -857,7 +877,7 @@ Imports Microsoft.Office.Interop.Excel
         Catch ex As Exception
             Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
         End Try
-        
+
 
 
 
@@ -1309,7 +1329,7 @@ Imports Microsoft.Office.Interop.Excel
                 Catch ex As Exception
                     Call MsgBox(ex.Message)
                 End Try
-                
+
 
                 appInstance.EnableEvents = True
                 appInstance.ScreenUpdating = True
@@ -1388,7 +1408,7 @@ Imports Microsoft.Office.Interop.Excel
                 Catch ex As Exception
                     Call MsgBox(ex.Message)
                 End Try
-                
+
 
                 appInstance.EnableEvents = True
                 appInstance.ScreenUpdating = True
@@ -1740,7 +1760,7 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
-    
+
     Sub Tom2G2M2M3B2SollIstGKosten(control As IRibbonControl)
 
         ' auswahl steuert , welche Kosten angezeigt werden
@@ -2114,8 +2134,10 @@ Imports Microsoft.Office.Interop.Excel
     End Sub
 
     ''' <summary>
-    ''' zeigt erst eine Liste, aus der man die Namen auswählen kann 
+    ''' zeigt bei den ausgewählten Projekten die gewählten  erst eine Liste, aus der man die Namen auswählen kann 
     ''' zeigt dann alle Meilensteine, die zu dieser Liste gehören 
+    ''' wenn Projekte selektiert sind: zeige nur die Meilensteine dieser Projekte an 
+    ''' wenn nichts selektiert ist: Fehler MEldung 
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
@@ -2125,27 +2147,261 @@ Imports Microsoft.Office.Interop.Excel
 
         Dim listOfItems As New Collection
         Dim nameList As New SortedList(Of String, String)
-        Dim title As String = "Meilensteine auswählen"
+        Dim title As String = "Meilensteine visualisieren"
+
+        Dim repObj As Object = Nothing
+
+        Dim singleShp As Excel.Shape
+        Dim myCollection As New Collection
+        Dim hproj As clsProjekt
+        Dim awinSelection As Excel.ShapeRange
+        Dim selektierteProjekte As New clsProjekte
+
+
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+
+                Try
+                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    selektierteProjekte.Add(hproj)
+                Catch ex As Exception
+                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                End Try
+
+            Next
+
+            nameList = selektierteProjekte.getMilestoneNames
+
+            If nameList.Count > 0 Then
+
+                For Each kvp As KeyValuePair(Of String, String) In nameList
+                    listOfItems.Add(kvp.Key)
+                Next
+
+                ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
+                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+
+
+                With auswahlFenster
+
+                    .chTyp = DiagrammTypen(5)
+
+                End With
+                auswahlFenster.Show()
+
+            Else
+                Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+            End If
+
+
+        Else
+            Call MsgBox("Bitte mindestens ein Projekt selektieren ... ")
+            Exit Sub
+        End If
+
+
+
+
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' zeigt bei den ausgewählten Projekten die gewählten  erst eine Liste, aus der man die Namen auswählen kann 
+    ''' zeigt dann alle Meilensteine, die zu dieser Liste gehören 
+    ''' wenn Projekte selektiert sind: zeige nur die Meilensteine dieser Projekte an 
+    ''' wenn nichts selektiert ist: zeige die Namen der Meilensteine aus allen Projekten  
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Public Sub PTShowAllMilestonesByName(Control As IRibbonControl)
+
+        Dim listOfItems As New Collection
+        Dim nameList As New SortedList(Of String, String)
+        Dim title As String = "Meilensteine visualisieren"
 
         Dim repObj As Object = Nothing
 
 
+        Call awinDeSelect()
+
         nameList = ShowProjekte.getMilestoneNames
 
-        For Each kvp As KeyValuePair(Of String, String) In nameList
-            listOfItems.Add(kvp.Key)
-        Next
+        If nameList.Count > 0 Then
 
-        ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-        Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+            For Each kvp As KeyValuePair(Of String, String) In nameList
+                listOfItems.Add(kvp.Key)
+            Next
+
+            ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
+            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
 
 
-        With auswahlFenster
+            With auswahlFenster
 
-            .chTyp = DiagrammTypen(5)
+                .chTyp = DiagrammTypen(5)
 
-        End With
-        auswahlFenster.Show()
+            End With
+            auswahlFenster.Show()
+
+        Else
+            Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+        End If
+
+
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' zeigt zu dem ausgewählten Projekt die Meilenstein Trendanalyse an 
+    ''' dazu wird erst ein Fenster aufgeschaltet, aus dem der oder die Namen des betreffenden Meilensteins ausgewählt werden können 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTShowMilestoneTrend(control As IRibbonControl)
+
+        Dim request As New Request(awinSettings.databaseName)
+        Dim singleShp As Excel.Shape
+        Dim listOfItems As New Collection
+        Dim nameList As New SortedList(Of Date, String)
+        Dim title As String = "Meilensteine auswählen"
+        Dim hproj As clsProjekt
+        Dim awinSelection As Excel.ShapeRange
+        Dim selektierteProjekte As New clsProjekte
+        Dim top As Double, left As Double, height As Double, width As Double
+        Dim repObj As Excel.ChartObject = Nothing
+
+        Dim pName As String, vglName As String = " "
+        Dim variantName As String
+
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' eingangs-prüfung, ob auch nur ein Element selektiert wurde ...
+            If awinSelection.Count = 1 Then
+                ' Aktion durchführen ...
+
+                singleShp = awinSelection.Item(1)
+
+                Try
+                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    nameList = hproj.getMilestones
+
+                    ' jetzt muss die ProjektHistorie aufgebaut werden 
+                    With hproj
+                        pName = .name
+                        variantName = .variantName
+                    End With
+
+                    If Not projekthistorie Is Nothing Then
+                        If projekthistorie.Count > 0 Then
+                            vglName = projekthistorie.First.name
+                        End If
+                    End If
+
+                    If vglName.Trim <> pName.Trim Then
+                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                        projekthistorie.liste = Request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                        projekthistorie.Add(Date.Now, hproj)
+                    Else
+                        ' der aktuelle Stand hproj muss hinzugefügt werden 
+                        Dim lastElem As Integer = projekthistorie.Count - 1
+                        projekthistorie.RemoveAt(lastElem)
+                        projekthistorie.Add(Date.Now, hproj)
+                    End If
+
+
+                    If nameList.Count > 0 Then
+
+
+                        appInstance.EnableEvents = False
+                        enableOnUpdate = False
+
+                        repObj = Nothing
+
+
+
+                        For Each kvp As KeyValuePair(Of Date, String) In nameList
+                            listOfItems.Add(kvp.Value)
+                        Next
+
+                        With singleShp
+                            top = .Top + boxHeight + 5
+                            left = .Left - 5
+                        End With
+
+                        height = 2 * ((nameList.Count - 1) * 20 + 110)
+                        width = System.Math.Max(hproj.Dauer * boxWidth + 10, 24 * boxWidth + 10)
+
+                        'Try
+
+                        '    Call createMsTrendAnalysisOfProject(hproj, repObj, listOfItems, top, left, height, width)
+
+                        'Catch ex As Exception
+
+                        '    Call MsgBox(ex.Message)
+
+                        'End Try
+
+
+
+                        ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
+                        Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+
+
+                        With auswahlFenster
+
+                            .kennung = " "
+                            .chTyp = DiagrammTypen(6)
+                            .chTop = top
+                            .chLeft = left
+                            .chWidth = width
+                            .chHeight = height
+
+                        End With
+                        auswahlFenster.Show()
+
+                    Else
+                        Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+                    End If
+
+
+                Catch ex As Exception
+                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                End Try
+
+            Else
+                Call MsgBox("bitte nur ein Projekt selektieren ...")
+            End If
+
+        Else
+            Call MsgBox("vorher ein Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+
+
 
 
 
@@ -2221,30 +2477,89 @@ Imports Microsoft.Office.Interop.Excel
         Dim von As Integer, bis As Integer
 
         Dim listOfItems As New Collection
+        Dim existingNames As New SortedList(Of String, String)
 
         Dim repObj As Object = Nothing
         Dim title As String = "Phasen visualisieren"
+        Dim phaseName As String
+        Dim hproj As clsProjekt
+
+
+        Dim awinSelection As Excel.ShapeRange
+        Dim selektierteProjekte As New clsProjekte
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+
+                Try
+                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    selektierteProjekte.Add(hproj)
+                Catch ex As Exception
+                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                End Try
+
+            Next
+
+
+            existingNames = selektierteProjekte.getPhaseNames
+
+            If existingNames.Count > 0 Then
+
+                ' jetzt werden die Namen in der Reihenfolge, wie sie in der Phasen-Definition stehen in der listofItems eingetragen ..
+
+                For i = 1 To PhaseDefinitions.Count
+                    phaseName = PhaseDefinitions.getPhaseDef(i).name
+
+                    If existingNames.ContainsKey(phaseName) Then
+                        listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
+                    End If
+
+                Next
+
+                ' jetzt stehen in der listOfItems die Namen der Phasen 
+                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+
+                von = showRangeLeft
+                bis = showRangeRight
+                With auswahlFenster
+                    .chTop = 50.0
+                    .chLeft = (showRangeRight - 1) * boxWidth + 4
+                    .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+                    .chHeight = awinSettings.ChartHoehe1
+                    .chTyp = DiagrammTypen(0)
+
+                End With
+                auswahlFenster.Show()
+
+            Else
+                Call MsgBox("keine Phasen vorhanden ...")
+
+            End If
 
 
 
-        For i = 1 To PhaseDefinitions.Count
-            listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
-        Next
+        Else
 
-        ' jetzt stehen in der listOfItems die Namen der Rollen 
-        Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+            Call MsgBox("bitte mindestens ein Projekt selektieren ...")
 
-        von = showRangeLeft
-        bis = showRangeRight
-        With auswahlFenster
-            .chTop = 50.0
-            .chLeft = (showRangeRight - 1) * boxWidth + 4
-            .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-            .chHeight = awinSettings.ChartHoehe1
-            .chTyp = DiagrammTypen(0)
+        End If
 
-        End With
-        auswahlFenster.Show()
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+
+
 
     End Sub
 
@@ -2254,17 +2569,29 @@ Imports Microsoft.Office.Interop.Excel
         Dim von As Integer, bis As Integer
 
         Dim listOfItems As New Collection
+        Dim existingNames As New SortedList(Of String, String)
 
         Dim repObj As Object = Nothing
         Dim title As String = "Phasen visualisieren"
+        Dim phaseName As String
 
         Call awinDeSelect()
 
+        existingNames = ShowProjekte.getPhaseNames
+
+        ' jetzt werden die Namen in der Reihenfolge, wie sie in der Phasen-Definition stehen in der listofItems eingetragen ..
+
         For i = 1 To PhaseDefinitions.Count
-            listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
+            phaseName = PhaseDefinitions.getPhaseDef(i).name
+
+            If existingNames.ContainsKey(phaseName) Then
+                listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
+            End If
+
         Next
 
-        ' jetzt stehen in der listOfItems die Namen der Rollen 
+
+        ' jetzt stehen in der listOfItems die Namen der Phasen 
         Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
 
         von = showRangeLeft
@@ -2293,8 +2620,6 @@ Imports Microsoft.Office.Interop.Excel
         Dim repObj As Object = Nothing
         Dim phaseName As String
 
-        'appInstance.EnableEvents = False
-        'enableOnUpdate = False
 
 
         For i = 1 To PhaseDefinitions.Count
@@ -2321,34 +2646,52 @@ Imports Microsoft.Office.Interop.Excel
         End With
         auswahlFenster.Show()
 
-        'If auswahlFenster.ShowDialog() Then
 
-        '    myCollection = auswahlFenster.selectedItems
-        '    von = showRangeLeft
-        '    bis = showRangeRight
-
-        '    height = awinSettings.ChartHoehe1
-        '    top = WertfuerTop()
-
-        '    If von > 1 Then
-        '        'left = ((von - 1) / 3 - 1) * 3 * boxWidth + 32.8 + von * screen_correct
-        '        left = (showRangeRight - 1) * boxWidth + 4
-        '    Else
-        '        left = 0
-        '    End If
-
-        '    width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-
-        '    Call awinCreateprcCollectionDiagram(myCollection, repObj, top, left, width, height, False, DiagrammTypen(0), False)
-
-        'End If
-
-
-
-        'appInstance.EnableEvents = True
-        'enableOnUpdate = True
 
     End Sub
+
+    Sub PTShowMilestoneSummen(control As IRibbonControl)
+
+        Dim von As Integer, bis As Integer
+
+        Dim listOfItems As New Collection
+
+        Dim repObj As Object = Nothing
+        Dim nameList As New SortedList(Of String, String)
+
+
+        nameList = ShowProjekte.getMilestoneNames
+
+        If nameList.Count > 0 Then
+
+            For Each kvp As KeyValuePair(Of String, String) In nameList
+                listOfItems.Add(kvp.Key)
+            Next
+
+            ' jetzt stehen in der listOfItems die Namen der Rollen 
+            Dim auswahlFenster As New ListSelectionWindow(listOfItems, "Meilensteine auswählen", "pro Item ein Chart")
+
+            von = showRangeLeft
+            bis = showRangeRight
+            With auswahlFenster
+                .kennung = "sum"
+                .chTop = 50.0 + awinSettings.ChartHoehe1
+                .chLeft = (showRangeRight - 1) * boxWidth + 4
+                .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+                .chHeight = awinSettings.ChartHoehe1
+                .chTyp = DiagrammTypen(5)
+            End With
+            auswahlFenster.Show()
+
+
+        Else
+            Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+        End If
+
+
+    End Sub
+
+
     Sub PT0ShowAuslastung(control As IRibbonControl)
 
         Dim top As Double, left As Double, width As Double, height As Double
@@ -2384,7 +2727,7 @@ Imports Microsoft.Office.Interop.Excel
 
 
 
-       
+
 
         appInstance.ScreenUpdating = True
         appInstance.EnableEvents = True
@@ -2790,8 +3133,8 @@ Imports Microsoft.Office.Interop.Excel
 
         End With
 
-        
-        
+
+
         Dim obj As Object = Nothing
         Call awinCreateErgebnisDiagramm(obj, top, left, width, height, False, False)
 
@@ -3000,9 +3343,9 @@ Imports Microsoft.Office.Interop.Excel
                 Dim ctitel As String = cproj.name
                 Call awinCompareProjectPhases(hproj, htitel, cproj, ctitel, 3, repObj)
 
-               
+
                 appInstance.ScreenUpdating = True
-                
+
             Else
                 Call MsgBox("bitte zwei Projekte selektieren")
                 'For Each singleShp In awinSelection
@@ -3090,7 +3433,7 @@ Imports Microsoft.Office.Interop.Excel
                 Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
 
                 With repObj
-                    top = .top + .height + 3
+                    top = .Top + .Height + 3
                 End With
 
 
@@ -3133,7 +3476,7 @@ Imports Microsoft.Office.Interop.Excel
                 Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
 
                 With repObj
-                    top = .top + .height + 3
+                    top = .Top + .Height + 3
                 End With
 
 
@@ -3212,7 +3555,7 @@ Imports Microsoft.Office.Interop.Excel
 
                 If vglName.Trim <> pName.Trim Then
                     ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                    projekthistorie.liste = Request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
                                                                         storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                     projekthistorie.Add(Date.Now, hproj)
                     lastElem = projekthistorie.Count - 1
@@ -3265,13 +3608,13 @@ Imports Microsoft.Office.Interop.Excel
 
 
 
-                
+
             Else
                 Call MsgBox("bitte nur ein Projekt selektieren")
 
             End If
         Else
-            Call MsgBox("ein Projekt selektieren, um es mit seinem letzten Stand zu vergleichen") 
+            Call MsgBox("ein Projekt selektieren, um es mit seinem letzten Stand zu vergleichen")
         End If
 
         enableOnUpdate = True
@@ -3676,7 +4019,7 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
-   
+
 
 
 #End Region
