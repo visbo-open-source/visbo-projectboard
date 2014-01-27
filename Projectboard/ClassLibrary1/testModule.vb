@@ -151,6 +151,7 @@ Public Module testModule
                         kennzeichnung = "Soll-Ist & Prognose" Or _
                         kennzeichnung = "Projekt-Grafik" Or _
                         kennzeichnung = "Meilenstein Trendanalyse" Or _
+                        kennzeichnung = "Vergleich mit Beauftragung" Or _
                         kennzeichnung = "Vergleich mit letztem Stand" Or _
                         kennzeichnung = "Vergleich mit Vorlage" Or _
                         kennzeichnung = "Tabelle Projektziele" Or _
@@ -351,6 +352,50 @@ Public Module testModule
 
                                 End Try
 
+                            Case "Teilprojekte"
+
+                                Dim scale As Integer
+
+                                Dim cproj As clsProjekt = Nothing
+                                Dim vproj As clsProjektvorlage
+
+
+                                scale = hproj.dauerInDays
+
+                                If qualifier.Length > 0 Then
+                                    If qualifier = "Vorlage" Then
+
+                                        vproj = Projektvorlagen.getProject(hproj.VorlagenName)
+                                        vproj.CopyTo(cproj)
+                                        cproj.startDate = hproj.startDate
+
+
+                                    ElseIf qualifier = "Beauftragung" Then
+                                        cproj = bproj
+
+                                    Else
+                                        cproj = hproj
+
+                                    End If
+                                Else
+                                    cproj = hproj
+                                End If
+
+                                htop = 150
+                                hleft = 150
+
+
+                                hheight = 380
+                                hwidth = 900
+                                scale = cproj.dauerInDays
+
+                                Dim noColorCollection As New Collection
+                                reportObj = Nothing
+                                Call createPhasesBalken(noColorCollection, cproj, reportObj, scale, htop, hleft, hheight, hwidth, qualifier)
+
+
+                                notYetDone = True
+
                             Case "Vergleich mit Vorlage"
 
                                 Dim vproj As clsProjektvorlage
@@ -467,6 +512,109 @@ Public Module testModule
 
                                 End If
 
+
+                            Case "Vergleich mit Beauftragung"
+
+
+                                Dim cproj As clsProjekt
+                                Dim scale As Double
+                                Dim noColorCollection As New Collection
+                                Dim repObj1 As xlNS.ChartObject, repObj2 As xlNS.ChartObject
+
+
+
+                                ' jetzt die Aktion durchführen ...
+
+
+                                If bproj Is Nothing Then
+                                    Throw New Exception("es gibt keine Beauftragung")
+                                End If
+
+                                cproj = bproj
+
+
+
+                                htop = 150
+                                hleft = 150
+
+                                hheight = 380
+                                hwidth = 900
+                                scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
+
+
+                                noColorCollection = getPhasenUnterschiede(hproj, cproj)
+
+                                repObj1 = Nothing
+                                Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, " ")
+
+                                With repObj1
+                                    htop = .Top + .Height + 3
+                                End With
+
+                                repObj2 = Nothing
+                                Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, "Beauftragung")
+
+                                Try
+                                    pptSize = .TextFrame2.TextRange.Font.Size
+                                    .TextFrame2.TextRange.Text = " "
+                                Catch ex As Exception
+                                    pptSize = 12
+                                End Try
+
+
+
+                                Dim widthFaktor As Double = 1.0
+                                Dim heightFaktor As Double = 1.0
+                                Dim topNext As Double
+
+                                If Not repObj1 Is Nothing Then
+                                    Try
+                                        repObj1.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
+                                        newShape = pptSlide.Shapes.Paste
+
+                                        With newShape(1)
+                                            .Top = top + 0.02 * height
+                                            .Left = left + 0.02 * width
+                                            .Width = width * 0.96
+                                            topNext = top + 0.04 * height + .Height
+                                            '.Height = height * 0.46
+                                        End With
+
+                                        repObj1.Delete()
+
+                                        If Not repObj2 Is Nothing Then
+                                            Try
+                                                repObj2.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
+                                                newShape2 = pptSlide.Shapes.Paste
+
+                                                With newShape2(1)
+                                                    .Top = topNext
+                                                    .Left = left + 0.02 * width
+                                                    .Width = width * 0.96
+                                                    '.Height = height * 0.46
+                                                End With
+
+                                                repObj2.Delete()
+
+                                                ' jetzt muss noch geschaut werden, ob die Shapes zu viele Höhe beanspruchen 
+                                                If newShape(1).Height + newShape2(1).Height > 0.96 * height Then
+                                                    widthFaktor = 0.96 * height / (newShape(1).Height + newShape2(1).Height)
+                                                    newShape.Width = widthFaktor * newShape.Width
+                                                    newShape2.Width = widthFaktor * newShape2.Width
+                                                    newShape2.Top = newShape.Top + newShape.Height + 0.02 * height
+                                                End If
+                                            Catch ex As Exception
+
+                                            End Try
+
+                                        End If
+
+
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End If
 
 
                             Case "Vergleich mit letztem Stand"
@@ -636,39 +784,6 @@ Public Module testModule
 
                                 Call awinCreateStratRisikMargeDiagramm(mycollection, obj, True, False, True, False, htop, hleft, hwidth, hheight)
                                 reportObj = obj
-
-                                notYetDone = True
-
-                            Case "Teilprojekte"
-
-                                Dim scale As Integer
-
-                                Dim cproj As clsProjekt = Nothing
-                                Dim vproj As clsProjektvorlage
-
-
-                                scale = hproj.dauerInDays
-
-                                If qualifier.Length > 0 Then
-                                    If qualifier = "Vorlage" Then
-
-                                        vproj = Projektvorlagen.getProject(hproj.VorlagenName)
-                                        vproj.CopyTo(cproj)
-                                        cproj.startDate = hproj.startDate
-
-
-                                    ElseIf qualifier = "Beauftragung" Then
-                                        cproj = bproj
-
-                                    Else
-                                        cproj = hproj
-
-                                    End If
-                                End If
-                                Dim noColorCollection As New Collection
-                                reportObj = Nothing
-                                Call createPhasesBalken(noColorCollection, cproj, reportObj, scale, htop, hleft, hheight, hwidth, qualifier)
-
 
                                 notYetDone = True
 
