@@ -11092,7 +11092,7 @@ Public Module Projekte
                                     Dim startOffset As Integer
                                     Dim dauerIndays As Integer
                                     startOffset = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
-                                    dauerIndays = calcDauerIndays(hproj.startDate, ende, True)
+                                    dauerIndays = calcDauerIndays(hproj.startDate.AddDays(startOffset), ende - anfang + 1, True)
 
 
                                     .changeStartandDauer(startOffset, dauerIndays)
@@ -11291,8 +11291,9 @@ Public Module Projekte
                                         .name = phaseName
                                         ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                                         Dim startOffset As Integer = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(anfang - 1))
-                                        Dim dauerIndays As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(anfang - 1), _
-                                                                                                StartofCalendar.AddMonths(ende).AddDays(-1)) + 1
+                                        'Dim dauerIndays As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(anfang - 1), _
+                                        '                                                        StartofCalendar.AddMonths(ende).AddDays(-1)) + 1
+                                        Dim dauerIndays As Integer = calcDauerIndays(StartofCalendar.AddDays(startOffset), ende - anfang + 1, True)
                                         .changeStartandDauer(startOffset, dauerIndays)
                                         
                                         .Offset = 0
@@ -11458,7 +11459,7 @@ Public Module Projekte
                                 End If
 
 
-                                Dim tmpResult As New clsResult(tmpPhase)
+                                Dim tmpResult As New clsResult(parent:=tmpPhase)
 
                                 If resultName.Length > 0 Then
                                     With tmpResult
