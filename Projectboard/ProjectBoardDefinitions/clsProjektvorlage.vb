@@ -5,7 +5,8 @@
     Public AllPhases As List(Of clsPhase)
     Private relStart As Integer
     Private uuid As Long
-    Private _Dauer As Integer
+    ' als Friend deklariert, damit sie aus der Klasse clsProjekt, die von clsProjektvorlage erbt , erreichbar ist
+    Friend _Dauer As Integer
     Private _earliestStart As Integer
     Private _latestStart As Integer
 
@@ -23,7 +24,7 @@
 
         With phase
 
-            phaseEnde = .startOffsetinDays + .dauerInDays
+            phaseEnde = .startOffsetinDays + .dauerInDays - 1
 
         End With
 
@@ -107,11 +108,12 @@
                         max = .startOffsetinDays + .dauerInDays
                     End If
 
-                    For m = 1 To .CountResults
-                        If max < .startOffsetinDays + .getResult(m).offset Then
-                            max = .startOffsetinDays + .getResult(m).offset
-                        End If
-                    Next
+                    ' Änderung 16.1.2014 es wird in phase.add(result) sichergestellt, daß kein Meilenstein nach Projektende, vor Projekt-Start sein kann 
+                    'For m = 1 To .CountResults
+                    '    If max < .startOffsetinDays + .getResult(m).offset Then
+                    '        max = .startOffsetinDays + .getResult(m).offset
+                    '    End If
+                    'Next
 
                 End With
 
@@ -138,15 +140,18 @@
 
                 With Me.getPhase(i)
 
-                    If max < .startOffsetinDays + .dauerInDays Then
-                        max = .startOffsetinDays + .dauerInDays
+                    If max < .startOffsetinDays + .dauerInDays - 1 Then
+                        max = .startOffsetinDays + .dauerInDays - 1
                     End If
 
-                    For m = 1 To .CountResults
-                        If max < .startOffsetinDays + .getResult(m).offset Then
-                            max = .startOffsetinDays + .getResult(m).offset
-                        End If
-                    Next
+                    ' Änderung 16.1.2014: Meilensteine wirken nicht Dauer-Verlängernd ! 
+                    ' ausserdem wird in phase.add(result) sichergestellt , dass kein Meilenstein vor Projektstart 
+                    ' bzw. nach Projektende ist 
+                    'For m = 1 To .CountResults
+                    '    If max < .startOffsetinDays + .getResult(m).offset Then
+                    '        max = .startOffsetinDays + .getResult(m).offset
+                    '    End If
+                    'Next
 
                 End With
 
@@ -297,9 +302,8 @@
             Dim phase As clsPhase
             Dim role As clsRolle
             Dim lookforIndex As Boolean
-            Dim phasenStart As Integer, phasenEnde As Integer
-            Dim tempArray() As Double
-
+            Dim phasenStart As Integer
+            Dim tempArray As Double()
 
 
             If _Dauer > 0 Then
@@ -316,8 +320,11 @@
                         ' Off1
                         anzRollen = .CountRoles
                         phasenStart = .relStart - 1
-                        phasenEnde = .relEnde - 1
-                        ReDim tempArray(phasenEnde - phasenStart)
+
+                        ' Änderung: relende, relstart bezeichnet nicht mehr notwendigerweise die tatsächliche Länge des Arrays
+                        ' es können Unschärfen auftreten 
+                        'phasenEnde = .relEnde - 1
+
 
                         For r = 1 To anzRollen
                             role = .getRole(r)
@@ -334,9 +341,12 @@
                                     End If
                                 End If
 
+                                Dim dimension As Integer
                                 If found Then
+                                    dimension = .getDimension
+                                    ReDim tempArray(dimension)
                                     tempArray = .Xwerte
-                                    For i = phasenStart To phasenEnde
+                                    For i = phasenStart To phasenStart + dimension
                                         roleValues(i) = roleValues(i) + tempArray(i - phasenStart)
                                     Next i
                                 End If
@@ -374,7 +384,7 @@
             'Dim ende As Integer
 
 
-            If _Dauer > 0 Then
+            If Me._Dauer > 0 Then
 
                 For p = 0 To AllPhases.Count - 1
                     phase = AllPhases.Item(p)
@@ -391,7 +401,7 @@
                                 Catch ex As Exception
 
                                 End Try
-                                
+
                             End If
                         Next r
                     End With
@@ -451,10 +461,11 @@
             Dim phase As clsPhase
             Dim role As clsRolle
             Dim lookforIndex As Boolean
-            Dim phasenStart As Integer, phasenEnde As Integer
+            Dim phasenStart As Integer
             Dim tempArray() As Double
             Dim tagessatz As Double
             Dim faktor As Double = nrOfDaysMonth
+            Dim dimension As Integer
 
             If awinSettings.kapaEinheit = "PM" Then
                 faktor = nrOfDaysMonth
@@ -480,8 +491,8 @@
                         ' Off1
                         anzRollen = .CountRoles
                         phasenStart = .relStart - 1
-                        phasenEnde = .relEnde - 1
-                        ReDim tempArray(phasenEnde - phasenStart)
+                        'phasenEnde = .relEnde - 1
+
 
                         For r = 1 To anzRollen
                             role = .getRole(r)
@@ -499,8 +510,10 @@
                                 End If
                                 If found Then
                                     tagessatz = .tagessatzIntern
+                                    dimension = .getDimension
+                                    ReDim tempArray(dimension)
                                     tempArray = .Xwerte
-                                    For i = phasenStart To phasenEnde
+                                    For i = phasenStart To phasenStart + dimension
                                         costValues(i) = costValues(i) + tempArray(i - phasenStart) * tagessatz * faktor / 1000
                                     Next i
                                 End If
@@ -536,8 +549,9 @@
             Dim phase As clsPhase
             Dim cost As clsKostenart
             Dim lookforIndex As Boolean, isPersCost As Boolean
-            Dim phasenStart As Integer, phasenEnde As Integer
+            Dim phasenStart As Integer
             Dim tempArray() As Double
+            Dim dimension As Integer
 
 
             If _Dauer > 0 Then
@@ -570,8 +584,8 @@
                             ' Off1
                             anzKostenarten = .CountCosts
                             phasenStart = .relStart - 1
-                            phasenEnde = .relEnde - 1
-                            ReDim tempArray(phasenEnde - phasenStart)
+                            'phasenEnde = .relEnde - 1
+
 
                             For k = 1 To anzKostenarten
                                 cost = .getCost(k)
@@ -588,8 +602,10 @@
                                         End If
                                     End If
                                     If found Then
+                                        dimension = .getDimension
+                                        ReDim tempArray(dimension)
                                         tempArray = .Xwerte
-                                        For i = phasenStart To phasenEnde
+                                        For i = phasenStart To phasenStart + dimension
                                             costValues(i) = costValues(i) + tempArray(i - phasenStart)
                                         Next i
                                     End If
@@ -896,10 +912,11 @@
             Dim i As Integer, p As Integer, r As Integer
             Dim phase As clsPhase
             Dim role As clsRolle
-            Dim phasenStart As Integer, phasenEnde As Integer
+            Dim phasenStart As Integer
             Dim tempArray() As Double
             Dim tagessatz As Double
             Dim faktor As Double = nrOfDaysMonth
+            Dim dimension As Integer
 
             If awinSettings.kapaEinheit = "PM" Then
                 faktor = nrOfDaysMonth
@@ -925,16 +942,18 @@
                         ' Off1
                         anzRollen = .CountRoles
                         phasenStart = .relStart - 1
-                        phasenEnde = .relEnde - 1
-                        ReDim tempArray(phasenEnde - phasenStart)
+                        'phasenEnde = .relEnde - 1
+
 
                         For r = 1 To anzRollen
                             role = .getRole(r)
 
                             With role
                                 tagessatz = .tagessatzIntern
+                                dimension = .getDimension
+                                ReDim tempArray(dimension)
                                 tempArray = .Xwerte
-                                For i = phasenStart To phasenEnde
+                                For i = phasenStart To phasenStart + dimension
                                     costValues(i) = costValues(i) + tempArray(i - phasenStart) * tagessatz * faktor / 1000
                                 Next i
 

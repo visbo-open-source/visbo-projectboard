@@ -33,11 +33,17 @@ Public Class ThisWorkbook
         magicBoardCmdBar.cmdbars = appInstance.CommandBars
 
 
+
         Try
+            appInstance.ScreenUpdating = False
             Call awinsetTypen()
+
         Catch ex As Exception
+
             Call MsgBox(ex.Message)
-            Exit Sub
+
+        Finally
+            appInstance.ScreenUpdating = True
         End Try
 
         anzahlCalls = 0

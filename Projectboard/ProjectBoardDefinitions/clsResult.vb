@@ -163,12 +163,19 @@
 
         Get
 
-            Try
+            If index > bewertungen.Count Then
+                'getBewertung = Nothing
+                getBewertung = New clsBewertung
+            Else
                 getBewertung = bewertungen.ElementAt(index - 1).Value
-            Catch ex As Exception
-                getBewertung = Nothing
-                Throw New ArgumentException(ex.Message)
-            End Try
+            End If
+
+            'Try
+            '    getBewertung = bewertungen.ElementAt(index - 1).Value
+            'Catch ex As Exception
+            '    getBewertung = Nothing
+            '    Throw New ArgumentException(ex.Message)
+            'End Try
 
         End Get
 
@@ -177,6 +184,7 @@
     Public ReadOnly Property getBewertung(ByVal key As String) As clsBewertung
 
         Get
+
 
             Try
                 getBewertung = bewertungen.Item(key)

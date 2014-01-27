@@ -7,7 +7,13 @@ Imports xlNS = Microsoft.Office.Interop.Excel
 
 Public Module testModule
 
-    Public Sub createPPTSlidesFromProject(ByRef hproj As clsprojekt)
+    ''' <summary>
+    ''' erzeugt den Bericht Report auf Grundlage des Templates templatedossier.pptx
+    ''' bei Aufruf ist sichergestellt, daß in Projekthistorie die Historie des Projektes steht 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <remarks></remarks>
+    Public Sub createPPTSlidesFromProject(ByRef hproj As clsProjekt)
         Dim pptApp As pptNS.Application = Nothing
         Dim pptPresentation As pptNS.Presentation = Nothing
         Dim pptSlide As pptNS.Slide = Nothing
@@ -33,11 +39,13 @@ Public Module testModule
         Dim lproj As clsProjekt
         Dim bproj As clsProjekt
         Dim lastproj As clsProjekt
-        Dim lastElem As Integer = projekthistorie.Count - 1
+        Dim lastElem As Integer
 
         Try
+            lastElem = projekthistorie.Count - 1
             lastproj = projekthistorie.ElementAt(lastElem - 1)
         Catch ex As Exception
+            lastElem = -1
             lastproj = Nothing
         End Try
 
@@ -142,6 +150,8 @@ Public Module testModule
                     If kennzeichnung = "Projekt-Name" Or _
                         kennzeichnung = "Soll-Ist & Prognose" Or _
                         kennzeichnung = "Projekt-Grafik" Or _
+                        kennzeichnung = "Meilenstein Trendanalyse" Or _
+                        kennzeichnung = "Vergleich mit Beauftragung" Or _
                         kennzeichnung = "Vergleich mit letztem Stand" Or _
                         kennzeichnung = "Vergleich mit Vorlage" Or _
                         kennzeichnung = "Tabelle Projektziele" Or _
@@ -193,7 +203,7 @@ Public Module testModule
 
                 End With
             Next
-           
+
 
 
             For Each tmpShape As pptNS.Shape In listofShapes
@@ -286,6 +296,105 @@ Public Module testModule
                                 Catch ex As Exception
 
                                 End Try
+
+                            Case "Meilenstein Trendanalyse"
+
+                                Dim nameList As New SortedList(Of Date, String)
+                                Dim listOfItems As New Collection
+
+                                Try
+                                    ' Aufruf 
+                                    If qualifier = "" Then
+                                        ' alle Meilensteine anzeigen
+                                        nameList = hproj.getMilestones
+
+                                        If nameList.Count > 0 Then
+                                            For Each kvp As KeyValuePair(Of Date, String) In nameList
+                                                listOfItems.Add(kvp.Value)
+                                            Next
+                                        End If
+
+
+                                    Else
+                                        ' nur die anzeigen, die im qualifier mit # voneinander getrennt stehen  
+                                        Dim tmpStr(20) As String
+                                        Try
+
+                                            tmpStr = qualifier.Trim.Split(New Char() {"(", ")"}, 20)
+                                            kennzeichnung = tmpStr(0).Trim
+
+                                        Catch ex As Exception
+                                            
+                                        End Try
+
+                                        For i = 1 To tmpStr.Count
+                                            listOfItems.Add(tmpStr(i - 1).Trim)
+                                        Next
+
+                                    End If
+
+                                    ' jetzt ist listofItems entsprechend gefüllt 
+                                    If listOfItems.Count > 0 Then
+                                        htop = 100
+                                        hleft = 50
+                                        hheight = 2 * ((listOfItems.Count - 1) * 20 + 110)
+                                        hwidth = System.Math.Max(hproj.Dauer * boxWidth + 10, 24 * boxWidth + 10)
+
+                                        Call createMsTrendAnalysisOfProject(hproj, obj, listOfItems, htop, hleft, hheight, hwidth)
+
+                                        reportObj = obj
+                                        notYetDone = True
+                                    Else
+                                        .TextFrame2.TextRange.Text = "es gibt keine Meilensteine im Projekt" & vbLf & hproj.name
+                                    End If
+
+                                Catch ex As Exception
+
+                                End Try
+
+                            Case "Teilprojekte"
+
+                                Dim scale As Integer
+
+                                Dim cproj As clsProjekt = Nothing
+                                Dim vproj As clsProjektvorlage
+
+
+                                scale = hproj.dauerInDays
+
+                                If qualifier.Length > 0 Then
+                                    If qualifier = "Vorlage" Then
+
+                                        vproj = Projektvorlagen.getProject(hproj.VorlagenName)
+                                        vproj.CopyTo(cproj)
+                                        cproj.startDate = hproj.startDate
+
+
+                                    ElseIf qualifier = "Beauftragung" Then
+                                        cproj = bproj
+
+                                    Else
+                                        cproj = hproj
+
+                                    End If
+                                Else
+                                    cproj = hproj
+                                End If
+
+                                htop = 150
+                                hleft = 150
+
+
+                                hheight = 380
+                                hwidth = 900
+                                scale = cproj.dauerInDays
+
+                                Dim noColorCollection As New Collection
+                                reportObj = Nothing
+                                Call createPhasesBalken(noColorCollection, cproj, reportObj, scale, htop, hleft, hheight, hwidth, qualifier)
+
+
+                                notYetDone = True
 
                             Case "Vergleich mit Vorlage"
 
@@ -404,6 +513,109 @@ Public Module testModule
                                 End If
 
 
+                            Case "Vergleich mit Beauftragung"
+
+
+                                Dim cproj As clsProjekt
+                                Dim scale As Double
+                                Dim noColorCollection As New Collection
+                                Dim repObj1 As xlNS.ChartObject, repObj2 As xlNS.ChartObject
+
+
+
+                                ' jetzt die Aktion durchführen ...
+
+
+                                If bproj Is Nothing Then
+                                    Throw New Exception("es gibt keine Beauftragung")
+                                End If
+
+                                cproj = bproj
+
+
+
+                                htop = 150
+                                hleft = 150
+
+                                hheight = 380
+                                hwidth = 900
+                                scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
+
+
+                                noColorCollection = getPhasenUnterschiede(hproj, cproj)
+
+                                repObj1 = Nothing
+                                Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, " ")
+
+                                With repObj1
+                                    htop = .Top + .Height + 3
+                                End With
+
+                                repObj2 = Nothing
+                                Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, "Beauftragung")
+
+                                Try
+                                    pptSize = .TextFrame2.TextRange.Font.Size
+                                    .TextFrame2.TextRange.Text = " "
+                                Catch ex As Exception
+                                    pptSize = 12
+                                End Try
+
+
+
+                                Dim widthFaktor As Double = 1.0
+                                Dim heightFaktor As Double = 1.0
+                                Dim topNext As Double
+
+                                If Not repObj1 Is Nothing Then
+                                    Try
+                                        repObj1.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
+                                        newShape = pptSlide.Shapes.Paste
+
+                                        With newShape(1)
+                                            .Top = top + 0.02 * height
+                                            .Left = left + 0.02 * width
+                                            .Width = width * 0.96
+                                            topNext = top + 0.04 * height + .Height
+                                            '.Height = height * 0.46
+                                        End With
+
+                                        repObj1.Delete()
+
+                                        If Not repObj2 Is Nothing Then
+                                            Try
+                                                repObj2.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
+                                                newShape2 = pptSlide.Shapes.Paste
+
+                                                With newShape2(1)
+                                                    .Top = topNext
+                                                    .Left = left + 0.02 * width
+                                                    .Width = width * 0.96
+                                                    '.Height = height * 0.46
+                                                End With
+
+                                                repObj2.Delete()
+
+                                                ' jetzt muss noch geschaut werden, ob die Shapes zu viele Höhe beanspruchen 
+                                                If newShape(1).Height + newShape2(1).Height > 0.96 * height Then
+                                                    widthFaktor = 0.96 * height / (newShape(1).Height + newShape2(1).Height)
+                                                    newShape.Width = widthFaktor * newShape.Width
+                                                    newShape2.Width = widthFaktor * newShape2.Width
+                                                    newShape2.Top = newShape.Top + newShape.Height + 0.02 * height
+                                                End If
+                                            Catch ex As Exception
+
+                                            End Try
+
+                                        End If
+
+
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End If
+
 
                             Case "Vergleich mit letztem Stand"
 
@@ -414,7 +626,7 @@ Public Module testModule
                                 Dim repObj1 As xlNS.ChartObject, repObj2 As xlNS.ChartObject
 
 
-                                
+
                                 ' jetzt die Aktion durchführen ...
 
 
@@ -423,7 +635,7 @@ Public Module testModule
                                 End If
 
                                 cproj = lastproj
-                                
+
 
 
                                 htop = 150
@@ -572,39 +784,6 @@ Public Module testModule
 
                                 Call awinCreateStratRisikMargeDiagramm(mycollection, obj, True, False, True, False, htop, hleft, hwidth, hheight)
                                 reportObj = obj
-
-                                notYetDone = True
-
-                            Case "Teilprojekte"
-
-                                Dim scale As Integer
-
-                                Dim cproj As clsProjekt = Nothing
-                                Dim vproj As clsProjektvorlage
-
-
-                                scale = hproj.dauerInDays
-
-                                If qualifier.Length > 0 Then
-                                    If qualifier = "Vorlage" Then
-
-                                        vproj = Projektvorlagen.getProject(hproj.VorlagenName)
-                                        vproj.CopyTo(cproj)
-                                        cproj.startDate = hproj.startDate
-
-
-                                    ElseIf qualifier = "Beauftragung" Then
-                                        cproj = bproj
-
-                                    Else
-                                        cproj = hproj
-
-                                    End If
-                                End If
-                                Dim noColorCollection As New Collection
-                                reportObj = Nothing
-                                Call createPhasesBalken(noColorCollection, cproj, reportObj, scale, htop, hleft, hheight, hwidth, qualifier)
-
 
                                 notYetDone = True
 
@@ -3242,11 +3421,12 @@ Public Module testModule
 
                     cResult = cphase.getResult(r)
 
-                    Try
-                        cBewertung = cResult.getBewertung(1)
-                    Catch ex As Exception
-                        cBewertung = New clsBewertung
-                    End Try
+                    cBewertung = cResult.getBewertung(1)
+                    'Try
+                    '    cBewertung = cResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    cBewertung = New clsBewertung
+                    'End Try
 
                     resultColumn = getColumnOfDate(cResult.getDate)
 
@@ -3407,6 +3587,17 @@ Public Module testModule
     End Sub
 
 
+    ''' <summary>
+    ''' zeichnet in die Shape Tabelle die Projekt Termin-Änderungen 
+    ''' übergeben wird cproj asl current Projekt
+    ''' bproj als das Projekt, das den Stand zur Beauftragung repräsentierte
+    ''' lproj als das Projekt, das den letzten Stand repräsentiert
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="cproj"></param>
+    ''' <param name="bproj"></param>
+    ''' <param name="lproj"></param>
+    ''' <remarks></remarks>
     Sub zeichneProjektTerminAenderungen(ByRef pptShape As pptNS.Shape, ByVal cproj As clsProjekt, ByVal bproj As clsProjekt, ByVal lproj As clsProjekt)
 
         Dim heute As Date = Date.Now
@@ -3526,44 +3717,49 @@ Public Module testModule
                     cResult = cphase.getResult(r)
                     currentDate = cResult.getDate
 
+                    If IsNothing(bphase) Then
+                    Else
 
-                    Try
+                    End If
 
-                        bResult = bphase.getResult(cResult.name)
+                    bResult = bphase.getResult(cResult.name)
+                    If IsNothing(bResult) Then
+                        bdiff = -9999
+                    Else
                         bDate = bResult.getDate
                         bdiff = DateDiff(DateInterval.Day, bDate, currentDate)
+                    End If
 
-                    Catch ex As Exception
 
-                    End Try
-
-                    Try
-                        lResult = lphase.getResult(cResult.name)
+                    lResult = lphase.getResult(cResult.name)
+                    If IsNothing(lResult) Then
+                        ldiff = -9999
+                    Else
                         lDate = lResult.getDate
                         ldiff = DateDiff(DateInterval.Day, lDate, currentDate)
-
-                    Catch ex As Exception
-
-                    End Try
+                    End If
 
 
-                    Try
-                        cBewertung = cResult.getBewertung(1)
-                    Catch ex As Exception
-                        cBewertung = New clsBewertung
-                    End Try
+                    cBewertung = cResult.getBewertung(1)
+                    'Try
+                    '    cBewertung = cResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    cBewertung = New clsBewertung
+                    'End Try
 
-                    Try
-                        bbewertung = bResult.getBewertung(1)
-                    Catch ex As Exception
-                        bbewertung = New clsBewertung
-                    End Try
+                    bbewertung = bResult.getBewertung(1)
+                    'Try
+                    '    bbewertung = bResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    bbewertung = New clsBewertung
+                    'End Try
 
-                    Try
-                        lbewertung = lResult.getBewertung(1)
-                    Catch ex As Exception
-                        lbewertung = New clsBewertung
-                    End Try
+                    lbewertung = lResult.getBewertung(1)
+                    'Try
+                    '    lbewertung = lResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    lbewertung = New clsBewertung
+                    'End Try
 
                     If bdiff <> 0 Or ldiff <> 0 Then
                         With tabelle
@@ -3680,12 +3876,13 @@ Public Module testModule
                     Dim cBewertung As clsBewertung
 
                     cResult = cphase.getResult(r)
+                    cBewertung = cResult.getBewertung(1)
 
-                    Try
-                        cBewertung = cResult.getBewertung(1)
-                    Catch ex As Exception
-                        cBewertung = New clsBewertung
-                    End Try
+                    'Try
+                    '    cBewertung = cResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    cBewertung = New clsBewertung
+                    'End Try
 
 
                     With tabelle

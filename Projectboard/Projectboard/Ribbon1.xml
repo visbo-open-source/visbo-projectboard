@@ -18,11 +18,11 @@
           <button id="PTXG1B2" label="Ziele-Bewertung" onAction="PT0ShowZieleUebersicht" />
           <separator id="PTXG1s2"/>
           <!--<button id="PTXG1B3" label="alle roten Meilensteine" onAction="Tom2G2M5M2B3ShowMilestones" />
-          <separator id="PTXG1s3"/>
+          <separator id="PTXG1s3"/>-->
           <button id="PTXG1B4" label="Auslastung" onAction="PT0ShowAuslastung" />
           <separator id="PTXG1s4"/>
           <button id="PTXG1B5" label="Engpass" onAction="PTXShowEngpass" />
-          <separator id="PTXG1s5"/>-->
+          <separator id="PTXG1s5"/>
           <button id="PTXG1B6" label="Symbole löschen" onAction="Tom2G2M5B3NoShowSymbols" />
         </group>
       </tab>
@@ -50,7 +50,8 @@
             <button id="PT0G1M2B4" label="Grau" onAction="Tom2G2M5M2B4ShowMilestones" />
             <button id="PT0G1M2B5" label="Alle" onAction="Tom2G2M5M2B5ShowMilestones" />
             <button id="PT0G1M2B6" label="Namen wählen" onAction="PTShowMilestonesByName" />
-            <button id="PT0G1M2B7" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
+            <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="PTShowMilestoneTrend" />
+            <button id="PT0G1M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
           </menu>
           <separator id="PT0G1s4"/>
           <button id="PT0G1B3" label="Strategie / Risiko" onAction="Tom2G2M1B6SFIT" />
@@ -74,13 +75,10 @@
           </menu>
           <separator id="PT0G2s3"/>
           <menu id="PT0G2M2" label="Meilensteine">
-            <button id="PT0G2M2B1" label="Übersicht" onAction="PT0ShowZieleUebersicht" />
-            <button id="PT0G2M2B2" label="Grün" onAction="Tom2G2M5M2B1ShowMilestones" />
-            <button id="PT0G2M2B3" label="Gelb" onAction="Tom2G2M5M2B2ShowMilestones" />
-            <button id="PT0G2M2B4" label="Rot" onAction="Tom2G2M5M2B3ShowMilestones" />
-            <button id="PT0G2M2B5" label="Grau" onAction="Tom2G2M5M2B4ShowMilestones" />
-            <button id="PT0G2M2B6" label="Alle" onAction="Tom2G2M5M2B5ShowMilestones" />
-            <button id="PT0G2M2B7" label="Namen wählen" onAction="PTShowMilestonesByName" />
+            <button id="PT0G2M2B1" label="Ampel Übersicht" onAction="PT0ShowZieleUebersicht" />
+            <button id="PT0G2M2B2" label="Alle anzeigen" onAction="Tom2G2M5M2B5ShowMilestones" />
+            <button id="PT0G2M2B3" label="Auswahl anzeigen" onAction="PTShowAllMilestonesByName" />
+            <button id="PT0G2M2B4" label="Summen Charts" onAction="PTShowMilestoneSummen" />
             <button id="PT0G2M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
           </menu>
           <separator id="PT0G2s4"/>
@@ -140,8 +138,9 @@
           <!--<button id="PT3G1B0" label="Phasen vergleichen in 1 Chart" onAction="Tom2G3M1B1PhasenVgl" />-->
           <button id="PT3G1B1" label="mit Projekt bzw. Vorlage vergleichen" onAction="Tom2G3M1B2PhasenVgl" />
           <button id="PT3G1B2" label="mit letztem Stand vergleichen" onAction="PT3G1B2PhasenVgl" />
+          <button id="PT3G1B3" label="mit Beauftragung vergleichen" onAction="PT3G1B3PhasenVgl" />
           <separator id="PT3G1s1"/>
-          <button id="PT3G1B3" label="Ressourcen vergleichen" onAction="Tom2G3M1B2ResourceVgl" />
+          <button id="PT3G1B4" label="Ressourcen vergleichen" onAction="Tom2G3M1B2ResourceVgl" />
           <separator id="PT3G1s2"/>
           <menu id="PT3G1M1" label ="Soll/Ist">
             <button id="PT3G1M1B1" label="Personalkosten" onAction="Tom2G2M2M1B2SollIstPKosten" />
@@ -149,7 +148,7 @@
             <button id="PT3G1M1B3" label="Gesamt Kosten" onAction="Tom2G2M2M3B2SollIstGKosten" />
           </menu>
           <separator id="PT3G1s3"/>
-          <button id="PT3G1B4" label="Time-Machine" onAction="awinShowTimeMachine"/>
+          <button id="PT3G1B5" label="Time-Machine" onAction="awinShowTimeMachine"/>
           <separator id="PT3G1s4"/>
           <menu id="PT3G1M2" label="Projekt Historie">
             <button id="PT3G1M2B1" label="Strategie/Risiko" onAction="awinShowTrendSR"/>

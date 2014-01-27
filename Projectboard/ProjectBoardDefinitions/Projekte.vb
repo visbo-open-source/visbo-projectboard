@@ -802,19 +802,19 @@ Public Module Projekte
 
             ElseIf qualifier = "Beauftragung" Then
                 titelTeile(0) = "Beauftragung " & hproj.startDate.ToShortDateString & _
-                                     " - " & hproj.startDate.AddDays(hproj.dauerInDays).ToShortDateString & vbLf
+                                     " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
                 kennung = hproj.name.Trim & "Beauftragung" & "#Phasen#1"
 
             ElseIf qualifier = "letzter Stand" Then
                 titelTeile(0) = "letzter Stand " & hproj.startDate.ToShortDateString & _
-                                     " - " & hproj.startDate.AddDays(hproj.dauerInDays).ToShortDateString & vbLf
+                                     " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
                 kennung = hproj.name.Trim & "letzter Stand" & "#Phasen#1"
 
             Else
                 titelTeile(0) = hproj.name & " ,  " & hproj.startDate.ToShortDateString & _
-                                     " - " & hproj.startDate.AddDays(hproj.dauerInDays).ToShortDateString & vbLf
+                                     " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
 
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
                 kennung = hproj.name.Trim & "#Phasen#1"
@@ -1026,7 +1026,7 @@ Public Module Projekte
                             With .Points(px)
 
                                 bis = tdatenreihe1(px - 1) + tdatenreihe2(px - 1)
-                                .Datalabel.Text = hproj.startDate.AddDays(bis).ToShortDateString
+                                .Datalabel.Text = hproj.startDate.AddDays(bis - 1).ToShortDateString
 
                             End With
 
@@ -1158,7 +1158,7 @@ Public Module Projekte
 
 
         titelTeile(0) = hproj.name & " ,  " & hproj.startDate.ToShortDateString & _
-                                      " - " & hproj.startDate.AddDays(hproj.dauerInDays).ToShortDateString & vbLf
+                                      " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
 
@@ -1303,7 +1303,7 @@ Public Module Projekte
                     With .Points(px)
 
                         bis = tdatenreihe1(px - 1) + tdatenreihe2(px - 1)
-                        .Datalabel.Text = hproj.startDate.AddDays(bis).ToShortDateString
+                        .Datalabel.Text = hproj.startDate.AddDays(bis - 1).ToShortDateString
 
                     End With
 
@@ -2621,17 +2621,501 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' Methode zeigt zum ausgewählten Projekt die Trendanalyse zu den in der myCollection übergebenen Meilensteinen an 
+    ''' </summary>
+    ''' <param name="hproj">Verweis auf Projekt</param>
+    ''' <param name="repObj">Verweis auf generiertes ChartObject (für Reporting benötigt)</param>
+    ''' <param name="myCollection">enthält die NAmen der Meilensteine, für die die Trendanalyse erstellt werden soll</param>
+    ''' <param name="top">y-Koordinate linke obere Ecke </param>
+    ''' <param name="left">x-Koordinate linke obere Ecke</param>
+    ''' <param name="height">Höhe des Charts</param>
+    ''' <param name="width">Breite des Charts</param>
+    ''' <remarks></remarks>
+    Public Sub createMsTrendAnalysisOfProject(ByRef hproj As clsProjekt, ByRef repObj As Object, ByRef myCollection As Collection, _
+                                                 ByVal top As Double, left As Double, height As Double, width As Double)
 
-    '
-    ' Prozedur zeigt die Ressourcen Struktur des Projektes an (Balken-Diagramm)
-    '
-    ' Auswahl = 1 : Diagramm zeigt Mann-Monate 
-    ' Auswahl = 2 : Diagramm zeigt Personal-Kosten  
-    ' Kennung Phasen, Personalbedarf, Personalkosten, Sonstige Kosten, Gesamtkosten, Strategie, Ergebnis
-    ' in repObj wird das Grafik Objekt zurückgegeben. Das wird dann von der Reporting Engine verwendet 
+        Dim kennung As String = " "
+        Dim diagramTitle As String = " "
+        Dim anzDiagrams As Integer
+        Dim found As Boolean
+        Dim plen As Integer
+        Dim i As Integer
+        Dim Xdatenreihe() As String
+        Dim tdatenreihe() As Double
+        Dim milestoneReached() As Boolean
+        Dim prevValueTaken() As Boolean
+        Dim ampelfarben() As Long
+        Dim tmpdatenreihe() As Date
+        Dim chtTitle As String
+        Dim pkIndex As Integer = CostDefinitions.Count
+        Dim chtobj As Excel.ChartObject
+        Dim ErgebnisListeR As New Collection
+        Dim msName As String
+        Dim zE As String = "(" & awinSettings.kapaEinheit & ")"
+        Dim titelTeile(1) As String
+        Dim titelTeilLaengen(1) As Integer
+        Dim anzMilestones As Integer
+        Dim aufzeichnungsStart As Date
+        Dim earliestStart As Date
+        Dim von As Integer, bis As Integer
 
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        appInstance.EnableEvents = False
+
+
+
+        Dim pname As String = hproj.name
+
+        titelTeile(0) = "Meilenstein Trend-Analyse " & pname & vbLf
+        titelTeilLaengen(0) = titelTeile(0).Length
+        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+        titelTeilLaengen(1) = titelTeile(1).Length
+        diagramTitle = titelTeile(0) & titelTeile(1)
+        kennung = "MTA"
+
+
+        ' neu - neu - neu - neu 
+
+        ' wann wurde mit der Aufzeichnung der Projekt-Historie begonnen ? 
+        aufzeichnungsStart = projekthistorie.ElementAt(0).timeStamp
+
+        '
+        ' bestimme den seit Beauftragung frühesten Start-Monat 
+        '
+        Try
+            earliestStart = projekthistorie.beauftragung.startDate
+        Catch ex As Exception
+            ' wenn es noch keine Beauftragung gibt, wird das erste Element der Liste verwendet 
+            earliestStart = projekthistorie.ElementAt(0).timeStamp
+            projekthistorie.currentIndex = 0
+        End Try
+
+
+        ' es beginnt entweder mit dem Monat, wo die Aufzeichnung begann oder mit dem Projekt-Start : nimm das größere von beidem 
+        von = System.Math.Max(getColumnOfDate(aufzeichnungsStart), getColumnOfDate(earliestStart))
+
+        ' es endet entweder mit heute oder dem Ende des Projektes : nimm das kleinere von beidem 
+        With hproj
+            bis = System.Math.Min(getColumnOfDate(Date.Now), getColumnOfDate(.endeDate))
+        End With
+
+
+        ' bestimme die Dimension
+        plen = bis - von + 1
+
+        ' wenn nicht mindestens zwei Elemente darstellbar sind, ist kein Trend darzustellen 
+        If plen < 2 Then
+            appInstance.EnableEvents = formerEE
+            Throw New Exception("es gibt noch keinen Trend")
+        End If
+
+        ' neu - neu - neu - neu 
+
+
+        anzMilestones = myCollection.Count
+
+        If anzMilestones = 0 Then
+            appInstance.EnableEvents = formerEE
+            Throw New Exception("keine Meilensteine angegeben!")
+        End If
+
+
+        ReDim Xdatenreihe(plen - 1)
+        ReDim tdatenreihe(plen - 1)
+        ReDim ampelfarben(plen - 1)
+        ReDim milestoneReached(plen - 1)
+        ReDim prevValueTaken(plen - 1)
+
+
+        For i = 1 To plen
+            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(von + i - 2).ToString("MMM yy")
+        Next i
+
+
+        With appInstance.Worksheets(arrWsNames(3))
+            anzDiagrams = .ChartObjects.Count
+            '
+            ' um welches Diagramm handelt es sich ...
+            '
+            i = 1
+            found = False
+            While i <= anzDiagrams And Not found
+                Try
+                    chtTitle = .ChartObjects(i).Chart.ChartTitle.text
+                Catch ex As Exception
+                    chtTitle = " "
+                End Try
+
+                If chtTitle = diagramTitle Then
+                    found = True
+
+                Else
+                    i = i + 1
+                End If
+
+            End While
+
+            If found Then
+
+                appInstance.EnableEvents = formerEE
+
+                repObj = .ChartObjects(i)
+                Exit Sub
+            Else
+                appInstance.ScreenUpdating = False
+
+                With appInstance.Charts.Add
+                    ' remove extra series
+                    Do Until .SeriesCollection.Count = 0
+                        .SeriesCollection(1).Delete()
+                    Loop
+
+                    .HasTitle = True
+                    .ChartTitle.Text = diagramTitle
+                    .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+
+                End With
+
+                chtobj = .Chartobjects(anzDiagrams + 1)
+                chtobj.Name = pname & "#" & kennung & "#" & "1"
+
+
+            End If
+
+            Dim ms As Integer
+            With CType(chtobj.Chart, Excel.Chart)
+
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+
+                ' remove extra series
+                Do Until .SeriesCollection.Count = 0
+                    .SeriesCollection(1).Delete()
+                Loop
+
+                Dim colorIndex As Integer
+                Dim drawnDates As New SortedList(Of Date, Date)
+                Dim drawnMilestones As Integer = 0
+                Dim tmpMinScale As Date, tmpMaxScale As Date
+
+
+                For ms = 1 To anzMilestones
+                    msName = myCollection.Item(ms)
+
+                    Try
+                        tmpdatenreihe = projekthistorie.getMtaDates(msName, von, bis)
+                        drawnMilestones = drawnMilestones + 1
+
+                        ' tmpMinScale und tmpMaxScale werden zur Bestimmung des optimalen Skalierungsfaktors für das Diagramm benötigt 
+                        If ms = 1 Then
+                            tmpMinScale = tmpdatenreihe.Min
+                            tmpMaxScale = tmpdatenreihe.Max
+                        Else
+                            If tmpMinScale > tmpdatenreihe.Min Then
+                                tmpMinScale = tmpdatenreihe.Min
+                            End If
+
+                            If tmpMaxScale < tmpdatenreihe.Max Then
+                                tmpMaxScale = tmpdatenreihe.Max
+                            End If
+                        End If
+
+                        ReDim tdatenreihe(tmpdatenreihe.Length - 1)
+                        For qx = 0 To tmpdatenreihe.Length - 1
+                            ' nur der Datums-Wert ohne Zeit-Anteil - die Farbe ist als Anzahl Sekunden nach Tagesstart in das Datum kodiert ...
+                            tdatenreihe(qx) = tmpdatenreihe(qx).Date.ToOADate
+
+                            ' prüfen, ob der Wert vonm Vormonat übernommen wurde 
+                            If DateDiff(DateInterval.Hour, tmpdatenreihe(qx).Date, tmpdatenreihe(qx)) > 11 Then
+                                prevValueTaken(qx) = True
+                                tmpdatenreihe(qx) = tmpdatenreihe(qx).AddHours(-12) ' Kodierung für "Wert des Vormonats" rausnehmen, sonst ist nachher Farbe auf alle Fälle rot
+                            Else
+                                prevValueTaken(qx) = False
+                            End If
+
+                            If DateDiff(DateInterval.Hour, tmpdatenreihe(qx).Date, tmpdatenreihe(qx)) = 6 Then
+                                milestoneReached(qx) = True
+                                tmpdatenreihe(qx) = tmpdatenreihe(qx).AddHours(-6) ' Kodierung für "milestone abgeschlossen" rausnehmen, sonst ist nachher Farbe auf alle Fälle rot
+                            Else
+                                milestoneReached(qx) = False
+                            End If
+
+                            colorIndex = DateDiff(DateInterval.Second, tmpdatenreihe(qx).Date, tmpdatenreihe(qx))
+                            If colorIndex = 0 Then
+                                ampelfarben(qx) = awinSettings.AmpelNichtBewertet
+                            ElseIf colorIndex = 1 Then
+                                ampelfarben(qx) = awinSettings.AmpelGruen
+                            ElseIf colorIndex = 2 Then
+                                ampelfarben(qx) = awinSettings.AmpelGelb
+                            Else
+                                ampelfarben(qx) = awinSettings.AmpelRot
+                            End If
+                        Next
+
+                        'series
+                        With CType(.SeriesCollection.NewSeries, Excel.Series)
+                            .Name = drawnMilestones.ToString & " - " & msName
+                            .ChartType = Excel.XlChartType.xlLineMarkers
+                            .Interior.Color = awinSettings.AmpelNichtBewertet
+                            .Values = tdatenreihe
+                            .XValues = Xdatenreihe
+                            .HasDataLabels = False
+                            .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleCircle
+                            .MarkerForegroundColor = awinSettings.AmpelNichtBewertet
+                            .MarkerBackgroundColor = awinSettings.AmpelNichtBewertet
+
+                            With .Format.Line
+                                .Visible = MsoTriState.msoTrue
+                                .ForeColor.RGB = awinSettings.AmpelNichtBewertet
+                                .DashStyle = MsoLineDashStyle.msoLineDashDot
+                            End With
+                        End With
+
+
+                        For px = 1 To tdatenreihe.Length
+                            With CType(.SeriesCollection(drawnMilestones).Points(px), Point)
+                                .Interior.Color = ampelfarben(px - 1)
+                                .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleCircle
+                                .MarkerForegroundColor = ampelfarben(px - 1)
+                                .MarkerBackgroundColor = ampelfarben(px - 1)
+                                .MarkerSize = 10
+
+                                ' Schreiben des ersten Planungs-Standes
+                                If px = 1 Then
+
+                                    ' wenn es der Wert aus dem Vormonat ist: einen kleineren Marker zeichnen 
+                                    If prevValueTaken(px - 1) Then
+                                        .MarkerSize = 5
+                                    End If
+
+                                    ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er auch so markiert
+                                    If milestoneReached(px - 1) Then
+                                        .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleSquare
+                                    End If
+
+                                    .HasDataLabel = True
+                                    If anzMilestones > 1 Then
+                                        .DataLabel.Text = drawnMilestones.ToString & " - " & tmpdatenreihe(px - 1).ToShortDateString
+                                    Else
+                                        .DataLabel.Text = msName & vbLf & tmpdatenreihe(px - 1).ToShortDateString
+                                    End If
+
+                                    .DataLabel.Font.Size = awinSettings.fontsizeItems
+                                    Try
+                                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionLeft
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    Try
+                                        drawnDates.Add(tmpdatenreihe(px - 1).Date, tmpdatenreihe(px - 1))
+                                    Catch ex As Exception
+
+                                    End Try
+
+
+                                End If
+
+                                ' wenn mittendrin Daten auftauchen, die noch nicht geschrieben wurden ... 
+                                If px > 1 And px < tdatenreihe.Length Then
+
+                                    ' wenn es der Wert aus dem Vormonat ist: einen kleineren Marker zeichnen 
+                                    If prevValueTaken(px - 1) Then
+                                        .MarkerSize = 5
+                                    End If
+
+                                    ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er auch so markiert
+                                    If milestoneReached(px - 1) Then
+                                        .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleSquare
+                                    End If
+
+                                    If Not drawnDates.ContainsKey(tmpdatenreihe(px - 1).Date) And _
+                                        tmpdatenreihe(px - 1).Date <> tmpdatenreihe(tdatenreihe.Length - 1).Date Then
+
+                                        .HasDataLabel = True
+                                        .DataLabel.Text = tmpdatenreihe(px - 1).ToShortDateString
+                                        '.DataLabel.Text = msName & ": " & tmpdatenreihe(px - 1).ToShortDateString
+                                        .DataLabel.Font.Size = awinSettings.fontsizeItems
+                                        Try
+                                            .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                        Try
+                                            drawnDates.Add(tmpdatenreihe(px - 1).Date, tmpdatenreihe(px - 1))
+                                        Catch ex As Exception
+
+                                        End Try
+
+
+                                    End If
+                                End If
+
+                                ' Schreiben des letzten Planungs-Standes
+                                If px > 1 And px = tdatenreihe.Length Then
+
+                                    ' wenn es der Wert aus dem Vormonat ist: einen kleineren Marker zeichnen 
+                                    If prevValueTaken(px - 1) Then
+                                        .MarkerSize = 5
+                                    End If
+
+                                    ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er auch so markiert
+                                    If milestoneReached(px - 1) Then
+                                        .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleSquare
+                                    End If
+
+                                    .HasDataLabel = True
+                                    If anzMilestones > 1 Then
+                                        .DataLabel.Text = drawnMilestones.ToString & " - " & tmpdatenreihe(px - 1).ToShortDateString
+                                    Else
+                                        .DataLabel.Text = msName & vbLf & tmpdatenreihe(px - 1).ToShortDateString
+                                    End If
+                                    .DataLabel.Font.Size = awinSettings.fontsizeItems
+                                    Try
+                                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionRight
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    Try
+                                        drawnDates.Add(tmpdatenreihe(px - 1).Date, tmpdatenreihe(px - 1))
+                                    Catch ex As Exception
+
+                                    End Try
+
+
+                                End If
+
+                            End With
+                        Next
+
+                        drawnDates.Clear()
+
+
+                    Catch ex As Exception
+
+                    End Try
+
+
+
+
+                Next ms
+
+                ' Bestimmen des optimlaen skalierungsfaktors 
+                Dim spread As Integer
+                spread = DateDiff(DateInterval.Day, tmpMinScale, tmpMaxScale) / 10
+                If spread < 1 Then
+                    spread = 1
+                End If
+
+                tmpMinScale = tmpMinScale.AddDays(-1 * spread)
+                tmpMaxScale = tmpMaxScale.AddDays(spread)
+
+                .HasAxis(Excel.XlAxisType.xlCategory) = True
+                .HasAxis(Excel.XlAxisType.xlValue) = False
+
+
+                With CType(.Axes(Excel.XlAxisType.xlCategory), Excel.Axis)
+                    .HasTitle = True
+                    .AxisTitle.Text = "Berichtszeiträume"
+                    .AxisTitle.Format.TextFrame2.TextRange.Font.Size = 14
+                    .BaseUnit = Excel.XlTimeUnit.xlMonths
+                    .CategoryType = Excel.XlCategoryType.xlTimeScale
+                End With
+
+                With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
+                    .HasMajorGridlines = False
+
+                    Try
+                        .HasTitle = False
+                        '.AxisTitle.Text = "Meilenstein Termine"
+                        '.AxisTitle.Format.TextFrame2.TextRange.Font.Size = 14
+                    Catch ex As Exception
+
+                    End Try
+                    
+                    .MaximumScale = tmpMaxScale.ToOADate
+                    .MinimumScale = tmpMinScale.ToOADate
+                    .MajorUnit = 61
+
+                    'Try
+                    '    .TickLabels.NumberFormat = "dd-mm-yyyy"
+                    'Catch ex As Exception
+
+                    'End Try
+
+
+                End With
+
+                If anzMilestones > 1 Then
+                    .HasLegend = True
+                    With .Legend
+                        .Position = Excel.Constants.xlTop
+                        .Font.Size = awinSettings.fontsizeLegend
+                    End With
+                Else
+                    .HasLegend = False
+                End If
+
+                
+
+            End With
+
+            ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
+            With chtobj
+                .Top = top
+                .Height = height
+                .Left = left
+                .Width = width
+            End With
+
+            With chtobj.Chart
+                ' jetzt wird die Plot-Area so verkleinert, daß links und rechts ausreichend Platz 
+                ' für die Bennenung der Meilensteine ist 
+                .PlotArea.Left = 0.2 * width
+                .PlotArea.Width = 0.8 * width
+                '.PlotArea.Height = 0.9 * height
+                '.PlotArea.Top = 0.08 * height
+            End With
+
+        End With
+
+
+
+        'Call awinScrollintoView()
+        appInstance.EnableEvents = formerEE
+        appInstance.ScreenUpdating = formerSU
+
+        repObj = chtobj
+
+
+
+    End Sub
+
+    
+
+    ''' <summary>
+    ''' Prozedur zeigt die Ressourcen Struktur des Projektes an (Balken-Diagramm)
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="repObj">Verweis auf das Grafik Objekt. 
+    ''' Das wird dann von der Reporting Engine verwendet </param>
+    ''' <param name="auswahl">steuert, was angezeigt wird
+    ''' Auswahl = 1 : Diagramm zeigt Mann-Monate
+    ''' Auswahl = 2 : Diagramm zeigt Personal-Kosten
+    ''' </param>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="height"></param>
+    ''' <param name="width"></param>
+    ''' <remarks>Kennung Phasen, Personalbedarf, Personalkosten, Sonstige Kosten, Gesamtkosten, Strategie, Ergebnis</remarks>
     Public Sub createRessBalkenOfProject(ByRef hproj As clsProjekt, ByRef repObj As Object, ByVal auswahl As Integer, _
-                                        ByVal top As Double, left As Double, height As Double, width As Double)
+                                            ByVal top As Double, left As Double, height As Double, width As Double)
 
         Dim kennung As String = " "
         Dim diagramTitle As String = " "
@@ -5943,12 +6427,11 @@ Public Module Projekte
 
 
         Dim cphase As clsPhase
-        Dim phaseStart As Date
+
         Dim resultDate As Date
 
         For p = 1 To hproj.CountPhases
             cphase = hproj.getPhase(p)
-            phaseStart = hproj.startDate.AddMonths(cphase.relStart - 1)
             For r = 1 To cphase.CountResults
 
                 With cphase.getResult(r)
@@ -6537,7 +7020,7 @@ Public Module Projekte
             Throw New Exception("Fehler in compareProjectPhases: " & ex.Message)
 
         End Try
-        
+
 
 
 
@@ -6589,7 +7072,7 @@ Public Module Projekte
         '
 
         plen = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
-        
+
 
         ReDim Xdatenreihe(mxAnzPhasen - 1)
         ReDim tdatenreihe1(mxAnzPhasen - 1)
@@ -6738,7 +7221,7 @@ Public Module Projekte
 
         height = (mxAnzPhasen - 1) * 20 + 90
         width = plen / 365 * 12 * boxWidth + 10
-       
+
 
 
 
@@ -7239,7 +7722,7 @@ Public Module Projekte
 
         'Dim top As Double, left As Double, height As Double, width As Double
         Dim startdate As Date
-        
+
 
         'Dim textzeile As String
 
@@ -8388,7 +8871,7 @@ Public Module Projekte
             For p = 1 To hproj.CountPhases
 
                 Dim cphase As clsPhase = hproj.getPhase(p)
-                Dim phaseStart As Date = hproj.startDate.AddMonths(cphase.relStart - 1)
+
 
                 For r = 1 To cphase.CountResults
                     Dim cResult As clsResult
@@ -8397,17 +8880,14 @@ Public Module Projekte
 
                     cResult = cphase.getResult(r)
 
-                    Try
-                        nameIstInListe = namenListe.ContainsKey(cResult.name)
-                    Catch ex As Exception
+                    If namenListe.ContainsKey(cResult.name) Then
+                        nameIstInListe = True
+                    Else
                         nameIstInListe = False
-                    End Try
+                    End If
 
-                    Try
-                        cBewertung = cResult.getBewertung(1)
-                    Catch ex As Exception
-                        cBewertung = New clsBewertung
-                    End Try
+                    cBewertung = cResult.getBewertung(1)
+                    
 
                     resultColumn = getColumnOfDate(cResult.getDate)
 
@@ -8557,8 +9037,6 @@ Public Module Projekte
 
         Dim onlyFew As Boolean
         Dim nameIstInListe As Boolean
-        Dim phaseStart As Date
-        Dim phaseEnd As Date
         Dim linienDicke As Double = 2.0
 
 
@@ -8594,8 +9072,6 @@ Public Module Projekte
                     nameIstInListe = False
                 End Try
 
-                phaseStart = hproj.startDate.AddMonths(cphase.relStart - 1)
-                phaseEnd = hproj.startDate.AddMonths(cphase.relEnde - 1)
 
 
                 If onlyFew And Not nameIstInListe Then
@@ -8707,8 +9183,6 @@ Public Module Projekte
 
         Dim onlyFew As Boolean
         Dim nameIstInListe As Boolean
-        Dim phaseStart As Date
-        Dim phaseEnd As Date
         Dim linienDicke As Double = 2.0
         Dim ok As Boolean = True
 
@@ -8758,8 +9232,6 @@ Public Module Projekte
                     nameIstInListe = False
                 End Try
 
-                phaseStart = hproj.startDate.AddMonths(cphase.relStart - 1)
-                phaseEnd = hproj.startDate.AddMonths(cphase.relEnde - 1)
 
 
                 If onlyFew And Not nameIstInListe Then
@@ -8817,7 +9289,7 @@ Public Module Projekte
 
                     End If
 
-                    
+
 
 
 
@@ -9609,7 +10081,7 @@ Public Module Projekte
 
                 End Try
 
-               
+
 
                 appInstance.EnableEvents = True
 
@@ -9619,7 +10091,7 @@ Public Module Projekte
                 Call MsgBox("Projekt " & pname & " wurde nicht gefunden")
             End If
 
-            
+
         End If
     End Sub
 
@@ -9735,7 +10207,7 @@ Public Module Projekte
 
     End Sub
 
-    
+
     Public Sub awinExportProject(hproj As clsProjekt)
 
         Dim fileName As String
@@ -9776,7 +10248,11 @@ Public Module Projekte
 
                 ' Ende
 
+<<<<<<< HEAD
                 .range("EndeDatum").value = CDate(hproj.startDate.AddDays(hproj.dauerInDays))
+=======
+                .range("EndeDatum").value = hproj.startDate.AddDays(hproj.dauerInDays - 1)
+>>>>>>> 92e02cda214fb2b0d11aff405a4452b0fd2e904b
 
 
                 'Projektleiter
@@ -9885,6 +10361,7 @@ Public Module Projekte
                 Dim r As Integer
                 Dim d As Integer
                 Dim itemName As String
+                Dim dimension As Integer
 
                 ' evtl hier vorher prüfen, ob es eine Phase mit Name hproj.name oder hproj.vorlagenName gibt; wenn nein , 
                 ' muss hier der Projektname mit farbiger Gesamtdauer stehen 
@@ -9936,16 +10413,20 @@ Public Module Projekte
                     rowOffset = rowOffset + 1
 
 
-                    ReDim values(cphase.relEnde - cphase.relStart)
+
                     anzahlItems = cphase.CountRoles
 
 
                     ' jetzt werden Rollen geschrieben 
                     For r = 1 To anzahlItems
                         itemName = cphase.getRole(r).name
+                        dimension = cphase.getRole(r).getDimension
+                        'ReDim values(cphase.relEnde - cphase.relStart)
+                        ReDim values(dimension)
                         values = cphase.getRole(r).Xwerte
                         .range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset).value = itemName
-                        For d = 1 To cphase.relEnde - cphase.relStart + 1
+
+                        For d = 1 To dimension + 1
                             .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
                             .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Value = values(d - 1)
                         Next d
@@ -9954,14 +10435,16 @@ Public Module Projekte
 
 
                     ' jetzt werden Kosten geschrieben 
-                    ReDim values(cphase.relEnde - cphase.relStart)
+
                     anzahlItems = cphase.CountCosts
 
                     For k = 1 To anzahlItems
                         itemName = cphase.getCost(k).name
+                        dimension = cphase.getCost(k).getDimension
+                        ReDim values(dimension)
                         values = cphase.getCost(k).Xwerte
                         .range("RollenKosten_des_Projekts").Cells(rowOffset, columnOffset).value = itemName
-                        For d = 1 To cphase.relEnde - cphase.relStart + 1
+                        For d = 1 To dimension + 1
                             .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
                             .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Value = values(d - 1)
                         Next d
@@ -10221,13 +10704,13 @@ Public Module Projekte
 
                 If awinSettings.zeitEinheit = "PM" Then
                     phaseStart = hproj.startDate.AddDays(cphase.startOffsetinDays)
-                    phaseEnde = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
+                    phaseEnde = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
                 ElseIf awinSettings.zeitEinheit = "PW" Then
                     phaseStart = hproj.startDate.AddDays((cphase.relStart - 1) * 7)
                     phaseEnde = hproj.startDate.AddDays((cphase.relEnde - 1) * 7)
                 ElseIf awinSettings.zeitEinheit = "PT" Then
                     phaseStart = hproj.startDate.AddDays(cphase.relStart - 1)
-                    phaseStart = hproj.startDate.AddDays(cphase.relEnde - 1)
+                    phaseEnde = hproj.startDate.AddDays(cphase.relEnde - 1)
                 End If
 
 
@@ -10249,11 +10732,12 @@ Public Module Projekte
                 For r = 1 To cphase.CountResults
                     cResult = cphase.getResult(r)
 
-                    Try
-                        cBewertung = cResult.getBewertung(1)
-                    Catch ex As Exception
-                        cBewertung = New clsBewertung
-                    End Try
+                    cBewertung = cResult.getBewertung(1)
+                    'Try
+                    '    cBewertung = cResult.getBewertung(1)
+                    'Catch ex As Exception
+                    '    cBewertung = New clsBewertung
+                    'End Try
                     ' --------------------------------------------------------------------------------
                     ' Termine müssen in Tabelle eingetragen werden
                     '----------------------------------------------------------------------------------
@@ -10430,6 +10914,7 @@ Public Module Projekte
             Dim anzahlItems As Integer
             Dim r As Integer
             Dim itemName As String
+            Dim dimension As Integer
             'Dim atleastOne As Boolean = False
 
 
@@ -10460,29 +10945,33 @@ Public Module Projekte
                 End If
 
 
-                ReDim values(cphase.relEnde - cphase.relStart)
+
                 anzahlItems = cphase.CountRoles
 
 
                 For r = 1 To anzahlItems
                     itemName = cphase.getRole(r).name
+                    dimension = cphase.getRole(r).getDimension
+                    ReDim values(dimension)
                     values = cphase.getRole(r).Xwerte
                     .cells(zeile, spalte + 1).value = itemName
-                    rng = .Range(.Cells(zeile, spalte + 1 + cphase.relStart), .Cells(zeile, spalte + 1 + cphase.relEnde))
+                    rng = .Range(.Cells(zeile, spalte + 1 + cphase.relStart), .Cells(zeile, spalte + 1 + cphase.relStart + dimension))
                     rng.Value = values
                     zeile = zeile + 1
                 Next r
 
 
                 ' jetzt werden Kosten geschrieben 
-                ReDim values(cphase.relEnde - cphase.relStart)
+
                 anzahlItems = cphase.CountCosts
 
                 For k = 1 To anzahlItems
                     itemName = cphase.getCost(k).name
+                    dimension = cphase.getCost(k).getDimension
+                    ReDim values(dimension)
                     values = cphase.getCost(k).Xwerte
                     .cells(zeile, spalte + 1).value = itemName
-                    rng = .Range(.Cells(zeile, spalte + 1 + cphase.relStart), .Cells(zeile, spalte + 1 + cphase.relEnde))
+                    rng = .Range(.Cells(zeile, spalte + 1 + cphase.relStart), .Cells(zeile, spalte + 1 + cphase.relStart + dimension))
                     rng.Value = values
                     zeile = zeile + 1
                 Next k
@@ -10561,11 +11050,10 @@ Public Module Projekte
                                     Dim startOffset As Integer
                                     Dim dauerIndays As Integer
                                     startOffset = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
-                                    dauerIndays = DateDiff(DateInterval.Day, hproj.startDate.AddMonths(anfang - 1), hproj.startDate.AddMonths(ende).AddDays(-1)) + 1
+                                    dauerIndays = calcDauerIndays(hproj.startDate, ende, True)
+
 
                                     .changeStartandDauer(startOffset, dauerIndays)
-                                    '.relStart = anfang
-                                    '.relEnde = ende
                                     .Offset = 0
                                 End With
 
@@ -10764,8 +11252,7 @@ Public Module Projekte
                                         Dim dauerIndays As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(anfang - 1), _
                                                                                                 StartofCalendar.AddMonths(ende).AddDays(-1)) + 1
                                         .changeStartandDauer(startOffset, dauerIndays)
-                                        '.relStart = anfang
-                                        '.relEnde = ende
+                                        
                                         .Offset = 0
                                     End With
 
@@ -10891,7 +11378,7 @@ Public Module Projekte
                         phaseName = zelle.Value.trim
 
                         tmpPhase = hproj.getPhase(phaseName)
-                        defaultOffset = tmpPhase.DauerM * 30
+                        defaultOffset = tmpPhase.dauerInDays
                     Catch ex As Exception
 
                     End Try
@@ -10994,7 +11481,7 @@ Public Module Projekte
 
         End Try
 
-        
+
         textZeitraum = htxt
 
         'textZeitraum = StartofCalendar.AddMonths(start - 1).ToString("MMM yy") & " - " & _
@@ -11295,8 +11782,6 @@ Public Module Projekte
 
             If ok Then
 
-                ' Änderung - braucht man hier nicht ... 
-                ' cPhase = New clsPhase(hproj)
                 Try
                     phaseName = tmpstr(1).Trim
                     cPhase = hproj.getPhase(phaseName)
@@ -11304,39 +11789,46 @@ Public Module Projekte
                     resultName = .Title
                     cResult = cPhase.getResult(resultName)
 
-                    With formMilestone
-                        .bewertungsListe = cResult.bewertungsListe
-                        .projectName.Text = hproj.name
-                        .phaseName.Text = cPhase.name
+                    If IsNothing(cResult) Then
+                    Else
 
-                        .resultDate.Text = cResult.getDate.ToShortDateString
-                        .resultName.Text = cResult.name
-                        
+                        With formMilestone
+                            .bewertungsListe = cResult.bewertungsListe
+                            .projectName.Text = hproj.name
+                            .phaseName.Text = cPhase.name
 
-                        If .bewertungsListe.Count > 0 Then
-                            Dim hb As clsBewertung = .bewertungsListe.ElementAt(0).Value
-
-                            Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(hb.color)
-
-                            .bewertungsText.Text = hb.description
+                            .resultDate.Text = cResult.getDate.ToShortDateString
+                            .resultName.Text = cResult.name
 
 
-                        Else
+                            If .bewertungsListe.Count > 0 Then
+                                Dim hb As clsBewertung = .bewertungsListe.ElementAt(0).Value
 
-                            Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(awinSettings.AmpelNichtBewertet)
+                                Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(hb.color)
 
-                            .bewertungsText.Text = "es existiert noch keine Bewertung ...."
-                            
+                                .bewertungsText.Text = hb.description
 
-                        End If
 
-                        If .Visible Then
-                        Else
-                            .Visible = True
-                            .Show()
-                        End If
+                            Else
 
-                    End With
+                                Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(awinSettings.AmpelNichtBewertet)
+
+                                .bewertungsText.Text = "es existiert noch keine Bewertung ...."
+
+
+                            End If
+
+                            If .Visible Then
+                            Else
+                                .Visible = True
+                                .Show()
+                            End If
+
+                        End With
+
+
+                    End If
+
 
 
 
@@ -11367,7 +11859,7 @@ Public Module Projekte
         Dim projectName As String
         Dim phaseName As String
         Dim cPhase As clsPhase
-        
+
         Dim ok As Boolean = True
         Dim hproj As New clsProjekt
 
@@ -11398,8 +11890,9 @@ Public Module Projekte
                 phaseName = tmpstr(1).Trim
                 cPhase = hproj.getPhase(phaseName)
                 'phaseStartdate = hproj.startDate.AddMonths(cPhase.relStart - 1)
-                phaseStartdate = hproj.startDate.AddDays(cPhase.startOffsetinDays)
-                phaseEnddate = hproj.startDate.AddDays(cPhase.startOffsetinDays + cPhase.dauerInDays - 1)
+
+                phaseStartdate = cPhase.getStartDate
+                phaseEnddate = cPhase.getEndDate
                 phaseDauerDays = cPhase.dauerInDays
 
 
@@ -11457,7 +11950,7 @@ Public Module Projekte
 
 
                 End With
- 
+
 
             Catch ex As Exception
                 phaseName = ""
@@ -11476,43 +11969,65 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' bringt eine Liste von Phasen Namen zurück, die in den beiden Projekten einander identisch sind 
+    ''' Wenn die Collection leer ist, dann unterscheiden sich beide Projekte in allen Phasen 
+    ''' </summary>
+    ''' <param name="hproj">Projekt 1</param>
+    ''' <param name="cproj">Projekt 2</param>
+    ''' <returns>Liste von Phasen Namen, die identisch sind </returns>
+    ''' <remarks></remarks>
     Public Function getPhasenUnterschiede(ByVal hproj As clsProjekt, ByVal cproj As clsProjekt) As Collection
         Dim noColorCollection As New Collection
         Dim hphase As clsPhase, cphase As clsPhase
         Dim phaseName As String
 
-        Try
 
-            For p = 1 To hproj.CountPhases
-                hphase = hproj.getPhase(p)
-                phaseName = hphase.name
-                Try
+        For p = 1 To hproj.CountPhases
 
-                    cphase = cproj.getPhase(phaseName)
+            Try
+                If p = 1 Then
+                    hphase = hproj.getPhase(1)
+                    cphase = cproj.getPhase(1)
 
                     If hphase.startOffsetinDays = cphase.startOffsetinDays And _
-                        hphase.dauerInDays = cphase.dauerInDays Then
+                            hphase.dauerInDays = cphase.dauerInDays Then
                         Try
-                            noColorCollection.Add(phaseName, phaseName)
+                            ' in diesem Fall müssen beide Phase(1) Namen, die ja evtl unterschiedlich sind, aufgenommen werden 
+                            noColorCollection.Add(hphase.name, hphase.name)
+                            noColorCollection.Add(cphase.name, cphase.name)
                         Catch ex As Exception
 
                         End Try
                     End If
+                Else
 
-                Catch ex As Exception
-                    ' in diesem Fall gibt es die Phase in hproj, nicht aber in cproj ... 
-                    ' das heisst, es muss farbig gezeichnet werden ... also nicht in NoColorCollection aufnehmen 
+                    hphase = hproj.getPhase(p)
+                    phaseName = hphase.name
 
-                End Try
+                    Try
+                        cphase = cproj.getPhase(phaseName)
+
+                        If hphase.startOffsetinDays = cphase.startOffsetinDays And _
+                            hphase.dauerInDays = cphase.dauerInDays Then
+                            Try
+                                noColorCollection.Add(phaseName, phaseName)
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+                    Catch ex As Exception
+                        ' in diesem Fall gibt es die Phase in hproj, nicht aber in cproj ... 
+                        ' das heisst, es muss farbig gezeichnet werden ... also nicht in NoColorCollection aufnehmen 
+                    End Try
+                End If
+
+            Catch ex As Exception
+                ' in diesem Fall ist gar nichts zu tun ... 
+            End Try
 
 
-            Next
-
-
-        Catch ex As Exception
-            ' in diesem Fall ist gar nichts zu tun ... 
-        End Try
-
+        Next
 
         getPhasenUnterschiede = noColorCollection
 
@@ -11575,7 +12090,7 @@ Public Module Projekte
                     hValues = hproj.getPhaseInfos
                     cValues = cproj.getPhaseInfos
 
-                    
+
 
 
                     ' es existiert schon - deshalb müssen alle restlichen Werte aus dem cproj übernommen werden 
@@ -11601,7 +12116,7 @@ Public Module Projekte
                                 ' das heisst, das Projekt hat sich verändert 
                                 .Status = ProjektStatus(2)
                             End If
-                            
+
                             .StrategicFit = cproj.StrategicFit
                             .businessUnit = cproj.businessUnit
                             .description = cproj.description
@@ -11664,7 +12179,7 @@ Public Module Projekte
 
                         End Try
                     End If
-                    
+
                     Try
                         With hproj
 
@@ -11722,7 +12237,7 @@ Public Module Projekte
                     End Try
 
                 End If
-               
+
 
             End If
 

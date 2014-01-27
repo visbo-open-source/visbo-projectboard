@@ -115,6 +115,7 @@ Public Module Module1
         ErgebnisWasserfall = 9
         ComplexRisiko = 10
         ZeitRisiko = 11
+        Meilenstein = 12
     End Enum
 
     
@@ -129,6 +130,14 @@ Public Module Module1
         projektampel = 7
         resultampel = 8
         phasen = 9
+    End Enum
+
+    ' Enumeration für die Farbe 
+    Public Enum PTfarbe
+        none = 0
+        green = 1
+        yellow = 2
+        red = 3
     End Enum
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
@@ -193,7 +202,7 @@ Public Module Module1
     ' portfolio
 
     ' Variable nimmt die Namen der Diagramm-Typen auf 
-    Public DiagrammTypen(5) As String
+    Public DiagrammTypen(6) As String
 
     ' Variable nimmt die Namen der Windows auf  
     Public windowNames(5) As String
@@ -1133,196 +1142,7 @@ Public Module Module1
 
     End Function
 
-    Sub awinChangeStartDauerofProject(projektname As String, tfzeile As Integer, Startdate As Date, Dauer As Integer)
 
-        'Dim endkriterium As Integer, zeile As Integer
-        'Dim found As Boolean
-        'Dim wsname As String
-        Dim hproj As clsProjekt
-
-        'zeile = 2
-        'Dim wasTrue As Boolean
-
-        'wasTrue = False
-        'If appInstance.EnableEvents = True Then
-        '    wasTrue = True
-        '    appInstance.EnableEvents = False
-        'End If
-
-
-        'wsname = arrWsNames(1)
-
-        'found = False
-
-        'With appInstance.Worksheets(wsname)
-        '    endkriterium = .Range("Projektliste").Row
-        '    While zeile <= endkriterium And Not found
-
-        '        If .Cells(zeile, 1).Value = projektname Then
-        '            found = True
-        '        Else
-        '            zeile = zeile + 1
-        '        End If
-
-        '    End While
-        '    If found Then
-        '        If Start > 0 Then
-        '            .Cells(zeile, 3).Value = Start
-        '        End If
-        '        If Dauer > 0 Then
-        '            .Cells(zeile, 4).Value = Dauer
-        '        End If
-        '    End If
-
-        'End With
-
-
-        'If wasTrue Then
-        '    appInstance.EnableEvents = True
-        'End If
-
-
-
-        ' jetzt wird das in der Project Collection geändert
-        '
-        If ShowProjekte.Liste.ContainsKey(projektname) Then
-
-            hproj = ShowProjekte.getProject(projektname)
-            With hproj
-                Try
-                    .startDate = Startdate
-                Catch ex As Exception
-                    Call MsgBox("in awinChangeStartDauerofProject: " & Chr(10) & ex.Message)
-                End Try
-
-                .tfZeile = tfzeile
-                '.tfSpalte = Start
-            End With
-
-
-            'If Start > 0 Then
-            '    ShowProjekte.getProject(projektname).Start = Start
-            'End If
-        Else
-            MsgBox("Fehler in ChangeStartDauerofProject: projektname " & projektname & " nicht gefunden")
-        End If
-
-
-    End Sub
-
-    
-    '
-    ' wird aufgerufen von Tasten-Kombination Ctrl und Rechte Pfeiltaste
-    '
-    'Sub awinExpandTimeSpanRight()
-    '    Dim von As Integer, bis As Integer
-
-    '    von = showRangeLeft
-
-    '    If showRangeRight <= 119 Then
-    '        bis = showRangeRight + 1
-    '    Else
-    '        bis = showRangeRight
-    '    End If
-
-    '    Call awinChangeTimeSpan(von, bis)
-
-    'End Sub
-
-
-    '
-    ' wird aufgerufen von Tasten-Kombination Ctrl und linke Pfeiltaste
-    '
-    'Sub awinExpandTimeSpanLeft()
-    '    Dim von As Integer, bis As Integer
-
-    '    bis = showRangeRight
-
-    '    If showRangeLeft > 1 Then
-    '        von = showRangeLeft - 1
-    '    Else
-    '        von = showRangeLeft
-    '    End If
-
-    '    Call awinChangeTimeSpan(von, bis)
-
-    'End Sub
-
-    '
-    ' wird aufgerufen von Tasten-Kombination Alt und linke Pfeiltaste
-    '
-    'Sub awinReduceTimeSpanLeft()
-    '    Dim von As Integer, bis As Integer
-
-    '    von = showRangeLeft
-
-    '    If showRangeRight > showRangeLeft + 5 Then
-    '        bis = showRangeRight - 1
-    '    Else
-    '        bis = showRangeRight
-    '    End If
-
-    '    Call awinChangeTimeSpan(von, bis)
-
-    'End Sub
-
-    '
-    ' wird aufgerufen von Tasten-Kombination Alt und rechte Pfeiltaste
-    '
-    'Sub awinReduceTimeSpanRight()
-    '    Dim von As Integer, bis As Integer
-
-    '    bis = showRangeRight
-
-    '    If showRangeRight > showRangeLeft + 5 Then
-    '        von = showRangeLeft + 1
-    '    Else
-    '        von = showRangeLeft
-    '    End If
-
-    '    Call awinChangeTimeSpan(von, bis)
-
-    'End Sub
-
-    '
-    ' wird aufgerufen von Tasten-Kombination Linke Pfeiltaste
-    '
-    'Sub awinMoveTimeSpanLeft()
-    '    Dim von As Integer, bis As Integer
-
-
-
-    '    If showRangeLeft > 1 Then
-    '        von = showRangeLeft - 1
-    '        bis = showRangeRight - 1
-    '    Else
-    '        von = showRangeLeft
-    '        bis = showRangeRight
-    '    End If
-
-    '    Call awinChangeTimeSpan(von, bis)
-
-    'End Sub
-
-    '
-    ' wird aufgerufen von Tasten-Kombination Rechte Pfeiltaste
-    '
-    'Sub awinMoveTimeSpanRight()
-    '    Dim von As Integer, bis As Integer
-
-
-
-    '    If showRangeRight <= 119 Then
-    '        von = showRangeLeft + 1
-    '        bis = showRangeRight + 1
-    '    Else
-    '        von = showRangeLeft
-    '        bis = showRangeRight
-    '    End If
-
-    '    Call awinChangeTimeSpan(von, bis)
-
-    'End Sub
 
     '
     ' gibt die Überdeckung zurück zwischen den beiden Zeiträumen definiert durch showRangeLeft /showRangeRight und anfang / ende
@@ -1695,17 +1515,6 @@ Public Module Module1
             newC.Add(newConstellationItem)
         Next
 
-        'For Each kvp As KeyValuePair(Of String, clsProjekt) In NoShowProjekte.Liste
-        '    newConstellationItem = New clsConstellationItem
-        '    With newConstellationItem
-        '        .projectName = kvp.Key
-        '        .show = False
-        '        .Start = kvp.Value.startDate
-        '        .variantName = ""
-        '        .zeile = kvp.Value.tfZeile
-        '    End With
-        '    newC.Add(newConstellationItem)
-        'Next
 
         Try
             projectConstellations.Add(newC)
@@ -2115,6 +1924,73 @@ Public Module Module1
             definecharacteristics = 3
         Else
             definecharacteristics = 2
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' Funktion berechnet die Dauer in Tagen des Zeitraums, der durch startDatum und endeDatum aufgespannt wird 
+    ''' Wenn StartDatum = EndeDatum: Dauer = 1
+    ''' Wenn StartDatum nach dem EndeDatum liegt, wird eine negative Dauer ausgegegeben   
+    ''' </summary>
+    ''' <param name="startDatum"></param>
+    ''' <param name="endeDatum"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcDauerIndays(ByVal startDatum As Date, ByVal endeDatum As Date) As Integer
+
+        If startDatum.Date > endeDatum.Date Then
+            calcDauerIndays = DateDiff(DateInterval.Day, startDatum, endeDatum) - 1
+        Else
+            calcDauerIndays = DateDiff(DateInterval.Day, startDatum, endeDatum) + 1
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' Funktion berechnet die Dauer in Tagen des Zeitraums, der durch StartDatum und Dauer in Monaten aufgespannt wird 
+    ''' wenn isRelative=false, dann steht rasterMonat für die absolute Spalte der Projekt-Tafel, in der das Projekt endet
+    ''' </summary>
+    ''' <param name="startDatum"></param>
+    ''' <param name="rasterMonat"></param>
+    ''' <param name="isRelative"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcDauerIndays(ByVal startDatum As Date, ByVal rasterMonat As Integer, ByVal isRelative As Boolean) As Integer
+        Dim endeDatum As Date
+
+        If isRelative Then
+            If rasterMonat >= 0 Then
+                endeDatum = StartofCalendar.AddMonths(getColumnOfDate(startDatum) - 1 + rasterMonat).AddDays(-1)
+            Else
+                endeDatum = StartofCalendar.AddMonths(getColumnOfDate(startDatum) - 1 + rasterMonat)
+            End If
+
+        Else
+
+            If rasterMonat >= 0 Then
+                endeDatum = StartofCalendar.AddMonths(rasterMonat).AddDays(-1)
+            Else
+                endeDatum = StartofCalendar.AddMonths(getColumnOfDate(startDatum) - 1 + rasterMonat)
+            End If
+
+        End If
+
+        If startDatum.Date > endeDatum.Date Then
+            calcDauerIndays = DateDiff(DateInterval.Day, startDatum, endeDatum) - 1
+        Else
+            calcDauerIndays = DateDiff(DateInterval.Day, startDatum, endeDatum) + 1
+        End If
+
+
+    End Function
+
+    Public Function calcDatum(ByVal datum As Date, ByVal dauerInDays As Integer) As Date
+
+        If dauerInDays <> 0 Then
+            calcDatum = datum.AddDays(dauerInDays - 1)
+        Else
+            Throw New Exception("Dauer von Null ist unzulässig ..")
         End If
 
     End Function
