@@ -1395,7 +1395,7 @@ Public Module awinGeneralModules
                             added = False
 
                             ' Auslesen der Phasen Dauer
-                            anfang = 1
+                            anfang = 1  ' anfang enthält den rel.Anfang einer Phase
                             Try
                                 While CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142 And
                                     Not (CType(zelle.Offset(0, anfang + 1).Value, String) = "x")
@@ -1408,14 +1408,14 @@ Public Module awinGeneralModules
 
                             ende = anfang + 1
 
-                            If CInt(zelle.Offset(0, ende).Interior.ColorIndex) = -4142 Then
-                                While CType(zelle.Offset(0, ende + 1).Value, String) = "x"
+                            If CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142 Then
+                                While CType(zelle.Offset(0, ende).Value, String) = "x"
                                     ende = ende + 1
                                 End While
                                 ende = ende - 1
                             Else
-                                farbeAktuell = zelle.Offset(0, ende + 1).Interior.Color
-                                While CInt(zelle.Offset(0, ende + 1).Interior.Color) = CInt(farbeAktuell)
+                                farbeAktuell = zelle.Offset(0, anfang + 1).Interior.Color
+                                While CInt(zelle.Offset(0, ende).Interior.Color) = CInt(farbeAktuell)
 
                                     ende = ende + 1
                                 End While
@@ -1427,6 +1427,7 @@ Public Module awinGeneralModules
                                 ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                                 Dim startOffset As Integer = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
                                 Dim dauerIndays As Integer = DateDiff(DateInterval.Day, hproj.startDate.AddDays(startOffset), hproj.startDate.AddMonths(ende - 1).AddDays(-1)) + 1
+                                ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
                                 Dim phaseStartdate As Date = hproj.startDate.AddDays(startOffset)
                                 Dim phaseEnddate As Date = hproj.startDate.AddDays(startOffset + dauerIndays - 1)
                                 .changeStartandDauer(startOffset, dauerIndays)
@@ -1454,14 +1455,14 @@ Public Module awinGeneralModules
                                         Try
                                             r = CInt(RoleDefinitions.getRoledef(hname).UID)
 
-                                            ReDim Xwerte(ende - anfang)
+                                            ReDim Xwerte(ende - anfang - 1)
 
 
                                             For m = anfang To ende
                                                 Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
                                             Next m
 
-                                            crole = New clsRolle(ende - anfang)
+                                            crole = New clsRolle(ende - anfang - 1)
                                             With crole
                                                 .RollenTyp = r
                                                 .Xwerte = Xwerte
@@ -1482,13 +1483,13 @@ Public Module awinGeneralModules
 
                                             k = CInt(CostDefinitions.getCostdef(hname).UID)
 
-                                            ReDim Xwerte(ende - anfang)
+                                            ReDim Xwerte(ende - anfang - 1)
 
                                             For m = anfang To ende
                                                 Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
                                             Next m
 
-                                            ccost = New clsKostenart(ende - anfang)
+                                            ccost = New clsKostenart(ende - anfang - 1)
                                             With ccost
                                                 .KostenTyp = k
                                                 .Xwerte = Xwerte
