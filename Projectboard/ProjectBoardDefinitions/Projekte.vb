@@ -2699,7 +2699,7 @@ Public Module Projekte
 
         ' es endet entweder mit heute oder dem Ende des Projektes : nimm das kleinere von beidem 
         With hproj
-            bis = System.Math.Min(getColumnOfDate(Date.Now), getColumnOfDate(.startDate.AddDays(.dauerInDays - 1)))
+            bis = System.Math.Min(getColumnOfDate(Date.Now), getColumnOfDate(.endeDate))
         End With
 
 
@@ -3019,9 +3019,10 @@ Public Module Projekte
                 .HasAxis(Excel.XlAxisType.xlCategory) = True
                 .HasAxis(Excel.XlAxisType.xlValue) = False
 
+
                 With CType(.Axes(Excel.XlAxisType.xlCategory), Excel.Axis)
                     .HasTitle = True
-                    .AxisTitle.Text = "Planungs-Stände"
+                    .AxisTitle.Text = "Berichtszeiträume"
                     .AxisTitle.Format.TextFrame2.TextRange.Font.Size = 14
                     .BaseUnit = Excel.XlTimeUnit.xlMonths
                     .CategoryType = Excel.XlCategoryType.xlTimeScale
@@ -3029,16 +3030,24 @@ Public Module Projekte
 
                 With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                     .HasMajorGridlines = False
-                    .HasTitle = False
+
+                    Try
+                        .HasTitle = False
+                        '.AxisTitle.Text = "Meilenstein Termine"
+                        '.AxisTitle.Format.TextFrame2.TextRange.Font.Size = 14
+                    Catch ex As Exception
+
+                    End Try
+                    
                     .MaximumScale = tmpMaxScale.ToOADate
                     .MinimumScale = tmpMinScale.ToOADate
                     .MajorUnit = 61
 
-                    Try
-                        .TickLabels.NumberFormat = "dd-mm-yyyy"
-                    Catch ex As Exception
+                    'Try
+                    '    .TickLabels.NumberFormat = "dd-mm-yyyy"
+                    'Catch ex As Exception
 
-                    End Try
+                    'End Try
 
 
                 End With
@@ -6418,12 +6427,11 @@ Public Module Projekte
 
 
         Dim cphase As clsPhase
-        Dim phaseStart As Date
+
         Dim resultDate As Date
 
         For p = 1 To hproj.CountPhases
             cphase = hproj.getPhase(p)
-            phaseStart = hproj.startDate.AddMonths(cphase.relStart - 1)
             For r = 1 To cphase.CountResults
 
                 With cphase.getResult(r)
@@ -8863,7 +8871,7 @@ Public Module Projekte
             For p = 1 To hproj.CountPhases
 
                 Dim cphase As clsPhase = hproj.getPhase(p)
-                Dim phaseStart As Date = hproj.startDate.AddMonths(cphase.relStart - 1)
+
 
                 For r = 1 To cphase.CountResults
                     Dim cResult As clsResult
@@ -8872,18 +8880,14 @@ Public Module Projekte
 
                     cResult = cphase.getResult(r)
 
-                    Try
-                        nameIstInListe = namenListe.ContainsKey(cResult.name)
-                    Catch ex As Exception
+                    If namenListe.ContainsKey(cResult.name) Then
+                        nameIstInListe = True
+                    Else
                         nameIstInListe = False
-                    End Try
+                    End If
 
                     cBewertung = cResult.getBewertung(1)
-                    'Try
-                    '    cBewertung = cResult.getBewertung(1)
-                    'Catch ex As Exception
-                    '    cBewertung = New clsBewertung
-                    'End Try
+                    
 
                     resultColumn = getColumnOfDate(cResult.getDate)
 
@@ -10463,6 +10467,9 @@ Public Module Projekte
         Try
 
             With appInstance.ActiveWorkbook.Worksheets("Settings")
+
+                .Unprotect(Password:="x")       ' Blattschutz aufheben
+
                 zeile = 3
                 Dim startZeile As Integer, endZeile As Integer
                 Dim startRollen As Integer, startKosten As Integer
@@ -10564,7 +10571,7 @@ Public Module Projekte
 
                 End If
 
-             
+
                 startKosten = zeile
 
                 For i = 1 To CostDefinitions.Count - 1
@@ -11042,11 +11049,10 @@ Public Module Projekte
                                     Dim startOffset As Integer
                                     Dim dauerIndays As Integer
                                     startOffset = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
-                                    dauerIndays = DateDiff(DateInterval.Day, hproj.startDate.AddMonths(anfang - 1), hproj.startDate.AddMonths(ende).AddDays(-1)) + 1
+                                    dauerIndays = calcDauerIndays(hproj.startDate.AddDays(startOffset), ende - anfang + 1, True)
+
 
                                     .changeStartandDauer(startOffset, dauerIndays)
-                                    '.relStart = anfang
-                                    '.relEnde = ende
                                     .Offset = 0
                                 End With
 
@@ -11242,8 +11248,9 @@ Public Module Projekte
                                         .name = phaseName
                                         ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                                         Dim startOffset As Integer = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(anfang - 1))
-                                        Dim dauerIndays As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(anfang - 1), _
-                                                                                                StartofCalendar.AddMonths(ende).AddDays(-1)) + 1
+                                        'Dim dauerIndays As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(anfang - 1), _
+                                        '                                                        StartofCalendar.AddMonths(ende).AddDays(-1)) + 1
+                                        Dim dauerIndays As Integer = calcDauerIndays(StartofCalendar.AddDays(startOffset), ende - anfang + 1, True)
                                         .changeStartandDauer(startOffset, dauerIndays)
                                         
                                         .Offset = 0
@@ -11409,7 +11416,7 @@ Public Module Projekte
                                 End If
 
 
-                                Dim tmpResult As New clsResult(tmpPhase)
+                                Dim tmpResult As New clsResult(parent:=tmpPhase)
 
                                 If resultName.Length > 0 Then
                                     With tmpResult
@@ -11775,8 +11782,6 @@ Public Module Projekte
 
             If ok Then
 
-                ' Änderung - braucht man hier nicht ... 
-                ' cPhase = New clsPhase(hproj)
                 Try
                     phaseName = tmpstr(1).Trim
                     cPhase = hproj.getPhase(phaseName)
@@ -11784,39 +11789,46 @@ Public Module Projekte
                     resultName = .Title
                     cResult = cPhase.getResult(resultName)
 
-                    With formMilestone
-                        .bewertungsListe = cResult.bewertungsListe
-                        .projectName.Text = hproj.name
-                        .phaseName.Text = cPhase.name
+                    If IsNothing(cResult) Then
+                    Else
 
-                        .resultDate.Text = cResult.getDate.ToShortDateString
-                        .resultName.Text = cResult.name
+                        With formMilestone
+                            .bewertungsListe = cResult.bewertungsListe
+                            .projectName.Text = hproj.name
+                            .phaseName.Text = cPhase.name
 
-
-                        If .bewertungsListe.Count > 0 Then
-                            Dim hb As clsBewertung = .bewertungsListe.ElementAt(0).Value
-
-                            Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(hb.color)
-
-                            .bewertungsText.Text = hb.description
+                            .resultDate.Text = cResult.getDate.ToShortDateString
+                            .resultName.Text = cResult.name
 
 
-                        Else
+                            If .bewertungsListe.Count > 0 Then
+                                Dim hb As clsBewertung = .bewertungsListe.ElementAt(0).Value
 
-                            Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(awinSettings.AmpelNichtBewertet)
+                                Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(hb.color)
 
-                            .bewertungsText.Text = "es existiert noch keine Bewertung ...."
+                                .bewertungsText.Text = hb.description
 
 
-                        End If
+                            Else
 
-                        If .Visible Then
-                        Else
-                            .Visible = True
-                            .Show()
-                        End If
+                                Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(awinSettings.AmpelNichtBewertet)
 
-                    End With
+                                .bewertungsText.Text = "es existiert noch keine Bewertung ...."
+
+
+                            End If
+
+                            If .Visible Then
+                            Else
+                                .Visible = True
+                                .Show()
+                            End If
+
+                        End With
+
+
+                    End If
+
 
 
 
@@ -11878,8 +11890,9 @@ Public Module Projekte
                 phaseName = tmpstr(1).Trim
                 cPhase = hproj.getPhase(phaseName)
                 'phaseStartdate = hproj.startDate.AddMonths(cPhase.relStart - 1)
-                phaseStartdate = hproj.startDate.AddDays(cPhase.startOffsetinDays)
-                phaseEnddate = hproj.startDate.AddDays(cPhase.startOffsetinDays + cPhase.dauerInDays - 1)
+
+                phaseStartdate = cPhase.getStartDate
+                phaseEnddate = cPhase.getEndDate
                 phaseDauerDays = cPhase.dauerInDays
 
 
@@ -11956,43 +11969,65 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' bringt eine Liste von Phasen Namen zurück, die in den beiden Projekten einander identisch sind 
+    ''' Wenn die Collection leer ist, dann unterscheiden sich beide Projekte in allen Phasen 
+    ''' </summary>
+    ''' <param name="hproj">Projekt 1</param>
+    ''' <param name="cproj">Projekt 2</param>
+    ''' <returns>Liste von Phasen Namen, die identisch sind </returns>
+    ''' <remarks></remarks>
     Public Function getPhasenUnterschiede(ByVal hproj As clsProjekt, ByVal cproj As clsProjekt) As Collection
         Dim noColorCollection As New Collection
         Dim hphase As clsPhase, cphase As clsPhase
         Dim phaseName As String
 
-        Try
 
-            For p = 1 To hproj.CountPhases
-                hphase = hproj.getPhase(p)
-                phaseName = hphase.name
-                Try
+        For p = 1 To hproj.CountPhases
 
-                    cphase = cproj.getPhase(phaseName)
+            Try
+                If p = 1 Then
+                    hphase = hproj.getPhase(1)
+                    cphase = cproj.getPhase(1)
 
                     If hphase.startOffsetinDays = cphase.startOffsetinDays And _
-                        hphase.dauerInDays = cphase.dauerInDays Then
+                            hphase.dauerInDays = cphase.dauerInDays Then
                         Try
-                            noColorCollection.Add(phaseName, phaseName)
+                            ' in diesem Fall müssen beide Phase(1) Namen, die ja evtl unterschiedlich sind, aufgenommen werden 
+                            noColorCollection.Add(hphase.name, hphase.name)
+                            noColorCollection.Add(cphase.name, cphase.name)
                         Catch ex As Exception
 
                         End Try
                     End If
+                Else
 
-                Catch ex As Exception
-                    ' in diesem Fall gibt es die Phase in hproj, nicht aber in cproj ... 
-                    ' das heisst, es muss farbig gezeichnet werden ... also nicht in NoColorCollection aufnehmen 
+                    hphase = hproj.getPhase(p)
+                    phaseName = hphase.name
 
-                End Try
+                    Try
+                        cphase = cproj.getPhase(phaseName)
+
+                        If hphase.startOffsetinDays = cphase.startOffsetinDays And _
+                            hphase.dauerInDays = cphase.dauerInDays Then
+                            Try
+                                noColorCollection.Add(phaseName, phaseName)
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+                    Catch ex As Exception
+                        ' in diesem Fall gibt es die Phase in hproj, nicht aber in cproj ... 
+                        ' das heisst, es muss farbig gezeichnet werden ... also nicht in NoColorCollection aufnehmen 
+                    End Try
+                End If
+
+            Catch ex As Exception
+                ' in diesem Fall ist gar nichts zu tun ... 
+            End Try
 
 
-            Next
-
-
-        Catch ex As Exception
-            ' in diesem Fall ist gar nichts zu tun ... 
-        End Try
-
+        Next
 
         getPhasenUnterschiede = noColorCollection
 

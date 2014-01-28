@@ -111,13 +111,12 @@
                     For p = 2 To kvp.Value.CountPhases
 
                         cphase = kvp.Value.getPhase(p)
-                        
-                            Try
+
+                        If tmpListe.ContainsKey(cphase.name) Then
+                            ' nichts tun 
+                        Else
                             tmpListe.Add(cphase.name, cphase.name)
-                            Catch ex1 As Exception
-
-                            End Try
-
+                        End If
 
 
                     Next
@@ -316,7 +315,6 @@
             Dim cphase As clsPhase
             Dim cresult As clsResult
             Dim hproj As clsProjekt
-            Dim milestoneDate As Date
             Dim ix As Integer
             Dim idFarbe As Integer
 
@@ -336,35 +334,32 @@
                 Dim p As Integer
                 For p = 1 To hproj.CountPhases
 
-                    Try
 
-                        cphase = hproj.getPhase(p)
-                        cresult = cphase.getResult(milestoneName)
-                        milestoneDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cresult.offset)
+                    cphase = hproj.getPhase(p)
+                    cresult = cphase.getResult(milestoneName)
+
+                    If IsNothing(cresult) Then
+                    Else
 
                         ' bestimme den monatsbezogenen Index im Array 
-                        ix = getColumnOfDate(milestoneDate) - showRangeLeft
+                        ix = getColumnOfDate(cresult.getDate) - showRangeLeft
 
                         If ix >= 0 And ix <= zeitraum Then
-                            ' bestimme des farbbezogenen Index im Array
 
-                            idFarbe = cresult.getBewertung(1).colorIndex
-                            'Try
-                            '    idFarbe = cresult.getBewertung(1).colorIndex
-                            'Catch ex As Exception
-                            '    ' wenn es noch keine Bewertung gibt ...
-                            '    idFarbe = 0
-                            'End Try
+                            If cresult.bewertungsCount > 0 Then
+                                idFarbe = cresult.getBewertung(1).colorIndex
+                            Else
+                                idFarbe = 0
+                            End If
 
                             milestoneValues(idFarbe, ix) = milestoneValues(idFarbe, ix) + 1
 
                         End If
-                       
 
-                    Catch ex As Exception
-                        ' in dieser Phase gibt es diesen Meilenstein nicht - 
-                        ' also einfach weitermachen 
-                    End Try
+
+                    End If
+
+
 
                 Next
 

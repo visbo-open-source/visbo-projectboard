@@ -288,7 +288,8 @@
                 If Me.dauerInDays = 0 Then
                     ' nutze 
                     startoffset = DateDiff(DateInterval.Day, .Parent.startDate, .Parent.startDate.AddMonths(Me.relStart - 1))
-                    dauer = DateDiff(DateInterval.Day, .Parent.startDate.AddMonths(Me.relStart - 1), .Parent.startDate.AddMonths(Me.relEnde).AddDays(-1)) + 1
+                    'dauer = DateDiff(DateInterval.Day, .Parent.startDate.AddMonths(Me.relStart - 1), .Parent.startDate.AddMonths(Me.relEnde).AddDays(-1)) + 1
+                    dauer = calcDauerIndays(.Parent.startDate.AddDays(startoffset), Me.relEnde - Me.relStart + 1, True)
                 Else
                     startoffset = Me.startOffsetinDays
                     dauer = Me.dauerInDays

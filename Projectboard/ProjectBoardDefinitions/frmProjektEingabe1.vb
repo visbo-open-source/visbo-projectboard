@@ -42,6 +42,13 @@ Public Class frmProjektEingabe1
                 awinSettings.lastProjektTyp = vorlagenDropbox.Items(1)
             End If
 
+            ' jetzt die Vorlagen dauer bestimmen 
+            Try
+                vorlagenDauer = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex).dauerInDays
+            Catch ex As Exception
+                vorlagenDauer = Projektvorlagen.getProject(1).dauerInDays
+            End Try
+
 
             ' Jetzt den Wert für den Erlös bestimmen 
 
@@ -62,16 +69,11 @@ Public Class frmProjektEingabe1
 
             Else
                 .kennzeichnungDate.Text = "Ende"
-                .DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer).AddMonths(1)
+                .DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
 
             End If
 
-            Try
-                vorlagenDauer = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex).dauerInDays
-            Catch ex As Exception
-                vorlagenDauer = Projektvorlagen.getProject(1).dauerInDays
-            End Try
-
+           
 
             .Top = frmCoord(PTfrm.eingabeProj, PTpinfo.top)
             .Left = frmCoord(PTfrm.eingabeProj, PTpinfo.left)
@@ -241,7 +243,7 @@ Public Class frmProjektEingabe1
             diff = vorlagenDauer - oldVorlagenDauer
 
             If Not dateIsStart.Checked Then
-                DateTimeProject.Value = DateTimeProject.Value.AddDays(diff - 1)
+                DateTimeProject.Value = DateTimeProject.Value.AddDays(diff)
             End If
 
         Catch ex As Exception

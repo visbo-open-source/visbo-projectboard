@@ -57,15 +57,15 @@ Public Class clsProjekt
             Dim phaseStart As Date, phaseEnd As Date
 
 
-            If Me.Dauer <> getColumnOfDate(Me.startDate.AddDays(dauerInDays - 1)) - getColumnOfDate(Me.startDate) + 1 Then
+            If Me.Dauer <> getColumnOfDate(Me.endeDate) - getColumnOfDate(Me.startDate) + 1 Then
                 tmpValue = False
             End If
 
             ' prüfen, ob die Gesamtlänge übereinstimmt  
             For p = 1 To Me.CountPhases
                 cphase = Me.getPhase(p)
-                phaseEnd = Me.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
-                phaseStart = Me.startDate.AddDays(cphase.startOffsetinDays)
+                phaseEnd = cphase.getEndDate
+                phaseStart = cphase.getStartDate
 
                 dimension = getColumnOfDate(phaseEnd) - getColumnOfDate(phaseStart)
 
@@ -139,7 +139,7 @@ Public Class clsProjekt
 
                 For r = 1 To cphase.CountResults
                     cresult = cphase.getResult(r)
-                    tmpDate = Me.startDate.AddDays(cphase.startOffsetinDays + cresult.offset)
+                    tmpDate = cresult.getDate
 
                     Dim ok As Boolean = False
                     Do Until ok
@@ -185,16 +185,13 @@ Public Class clsProjekt
 
                 cphase = Me.getPhase(p)
 
-                Try
-                    cresult = cphase.getResult(milestoneName)
-                    colorIndex = cresult.getBewertung(1).colorIndex
-                    'Try
-                    '    colorIndex = cresult.getBewertung(1).colorIndex
-                    'Catch ex1 As Exception
-                    '    colorIndex = 0
-                    'End Try
+                cresult = cphase.getResult(milestoneName)
 
-                    tmpDate = Me.startDate.AddDays(cphase.startOffsetinDays + cresult.offset).Date
+                If Not IsNothing(cresult) Then
+                    
+                    colorIndex = cresult.getBewertung(1).colorIndex
+                    tmpDate = cresult.getDate.Date
+
                     ' jetzt wird die Ampelfarbe ins Datum kodiert 
                     tmpDate = tmpDate.AddSeconds(colorIndex)
                     found = True
@@ -207,9 +204,8 @@ Public Class clsProjekt
                         tmpDate = tmpDate.AddHours(6)
 
                     End If
-                Catch ex As Exception
 
-                End Try
+                End If
 
                 p = p + 1
 
@@ -262,8 +258,9 @@ Public Class clsProjekt
 
                         If phase.name = phaseName Then
 
-                            phaseStart = Me.startDate.AddDays(phase.startOffsetinDays)
-                            phaseEnd = Me.startDate.AddDays(phase.startOffsetinDays + phase.dauerInDays - 1)
+
+                            phaseStart = phase.getStartDate
+                            phaseEnd = phase.getEndDate
 
                             ReDim phaseValues(phase.relEnde - phase.relStart)
 
@@ -399,6 +396,18 @@ Public Class clsProjekt
         End Set
     End Property
 
+    ''' <summary>
+    ''' liefert das Ende-Datum des Projektes zurück - Readonly 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property endeDate As Date
+        Get
+            endeDate = Me.startDate.AddDays(Me.dauerInDays - 1)
+        End Get
+    End Property
+
 
     Public Property startDate As Date
         Get
@@ -454,29 +463,9 @@ Public Class clsProjekt
             earliestStartDate = _earliestStartDate
         End Get
         Set(value As Date)
-            'Dim Heute As Date = Now
 
             _earliestStartDate = value
 
-            'If _Status = ProjektStatus(1) Or _Status = ProjektStatus(2) Or _
-            '                                 _Status = ProjektStatus(2) Then
-            '    Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
-            'Else
-            '    If DateDiff(DateInterval.Month, StartofCalendar, value) + 1 > 0 And DateDiff(DateInterval.Month, _startDate, value) <= 0 Then
-            '        If DateDiff(DateInterval.Month, Heute, value) > 0 Then
-            '            _earliestStartDate = value
-            '        Else
-            '            _earliestStartDate = Heute
-            '        End If
-
-            '        If _Start > 0 Then
-            '            _earliestStart = System.Math.Min(DateDiff(DateInterval.Month, _startDate, _earliestStartDate), 0)
-            '        End If
-            '    Else
-            '        Throw New ArgumentException("unzulässiges frühestes Startdatum: " & value.ToString)
-            '    End If
-
-            'End If
 
         End Set
     End Property
@@ -495,20 +484,6 @@ Public Class clsProjekt
             Dim Heute As Date = Now
 
             _earliestStartDate = value
-            'If DateDiff(DateInterval.Month, StartofCalendar, value) + 1 > 0 And DateDiff(DateInterval.Month, _startDate, value) <= 0 Then
-            '    If DateDiff(DateInterval.Month, Heute, value) > 0 Then
-            '        _earliestStartDate = value
-            '    Else
-            '        _earliestStartDate = Heute
-            '    End If
-
-            '    If _Start > 0 Then
-            '        _earliestStart = System.Math.Min(DateDiff(DateInterval.Month, _startDate, _earliestStartDate), 0)
-            '    End If
-            'Else
-            '    Throw New ArgumentException("unzulässiges frühestes Startdatum: " & value.ToString)
-            'End If
-
 
 
         End Set
@@ -522,25 +497,6 @@ Public Class clsProjekt
             Dim heute As Date = Now
 
             _latestStartDate = value
-            'If _Status = ProjektStatus(1) Or _Status = ProjektStatus(2) Or _
-            '                                 _Status = ProjektStatus(2) Then
-            '    Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
-            'Else
-
-            '    If DateDiff(DateInterval.Month, StartofCalendar, value) + 1 > 0 And DateDiff(DateInterval.Month, _startDate, value) >= 0 Then
-            '        If DateDiff(DateInterval.Month, heute, value) > 0 Then
-            '            _latestStartDate = value
-            '        Else
-            '            _latestStartDate = heute
-            '        End If
-            '        If _Start > 0 Then
-            '            _latestStart = System.Math.Max(DateDiff(DateInterval.Month, _startDate, _latestStartDate), 0)
-            '        End If
-            '    Else
-            '        Throw New ArgumentException("unzulässiges spätestes Startdatum: " & value.ToString)
-            '    End If
-            'End If
-
 
         End Set
     End Property
@@ -560,20 +516,6 @@ Public Class clsProjekt
             Dim heute As Date = Now
 
             _latestStartDate = value
-
-            'If DateDiff(DateInterval.Month, StartofCalendar, value) + 1 > 0 And DateDiff(DateInterval.Month, _startDate, value) >= 0 Then
-            '    If DateDiff(DateInterval.Month, heute, value) > 0 Then
-            '        _latestStartDate = value
-            '    Else
-            '        _latestStartDate = heute
-            '    End If
-            '    If _Start > 0 Then
-            '        _latestStart = System.Math.Max(DateDiff(DateInterval.Month, _startDate, _latestStartDate), 0)
-            '    End If
-            'Else
-            '    Throw New ArgumentException("unzulässiges spätestes Startdatum: " & value.ToString)
-            'End If
-
 
 
         End Set
@@ -917,7 +859,6 @@ Public Class clsProjekt
             Dim i As Integer, p As Integer, r As Integer
             Dim phase As clsPhase
             Dim result As clsResult
-            Dim phasenStart As Integer, phasenEnde As Integer
             Dim monatsIndex As Integer
 
 
@@ -935,8 +876,6 @@ Public Class clsProjekt
                     With phase
                         ' Off1
                         anzResults = .CountResults
-                        phasenStart = .relStart - 1
-                        phasenEnde = .relEnde - 1
 
 
                         For r = 1 To anzResults
@@ -1246,74 +1185,7 @@ Public Class clsProjekt
             Start = _Start
         End Get
 
-        'Set(value As Integer)
-
-        '    Dim newDate As Date = StartofCalendar.AddMonths(value - 1)
-        '    Dim Heute As Date = Now
-
-        '    If _Start <> value Then
-
-        '        If _Status = ProjektStatus(0) Then
-        '            ' nur dann darf das Projekt verschoben werden  
-        '            ' andernfalls muss nichts gemacht werden ...
-        '            _Start = value
-        '            '_tfSpalte = value
-        '            Me.startDate = StartofCalendar.AddMonths(value - 1)
-        '            Me.earliestStartDate = _startDate
-        '            Me.latestStartDate = _startDate
-        '        End If
-
-
-        '        'Me.earliestStart = 0
-        '        'Me.latestStart = 0
-
-
-
-        '        'If _Start = 0 Then
-        '        '    ' es handelt sich um die erstbesetzung ... 
-        '        '    ' hier muss überprüft werden, ob die earliest/latest Settings so bleiben können: sie könnten ja bereits in der Vergangenheit liegen 
-        '        '    _Start = value
-        '        '    _startDate = StartofCalendar.AddMonths(value - 1)
-        '        '    _tfSpalte = value
-
-        '        '    'If DateDiff(DateInterval.Month, Heute, newDate) <= 0 Then
-        '        '    '    _earliestStart = 0
-        '        '    'ElseIf DateDiff(DateInterval.Month, newDate, Heute) > _earliestStart Then
-        '        '    '    _earliestStart = DateDiff(DateInterval.Month, newDate, Heute)
-        '        '    'End If
-
-        '        'ElseIf _Status = ProjektStatus(1) Or _Status = ProjektStatus(2) Or _
-        '        '                                 _Status = ProjektStatus(2) Then
-        '        '    'Call MsgBox("der Startzeitpunkt kann nicht mehr verändert werden ... ")
-        '        '    Throw New ApplicationException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
-
-        '        'ElseIf value < _Start + _earliestStart Then
-        '        '    'Call MsgBox("der neue Startzeitpunkt liegt vor dem bisher zugelassenen frühestmöglichen Startzeitpunkt ...")
-        '        '    Throw New ApplicationException("der neue Startzeitpunkt liegt vor dem bisher zugelassenen frühestmöglichen Startzeitpunkt ...")
-
-        '        'ElseIf value > _Start + _latestStart Then
-        '        '    'Call MsgBox("der neue Startzeitpunkt liegt nach dem bisher zugelassenen spätestmöglichen Startzeitpunkt ...")
-        '        '    Throw New ApplicationException("der neue Startzeitpunkt liegt nach dem bisher zugelassenen spätestmöglichen Startzeitpunkt ...")
-        '        'Else
-
-        '        '    If DateDiff(DateInterval.Month, Heute, newDate) < 0 Then
-        '        '        'Call MsgBox("der neue Startzeitpunkt liegt in der Vergangenheit ...")
-        '        '        Throw New ApplicationException("der neue Startzeitpunkt liegt in der Vergangenheit ...")
-        '        '    Else
-
-        '        '        _Start = value
-        '        '        _tfSpalte = value
-        '        '        Me.startDate = StartofCalendar.AddMonths(value - 1)
-        '        '        Me.earliestStart = System.Math.Min(DateDiff(DateInterval.Month, _startDate, _earliestStartDate), 0)
-        '        '        Me.latestStart = System.Math.Max(DateDiff(DateInterval.Month, _startDate, _latestStartDate), 0)
-
-        '        '    End If
-
-
-        '        'End If
-
-        '    End If
-        'End Set
+        
     End Property
 
     Public Property Status() As String

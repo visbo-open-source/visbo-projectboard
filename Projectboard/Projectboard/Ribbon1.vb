@@ -3622,6 +3622,137 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
+    ''' <summary>
+    ''' vergleicht die Phasen Termine des aktuellen Projektes mit der Beauftragung
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT3G1B3PhasenVgl(control As IRibbonControl)
+
+        Dim request As New Request(awinSettings.databaseName)
+        Dim singleShp1 As Excel.Shape
+        Dim hproj As clsProjekt, cproj As clsProjekt
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim scale As Double
+        Dim noColorCollection As New Collection
+        Dim vglName As String = " "
+        Dim pName As String, variantName As String
+
+        Dim awinSelection As Excel.ShapeRange
+
+        enableOnUpdate = False
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+
+            If awinSelection.Count = 1 Then
+
+                Dim lastElem As Integer
+
+                ' jetzt die Aktion durchführen ...
+                singleShp1 = awinSelection.Item(1)
+
+
+                Try
+                    hproj = ShowProjekte.getProject(singleShp1.Name)
+                Catch ex As Exception
+                    Call MsgBox("Projekt nicht gefunden ...")
+                    enableOnUpdate = True
+                    Exit Sub
+                End Try
+
+                ' jetzt ggf die Projekt-Historie aufbauen
+
+                If Not projekthistorie Is Nothing Then
+                    If projekthistorie.Count > 0 Then
+                        vglName = projekthistorie.First.name
+                    End If
+                End If
+
+                With hproj
+                    pName = .name
+                    variantName = .variantName
+                End With
+
+                If vglName.Trim <> pName.Trim Then
+                    ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                    projekthistorie.Add(Date.Now, hproj)
+                    lastElem = projekthistorie.Count - 1
+                Else
+                    ' der aktuelle Stand hproj muss hinzugefügt werden 
+                    lastElem = projekthistorie.Count - 1
+                    projekthistorie.RemoveAt(lastElem)
+                    projekthistorie.Add(Date.Now, hproj)
+                End If
+
+
+                If projekthistorie.Count = 1 Then
+
+                    Call MsgBox(" es gibt zu diesem Projekt noch keine Historie")
+
+                Else
+
+
+                    Try
+                        cproj = projekthistorie.beauftragung
+                        top = singleShp1.Top + boxHeight + 2
+                        left = singleShp1.Left - 5
+                        If left <= 0 Then
+                            left = 5
+                        End If
+
+                        height = 380
+                        width = System.Math.Max(hproj.dauerInDays / 365 * 12 * boxWidth + 7, cproj.dauerInDays / 365 * 12 * boxWidth + 7)
+                        scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
+
+                        Dim repObj As Excel.ChartObject
+                        appInstance.EnableEvents = False
+                        appInstance.ScreenUpdating = False
+
+                        noColorCollection = getPhasenUnterschiede(hproj, cproj)
+
+                        repObj = Nothing
+                        Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+
+                        With repObj
+                            top = .Top + .Height + 3
+                        End With
+
+
+                        repObj = Nothing
+                        Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, "Beauftragung")
+
+                    Catch ex As Exception
+
+                        Call MsgBox("es ist kein Beauftragungs-Stand vorhanden")
+
+                    End Try
+
+
+                End If
+
+            Else
+                Call MsgBox("bitte nur ein Projekt selektieren")
+
+            End If
+        Else
+            Call MsgBox("ein Projekt selektieren, um es mit seinem letzten Stand zu vergleichen")
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+    End Sub
+
     Sub Tom2G3M1B2ResourceVgl(control As IRibbonControl)
 
         Dim singleShp1 As Excel.Shape, singleShp2 As Excel.Shape

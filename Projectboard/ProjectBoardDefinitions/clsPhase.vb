@@ -23,8 +23,6 @@
     Public Sub changeStartandDauer(ByVal startOffset As Integer, ByVal dauer As Integer)
 
         Dim projektStartdate As Date
-        Dim phaseStartdate As Date, phaseEnddate As Date
-
         Dim projektstartColumn As Integer
 
 
@@ -46,8 +44,9 @@
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
                 _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
-                _dauerInDays = DateDiff(DateInterval.Day, projektStartdate.AddMonths(_relStart - 1), _
-                                        projektStartdate.AddMonths(_relEnde).AddDays(-1)) + 1
+                '_dauerInDays = DateDiff(DateInterval.Day, projektStartdate.AddMonths(_relStart - 1), _
+                '                        projektStartdate.AddMonths(_relEnde).AddDays(-1)) + 1
+                _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
 
 
             ElseIf dauer = 0 And _relEnde = 0 Then
@@ -63,8 +62,9 @@
                 Dim oldlaenge As Integer = _relEnde - _relStart + 1
                 Dim newlaenge As Integer
 
-                phaseStartdate = projektStartdate.AddDays(startOffset)
-                phaseEndDate = projektStartdate.AddDays(startOffset + _dauerInDays - 1)
+
+                Dim phaseStartdate As Date = Me.getStartDate
+                Dim phaseEndDate As Date = Me.getEndDate
 
 
                 _relStart = getColumnOfDate(phaseStartdate) - projektstartColumn + 1
@@ -122,8 +122,9 @@
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
                 _startOffsetinDays = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1))
-                _dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
-                                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
+                '_dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
+                '                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
+                _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
 
 
             Else
@@ -159,81 +160,6 @@
             startOffsetinDays = _startOffsetinDays
         End Get
 
-        'Set(value As Integer)
-
-        '    Dim projektStartdate As Date
-
-        '    Try
-
-        '        projektStartdate = Me.Parent.startDate
-
-        '        If value < 0 Then
-                '            Throw New ArgumentException("Phase kann nicht vor dem Projekt-Anfang sein")
-
-                '        ElseIf value = 0 And _relStart - 1 > 0 Then
-                '            ' wenn z.B nur relstart und relende gesetzt sind 
-                '            _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
-
-                '        Else
-                '            ' jetzt 
-                '            Dim oldlaenge As Integer = _relEnde - _relStart + 1
-                '            Dim newlaenge As Integer
-                '            _startOffsetinDays = value
-                '            _relStart = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(value))
-                '            _relEnde = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(value + _dauerInDays - 1))
-
-
-                '            newlaenge = _relEnde - _relStart + 1
-
-                '            If newlaenge <> oldlaenge Then
-                '                Dim newvalues() As Double
-                '                Dim oldvalues() As Double
-
-                '                For r = 1 To Me.CountRoles
-                '                    oldvalues = Me.getRole(r).Xwerte
-                '                    newvalues = adjustArrayLength(newlaenge, oldvalues, False)
-                '                    ' wahrscheionlich muss dafür eine .XwerteReDim Property gemacht werden
-                '                    ' die den Redim macht ... 
-                '                    Me.getRole(r).Xwerte = newvalues
-                '                Next
-
-
-                '                For k = 1 To Me.CountCosts
-                '                    oldvalues = Me.getCost(k).Xwerte
-                '                    newvalues = adjustArrayLength(newlaenge, oldvalues, False)
-                '                    ' wahrscheionlich muss dafür eine .XwerteReDim Property gemacht werden
-                '                    ' die den Redim macht ... 
-                '                    Me.getCost(k).Xwerte = newvalues
-                '                Next
-                '            End If
-
-                '        End If
-
-                '    Catch ex As Exception
-
-                '        ' bei einer Projektvorlage gibt es kein Datum - es soll aber der Wert für den Start-Offset übernommen werden
-
-                '        If value = 0 And (_relStart - 1 > 0) Then
-                '            _startOffsetinDays = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(relStart - 1)) - 1
-
-                '            ' wenn negativ: zurücksetzen auf NULL
-                '            If _startOffsetinDays < 0 Then
-                '                _startOffsetinDays = 0
-                '            End If
-
-                '        ElseIf value >= 0 Then
-                '            _startOffsetinDays = value
-                '        Else
-
-                '            Throw New ArgumentException("Phase kann nicht negativen Offset haben, d.h vor dem Projekt beginnen ")
-
-                '        End If
-
-
-                '    End Try
-
-
-                'End Set
 
     End Property
 
@@ -254,6 +180,37 @@
             End If
 
         End Set
+    End Property
+
+    ''' <summary>
+    ''' liefert das StartDatum der Phase
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getStartDate As Date
+        Get
+            getStartDate = Me.Parent.startDate.AddDays(_startOffsetinDays)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' liefert das Ende-Datum einer Phase
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getEndDate As Date
+
+        Get
+            If _dauerInDays > 0 Then
+                getEndDate = Me.Parent.startDate.AddDays(_startOffsetinDays + _dauerInDays - 1)
+            Else
+                Throw New Exception("Dauer muss mindestens 1 Tag sein ...")
+            End If
+
+        End Get
+
     End Property
 
     Public ReadOnly Property Farbe As Object
@@ -538,10 +495,17 @@
 
         If awinSettings.milestoneFreeFloat Then
             ' nichts verändern ....
-        Else
+        ElseIf IsNothing(_vorlagenParent) Then
             If result.offset + Me.startOffsetinDays > Me.Parent.dauerInDays - 1 Then
                 'result.offset = result.offset - (result.offset + Me.startOffsetinDays - (Me.Parent.dauerInDays - 1))
                 result.offset = Me.Parent.dauerInDays - 1 - Me.startOffsetinDays
+            ElseIf result.offset + Me.startOffsetinDays < 0 Then
+                result.offset = -1 * Me.startOffsetinDays
+            End If
+        Else
+            If result.offset + Me.startOffsetinDays > Me.VorlagenParent.dauerInDays - 1 Then
+                'result.offset = result.offset - (result.offset + Me.startOffsetinDays - (Me.Parent.dauerInDays - 1))
+                result.offset = Me.VorlagenParent.dauerInDays - 1 - Me.startOffsetinDays
             ElseIf result.offset + Me.startOffsetinDays < 0 Then
                 result.offset = -1 * Me.startOffsetinDays
             End If
@@ -719,10 +683,6 @@
 
             getResult = tmpResult
 
-            If Not found Then
-                Throw New ArgumentException("Result " & key & " nicht gefunden ")
-            End If
-
 
         End Get
 
@@ -755,6 +715,12 @@
     Public ReadOnly Property Parent() As clsProjekt
         Get
             Parent = _Parent
+        End Get
+    End Property
+
+    Public ReadOnly Property VorlagenParent() As clsProjektvorlage
+        Get
+            VorlagenParent = _vorlagenParent
         End Get
     End Property
 

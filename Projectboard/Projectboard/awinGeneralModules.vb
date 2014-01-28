@@ -1188,8 +1188,9 @@ Public Module awinGeneralModules
                 hproj.startDate = CType(.Range("StartDatum").Value, Date)
 
                 ' Ende
+               
                 endedateProjekt = CType(.Range("EndeDatum").Value, Date)  ' Projekt-Ende für spätere Verwendung merken
-                ProjektdauerIndays = DateDiff(DateInterval.Day, CType(.Range("StartDatum").Value, Date), CType(.Range("EndeDatum").Value, Date)) + 1
+                ProjektdauerIndays = calcDauerIndays(hproj.startDate, endedateProjekt)
                 Dim startOffset As Integer = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(0))
 
                 ' Budget
@@ -1301,7 +1302,7 @@ Public Module awinGeneralModules
                 Dim cphase As New clsPhase(hproj)
                 Dim ccost As clsKostenart
                 Dim phaseName As String = ""
-                Dim anfang As Integer, ende As Integer, projDauer As Integer
+                Dim anfang As Integer, ende As Integer  ', projDauer As Integer
                 Dim farbeAktuell As Object
                 Dim r As Integer, k As Integer
 
@@ -1325,9 +1326,9 @@ Public Module awinGeneralModules
                         .name = phaseName
                         Dim startOffset As Integer = 0
                         .changeStartandDauer(startOffset, ProjektdauerIndays)
-                        Dim phaseStartdate As Date = hproj.startDate.AddDays(startOffset)
-                        Dim phaseEnddate As Date = hproj.startDate.AddDays(startOffset + ProjektdauerIndays - 1)
-                        projDauer = DateDiff(DateInterval.Month, phaseStartdate, phaseEnddate) + 1
+                        Dim phaseStartdate As Date = .getStartDate
+                        Dim phaseEnddate As Date = .getEndDate
+                        'projDauer = calcDauerIndays(phaseStartdate, phaseEnddate)
                         firsttime = True
                     End With
                     Call MsgBox("Projektnamen/Phasen Konflikt in awinImportProjekt" & vbLf & "Problem wurde behoben")
@@ -1409,13 +1410,13 @@ Public Module awinGeneralModules
                             ende = anfang + 1
 
                             If CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142 Then
-                                While CType(zelle.Offset(0, ende).Value, String) = "x"
+                                While CType(zelle.Offset(0, ende + 1).Value, String) = "x"
                                     ende = ende + 1
                                 End While
                                 ende = ende - 1
                             Else
                                 farbeAktuell = zelle.Offset(0, anfang + 1).Interior.Color
-                                While CInt(zelle.Offset(0, ende).Interior.Color) = CInt(farbeAktuell)
+                                While CInt(zelle.Offset(0, ende + 1).Interior.Color) = CInt(farbeAktuell)
 
                                     ende = ende + 1
                                 End While
@@ -1425,16 +1426,18 @@ Public Module awinGeneralModules
                             With cphase
                                 .name = phaseName
                                 ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
-                                Dim startOffset As Integer = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
-                                Dim dauerIndays As Integer = DateDiff(DateInterval.Day, hproj.startDate.AddDays(startOffset), hproj.startDate.AddMonths(ende - 1).AddDays(-1)) + 1
-                                ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
-                                Dim phaseStartdate As Date = hproj.startDate.AddDays(startOffset)
-                                Dim phaseEnddate As Date = hproj.startDate.AddDays(startOffset + dauerIndays - 1)
+                                Dim startOffset As Integer
+                                Dim dauerIndays As Integer
+                                startOffset = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
+                                dauerIndays = calcDauerIndays(hproj.startDate.AddDays(startOffset), ende - anfang + 1, True)
+
                                 .changeStartandDauer(startOffset, dauerIndays)
-                                'If zeile = 1 Then
-                                '    projDauer = ende - anfang + 1
-                                'End If
                                 .Offset = 0
+                             
+                                ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
+                                Dim phaseStartdate As Date = .getStartDate
+                                Dim phaseEnddate As Date = .getEndDate
+
                             End With
                             Select Case chkRolle
                                 Case True
@@ -1455,14 +1458,14 @@ Public Module awinGeneralModules
                                         Try
                                             r = CInt(RoleDefinitions.getRoledef(hname).UID)
 
-                                            ReDim Xwerte(ende - anfang - 1)
+                                            ReDim Xwerte(ende - anfang)
 
 
                                             For m = anfang To ende
                                                 Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
                                             Next m
 
-                                            crole = New clsRolle(ende - anfang - 1)
+                                            crole = New clsRolle(ende - anfang + 1)
                                             With crole
                                                 .RollenTyp = r
                                                 .Xwerte = Xwerte
@@ -1483,13 +1486,13 @@ Public Module awinGeneralModules
 
                                             k = CInt(CostDefinitions.getCostdef(hname).UID)
 
-                                            ReDim Xwerte(ende - anfang - 1)
+                                            ReDim Xwerte(ende - anfang)
 
                                             For m = anfang To ende
                                                 Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
                                             Next m
 
-                                            ccost = New clsKostenart(ende - anfang - 1)
+                                            ccost = New clsKostenart(ende - anfang + 1)
                                             With ccost
                                                 .KostenTyp = k
                                                 .Xwerte = Xwerte
@@ -1656,7 +1659,7 @@ Public Module awinGeneralModules
                                     Dim startdiff As Integer
                                     Dim endediff As Integer
 
-                                    duration = DateDiff(DateInterval.Day, startDate, endeDate) + 1
+                                    duration = calcDauerIndays(startDate, endeDate)
                                     offset = DateDiff(DateInterval.Day, hproj.startDate, startDate)
 
                                     If duration < 1 Or offset < 0 Then
@@ -1665,14 +1668,12 @@ Public Module awinGeneralModules
                                     End If
 
                                     If awinSettings.zeitEinheit = "PM" Then
-                                        phaseStart = hproj.startDate.AddDays(cphase.startOffsetinDays)
-                                        phaseEnde = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
+                                        phaseStart = cphase.getStartDate
+                                        phaseEnde = cphase.getEndDate
                                     ElseIf awinSettings.zeitEinheit = "PW" Then
-                                        phaseStart = hproj.startDate.AddDays((cphase.relStart - 1) * 7)
-                                        phaseEnde = hproj.startDate.AddDays((cphase.relEnde - 1) * 7)
+                                       
                                     ElseIf awinSettings.zeitEinheit = "PT" Then
-                                        phaseStart = hproj.startDate.AddDays(cphase.relStart - 1)
-                                        phaseStart = hproj.startDate.AddDays(cphase.relEnde - 1)
+                                        
                                     End If
 
                                     ressourceDuration = cphase.dauerInDays

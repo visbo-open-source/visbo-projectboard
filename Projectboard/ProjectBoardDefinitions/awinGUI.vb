@@ -954,6 +954,7 @@ Public Module awinGUI
         Dim smallfontsize As Double, titlefontsize As Double
         Dim kennung As String
         Dim singleProject As Boolean
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
 
 
 
@@ -1082,6 +1083,8 @@ Public Module awinGUI
 
             ReDim tempArray(anzBubbles - 1)
 
+
+            appInstance.ScreenUpdating = False
 
             With appInstance.Charts.Add
 
@@ -1267,6 +1270,7 @@ Public Module awinGUI
 
         End With
 
+        appInstance.ScreenUpdating = formerSU
 
     End Sub
 
