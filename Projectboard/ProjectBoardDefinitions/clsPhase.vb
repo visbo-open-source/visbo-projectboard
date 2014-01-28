@@ -25,9 +25,6 @@
         Dim projektStartdate As Date
         Dim projektstartColumn As Integer
 
-        Dim phaseStartdate As Date
-        Dim phaseEndDate As Date
-
 
         If dauer < 0 Then
             Throw New ArgumentException("Dauer kann nicht negativ sein")
@@ -66,9 +63,8 @@
                 Dim newlaenge As Integer
 
 
-                phaseStartdate = Me.getStartDate
-                phaseEndDate = Me.getEndDate
-
+                Dim phaseStartdate As Date = Me.getStartDate
+                Dim phaseEndDate As Date = Me.getEndDate
 
 
                 _relStart = getColumnOfDate(phaseStartdate) - projektstartColumn + 1
@@ -92,7 +88,7 @@
                                 newvalues = adjustArrayLength(newlaenge, oldvalues, False)
                                 Me.getRole(r).Xwerte = newvalues
                             End If
-                            
+
                         Next
 
 
@@ -103,7 +99,7 @@
                                 newvalues = adjustArrayLength(newlaenge, oldvalues, False)
                                 Me.getCost(k).Xwerte = newvalues
                             End If
-                            
+
                         Next
 
                     Catch ex As Exception
@@ -114,7 +110,7 @@
 
 
 
-                
+
             End If
 
 
@@ -163,6 +159,7 @@
         Get
             startOffsetinDays = _startOffsetinDays
         End Get
+
 
     End Property
 
@@ -325,7 +322,7 @@
         End Set
     End Property
 
-    
+
     Public ReadOnly Property relStart As Integer
         Get
 
@@ -365,10 +362,10 @@
 
         End Get
 
-        
+
     End Property
 
-   
+
 
     Public ReadOnly Property relEnde As Integer
         Get
@@ -425,7 +422,7 @@
         Try
 
             Dim projektStartdate As Date = Me.Parent.startDate
-            
+
             Dim korrPosition As Double = nummer / gesamtZahl
             Dim faktor As Double = linienDicke / boxHeight
             Dim startpunkt As Integer = DateDiff(DateInterval.Day, StartofCalendar, projektStartdate)
@@ -456,7 +453,7 @@
             ' ausrechnen des Korrekturfaktors
 
             korrPosition = nummer / (gesamtZahl + 1)
-            
+
 
             If phasenStart >= 0 And phasenDauer > 0 Then
 
@@ -579,7 +576,7 @@
             .latestStart = Me._latestStart
             .Offset = Me._Offset
 
-           
+
 
             .name = _name
 
@@ -606,7 +603,7 @@
             ' Änderung 16.1.2014: zuerst die Rollen und Kosten übertragen, dann die relStart und RelEnde, dann die Results
             ' die evtrl enstehende Inkonsistenz zwischen Länder der Arrays der Rollen/Kostenarten und dem neuen relende/relstart wird in Kauf genommen 
             ' und nur korrigiert , wenn explizit gewünscht (Parameter awinsettings.autoCorrectBedarfe = true 
-            
+
             .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
             For r = 1 To Me.AllResults.Count

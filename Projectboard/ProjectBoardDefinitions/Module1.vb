@@ -118,7 +118,7 @@ Public Module Module1
         Meilenstein = 12
     End Enum
 
-    
+
     ' Enumeration History Change Criteria: um anzugebe, welche Veränderung man in der History eines Projektes sucht 
     Public Enum PThcc
         perscost = 1
