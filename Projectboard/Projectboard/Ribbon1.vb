@@ -744,8 +744,8 @@ Imports Microsoft.Office.Interop.Excel
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
 
         'Dim projektInventurFile As String = "Projekt-Inventur.xlsx"
-        'Dim projektInventurFile As String = requirementsOrdner & "Projekt-Inventur.xlsx"
-        Dim projektInventurFile As String = requirementsOrdner & "RPLAN Projekte.xlsx"
+        Dim projektInventurFile As String = requirementsOrdner & "Projekt-Inventur.xlsx"
+        'Dim projektInventurFile As String = requirementsOrdner & "RPLAN Projekte.xlsx"
         Dim dateiName As String
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
@@ -761,8 +761,8 @@ Imports Microsoft.Office.Interop.Excel
             appInstance.Workbooks.Open(dateiName)
             ' alle Import Projekte erstmal löschen
             ImportProjekte.Clear()
-            'Call awinImportProjektInventur()
-            Call bmwImportProjektInventur(myCollection)
+            Call awinImportProjektInventur(myCollection)
+            'Call bmwImportProjektInventur(myCollection)
 
             appInstance.ActiveWorkbook.Save()
             appInstance.ActiveWorkbook.Close()

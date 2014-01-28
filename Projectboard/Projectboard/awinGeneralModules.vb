@@ -1042,7 +1042,7 @@ Public Module awinGeneralModules
 
 
 
-    Public Sub awinImportProjektInventur()
+    Public Sub awinImportProjektInventur(ByRef myCollection As Collection)
         Dim zeile As Integer, spalte As Integer
         Dim pName As String
         Dim vName As String
@@ -1072,7 +1072,7 @@ Public Module awinGeneralModules
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
             With activeWSListe
 
-                lastRow = CType(.cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).row
+                lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
                 While zeile <= lastRow
 
@@ -1107,6 +1107,7 @@ Public Module awinGeneralModules
                             If Not hproj Is Nothing Then
                                 Try
                                     ImportProjekte.Add(hproj)
+                                    myCollection.Add(hproj.name)
                                 Catch ex As Exception
 
                                 End Try
