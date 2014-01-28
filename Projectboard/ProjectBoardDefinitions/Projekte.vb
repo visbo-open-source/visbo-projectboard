@@ -10248,11 +10248,7 @@ Public Module Projekte
 
                 ' Ende
 
-<<<<<<< HEAD
-                .range("EndeDatum").value = CDate(hproj.startDate.AddDays(hproj.dauerInDays))
-=======
                 .range("EndeDatum").value = hproj.startDate.AddDays(hproj.dauerInDays - 1)
->>>>>>> 92e02cda214fb2b0d11aff405a4452b0fd2e904b
 
 
                 'Projektleiter
@@ -10471,6 +10467,9 @@ Public Module Projekte
         Try
 
             With appInstance.ActiveWorkbook.Worksheets("Settings")
+
+                .Unprotect(Password:="x")       ' Blattschutz aufheben
+
                 zeile = 3
                 Dim startZeile As Integer, endZeile As Integer
                 Dim startRollen As Integer, startKosten As Integer
@@ -10572,7 +10571,7 @@ Public Module Projekte
 
                 End If
 
-             
+
                 startKosten = zeile
 
                 For i = 1 To CostDefinitions.Count - 1
