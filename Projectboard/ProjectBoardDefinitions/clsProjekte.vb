@@ -111,13 +111,12 @@
                     For p = 2 To kvp.Value.CountPhases
 
                         cphase = kvp.Value.getPhase(p)
-                        
-                            Try
+
+                        If tmpListe.ContainsKey(cphase.name) Then
+                            ' nichts tun 
+                        Else
                             tmpListe.Add(cphase.name, cphase.name)
-                            Catch ex1 As Exception
-
-                            End Try
-
+                        End If
 
 
                     Next

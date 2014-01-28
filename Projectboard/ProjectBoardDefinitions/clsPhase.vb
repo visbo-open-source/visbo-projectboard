@@ -47,8 +47,9 @@
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
                 _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
-                _dauerInDays = DateDiff(DateInterval.Day, projektStartdate.AddMonths(_relStart - 1), _
-                                        projektStartdate.AddMonths(_relEnde).AddDays(-1)) + 1
+                '_dauerInDays = DateDiff(DateInterval.Day, projektStartdate.AddMonths(_relStart - 1), _
+                '                        projektStartdate.AddMonths(_relEnde).AddDays(-1)) + 1
+                _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
 
 
             ElseIf dauer = 0 And _relEnde = 0 Then
@@ -64,11 +65,10 @@
                 Dim oldlaenge As Integer = _relEnde - _relStart + 1
                 Dim newlaenge As Integer
 
-                '_relStart = DateDiff(DateInterval.Month, projektStartdate, projektStartdate .AddDays(startOffset)) + 1
-                '_relEnde = DateDiff(DateInterval.Month, projektStartdate, projektStartdate.AddDays(startOffset + _dauerInDays)) + 1
 
-                phaseStartdate = projektStartdate.AddDays(startOffset)
-                phaseEndDate = projektStartdate.AddDays(startOffset + _dauerInDays - 1)
+                phaseStartdate = Me.getStartDate
+                phaseEndDate = Me.getEndDate
+
 
 
                 _relStart = getColumnOfDate(phaseStartdate) - projektstartColumn + 1
@@ -126,8 +126,9 @@
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
                 _startOffsetinDays = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1))
-                _dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
-                                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
+                '_dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
+                '                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
+                _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
 
 
             Else
@@ -497,10 +498,17 @@
 
         If awinSettings.milestoneFreeFloat Then
             ' nichts verändern ....
-        Else
+        ElseIf IsNothing(_vorlagenParent) Then
             If result.offset + Me.startOffsetinDays > Me.Parent.dauerInDays - 1 Then
                 'result.offset = result.offset - (result.offset + Me.startOffsetinDays - (Me.Parent.dauerInDays - 1))
                 result.offset = Me.Parent.dauerInDays - 1 - Me.startOffsetinDays
+            ElseIf result.offset + Me.startOffsetinDays < 0 Then
+                result.offset = -1 * Me.startOffsetinDays
+            End If
+        Else
+            If result.offset + Me.startOffsetinDays > Me.VorlagenParent.dauerInDays - 1 Then
+                'result.offset = result.offset - (result.offset + Me.startOffsetinDays - (Me.Parent.dauerInDays - 1))
+                result.offset = Me.VorlagenParent.dauerInDays - 1 - Me.startOffsetinDays
             ElseIf result.offset + Me.startOffsetinDays < 0 Then
                 result.offset = -1 * Me.startOffsetinDays
             End If
@@ -710,6 +718,12 @@
     Public ReadOnly Property Parent() As clsProjekt
         Get
             Parent = _Parent
+        End Get
+    End Property
+
+    Public ReadOnly Property VorlagenParent() As clsProjektvorlage
+        Get
+            VorlagenParent = _vorlagenParent
         End Get
     End Property
 
