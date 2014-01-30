@@ -892,7 +892,7 @@ Public Class clsProjekt
                             End If
 
 
-                            
+
 
 
                         Next r

@@ -104,7 +104,7 @@ Imports Microsoft.Office.Interop.Excel
         'Call MsgBox("Anzahl Aufrufe: " & anzahlCalls)
         Dim ok As Boolean = True
 
-        
+
 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
@@ -704,7 +704,7 @@ Imports Microsoft.Office.Interop.Excel
 
                         If vglName.Trim <> pName.Trim Then
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            
+
                             Try
                                 projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
                                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
@@ -877,7 +877,7 @@ Imports Microsoft.Office.Interop.Excel
         Catch ex As Exception
             Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
         End Try
-        
+
 
 
 
@@ -1329,7 +1329,7 @@ Imports Microsoft.Office.Interop.Excel
                 Catch ex As Exception
                     Call MsgBox(ex.Message)
                 End Try
-                
+
 
                 appInstance.EnableEvents = True
                 appInstance.ScreenUpdating = True
@@ -1408,7 +1408,7 @@ Imports Microsoft.Office.Interop.Excel
                 Catch ex As Exception
                     Call MsgBox(ex.Message)
                 End Try
-                
+
 
                 appInstance.EnableEvents = True
                 appInstance.ScreenUpdating = True
@@ -1760,7 +1760,7 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
-    
+
     Sub Tom2G2M2M3B2SollIstGKosten(control As IRibbonControl)
 
         ' auswahl steuert , welche Kosten angezeigt werden
@@ -2548,7 +2548,7 @@ Imports Microsoft.Office.Interop.Excel
 
             End If
 
-           
+
 
         Else
 
@@ -2646,7 +2646,7 @@ Imports Microsoft.Office.Interop.Excel
         End With
         auswahlFenster.Show()
 
-        
+
 
     End Sub
 

@@ -720,7 +720,7 @@ Public Module awinDiagrams
             ampelfarbe(2) = .AmpelGelb
             ampelfarbe(3) = .AmpelRot
         End With
-        
+
         von = showRangeLeft
         bis = showRangeRight
         einheit = " "
@@ -866,7 +866,7 @@ Public Module awinDiagrams
             End While
 
             If Not found Then
-               
+
 
                 With CType(appInstance.Charts.Add, Excel.Chart)
 
@@ -973,7 +973,7 @@ Public Module awinDiagrams
                                 .HasDataLabels = False
                             End With
                             With .SeriesCollection.NewSeries
-                                
+
                                 .name = "externe Dienstleister "
                                 .Interior.color = farbeExterne
                                 .Values = edatenreihe
@@ -1032,7 +1032,7 @@ Public Module awinDiagrams
 
                             End If
 
-                            
+
                         End If
 
                     Next r
@@ -1079,7 +1079,7 @@ Public Module awinDiagrams
                             .HasDataLabels = False
                             VarValues = seriesSumDatenreihe
                             nr_pts = .Points.Count
-                            
+
                             minwert = VarValues.Min
                             maxwert = VarValues.Max
                             mindone = False
@@ -1398,7 +1398,7 @@ Public Module awinDiagrams
             Exit Sub
         End Try
 
-        
+
 
         If Not found Then
             Exit Sub
@@ -1545,7 +1545,7 @@ Public Module awinDiagrams
 
                     If isPersCost Then
                         With .SeriesCollection.NewSeries
-                            
+
                             .name = prcName & " intern "
                             .Interior.color = objektFarbe
                             .Values = datenreihe
@@ -1554,7 +1554,7 @@ Public Module awinDiagrams
                             .HasDataLabels = False
                         End With
                         With .SeriesCollection.NewSeries
-                            
+
                             .name = "externe Dienstleister "
                             .Interior.color = farbeExterne
                             .Values = edatenreihe
@@ -1675,7 +1675,7 @@ Public Module awinDiagrams
                         nr_pts = .Points.Count
                         minwert = VarValues.Min
                         maxwert = VarValues.Max
-                        
+
                         mindone = False
                         maxdone = False
                         i = 1
@@ -1750,7 +1750,7 @@ Public Module awinDiagrams
                 End If
 
                 .HasTitle = True
-               
+
                 If prcTyp = DiagrammTypen(0) Or _
                         prcTyp = DiagrammTypen(5) Or _
                         awinSettings.kapaEinheit = "ST" Then
