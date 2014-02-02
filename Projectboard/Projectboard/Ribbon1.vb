@@ -85,7 +85,8 @@ Imports Microsoft.Office.Interop.Excel
     Sub awinSetModusHistory(control As IRibbonControl)
 
         demoModusHistory = Not demoModusHistory
-        historicDate = #11/11/2012#
+        historicDate = #1/31/2014#
+        historicDate = historicDate.AddHours(16)
         If demoModusHistory Then
             Call MsgBox("Demo Modus History: Ein")
         Else
@@ -103,7 +104,6 @@ Imports Microsoft.Office.Interop.Excel
     Sub awinTestNewFunctions(control As IRibbonControl)
         'Call MsgBox("Anzahl Aufrufe: " & anzahlCalls)
         Dim ok As Boolean = True
-
 
 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
@@ -258,6 +258,23 @@ Imports Microsoft.Office.Interop.Excel
         End If
 
         enableOnUpdate = True
+
+    End Sub
+
+    Sub PT5changeTimeSpan(control As IRibbonControl)
+
+        Dim mvTimeSpan As New frmMoveTimeSpan
+        'Dim returnValue As DialogResult
+
+        appInstance.EnableEvents = False
+
+        'returnValue = mvTimeSpan.Showdialog
+        ' in dieser auskommentierten Variante ist es sehr langsam ... deshalb als modales Fenster
+
+        mvTimeSpan.Show()
+
+        appInstance.EnableEvents = True
+
 
     End Sub
 
@@ -485,6 +502,53 @@ Imports Microsoft.Office.Interop.Excel
         appInstance.ScreenUpdating = True
         enableOnUpdate = True
     End Sub
+    ''' <summary>
+    ''' Änderungen akzeptieren 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub Tom2G1Accept(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+
+
+        Dim awinSelection As Excel.ShapeRange
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+                With singleShp
+                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or
+                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
+                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                        Call awinBeauftragung(pname:=.Name, type:=0)
+                    End If
+                End With
+            Next
+
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
 
     ''' <summary>
     ''' Projekt beauftragen
@@ -519,7 +583,7 @@ Imports Microsoft.Office.Interop.Excel
                     If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or
                         (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
                          And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
-                        Call awinBeauftragung(pname:=.Name)
+                        Call awinBeauftragung(pname:=.Name, type:=1)
                     End If
                 End With
             Next
@@ -785,6 +849,47 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
+    Public Sub Tom2G4B1RPLANImport(control As IRibbonControl)
+
+
+        Dim projektInventurFile As String = requirementsOrdner & "RPLAN Projekte.xlsx"
+        Dim dateiName As String
+        Dim myCollection As New Collection
+        Dim importDate As Date = Date.Now
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        dateiName = awinPath & projektInventurFile
+
+        Try
+
+            appInstance.Workbooks.Open(dateiName)
+            ' alle Import Projekte erstmal löschen
+            ImportProjekte.Clear()
+            Call bmwImportProjektInventur(myCollection)
+
+            appInstance.ActiveWorkbook.Save()
+            appInstance.ActiveWorkbook.Close()
+
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+            Exit Sub
+        End Try
+
+        Try
+            Call importProjekteEintragen(myCollection, importDate)
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
+        End Try
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+    End Sub
 
     Public Sub Tom2G4M1Import(control As IRibbonControl)
 
