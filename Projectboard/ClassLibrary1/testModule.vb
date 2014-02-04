@@ -629,14 +629,15 @@ Public Module testModule
 
                                 ' jetzt die Aktion durchführen ...
 
+                                If hproj.timeStamp.Date = lastproj.timeStamp.Date Then
+                                    lastproj = projekthistorie.ElementAtorBefore(lastproj.timeStamp.Date.AddMinutes(-5))
+                                End If
 
                                 If lastproj Is Nothing Then
                                     Throw New Exception("es gibt keinen letzten Strand")
                                 End If
 
                                 cproj = lastproj
-
-
 
                                 htop = 150
                                 hleft = 150
@@ -1399,8 +1400,8 @@ Public Module testModule
         Dim top As Double, left As Double, width As Double, height As Double
         Dim htop As Double, hleft As Double, hwidth As Double, hheight As Double
         Dim pptSize As Integer = 18
-        Dim hproj As clsProjekt
-        Dim pName As String
+        'Dim hproj As clsProjekt
+        'Dim pName As String
         'Dim auswahl As Integer
         Dim von As Integer, bis As Integer
         Dim myCollection As New Collection
@@ -1499,6 +1500,7 @@ Public Module testModule
                         kennzeichnung = "Phase" Or _
                         kennzeichnung = "Rolle" Or _
                         kennzeichnung = "Kostenart" Or _
+                        kennzeichnung = "Meilenstein" Or _
                         kennzeichnung = "Stand:" Or _
                         kennzeichnung = "Zeitraum:" Then
 
@@ -1571,46 +1573,22 @@ Public Module testModule
                             bis = showRangeRight
                             myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
+
                             If myCollection.Count > 0 Then
                                 pptSize = .TextFrame2.TextRange.Font.Size
                                 .TextFrame2.TextRange.Text = " "
 
                                 Dim minColumn As Integer = 10000, maxColumn As Integer = 0, maxzeile As Integer = 0
-                                For Each pName In myCollection
-                                    Try
-                                        hproj = ShowProjekte.getProject(pName)
-                                        With hproj
-                                            If .Start < minColumn Then
-                                                minColumn = .Start
-                                            End If
 
-                                            If .Start + .Dauer - 1 > maxColumn Then
-                                                maxColumn = .Start + .Dauer - 1
-                                            End If
-
-                                            If .tfZeile > maxzeile Then
-                                                maxzeile = .tfZeile
-                                            End If
-                                        End With
-                                    Catch ex As Exception
-
-                                    End Try
-
-                                Next
-                                maxzeile = maxzeile + 1
-                                If minColumn > 1 Then
-                                    minColumn = minColumn - 1
-                                End If
-                                maxColumn = maxColumn + 1
-
-
-                                If von > 0 And von < minColumn Then
-                                    minColumn = von
+                                ' wenn nur die Projekt-Tafel und Zeitraum im großen Bild gezeigt werden soll, also ohne Qualifier aufgerufen wird , 
+                                ' dann stelle die Projekt-Tafel mit den Projekten dar, ohne sie abzuschneiden ...
+                                If qualifier = "" Then
+                                    Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, False)
+                                Else
+                                    Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, True)
                                 End If
 
-                                If bis > maxColumn Then
-                                    maxColumn = bis
-                                End If
+
 
                                 ' set Gridlines to white 
                                 With appInstance.ActiveWindow
@@ -1627,22 +1605,40 @@ Public Module testModule
 
                                     End Try
 
+                                    Dim farbtyp As Integer
 
                                     ' hier werden die Milestones gezeichnet 
                                     If qualifier = "Milestones R" Then
                                         Call awinDeleteMilestoneShapes(0)
 
-                                        Dim farbTyp As Integer = 3
+                                        farbtyp = 3
                                         Call awinZeichneMilestones(nameList, farbTyp, True)
                                         
 
                                     ElseIf qualifier = "Milestones GR" Then
                                         Call awinDeleteMilestoneShapes(0)
 
-                                        Dim farbTyp As Integer = 2
+                                        farbtyp = 2
                                         Call awinZeichneMilestones(nameList, farbTyp, False)
                                         farbTyp = 3
                                         Call awinZeichneMilestones(nameList, farbTyp, False)
+
+                                    ElseIf qualifier = "Milestones GGR" Then
+                                        Call awinDeleteMilestoneShapes(0)
+
+                                        farbtyp = 1
+                                        Call awinZeichneMilestones(nameList, farbTyp, False)
+                                        farbTyp = 2
+                                        Call awinZeichneMilestones(nameList, farbTyp, False)
+                                        farbTyp = 3
+                                        Call awinZeichneMilestones(nameList, farbTyp, False)
+
+                                    ElseIf qualifier = "Milestones ALL" Then
+                                        Call awinDeleteMilestoneShapes(0)
+
+                                        farbtyp = 4
+                                        Call awinZeichneMilestones(nameList, farbTyp, False)
+                                        
                                         
                                     ElseIf qualifier = "Status" Then
                                         Call awinDeleteMilestoneShapes(0)
@@ -1710,49 +1706,8 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = " "
 
                                 Dim minColumn As Integer = 10000, maxColumn As Integer = 0, maxzeile As Integer = 0
-                                For Each pName In myCollection
-                                    Try
-                                        hproj = ShowProjekte.getProject(pName)
-                                        With hproj
-                                            If .Start < minColumn Then
-                                                minColumn = .Start
-                                            End If
 
-                                            If .Start + .Dauer - 1 > maxColumn Then
-                                                maxColumn = .Start + .Dauer - 1
-                                            End If
-
-                                            If .tfZeile > maxzeile Then
-                                                maxzeile = .tfZeile
-                                            End If
-                                        End With
-                                    Catch ex As Exception
-
-                                    End Try
-
-                                Next
-                                maxzeile = maxzeile + 1
-                                If minColumn > 1 Then
-                                    minColumn = minColumn - 1
-                                End If
-                                maxColumn = maxColumn + 1
-
-
-                                If von > 0 And von < minColumn Then
-                                    minColumn = von
-                                End If
-
-                                If bis > maxColumn Then
-                                    maxColumn = bis
-                                End If
-
-                                If minColumn < von - 12 Then
-                                    minColumn = von - 12
-                                End If
-
-                                If maxColumn > bis + 12 Then
-                                    maxColumn = bis + 12
-                                End If
+                                Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, True)
 
 
                                 ' set Gridlines to white 
@@ -1862,6 +1817,8 @@ Public Module testModule
                                     farbtyp = 2
                                 ElseIf qualifier = "gruen" Then
                                     farbtyp = 1
+                                ElseIf qualifier = "gelb/rot" Then
+                                    farbtyp = 12
                                 Else
                                     farbtyp = 3
                                 End If
@@ -2040,6 +1997,48 @@ Public Module testModule
 
                         Case "Strategie/Risiko/Volumen"
 
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+
+                            Dim selectionType As Integer = -1 ' keine Einschränkung
+                            von = showRangeLeft
+                            bis = showRangeRight
+                            myCollection = ShowProjekte.withinTimeFrame(selectionType, von, bis)
+
+                            htop = 50
+                            hleft = (showRangeRight - 1) * boxWidth
+                            hwidth = 0.4 * maxScreenWidth
+                            hheight = 0.6 * maxScreenHeight
+                            obj = Nothing
+
+                            Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, htop, hleft, hwidth, hheight)
+
+
+                            reportObj = obj
+
+                            With reportObj
+                                .Chart.ChartTitle.Text = boxName
+                                .Chart.ChartTitle.Font.Size = pptSize
+                            End With
+
+                            reportObj.Copy()
+                            newShape = pptSlide.Shapes.Paste
+
+                            With newShape
+                                .Top = top + 0.02 * height
+                                .Left = left + 0.02 * width
+                                .Width = width * 0.96
+                                .Height = height * 0.96
+                            End With
+
+
+                            Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+                            Catch ex As Exception
+
+                            End Try
 
                         Case "Zeit/Risiko/Volumen"
 
@@ -2310,12 +2309,30 @@ Public Module testModule
 
 
                             myCollection.Clear()
-                            If PhaseDefinitions.Contains(qualifier) Then
+
+                            Dim qstr(20) As String
+                            Dim phName As String = " "
+                            qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                            ' Aufbau der Collection 
+                            For i = 0 To qstr.Length - 1
+
+                                Try
+                                    phName = qstr(i).Trim
+                                    If PhaseDefinitions.Contains(phName) Then
+                                        myCollection.Add(phName, phName)
+                                    End If
+                                Catch ex As Exception
+                                    Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
+                                End Try
+
+                            Next
+
+
+                            If myCollection.Count > 0 Then
 
                                 pptSize = .TextFrame2.TextRange.Font.Size
                                 .TextFrame2.TextRange.Text = " "
-
-                                myCollection.Add(qualifier, qualifier)
 
                                 htop = 100
                                 hleft = 100
@@ -2327,7 +2344,12 @@ Public Module testModule
                                 reportObj = obj
 
                                 With reportObj
-                                    .Chart.ChartTitle.Text = boxName
+                                    If myCollection.Count > 1 Then
+                                        .Chart.ChartTitle.Text = "Phasen Übersicht"
+                                    Else
+                                        .Chart.ChartTitle.Text = boxName
+                                    End If
+
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
@@ -2355,17 +2377,106 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
                             End If
 
+                        Case "Meilenstein"
+
+
+                            myCollection.Clear()
+                            Dim MSnameList As SortedList(Of String, String)
+                            MSnameList = ShowProjekte.getMilestoneNames
+
+                            Dim qstr(20) As String
+                            Dim msName As String = " "
+                            qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                            ' Aufbau der Collection 
+                            For i = 0 To qstr.Length - 1
+
+                                Try
+                                    msName = qstr(i).Trim
+                                    If MSnameList.ContainsKey(msName) Then
+                                        myCollection.Add(msName, msName)
+                                    End If
+                                Catch ex As Exception
+                                    Call MsgBox("Fehler: Phasen Name " & msName & " konnte nicht erkannt werden ...")
+                                End Try
+
+                            Next
+
+
+                            If myCollection.Count > 0 Then
+
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+                                htop = 100
+                                hleft = 100
+                                hheight = miniHeight  ' height of all charts
+                                hwidth = miniWidth   ' width of all charts
+                                obj = Nothing
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(5), True)
+
+                                reportObj = obj
+
+                                With reportObj
+                                    If myCollection.Count > 1 Then
+                                        .Chart.ChartTitle.Text = "Meilenstein Übersicht"
+                                    Else
+                                        .Chart.ChartTitle.Text = boxName
+                                    End If
+
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
+
+                                reportObj.Copy()
+                                newShape = pptSlide.Shapes.Paste
+
+                                With newShape
+                                    .Top = top + 0.02 * height
+                                    .Left = left + 0.02 * width
+                                    .Width = width * 0.96
+                                    .Height = height * 0.96
+                                End With
+
+
+                                Try
+                                    reportObj.Delete()
+                                Catch ex As Exception
+
+                                End Try
+
+                            Else
+                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                            End If
+
 
                         Case "Rolle"
 
 
                             myCollection.Clear()
-                            If RoleDefinitions.Contains(qualifier) Then
+
+                            Dim qstr(20) As String
+                            Dim roleName As String = " "
+                            qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                            ' Aufbau der Collection 
+                            For i = 0 To qstr.Length - 1
+
+                                Try
+                                    roleName = qstr(i).Trim
+                                    If RoleDefinitions.Contains(roleName) Then
+                                        myCollection.Add(roleName, roleName)
+                                    End If
+                                Catch ex As Exception
+                                    Call MsgBox("Fehler: Rolle " & roleName & " konnte nicht erkannt werden ...")
+                                End Try
+
+                            Next
+
+
+                            If myCollection.Count > 0 Then
 
                                 pptSize = .TextFrame2.TextRange.Font.Size
                                 .TextFrame2.TextRange.Text = " "
-
-                                myCollection.Add(qualifier, qualifier)
 
                                 htop = 100
                                 hleft = 100
@@ -2401,9 +2512,6 @@ Public Module testModule
 
                                 Try
                                     reportObj.Delete()
-                                    ' das diagramlist.remove darf nicht gemacht werden, weil sonst die gespeicherten Werte 
-                                    ' für die top. left, .. Positionen verloren gehen  
-                                    'DiagramList.Remove(DiagramList.Count)
                                 Catch ex As Exception
 
                                 End Try
@@ -2416,12 +2524,29 @@ Public Module testModule
 
 
                             myCollection.Clear()
-                            If CostDefinitions.Contains(qualifier) Then
+                            Dim qstr(20) As String
+                            Dim costName As String = " "
+                            qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                            ' Aufbau der Collection 
+                            For i = 0 To qstr.Length - 1
+
+                                Try
+                                    costName = qstr(i).Trim
+                                    If CostDefinitions.Contains(costName) Then
+                                        myCollection.Add(costName, costName)
+                                    End If
+                                Catch ex As Exception
+                                    Call MsgBox("Fehler: Kostenart " & costName & " konnte nicht erkannt werden ...")
+                                End Try
+
+                            Next
+
+
+                            If myCollection.Count > 0 Then
 
                                 pptSize = .TextFrame2.TextRange.Font.Size
                                 .TextFrame2.TextRange.Text = " "
-
-                                myCollection.Add(qualifier, qualifier)
 
                                 htop = 100
                                 hleft = 100
@@ -3381,6 +3506,9 @@ Public Module testModule
         Dim heute As Date = Date.Now
         Dim index As Integer = 0
         Dim tabelle As pptNS.Table
+        Dim farbTypenListe As New Collection
+        Dim timeFrameProjekte As New Collection
+        Dim hproj As clsProjekt
 
         Try
             tabelle = pptShape.Table
@@ -3389,23 +3517,31 @@ Public Module testModule
         End Try
 
 
-
+        If farbtyp <= 3 Then
+            farbTypenListe.Add(farbtyp)
+        ElseIf farbtyp = 12 Then
+            Dim tmpfarbe As Integer = 2
+            farbTypenListe.Add(tmpfarbe, tmpfarbe)
+            tmpfarbe = 3
+            farbTypenListe.Add(tmpfarbe, tmpfarbe)
+        End If
 
         Dim todoListe As New SortedList(Of Long, clsProjekt)
         Dim key As Long
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        timeFrameProjekte = ShowProjekte.withinTimeFrame(0, showRangeLeft, showRangeRight)
 
-            key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
-            todoListe.Add(key, kvp.Value)
-
+        For Each pname As String In timeFrameProjekte
+            hproj = ShowProjekte.getProject(pname)
+            key = 10000 * hproj.tfZeile + hproj.start
+            todoListe.Add(key, hproj)
         Next
+
 
         Dim msNumber As Integer = 1
 
         ' jetzt wird die todoListe abgearbeitet 
         Dim tabellenzeile As Integer = 2
-        Dim hproj As clsProjekt
         For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
 
             hproj = kvp.Value
@@ -3422,16 +3558,11 @@ Public Module testModule
                     cResult = cphase.getResult(r)
 
                     cBewertung = cResult.getBewertung(1)
-                    'Try
-                    '    cBewertung = cResult.getBewertung(1)
-                    'Catch ex As Exception
-                    '    cBewertung = New clsBewertung
-                    'End Try
-
+                    
                     resultColumn = getColumnOfDate(cResult.getDate)
 
-                    If farbtyp = cBewertung.colorIndex Then
-                        ' es muss nur etwas gemacht werden , wenn entweder alle Farben gezeichnet werden oder eben die übergebene
+                    If farbTypenListe.Contains(cBewertung.colorIndex) Then
+                        ' dann muss ein Eintrag in der Tabelle gemacht werden 
 
                         If (resultColumn < showRangeLeft Or resultColumn > showRangeRight) Then
                             ' nichts machen 
@@ -4027,5 +4158,68 @@ Public Module testModule
 
     End Sub
 
+    ''' <summary>
+    ''' berechnet die Koordinaten des Bild, von welcher Spalte bis zu welcher Spalte und Zeile der SchnappSchuss der Projekt-Tafel aufgenommen werden soll 
+    ''' </summary>
+    ''' <param name="myCollection"></param>
+    ''' <param name="minColumn">Ausgabe Parameter: von Spalte</param>
+    ''' <param name="maxColumn">Ausgabe Parameter: bis Spalte</param>
+    ''' <param name="maxZeile">Ausgabe-Parameter: bis Zeile</param>
+    ''' <remarks></remarks>
+    Sub calcPictureCoord(ByVal myCollection As Collection, ByRef minColumn As Integer, ByRef maxColumn As Integer, ByRef maxZeile As Integer, ByVal toBeTrimmed As Boolean)
 
+        Dim hproj As clsProjekt
+        Dim von As Integer = showRangeLeft
+        Dim bis As Integer = showRangeRight
+
+        For Each pName In myCollection
+            Try
+                hproj = ShowProjekte.getProject(pName)
+                With hproj
+                    If .Start < minColumn Then
+                        minColumn = .Start
+                    End If
+
+                    If .Start + .Dauer - 1 > maxColumn Then
+                        maxColumn = .Start + .Dauer - 1
+                    End If
+
+                    If .tfZeile > maxZeile Then
+                        maxZeile = .tfZeile
+                    End If
+                End With
+            Catch ex As Exception
+
+            End Try
+
+        Next
+        maxZeile = maxZeile + 1
+
+        If minColumn > 1 Then
+            minColumn = minColumn - 1
+        End If
+        maxColumn = maxColumn + 1
+
+
+        If von > 0 And von < minColumn Then
+            minColumn = von
+        End If
+
+        If bis > maxColumn Then
+            maxColumn = bis
+        End If
+
+
+        If toBeTrimmed Then
+            If minColumn < von - 12 Then
+                minColumn = von - 12
+            End If
+
+            If maxColumn > bis + 12 Then
+                maxColumn = bis + 12
+            End If
+        End If
+        
+
+    End Sub
 End Module

@@ -116,6 +116,7 @@ Public Module Module1
         ComplexRisiko = 10
         ZeitRisiko = 11
         Meilenstein = 12
+        FitRisikoVol = 13
     End Enum
 
 

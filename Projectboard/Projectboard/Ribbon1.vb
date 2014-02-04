@@ -1685,6 +1685,8 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
+
+
     ''' <summary>
     ''' Charakteristik Strategie / Risiko 
     ''' </summary>
@@ -1744,7 +1746,58 @@ Imports Microsoft.Office.Interop.Excel
         appInstance.ScreenUpdating = formerSU
 
 
+    End Sub
 
+    Sub Tom2G2M1B6SFITVOl(control As IRibbonControl)
+
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim singleShp As Excel.Shape
+        Dim myCollection As New Collection
+
+
+        Dim awinSelection As Excel.ShapeRange
+
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+
+        enableOnUpdate = False
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+                With singleShp
+                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
+                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
+                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+
+                        myCollection.Add(.Name)
+                        top = .Top + boxHeight + 2
+                        left = .Left - 3
+                        width = 12 * boxWidth
+                        height = 8 * boxHeight
+
+                    End If
+                End With
+            Next
+            Dim obj As New Object
+            Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+        appInstance.ScreenUpdating = formerSU
 
     End Sub
 
@@ -3076,6 +3129,8 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
+
+
     Sub PT0ShowStrategieRisiko(control As IRibbonControl)
 
         Dim selectionType As Integer = -1 ' keine Einschränkung
@@ -3117,6 +3172,51 @@ Imports Microsoft.Office.Interop.Excel
         enableOnUpdate = True
 
     End Sub
+
+    Sub PT0ShowStratRisikoVolume(control As IRibbonControl)
+
+        Dim selectionType As Integer = -1 ' keine Einschränkung
+        Dim myCollection As New Collection
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim sichtbarerBereich As Excel.Range
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+
+        With appInstance.ActiveWindow
+            sichtbarerBereich = .VisibleRange
+            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
+            If left < sichtbarerBereich.Left Then
+                left = sichtbarerBereich.Left + 2
+            End If
+
+            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+            If top < sichtbarerBereich.Top Then
+                top = sichtbarerBereich.Top + 2
+            End If
+
+        End With
+
+        width = 600
+        height = 450
+
+        Dim obj As New Object
+
+        Try
+            Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+        appInstance.ScreenUpdating = True
+
+    End Sub
+
 
     Sub PT0ShowComplexRisiko(control As IRibbonControl)
 

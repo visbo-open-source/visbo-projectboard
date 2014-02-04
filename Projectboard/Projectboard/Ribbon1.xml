@@ -54,8 +54,9 @@
             <button id="PT0G1M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
           </menu>
           <separator id="PT0G1s4"/>
-          <button id="PT0G1B3" label="Strategie / Risiko" onAction="Tom2G2M1B6SFIT" />
-          <button id="PT0G1B4" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />
+          <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
+          <button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />
+          <!--<button id="PT0G1B4" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />-->
           <separator id="PT0G1s5"/>
           <button id="PT0G1B5" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
         </group>
@@ -82,9 +83,9 @@
             <button id="PT0G2M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
           </menu>
           <separator id="PT0G2s4"/>
-          <button id="PT0G2B3" label="Strategie / Risiko" onAction="PT0ShowStrategieRisiko" />
-          <button id="PT0G2B4" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />
-          <button id="PT0G2B6" label="Zeit / Risiko" onAction="PT0ShowZeitRisiko" />
+          <button id="PT0G2B3" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
+          <button id="PT0G2B4" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />
+          <button id="PT0G2B6" label="Zeit/Risiko/Volumen" onAction="PT0ShowZeitRisiko" />
           <separator id="PT0G2s5"/>
           <button id="PT0G2B5" label="Ergebnis" onAction="PT0ShowPortfolioErgebnis" />
         </group>

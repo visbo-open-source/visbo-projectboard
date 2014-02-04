@@ -2786,6 +2786,23 @@ Public Module Projekte
 
             End If
 
+            ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
+            With chtobj
+                .Top = top
+                .Height = height
+                .Left = left
+                .Width = width
+            End With
+
+            With chtobj.Chart
+                ' jetzt wird die Plot-Area so verkleinert, daß links und rechts ausreichend Platz 
+                ' für die Bennenung der Meilensteine ist 
+                .PlotArea.Left = 0.2 * width
+                .PlotArea.Width = 0.8 * width
+                '.PlotArea.Height = 0.9 * height
+                '.PlotArea.Top = 0.08 * height
+            End With
+
             Dim ms As Integer
             With CType(chtobj.Chart, Excel.Chart)
 
@@ -2928,7 +2945,7 @@ Public Module Projekte
                                         .MarkerSize = 5
                                     End If
 
-                                    ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er auch so markiert
+                                    ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er entsprechend markiert
                                     If milestoneReached(px - 1) Then
                                         .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleSquare
                                     End If
@@ -2941,7 +2958,13 @@ Public Module Projekte
                                         '.DataLabel.Text = msName & ": " & tmpdatenreihe(px - 1).ToShortDateString
                                         .DataLabel.Font.Size = awinSettings.fontsizeItems
                                         Try
-                                            .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
+
+                                            If tmpdatenreihe(px - 1).Date > tmpdatenreihe(px - 2).Date Then
+                                                .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBelow
+                                            Else
+                                                .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
+                                            End If
+
                                         Catch ex As Exception
 
                                         End Try
@@ -3066,22 +3089,7 @@ Public Module Projekte
 
             End With
 
-            ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
-            With chtobj
-                .Top = top
-                .Height = height
-                .Left = left
-                .Width = width
-            End With
-
-            With chtobj.Chart
-                ' jetzt wird die Plot-Area so verkleinert, daß links und rechts ausreichend Platz 
-                ' für die Bennenung der Meilensteine ist 
-                .PlotArea.Left = 0.2 * width
-                .PlotArea.Width = 0.8 * width
-                '.PlotArea.Height = 0.9 * height
-                '.PlotArea.Top = 0.08 * height
-            End With
+           
 
         End With
 
@@ -8360,6 +8368,7 @@ Public Module Projekte
                             Try
                                 pName = hproj.name
                                 Call zeichnePhasenInProjekt(hproj, nameList, farbTyp, False, 0, False)
+
                             Catch ex As Exception
 
                             End Try
@@ -8388,7 +8397,14 @@ Public Module Projekte
 
             For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
 
-                Call zeichnePhasenInProjekt(kvp.Value, nameList, farbTyp, False, 0, False)
+                ' wenn ein Zeitraum gesetzt ist, dann nur anzeigen, was in diesem Zeitraum liegt 
+                If showRangeLeft < showRangeRight And showRangeLeft > 0 Then
+                    Call zeichnePhasenInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, False, 0, False)
+                Else
+                    ' von jedem Projekt die Phasen anzeigen 
+                    Call zeichnePhasenInProjekt(kvp.Value, nameList, farbTyp, False, 0, False)
+                End If
+
 
             Next
 
