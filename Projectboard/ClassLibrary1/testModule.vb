@@ -782,7 +782,7 @@ Public Module testModule
                                 'hwidth = 12 * boxWidth
                                 'hheight = 8 * boxHeight
 
-                                Call awinCreateStratRisikMargeDiagramm(mycollection, obj, True, False, True, False, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagramms(mycollection, obj, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, True, False, True, False, htop, hleft, hwidth, hheight)
                                 reportObj = obj
 
                                 notYetDone = True
@@ -2008,7 +2008,7 @@ Public Module testModule
                             hwidth = 0.4 * maxScreenWidth
                             hheight = 0.6 * maxScreenHeight
                             obj = Nothing
-                            Call awinCreateStratRisikMargeDiagramm(myCollection, obj, False, False, True, True, htop, hleft, hwidth, hheight)
+                            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
 
 
                             reportObj = obj
@@ -2057,8 +2057,8 @@ Public Module testModule
                             hwidth = 0.4 * maxScreenWidth
                             hheight = 0.6 * maxScreenHeight
                             obj = Nothing
-                            'Call awinCreateComplexRiskVolumeDiagramm(myCollection, obj, False, False, True, True, htop, hleft, hwidth, hheight)
-                            Call awinCreateZeitRiskVolumeDiagramm(myCollection, obj, False, False, True, True, htop, hleft, hwidth, hheight)
+
+                            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
 
 
                             reportObj = obj

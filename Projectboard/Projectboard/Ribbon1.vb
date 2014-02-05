@@ -1629,7 +1629,7 @@ Imports Microsoft.Office.Interop.Excel
                 End With
             Next
             Dim obj As New Object
-            Call awinCreateStratRisikMargeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
         End If
@@ -1701,7 +1701,7 @@ Imports Microsoft.Office.Interop.Excel
             Dim obj As New Object
 
             Try
-                Call awinCreateComplexRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
             Catch ex As Exception
 
             End Try
@@ -1714,7 +1714,9 @@ Imports Microsoft.Office.Interop.Excel
         appInstance.EnableEvents = formerEE
         appInstance.ScreenUpdating = formerSU
 
-        Call awinDeSelect()
+        ' die Projekte sollen hier doch nicht deselektiert werden, weil dadurch die awinNeuZeichnenDiagramm aufgerufen wird und damit auch die awinUpdatePortfolioDiagrams
+        ' was dazu führt, dass alle Projekt in der Projektliste wieder in das Diagramm eingezeichnet werden.
+        'Call awinDeSelect()
 
 
 
@@ -3003,7 +3005,7 @@ Imports Microsoft.Office.Interop.Excel
         Dim obj As New Object
 
         Try
-            Call awinCreateStratRisikMargeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
         Catch ex As Exception
 
         End Try
@@ -3047,7 +3049,7 @@ Imports Microsoft.Office.Interop.Excel
         Dim obj As New Object
 
         Try
-            Call awinCreateComplexRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
         Catch ex As Exception
 
         End Try
@@ -3094,7 +3096,7 @@ Imports Microsoft.Office.Interop.Excel
         Dim obj As New Object
 
         Try
-            Call awinCreateZeitRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ZeitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
         Catch ex As Exception
 
         End Try

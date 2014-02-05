@@ -116,10 +116,12 @@ Public Module Module1
         ComplexRisiko = 10
         ZeitRisiko = 11
         Meilenstein = 12
+        AmpelFarbe = 13
+        ProjektFarbe = 14
     End Enum
 
 
-    ' Enumeration History Change Criteria: um anzugebe, welche Veränderung man in der History eines Projektes sucht 
+    ' Enumeration History Change Criteria: um anzugeben, welche Veränderung man in der History eines Projektes sucht 
     Public Enum PThcc
         perscost = 1
         othercost = 2
@@ -213,10 +215,10 @@ Public Module Module1
     ' diese Variabe nimmt die Farbe der Kapa-Linie an
     Public rollenKapaFarbe As Object
 
-    ' diese Variabe nimmt die Farbe der internen Ressourcen, ohne Projekte an auf
+    ' diese Variable nimmt die Farbe der internen Ressourcen, ohne Projekte an auf
     Public farbeInternOP As Object
 
-    ' diese Variabe nimmt die Farbe der externen Ressourcen auf
+    ' diese Variable nimmt die Farbe der externen Ressourcen auf
     Public farbeExterne As Object
 
     ' Variable nimmt die Namen der Worksheets für Portfolio und Ressourcen auf
