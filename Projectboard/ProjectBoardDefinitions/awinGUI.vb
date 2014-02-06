@@ -269,7 +269,7 @@ Public Module awinGUI
                     Case Else
 
                         ' für Zeit/Risiko und für Complex/Risiko
-                        hilfsstring = .chartObjects(i)
+                        hilfsstring = .chartObjects(i).name
                         If chtobjName = .chartObjects(i).name Then
                             found = True
                             repChart = .ChartObjects(i)
