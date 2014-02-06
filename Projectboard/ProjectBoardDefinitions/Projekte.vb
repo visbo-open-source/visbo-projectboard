@@ -2966,7 +2966,7 @@ Public Module Projekte
                                             End If
 
                                         Catch ex As Exception
-
+                                            .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
                                         End Try
 
                                         Try
@@ -5868,24 +5868,21 @@ Public Module Projekte
 
 
         With hproj
-            Dim gk As Double = .getSummeKosten
-            projektErloes = System.Math.Round(.Erloes, mode:=MidpointRounding.ToEven)
+
+            .calculateRoundedKPI(projektErloes, projektPersKosten, projektSonstKosten, projektRisikoKosten, projektErgebnis)
+            
             itemValue(0) = projektErloes
             itemColor(0) = ergebnisfarbe1
 
-            projektRisikoKosten = System.Math.Round(.risikoKostenfaktor * gk, mode:=MidpointRounding.ToEven)
             itemValue(1) = projektRisikoKosten
             itemColor(1) = iProjektFarbe
 
-            projektPersKosten = System.Math.Round(.getAllPersonalKosten.Sum, mode:=MidpointRounding.ToEven)
             itemValue(2) = projektPersKosten
             itemColor(2) = farbeExterne
 
-            projektSonstKosten = System.Math.Round(.getGesamtAndereKosten.Sum, mode:=MidpointRounding.ToEven)
             itemValue(3) = projektSonstKosten
             itemColor(3) = farbeInternOP
 
-            projektErgebnis = projektErloes - (projektRisikoKosten + projektPersKosten + projektSonstKosten)
             itemValue(4) = projektErgebnis
             If projektErgebnis > 0 Then
                 itemColor(4) = ergebnisfarbe2

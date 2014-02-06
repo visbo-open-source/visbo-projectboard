@@ -190,65 +190,114 @@ Public Class clsProjekt
 
                     ' Ist das startdatum unterschiedlich?
                     If Me.startDate.Date <> vglproj.startDate.Date Then
-                        tmpCollection.Add(PThcc.startdatum)
+                        Try
+                            tmpCollection.Add(PThcc.startdatum, PThcc.startdatum)
+                        Catch ex As Exception
+
+                        End Try
+
                     End If
 
                     ' prüfen, ob die Phasen identisch sind 
                     hValues = Me.getPhaseInfos
                     cValues = vglproj.getPhaseInfos
                     If arraysAreDifferent(hValues, cValues) Then
-                        tmpCollection.Add(PThcc.phasen)
+                        Try
+                            tmpCollection.Add(PThcc.phasen, PThcc.phasen)
+                        Catch ex As Exception
+
+                        End Try
+
                     End If
 
                     ' prüfen, ob die Milestones identisch sind 
                     hdates = Me.getMilestones
                     cdates = vglproj.getMilestones
                     If dateListsareDifferent(hdates, cdates) Then
-                        tmpCollection.Add(PThcc.resultdates)
+                        Try
+                            tmpCollection.Add(PThcc.resultdates, PThcc.resultdates)
+                        Catch ex As Exception
+
+                        End Try
+
                     End If
 
                     ' prüfen , ob die Personalkosten identisch sind 
                     hValues = Me.getAllPersonalKosten
                     cValues = vglproj.getAllPersonalKosten
-                    If arraysAreDifferent(hValues, cValues) Then
-                        tmpCollection.Add(PThcc.perscost)
+                    If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
+                        Try
+                            tmpCollection.Add(PThcc.perscost, PThcc.perscost)
+                        Catch ex As Exception
+
+                        End Try
+
                     End If
 
                     ' prüfen, ob sonstige Kosten identisch sind 
                     hValues = Me.getGesamtAndereKosten
                     cValues = vglproj.getGesamtAndereKosten
-                    If arraysAreDifferent(hValues, cValues) Then
-                        tmpCollection.Add(PThcc.othercost)
+                    If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
+                        Try
+                            tmpCollection.Add(PThcc.othercost, PThcc.othercost)
+                        Catch ex As Exception
+
+                        End Try
+
                     End If
 
                     ' prüfen, ob das Ergebnis identisch ist 
-                    Dim hErg As Double, cErg As Double
+                    Dim aktBudget As Double, aktPCost As Double, aktSCost As Double, aktRCost As Double, aktErg As Double
+                    Dim vglBudget As Double, vglPCost As Double, vglSCost As Double, vglRCost As Double, vglErg As Double
+
                     With Me
-                        hErg = .Erloes - .getGesamtKostenBedarf.Sum
+                        .calculateRoundedKPI(aktBudget, aktPCost, aktSCost, aktRCost, aktErg)
                     End With
+
                     With vglproj
-                        cErg = .Erloes - .getGesamtKostenBedarf.Sum
+                        .calculateRoundedKPI(vglBudget, vglPCost, vglSCost, vglRCost, vglErg)
                     End With
-                    If hErg <> cErg Then
-                        tmpCollection.Add(PThcc.ergebnis)
+
+                    If aktErg <> vglErg Then
+                        Try
+                            tmpCollection.Add(PThcc.ergebnis, PThcc.ergebnis)
+                        Catch ex As Exception
+
+                        End Try
+
                     End If
 
                     ' prüfen, ob die Attribute identisch sind
                     If Me.StrategicFit <> vglproj.StrategicFit Or _
                         Me.Risiko <> vglproj.Risiko Then
-                        tmpCollection.Add(PThcc.fitrisk)
+                        Try
+                            tmpCollection.Add(PThcc.fitrisk, PThcc.fitrisk)
+                        Catch ex As Exception
+
+                        End Try
+
                     End If
 
                     ' prüfen, ob die Projekt Ampel unterschiedlich ist 
                     If Me.ampelStatus <> vglproj.ampelStatus Then
-                        tmpCollection.Add(PThcc.projektampel)
+                        Try
+                            tmpCollection.Add(PThcc.projektampel, PThcc.projektampel)
+                        Catch ex As Exception
+
+                        End Try
+
                     End If
 
                     ' prüfen, ob die Meilenstein Ampeln unterschiedlich sind 
                     hValues = Me.getMilestoneColors
                     cValues = vglproj.getMilestoneColors
                     If arraysAreDifferent(hValues, cValues) Then
-                        tmpCollection.Add(PThcc.resultampel)
+                        Try
+                            tmpCollection.Add(PThcc.resultampel, PThcc.resultampel)
+                        Catch ex As Exception
+
+                        End Try
+
                     End If
 
                 Case 1 ' strong role identity
@@ -257,14 +306,27 @@ Public Class clsProjekt
 
                     For Each role In hUsedRoles
 
+                        
+                        hValues = Me.getRessourcenBedarf(role)
                         If cUsedRoles.Contains(role) Then
-                            hValues = Me.getRessourcenBedarf(role)
+
                             cValues = vglproj.getRessourcenBedarf(role)
-                            If arraysAreDifferent(hValues, cValues) Then
-                                tmpCollection.Add(role)
+                            If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
+                                Try
+                                    tmpCollection.Add(role, role)
+                                Catch ex As Exception
+
+                                End Try
                             End If
                         Else
-                            tmpCollection.Add(role)
+                            If hValues.Sum > 0 Then
+                                Try
+                                    tmpCollection.Add(role, role)
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+
                         End If
                         
                     Next
@@ -274,8 +336,14 @@ Public Class clsProjekt
 
                     For Each role In cUsedRoles
 
-                        If Not hUsedRoles.Contains(role) Then
-                            tmpCollection.Add(role)
+                        cValues = vglproj.getRessourcenBedarf(role)
+
+                        If Not hUsedRoles.Contains(role) And cValues.Sum > 0 Then
+                            Try
+                                tmpCollection.Add(role, role)
+                            Catch ex As Exception
+
+                            End Try
                         End If
 
                     Next
@@ -287,15 +355,24 @@ Public Class clsProjekt
                     ReDim cValues(0)
 
                     For Each role In hUsedRoles
+                        hValues(0) = Me.getRessourcenBedarf(role).Sum
 
                         If cUsedRoles.Contains(role) Then
-                            hValues(0) = Me.getRessourcenBedarf(role).Sum
+
                             cValues(0) = vglproj.getRessourcenBedarf(role).Sum
                             If hValues(0) <> cValues(0) Then
-                                tmpCollection.Add(role)
+                                Try
+                                    tmpCollection.Add(role, role)
+                                Catch ex As Exception
+
+                                End Try
                             End If
-                        Else
-                            tmpCollection.Add(role)
+                        ElseIf hValues(0) > 0 Then
+                            Try
+                                tmpCollection.Add(role, role)
+                            Catch ex As Exception
+
+                            End Try
                         End If
 
                     Next
@@ -305,8 +382,15 @@ Public Class clsProjekt
 
                     For Each role In cUsedRoles
 
-                        If Not hUsedRoles.Contains(role) Then
-                            tmpCollection.Add(role)
+                        cValues(0) = vglproj.getRessourcenBedarf(role).Sum
+
+                        If Not hUsedRoles.Contains(role) And cValues(0) > 0 Then
+                            Try
+                                tmpCollection.Add(role, role)
+                            Catch ex As Exception
+
+                            End Try
+
                         End If
 
                     Next
@@ -317,15 +401,24 @@ Public Class clsProjekt
                     Dim cUsedCosts As Collection = vglproj.getUsedKosten
 
                     For Each cost In hUsedCosts
+                        hValues = Me.getKostenBedarf(cost)
 
                         If cUsedCosts.Contains(cost) Then
-                            hValues = Me.getKostenBedarf(cost)
+
                             cValues = vglproj.getKostenBedarf(cost)
-                            If arraysAreDifferent(hValues, cValues) Then
-                                tmpCollection.Add(cost)
+                            If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
+                                Try
+                                    tmpCollection.Add(cost, cost)
+                                Catch ex As Exception
+
+                                End Try
                             End If
-                        Else
-                            tmpCollection.Add(cost)
+                        ElseIf hValues.Sum > 0 Then
+                            Try
+                                tmpCollection.Add(cost, cost)
+                            Catch ex As Exception
+
+                            End Try
                         End If
 
                     Next
@@ -334,9 +427,13 @@ Public Class clsProjekt
                     ' die müssen dann auf alle fälle aufgenommen werden 
 
                     For Each cost In cUsedCosts
+                        cValues = vglproj.getKostenBedarf(cost)
+                        If Not hUsedCosts.Contains(cost) And cValues.Sum > 0 Then
+                            Try
+                                tmpCollection.Add(cost, cost)
+                            Catch ex As Exception
 
-                        If Not hUsedCosts.Contains(cost) Then
-                            tmpCollection.Add(cost)
+                            End Try
                         End If
 
                     Next
@@ -349,15 +446,23 @@ Public Class clsProjekt
                     ReDim cValues(0)
 
                     For Each cost In hUsedCosts
-
+                        hValues(0) = Me.getKostenBedarf(cost).Sum
                         If cUsedCosts.Contains(cost) Then
-                            hValues(0) = Me.getKostenBedarf(cost).Sum
+
                             cValues(0) = vglproj.getKostenBedarf(cost).Sum
-                            If arraysAreDifferent(hValues, cValues) Then
-                                tmpCollection.Add(cost)
+                            If arraysAreDifferent(hValues, cValues) And (hValues(0) > 0 Or cValues(0) > 0) Then
+                                Try
+                                    tmpCollection.Add(cost, cost)
+                                Catch ex As Exception
+
+                                End Try
                             End If
-                        Else
-                            tmpCollection.Add(cost)
+                        ElseIf hValues(0) > 0 Then
+                            Try
+                                tmpCollection.Add(cost, cost)
+                            Catch ex As Exception
+
+                            End Try
                         End If
 
                     Next
@@ -366,9 +471,14 @@ Public Class clsProjekt
                     ' die müssen dann auf alle fälle aufgenommen werden 
 
                     For Each cost In cUsedCosts
+                        cValues(0) = vglproj.getKostenBedarf(cost).Sum
+                        If Not hUsedCosts.Contains(cost) And cValues(0) > 0 Then
+                            Try
+                                tmpCollection.Add(cost, cost)
+                            Catch ex As Exception
 
-                        If Not hUsedCosts.Contains(cost) Then
-                            tmpCollection.Add(cost)
+                            End Try
+
                         End If
 
                     Next
@@ -1629,6 +1739,25 @@ Public Class clsProjekt
             Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
         End If
 
+
+    End Sub
+
+    Public Sub calculateRoundedKPI(ByRef budget As Double, ByRef personalKosten As Double, ByRef sonstKosten As Double, ByRef risikoKosten As Double, ByRef ergebnis As Double)
+
+        With Me
+            Dim gk As Double = .getSummeKosten
+
+            budget = System.Math.Round(.Erloes, mode:=MidpointRounding.ToEven)
+
+            risikoKosten = System.Math.Round(.risikoKostenfaktor * gk, mode:=MidpointRounding.ToEven)
+
+            personalKosten = System.Math.Round(.getAllPersonalKosten.Sum, mode:=MidpointRounding.ToEven)
+
+            sonstKosten = System.Math.Round(.getGesamtAndereKosten.Sum, mode:=MidpointRounding.ToEven)
+
+            ergebnis = budget - (risikoKosten + personalKosten + sonstKosten)
+
+        End With
 
     End Sub
 

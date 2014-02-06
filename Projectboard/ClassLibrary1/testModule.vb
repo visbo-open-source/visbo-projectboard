@@ -40,6 +40,12 @@ Public Module testModule
         Dim bproj As clsProjekt
         Dim lastproj As clsProjekt
         Dim lastElem As Integer
+        ' das sind Formen , die zur in der Tabelle Vergleich Anzeige der Tendenz verwendet werden 
+        Dim gleichShape As pptNS.Shape = Nothing
+        Dim steigendShape As pptNS.Shape = Nothing
+        Dim fallendShape As pptNS.Shape = Nothing
+        Dim ampelShape As pptNS.Shape = Nothing
+        Dim sternShape As pptNS.Shape = Nothing
 
         Try
             lastElem = projekthistorie.Count - 1
@@ -157,6 +163,8 @@ Public Module testModule
                         kennzeichnung = "Tabelle Projektziele" Or _
                         kennzeichnung = "Tabelle Projektstatus" Or _
                         kennzeichnung = "Tabelle Veränderungen" Or _
+                        kennzeichnung = "Tabelle Vergleich letzter Stand" Or _
+                        kennzeichnung = "Tabelle Vergleich Beauftragung" Or _
                         kennzeichnung = "Ergebnis" Or _
                         kennzeichnung = "Strategie/Risiko" Or _
                         kennzeichnung = "Teilprojekte" Or _
@@ -197,6 +205,21 @@ Public Module testModule
                         kennzeichnung = "Verantwortlich:" Then
 
                         listofShapes.Add(pptShape)
+
+                    ElseIf kennzeichnung = "gleich" Then
+                        gleichShape = pptShape
+
+                    ElseIf kennzeichnung = "steigend" Then
+                        steigendShape = pptShape
+
+                    ElseIf kennzeichnung = "fallend" Then
+                        fallendShape = pptShape
+
+                    ElseIf kennzeichnung = "ampel" Then
+                        ampelShape = pptShape
+
+                    ElseIf kennzeichnung = "stern" Then
+                        sternShape = pptShape
 
                     End If
 
@@ -324,7 +347,7 @@ Public Module testModule
                                             kennzeichnung = tmpStr(0).Trim
 
                                         Catch ex As Exception
-                                            
+
                                         End Try
 
                                         For i = 1 To tmpStr.Count
@@ -726,10 +749,26 @@ Public Module testModule
 
                                 Try
                                     Call zeichneProjektTabelleZiele(pptShape, hproj)
+                                    
                                 Catch ex As Exception
 
                                 End Try
 
+                            Case "Tabelle Vergleich letzter Stand"
+
+                                Try
+                                    Call zeichneProjektTabelleVergleich(pptSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternshape, hproj, lastproj)
+                                Catch ex As Exception
+
+                                End Try
+
+                            Case "Tabelle Vergleich Beauftragung"
+
+                                Try
+                                    Call zeichneProjektTabelleVergleich(pptSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternshape, hproj, bproj)
+                                Catch ex As Exception
+
+                                End Try
 
                             Case "Tabelle Veränderungen"
 
@@ -1378,6 +1417,32 @@ Public Module testModule
                 End Try
 
             Next
+
+            ' jetzt muss die ListofShapes wieder geleert werden 
+
+            listofShapes.Clear()
+
+            ' jetzt müssen die Hilfs-Shapes, die evtl auf der Folie sind, gelöscht werden 
+            If Not IsNothing(gleichShape) Then
+                gleichShape.Delete()
+                gleichShape = Nothing
+            End If
+
+            If Not IsNothing(steigendShape) Then
+                steigendShape.Delete()
+                steigendShape = Nothing
+            End If
+
+            If Not IsNothing(fallendShape) Then
+                fallendShape.Delete()
+                fallendShape = Nothing
+            End If
+
+            If Not IsNothing(ampelShape) Then
+                ampelShape.Delete()
+                ampelShape = Nothing
+            End If
+
         Next
 
 
@@ -3977,6 +4042,447 @@ Public Module testModule
 
     End Sub
 
+    ''' <summary>
+    ''' füllt die Vergleichs-Tabelle aus und setzt die entsprechenden Trend-Markierungen gleich, fallend, steigend ein  
+    ''' </summary>
+    ''' <param name="pptShape">Adresse auf die Tabelle, die ausgefükllt werden soll </param>
+    ''' <param name="gleichShape">Shape für gleich</param>
+    ''' <param name="steigendShape">shape für steigend</param>
+    ''' <param name="fallendShape">shape für fallend</param>
+    ''' <param name="hproj">aktuelles Projekt</param>
+    ''' <param name="vglproj">letzter Stand</param>
+    ''' <remarks></remarks>
+    Sub zeichneProjektTabelleVergleich(ByRef pptslide As pptNS.Slide, ByRef pptShape As pptNS.Shape, ByVal gleichShape As pptNS.Shape, ByVal steigendShape As pptNS.Shape, ByVal fallendShape As pptNS.Shape, _
+                                           ByVal ampelShape As pptNS.Shape, ByVal sternShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal vglproj As clsProjekt)
+        Dim anzZeilen As Integer
+        Dim tabelle As pptNS.Table
+        Dim zeile As Integer
+        Dim tmpStr As String
+        Dim tableLeft As Double = pptShape.Left
+        Dim tableTop As Double = pptShape.Top
+        Dim kennung As String
+        Dim aktBudget As Double, vglBudget As Double
+        Dim aktPersCost As Double, vglPersCost As Double
+        Dim aktSonstCost As Double, vglSonstCost As Double
+        Dim aktRiskCost As Double, vglRiskCost As Double
+        Dim aktErgebnis As Double, vglErgebnis As Double
+        Dim farbePositiv As Long
+        Dim farbeNeutral As Long
+        Dim farbeNegativ As Long
+        Dim farbeStern As Long
+        Dim unterschiede As New Collection
+
+
+        Try
+            farbePositiv = steigendShape.Fill.ForeColor.RGB
+            farbeNeutral = gleichShape.Fill.ForeColor.RGB
+            farbeNegativ = fallendShape.Fill.ForeColor.RGB
+            farbeStern = sternShape.Fill.ForeColor.RGB
+        Catch ex As Exception
+
+        End Try
+        
+
+        ' jetzt wird festgestellt, wo es über all Unterschiede gibt 
+        ' wird für Bewertung Termine und Meilensteine benötigt 
+        unterschiede = hproj.listOfDifferences(vglproj, True, 0)
+
+        ' jetzt werden die aktuellen bzw Vergleichswerte der finanziellen KPIs bestimmt 
+        Try
+            hproj.calculateRoundedKPI(aktBudget, aktPersCost, aktSonstCost, aktRiskCost, aktErgebnis)
+
+            If Not IsNothing(vglproj) Then
+                vglproj.calculateRoundedKPI(vglBudget, vglPersCost, vglSonstCost, vglRiskCost, vglErgebnis)
+            End If
+
+        Catch ex As Exception
+
+
+
+        End Try
+
+        If pptShape.HasTable Then
+            tabelle = pptShape.Table
+            anzZeilen = tabelle.Rows.Count
+            If anzZeilen > 1 Then
+                zeile = 1
+                ' jetzt wird die Überschrift aktualisiert 
+                With tabelle
+
+                    CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Projekt" & vbLf & hproj.name
+
+                    tmpStr = CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text
+                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
+
+
+                    ' jetzt werden die Zeilen abgearbeitet, beginnend mit 2
+                    For zeile = 2 To anzZeilen
+
+                        Try
+                            kennung = CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text.Trim
+                        Catch ex As Exception
+                            kennung = ""
+                        End Try
+
+                        Dim aktvalue As Double
+                        Dim vglValue As Double
+                        Select Case kennung
+
+                            Case "Ergebnis"
+
+                                aktvalue = aktErgebnis
+                                vglValue = vglErgebnis
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbePositiv)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbeNegativ)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString & " T€"
+                                End If
+
+
+
+
+                            Case "Budget"
+
+                                aktvalue = aktBudget
+                                vglValue = vglBudget
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbePositiv)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbeNegativ)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString & " T€"
+                                End If
+
+
+
+
+                            Case "Personalkosten"
+
+                                aktvalue = aktPersCost
+                                vglValue = vglPersCost
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString & " T€"
+                                End If
+
+
+
+
+                            Case "Sonstige Kosten"
+
+                                aktvalue = aktSonstCost
+                                vglValue = vglSonstCost
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString & " T€"
+                                End If
+
+
+
+
+                            Case "Termine Phasen"
+
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                Else
+                                    If unterschiede.Contains(PThcc.phasen) Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, sternShape, farbeStern)
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                    End If
+                                End If
+
+
+
+                            Case "Termine Meilensteine"
+
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                Else
+                                    If unterschiede.Contains(PThcc.resultdates) Or unterschiede.Contains(PThcc.resultampel) Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, sternShape, farbeStern)
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                    End If
+                                End If
+
+
+
+                            Case "Einschätzung strategischer Fit"
+
+                                aktvalue = hproj.StrategicFit
+                                vglValue = vglproj.StrategicFit
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbePositiv)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbeNegativ)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString
+                                End If
+
+
+
+
+                            Case "Einschätzung Risiko"
+
+                                aktvalue = hproj.Risiko
+                                vglValue = vglproj.Risiko
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString
+                                End If
+
+
+
+
+                            Case "Projekt-Ampel"
+
+                                aktvalue = hproj.ampelStatus
+                                vglValue = vglproj.ampelStatus
+                                Dim tmpFarbe As Long
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    If aktvalue = PTfarbe.red Then
+                                        tmpFarbe = farbeNegativ
+                                    ElseIf aktvalue = PTfarbe.green Then
+                                        tmpFarbe = farbePositiv
+                                    ElseIf aktvalue = PTfarbe.yellow Then
+                                        tmpFarbe = awinSettings.AmpelGelb
+                                    Else
+                                        tmpFarbe = farbeNeutral
+                                    End If
+
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 3, ampelShape, tmpFarbe)
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                Else
+
+                                    Dim aktFarbe As Long, vglFarbe As Long
+                                    If aktvalue = PTfarbe.red Then
+                                        aktFarbe = farbeNegativ
+                                    ElseIf aktvalue = PTfarbe.green Then
+                                        aktFarbe = farbePositiv
+                                    ElseIf aktvalue = PTfarbe.yellow Then
+                                        aktFarbe = awinSettings.AmpelGelb
+                                    Else
+                                        aktFarbe = farbeNeutral
+                                    End If
+
+                                    If vglValue = PTfarbe.red Then
+                                        vglFarbe = farbeNegativ
+                                    ElseIf vglValue = PTfarbe.green Then
+                                        vglFarbe = farbePositiv
+                                    ElseIf vglValue = PTfarbe.yellow Then
+                                        vglFarbe = awinSettings.AmpelGelb
+                                    Else
+                                        vglFarbe = farbeNeutral
+                                    End If
+
+
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+
+                                        If aktvalue = 1 Then
+                                            Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbePositiv)
+                                        Else
+                                            Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbeNegativ)
+                                        End If
+
+                                    Else
+
+                                        If aktvalue = 0 Then
+                                            Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbeNegativ)
+                                        Else
+                                            Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbePositiv)
+                                        End If
+
+                                    End If
+
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 4, ampelShape, aktFarbe)
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 3, ampelShape, vglFarbe)
+
+                                End If
+
+
+                            Case "Projekt-Ampel Erläuterung"
+
+                                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
+                                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglproj.ampelErlaeuterung
+
+                            Case Else
+
+
+                        End Select
+
+
+                    Next
+
+                End With
+
+            End If
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' zeichnet das übergebene Symbol in die per zeile, spalte angegebene Tabellen-Zelle
+    ''' </summary>
+    ''' <param name="pptslide"></param>
+    ''' <param name="tabelle"></param>
+    ''' <param name="tbZeile"></param>
+    ''' <param name="tbSpalte"></param>
+    ''' <param name="zeichen"></param>
+    ''' <param name="farbkennung"></param>
+    ''' <remarks></remarks>
+    Sub zeichneTrendSymbol(ByRef pptslide As pptNS.Slide, ByRef tabelle As pptNS.Table, ByVal tbZeile As Integer, ByVal tbSpalte As Integer, _
+                                ByVal zeichen As pptNS.Shape, ByVal farbkennung As Long)
+
+        Dim korrFaktor As Double = 1.0
+        Dim newZeichen As pptNS.ShapeRange
+
+        zeichen.Copy()
+        newZeichen = pptslide.Shapes.Paste
+
+        ' ist der Pfeil größer als die Zelle ? 
+        If tabelle.Cell(tbZeile, tbSpalte).Shape.Width < newZeichen(1).Width Or _
+             tabelle.Cell(tbZeile, tbSpalte).Shape.Height < newZeichen(1).Height Then
+            ' dann am kleineren orientieren 
+
+            Try
+                korrFaktor = System.Math.Min(tabelle.Cell(tbZeile, tbSpalte).Shape.Width / newZeichen(1).Width, tabelle.Cell(tbZeile, tbSpalte).Shape.Height / newZeichen(1).Height)
+            Catch ex As Exception
+                ' in diesem Fall bleibt Korrfaktor auf 1.0 
+            End Try
+
+
+        End If
+
+        ' Anpassen derPfeilgröße
+        If korrFaktor < 1.0 Then
+
+            korrFaktor = korrFaktor * 0.98
+
+            With newZeichen(1)
+                .Width = korrFaktor * .Width
+                .Height = korrFaktor * .Height
+            End With
+
+        End If
+
+        ' jetzt bestimmen der Left , Top Koordinaten des Pfeils und setzen der Farbe
+
+        With newZeichen(1)
+
+            .Top = tabelle.Cell(tbZeile, tbSpalte).Shape.Top + (tabelle.Cell(tbZeile, tbSpalte).Shape.Height - .Height) / 2
+            .Left = tabelle.Cell(tbZeile, tbSpalte).Shape.Left + (tabelle.Cell(tbZeile, tbSpalte).Shape.Width - .Width) / 2
+            .Fill.ForeColor.RGB = farbkennung
+
+        End With
+
+
+
+    End Sub
+
     Sub zeichneProjektTabelleZiele(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt)
 
         Dim heute As Date = Date.Now
@@ -4219,7 +4725,7 @@ Public Module testModule
                 maxColumn = bis + 12
             End If
         End If
-        
+
 
     End Sub
 End Module
