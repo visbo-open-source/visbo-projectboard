@@ -73,11 +73,15 @@
                 ' jetzt muss geprüft werden, ob die Phase die Dauer des Projektes verlängert 
                 ' dieser Aufruf korrigiert notfalls die intern gehaltene
 
-                If Me.name <> Me.Parent.getPhase(1).name Then
-                    ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
-                    Me.Parent.keepPhase1consistent()
-                End If
+                Try
+                    If Me.name <> Me.Parent.getPhase(1).name Then
+                        ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
+                        Me.Parent.keepPhase1consistent()
+                    End If
+                Catch ex As Exception
 
+                End Try
+                
 
                 If awinSettings.autoCorrectBedarfe Then
 
@@ -623,29 +627,23 @@
 
     End Sub
 
-    Public Sub AddResult(ByVal result As clsResult)
+    Public Sub addresult(ByVal result As clsResult)
 
         ' in Abhängigkeit von milestoneFreeFloat: 
-        ' es wird geprüft, ob der Meilenstein innerhalb der Projektgrenzen ist 
-        ' wenn nein , wird entweder auf Projektstart gesetzt, wenn er vor dem Projektstart liegt 
-        ' oder auf Projektende, wenn er nach dem Projektende liegt 
+        ' es wird geprüft, ob der Meilenstein innerhalb der Phasengrenze  ist 
+        ' wenn nein , wird entweder auf Phasen-Start oder auf Phasen-Ende gesetzt 
 
         If awinSettings.milestoneFreeFloat Then
             ' nichts verändern ....
-        ElseIf IsNothing(_vorlagenParent) Then
-            If result.offset + Me.startOffsetinDays > Me.Parent.dauerInDays - 1 Then
-                'result.offset = result.offset - (result.offset + Me.startOffsetinDays - (Me.Parent.dauerInDays - 1))
-                result.offset = Me.Parent.dauerInDays - 1 - Me.startOffsetinDays
-            ElseIf result.offset + Me.startOffsetinDays < 0 Then
-                result.offset = -1 * Me.startOffsetinDays
-            End If
         Else
-            If result.offset + Me.startOffsetinDays > Me.VorlagenParent.dauerInDays - 1 Then
-                'result.offset = result.offset - (result.offset + Me.startOffsetinDays - (Me.Parent.dauerInDays - 1))
-                result.offset = Me.VorlagenParent.dauerInDays - 1 - Me.startOffsetinDays
-            ElseIf result.offset + Me.startOffsetinDays < 0 Then
-                result.offset = -1 * Me.startOffsetinDays
+
+            If result.offset > Me._dauerInDays - 1 Then
+                result.offset = Me._dauerInDays - 1
+            ElseIf result.offset < 0 Then
+                result.offset = 0
             End If
+
+        
         End If
 
         AllResults.Add(result)

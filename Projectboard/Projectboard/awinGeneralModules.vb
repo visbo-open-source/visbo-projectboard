@@ -897,7 +897,6 @@ Public Module awinGeneralModules
                     Try
 
                         hproj.name = pName
-                        hproj.getPhase(1).name = pName
                         hproj.startDate = startDate
                         hproj.earliestStartDate = hproj.startDate.AddMonths(hproj.earliestStart)
                         hproj.latestStartDate = hproj.startDate.AddMonths(hproj.latestStart)
@@ -936,34 +935,34 @@ Public Module awinGeneralModules
                     ' jetzt wird  eine <SOP-Phase angelegt> , um die Auswertungen zu machen 
                     ' wird später ersetzt durch Zählen von Meilensteinen
 
-                    cphase = New clsPhase(parent:=hproj)
-                    cphase.name = "SOP"
-                    startoffset = DateDiff(DateInterval.Day, hproj.startDate, tmpStartSop)
-                    duration = DateDiff(DateInterval.Day, tmpStartSop, sopDate) + 1
-                    cphase.changeStartandDauer(startoffset, duration)
-                    hproj.AddPhase(cphase)
+                    'cphase = New clsPhase(parent:=hproj)
+                    'cphase.name = "SOP"
+                    'startoffset = DateDiff(DateInterval.Day, hproj.startDate, tmpStartSop)
+                    'duration = DateDiff(DateInterval.Day, tmpStartSop, sopDate) + 1
+                    'cphase.changeStartandDauer(startoffset, duration)
+                    'hproj.AddPhase(cphase)
 
-                    If PhaseDefinitions.Contains(cphase.name) Then
-                        ' nichts tun 
-                    Else
-                        ' in die Phase-Definitions aufnehmen 
+                    'If PhaseDefinitions.Contains(cphase.name) Then
+                    '    ' nichts tun 
+                    'Else
+                    '    ' in die Phase-Definitions aufnehmen 
 
-                        Dim hphase As clsPhasenDefinition
-                        hphase = New clsPhasenDefinition
+                    '    Dim hphase As clsPhasenDefinition
+                    '    hphase = New clsPhasenDefinition
 
-                        hphase.farbe = awinSettings.AmpelGruen
-                        hphase.name = cphase.name
-                        hphase.UID = phaseIX
-                        phaseIX = phaseIX + 1
+                    '    hphase.farbe = awinSettings.AmpelGruen
+                    '    hphase.name = cphase.name
+                    '    hphase.UID = phaseIX
+                    '    phaseIX = phaseIX + 1
 
 
-                        Try
-                            PhaseDefinitions.Add(hphase)
-                        Catch ex As Exception
+                    '    Try
+                    '        PhaseDefinitions.Add(hphase)
+                    '    Catch ex As Exception
 
-                        End Try
+                    '    End Try
 
-                    End If
+                    'End If
 
 
                     ' Ende der Sonderbehandlung Phase SOP 
