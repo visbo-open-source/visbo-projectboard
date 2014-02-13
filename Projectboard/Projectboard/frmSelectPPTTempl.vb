@@ -214,7 +214,7 @@ Public Class frmSelectPPTTempl
 
     End Sub
 
-    Private Sub BackgroundWorker2_DoWork(sender As Object, e As System.ComponentModel.DoWorkEventArgs) Handles BackgroundWorker1.DoWork, BackgroundWorker2.DoWork
+    Private Sub BackgroundWorker2_DoWork(sender As Object, e As System.ComponentModel.DoWorkEventArgs) Handles BackgroundWorker2.DoWork
 
         Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
 
@@ -225,7 +225,7 @@ Public Class frmSelectPPTTempl
 
     End Sub
 
-    Private Sub BackgroundWorker2_ProgressChanged(sender As Object, e As System.ComponentModel.ProgressChangedEventArgs) Handles BackgroundWorker1.ProgressChanged, BackgroundWorker2.ProgressChanged
+    Private Sub BackgroundWorker2_ProgressChanged(sender As Object, e As System.ComponentModel.ProgressChangedEventArgs) Handles BackgroundWorker2.ProgressChanged
         'Me.statusNotification.Text = e.ProgressPercentage.ToString & "% erledigt"
 
         Dim re As System.ComponentModel.DoWorkEventArgs = CType(e.UserState, System.ComponentModel.DoWorkEventArgs)
@@ -233,7 +233,7 @@ Public Class frmSelectPPTTempl
 
     End Sub
 
-    Private Sub BackgroundWorker2_RunWorkerCompleted(sender As Object, e As System.ComponentModel.RunWorkerCompletedEventArgs) Handles BackgroundWorker1.RunWorkerCompleted, BackgroundWorker2.RunWorkerCompleted
+    Private Sub BackgroundWorker2_RunWorkerCompleted(sender As Object, e As System.ComponentModel.RunWorkerCompletedEventArgs) Handles BackgroundWorker2.RunWorkerCompleted
 
 
         createReport.Enabled = True
