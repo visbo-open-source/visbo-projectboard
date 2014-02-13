@@ -78,6 +78,7 @@ Public Module awinGUI
         Dim smallfontsize As Double, titlefontsize As Double
         Dim singleProject As Boolean
         Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim formerEE As Boolean = appInstance.EnableEvents
 
         appInstance.ScreenUpdating = False
 
@@ -477,8 +478,12 @@ Public Module awinGUI
                 .HasTitle = True
                 .ChartTitle.text = diagramTitle
                 .ChartTitle.Characters.Font.Size = awinSettings.fontsizeTitle
-                .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
 
+                ' Events disablen, wegen Report erstellen
+                appInstance.EnableEvents = False
+                .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                appInstance.EnableEvents = formerEE
+                ' Events sind wieder zurückgesetzt
             End With
 
 

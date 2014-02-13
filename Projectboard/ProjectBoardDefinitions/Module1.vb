@@ -240,7 +240,8 @@ Public Module Module1
     ' Public projektDetail As String = "Project Detail.xlsx"
     Public projektAustausch As String = requirementsOrdner & "Projekt-Steckbrief.xlsx"
     Public projektRessOrdner As String = requirementsOrdner & "Ressource Manager"
-
+    Public RepProjectVorOrdner As String = requirementsOrdner & "ReportTemplatesProject"
+    Public RepPortfolioVorOrdner As String = requirementsOrdner & "ReportTemplatesPortfolio"
     Public demoModusHistory As Boolean = False
     Public historicDate As Date = #6/6/2012#
 
