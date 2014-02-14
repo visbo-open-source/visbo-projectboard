@@ -33,7 +33,7 @@
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
       <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <ProductName>Microsoft .NET Framework 4 %28x86 und x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -146,6 +146,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
+    <Compile Include="frmSelectPPTTempl.Designer.vb">
+      <DependentUpon>frmSelectPPTTempl.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmSelectPPTTempl.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmAmpelBewertung.Designer.vb">
       <DependentUpon>frmAmpelBewertung.vb</DependentUpon>
     </Compile>
@@ -196,6 +202,9 @@
     <EmbeddedResource Include="frmCreateRolloutProject.resx">
       <DependentUpon>frmCreateRolloutProject.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmSelectPPTTempl.resx">
+      <DependentUpon>frmSelectPPTTempl.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmShowProjCharacteristics.resx">
       <DependentUpon>frmShowProjCharacteristics.vb</DependentUpon>
     </EmbeddedResource>
@@ -210,6 +219,19 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="app.config" />
+    <None Include="My Project\DataSources\frmAmpelBewertung.datasource" />
+    <None Include="My Project\DataSources\frmCreateRolloutProject.datasource" />
+    <None Include="My Project\DataSources\frmSelectPPTTempl.datasource" />
+    <None Include="My Project\DataSources\frmShowProjCharacteristics.datasource" />
+    <None Include="My Project\DataSources\Globals.datasource" />
+    <None Include="My Project\DataSources\MySettings.datasource" />
+    <None Include="My Project\DataSources\Ribbon1.datasource" />
+    <None Include="My Project\DataSources\Tabelle1.datasource" />
+    <None Include="My Project\DataSources\Tabelle2.datasource" />
+    <None Include="My Project\DataSources\Tabelle3.datasource" />
+    <None Include="My Project\DataSources\ThisRibbonCollection.datasource" />
+    <None Include="My Project\DataSources\ThisWorkbook.datasource" />
     <None Include="My Project\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
@@ -305,7 +327,7 @@
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
-        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{825100CF-0BA7-47EA-A084-DCF3308DAF74}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\Office14\Excel.exe" DebugInfoCommandLine="&quot;[$OUTPUT]Projectboard.xlsx&quot;" />
+        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{825100CF-0BA7-47EA-A084-DCF3308DAF74}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files (x86)\Microsoft Office\Office14\Excel.exe" DebugInfoCommandLine="&quot;[$OUTPUT]Projectboard.xlsx&quot;" />
         <Host Name="Excel Document" Path=".\Projectboard.xlsx" PublishedHash="453AD57C08540C0F42079FCA83BE658033F2D2F9">
           <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="82ADB180198A3C1EDCF257AE533322806316B8E0" DisplayName="Tabelle1" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
           <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="1477224DA095CF7893DCD4FB2D03FFF48FFAABFD" DisplayName="Tabelle2" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />

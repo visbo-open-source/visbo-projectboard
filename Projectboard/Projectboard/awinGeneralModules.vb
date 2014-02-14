@@ -1302,7 +1302,9 @@ Public Module awinGeneralModules
                 Dim cphase As New clsPhase(hproj)
                 Dim ccost As clsKostenart
                 Dim phaseName As String = ""
+
                 Dim anfang As Integer, ende As Integer  ', projDauer As Integer
+
                 Dim farbeAktuell As Object
                 Dim r As Integer, k As Integer
 
