@@ -25,9 +25,6 @@
         Dim projektStartdate As Date
         Dim projektstartColumn As Integer
 
-        Dim phaseStartdate As Date
-        Dim phaseEndDate As Date
-
 
         If dauer < 0 Then
             Throw New ArgumentException("Dauer kann nicht negativ sein")
@@ -66,9 +63,8 @@
                 Dim newlaenge As Integer
 
 
-                phaseStartdate = Me.getStartDate
-                phaseEndDate = Me.getEndDate
-
+                Dim phaseStartdate As Date = Me.getStartDate
+                Dim phaseEndDate As Date = Me.getEndDate
 
 
                 _relStart = getColumnOfDate(phaseStartdate) - projektstartColumn + 1
