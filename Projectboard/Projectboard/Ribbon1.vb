@@ -85,7 +85,8 @@ Imports Microsoft.Office.Interop.Excel
     Sub awinSetModusHistory(control As IRibbonControl)
 
         demoModusHistory = Not demoModusHistory
-        historicDate = #11/11/2012#
+        historicDate = #1/31/2014#
+        historicDate = historicDate.AddHours(16)
         If demoModusHistory Then
             Call MsgBox("Demo Modus History: Ein")
         Else
@@ -103,7 +104,6 @@ Imports Microsoft.Office.Interop.Excel
     Sub awinTestNewFunctions(control As IRibbonControl)
         'Call MsgBox("Anzahl Aufrufe: " & anzahlCalls)
         Dim ok As Boolean = True
-
 
 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
@@ -258,6 +258,23 @@ Imports Microsoft.Office.Interop.Excel
         End If
 
         enableOnUpdate = True
+
+    End Sub
+
+    Sub PT5changeTimeSpan(control As IRibbonControl)
+
+        Dim mvTimeSpan As New frmMoveTimeSpan
+        'Dim returnValue As DialogResult
+
+        appInstance.EnableEvents = False
+
+        'returnValue = mvTimeSpan.Showdialog
+        ' in dieser auskommentierten Variante ist es sehr langsam ... deshalb als modales Fenster
+
+        mvTimeSpan.Show()
+
+        appInstance.EnableEvents = True
+
 
     End Sub
 
@@ -485,6 +502,53 @@ Imports Microsoft.Office.Interop.Excel
         appInstance.ScreenUpdating = True
         enableOnUpdate = True
     End Sub
+    ''' <summary>
+    ''' Änderungen akzeptieren 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub Tom2G1Accept(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+
+
+        Dim awinSelection As Excel.ShapeRange
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+                With singleShp
+                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or
+                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
+                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                        Call awinBeauftragung(pname:=.Name, type:=0)
+                    End If
+                End With
+            Next
+
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
 
 
     ''' <summary>
@@ -520,7 +584,7 @@ Imports Microsoft.Office.Interop.Excel
                     If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or
                         (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
                          And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
-                        Call awinBeauftragung(pname:=.Name)
+                        Call awinBeauftragung(pname:=.Name, type:=1)
                     End If
                 End With
             Next
@@ -686,8 +750,8 @@ Imports Microsoft.Office.Interop.Excel
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
 
         'Dim projektInventurFile As String = "Projekt-Inventur.xlsx"
-        'Dim projektInventurFile As String = requirementsOrdner & "Projekt-Inventur.xlsx"
-        Dim projektInventurFile As String = requirementsOrdner & "RPLAN Projekte.xlsx"
+        Dim projektInventurFile As String = requirementsOrdner & "Projekt-Inventur.xlsx"
+        'Dim projektInventurFile As String = requirementsOrdner & "RPLAN Projekte.xlsx"
         Dim dateiName As String
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
@@ -703,8 +767,8 @@ Imports Microsoft.Office.Interop.Excel
             appInstance.Workbooks.Open(dateiName)
             ' alle Import Projekte erstmal löschen
             ImportProjekte.Clear()
-            'Call awinImportProjektInventur()
-            Call bmwImportProjektInventur(myCollection)
+            Call awinImportProjektInventur(myCollection)
+            'Call bmwImportProjektInventur(myCollection)
 
             appInstance.ActiveWorkbook.Save()
             appInstance.ActiveWorkbook.Close()
@@ -727,6 +791,47 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
+    Public Sub Tom2G4B1RPLANImport(control As IRibbonControl)
+
+
+        Dim projektInventurFile As String = requirementsOrdner & "RPLAN Projekte.xlsx"
+        Dim dateiName As String
+        Dim myCollection As New Collection
+        Dim importDate As Date = Date.Now
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        dateiName = awinPath & projektInventurFile
+
+        Try
+
+            appInstance.Workbooks.Open(dateiName)
+            ' alle Import Projekte erstmal löschen
+            ImportProjekte.Clear()
+            Call bmwImportProjektInventur(myCollection)
+
+            appInstance.ActiveWorkbook.Save()
+            appInstance.ActiveWorkbook.Close()
+
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+            Exit Sub
+        End Try
+
+        Try
+            Call importProjekteEintragen(myCollection, importDate)
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
+        End Try
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+    End Sub
 
     Public Sub Tom2G4M1Import(control As IRibbonControl)
 
@@ -1522,6 +1627,8 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
+
+
     ''' <summary>
     ''' Charakteristik Strategie / Risiko 
     ''' </summary>
@@ -1581,7 +1688,60 @@ Imports Microsoft.Office.Interop.Excel
         appInstance.ScreenUpdating = formerSU
 
 
+    End Sub
 
+    Sub Tom2G2M1B6SFITVOl(control As IRibbonControl)
+
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim singleShp As Excel.Shape
+        Dim myCollection As New Collection
+
+
+        Dim awinSelection As Excel.ShapeRange
+
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+
+        enableOnUpdate = False
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+                With singleShp
+                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
+                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
+                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+
+                        myCollection.Add(.Name)
+                        top = .Top + boxHeight + 2
+                        left = .Left - 3
+                        width = 12 * boxWidth
+                        height = 8 * boxHeight
+
+                    End If
+                End With
+            Next
+            Dim obj As New Object
+
+            Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.FitRisikoVol, PTpfdk.FitRisikoVol, False, True, True, top, left, width, height)
+            'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+        appInstance.ScreenUpdating = formerSU
 
     End Sub
 
@@ -2915,6 +3075,8 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
+
+
     Sub PT0ShowStrategieRisiko(control As IRibbonControl)
 
         Dim selectionType As Integer = -1 ' keine Einschränkung
@@ -2956,6 +3118,52 @@ Imports Microsoft.Office.Interop.Excel
         enableOnUpdate = True
 
     End Sub
+
+    Sub PT0ShowStratRisikoVolume(control As IRibbonControl)
+
+        Dim selectionType As Integer = -1 ' keine Einschränkung
+        Dim myCollection As New Collection
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim sichtbarerBereich As Excel.Range
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+
+        With appInstance.ActiveWindow
+            sichtbarerBereich = .VisibleRange
+            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
+            If left < sichtbarerBereich.Left Then
+                left = sichtbarerBereich.Left + 2
+            End If
+
+            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+            If top < sichtbarerBereich.Top Then
+                top = sichtbarerBereich.Top + 2
+            End If
+
+        End With
+
+        width = 600
+        height = 450
+
+        Dim obj As New Object
+
+        Try
+            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisikoVol, PTpfdk.FitRisikoVol, False, True, True, top, left, width, height)
+            'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+        appInstance.ScreenUpdating = True
+
+    End Sub
+
 
     Sub PT0ShowComplexRisiko(control As IRibbonControl)
 

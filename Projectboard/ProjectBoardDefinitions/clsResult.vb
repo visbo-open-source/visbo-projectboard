@@ -27,7 +27,15 @@
 
         Get
 
-            Dim projektStartDate As Date = Me.Parent.Parent.startDate
+            Dim projektStartDate As Date
+            ' das Folgende ist notwendig, um auch im Fall einer Projektvorlage ein Ergebnis zu bekommen 
+            Try
+                projektStartDate = Me.Parent.Parent.startDate
+            Catch ex As Exception
+                projektStartDate = StartofCalendar
+            End Try
+
+
             Dim phasenOffset As Integer = Me.Parent.startOffsetinDays
 
             getDate = projektStartDate.AddDays(phasenOffset + _offset)

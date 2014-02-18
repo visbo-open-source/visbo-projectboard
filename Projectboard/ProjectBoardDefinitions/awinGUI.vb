@@ -48,7 +48,6 @@ Public Module awinGUI
     End Sub
 
 
-
  
    
     ' Portfolio - Diagramme erstellen gemäß dem angegebenen charttype
@@ -127,6 +126,14 @@ Public Module awinGUI
                     diagramTitle = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
                 End If
 
+            Case PTpfdk.FitRisikoVol
+                If isProjektCharakteristik Then
+                    diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisikoVol)
+                    diagramTitle = "Charakteristik " & diagramTitle
+                Else
+                    diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+                End If
+
         End Select
 
         ' hier werden die Werte bestimmt ...
@@ -192,6 +199,15 @@ Public Module awinGUI
                                 PfChartBubbleNames(anzBubbles) = .name & _
                                     " (" & Format(bubbleValues(anzBubbles), "##0.#%") & ")"
                             End If                                                              'Strategie/Rsiko
+                        Case PTpfdk.FitRisikoVol
+
+                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie/Risiko
+                            bubbleValues(anzBubbles) = .volume
+                            nameValues(anzBubbles) = .name                                          'Complex/Risiko, Strategie/Risiko
+
+                            PfChartBubbleNames(anzBubbles) = .name & _
+                                " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"
+
                         Case PTpfdk.ZeitRisiko
 
                             xAchsenValues(anzBubbles) = .dauerInDays / 365 * 12                    'Zeit/Risiko
@@ -225,7 +241,7 @@ Public Module awinGUI
             chtobjName = getKennung("pf", charttype, ProjektListe)
         End If
 
-        
+
 
         ' bestimmen der besten Position für die Werte ...
         Dim labelPosition(4) As String
@@ -269,7 +285,7 @@ Public Module awinGUI
 
                     Case Else
 
-                        ' für Zeit/Risiko und für Complex/Risiko
+                        ' für Zeit/Risiko und für Complex/Risiko und für Strategie/FitRisikoVolume
                         hilfsstring = .chartObjects(i).name
                         If chtobjName = .chartObjects(i).name Then
                             found = True
@@ -412,6 +428,26 @@ Public Module awinGUI
 
                         End With
 
+                    Case PTpfdk.FitRisikoVol
+
+                        With .Axes(Excel.XlAxisType.xlCategory)
+                            .HasTitle = True
+                            .MinimumScale = 0
+                            .MaximumScale = 11
+                            With .AxisTitle
+                                .Characters.text = "strategischer Fit"
+                                .Characters.Font.Size = titlefontsize
+                                .Characters.Font.Bold = False
+                            End With
+                            With .TickLabels.Font
+                                .FontStyle = "Normal"
+                                .Bold = True
+                                .Size = awinSettings.fontsizeItems
+
+                            End With
+
+                        End With
+
                     Case PTpfdk.ZeitRisiko
 
                         With .Axes(Excel.XlAxisType.xlCategory)
@@ -454,7 +490,7 @@ Public Module awinGUI
                 End Select
 
 
-                ' für Strategie/Risiko, Zeit/Risiko und Complex/Risiko gültig
+                ' für , Strategie/RisikoMarge,Strategie/RisikoVolume, Zeit/Risiko und Complex/Risiko gültig
 
                 With .Axes(Excel.XlAxisType.xlValue)
                     .HasTitle = True
@@ -518,7 +554,7 @@ Public Module awinGUI
             pfDiagram.setDiagramEvent = pfChart
 
             With pfDiagram
-             
+
                 .kennung = getKennung("pf", charttype, ProjektListe)
                 .DiagrammTitel = diagramTitle
                 .diagrammTyp = DiagrammTypen(3)                     ' Portfolio
@@ -637,6 +673,15 @@ Public Module awinGUI
                             PfChartBubbleNames(anzBubbles) = hproj.name & _
                                     " (" & Format(bubbleValues(anzBubbles), "##0.#%") & ")" 'Strategie/Rsiko
 
+                        Case PTpfdk.FitRisikoVol
+
+                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie/Risiko
+                            bubbleValues(anzBubbles) = .volume                               '   Strategie/Risiko
+                            nameValues(anzBubbles) = .name              'Complex/Risiko, Strategie/Risiko
+                            PfChartBubbleNames(anzBubbles) = hproj.name & _
+                                    " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)" 'Strategie/Rsiko
+
+
                         Case PTpfdk.ZeitRisiko
 
                             xAchsenValues(anzBubbles) = .dauerInDays / 365 * 12                    'Zeit/Risiko
@@ -668,6 +713,10 @@ Public Module awinGUI
             Case PTpfdk.FitRisiko
 
                 diagramTitle = summentitel2 & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+
+            Case PTpfdk.FitRisikoVol
+
+                diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
 
             Case PTpfdk.ZeitRisiko
 

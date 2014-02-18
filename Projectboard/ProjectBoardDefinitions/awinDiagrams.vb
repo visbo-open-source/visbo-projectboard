@@ -4785,7 +4785,7 @@ Public Module awinDiagrams
         ' 5 - Stammdaten ändern
         ' 6 - Ressourcen-Bedarfe, Kapas ändern
         ' 7 - Kosten-Bedarfe , Budgets ändern
-        '
+        ' 8 - Summen- und Portfolio diagramme
 
 
 

@@ -70,6 +70,147 @@
                 _relStart = getColumnOfDate(phaseStartdate) - projektstartColumn + 1
                 _relEnde = getColumnOfDate(phaseEndDate) - projektstartColumn + 1
 
+                ' jetzt muss geprüft werden, ob die Phase die Dauer des Projektes verlängert 
+                ' dieser Aufruf korrigiert notfalls die intern gehaltene
+
+                Try
+                    If Me.name <> Me.Parent.getPhase(1).name Then
+                        ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
+                        Me.Parent.keepPhase1consistent()
+                    End If
+                Catch ex As Exception
+
+                End Try
+                
+
+                If awinSettings.autoCorrectBedarfe Then
+
+                    newlaenge = _relEnde - _relStart + 1
+
+                    Dim newvalues() As Double
+                    Dim oldvalues() As Double
+
+
+                    Try
+
+                        For r = 1 To Me.CountRoles
+                            oldvalues = Me.getRole(r).Xwerte
+                            oldlaenge = oldvalues.Length
+                            If newlaenge <> oldlaenge Then
+                                newvalues = adjustArrayLength(newlaenge, oldvalues, False)
+                                Me.getRole(r).Xwerte = newvalues
+                            End If
+
+                        Next
+
+
+                        For k = 1 To Me.CountCosts
+                            oldvalues = Me.getCost(k).Xwerte
+                            oldlaenge = oldvalues.Length
+                            If newlaenge <> oldlaenge Then
+                                newvalues = adjustArrayLength(newlaenge, oldvalues, False)
+                                Me.getCost(k).Xwerte = newvalues
+                            End If
+
+                        Next
+
+                    Catch ex As Exception
+                        Throw New Exception("Rollen- bzw. Kosten konnten nicht in der Länge angepasst werden" & ex.Message)
+                    End Try
+
+                End If
+
+
+
+
+            End If
+
+
+        Catch ex As Exception
+            ' bei einer Projektvorlage gibt es kein Datum - es sollen aber die Werte für Offset und Dauer übernommen werden
+
+            If dauer = 0 And _relEnde > 0 Then
+
+
+                ' dann sind die Werte initial noch nicht gesetzt worden 
+                _startOffsetinDays = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1))
+                '_dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
+                '                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
+                _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
+
+
+            Else
+                '  
+                _startOffsetinDays = startOffset
+                _dauerInDays = dauer
+
+                _relStart = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1
+                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1
+
+
+            End If
+
+        End Try
+
+
+    End Sub
+
+    ''' <summary>
+    ''' stellt sicher, daß die Länge der Phase 1 auch der Projektlänge entspricht 
+    ''' </summary>
+    ''' <param name="startOffset"></param>
+    ''' <param name="dauer"></param>
+    ''' <remarks></remarks>
+    Public Sub changeStartandDauerPhase1(ByVal startOffset As Integer, ByVal dauer As Integer)
+
+        Dim projektStartdate As Date
+        Dim projektstartColumn As Integer
+
+
+        If dauer < 0 Then
+            Throw New ArgumentException("Dauer kann nicht negativ sein")
+
+        ElseIf startOffset < 0 Then
+            Throw New ArgumentException("Phase kann nicht vor Projektstart beginnen")
+
+        End If
+
+
+        Try
+
+            projektStartdate = Me.Parent.startDate
+            projektstartColumn = Me.Parent.Start
+
+            If dauer = 0 And _relEnde > 0 Then
+
+                ' dann sind die Werte initial noch nicht gesetzt worden 
+                _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
+                '_dauerInDays = DateDiff(DateInterval.Day, projektStartdate.AddMonths(_relStart - 1), _
+                '                        projektStartdate.AddMonths(_relEnde).AddDays(-1)) + 1
+                _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
+
+
+            ElseIf dauer = 0 And _relEnde = 0 Then
+
+                Throw New ArgumentException("Phase kann nicht Dauer = 0 haben ")
+
+            Else
+                '  
+
+                _startOffsetinDays = startOffset
+                _dauerInDays = dauer
+
+                Dim oldlaenge As Integer = _relEnde - _relStart + 1
+                Dim newlaenge As Integer
+
+
+                Dim phaseStartdate As Date = Me.getStartDate
+                Dim phaseEndDate As Date = Me.getEndDate
+
+
+                _relStart = getColumnOfDate(phaseStartdate) - projektstartColumn + 1
+                _relEnde = getColumnOfDate(phaseEndDate) - projektstartColumn + 1
+
 
                 If awinSettings.autoCorrectBedarfe Then
 
@@ -486,29 +627,23 @@
 
     End Sub
 
-    Public Sub AddResult(ByVal result As clsResult)
+    Public Sub addresult(ByVal result As clsResult)
 
         ' in Abhängigkeit von milestoneFreeFloat: 
-        ' es wird geprüft, ob der Meilenstein innerhalb der Projektgrenzen ist 
-        ' wenn nein , wird entweder auf Projektstart gesetzt, wenn er vor dem Projektstart liegt 
-        ' oder auf Projektende, wenn er nach dem Projektende liegt 
+        ' es wird geprüft, ob der Meilenstein innerhalb der Phasengrenze  ist 
+        ' wenn nein , wird entweder auf Phasen-Start oder auf Phasen-Ende gesetzt 
 
         If awinSettings.milestoneFreeFloat Then
             ' nichts verändern ....
-        ElseIf IsNothing(_vorlagenParent) Then
-            If result.offset + Me.startOffsetinDays > Me.Parent.dauerInDays - 1 Then
-                'result.offset = result.offset - (result.offset + Me.startOffsetinDays - (Me.Parent.dauerInDays - 1))
-                result.offset = Me.Parent.dauerInDays - 1 - Me.startOffsetinDays
-            ElseIf result.offset + Me.startOffsetinDays < 0 Then
-                result.offset = -1 * Me.startOffsetinDays
-            End If
         Else
-            If result.offset + Me.startOffsetinDays > Me.VorlagenParent.dauerInDays - 1 Then
-                'result.offset = result.offset - (result.offset + Me.startOffsetinDays - (Me.Parent.dauerInDays - 1))
-                result.offset = Me.VorlagenParent.dauerInDays - 1 - Me.startOffsetinDays
-            ElseIf result.offset + Me.startOffsetinDays < 0 Then
-                result.offset = -1 * Me.startOffsetinDays
+
+            If result.offset > Me._dauerInDays - 1 Then
+                result.offset = Me._dauerInDays - 1
+            ElseIf result.offset < 0 Then
+                result.offset = 0
             End If
+
+        
         End If
 
         AllResults.Add(result)

@@ -131,6 +131,12 @@ Public Module testModule
         Dim bproj As clsProjekt
         Dim lastproj As clsProjekt
         Dim lastElem As Integer
+        ' das sind Formen , die zur in der Tabelle Vergleich Anzeige der Tendenz verwendet werden 
+        Dim gleichShape As pptNS.Shape = Nothing
+        Dim steigendShape As pptNS.Shape = Nothing
+        Dim fallendShape As pptNS.Shape = Nothing
+        Dim ampelShape As pptNS.Shape = Nothing
+        Dim sternShape As pptNS.Shape = Nothing
 
         Try
             lastElem = projekthistorie.Count - 1
@@ -248,6 +254,8 @@ Public Module testModule
                         kennzeichnung = "Tabelle Projektziele" Or _
                         kennzeichnung = "Tabelle Projektstatus" Or _
                         kennzeichnung = "Tabelle Veränderungen" Or _
+                        kennzeichnung = "Tabelle Vergleich letzter Stand" Or _
+                        kennzeichnung = "Tabelle Vergleich Beauftragung" Or _
                         kennzeichnung = "Ergebnis" Or _
                         kennzeichnung = "Strategie/Risiko" Or _
                         kennzeichnung = "Teilprojekte" Or _
@@ -288,6 +296,21 @@ Public Module testModule
                         kennzeichnung = "Verantwortlich:" Then
 
                         listofShapes.Add(pptShape)
+
+                    ElseIf kennzeichnung = "gleich" Then
+                        gleichShape = pptShape
+
+                    ElseIf kennzeichnung = "steigend" Then
+                        steigendShape = pptShape
+
+                    ElseIf kennzeichnung = "fallend" Then
+                        fallendShape = pptShape
+
+                    ElseIf kennzeichnung = "ampel" Then
+                        ampelShape = pptShape
+
+                    ElseIf kennzeichnung = "stern" Then
+                        sternShape = pptShape
 
                     End If
 
@@ -720,14 +743,15 @@ Public Module testModule
 
                                 ' jetzt die Aktion durchführen ...
 
+                                If hproj.timeStamp.Date = lastproj.timeStamp.Date Then
+                                    lastproj = projekthistorie.ElementAtorBefore(lastproj.timeStamp.Date.AddMinutes(-5))
+                                End If
 
                                 If lastproj Is Nothing Then
                                     Throw New Exception("es gibt keinen letzten Strand")
                                 End If
 
                                 cproj = lastproj
-
-
 
                                 htop = 150
                                 hleft = 150
@@ -816,10 +840,26 @@ Public Module testModule
 
                                 Try
                                     Call zeichneProjektTabelleZiele(pptShape, hproj)
+                                    
                                 Catch ex As Exception
 
                                 End Try
 
+                            Case "Tabelle Vergleich letzter Stand"
+
+                                Try
+                                    Call zeichneProjektTabelleVergleich(pptSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternshape, hproj, lastproj)
+                                Catch ex As Exception
+
+                                End Try
+
+                            Case "Tabelle Vergleich Beauftragung"
+
+                                Try
+                                    Call zeichneProjektTabelleVergleich(pptSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternshape, hproj, bproj)
+                                Catch ex As Exception
+
+                                End Try
 
                             Case "Tabelle Veränderungen"
 
@@ -1469,6 +1509,32 @@ Public Module testModule
 
             Next
             
+
+            ' jetzt muss die ListofShapes wieder geleert werden 
+
+            listofShapes.Clear()
+
+            ' jetzt müssen die Hilfs-Shapes, die evtl auf der Folie sind, gelöscht werden 
+            If Not IsNothing(gleichShape) Then
+                gleichShape.Delete()
+                gleichShape = Nothing
+            End If
+
+            If Not IsNothing(steigendShape) Then
+                steigendShape.Delete()
+                steigendShape = Nothing
+            End If
+
+            If Not IsNothing(fallendShape) Then
+                fallendShape.Delete()
+                fallendShape = Nothing
+            End If
+
+            If Not IsNothing(ampelShape) Then
+                ampelShape.Delete()
+                ampelShape = Nothing
+            End If
+
         Next
 
 
@@ -1490,8 +1556,8 @@ Public Module testModule
         Dim top As Double, left As Double, width As Double, height As Double
         Dim htop As Double, hleft As Double, hwidth As Double, hheight As Double
         Dim pptSize As Integer = 18
-        Dim hproj As clsProjekt
-        Dim pName As String
+        'Dim hproj As clsProjekt
+        'Dim pName As String
         'Dim auswahl As Integer
         Dim von As Integer, bis As Integer
         Dim myCollection As New Collection
@@ -1546,6 +1612,7 @@ Public Module testModule
         Dim tatsErstellt As Integer = 0
 
         For j = 1 To AnzAdded
+
             tatsErstellt = tatsErstellt + 1
             If worker.CancellationPending Then
                 e.Cancel = True
@@ -1559,68 +1626,73 @@ Public Module testModule
                 worker.ReportProgress(0, e)
                 pptSlide = pptPresentation.Slides(anzahlSlides + j)
 
-                ' jetzt werden die Charts gezeichnet 
-                anzShapes = pptSlide.Shapes.Count
-
-                ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
-                For i = 1 To anzShapes
-                    pptShape = pptSlide.Shapes(i)
-                    qualifier = ""
-                    With pptShape
-
-                        Dim tmpStr(3) As String
-                        Try
-
-                            If .Title <> "" Then
-                                kennzeichnung = .Title
-                            Else
-                                tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {"(", ")"}, 3)
-                                kennzeichnung = tmpStr(0).Trim
-                            End If
+         
+            ' jetzt werden die Charts gezeichnet 
+            anzShapes = pptSlide.Shapes.Count
 
 
-                        Catch ex As Exception
-                            kennzeichnung = "nicht identifizierbar"
-                        End Try
+            ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
+            For i = 1 To anzShapes
+                pptShape = pptSlide.Shapes(i)
+                qualifier = ""
+                With pptShape
 
-                        If kennzeichnung = "Portfolio-Name" Or _
-                            kennzeichnung = "Projekt-Tafel" Or _
-                            kennzeichnung = "Projekt-Tafel Phasen" Or _
-                            kennzeichnung = "Tabelle Zielerreichung" Or _
-                            kennzeichnung = "Tabelle Projektstatus" Or _
-                            kennzeichnung = "Fortschritt Personalkosten" Or _
-                            kennzeichnung = "Fortschritt Sonstige Kosten" Or _
-                            kennzeichnung = "Fortschritt Gesamtkosten" Or _
-                            kennzeichnung = "Fortschritt Rolle" Or _
-                            kennzeichnung = "Fortschritt Kostenart" Or _
-                            kennzeichnung = "Ergebnis Verbesserungspotential" Or _
-                            kennzeichnung = "Ergebnis" Or _
-                            kennzeichnung = "Strategie/Risiko/Marge" Or _
-                            kennzeichnung = "Strategie/Risiko/Volumen" Or _
-                            kennzeichnung = "Zeit/Risiko/Volumen" Or _
-                            kennzeichnung = "Übersicht Auslastung" Or _
-                            kennzeichnung = "Details Unterauslastung" Or _
-                            kennzeichnung = "Details Überauslastung" Or _
-                            kennzeichnung = "Bisherige Zielerreichung" Or _
-                            kennzeichnung = "Prognose Zielerreichung" Or _
-                            kennzeichnung = "Phase" Or _
-                            kennzeichnung = "Rolle" Or _
-                            kennzeichnung = "Kostenart" Or _
-                            kennzeichnung = "Stand:" Or _
-                            kennzeichnung = "Zeitraum:" Then
+                    Dim tmpStr(3) As String
+                    Try
 
-                            listofShapes.Add(pptShape)
-
+                        If .Title <> "" Then
+                            kennzeichnung = .Title
+                        Else
+                            tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {"(", ")"}, 3)
+                            kennzeichnung = tmpStr(0).Trim
                         End If
 
 
-                    End With
-                Next
+                    Catch ex As Exception
+                        kennzeichnung = "nicht identifizierbar"
+                    End Try
 
+                    If kennzeichnung = "Portfolio-Name" Or _
+                        kennzeichnung = "Projekt-Tafel" Or _
+                        kennzeichnung = "Projekt-Tafel Phasen" Or _
+                        kennzeichnung = "Tabelle Zielerreichung" Or _
+                        kennzeichnung = "Tabelle Projektstatus" Or _
+                        kennzeichnung = "Fortschritt Personalkosten" Or _
+                        kennzeichnung = "Fortschritt Sonstige Kosten" Or _
+                        kennzeichnung = "Fortschritt Gesamtkosten" Or _
+                        kennzeichnung = "Fortschritt Rolle" Or _
+                        kennzeichnung = "Fortschritt Kostenart" Or _
+                        kennzeichnung = "Ergebnis Verbesserungspotential" Or _
+                        kennzeichnung = "Ergebnis" Or _
+                        kennzeichnung = "Strategie/Risiko/Marge" Or _
+                        kennzeichnung = "Strategie/Risiko/Volumen" Or _
+                        kennzeichnung = "Zeit/Risiko/Volumen" Or _
+                        kennzeichnung = "Übersicht Auslastung" Or _
+                        kennzeichnung = "Details Unterauslastung" Or _
+                        kennzeichnung = "Details Überauslastung" Or _
+                        kennzeichnung = "Bisherige Zielerreichung" Or _
+                        kennzeichnung = "Prognose Zielerreichung" Or _
+                        kennzeichnung = "Phase" Or _
+                        kennzeichnung = "Rolle" Or _
+                        kennzeichnung = "Kostenart" Or _
+                        kennzeichnung = "Meilenstein" Or _
+                        kennzeichnung = "Stand:" Or _
+                        kennzeichnung = "Zeitraum:" Then
+
+                        listofShapes.Add(pptShape)
+
+                    End If
+
+
+                End With
+            Next
+
+'OKOKOK
                 Dim newShape As pptNS.ShapeRange
                 Dim boxName As String
 
                 For Each tmpShape As pptNS.Shape In listofShapes
+
 
                     pptShape = tmpShape
                     qualifier = ""
@@ -1647,12 +1719,11 @@ Public Module testModule
                                 End If
                             End If
 
-
-
                         Catch ex As Exception
                             kennzeichnung = "nicht identifizierbar"
                             boxName = " "
                         End Try
+
 
                         'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
                         e.Result = "Chart '" & kennzeichnung & "' wird aufgebaut ...."
@@ -1670,8 +1741,10 @@ Public Module testModule
                             Case "Portfolio-Name"
                                 .TextFrame2.TextRange.Text = portfolioName
 
+
                             Case "Projekt-Tafel"
 
+                                Dim farbtyp As Integer
                                 Dim rng As xlNS.Range
                                 Dim colorrng As xlNS.Range
                                 Dim selectionType As Integer = -1 ' keine Einschränkung
@@ -1679,46 +1752,21 @@ Public Module testModule
                                 bis = showRangeRight
                                 myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
-                                If myCollection.Count > 0 Then
-                                    pptSize = .TextFrame2.TextRange.Font.Size
-                                    .TextFrame2.TextRange.Text = " "
 
-                                    Dim minColumn As Integer = 10000, maxColumn As Integer = 0, maxzeile As Integer = 0
-                                    For Each pName In myCollection
-                                        Try
-                                            hproj = ShowProjekte.getProject(pName)
-                                            With hproj
-                                                If .Start < minColumn Then
-                                                    minColumn = .Start
-                                                End If
+                 If myCollection.Count > 0 Then
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
 
-                                                If .Start + .Dauer - 1 > maxColumn Then
-                                                    maxColumn = .Start + .Dauer - 1
-                                                End If
+                                Dim minColumn As Integer = 10000, maxColumn As Integer = 0, maxzeile As Integer = 0
 
-                                                If .tfZeile > maxzeile Then
-                                                    maxzeile = .tfZeile
-                                                End If
-                                            End With
-                                        Catch ex As Exception
+                                ' wenn nur die Projekt-Tafel und Zeitraum im großen Bild gezeigt werden soll, also ohne Qualifier aufgerufen wird , 
+                                ' dann stelle die Projekt-Tafel mit den Projekten dar, ohne sie abzuschneiden ...
+                                If qualifier = "" Then
+                                    Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, False)
+                                Else
+                                    Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, True)
+                                End If
 
-                                        End Try
-
-                                    Next
-                                    maxzeile = maxzeile + 1
-                                    If minColumn > 1 Then
-                                        minColumn = minColumn - 1
-                                    End If
-                                    maxColumn = maxColumn + 1
-
-
-                                    If von > 0 And von < minColumn Then
-                                        minColumn = von
-                                    End If
-
-                                    If bis > maxColumn Then
-                                        maxColumn = bis
-                                    End If
 
                                     ' set Gridlines to white 
                                     With appInstance.ActiveWindow
@@ -1740,17 +1788,34 @@ Public Module testModule
                                         If qualifier = "Milestones R" Then
                                             Call awinDeleteMilestoneShapes(0)
 
-                                            Dim farbTyp As Integer = 3
+                                           farbTyp  = 3
                                             Call awinZeichneMilestones(nameList, farbTyp, True)
+
 
 
                                         ElseIf qualifier = "Milestones GR" Then
                                             Call awinDeleteMilestoneShapes(0)
-
-                                            Dim farbTyp As Integer = 2
+  					 
+                                            farbtyp = 2
                                             Call awinZeichneMilestones(nameList, farbTyp, False)
                                             farbTyp = 3
                                             Call awinZeichneMilestones(nameList, farbTyp, False)
+
+                                        ElseIf qualifier = "Milestones GGR" Then
+                                            Call awinDeleteMilestoneShapes(0)
+
+                                            farbtyp = 1
+                                            Call awinZeichneMilestones(nameList, farbtyp, False)
+                                            farbtyp = 2
+                                            Call awinZeichneMilestones(nameList, farbtyp, False)
+                                            farbtyp = 3
+                                            Call awinZeichneMilestones(nameList, farbtyp, False)
+
+                                        ElseIf qualifier = "Milestones ALL" Then
+                                            Call awinDeleteMilestoneShapes(0)
+
+                                            farbtyp = 4
+                                            Call awinZeichneMilestones(nameList, farbtyp, False)
 
                                         ElseIf qualifier = "Status" Then
                                             Call awinDeleteMilestoneShapes(0)
@@ -1766,6 +1831,9 @@ Public Module testModule
                                             Call awinDeleteMilestoneShapes(0)
                                         End If
                                     End With
+
+
+'okokok
 
                                     ' set back 
                                     With appInstance.ActiveWindow
@@ -1818,248 +1886,213 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = " "
 
                                     Dim minColumn As Integer = 10000, maxColumn As Integer = 0, maxzeile As Integer = 0
-                                    For Each pName In myCollection
+
+'okokok
+                          Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, True)
+
+
+                                ' set Gridlines to white 
+                                With appInstance.ActiveWindow
+                                    .GridlineColor = RGB(255, 255, 255)
+                                End With
+
+                                With appInstance.Worksheets(arrWsNames(3))
+                                    rng = .range(.cells(1, minColumn), .cells(maxzeile, maxColumn))
+                                    colorrng = .range(.cells(2, showRangeLeft), .cells(maxzeile, showRangeRight))
+
+                                    Try
+                                        colorrng.Interior.Color = showtimezone_color
+                                    Catch ex1 As Exception
+
+                                    End Try
+
+
+                                    ' hier werden die Phasen gezeichnet 
+                                    Call awinDeleteMilestoneShapes(0)
+
+                                    Dim qstr(20) As String
+                                    Dim phNameCollection As New Collection
+                                    Dim phName As String = " "
+                                    qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                                    ' Aufbau der Collection 
+                                    For i = 0 To qstr.Length - 1
+
                                         Try
-                                            hproj = ShowProjekte.getProject(pName)
-                                            With hproj
-                                                If .Start < minColumn Then
-                                                    minColumn = .Start
-                                                End If
-
-                                                If .Start + .Dauer - 1 > maxColumn Then
-                                                    maxColumn = .Start + .Dauer - 1
-                                                End If
-
-                                                If .tfZeile > maxzeile Then
-                                                    maxzeile = .tfZeile
-                                                End If
-                                            End With
+                                            phName = qstr(i).Trim
+                                            If PhaseDefinitions.Contains(phName) Then
+                                                phNameCollection.Add(phName, phName)
+                                            End If
                                         Catch ex As Exception
-
+                                            Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
                                         End Try
 
                                     Next
-                                    maxzeile = maxzeile + 1
-                                    If minColumn > 1 Then
-                                        minColumn = minColumn - 1
-                                    End If
-                                    maxColumn = maxColumn + 1
 
+                                    Call awinDeSelect()
 
-                                    If von > 0 And von < minColumn Then
-                                        minColumn = von
-                                    End If
+                                    If phNameCollection.Count > 0 Then
 
-                                    If bis > maxColumn Then
-                                        maxColumn = bis
-                                    End If
+                                        Call awinZeichnePhasen(phNameCollection, 4, False)
+                                        rng.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
+                                        colorrng.Interior.ColorIndex = -4142
 
-                                    If minColumn < von - 12 Then
-                                        minColumn = von - 12
-                                    End If
+                                        ' lösche alle Phase Shapes wieder wieder 
+                                        If qualifier <> "" Then
+                                            Call awinDeleteMilestoneShapes(0)
+                                        End If
 
-                                    If maxColumn > bis + 12 Then
-                                        maxColumn = bis + 12
+                                    Else
+                                        ok = False
                                     End If
 
+                                End With
 
-                                    ' set Gridlines to white 
-                                    With appInstance.ActiveWindow
-                                        .GridlineColor = RGB(255, 255, 255)
-                                    End With
+                                ' set back 
+                                With appInstance.ActiveWindow
+                                    .GridlineColor = RGB(220, 220, 220)
+                                End With
 
-                                    With appInstance.Worksheets(arrWsNames(3))
-                                        rng = .range(.cells(1, minColumn), .cells(maxzeile, maxColumn))
-                                        colorrng = .range(.cells(2, showRangeLeft), .cells(maxzeile, showRangeRight))
+                                If ok Then
+                                    newShape = pptSlide.Shapes.Paste
+                                    Dim ratio As Double
 
-                                        Try
-                                            colorrng.Interior.Color = showtimezone_color
-                                        Catch ex1 As Exception
-
-                                        End Try
-
-
-                                        ' hier werden die Phasen gezeichnet 
-                                        Call awinDeleteMilestoneShapes(0)
-
-                                        Dim qstr(20) As String
-                                        Dim phNameCollection As New Collection
-                                        Dim phName As String = " "
-                                        qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
-
-                                        ' Aufbau der Collection 
-                                        For i = 0 To qstr.Length - 1
-
-                                            Try
-                                                phName = qstr(i).Trim
-                                                If PhaseDefinitions.Contains(phName) Then
-                                                    phNameCollection.Add(phName, phName)
-                                                End If
-                                            Catch ex As Exception
-                                                Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
-                                            End Try
-
-                                        Next
-
-                                        Call awinDeSelect()
-
-                                        If phNameCollection.Count > 0 Then
-
-                                            Call awinZeichnePhasen(phNameCollection, 4, False)
-                                            rng.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-                                            colorrng.Interior.ColorIndex = -4142
-
-                                            ' lösche alle Phase Shapes wieder wieder 
-                                            If qualifier <> "" Then
-                                                Call awinDeleteMilestoneShapes(0)
-                                            End If
+                                    With newShape
+                                        ratio = height / width
+                                        If ratio < .Height / .Width Then
+                                            ' orientieren an width 
+                                            .Width = width * 0.96
+                                            .Height = ratio * .Width
+                                            ' left anpassen
+                                            .Top = top + 0.02 * height
+                                            .Left = left + 0.98 * (width - .Width) / 2
 
                                         Else
-                                            ok = False
+                                            .Height = height * 0.96
+                                            .Width = .Height / ratio
+                                            ' top anpassen 
+                                            .Left = left + 0.02 * width
+                                            .Top = top + 0.98 * (height - .Height) / 2
                                         End If
 
                                     End With
-
-                                    ' set back 
-                                    With appInstance.ActiveWindow
-                                        .GridlineColor = RGB(220, 220, 220)
-                                    End With
-
-                                    If ok Then
-                                        newShape = pptSlide.Shapes.Paste
-                                        Dim ratio As Double
-
-                                        With newShape
-                                            ratio = height / width
-                                            If ratio < .Height / .Width Then
-                                                ' orientieren an width 
-                                                .Width = width * 0.96
-                                                .Height = ratio * .Width
-                                                ' left anpassen
-                                                .Top = top + 0.02 * height
-                                                .Left = left + 0.98 * (width - .Width) / 2
-
-                                            Else
-                                                .Height = height * 0.96
-                                                .Width = .Height / ratio
-                                                ' top anpassen 
-                                                .Left = left + 0.02 * width
-                                                .Top = top + 0.98 * (height - .Height) / 2
-                                            End If
-
-                                        End With
-                                    Else
-                                        .TextFrame2.TextRange.Text = "es konnten keine Phasen erkannt werden ... "
-                                    End If
-
-
                                 Else
-                                    .TextFrame2.TextRange.Text = "Keine Projekte im angegebenen Zeitraum vorhanden"
+                                    .TextFrame2.TextRange.Text = "es konnten keine Phasen erkannt werden ... "
                                 End If
 
 
+                            Else
+                                .TextFrame2.TextRange.Text = "Keine Projekte im angegebenen Zeitraum vorhanden"
+                            End If
+                Case "Tabelle Zielerreichung"
 
-                            Case "Tabelle Zielerreichung"
+                            Dim farbtyp As Integer
+                            Try
 
-                                Dim farbtyp As Integer
-                                Try
+                                If qualifier = "rot" Then
+                                    farbtyp = 3
+                                ElseIf qualifier = "gelb" Then
+                                    farbtyp = 2
+                                ElseIf qualifier = "gruen" Then
+                                    farbtyp = 1
+                                ElseIf qualifier = "gelb/rot" Then
+                                    farbtyp = 12
+                                Else
+                                    farbtyp = 3
+                                End If
+                                Call zeichneTabelleZielErreichung(pptShape, farbtyp)
 
-                                    If qualifier = "rot" Then
-                                        farbtyp = 3
-                                    ElseIf qualifier = "gelb" Then
-                                        farbtyp = 2
-                                    ElseIf qualifier = "gruen" Then
-                                        farbtyp = 1
-                                    Else
-                                        farbtyp = 3
-                                    End If
-                                    Call zeichneTabelleZielErreichung(pptShape, farbtyp)
+                            Catch ex As Exception
 
-                                Catch ex As Exception
+                            End Try
 
-                                End Try
+'okokok
 
-                            Case "Tabelle Projektstatus"
+ 
+                        Case "Tabelle Projektstatus"
 
-                                Try
-                                    Call zeichneTabelleStatus(pptShape)
-                                Catch ex As Exception
+                            Try
+                                Call zeichneTabelleStatus(pptShape)
+                            Catch ex As Exception
 
-                                End Try
-
-
-                            Case "Fortschritt Personalkosten"
-
-                                Dim compareToID As Integer = 1
-                                Dim auswahl As Integer = 1
-
-                                Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
-
-                            Case "Fortschritt Sonstige Kosten"
-
-                                Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
-                                Dim auswahl As Integer = 2 ' Sonstige Kosten 
-
-                                Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
-
-                            Case "Fortschritt Gesamtkosten"
-
-                                Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
-                                Dim auswahl As Integer = 3 ' Gesamt Kosten 
-
-                                Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
-
-                            Case "Fortschritt Rolle"
-
-                                Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
-                                Dim auswahl As Integer = 4 ' Rolle ; in qualifier steht welche Rolle  
-
-                                Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
-
-                            Case "Fortschritt Kostenart"
-
-                                Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
-                                Dim auswahl As Integer = 5 ' Kostenart ; in qualifier steht welche Kostenart  
-
-                                Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
+                            End Try
 
 
-                            Case "Ergebnis Verbesserungspotential"
+                        Case "Fortschritt Personalkosten"
 
-                                boxName = boxName & " (T€)"
-                                pptSize = .TextFrame2.TextRange.Font.Size
-                                .TextFrame2.TextRange.Text = " "
+                            Dim compareToID As Integer = 1
+                            Dim auswahl As Integer = 1
 
-                                htop = 100
-                                hleft = 100
-                                hwidth = 450
-                                hheight = awinSettings.ChartHoehe1
-                                obj = Nothing
-                                Call awinCreateVerbesserungsPotentialDiagramm(obj, top, left, width, height, False)
+                            Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
-                                reportObj = obj
+                        Case "Fortschritt Sonstige Kosten"
 
-                                With reportObj
-                                    .Chart.ChartTitle.Text = boxName
-                                    .Chart.ChartTitle.Font.Size = pptSize
-                                End With
+                            Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
+                            Dim auswahl As Integer = 2 ' Sonstige Kosten 
 
-                                reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
+                            Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
-                                With newShape
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
-                                End With
+                        Case "Fortschritt Gesamtkosten"
 
-                                Try
-                                    reportObj.Delete()
-                                    'DiagramList.Remove(DiagramList.Count)
-                                Catch ex As Exception
+                            Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
+                            Dim auswahl As Integer = 3 ' Gesamt Kosten 
 
-                                End Try
+                            Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
+
+                        Case "Fortschritt Rolle"
+
+                            Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
+                            Dim auswahl As Integer = 4 ' Rolle ; in qualifier steht welche Rolle  
+
+                            Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
+
+                        Case "Fortschritt Kostenart"
+
+                            Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
+                            Dim auswahl As Integer = 5 ' Kostenart ; in qualifier steht welche Kostenart  
+
+                            Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
+
+
+                        Case "Ergebnis Verbesserungspotential"
+
+
+                            boxName = boxName & " (T€)"
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+                            htop = 100
+                            hleft = 100
+                            hwidth = 450
+                            hheight = awinSettings.ChartHoehe1
+                            obj = Nothing
+                            Call awinCreateVerbesserungsPotentialDiagramm(obj, top, left, width, height, False)
+
+                            reportObj = obj
+
+                            With reportObj
+                                .Chart.ChartTitle.Text = boxName
+                                .Chart.ChartTitle.Font.Size = pptSize
+                            End With
+
+                            reportObj.Copy()
+                            newShape = pptSlide.Shapes.Paste
+
+                            With newShape
+                                .Top = top + 0.02 * height
+                                .Left = left + 0.02 * width
+                                .Width = width * 0.96
+                                .Height = height * 0.96
+                            End With
+
+                            Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+                            Catch ex As Exception
+
+                            End Try
+
+'okokok
 
 
                             Case "Ergebnis"
@@ -2148,6 +2181,51 @@ Public Module testModule
 
                             Case "Strategie/Risiko/Volumen"
 
+			     pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+
+                            Dim selectionType As Integer = -1 ' keine Einschränkung
+                            von = showRangeLeft
+                            bis = showRangeRight
+                            myCollection = ShowProjekte.withinTimeFrame(selectionType, von, bis)
+
+                            htop = 50
+                            hleft = (showRangeRight - 1) * boxWidth
+                            hwidth = 0.4 * maxScreenWidth
+                            hheight = 0.6 * maxScreenHeight
+                            obj = Nothing
+
+                            'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, htop, hleft, hwidth, hheight)
+                            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+
+
+                            reportObj = obj
+
+                            With reportObj
+                                .Chart.ChartTitle.Text = boxName
+                                .Chart.ChartTitle.Font.Size = pptSize
+                            End With
+
+                            reportObj.Copy()
+                            newShape = pptSlide.Shapes.Paste
+
+                            With newShape
+                                .Top = top + 0.02 * height
+                                .Left = left + 0.02 * width
+                                .Width = width * 0.96
+                                .Height = height * 0.96
+                            End With
+
+
+                            Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+                            Catch ex As Exception
+
+                            End Try
+
+
 
                             Case "Zeit/Risiko/Volumen"
 
@@ -2167,7 +2245,7 @@ Public Module testModule
                                 obj = Nothing
 
                                 Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
-
+        			'Call awinCreateZeitRiskVolumeDiagramm(myCollection, obj, False, False, True, True, htop, hleft, hwidth, hheight)
 
                                 reportObj = obj
 
@@ -2199,59 +2277,141 @@ Public Module testModule
                             Case "Übersicht Auslastung"
 
                                 boxName = boxName & " (PT)"
-                                pptSize = .TextFrame2.TextRange.Font.Size
-                                .TextFrame2.TextRange.Text = " "
 
-                                htop = 100
-                                hleft = 100
-                                hheight = awinSettings.ChartHoehe2
-                                hwidth = 340
-                                obj = Nothing
-                                Call awinCreateAuslastungsDiagramm(obj, htop, hleft, hwidth, hheight, True)
+                      		 pptSize = .TextFrame2.TextRange.Font.Size
+                            	.TextFrame2.TextRange.Text = " "
+
+	                            htop = 100
+        	                    hleft = 100
+                	            hheight = awinSettings.ChartHoehe2
+                        	    hwidth = 340
+                            		obj = Nothing
+                            	Call awinCreateAuslastungsDiagramm(obj, htop, hleft, hwidth, hheight, True)
+
+	                            reportObj = obj
+	
+        	                    With reportObj
+                	                .Chart.ChartTitle.Text = boxName
+                        	        .Chart.ChartTitle.Font.Size = pptSize
+                            	End With
+
+                            	reportObj.Copy()
+                            	newShape = pptSlide.Shapes.Paste
+
+                            	With newShape
+                                .Top = top + 0.02 * height
+                                .Left = left + 0.02 * width
+                                .Width = width * 0.96
+                                .Height = height * 0.96
+                            	End With
+
+
+	                        Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+        	                Catch ex As Exception
+
+	                        End Try
+
+
+                       Case "Details Unterauslastung"
+
+                            boxName = boxName & " (PT)"
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+                            htop = 100
+                            hleft = 100
+                            hheight = awinSettings.ChartHoehe2
+                            hwidth = 340
+                            obj = Nothing
+                            Call createAuslastungsDetailPie(obj, 2, htop, hleft, hheight, hwidth, True)
+
+                            reportObj = obj
+
+                            With reportObj
+                                .Chart.ChartTitle.Text = boxName
+                                .Chart.ChartTitle.Font.Size = pptSize
+                            End With
+
+                            reportObj.Copy()
+                            newShape = pptSlide.Shapes.Paste
+
+                            With newShape
+                                .Top = top + 0.02 * height
+                                .Left = left + 0.02 * width
+                                .Width = width * 0.96
+                                .Height = height * 0.96
+                            End With
+
+                            'Call awinDeleteChart(reportObj)
+
+                            Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+                            Catch ex As Exception
+
+                            End Try
+
+                        Case "Details Überauslastung"
+
+                            boxName = boxName & " (PT)"
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+                            htop = 100
+                            hleft = 100
+                            hheight = awinSettings.ChartHoehe2
+                            hwidth = 340
+                            obj = Nothing
+                            Call createAuslastungsDetailPie(obj, 1, htop, hleft, hheight, hwidth, True)
+
+                            reportObj = obj
+
+                            With reportObj
+                                .Chart.ChartTitle.Text = boxName
+                                .Chart.ChartTitle.Font.Size = pptSize
+                            End With
+
+                            reportObj.Copy()
+                            newShape = pptSlide.Shapes.Paste
+
+                            With newShape
+                                .Top = top + 0.02 * height
+                                .Left = left + 0.02 * width
+                                .Width = width * 0.96
+                                .Height = height * 0.96
+                            End With
+
+                            'Call awinDeleteChart(reportObj)
+
+                            Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+                            Catch ex As Exception
+
+                            End Try
+
+                        Case "Bisherige Zielerreichung"
+
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+                            htop = 100
+                            hleft = 100
+                            hheight = awinSettings.ChartHoehe2
+                            hwidth = 340
+                            obj = Nothing
+
+
+                            Try
+
+                                Call awinCreateZielErreichungsDiagramm(obj, -1, htop, hleft, hheight, hwidth, False, True)
 
                                 reportObj = obj
 
                                 With reportObj
-                                    .Chart.ChartTitle.Text = boxName
-                                    .Chart.ChartTitle.Font.Size = pptSize
-                                End With
-
-                                reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
-
-                                With newShape
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
-                                End With
-
-
-                                Try
-                                    reportObj.Delete()
-                                    'DiagramList.Remove(DiagramList.Count)
-                                Catch ex As Exception
-
-                                End Try
-
-
-                            Case "Details Unterauslastung"
-
-                                boxName = boxName & " (PT)"
-                                pptSize = .TextFrame2.TextRange.Font.Size
-                                .TextFrame2.TextRange.Text = " "
-
-                                htop = 100
-                                hleft = 100
-                                hheight = awinSettings.ChartHoehe2
-                                hwidth = 340
-                                obj = Nothing
-                                Call createAuslastungsDetailPie(obj, 2, htop, hleft, hheight, hwidth, True)
-
-                                reportObj = obj
-
-                                With reportObj
-                                    .Chart.ChartTitle.Text = boxName
+                                    '.Chart.ChartTitle.Text = boxName
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
@@ -2274,23 +2434,34 @@ Public Module testModule
 
                                 End Try
 
-                            Case "Details Überauslastung"
+                            Catch ex As Exception
 
-                                boxName = boxName & " (PT)"
-                                pptSize = .TextFrame2.TextRange.Font.Size
-                                .TextFrame2.TextRange.Text = " "
+                                .TextFrame2.TextRange.Text = ex.Message
 
-                                htop = 100
-                                hleft = 100
-                                hheight = awinSettings.ChartHoehe2
-                                hwidth = 340
-                                obj = Nothing
-                                Call createAuslastungsDetailPie(obj, 1, htop, hleft, hheight, hwidth, True)
+                            End Try
+
+
+
+                        Case "Prognose Zielerreichung"
+
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+                            htop = 100
+                            hleft = 100
+                            hheight = awinSettings.ChartHoehe2
+                            hwidth = 340
+                            obj = Nothing
+
+
+                            Try
+
+                                Call awinCreateZielErreichungsDiagramm(obj, 1, htop, hleft, hheight, hwidth, False, True)
 
                                 reportObj = obj
 
                                 With reportObj
-                                    .Chart.ChartTitle.Text = boxName
+                                    '.Chart.ChartTitle.Text = boxName
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
@@ -2304,286 +2475,323 @@ Public Module testModule
                                     .Height = height * 0.96
                                 End With
 
-                                'Call awinDeleteChart(reportObj)
+
 
                                 Try
+
                                     reportObj.Delete()
-                                    'DiagramList.Remove(DiagramList.Count)
+
                                 Catch ex As Exception
 
                                 End Try
+                            Catch ex As Exception
 
-                            Case "Bisherige Zielerreichung"
+                                .TextFrame2.TextRange.Text = ex.Message
+
+                            End Try
+                            
+
+
+
+                        Case "Phase"
+
+
+                            myCollection.Clear()
+
+                            Dim qstr(20) As String
+                            Dim phName As String = " "
+                            qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                            ' Aufbau der Collection 
+                            For i = 0 To qstr.Length - 1
+
+                                Try
+                                    phName = qstr(i).Trim
+                                    If PhaseDefinitions.Contains(phName) Then
+                                        myCollection.Add(phName, phName)
+                                    End If
+                                Catch ex As Exception
+                                    Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
+                                End Try
+
+                            Next
+
+
+                            If myCollection.Count > 0 Then
 
                                 pptSize = .TextFrame2.TextRange.Font.Size
                                 .TextFrame2.TextRange.Text = " "
 
                                 htop = 100
                                 hleft = 100
-                                hheight = awinSettings.ChartHoehe2
-                                hwidth = 340
+                                hheight = miniHeight  ' height of all charts
+                                hwidth = miniWidth   ' width of all charts
                                 obj = Nothing
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(0), True)
 
+                                reportObj = obj
 
-                                Try
-
-                                    Call awinCreateZielErreichungsDiagramm(obj, -1, htop, hleft, hheight, hwidth, False, True)
-
-                                    reportObj = obj
-
-                                    With reportObj
-                                        '.Chart.ChartTitle.Text = boxName
-                                        .Chart.ChartTitle.Font.Size = pptSize
-                                    End With
-
-                                    reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
-
-                                    With newShape
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
-                                    End With
-
-                                    'Call awinDeleteChart(reportObj)
-
-                                    Try
-                                        reportObj.Delete()
-                                        'DiagramList.Remove(DiagramList.Count)
-                                    Catch ex As Exception
-
-                                    End Try
-
-                                Catch ex As Exception
-
-                                    .TextFrame2.TextRange.Text = ex.Message
-
-                                End Try
-
-
-
-                            Case "Prognose Zielerreichung"
-
-                                pptSize = .TextFrame2.TextRange.Font.Size
-                                .TextFrame2.TextRange.Text = " "
-
-                                htop = 100
-                                hleft = 100
-                                hheight = awinSettings.ChartHoehe2
-                                hwidth = 340
-                                obj = Nothing
-
-
-                                Try
-
-                                    Call awinCreateZielErreichungsDiagramm(obj, 1, htop, hleft, hheight, hwidth, False, True)
-
-                                    reportObj = obj
-
-                                    With reportObj
-                                        '.Chart.ChartTitle.Text = boxName
-                                        .Chart.ChartTitle.Font.Size = pptSize
-                                    End With
-
-                                    reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
-
-                                    With newShape
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
-                                    End With
-
-
-
-                                    Try
-
-                                        reportObj.Delete()
-
-                                    Catch ex As Exception
-
-                                    End Try
-                                Catch ex As Exception
-
-                                    .TextFrame2.TextRange.Text = ex.Message
-
-                                End Try
-
-
-
-
-                            Case "Phase"
-
-
-                                myCollection.Clear()
-                                If PhaseDefinitions.Contains(qualifier) Then
-
-                                    pptSize = .TextFrame2.TextRange.Font.Size
-                                    .TextFrame2.TextRange.Text = " "
-
-                                    myCollection.Add(qualifier, qualifier)
-
-                                    htop = 100
-                                    hleft = 100
-                                    hheight = miniHeight  ' height of all charts
-                                    hwidth = miniWidth   ' width of all charts
-                                    obj = Nothing
-                                    Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(0), True)
-
-                                    reportObj = obj
-
-                                    With reportObj
+                                With reportObj
+                                    If myCollection.Count > 1 Then
+                                        .Chart.ChartTitle.Text = "Phasen Übersicht"
+                                    Else
                                         .Chart.ChartTitle.Text = boxName
-                                        .Chart.ChartTitle.Font.Size = pptSize
-                                    End With
+                                    End If
 
-                                    reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
 
-                                    With newShape
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
-                                    End With
+                                reportObj.Copy()
+                                newShape = pptSlide.Shapes.Paste
 
-                                    'Call awinDeleteChart(reportObj)
-                                    ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+                                With newShape
+                                    .Top = top + 0.02 * height
+                                    .Left = left + 0.02 * width
+                                    .Width = width * 0.96
+                                    .Height = height * 0.96
+                                End With
 
+                                'Call awinDeleteChart(reportObj)
+                                ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                                Try
+                                    reportObj.Delete()
+                                    'DiagramList.Remove(DiagramList.Count)
+                                Catch ex As Exception
+
+                                End Try
+
+                            Else
+                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                            End If
+
+                        Case "Meilenstein"
+
+
+                            myCollection.Clear()
+                            Dim MSnameList As SortedList(Of String, String)
+                            MSnameList = ShowProjekte.getMilestoneNames
+
+                            Dim qstr(20) As String
+                            Dim msName As String = " "
+                            qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                            ' Aufbau der Collection 
+                            For i = 0 To qstr.Length - 1
+
+                                Try
+                                    msName = qstr(i).Trim
+                                    If MSnameList.ContainsKey(msName) Then
+                                        myCollection.Add(msName, msName)
+                                    End If
+                                Catch ex As Exception
+                                    Call MsgBox("Fehler: Phasen Name " & msName & " konnte nicht erkannt werden ...")
+                                End Try
+
+                            Next
+
+
+                            If myCollection.Count > 0 Then
+
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+                                htop = 100
+                                hleft = 100
+                                hheight = miniHeight  ' height of all charts
+                                hwidth = miniWidth   ' width of all charts
+                                obj = Nothing
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(5), True)
+
+                                reportObj = obj
+
+                                With reportObj
+                                    If myCollection.Count > 1 Then
+                                        .Chart.ChartTitle.Text = "Meilenstein Übersicht"
+                                    Else
+                                        .Chart.ChartTitle.Text = boxName
+                                    End If
+
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
+
+                                reportObj.Copy()
+                                newShape = pptSlide.Shapes.Paste
+
+                                With newShape
+                                    .Top = top + 0.02 * height
+                                    .Left = left + 0.02 * width
+                                    .Width = width * 0.96
+                                    .Height = height * 0.96
+                                End With
+
+
+                                Try
+                                    reportObj.Delete()
+                                Catch ex As Exception
+
+                                End Try
+
+                            Else
+                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                            End If
+
+
+                        Case "Rolle"
+
+
+                            myCollection.Clear()
+
+                            Dim qstr(20) As String
+                            Dim roleName As String = " "
+                            qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                            ' Aufbau der Collection 
+                            For i = 0 To qstr.Length - 1
+
+                                Try
+                                    roleName = qstr(i).Trim
+                                    If RoleDefinitions.Contains(roleName) Then
+                                        myCollection.Add(roleName, roleName)
+                                    End If
+                                Catch ex As Exception
+                                    Call MsgBox("Fehler: Rolle " & roleName & " konnte nicht erkannt werden ...")
+                                End Try
+
+                            Next
+
+
+                            If myCollection.Count > 0 Then
+
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+                                htop = 100
+                                hleft = 100
+                                hheight = miniHeight  ' height of all charts
+                                hwidth = miniWidth   ' width of all charts
+                                obj = Nothing
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True)
+
+                                reportObj = obj
+                                ' jetzt wird die Überschrift neu bestimmt ...
+                                With reportObj
+                                    Dim tmpTitle() As String = .Chart.ChartTitle.Text.Split(New Char() {"(", ")"}, 3)
                                     Try
-                                        reportObj.Delete()
-                                        'DiagramList.Remove(DiagramList.Count)
+                                        .Chart.ChartTitle.Text = qualifier & " (" & tmpTitle(1) & ")"
                                     Catch ex As Exception
-
+                                        .Chart.ChartTitle.Text = qualifier
                                     End Try
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
 
-                                Else
-                                    .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
-                                End If
+                                reportObj.Copy()
+                                newShape = pptSlide.Shapes.Paste
+
+                                With newShape
+                                    .Top = top + 0.02 * height
+                                    .Left = left + 0.02 * width
+                                    .Width = width * 0.96
+                                    .Height = height * 0.96
+                                End With
+
+                                'Call awinDeleteChart(reportObj)
+                                ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                                Try
+                                    reportObj.Delete()
+                                Catch ex As Exception
+
+                                End Try
+
+                            Else
+                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                            End If
+
+                        Case "Kostenart"
 
 
-                            Case "Rolle"
+                            myCollection.Clear()
+                            Dim qstr(20) As String
+                            Dim costName As String = " "
+                            qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                            ' Aufbau der Collection 
+                            For i = 0 To qstr.Length - 1
+
+                                Try
+                                    costName = qstr(i).Trim
+                                    If CostDefinitions.Contains(costName) Then
+                                        myCollection.Add(costName, costName)
+                                    End If
+                                Catch ex As Exception
+                                    Call MsgBox("Fehler: Kostenart " & costName & " konnte nicht erkannt werden ...")
+                                End Try
+
+                            Next
 
 
-                                myCollection.Clear()
-                                If RoleDefinitions.Contains(qualifier) Then
+                            If myCollection.Count > 0 Then
 
-                                    pptSize = .TextFrame2.TextRange.Font.Size
-                                    .TextFrame2.TextRange.Text = " "
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
 
-                                    myCollection.Add(qualifier, qualifier)
+                                htop = 100
+                                hleft = 100
+                                hheight = miniHeight  ' height of all charts
+                                hwidth = miniWidth   ' width of all charts
+                                obj = Nothing
+                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True)
 
-                                    htop = 100
-                                    hleft = 100
-                                    hheight = miniHeight  ' height of all charts
-                                    hwidth = miniWidth   ' width of all charts
-                                    obj = Nothing
-                                    Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True)
+                                reportObj = obj
 
-                                    reportObj = obj
-                                    ' jetzt wird die Überschrift neu bestimmt ...
-                                    With reportObj
-                                        Dim tmpTitle() As String = .Chart.ChartTitle.Text.Split(New Char() {"(", ")"}, 3)
-                                        Try
-                                            .Chart.ChartTitle.Text = qualifier & " (" & tmpTitle(1) & ")"
-                                        Catch ex As Exception
-                                            .Chart.ChartTitle.Text = qualifier
-                                        End Try
-                                        .Chart.ChartTitle.Font.Size = pptSize
-                                    End With
-
-                                    reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
-
-                                    With newShape
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
-                                    End With
-
-                                    'Call awinDeleteChart(reportObj)
-                                    ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
-
+                                With reportObj
+                                    Dim tmpTitle() As String = .Chart.ChartTitle.Text.Split(New Char() {"(", ")"}, 3)
                                     Try
-                                        reportObj.Delete()
-                                        ' das diagramlist.remove darf nicht gemacht werden, weil sonst die gespeicherten Werte 
-                                        ' für die top. left, .. Positionen verloren gehen  
-                                        'DiagramList.Remove(DiagramList.Count)
+                                        .Chart.ChartTitle.Text = qualifier & " (" & tmpTitle(1) & ")"
                                     Catch ex As Exception
-
+                                        .Chart.ChartTitle.Text = qualifier
                                     End Try
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
 
-                                Else
-                                    .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
-                                End If
+                                reportObj.Copy()
+                                newShape = pptSlide.Shapes.Paste
 
-                            Case "Kostenart"
+                                With newShape
+                                    .Top = top + 0.02 * height
+                                    .Left = left + 0.02 * width
+                                    .Width = width * 0.96
+                                    .Height = height * 0.96
+                                End With
 
+                                'Call awinDeleteChart(reportObj)
+                                ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
 
-                                myCollection.Clear()
-                                If CostDefinitions.Contains(qualifier) Then
+                                Try
+                                    reportObj.Delete()
+                                    'DiagramList.Remove(DiagramList.Count)
+                                Catch ex As Exception
 
-                                    pptSize = .TextFrame2.TextRange.Font.Size
-                                    .TextFrame2.TextRange.Text = " "
+                                End Try
 
-                                    myCollection.Add(qualifier, qualifier)
-
-                                    htop = 100
-                                    hleft = 100
-                                    hheight = miniHeight  ' height of all charts
-                                    hwidth = miniWidth   ' width of all charts
-                                    obj = Nothing
-                                    Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True)
-
-                                    reportObj = obj
-
-                                    With reportObj
-                                        Dim tmpTitle() As String = .Chart.ChartTitle.Text.Split(New Char() {"(", ")"}, 3)
-                                        Try
-                                            .Chart.ChartTitle.Text = qualifier & " (" & tmpTitle(1) & ")"
-                                        Catch ex As Exception
-                                            .Chart.ChartTitle.Text = qualifier
-                                        End Try
-                                        .Chart.ChartTitle.Font.Size = pptSize
-                                    End With
-
-                                    reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
-
-                                    With newShape
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
-                                    End With
-
-                                    'Call awinDeleteChart(reportObj)
-                                    ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
-
-                                    Try
-                                        reportObj.Delete()
-                                        'DiagramList.Remove(DiagramList.Count)
-                                    Catch ex As Exception
-
-                                    End Try
-
-                                Else
-                                    .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
-                                End If
+                            Else
+                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                            End If
 
 
-                            Case "Stand:"
-                                .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d")
+                        Case "Stand:"
+                            .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d")
 
-                            Case "Zeitraum:"
-                                .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(showRangeLeft, showRangeRight)
+                        Case "Zeitraum:"
+                            .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(showRangeLeft, showRangeRight)
 
-                            Case Else
+                        Case Else
+
+
                         End Select
 
+'bis hierher neu
                         If notYetDone Then
 
                             pptSize = .TextFrame2.TextRange.Font.Size
@@ -2628,6 +2836,7 @@ Public Module testModule
             listofShapes.Clear()
 
         Next
+
         ' pptTemplate muss noch geschlossen werden
 
         If tatsErstellt = 1 Then
@@ -2641,6 +2850,8 @@ Public Module testModule
 
 
     End Sub
+
+
 
     Public Sub StoreAllProjectsinDB()
 
@@ -3500,6 +3711,9 @@ Public Module testModule
         Dim heute As Date = Date.Now
         Dim index As Integer = 0
         Dim tabelle As pptNS.Table
+        Dim farbTypenListe As New Collection
+        Dim timeFrameProjekte As New Collection
+        Dim hproj As clsProjekt
 
         Try
             tabelle = pptShape.Table
@@ -3508,23 +3722,31 @@ Public Module testModule
         End Try
 
 
-
+        If farbtyp <= 3 Then
+            farbTypenListe.Add(farbtyp)
+        ElseIf farbtyp = 12 Then
+            Dim tmpfarbe As Integer = 2
+            farbTypenListe.Add(tmpfarbe, tmpfarbe)
+            tmpfarbe = 3
+            farbTypenListe.Add(tmpfarbe, tmpfarbe)
+        End If
 
         Dim todoListe As New SortedList(Of Long, clsProjekt)
         Dim key As Long
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        timeFrameProjekte = ShowProjekte.withinTimeFrame(0, showRangeLeft, showRangeRight)
 
-            key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
-            todoListe.Add(key, kvp.Value)
-
+        For Each pname As String In timeFrameProjekte
+            hproj = ShowProjekte.getProject(pname)
+            key = 10000 * hproj.tfZeile + hproj.start
+            todoListe.Add(key, hproj)
         Next
+
 
         Dim msNumber As Integer = 1
 
         ' jetzt wird die todoListe abgearbeitet 
         Dim tabellenzeile As Integer = 2
-        Dim hproj As clsProjekt
         For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
 
             hproj = kvp.Value
@@ -3541,16 +3763,11 @@ Public Module testModule
                     cResult = cphase.getResult(r)
 
                     cBewertung = cResult.getBewertung(1)
-                    'Try
-                    '    cBewertung = cResult.getBewertung(1)
-                    'Catch ex As Exception
-                    '    cBewertung = New clsBewertung
-                    'End Try
-
+                    
                     resultColumn = getColumnOfDate(cResult.getDate)
 
-                    If farbtyp = cBewertung.colorIndex Then
-                        ' es muss nur etwas gemacht werden , wenn entweder alle Farben gezeichnet werden oder eben die übergebene
+                    If farbTypenListe.Contains(cBewertung.colorIndex) Then
+                        ' dann muss ein Eintrag in der Tabelle gemacht werden 
 
                         If (resultColumn < showRangeLeft Or resultColumn > showRangeRight) Then
                             ' nichts machen 
@@ -3965,6 +4182,447 @@ Public Module testModule
 
     End Sub
 
+    ''' <summary>
+    ''' füllt die Vergleichs-Tabelle aus und setzt die entsprechenden Trend-Markierungen gleich, fallend, steigend ein  
+    ''' </summary>
+    ''' <param name="pptShape">Adresse auf die Tabelle, die ausgefükllt werden soll </param>
+    ''' <param name="gleichShape">Shape für gleich</param>
+    ''' <param name="steigendShape">shape für steigend</param>
+    ''' <param name="fallendShape">shape für fallend</param>
+    ''' <param name="hproj">aktuelles Projekt</param>
+    ''' <param name="vglproj">letzter Stand</param>
+    ''' <remarks></remarks>
+    Sub zeichneProjektTabelleVergleich(ByRef pptslide As pptNS.Slide, ByRef pptShape As pptNS.Shape, ByVal gleichShape As pptNS.Shape, ByVal steigendShape As pptNS.Shape, ByVal fallendShape As pptNS.Shape, _
+                                           ByVal ampelShape As pptNS.Shape, ByVal sternShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal vglproj As clsProjekt)
+        Dim anzZeilen As Integer
+        Dim tabelle As pptNS.Table
+        Dim zeile As Integer
+        Dim tmpStr As String
+        Dim tableLeft As Double = pptShape.Left
+        Dim tableTop As Double = pptShape.Top
+        Dim kennung As String
+        Dim aktBudget As Double, vglBudget As Double
+        Dim aktPersCost As Double, vglPersCost As Double
+        Dim aktSonstCost As Double, vglSonstCost As Double
+        Dim aktRiskCost As Double, vglRiskCost As Double
+        Dim aktErgebnis As Double, vglErgebnis As Double
+        Dim farbePositiv As Long
+        Dim farbeNeutral As Long
+        Dim farbeNegativ As Long
+        Dim farbeStern As Long
+        Dim unterschiede As New Collection
+
+
+        Try
+            farbePositiv = steigendShape.Fill.ForeColor.RGB
+            farbeNeutral = gleichShape.Fill.ForeColor.RGB
+            farbeNegativ = fallendShape.Fill.ForeColor.RGB
+            farbeStern = sternShape.Fill.ForeColor.RGB
+        Catch ex As Exception
+
+        End Try
+        
+
+        ' jetzt wird festgestellt, wo es über all Unterschiede gibt 
+        ' wird für Bewertung Termine und Meilensteine benötigt 
+        unterschiede = hproj.listOfDifferences(vglproj, True, 0)
+
+        ' jetzt werden die aktuellen bzw Vergleichswerte der finanziellen KPIs bestimmt 
+        Try
+            hproj.calculateRoundedKPI(aktBudget, aktPersCost, aktSonstCost, aktRiskCost, aktErgebnis)
+
+            If Not IsNothing(vglproj) Then
+                vglproj.calculateRoundedKPI(vglBudget, vglPersCost, vglSonstCost, vglRiskCost, vglErgebnis)
+            End If
+
+        Catch ex As Exception
+
+
+
+        End Try
+
+        If pptShape.HasTable Then
+            tabelle = pptShape.Table
+            anzZeilen = tabelle.Rows.Count
+            If anzZeilen > 1 Then
+                zeile = 1
+                ' jetzt wird die Überschrift aktualisiert 
+                With tabelle
+
+                    CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Projekt" & vbLf & hproj.name
+
+                    tmpStr = CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text
+                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
+
+
+                    ' jetzt werden die Zeilen abgearbeitet, beginnend mit 2
+                    For zeile = 2 To anzZeilen
+
+                        Try
+                            kennung = CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text.Trim
+                        Catch ex As Exception
+                            kennung = ""
+                        End Try
+
+                        Dim aktvalue As Double
+                        Dim vglValue As Double
+                        Select Case kennung
+
+                            Case "Ergebnis"
+
+                                aktvalue = aktErgebnis
+                                vglValue = vglErgebnis
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbePositiv)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbeNegativ)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString & " T€"
+                                End If
+
+
+
+
+                            Case "Budget"
+
+                                aktvalue = aktBudget
+                                vglValue = vglBudget
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbePositiv)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbeNegativ)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString & " T€"
+                                End If
+
+
+
+
+                            Case "Personalkosten"
+
+                                aktvalue = aktPersCost
+                                vglValue = vglPersCost
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString & " T€"
+                                End If
+
+
+
+
+                            Case "Sonstige Kosten"
+
+                                aktvalue = aktSonstCost
+                                vglValue = vglSonstCost
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString & " T€"
+                                End If
+
+
+
+
+                            Case "Termine Phasen"
+
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                Else
+                                    If unterschiede.Contains(PThcc.phasen) Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, sternShape, farbeStern)
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                    End If
+                                End If
+
+
+
+                            Case "Termine Meilensteine"
+
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                Else
+                                    If unterschiede.Contains(PThcc.resultdates) Or unterschiede.Contains(PThcc.resultampel) Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, sternShape, farbeStern)
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "identisch"
+                                    End If
+                                End If
+
+
+
+                            Case "Einschätzung strategischer Fit"
+
+                                aktvalue = hproj.StrategicFit
+                                vglValue = vglproj.StrategicFit
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbePositiv)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbeNegativ)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString
+                                End If
+
+
+
+
+                            Case "Einschätzung Risiko"
+
+                                aktvalue = hproj.Risiko
+                                vglValue = vglproj.Risiko
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString
+                                End If
+
+
+
+
+                            Case "Projekt-Ampel"
+
+                                aktvalue = hproj.ampelStatus
+                                vglValue = vglproj.ampelStatus
+                                Dim tmpFarbe As Long
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    If aktvalue = PTfarbe.red Then
+                                        tmpFarbe = farbeNegativ
+                                    ElseIf aktvalue = PTfarbe.green Then
+                                        tmpFarbe = farbePositiv
+                                    ElseIf aktvalue = PTfarbe.yellow Then
+                                        tmpFarbe = awinSettings.AmpelGelb
+                                    Else
+                                        tmpFarbe = farbeNeutral
+                                    End If
+
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 3, ampelShape, tmpFarbe)
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                Else
+
+                                    Dim aktFarbe As Long, vglFarbe As Long
+                                    If aktvalue = PTfarbe.red Then
+                                        aktFarbe = farbeNegativ
+                                    ElseIf aktvalue = PTfarbe.green Then
+                                        aktFarbe = farbePositiv
+                                    ElseIf aktvalue = PTfarbe.yellow Then
+                                        aktFarbe = awinSettings.AmpelGelb
+                                    Else
+                                        aktFarbe = farbeNeutral
+                                    End If
+
+                                    If vglValue = PTfarbe.red Then
+                                        vglFarbe = farbeNegativ
+                                    ElseIf vglValue = PTfarbe.green Then
+                                        vglFarbe = farbePositiv
+                                    ElseIf vglValue = PTfarbe.yellow Then
+                                        vglFarbe = awinSettings.AmpelGelb
+                                    Else
+                                        vglFarbe = farbeNeutral
+                                    End If
+
+
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+
+                                        If aktvalue = 1 Then
+                                            Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbePositiv)
+                                        Else
+                                            Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbeNegativ)
+                                        End If
+
+                                    Else
+
+                                        If aktvalue = 0 Then
+                                            Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbeNegativ)
+                                        Else
+                                            Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbePositiv)
+                                        End If
+
+                                    End If
+
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 4, ampelShape, aktFarbe)
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 3, ampelShape, vglFarbe)
+
+                                End If
+
+
+                            Case "Projekt-Ampel Erläuterung"
+
+                                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
+                                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglproj.ampelErlaeuterung
+
+                            Case Else
+
+
+                        End Select
+
+
+                    Next
+
+                End With
+
+            End If
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' zeichnet das übergebene Symbol in die per zeile, spalte angegebene Tabellen-Zelle
+    ''' </summary>
+    ''' <param name="pptslide"></param>
+    ''' <param name="tabelle"></param>
+    ''' <param name="tbZeile"></param>
+    ''' <param name="tbSpalte"></param>
+    ''' <param name="zeichen"></param>
+    ''' <param name="farbkennung"></param>
+    ''' <remarks></remarks>
+    Sub zeichneTrendSymbol(ByRef pptslide As pptNS.Slide, ByRef tabelle As pptNS.Table, ByVal tbZeile As Integer, ByVal tbSpalte As Integer, _
+                                ByVal zeichen As pptNS.Shape, ByVal farbkennung As Long)
+
+        Dim korrFaktor As Double = 1.0
+        Dim newZeichen As pptNS.ShapeRange
+
+        zeichen.Copy()
+        newZeichen = pptslide.Shapes.Paste
+
+        ' ist der Pfeil größer als die Zelle ? 
+        If tabelle.Cell(tbZeile, tbSpalte).Shape.Width < newZeichen(1).Width Or _
+             tabelle.Cell(tbZeile, tbSpalte).Shape.Height < newZeichen(1).Height Then
+            ' dann am kleineren orientieren 
+
+            Try
+                korrFaktor = System.Math.Min(tabelle.Cell(tbZeile, tbSpalte).Shape.Width / newZeichen(1).Width, tabelle.Cell(tbZeile, tbSpalte).Shape.Height / newZeichen(1).Height)
+            Catch ex As Exception
+                ' in diesem Fall bleibt Korrfaktor auf 1.0 
+            End Try
+
+
+        End If
+
+        ' Anpassen derPfeilgröße
+        If korrFaktor < 1.0 Then
+
+            korrFaktor = korrFaktor * 0.98
+
+            With newZeichen(1)
+                .Width = korrFaktor * .Width
+                .Height = korrFaktor * .Height
+            End With
+
+        End If
+
+        ' jetzt bestimmen der Left , Top Koordinaten des Pfeils und setzen der Farbe
+
+        With newZeichen(1)
+
+            .Top = tabelle.Cell(tbZeile, tbSpalte).Shape.Top + (tabelle.Cell(tbZeile, tbSpalte).Shape.Height - .Height) / 2
+            .Left = tabelle.Cell(tbZeile, tbSpalte).Shape.Left + (tabelle.Cell(tbZeile, tbSpalte).Shape.Width - .Width) / 2
+            .Fill.ForeColor.RGB = farbkennung
+
+        End With
+
+
+
+    End Sub
+
     Sub zeichneProjektTabelleZiele(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt)
 
         Dim heute As Date = Date.Now
@@ -4146,5 +4804,68 @@ Public Module testModule
 
     End Sub
 
+    ''' <summary>
+    ''' berechnet die Koordinaten des Bild, von welcher Spalte bis zu welcher Spalte und Zeile der SchnappSchuss der Projekt-Tafel aufgenommen werden soll 
+    ''' </summary>
+    ''' <param name="myCollection"></param>
+    ''' <param name="minColumn">Ausgabe Parameter: von Spalte</param>
+    ''' <param name="maxColumn">Ausgabe Parameter: bis Spalte</param>
+    ''' <param name="maxZeile">Ausgabe-Parameter: bis Zeile</param>
+    ''' <remarks></remarks>
+    Sub calcPictureCoord(ByVal myCollection As Collection, ByRef minColumn As Integer, ByRef maxColumn As Integer, ByRef maxZeile As Integer, ByVal toBeTrimmed As Boolean)
 
+        Dim hproj As clsProjekt
+        Dim von As Integer = showRangeLeft
+        Dim bis As Integer = showRangeRight
+
+        For Each pName In myCollection
+            Try
+                hproj = ShowProjekte.getProject(pName)
+                With hproj
+                    If .Start < minColumn Then
+                        minColumn = .Start
+                    End If
+
+                    If .Start + .Dauer - 1 > maxColumn Then
+                        maxColumn = .Start + .Dauer - 1
+                    End If
+
+                    If .tfZeile > maxZeile Then
+                        maxZeile = .tfZeile
+                    End If
+                End With
+            Catch ex As Exception
+
+            End Try
+
+        Next
+        maxZeile = maxZeile + 1
+
+        If minColumn > 1 Then
+            minColumn = minColumn - 1
+        End If
+        maxColumn = maxColumn + 1
+
+
+        If von > 0 And von < minColumn Then
+            minColumn = von
+        End If
+
+        If bis > maxColumn Then
+            maxColumn = bis
+        End If
+
+
+        If toBeTrimmed Then
+            If minColumn < von - 12 Then
+                minColumn = von - 12
+            End If
+
+            If maxColumn > bis + 12 Then
+                maxColumn = bis + 12
+            End If
+        End If
+
+
+    End Sub
 End Module

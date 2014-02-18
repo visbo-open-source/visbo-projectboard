@@ -92,7 +92,7 @@
 
     End Property
 
-    Public ReadOnly Property dauerInDays As Integer
+    Public Overridable ReadOnly Property dauerInDays As Integer
 
         Get
             Dim i As Integer
@@ -121,49 +121,50 @@
 
 
             dauerInDays = CInt(max)
+            _Dauer = getColumnOfDate(StartofCalendar.AddDays(max - 1))
 
         End Get
     End Property
 
 
-    Public Overridable ReadOnly Property Dauer() As Integer
+    Public ReadOnly Property Dauer() As Integer
 
 
         Get
-            Dim i As Integer
-            Dim max As Double = 0
-            Dim maxM As Integer
+            'Dim i As Integer
+            'Dim max As Double = 0
+            'Dim maxM As Integer
 
-            ' neue Bestimmung der Dauer 
+            '' neue Bestimmung der Dauer 
 
-            For i = 1 To Me.CountPhases
+            'For i = 1 To Me.CountPhases
 
-                With Me.getPhase(i)
+            '    With Me.getPhase(i)
 
-                    If max < .startOffsetinDays + .dauerInDays - 1 Then
-                        max = .startOffsetinDays + .dauerInDays - 1
-                    End If
+            '        If max < .startOffsetinDays + .dauerInDays - 1 Then
+            '            max = .startOffsetinDays + .dauerInDays - 1
+            '        End If
 
-                    ' Änderung 16.1.2014: Meilensteine wirken nicht Dauer-Verlängernd ! 
-                    ' ausserdem wird in phase.add(result) sichergestellt , dass kein Meilenstein vor Projektstart 
-                    ' bzw. nach Projektende ist 
-                    'For m = 1 To .CountResults
-                    '    If max < .startOffsetinDays + .getResult(m).offset Then
-                    '        max = .startOffsetinDays + .getResult(m).offset
-                    '    End If
-                    'Next
+            '        ' Änderung 16.1.2014: Meilensteine wirken nicht Dauer-Verlängernd ! 
+            '        ' ausserdem wird in phase.add(result) sichergestellt , dass kein Meilenstein vor Projektstart 
+            '        ' bzw. nach Projektende ist 
+            '        'For m = 1 To .CountResults
+            '        '    If max < .startOffsetinDays + .getResult(m).offset Then
+            '        '        max = .startOffsetinDays + .getResult(m).offset
+            '        '    End If
+            '        'Next
 
-                End With
+            '    End With
 
-            Next i
+            'Next i
 
-            maxM = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(max)) + 1
+            'maxM = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(max)) + 1
 
 
-            If maxM <> _Dauer Then
-                _Dauer = maxM
-                ' hier muss jetzt die Dauer der Allgemeinen Phase angepasst werden ... 
-            End If
+            'If maxM <> _Dauer Then
+            '    _Dauer = maxM
+            '    ' hier muss jetzt die Dauer der Allgemeinen Phase angepasst werden ... 
+            'End If
 
 
             Dauer = _Dauer
@@ -394,13 +395,17 @@
                             If hrole.summe > 0 Then
                                 roleName = hrole.name
                                 '
-                                ' Error-Handling ignorieren - in eine Collection können Werte nur einmal aufgenommen werden
+                                ' das ist performanter als der Weg über try .. catch 
                                 '
-                                Try
+                                If Not aufbauRollen.Contains(roleName) Then
                                     aufbauRollen.Add(roleName, roleName)
-                                Catch ex As Exception
+                                End If
 
-                                End Try
+                                'Try
+                                '    aufbauRollen.Add(roleName, roleName)
+                                'Catch ex As Exception
+
+                                'End Try
 
                             End If
                         Next r
@@ -447,6 +452,83 @@
 
         End Get
 
+    End Property
+
+    Public ReadOnly Property getMilestoneColors() As Double()
+        Get
+            Dim cphase As clsPhase
+            Dim cresult As clsResult
+            Dim tmpvalues() As Double
+            Dim colorIndex As Integer
+            Dim anzahlMilestones As Integer = 0
+
+            For p = 1 To Me.CountPhases
+                anzahlMilestones = anzahlMilestones + Me.getPhase(p).CountResults
+            Next
+
+            If anzahlMilestones > 0 Then
+
+                ReDim tmpvalues(anzahlMilestones - 1)
+
+                Dim index As Integer = 0
+                For p = 1 To Me.CountPhases
+                    cphase = Me.getPhase(p)
+
+                    For r = 1 To cphase.CountResults
+                        cresult = cphase.getResult(r)
+                        colorIndex = cresult.getBewertung(1).colorIndex
+                        tmpvalues(index) = colorIndex
+                        index = index + 1
+                    Next r
+
+                Next p
+
+            Else
+                Throw New Exception("es gibt keine Meilensteine")
+            End If
+
+            getMilestoneColors = tmpvalues
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zum betreffenden Projekt eine nach dem Datum aufsteigend sortierte Liste der Meilensteine zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns>nach Datum sortierte Liste der MEilensteine im Projekt </returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestones As SortedList(Of Date, String)
+        Get
+            Dim tmpValues As New SortedList(Of Date, String)
+            Dim tmpDate As Date
+            Dim cphase As clsPhase
+            Dim cresult As clsResult
+
+            For p = 1 To Me.CountPhases
+                cphase = Me.getPhase(p)
+
+                For r = 1 To cphase.CountResults
+                    cresult = cphase.getResult(r)
+                    tmpDate = cresult.getDate
+
+                    Dim ok As Boolean = False
+                    Do Until ok
+                        Try
+                            tmpValues.Add(tmpDate, cresult.name)
+                            ok = True
+                        Catch ex As Exception
+                            tmpDate = tmpDate.AddSeconds(1)
+                        End Try
+                    Loop
+
+                Next r
+
+            Next p
+
+            getMilestones = tmpValues
+
+        End Get
     End Property
     '
     ' übergibt in getPersonalKosten die Personal Kosten der Rolle <roleid> über den Projektzeitraum
@@ -653,13 +735,16 @@
                             If hcost.summe > 0 Then
                                 costname = hcost.name
                                 '
-                                ' Error-Handling ignorieren - in eine Collection können Werte nur einmal aufgenommen werden
+                                ' das ist performanter als über try .. catch 
                                 '
-                                Try
+                                If Not aufbauKosten.Contains(costname) Then
                                     aufbauKosten.Add(costname, costname)
-                                Catch ex As Exception
+                                End If
+                                'Try
+                                '    aufbauKosten.Add(costname, costname)
+                                'Catch ex As Exception
 
-                                End Try
+                                'End Try
                                 
                             End If
                         Next k
