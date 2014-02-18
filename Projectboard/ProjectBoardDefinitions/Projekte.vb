@@ -2786,6 +2786,23 @@ Public Module Projekte
 
             End If
 
+            ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
+            With chtobj
+                .Top = top
+                .Height = height
+                .Left = left
+                .Width = width
+            End With
+
+            With chtobj.Chart
+                ' jetzt wird die Plot-Area so verkleinert, daß links und rechts ausreichend Platz 
+                ' für die Bennenung der Meilensteine ist 
+                .PlotArea.Left = 0.2 * width
+                .PlotArea.Width = 0.8 * width
+                '.PlotArea.Height = 0.9 * height
+                '.PlotArea.Top = 0.08 * height
+            End With
+
             Dim ms As Integer
             With CType(chtobj.Chart, Excel.Chart)
 
@@ -2928,7 +2945,7 @@ Public Module Projekte
                                         .MarkerSize = 5
                                     End If
 
-                                    ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er auch so markiert
+                                    ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er entsprechend markiert
                                     If milestoneReached(px - 1) Then
                                         .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleSquare
                                     End If
@@ -2941,9 +2958,15 @@ Public Module Projekte
                                         '.DataLabel.Text = msName & ": " & tmpdatenreihe(px - 1).ToShortDateString
                                         .DataLabel.Font.Size = awinSettings.fontsizeItems
                                         Try
-                                            .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
-                                        Catch ex As Exception
 
+                                            If tmpdatenreihe(px - 1).Date > tmpdatenreihe(px - 2).Date Then
+                                                .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBelow
+                                            Else
+                                                .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
+                                            End If
+
+                                        Catch ex As Exception
+                                            .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
                                         End Try
 
                                         Try
@@ -3066,22 +3089,7 @@ Public Module Projekte
 
             End With
 
-            ' jetzt kommt die Korrektur der Größe; herausfinden, wieviel Raum die Axis Beschriftung einnimmt ... 
-            With chtobj
-                .Top = top
-                .Height = height
-                .Left = left
-                .Width = width
-            End With
-
-            With chtobj.Chart
-                ' jetzt wird die Plot-Area so verkleinert, daß links und rechts ausreichend Platz 
-                ' für die Bennenung der Meilensteine ist 
-                .PlotArea.Left = 0.2 * width
-                .PlotArea.Width = 0.8 * width
-                '.PlotArea.Height = 0.9 * height
-                '.PlotArea.Top = 0.08 * height
-            End With
+           
 
         End With
 
@@ -5860,24 +5868,21 @@ Public Module Projekte
 
 
         With hproj
-            Dim gk As Double = .getSummeKosten
-            projektErloes = System.Math.Round(.Erloes, mode:=MidpointRounding.ToEven)
+
+            .calculateRoundedKPI(projektErloes, projektPersKosten, projektSonstKosten, projektRisikoKosten, projektErgebnis)
+            
             itemValue(0) = projektErloes
             itemColor(0) = ergebnisfarbe1
 
-            projektRisikoKosten = System.Math.Round(.risikoKostenfaktor * gk, mode:=MidpointRounding.ToEven)
             itemValue(1) = projektRisikoKosten
             itemColor(1) = iProjektFarbe
 
-            projektPersKosten = System.Math.Round(.getAllPersonalKosten.Sum, mode:=MidpointRounding.ToEven)
             itemValue(2) = projektPersKosten
             itemColor(2) = farbeExterne
 
-            projektSonstKosten = System.Math.Round(.getGesamtAndereKosten.Sum, mode:=MidpointRounding.ToEven)
             itemValue(3) = projektSonstKosten
             itemColor(3) = farbeInternOP
 
-            projektErgebnis = projektErloes - (projektRisikoKosten + projektPersKosten + projektSonstKosten)
             itemValue(4) = projektErgebnis
             If projektErgebnis > 0 Then
                 itemColor(4) = ergebnisfarbe2
@@ -6528,6 +6533,7 @@ Public Module Projekte
         Try
             With hproj
                 .name = pname
+                .getPhase(1).name = pname
                 .VorlagenName = vorlagenName
                 .startDate = startdate
                 .earliestStartDate = .startDate.AddMonths(.earliestStart)
@@ -6651,7 +6657,15 @@ Public Module Projekte
     End Sub
 
     '
-    Public Sub awinBeauftragung(ByVal pname As String)
+    ''' <summary>
+    ''' das Projekt beauftragen bzw. die Änderungen akzeptieren
+    ''' type 0 : Acceptchanges
+    ''' type 1: Beauftragen 
+    ''' </summary>
+    ''' <param name="pname">Projektname</param>
+    ''' <param name="type">0: Accept Changes; 1: Beauftragung </param>
+    ''' <remarks></remarks>
+    Public Sub awinBeauftragung(ByVal pname As String, ByVal type As Integer)
         Dim hproj As clsProjekt
         Dim zeile As Integer
 
@@ -6664,7 +6678,10 @@ Public Module Projekte
                 hproj = ShowProjekte.getProject(pname)
                 With hproj
                     zeile = .tfZeile
-                    .Status = ProjektStatus(1)
+                    If type = 1 Then
+                        .Status = ProjektStatus(1)
+                    End If
+                    .diffToPrev = False
                     .timeStamp = Date.Now
                 End With
 
@@ -7393,6 +7410,42 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' gibt zurück, ob die beiden sortierten Listen vom Datum her identisch sind; 
+    ''' die Namen werden nicht berücksichtigt 
+    ''' </summary>
+    ''' <param name="liste1"></param>
+    ''' <param name="liste2"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function dateListsareDifferent(ByRef liste1 As SortedList(Of Date, String), _
+                                              ByRef liste2 As SortedList(Of Date, String))
+        Dim isDifferent As Boolean = False
+        Dim anzItems As Integer = liste1.Count
+
+        If liste1.Count <> liste2.Count Then
+            isDifferent = True
+        Else
+            Dim i As Integer = 1
+            Do While i <= anzItems And Not isDifferent
+                If DateDiff(DateInterval.Day, liste1.ElementAt(i - 1).Key, liste2.ElementAt(i - 1).Key) <> 0 Then
+                    isDifferent = True
+                End If
+                i = i + 1
+            Loop
+        End If
+
+
+        dateListsareDifferent = isDifferent
+
+    End Function
+    ''' <summary>
+    ''' prüft ob zwei Arrays sowohl in der Länge als auch in den Werten absolut identisch sind
+    ''' </summary>
+    ''' <param name="values1"></param>
+    ''' <param name="values2"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Function arraysAreDifferent(ByRef values1() As Double, ByRef values2() As Double) As Boolean
 
         Dim istIdentisch As Boolean = True
@@ -8312,6 +8365,7 @@ Public Module Projekte
                             Try
                                 pName = hproj.name
                                 Call zeichnePhasenInProjekt(hproj, nameList, farbTyp, False, 0, False)
+
                             Catch ex As Exception
 
                             End Try
@@ -8340,7 +8394,14 @@ Public Module Projekte
 
             For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
 
-                Call zeichnePhasenInProjekt(kvp.Value, nameList, farbTyp, False, 0, False)
+                ' wenn ein Zeitraum gesetzt ist, dann nur anzeigen, was in diesem Zeitraum liegt 
+                If showRangeLeft < showRangeRight And showRangeLeft > 0 Then
+                    Call zeichnePhasenInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, False, 0, False)
+                Else
+                    ' von jedem Projekt die Phasen anzeigen 
+                    Call zeichnePhasenInProjekt(kvp.Value, nameList, farbTyp, False, 0, False)
+                End If
+
 
             Next
 
@@ -8551,21 +8612,7 @@ Public Module Projekte
 
 
         If shpExists Then
-            ' Änderung 14.8.13: das wird hier doch nicht benötigt !? Shape existiert ja bereits ...
-            'With hproj
-            '    '.tfSpalte = start
-            '    .tfZeile = zeile
-            '    .CalculateShapeCoord(top, left, width, height)
-            'End With
-            'With shpElement
-            '    .Top = top
-            '    .Left = left
-            '    .Width = width
-            '    .Height = height
-            'End With
-
-            ' hier muss noch die Behandlung rein , wenn drawphases = true
-            ' Änderung 25.10.13 - ergänzt um Angabe , wie Projekt dargestellt werden soll 
+            
             If drawphases Then
 
                 For i = 1 To hproj.CountPhases
@@ -8887,7 +8934,7 @@ Public Module Projekte
                     End If
 
                     cBewertung = cResult.getBewertung(1)
-                    
+
 
                     resultColumn = getColumnOfDate(cResult.getDate)
 
@@ -9524,6 +9571,7 @@ Public Module Projekte
         Dim status As String
         Dim pMarge As Double
         Dim pname As String
+        Dim diffToPrev As Boolean
         Dim ampel As Integer
         Dim showAmpel As Boolean = False
         Dim showResults As Boolean = True
@@ -9547,11 +9595,12 @@ Public Module Projekte
             pMarge = .ProjectMarge
             pname = .name
             ampel = .ampelStatus
+            diffToPrev = .diffToPrev
         End With
 
         With myshape
 
-            If status = ProjektStatus(2) Then
+            If status = ProjektStatus(2) Or diffToPrev Then
                 ' beauftragt, aber noch nicht wieder freigegeben ... 
 
                 .Glow.Color.RGB = awinSettings.glowColor
@@ -11252,7 +11301,7 @@ Public Module Projekte
                                         '                                                        StartofCalendar.AddMonths(ende).AddDays(-1)) + 1
                                         Dim dauerIndays As Integer = calcDauerIndays(StartofCalendar.AddDays(startOffset), ende - anfang + 1, True)
                                         .changeStartandDauer(startOffset, dauerIndays)
-                                        
+
                                         .Offset = 0
                                     End With
 
@@ -12048,7 +12097,8 @@ Public Module Projekte
 
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
-        Dim hValues() As Double, cValues() As Double
+
+        Dim differentToPrevious As Boolean = False
 
         If myCollection.Count <> ImportProjekte.Count Then
             Throw New ArgumentException("keine Übereinstimmung in der Anzahl gültiger/ímportierter Projekte - Abbruch!")
@@ -12087,10 +12137,8 @@ Public Module Projekte
                     ' in einem ersten Schritt werden die Phasen Werte verglichen 
                     ' später soll dann folgen: Ressourcen, Strategischer Fit, Volumen, etc. 
 
-                    hValues = hproj.getPhaseInfos
-                    cValues = cproj.getPhaseInfos
 
-
+                    ' jetzt wird geprüft , ob die 
 
 
                     ' es existiert schon - deshalb müssen alle restlichen Werte aus dem cproj übernommen werden 
@@ -12112,22 +12160,54 @@ Public Module Projekte
                             .leadPerson = cproj.leadPerson
                             .shpUID = cproj.shpUID
                             .StartOffset = 0
-                            If arraysAreDifferent(hValues, cValues) Then
-                                ' das heisst, das Projekt hat sich verändert 
-                                .Status = ProjektStatus(2)
-                            End If
 
-                            .StrategicFit = cproj.StrategicFit
-                            .businessUnit = cproj.businessUnit
-                            .description = cproj.description
-                            .complexity = cproj.complexity
-                            .volume = cproj.volume
-                            .Risiko = cproj.Risiko
-                            '.tfSpalte = cproj.tfSpalte
+                            ' Änderung 28.1.14: bei einem bereits existierenden Projekt muss der Status mitübernommen werden 
+                            .Status = cproj.Status ' wird evtl , falls sich Änderungen ergeben haben, noch geändert ...
                             .tfZeile = cproj.tfZeile
                             .timeStamp = importDate
                             .UID = cproj.UID
                             .VorlagenName = cproj.VorlagenName
+
+                            ' im Folgenden werden die Werte dann vom letzten stand übernommen, wenn es keine Werte in 
+                            ' der Import datei dafür gab
+
+                            If .StrategicFit = 0 Then
+                                .StrategicFit = cproj.StrategicFit
+                            End If
+
+                            If .Risiko = 0 Then
+                                .Risiko = cproj.Risiko
+                            End If
+
+                            If .businessUnit = "" Then
+                                .businessUnit = cproj.businessUnit
+                            End If
+
+                            If .description = "" Then
+                                .description = cproj.description
+                            End If
+
+                            If .complexity = 0 Then
+                                .complexity = cproj.complexity
+                            End If
+
+                            If .volume = 0 Then
+                                .volume = cproj.volume
+                            End If
+
+                            Dim unterschiede As New Collection
+                            ' jetzt wird geprüft , ob die beiden Projekte von den Werten her unterschiedlich sind 
+                            ' es wird auf absolute Identität geprüft, d.h alleine wenn sich das Startdatum schon verändert gibt es Unterschiede 
+                            unterschiede = hproj.listOfDifferences(vglproj:=cproj, absolut:=True, type:=0)
+                            If unterschiede.Count > 0 Then
+                                ' das heisst, das Projekt hat sich verändert 
+                                .diffToPrev = True
+                                If .Status = ProjektStatus(1) Then
+                                    .Status = ProjektStatus(2)
+                                End If
+
+                            End If
+
                         End With
                     Catch ex As Exception
                         ok = False

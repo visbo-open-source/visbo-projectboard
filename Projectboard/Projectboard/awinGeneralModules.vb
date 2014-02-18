@@ -123,7 +123,7 @@ Public Module awinGeneralModules
         ergebnisChartName(2) = "Verbesserungs-Potential"
         ergebnisChartName(3) = "Risiko-Abschlag"
 
-        ReDim portfolioDiagrammtitel(12)
+        ReDim portfolioDiagrammtitel(15)
         portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
@@ -136,7 +136,10 @@ Public Module awinGeneralModules
         portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
         portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
         portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
+        portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
+        portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
         portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
+        portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
 
 
         windowNames(0) = "Cockpit Phasen"
@@ -934,34 +937,34 @@ Public Module awinGeneralModules
                     ' jetzt wird  eine <SOP-Phase angelegt> , um die Auswertungen zu machen 
                     ' wird später ersetzt durch Zählen von Meilensteinen
 
-                    cphase = New clsPhase(parent:=hproj)
-                    cphase.name = "SOP"
-                    startoffset = DateDiff(DateInterval.Day, hproj.startDate, tmpStartSop)
-                    duration = DateDiff(DateInterval.Day, tmpStartSop, sopDate) + 1
-                    cphase.changeStartandDauer(startoffset, duration)
-                    hproj.AddPhase(cphase)
+                    'cphase = New clsPhase(parent:=hproj)
+                    'cphase.name = "SOP"
+                    'startoffset = DateDiff(DateInterval.Day, hproj.startDate, tmpStartSop)
+                    'duration = DateDiff(DateInterval.Day, tmpStartSop, sopDate) + 1
+                    'cphase.changeStartandDauer(startoffset, duration)
+                    'hproj.AddPhase(cphase)
 
-                    If PhaseDefinitions.Contains(cphase.name) Then
-                        ' nichts tun 
-                    Else
-                        ' in die Phase-Definitions aufnehmen 
+                    'If PhaseDefinitions.Contains(cphase.name) Then
+                    '    ' nichts tun 
+                    'Else
+                    '    ' in die Phase-Definitions aufnehmen 
 
-                        Dim hphase As clsPhasenDefinition
-                        hphase = New clsPhasenDefinition
+                    '    Dim hphase As clsPhasenDefinition
+                    '    hphase = New clsPhasenDefinition
 
-                        hphase.farbe = awinSettings.AmpelGruen
-                        hphase.name = cphase.name
-                        hphase.UID = phaseIX
-                        phaseIX = phaseIX + 1
+                    '    hphase.farbe = awinSettings.AmpelGruen
+                    '    hphase.name = cphase.name
+                    '    hphase.UID = phaseIX
+                    '    phaseIX = phaseIX + 1
 
 
-                        Try
-                            PhaseDefinitions.Add(hphase)
-                        Catch ex As Exception
+                    '    Try
+                    '        PhaseDefinitions.Add(hphase)
+                    '    Catch ex As Exception
 
-                        End Try
+                    '    End Try
 
-                    End If
+                    'End If
 
 
                     ' Ende der Sonderbehandlung Phase SOP 
@@ -1042,7 +1045,7 @@ Public Module awinGeneralModules
 
 
 
-    Public Sub awinImportProjektInventur()
+    Public Sub awinImportProjektInventur(ByRef myCollection As Collection)
         Dim zeile As Integer, spalte As Integer
         Dim pName As String
         Dim vName As String
@@ -1072,7 +1075,7 @@ Public Module awinGeneralModules
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
             With activeWSListe
 
-                lastRow = CType(.cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).row
+                lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
                 While zeile <= lastRow
 
@@ -1107,6 +1110,7 @@ Public Module awinGeneralModules
                             If Not hproj Is Nothing Then
                                 Try
                                     ImportProjekte.Add(hproj)
+                                    myCollection.Add(hproj.name)
                                 Catch ex As Exception
 
                                 End Try
@@ -1302,7 +1306,9 @@ Public Module awinGeneralModules
                 Dim cphase As New clsPhase(hproj)
                 Dim ccost As clsKostenart
                 Dim phaseName As String = ""
-                Dim anfang As Integer, ende As Integer ', projDauer As Integer
+
+                Dim anfang As Integer, ende As Integer  ', projDauer As Integer
+
                 Dim farbeAktuell As Object
                 Dim r As Integer, k As Integer
 
@@ -1637,10 +1643,24 @@ Public Module awinGeneralModules
                             Else
                                 'objectName ist eine Phase
                                 isPhase = True
+
+                                ' ist der Phasen Name in der Liste der definitionen überhaupt bekannt ? 
+                                If Not PhaseDefinitions.Contains(objectName) Then
+
+                                    ' jetzt noch prüfen, ob es sich um die Phase (1) handelt, dann kann sie ja nicht in der PhaseDefinitions enthalten sein  ..
+                                    If hproj.getPhase(1).name <> objectName Then
+                                        Throw New Exception("Phase '" & objectName & "' ist nicht definiert!" & vbLf &
+                                                       "Bitte löschen Sie diese Phase aus '" & hproj.name & "'.xlsx, Tabellenblatt 'Termine'")
+                                    End If
+                                    
+                                End If
+
+                                ' an dieser stelle ist sichergestellt, daß der Phasen Name bekannt ist
+                                ' Prüfen, ob diese Phase bereits in hproj über das ressourcen Sheet angelegt wurde 
                                 cphase = hproj.getPhase(objectName)
                                 If IsNothing(cphase) Then
-                                    Throw New Exception("Phase '" & objectName & "' ist nicht definiert!" & vbLf &
-                                                        "Bitte löschen Sie diese Phase aus '" & hproj.name & "'.xlsx, Tabellenblatt 'Termine'")
+                                    cphase = New clsPhase(parent:=hproj)
+                                    cphase.name = objectName
                                 End If
                             End If
 
@@ -1650,14 +1670,6 @@ Public Module awinGeneralModules
                                     Dim duration As Integer
                                     Dim offset As Integer
 
-                                    Dim ressourceDuration As Integer
-                                    Dim ressourceOffset As Integer
-                                    'Dim controlDate As Date
-
-                                    Dim phaseStart As Date
-                                    Dim phaseEnde As Date
-                                    Dim startdiff As Integer
-                                    Dim endediff As Integer
 
                                     duration = calcDauerIndays(startDate, endeDate)
                                     offset = DateDiff(DateInterval.Day, hproj.startDate, startDate)
@@ -1667,34 +1679,32 @@ Public Module awinGeneralModules
                                                             offset.ToString & ", " & duration.ToString)
                                     End If
 
-                                    If awinSettings.zeitEinheit = "PM" Then
-                                        phaseStart = cphase.getStartDate
-                                        phaseEnde = cphase.getEndDate
-                                    ElseIf awinSettings.zeitEinheit = "PW" Then
-                                       
-                                    ElseIf awinSettings.zeitEinheit = "PT" Then
-                                        
+                                    cphase.changeStartandDauer(offset, duration)
+
+                                    ' jetzt wird auf Inkonsistenz geprüft 
+                                    Dim inkonsistent As Boolean = False
+
+                                    If cphase.CountRoles > 0 Or cphase.CountCosts > 0 Then
+                                        ' prüfen , ob es Inkonsistenzen gibt ? 
+                                        For r = 1 To cphase.CountRoles
+                                            If cphase.getRole(r).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
+                                                inkonsistent = True
+                                            End If
+                                        Next
+
+                                        For k = 1 To cphase.CountCosts
+                                            If cphase.getCost(k).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
+                                                inkonsistent = True
+                                            End If
+                                        Next
                                     End If
 
-                                    ressourceDuration = cphase.dauerInDays
-                                    ressourceOffset = cphase.startOffsetinDays
-                                    startdiff = DateDiff(DateInterval.Month, startDate, phaseStart)
-                                    endediff = DateDiff(DateInterval.Month, endeDate, phaseEnde)
-
-                                    If startdiff <> 0 Or endediff <> 0 Then
+                                    If inkonsistent Then
                                         anzFehler = anzFehler + 1
                                         Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
                                                              "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & hproj.name & ".xlsx'")
-
-
-                                    ElseIf duration < 0 Or offset < 0 Then
-                                        anzFehler = anzFehler + 1
-                                        Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
-                                                            offset.ToString & ", " & duration.ToString)
-
-                                    Else
-                                        cphase.changeStartandDauer(offset, duration)
                                     End If
+
 
                                 Catch ex As Exception
                                     Throw New Exception(ex.Message)

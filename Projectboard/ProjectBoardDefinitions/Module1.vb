@@ -118,10 +118,12 @@ Public Module Module1
         Meilenstein = 12
         AmpelFarbe = 13
         ProjektFarbe = 14
+        FitRisikoVol = 15
     End Enum
 
 
     ' Enumeration History Change Criteria: um anzugeben, welche Veränderung man in der History eines Projektes sucht 
+
     Public Enum PThcc
         perscost = 1
         othercost = 2
@@ -132,6 +134,7 @@ Public Module Module1
         projektampel = 7
         resultampel = 8
         phasen = 9
+        startdatum = 10
     End Enum
 
     ' Enumeration für die Farbe 

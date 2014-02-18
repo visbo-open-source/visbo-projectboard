@@ -54,8 +54,9 @@
             <button id="PT0G1M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
           </menu>
           <separator id="PT0G1s4"/>
-          <button id="PT0G1B3" label="Strategie / Risiko" onAction="Tom2G2M1B6SFIT" />
-          <button id="PT0G1B4" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />
+          <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
+          <button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />
+          <!--<button id="PT0G1B4" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />-->
           <separator id="PT0G1s5"/>
           <button id="PT0G1B5" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
         </group>
@@ -82,11 +83,12 @@
             <button id="PT0G2M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
           </menu>
           <separator id="PT0G2s4"/>
-          <button id="PT0G2B3" label="Strategie / Risiko" onAction="PT0ShowStrategieRisiko" />
-          <button id="PT0G2B4" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />
-          <!--<button id="PT0G2B6" label="Zeit / Risiko" onAction="PT0ShowZeitRisiko" />-->
+          <button id="PT0G2B3" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
+          <button id="PT0G2B4" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />
+          <button id="PT0G2B5" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />
+           <!--button id="PT0G2B6" label="Zeit/Risiko/Volumen" onAction="PT0ShowZeitRisiko" />-->
           <separator id="PT0G2s5"/>
-          <button id="PT0G2B5" label="Ergebnis" onAction="PT0ShowPortfolioErgebnis" />
+          <button id="PT0G2B7" label="Ergebnis" onAction="PT0ShowPortfolioErgebnis" />
         </group>
       </tab>
       <!--
@@ -111,15 +113,16 @@
             <button id="PT2G1M1B2" label="Strategie/Risiko/Budget" onAction="Tom2G1Attribute" />
           </menu>
           <separator id="PT2G1s3"/>
-          <button id="PT2G1B1" label="Beauftragen/Freigeben" onAction="Tom2G1Beauftragen" />
-          <button id="PT2G1B2" label="Freigabe aufheben" onAction="Tom2GXBeauftragen" />
+          <button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />
+          <button id="PT2G1B2" label="Beauftragen" onAction="Tom2G1Beauftragen" />
+          <button id="PT2G1B3" label="Beauftragung aufheben" onAction="Tom2GXBeauftragen" />
           <separator id="PT2G1s1"/>
-          <button id="PT2G1B3" label="in Warteschlange stellen" onAction="Tom2G1NoShow" />
-          <button id="PT2G1B4" label="aus Warteschlange holen" onAction="Tom2G1Show" />
+          <button id="PT2G1B4" label="in Warteschlange stellen" onAction="Tom2G1NoShow" />
+          <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />
           <separator id="PT2G1s2"/>
-          <button id="PT2G1B5" label="Umbenennen" onAction="Tom2G1Rename" />
+          <button id="PT2G1B6" label="Umbenennen" onAction="Tom2G1Rename" />
           <separator id="PT2G1s4"/>
-          <button id="PT2G1B6" label="Löschen" onAction="Tom2G1Loeschen" />
+          <button id="PT2G1B7" label="Löschen" onAction="Tom2G1Loeschen" />
         </group>
         <!---->
         <group id="PT2G2" label="Portfolio">
@@ -166,13 +169,14 @@
       <tab id ="PT4" label="Austauschen">
         <group id="PT4G1" label=" ">
           <button id="PT4G1B1" label="Import Projekt-Inventur" onAction="Tom2G4B1InventurImport" />
+          <button id="PT4G1B2" label="Import RPLAN Projekte" onAction="Tom2G4B1RPLANImport" />
           <separator id="PT4G1s1"/>
           <menu id="PT4G1M1" label ="Projekt Steckbriefe">
-            <button id="PT4G1B2" label="Importieren" onAction="Tom2G4M1Import" />
-            <button id="PT4G1B3" label="Exportieren" onAction="Tom2G4M1Export" />
+            <button id="PT4G1B3" label="Importieren" onAction="Tom2G4M1Import" />
+            <button id="PT4G1B4" label="Exportieren" onAction="Tom2G4M1Export" />
           </menu>
           <separator id="PT4G1s2"/>
-          <button id="PT4G1B4" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />
+          <button id="PT4G1B5" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />
         </group>
 
       </tab>
