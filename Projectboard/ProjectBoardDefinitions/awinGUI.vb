@@ -52,6 +52,7 @@ Public Module awinGUI
    
     ' Portfolio - Diagramme erstellen gemäß dem angegebenen charttype
     ' derzeit möglich: PTpfdk.FitRisiko; PTpfdk.ZeitRisiko; PTpfdk.ComplexRisiko
+    ' bubbleColor kann derzeit PTpfdk.ProjektFarbe oder PTpfdk.AmpelFarbe sein.
 
     Sub awinCreatePortfolioDiagramms(ByRef ProjektListe As Collection, ByRef repChart As Object, isProjektCharakteristik As Boolean, _
                                      charttype As Integer, bubbleColor As Integer, showNegativeValues As Boolean, showLabels As Boolean, chartBorderVisible As Boolean, _
@@ -154,7 +155,7 @@ Public Module awinGUI
 
         anzBubbles = 0
 
-        Dim tmpstr(10) As String ' nur für Zeit/Risiko Chart erforderlich
+        Dim tmpstr(10) As String                ' nur für Zeit/Risiko Chart erforderlich
 
         For i = 1 To ProjektListe.Count
             pname = ProjektListe.Item(i)
@@ -190,41 +191,39 @@ Public Module awinGUI
                     Select Case charttype
                         Case PTpfdk.FitRisiko
 
-                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie/Risiko
-                            bubbleValues(anzBubbles) = .ProjectMarge                                '   Strategie/Risiko
-                            nameValues(anzBubbles) = .name                                          'Complex/Risiko, Strategie/Risiko
+                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
+                            bubbleValues(anzBubbles) = .ProjectMarge                                ' Marge
+                            nameValues(anzBubbles) = .name
                             If singleProject Then
                                 PfChartBubbleNames(anzBubbles) = Format(bubbleValues(anzBubbles), "##0.#%")
                             Else
                                 PfChartBubbleNames(anzBubbles) = .name & _
                                     " (" & Format(bubbleValues(anzBubbles), "##0.#%") & ")"
-                            End If                                                              'Strategie/Rsiko
+                            End If
                         Case PTpfdk.FitRisikoVol
 
-                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie/Risiko
+                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
                             bubbleValues(anzBubbles) = .volume
-                            nameValues(anzBubbles) = .name                                          'Complex/Risiko, Strategie/Risiko
+                            nameValues(anzBubbles) = .name
 
                             PfChartBubbleNames(anzBubbles) = .name & _
                                 " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"
 
                         Case PTpfdk.ZeitRisiko
 
-                            xAchsenValues(anzBubbles) = .dauerInDays / 365 * 12                    'Zeit/Risiko
-                            bubbleValues(anzBubbles) = System.Math.Round(.volume / 10000) * 10      'Zeit/Risiko
-                            'tmpstr = .name.Split(New Char() {" "}, 10)                             'Zeit/Risiko
-                            'nameValues(anzBubbles) = tmpstr(0) & " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)" 
+                            xAchsenValues(anzBubbles) = .dauerInDays / 365 * 12                    'Zeit
+                            bubbleValues(anzBubbles) = System.Math.Round(.volume / 10000) * 10
                             nameValues(anzBubbles) = .name & " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)"
                             PfChartBubbleNames(anzBubbles) = .name & _
-                                    " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)"        'Zeit/Risiko
+                                    " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)"
 
                         Case PTpfdk.ComplexRisiko
 
-                            xAchsenValues(anzBubbles) = .complexity                                'Complex/Risiko
-                            bubbleValues(anzBubbles) = .volume                                     'Complex/Rsiko
-                            nameValues(anzBubbles) = .name                                          'Complex/Risiko, Strategie/Risiko
+                            xAchsenValues(anzBubbles) = .complexity                                'Complex
+                            bubbleValues(anzBubbles) = .volume                                     'Volumen
+                            nameValues(anzBubbles) = .name
                             PfChartBubbleNames(anzBubbles) = .name & _
-                             " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"       'Complex/Risiko
+                             " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"
 
 
                     End Select
@@ -284,8 +283,9 @@ Public Module awinGUI
                         End If
 
                     Case Else
-
-                        ' für Zeit/Risiko und für Complex/Risiko und für Strategie/FitRisikoVolume
+                        ' für Zeit/Risiko und 
+                        ' für Complex/Risiko und 
+                        ' für Strategie/FitRisikoVolume
                         hilfsstring = .chartObjects(i).name
                         If chtobjName = .chartObjects(i).name Then
                             found = True
@@ -335,7 +335,7 @@ Public Module awinGUI
                 Dim point1 As Excel.Point = _
                             CType(series1.Points(1), Excel.Point)
 
-                'Dim testName As String
+
                 For i = 1 To anzBubbles
 
                     With CType(.SeriesCollection(1).Points(i), Excel.Point)
@@ -577,7 +577,6 @@ Public Module awinGUI
     '
     ' Prozedur für den Update des Portfolio Diagramms
     '
-    'Sub awinUpdatePortfolioDiagrams(ByVal chtobj As ChartObject)
     Sub awinUpdatePortfolioDiagrams(ByVal chtobj As ChartObject, bubbleColor As Integer)
 
         Dim i As Integer
@@ -596,7 +595,7 @@ Public Module awinGUI
         Dim charttype As Integer
         Dim chartkennung As String
         Dim tmpstr(3) As String
-        Dim foundDiagramm As clsDiagramm
+        'Dim foundDiagramm As Boolean
         'Dim pfDiagram As clsDiagramm
         'Dim pfChart As clsEventsPfCharts
         'Dim TypeCollection As Collection
@@ -610,7 +609,7 @@ Public Module awinGUI
         charttype = tmpstr(1)
 
         'foundDiagramm = DiagramList.getDiagramm(chtobj.Name)
-        ' event für eine Erweiterung benötigt
+        ' event. für eine Erweiterung benötigt
 
 
         ' hier werden die Werte bestimmt ...
@@ -667,38 +666,38 @@ Public Module awinGUI
                     Select Case charttype
                         Case PTpfdk.FitRisiko
 
-                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie/Risiko
-                            bubbleValues(anzBubbles) = .ProjectMarge                                '   Strategie/Risiko
-                            nameValues(anzBubbles) = .name              'Complex/Risiko, Strategie/Risiko
+                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
+                            bubbleValues(anzBubbles) = .ProjectMarge
+                            nameValues(anzBubbles) = .name
                             PfChartBubbleNames(anzBubbles) = hproj.name & _
                                     " (" & Format(bubbleValues(anzBubbles), "##0.#%") & ")" 'Strategie/Rsiko
 
                         Case PTpfdk.FitRisikoVol
 
-                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie/Risiko
-                            bubbleValues(anzBubbles) = .volume                               '   Strategie/Risiko
-                            nameValues(anzBubbles) = .name              'Complex/Risiko, Strategie/Risiko
+                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
+                            bubbleValues(anzBubbles) = .volume                               '   Volumen
+                            nameValues(anzBubbles) = .name
                             PfChartBubbleNames(anzBubbles) = hproj.name & _
-                                    " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)" 'Strategie/Rsiko
+                                    " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"
 
 
                         Case PTpfdk.ZeitRisiko
 
-                            xAchsenValues(anzBubbles) = .dauerInDays / 365 * 12                    'Zeit/Risiko
-                            bubbleValues(anzBubbles) = System.Math.Round(.volume / 10000) * 10      'Zeit/Risiko
+                            xAchsenValues(anzBubbles) = .dauerInDays / 365 * 12                    'Zeit
+                            bubbleValues(anzBubbles) = System.Math.Round(.volume / 10000) * 10
                             'tmpstr = .name.Split(New Char() {" "}, 10)                             'Zeit/Risiko
                             'nameValues(anzBubbles) = tmpstr(0) & " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)" 
                             nameValues(anzBubbles) = .name & " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)"
                             PfChartBubbleNames(anzBubbles) = .name & _
-                                    " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)"        'Zeit/Risiko
+                                    " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)"
 
                         Case PTpfdk.ComplexRisiko
 
-                            xAchsenValues(anzBubbles) = .complexity                                'Complex/Risiko
-                            bubbleValues(anzBubbles) = .volume                                     'Complex/Rsiko
-                            nameValues(anzBubbles) = .name                                          'Complex/Risiko, Strategie/Risiko
+                            xAchsenValues(anzBubbles) = .complexity                                'Complex
+                            bubbleValues(anzBubbles) = .volume                                     'Bubblegröße gemäß Volumen
+                            nameValues(anzBubbles) = .name
                             PfChartBubbleNames(anzBubbles) = hproj.name & _
-                             " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"       'Complex/Risiko
+                             " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"
 
 
                     End Select
@@ -731,9 +730,6 @@ Public Module awinGUI
 
 
 
-
-
-
         ' bestimmen der besten Position für die Werte ...
         Dim labelPosition(4) As String
         labelPosition(0) = "oben"
@@ -749,11 +745,6 @@ Public Module awinGUI
         Next
 
 
-        'hproj = Nothing
-
-        'With appInstance.Worksheets(arrWsNames(3))
-
-
         ReDim tempArray(anzBubbles - 1)
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -762,10 +753,7 @@ Public Module awinGUI
 
 
         With chtobj.Chart
-            'With .SeriesCollection(1)
-            '    showLabels = .HasDataLabels
-            'End With
-
+          
             showLabels = True
 
             ' remove old series
