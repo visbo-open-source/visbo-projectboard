@@ -123,7 +123,7 @@ Public Module awinGeneralModules
         ergebnisChartName(2) = "Verbesserungs-Potential"
         ergebnisChartName(3) = "Risiko-Abschlag"
 
-        ReDim portfolioDiagrammtitel(13)
+        ReDim portfolioDiagrammtitel(15)
         portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
@@ -136,6 +136,8 @@ Public Module awinGeneralModules
         portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
         portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
         portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
+        portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
+        portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
         portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
         portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
 
@@ -1304,7 +1306,9 @@ Public Module awinGeneralModules
                 Dim cphase As New clsPhase(hproj)
                 Dim ccost As clsKostenart
                 Dim phaseName As String = ""
+
                 Dim anfang As Integer, ende As Integer  ', projDauer As Integer
+
                 Dim farbeAktuell As Object
                 Dim r As Integer, k As Integer
 

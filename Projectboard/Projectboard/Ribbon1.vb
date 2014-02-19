@@ -550,6 +550,7 @@ Imports Microsoft.Office.Interop.Excel
     End Sub
 
 
+
     ''' <summary>
     ''' Projekt beauftragen
     ''' </summary>
@@ -707,27 +708,18 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
+ 
+
     ''' <summary>
-    ''' Dokumentieren der Einzel-Projekte
+    ''' EinzelProjekt Report mit selektierter Vorlage erstellen
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
     Sub Tom2G1Doku(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName)
-        Dim singleShp As Excel.Shape
-        Dim hproj As clsProjekt
-        Dim vglName As String = " "
-        Dim pName As String, variantName As String
-
         Dim awinSelection As Excel.ShapeRange
-
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-
-        enableOnUpdate = False
+        Dim returnValue As DialogResult
+        Dim getReportVorlage As New frmSelectPPTTempl
 
         Try
             'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
@@ -736,72 +728,22 @@ Imports Microsoft.Office.Interop.Excel
             awinSelection = Nothing
         End Try
 
-        If Not awinSelection Is Nothing Then
-
-            ' jetzt die Aktion durchführen ...
-
-            For Each singleShp In awinSelection
-                With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
-
-                        Try
-                            hproj = ShowProjekte.getProject(singleShp.Name)
-                        Catch ex As Exception
-                            Call MsgBox(singleShp.Name & " nicht gefunden ...")
-                            appInstance.EnableEvents = formerEE
-                            appInstance.ScreenUpdating = formerSU
-                            Exit Sub
-                        End Try
-
-                        If Not projekthistorie Is Nothing Then
-                            If projekthistorie.Count > 0 Then
-                                vglName = projekthistorie.First.name
-                            End If
-                        End If
-
-                        With hproj
-                            pName = .name
-                            variantName = .variantName
-                        End With
-
-                        If vglName.Trim <> pName.Trim Then
-                            ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-
-                            Try
-                                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                                projekthistorie.Add(Date.Now, hproj)
-                            Catch ex As Exception
-                                projekthistorie = Nothing
-                            End Try
-
-                        Else
-                            ' der aktuelle Stand hproj muss hinzugefügt werden 
-                            Dim lastElem As Integer = projekthistorie.Count - 1
-                            projekthistorie.RemoveAt(lastElem)
-                            projekthistorie.Add(Date.Now, hproj)
-                        End If
-
-
-
-                        Call createPPTSlidesFromProject(hproj)
-
-                    End If
-                End With
-            Next
-
+        If awinSelection Is Nothing Then
+            Call MsgBox("vorher Projekt/e selektieren ...")
         Else
-            Call MsgBox("vorher Projekt selektieren ...")
+            enableOnUpdate = False
+            appInstance.ScreenUpdating = False
+            appInstance.EnableEvents = False
+
+            ' Formular zum Auswählen der Report-Vorlage wird aufgerufen
+
+            getReportVorlage.calledfrom = "Projekt"
+            returnValue = getReportVorlage.ShowDialog
+
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+            enableOnUpdate = True
         End If
-
-        Call awinDeSelect()
-        enableOnUpdate = True
-        appInstance.EnableEvents = formerEE
-        appInstance.ScreenUpdating = formerSU
-
-
 
     End Sub
 
@@ -903,7 +845,7 @@ Imports Microsoft.Office.Interop.Excel
         Dim pname As String
         Dim importDate As Date = Date.Now
         'Dim importDate As Date = "31.10.2013"
-        Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String)
+        Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
         Dim projektInventurFile As String = "ProjektInventur.xlsm"
 
 
@@ -918,15 +860,15 @@ Imports Microsoft.Office.Interop.Excel
 
 
         dirName = awinPath & projektFilesOrdner
-        listOfFiles = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
+        listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
 
         ' alle Import Projekte erstmal löschen
         ImportProjekte.Clear()
 
 
         ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
-        For i = 1 To listOfFiles.Count
-            dateiName = listOfFiles.Item(i - 1)
+        For i = 1 To listOfVorlagen.Count
+            dateiName = listOfVorlagen.Item(i - 1)
 
             If dateiName = projektInventurFile Then
 
@@ -1736,7 +1678,7 @@ Imports Microsoft.Office.Interop.Excel
                 End With
             Next
             Dim obj As New Object
-            Call awinCreateStratRisikMargeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
         End If
@@ -1790,7 +1732,9 @@ Imports Microsoft.Office.Interop.Excel
                 End With
             Next
             Dim obj As New Object
-            Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
+
+            Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.FitRisikoVol, PTpfdk.FitRisikoVol, False, True, True, top, left, width, height)
+            'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
         End If
@@ -1859,7 +1803,7 @@ Imports Microsoft.Office.Interop.Excel
             Dim obj As New Object
 
             Try
-                Call awinCreateComplexRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
             Catch ex As Exception
 
             End Try
@@ -1872,7 +1816,9 @@ Imports Microsoft.Office.Interop.Excel
         appInstance.EnableEvents = formerEE
         appInstance.ScreenUpdating = formerSU
 
-        Call awinDeSelect()
+        ' die Projekte sollen hier doch nicht deselektiert werden, weil dadurch die awinNeuZeichnenDiagramm aufgerufen wird und damit auch die awinUpdatePortfolioDiagrams
+        ' was dazu führt, dass alle Projekt in der Projektliste wieder in das Diagramm eingezeichnet werden.
+        'Call awinDeSelect()
 
 
 
@@ -2478,7 +2424,7 @@ Imports Microsoft.Office.Interop.Excel
 
                     If vglName.Trim <> pName.Trim Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = Request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
                                                                             storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                         projekthistorie.Add(Date.Now, hproj)
                     Else
@@ -3163,7 +3109,7 @@ Imports Microsoft.Office.Interop.Excel
         Dim obj As New Object
 
         Try
-            Call awinCreateStratRisikMargeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
         Catch ex As Exception
 
         End Try
@@ -3206,7 +3152,8 @@ Imports Microsoft.Office.Interop.Excel
         Dim obj As New Object
 
         Try
-            Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisikoVol, PTpfdk.FitRisikoVol, False, True, True, top, left, width, height)
+            'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
         Catch ex As Exception
 
         End Try
@@ -3252,7 +3199,7 @@ Imports Microsoft.Office.Interop.Excel
         Dim obj As New Object
 
         Try
-            Call awinCreateComplexRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
         Catch ex As Exception
 
         End Try
@@ -3299,7 +3246,7 @@ Imports Microsoft.Office.Interop.Excel
         Dim obj As New Object
 
         Try
-            Call awinCreateZeitRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ZeitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
         Catch ex As Exception
 
         End Try
@@ -4327,31 +4274,49 @@ Imports Microsoft.Office.Interop.Excel
     End Sub
 
 
+
     ' 
 
     ''' <summary>
     ''' aktuelle Konstellation wird dokumentiert
-    ''' Vorlage in templateboarddossier
+    ''' Report-Vorlage wird im Formular 'Auswählen der Report-Vorlage' ausgewählt
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
     Sub awinAllprojectsReport(control As IRibbonControl)
 
+        Dim getReportVorlage As New frmSelectPPTTempl
+        Dim returnValue As DialogResult
+
+        getReportVorlage.calledfrom = "Portfolio"
 
         enableOnUpdate = False
-        appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
 
-        Try
-            Call createPPTSlidesFromConstellation()
-        Catch ex As Exception
-            Call MsgBox(ex.Message)
-        End Try
+        ' Formular zum Auswählen der Report-Vorlage wird aufgerufen
 
+        returnValue = getReportVorlage.ShowDialog
 
-        appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
         enableOnUpdate = True
+
+
+        ' das ist die alte Variante
+        '
+        'enableOnUpdate = False
+        'appInstance.EnableEvents = False
+        'appInstance.ScreenUpdating = False
+
+        'Try
+        '    Call createPPTSlidesFromConstellation()
+        'Catch ex As Exception
+        '    Call MsgBox(ex.Message)
+        'End Try
+
+
+        'appInstance.EnableEvents = True
+        'appInstance.ScreenUpdating = True
+        'enableOnUpdate = True
 
     End Sub
 

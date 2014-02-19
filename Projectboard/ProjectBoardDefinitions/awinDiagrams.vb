@@ -4809,7 +4809,7 @@ Public Module awinDiagrams
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj)
+                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -4879,7 +4879,7 @@ Public Module awinDiagrams
                                 Call awinUpdateErgebnisDiagramm(chtobj)
 
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj)
+                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
 
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
@@ -4917,7 +4917,7 @@ Public Module awinDiagrams
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-                            Call awinUpdatePortfolioDiagrams(chtobj)
+                            Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
 
 
                         Else ' ist Projekt-Charakteristik Diagramm
@@ -4935,7 +4935,7 @@ Public Module awinDiagrams
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj)
+                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -4969,7 +4969,7 @@ Public Module awinDiagrams
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-                            Call awinUpdatePortfolioDiagrams(chtobj)
+                            Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
 
 
                         Else ' ist Projekt-Charakteristik Diagramm
@@ -4986,7 +4986,7 @@ Public Module awinDiagrams
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj)
+                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -5036,7 +5036,7 @@ Public Module awinDiagrams
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj)
+                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -5065,7 +5065,7 @@ Public Module awinDiagrams
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-                            Call awinUpdatePortfolioDiagrams(chtobj)
+                            Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
 
                         ElseIf istErgebnisDiagramm(chtobj, e) Then
 
@@ -5086,7 +5086,7 @@ Public Module awinDiagrams
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj)
+                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -5115,7 +5115,7 @@ Public Module awinDiagrams
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-                            Call awinUpdatePortfolioDiagrams(chtobj)
+                            Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
 
 
                         Else ' ist Projekt-Charakteristik Diagramm
@@ -5133,7 +5133,7 @@ Public Module awinDiagrams
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj)
+                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -5143,7 +5143,7 @@ Public Module awinDiagrams
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-                            Call awinUpdatePortfolioDiagrams(chtobj)
+                            Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
 
 
                         Else ' ist Projekt-Charakteristik Diagramm oder Phasen Diagramm
@@ -5156,6 +5156,25 @@ Public Module awinDiagrams
 
                             Call awinUpdateprcCollectionDiagram(chtobj)
 
+                        ElseIf istSummenDiagramm(chtobj, p) Then
+
+                            If p = 1 Then
+                                Call awinUpdateErgebnisDiagramm(chtobj)
+                            ElseIf p = 2 Then
+                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                            ElseIf p = 4 Then
+                                Call awinUpdatePersCostStructureDiagramm(chtobj)
+                            ElseIf p = 5 Then
+                                Call awinUpdateEffizienzDiagramm2(chtobj)
+                            End If
+
+
+                        ElseIf istPortfolioDiagramm(chtobj, p) Then
+
+                            Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+
+
+                        Else ' ist Projekt-Charakteristik Diagramm oder Phasen Diagramm
                         End If
 
                 End Select

@@ -1513,14 +1513,21 @@ Public Class clsProjekt
 
 
         Get
-            Dim gk As Double = Me.getGesamtKostenBedarf.Sum
-            ' prüfen , ob die Marge konsistent ist mit Verhältnis Erlös und Kosten  ... 
+            Dim gk As Double = 10.0
+            Try
+                gk = Me.getGesamtKostenBedarf.Sum
+                ' prüfen , ob die Marge konsistent ist mit Verhältnis Erlös und Kosten  ... 
 
-            If gk > 0 Then
-                ProjectMarge = (Me.Erloes - gk) / gk
-            Else
+                If gk > 0 Then
+                    ProjectMarge = (Me.Erloes - gk) / gk
+                Else
+                    ProjectMarge = 0
+                End If
+
+            Catch ex As Exception
+                Call MsgBox("Projekt: " & Me.name & vbLf & "gk: " & gk.ToString)
                 ProjectMarge = 0
-            End If
+            End Try
 
 
         End Get

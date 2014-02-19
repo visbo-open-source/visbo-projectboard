@@ -85,9 +85,10 @@
           <separator id="PT0G2s4"/>
           <button id="PT0G2B3" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
           <button id="PT0G2B4" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />
-          <button id="PT0G2B6" label="Zeit/Risiko/Volumen" onAction="PT0ShowZeitRisiko" />
+          <button id="PT0G2B5" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />
+           <!--button id="PT0G2B6" label="Zeit/Risiko/Volumen" onAction="PT0ShowZeitRisiko" />-->
           <separator id="PT0G2s5"/>
-          <button id="PT0G2B5" label="Ergebnis" onAction="PT0ShowPortfolioErgebnis" />
+          <button id="PT0G2B7" label="Ergebnis" onAction="PT0ShowPortfolioErgebnis" />
         </group>
       </tab>
       <!--
