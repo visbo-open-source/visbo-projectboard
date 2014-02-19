@@ -596,7 +596,7 @@ Public Module awinGUI
         Dim charttype As Integer
         Dim chartkennung As String
         Dim tmpstr(3) As String
-        Dim foundDiagramm As clsDiagramm
+        'Dim foundDiagramm As clsDiagramm
         'Dim pfDiagram As clsDiagramm
         'Dim pfChart As clsEventsPfCharts
         'Dim TypeCollection As Collection
