@@ -433,7 +433,7 @@ Public Module awinGeneralModules
 
         showtimezone = True
 
-
+        'ThemaUte
 
         ' jetzt werden die Projekt-Vorlagen ausgelesen 
         Dim dirName As String = awinPath & projektVorlagenOrdner
@@ -444,10 +444,13 @@ Public Module awinGeneralModules
 
             Try
                 appInstance.Workbooks.Open(dateiName)
-                pname = ""
-                Call awinReadProjectTemplate(pname, False)
-                appInstance.ActiveWorkbook.Close()
+                Dim hproj As New clsProjektvorlage
+                Call awinImportProject(Nothing, hproj, True, Date.Now)
 
+                'Call awinReadProjectTemplate(pname, False)
+                Projektvorlagen.Add(hproj)
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+            
             Catch ex As Exception
                 Call MsgBox(ex.Message & ": " & dateiName)
             End Try
@@ -1141,14 +1144,15 @@ Public Module awinGeneralModules
     End Sub
 
 
-    Public Sub awinImportProject(ByRef hproj As clsProjekt, ByVal importDatum As Date)
+    Public Sub awinImportProject(ByRef hprojekt As clsProjekt, ByRef hprojTemp As clsProjektvorlage, ByVal isTemplate As Boolean, ByVal importDatum As Date)
 
         Dim zeile As Integer, spalte As Integer
-        Dim cproj As New clsProjekt
+        Dim hproj As New clsProjekt
         Dim hwert As Integer
         Dim anzFehler As Integer = 0
         Dim ProjektdauerIndays As Integer = 0
         Dim endedateProjekt As Date
+
 
         ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
 
@@ -1192,7 +1196,7 @@ Public Module awinGeneralModules
                 hproj.startDate = CType(.Range("StartDatum").Value, Date)
 
                 ' Ende
-               
+
                 endedateProjekt = CType(.Range("EndeDatum").Value, Date)  ' Projekt-Ende für spätere Verwendung merken
                 ProjektdauerIndays = calcDauerIndays(hproj.startDate, endedateProjekt)
                 Dim startOffset As Integer = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(0))
@@ -1439,7 +1443,7 @@ Public Module awinGeneralModules
 
                                 .changeStartandDauer(startOffset, dauerIndays)
                                 .Offset = 0
-                             
+
                                 ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
                                 Dim phaseStartdate As Date = .getStartDate
                                 Dim phaseEnddate As Date = .getEndDate
@@ -1652,7 +1656,7 @@ Public Module awinGeneralModules
                                         Throw New Exception("Phase '" & objectName & "' ist nicht definiert!" & vbLf &
                                                        "Bitte löschen Sie diese Phase aus '" & hproj.name & "'.xlsx, Tabellenblatt 'Termine'")
                                     End If
-                                    
+
                                 End If
 
                                 ' an dieser stelle ist sichergestellt, daß der Phasen Name bekannt ist
@@ -1719,83 +1723,97 @@ Public Module awinGeneralModules
                                         resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
                                     End If
                                     'xxxxxx
-                            phaseName = cphase.name
-                            cResult = New clsResult(parent:=cphase)
-                            cBewertung = New clsBewertung
+                                    phaseName = cphase.name
+                                    cResult = New clsResult(parent:=cphase)
+                                    cBewertung = New clsBewertung
 
-                            resultName = objectName.Trim
-                            resultDate = endeDate
+                                    resultName = objectName.Trim
+                                    resultDate = endeDate
 
-                            ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
-                            If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
-                                resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
-                            Else
-                                If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
-                                    Call MsgBox("der Meilenstein '" & resultName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
-                                                "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '" & hproj.name & ".xlsx")
-                                End If
+                                    ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
+                                    If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
+                                        resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
+                                    Else
+                                        If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
+                                            Call MsgBox("der Meilenstein '" & resultName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
+                                                        "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '" & hproj.name & ".xlsx")
+                                        End If
+                                    End If
+
+                                    ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
+                                    bewertungsAmpel = CType(.Cells(zeile, columnOffset + 5).value, Integer)
+                                    explanation = CType(.Cells(zeile, columnOffset + 6).value, String)
+
+                                    If bewertungsAmpel <= 0 Or bewertungsAmpel > 3 Then
+                                        ' es gibt keine Bewertung 
+                                    Else
+                                        With cBewertung
+                                            '.bewerterName = resultVerantwortlich
+                                            .colorIndex = bewertungsAmpel
+                                            .datum = importDatum
+                                            .description = explanation
+                                        End With
+                                    End If
+
+
+                                    With cResult
+                                        .setDate = resultDate
+                                        '.verantwortlich = resultVerantwortlich
+                                        .name = resultName
+                                        If Not cBewertung Is Nothing Then
+                                            .addBewertung(cBewertung)
+                                        End If
+                                    End With
+
+                                    With hproj.getPhase(phaseName)
+                                        .addresult(cResult)
+                                    End With
+
+
+                                Catch ex As Exception
+                                    ' Schreiben des Fehlers in das Fehlerprotokoll - muss noch ergänzt werden 
+                                    anzFehler = anzFehler + 1
+                                End Try
+
                             End If
-
-                            ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
-                            bewertungsAmpel = CType(.Cells(zeile, columnOffset + 5).value, Integer)
-                            explanation = CType(.Cells(zeile, columnOffset + 6).value, String)
-
-                            If bewertungsAmpel <= 0 Or bewertungsAmpel > 3 Then
-                                ' es gibt keine Bewertung 
-                            Else
-                                With cBewertung
-                                    '.bewerterName = resultVerantwortlich
-                                    .colorIndex = bewertungsAmpel
-                                    .datum = importDatum
-                                    .description = explanation
-                                End With
-                            End If
-
-
-                            With cResult
-                                .setDate = resultDate
-                                '.verantwortlich = resultVerantwortlich
-                                .name = resultName
-                                If Not cBewertung Is Nothing Then
-                                    .addBewertung(cBewertung)
-                                End If
-                            End With
-
-                            With hproj.getPhase(phaseName)
-                                .AddResult(cResult)
-                            End With
-
 
                         Catch ex As Exception
-                            ' Schreiben des Fehlers in das Fehlerprotokoll - muss noch ergänzt werden 
-                            anzFehler = anzFehler + 1
+                            ' letzte belegte Zeile wurde bereits bearbeitet.
+                            zeile = lastrow + 1 ' erzwingt das Ende der For - Schleife
+                            Nummer = Nothing
+                            Throw New Exception(ex.Message)
                         End Try
-
-                            End If
-
-                        Catch ex As Exception
-                ' letzte belegte Zeile wurde bereits bearbeitet.
-                zeile = lastrow + 1 ' erzwingt das Ende der For - Schleife
-                Nummer = Nothing
-                Throw New Exception(ex.Message)
-            End Try
 
                     Next
 
                 End With
+            Catch ex As Exception
+                Throw New Exception(ex.Message)
+            End Try
+
+            If anzFehler > 0 Then
+                Call MsgBox("Anzahl Fehler bei Import der Termine von" & hproj.name & " : " & anzFehler)
+            End If
+
         Catch ex As Exception
             Throw New Exception(ex.Message)
         End Try
 
-        If anzFehler > 0 Then
-            Call MsgBox("Anzahl Fehler bei Import der Termine von" & hproj.name & " : " & anzFehler)
+        If isTemplate Then
+            ' hier müssen die Werte für die Vorlage übergeben werden.
+            Dim projVorlage As New clsProjektvorlage
+            projVorlage.VorlagenName = hproj.name
+            projVorlage.Schrift = hproj.Schrift
+            projVorlage.Schriftfarbe = hproj.Schriftfarbe
+            projVorlage.farbe = hproj.farbe
+            projVorlage.earliestStart = -6
+            projVorlage.latestStart = 6
+            projVorlage.AllPhases = hproj.AllPhases
+            hprojTemp = projVorlage
+
+        Else
+            hprojekt = hproj
         End If
-
-        Catch ex As Exception
-            Throw New Exception(ex.Message)
-        End Try
-
-
 
     End Sub
 

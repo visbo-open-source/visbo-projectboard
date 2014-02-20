@@ -889,7 +889,7 @@ Imports Microsoft.Office.Interop.Excel
                     pname = ""
                     hproj = New clsProjekt
                     Try
-                        Call awinImportProject(hproj, importDate)
+                        Call awinImportProject(hproj, Nothing, False, importDate)
 
                         Try
                             ImportProjekte.Add(hproj)
