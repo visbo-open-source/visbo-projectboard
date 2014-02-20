@@ -1,6 +1,7 @@
 ﻿Imports System.Math ' für Funktion Abs()
 Imports ProjectBoardDefinitions
 Imports Microsoft.Office.Interop.Excel
+Imports Microsoft.Office.Core
 
 
 
@@ -11,8 +12,21 @@ Public Class Tabelle1
     Private Sub Tabelle1_ActivateEvent() Handles Me.ActivateEvent
 
 
-        Application.DisplayFormulaBar = False
 
+
+        Dim cbar As CommandBar
+
+        ' die Short Cut Menues aus Excel alle de-aktivieren ...
+        ' das wird jetzt in Tabelle1 , also der Projekt-Tafel gemacht
+        ' es wird beim Verlassen der Tabelle1 wieder aufgehoben 
+        For Each cbar In appInstance.CommandBars
+
+            If cbar.Type = MsoBarType.msoBarTypePopup Then
+                cbar.Enabled = False
+            End If
+        Next
+
+        Application.DisplayFormulaBar = False
 
         With Application.ActiveWindow
 
@@ -70,6 +84,18 @@ Public Class Tabelle1
     End Sub
 
     Private Sub Tabelle1_Deactivate() Handles Me.Deactivate
+
+        Dim cbar As CommandBar
+
+        ' die Short Cut Menues aus Excel wieder alle aktivieren ...
+        
+        For Each cbar In appInstance.CommandBars
+
+            If cbar.Type = MsoBarType.msoBarTypePopup Then
+                cbar.Enabled = True
+            End If
+        Next
+
 
     End Sub
 
