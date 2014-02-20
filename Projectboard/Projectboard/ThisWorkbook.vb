@@ -17,18 +17,20 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_Startup() Handles Me.Startup
 
-        Dim cbar As CommandBar
+        'Dim cbar As CommandBar
 
         appInstance = Application
         
 
-        ' die Short Cut Menues aus Excel alle de-aktivieren ...
-        For Each cbar In appInstance.CommandBars
+        ' die Short Cut Menues aus Excel werden hier nicht mehr de-aktiviert 
+        ' das wird jetzt nur in Tabelle1, also der Projekt-Tafel gemacht ...
+        ' in anderen Excel Sheets ist das weiterhin aktiv 
+        'For Each cbar In appInstance.CommandBars
 
-            If cbar.Type = MsoBarType.msoBarTypePopup Then
-                cbar.Enabled = False
-            End If
-        Next
+        '    If cbar.Type = MsoBarType.msoBarTypePopup Then
+        '        cbar.Enabled = False
+        '    End If
+        'Next
 
         magicBoardCmdBar.cmdbars = appInstance.CommandBars
 
@@ -60,7 +62,7 @@ Public Class ThisWorkbook
         Dim cbar As CommandBar
 
         
-        ' die Short Cut Menues aus Excel alle de-aktivieren ...
+        ' die Short Cut Menues aus Excel alle wieder aktivieren ...
         For Each cbar In appInstance.CommandBars
 
             If cbar.Type = MsoBarType.msoBarTypePopup Then
