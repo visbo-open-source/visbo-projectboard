@@ -416,6 +416,8 @@ Public Module testModule
                                 Dim nameList As New SortedList(Of Date, String)
                                 Dim listOfItems As New Collection
 
+                                boxName = "Meilenstein Trendanalyse"
+
                                 Try
                                     ' Aufruf 
                                     If qualifier = "" Then
@@ -434,7 +436,7 @@ Public Module testModule
                                         Dim tmpStr(20) As String
                                         Try
 
-                                            tmpStr = qualifier.Trim.Split(New Char() {"(", ")"}, 20)
+                                            tmpStr = qualifier.Trim.Split(New Char() {"#"}, 20)
                                             kennzeichnung = tmpStr(0).Trim
 
                                         Catch ex As Exception
