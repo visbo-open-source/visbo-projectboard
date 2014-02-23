@@ -771,7 +771,8 @@ Imports Microsoft.Office.Interop.Excel
             'Call bmwImportProjektInventur(myCollection)
 
             appInstance.ActiveWorkbook.Save()
-            appInstance.ActiveWorkbook.Close()
+            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+
 
         Catch ex As Exception
             Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
@@ -798,33 +799,38 @@ Imports Microsoft.Office.Interop.Excel
         Dim dateiName As String
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
+        Dim returnValue As DialogResult
+        Dim getRPLANImport As New frmSelectRPlanImport
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
-        dateiName = awinPath & projektInventurFile
+        'dateiName = awinPath & projektInventurFile
 
-        Try
 
-            appInstance.Workbooks.Open(dateiName)
-            ' alle Import Projekte erstmal löschen
-            ImportProjekte.Clear()
-            Call bmwImportProjektInventur(myCollection)
+        returnValue = getRPLANImport.ShowDialog
 
-            appInstance.ActiveWorkbook.Save()
-            appInstance.ActiveWorkbook.Close()
+        If returnValue = DialogResult.OK Then
+            dateiName = getRPLANImport.RPLANdateiName
 
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
-            Exit Sub
-        End Try
+            Try
+                appInstance.Workbooks.Open(dateiName)
 
-        Try
-            Call importProjekteEintragen(myCollection, importDate)
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
-        End Try
+                ' alle Import Projekte erstmal löschen
+                ImportProjekte.Clear()
+                Call bmwImportProjektInventur(myCollection)
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                Call importProjekteEintragen(myCollection, importDate)
+
+            Catch ex As Exception
+                Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+                Exit Sub
+            End Try
+        Else
+            Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
+        End If
+        
 
 
         enableOnUpdate = True
@@ -889,7 +895,7 @@ Imports Microsoft.Office.Interop.Excel
                     pname = ""
                     hproj = New clsProjekt
                     Try
-                        Call awinImportProject(hproj, importDate)
+                        Call awinImportProject(hproj, Nothing, False, importDate)
 
                         Try
                             ImportProjekte.Add(hproj)

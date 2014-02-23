@@ -1687,14 +1687,13 @@ Public Module testModule
 
 
                 End With
-            Next
+                Next
 
-'OKOKOK
+
                 Dim newShape As pptNS.ShapeRange
                 Dim boxName As String
 
                 For Each tmpShape As pptNS.Shape In listofShapes
-
 
                     pptShape = tmpShape
                     qualifier = ""
@@ -1726,10 +1725,12 @@ Public Module testModule
                             boxName = " "
                         End Try
 
+                        ' Fortschrittsmeldung im Formular SelectPPTTempl
 
                         'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
                         e.Result = "Chart '" & kennzeichnung & "' wird aufgebaut ...."
                         worker.ReportProgress(0, e)
+
 
                         reportObj = Nothing
                         top = .Top
@@ -1754,20 +1755,19 @@ Public Module testModule
                                 bis = showRangeRight
                                 myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
+                                If myCollection.Count > 0 Then
+                                    pptSize = .TextFrame2.TextRange.Font.Size
+                                    .TextFrame2.TextRange.Text = " "
 
-                 If myCollection.Count > 0 Then
-                                pptSize = .TextFrame2.TextRange.Font.Size
-                                .TextFrame2.TextRange.Text = " "
+                                    Dim minColumn As Integer = 10000, maxColumn As Integer = 0, maxzeile As Integer = 0
 
-                                Dim minColumn As Integer = 10000, maxColumn As Integer = 0, maxzeile As Integer = 0
-
-                                ' wenn nur die Projekt-Tafel und Zeitraum im großen Bild gezeigt werden soll, also ohne Qualifier aufgerufen wird , 
-                                ' dann stelle die Projekt-Tafel mit den Projekten dar, ohne sie abzuschneiden ...
-                                If qualifier = "" Then
-                                    Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, False)
-                                Else
-                                    Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, True)
-                                End If
+                                    ' wenn nur die Projekt-Tafel und Zeitraum im großen Bild gezeigt werden soll, also ohne Qualifier aufgerufen wird , 
+                                    ' dann stelle die Projekt-Tafel mit den Projekten dar, ohne sie abzuschneiden ...
+                                    If qualifier = "" Then
+                                        Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, False)
+                                    Else
+                                        Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, True)
+                                    End If
 
 
                                     ' set Gridlines to white 
@@ -1790,18 +1790,18 @@ Public Module testModule
                                         If qualifier = "Milestones R" Then
                                             Call awinDeleteMilestoneShapes(0)
 
-                                           farbTyp  = 3
-                                            Call awinZeichneMilestones(nameList, farbTyp, True)
+                                            farbtyp = 3
+                                            Call awinZeichneMilestones(nameList, farbtyp, True)
 
 
 
                                         ElseIf qualifier = "Milestones GR" Then
                                             Call awinDeleteMilestoneShapes(0)
-  					 
+
                                             farbtyp = 2
-                                            Call awinZeichneMilestones(nameList, farbTyp, False)
-                                            farbTyp = 3
-                                            Call awinZeichneMilestones(nameList, farbTyp, False)
+                                            Call awinZeichneMilestones(nameList, farbtyp, False)
+                                            farbtyp = 3
+                                            Call awinZeichneMilestones(nameList, farbtyp, False)
 
                                         ElseIf qualifier = "Milestones GGR" Then
                                             Call awinDeleteMilestoneShapes(0)
@@ -1834,8 +1834,6 @@ Public Module testModule
                                         End If
                                     End With
 
-
-'okokok
 
                                     ' set back 
                                     With appInstance.ActiveWindow
@@ -1889,212 +1887,212 @@ Public Module testModule
 
                                     Dim minColumn As Integer = 10000, maxColumn As Integer = 0, maxzeile As Integer = 0
 
-'okokok
-                          Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, True)
+                                    Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, True)
 
 
-                                ' set Gridlines to white 
-                                With appInstance.ActiveWindow
-                                    .GridlineColor = RGB(255, 255, 255)
-                                End With
+                                    ' set Gridlines to white 
+                                    With appInstance.ActiveWindow
+                                        .GridlineColor = RGB(255, 255, 255)
+                                    End With
 
-                                With appInstance.Worksheets(arrWsNames(3))
-                                    rng = .range(.cells(1, minColumn), .cells(maxzeile, maxColumn))
-                                    colorrng = .range(.cells(2, showRangeLeft), .cells(maxzeile, showRangeRight))
-
-                                    Try
-                                        colorrng.Interior.Color = showtimezone_color
-                                    Catch ex1 As Exception
-
-                                    End Try
-
-
-                                    ' hier werden die Phasen gezeichnet 
-                                    Call awinDeleteMilestoneShapes(0)
-
-                                    Dim qstr(20) As String
-                                    Dim phNameCollection As New Collection
-                                    Dim phName As String = " "
-                                    qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
-
-                                    ' Aufbau der Collection 
-                                    For i = 0 To qstr.Length - 1
+                                    With appInstance.Worksheets(arrWsNames(3))
+                                        rng = .range(.cells(1, minColumn), .cells(maxzeile, maxColumn))
+                                        colorrng = .range(.cells(2, showRangeLeft), .cells(maxzeile, showRangeRight))
 
                                         Try
-                                            phName = qstr(i).Trim
-                                            If PhaseDefinitions.Contains(phName) Then
-                                                phNameCollection.Add(phName, phName)
-                                            End If
-                                        Catch ex As Exception
-                                            Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
+                                            colorrng.Interior.Color = showtimezone_color
+                                        Catch ex1 As Exception
+
                                         End Try
 
-                                    Next
+                                        ' hier werden die Phasen gezeichnet 
+                                        Call awinDeleteMilestoneShapes(0)
 
-                                    Call awinDeSelect()
+                                        Dim qstr(20) As String
+                                        Dim phNameCollection As New Collection
+                                        Dim phName As String = " "
+                                        qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
 
-                                    If phNameCollection.Count > 0 Then
+                                        ' Aufbau der Collection 
+                                        For i = 0 To qstr.Length - 1
 
-                                        Call awinZeichnePhasen(phNameCollection, 4, False)
-                                        rng.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-                                        colorrng.Interior.ColorIndex = -4142
+                                            Try
+                                                phName = qstr(i).Trim
+                                                If PhaseDefinitions.Contains(phName) Then
+                                                    phNameCollection.Add(phName, phName)
+                                                End If
+                                            Catch ex As Exception
+                                                Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
+                                            End Try
 
-                                        ' lösche alle Phase Shapes wieder wieder 
-                                        If qualifier <> "" Then
-                                            Call awinDeleteMilestoneShapes(0)
-                                        End If
+                                        Next
 
-                                    Else
-                                        ok = False
-                                    End If
+                                        Call awinDeSelect()
 
-                                End With
+                                        If phNameCollection.Count > 0 Then
 
-                                ' set back 
-                                With appInstance.ActiveWindow
-                                    .GridlineColor = RGB(220, 220, 220)
-                                End With
+                                            Call awinZeichnePhasen(phNameCollection, 4, False)
+                                            rng.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
+                                            colorrng.Interior.ColorIndex = -4142
 
-                                If ok Then
-                                    newShape = pptSlide.Shapes.Paste
-                                    Dim ratio As Double
-
-                                    With newShape
-                                        ratio = height / width
-                                        If ratio < .Height / .Width Then
-                                            ' orientieren an width 
-                                            .Width = width * 0.96
-                                            .Height = ratio * .Width
-                                            ' left anpassen
-                                            .Top = top + 0.02 * height
-                                            .Left = left + 0.98 * (width - .Width) / 2
+                                            ' lösche alle Phase Shapes wieder wieder 
+                                            If qualifier <> "" Then
+                                                Call awinDeleteMilestoneShapes(0)
+                                            End If
 
                                         Else
-                                            .Height = height * 0.96
-                                            .Width = .Height / ratio
-                                            ' top anpassen 
-                                            .Left = left + 0.02 * width
-                                            .Top = top + 0.98 * (height - .Height) / 2
+                                            ok = False
                                         End If
 
                                     End With
+
+                                    ' set back 
+                                    With appInstance.ActiveWindow
+                                        .GridlineColor = RGB(220, 220, 220)
+                                    End With
+
+                                    If ok Then
+                                        newShape = pptSlide.Shapes.Paste
+                                        Dim ratio As Double
+
+                                        With newShape
+                                            ratio = height / width
+                                            If ratio < .Height / .Width Then
+                                                ' orientieren an width 
+                                                .Width = width * 0.96
+                                                .Height = ratio * .Width
+                                                ' left anpassen
+                                                .Top = top + 0.02 * height
+                                                .Left = left + 0.98 * (width - .Width) / 2
+
+                                            Else
+                                                .Height = height * 0.96
+                                                .Width = .Height / ratio
+                                                ' top anpassen 
+                                                .Left = left + 0.02 * width
+                                                .Top = top + 0.98 * (height - .Height) / 2
+                                            End If
+
+                                        End With
+                                    Else
+                                        .TextFrame2.TextRange.Text = "es konnten keine Phasen erkannt werden ... "
+                                    End If
+
+
                                 Else
-                                    .TextFrame2.TextRange.Text = "es konnten keine Phasen erkannt werden ... "
+                                    .TextFrame2.TextRange.Text = "Keine Projekte im angegebenen Zeitraum vorhanden"
                                 End If
 
 
-                            Else
-                                .TextFrame2.TextRange.Text = "Keine Projekte im angegebenen Zeitraum vorhanden"
-                            End If
-                Case "Tabelle Zielerreichung"
+                            Case "Tabelle Zielerreichung"
 
-                            Dim farbtyp As Integer
-                            Try
+                                Dim farbtyp As Integer
+                                Try
 
-                                If qualifier = "rot" Then
-                                    farbtyp = 3
-                                ElseIf qualifier = "gelb" Then
-                                    farbtyp = 2
-                                ElseIf qualifier = "gruen" Then
-                                    farbtyp = 1
-                                ElseIf qualifier = "gelb/rot" Then
-                                    farbtyp = 12
-                                Else
-                                    farbtyp = 3
-                                End If
-                                Call zeichneTabelleZielErreichung(pptShape, farbtyp)
+                                    If qualifier = "rot" Then
+                                        farbtyp = 3
+                                    ElseIf qualifier = "gelb" Then
+                                        farbtyp = 2
+                                    ElseIf qualifier = "gruen" Then
+                                        farbtyp = 1
+                                    ElseIf qualifier = "gelb/rot" Then
+                                        farbtyp = 12
+                                    Else
+                                        farbtyp = 3
+                                    End If
+                                    Call zeichneTabelleZielErreichung(pptShape, farbtyp)
 
-                            Catch ex As Exception
+                                Catch ex As Exception
 
-                            End Try
-
-'okokok
-
- 
-                        Case "Tabelle Projektstatus"
-
-                            Try
-                                Call zeichneTabelleStatus(pptShape)
-                            Catch ex As Exception
-
-                            End Try
+                                End Try
 
 
-                        Case "Fortschritt Personalkosten"
+                            Case "Tabelle Projektstatus"
 
-                            Dim compareToID As Integer = 1
-                            Dim auswahl As Integer = 1
+                                Try
+                                    Call zeichneTabelleStatus(pptShape)
+                                Catch ex As Exception
 
-                            Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
-
-                        Case "Fortschritt Sonstige Kosten"
-
-                            Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
-                            Dim auswahl As Integer = 2 ' Sonstige Kosten 
-
-                            Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
-
-                        Case "Fortschritt Gesamtkosten"
-
-                            Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
-                            Dim auswahl As Integer = 3 ' Gesamt Kosten 
-
-                            Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
-
-                        Case "Fortschritt Rolle"
-
-                            Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
-                            Dim auswahl As Integer = 4 ' Rolle ; in qualifier steht welche Rolle  
-
-                            Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
-
-                        Case "Fortschritt Kostenart"
-
-                            Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
-                            Dim auswahl As Integer = 5 ' Kostenart ; in qualifier steht welche Kostenart  
-
-                            Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
+                                End Try
 
 
-                        Case "Ergebnis Verbesserungspotential"
+                            Case "Fortschritt Personalkosten"
+
+                                Dim compareToID As Integer = 1
+                                Dim auswahl As Integer = 1
+
+                                Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
 
-                            boxName = boxName & " (T€)"
-                            pptSize = .TextFrame2.TextRange.Font.Size
-                            .TextFrame2.TextRange.Text = " "
+                            Case "Fortschritt Sonstige Kosten"
 
-                            htop = 100
-                            hleft = 100
-                            hwidth = 450
-                            hheight = awinSettings.ChartHoehe1
-                            obj = Nothing
-                            Call awinCreateVerbesserungsPotentialDiagramm(obj, top, left, width, height, False)
+                                Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
+                                Dim auswahl As Integer = 2 ' Sonstige Kosten 
 
-                            reportObj = obj
+                                Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
-                            With reportObj
-                                .Chart.ChartTitle.Text = boxName
-                                .Chart.ChartTitle.Font.Size = pptSize
-                            End With
 
-                            reportObj.Copy()
-                            newShape = pptSlide.Shapes.Paste
+                            Case "Fortschritt Gesamtkosten"
 
-                            With newShape
-                                .Top = top + 0.02 * height
-                                .Left = left + 0.02 * width
-                                .Width = width * 0.96
-                                .Height = height * 0.96
-                            End With
+                                Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
+                                Dim auswahl As Integer = 3 ' Gesamt Kosten 
 
-                            Try
-                                reportObj.Delete()
-                                'DiagramList.Remove(DiagramList.Count)
-                            Catch ex As Exception
+                                Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
-                            End Try
 
-'okokok
+                            Case "Fortschritt Rolle"
+
+                                Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
+                                Dim auswahl As Integer = 4 ' Rolle ; in qualifier steht welche Rolle  
+
+                                Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
+
+
+                            Case "Fortschritt Kostenart"
+
+                                Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
+                                Dim auswahl As Integer = 5 ' Kostenart ; in qualifier steht welche Kostenart  
+
+                                Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
+
+
+                            Case "Ergebnis Verbesserungspotential"
+
+
+                                boxName = boxName & " (T€)"
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+                                htop = 100
+                                hleft = 100
+                                hwidth = 450
+                                hheight = awinSettings.ChartHoehe1
+                                obj = Nothing
+                                Call awinCreateVerbesserungsPotentialDiagramm(obj, top, left, width, height, False)
+
+                                reportObj = obj
+
+                                With reportObj
+                                    .Chart.ChartTitle.Text = boxName
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
+
+                                reportObj.Copy()
+                                newShape = pptSlide.Shapes.Paste
+
+                                With newShape
+                                    .Top = top + 0.02 * height
+                                    .Left = left + 0.02 * width
+                                    .Width = width * 0.96
+                                    .Height = height * 0.96
+                                End With
+
+                                Try
+                                    reportObj.Delete()
+                                    'DiagramList.Remove(DiagramList.Count)
+                                Catch ex As Exception
+
+                                End Try
 
 
                             Case "Ergebnis"
@@ -2183,50 +2181,47 @@ Public Module testModule
 
                             Case "Strategie/Risiko/Volumen"
 
-			     pptSize = .TextFrame2.TextRange.Font.Size
-                            .TextFrame2.TextRange.Text = " "
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
 
 
-                            Dim selectionType As Integer = -1 ' keine Einschränkung
-                            von = showRangeLeft
-                            bis = showRangeRight
-                            myCollection = ShowProjekte.withinTimeFrame(selectionType, von, bis)
+                                Dim selectionType As Integer = -1 ' keine Einschränkung
+                                von = showRangeLeft
+                                bis = showRangeRight
+                                myCollection = ShowProjekte.withinTimeFrame(selectionType, von, bis)
 
-                            htop = 50
-                            hleft = (showRangeRight - 1) * boxWidth
-                            hwidth = 0.4 * maxScreenWidth
-                            hheight = 0.6 * maxScreenHeight
-                            obj = Nothing
+                                htop = 50
+                                hleft = (showRangeRight - 1) * boxWidth
+                                hwidth = 0.4 * maxScreenWidth
+                                hheight = 0.6 * maxScreenHeight
+                                obj = Nothing
 
-                            'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, htop, hleft, hwidth, hheight)
-                            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
 
+                                reportObj = obj
 
-                            reportObj = obj
+                                With reportObj
+                                    .Chart.ChartTitle.Text = boxName
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
 
-                            With reportObj
-                                .Chart.ChartTitle.Text = boxName
-                                .Chart.ChartTitle.Font.Size = pptSize
-                            End With
+                                reportObj.Copy()
+                                newShape = pptSlide.Shapes.Paste
 
-                            reportObj.Copy()
-                            newShape = pptSlide.Shapes.Paste
-
-                            With newShape
-                                .Top = top + 0.02 * height
-                                .Left = left + 0.02 * width
-                                .Width = width * 0.96
-                                .Height = height * 0.96
-                            End With
+                                With newShape
+                                    .Top = top + 0.02 * height
+                                    .Left = left + 0.02 * width
+                                    .Width = width * 0.96
+                                    .Height = height * 0.96
+                                End With
 
 
-                            Try
-                                reportObj.Delete()
-                                'DiagramList.Remove(DiagramList.Count)
-                            Catch ex As Exception
+                                Try
+                                    reportObj.Delete()
+                                    'DiagramList.Remove(DiagramList.Count)
+                                Catch ex As Exception
 
-                            End Try
-
+                                End Try
 
 
                             Case "Zeit/Risiko/Volumen"
@@ -2247,7 +2242,7 @@ Public Module testModule
                                 obj = Nothing
 
                                 Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
-        			'Call awinCreateZeitRiskVolumeDiagramm(myCollection, obj, False, False, True, True, htop, hleft, hwidth, hheight)
+                                'Call awinCreateZeitRiskVolumeDiagramm(myCollection, obj, False, False, True, True, htop, hleft, hwidth, hheight)
 
                                 reportObj = obj
 
@@ -2280,140 +2275,59 @@ Public Module testModule
 
                                 boxName = boxName & " (PT)"
 
-                      		 pptSize = .TextFrame2.TextRange.Font.Size
-                            	.TextFrame2.TextRange.Text = " "
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
 
-	                            htop = 100
-        	                    hleft = 100
-                	            hheight = awinSettings.ChartHoehe2
-                        	    hwidth = 340
-                            		obj = Nothing
-                            	Call awinCreateAuslastungsDiagramm(obj, htop, hleft, hwidth, hheight, True)
-
-	                            reportObj = obj
-	
-        	                    With reportObj
-                	                .Chart.ChartTitle.Text = boxName
-                        	        .Chart.ChartTitle.Font.Size = pptSize
-                            	End With
-
-                            	reportObj.Copy()
-                            	newShape = pptSlide.Shapes.Paste
-
-                            	With newShape
-                                .Top = top + 0.02 * height
-                                .Left = left + 0.02 * width
-                                .Width = width * 0.96
-                                .Height = height * 0.96
-                            	End With
-
-
-	                        Try
-                                reportObj.Delete()
-                                'DiagramList.Remove(DiagramList.Count)
-        	                Catch ex As Exception
-
-	                        End Try
-
-
-                       Case "Details Unterauslastung"
-
-                            boxName = boxName & " (PT)"
-                            pptSize = .TextFrame2.TextRange.Font.Size
-                            .TextFrame2.TextRange.Text = " "
-
-                            htop = 100
-                            hleft = 100
-                            hheight = awinSettings.ChartHoehe2
-                            hwidth = 340
-                            obj = Nothing
-                            Call createAuslastungsDetailPie(obj, 2, htop, hleft, hheight, hwidth, True)
-
-                            reportObj = obj
-
-                            With reportObj
-                                .Chart.ChartTitle.Text = boxName
-                                .Chart.ChartTitle.Font.Size = pptSize
-                            End With
-
-                            reportObj.Copy()
-                            newShape = pptSlide.Shapes.Paste
-
-                            With newShape
-                                .Top = top + 0.02 * height
-                                .Left = left + 0.02 * width
-                                .Width = width * 0.96
-                                .Height = height * 0.96
-                            End With
-
-                            'Call awinDeleteChart(reportObj)
-
-                            Try
-                                reportObj.Delete()
-                                'DiagramList.Remove(DiagramList.Count)
-                            Catch ex As Exception
-
-                            End Try
-
-                        Case "Details Überauslastung"
-
-                            boxName = boxName & " (PT)"
-                            pptSize = .TextFrame2.TextRange.Font.Size
-                            .TextFrame2.TextRange.Text = " "
-
-                            htop = 100
-                            hleft = 100
-                            hheight = awinSettings.ChartHoehe2
-                            hwidth = 340
-                            obj = Nothing
-                            Call createAuslastungsDetailPie(obj, 1, htop, hleft, hheight, hwidth, True)
-
-                            reportObj = obj
-
-                            With reportObj
-                                .Chart.ChartTitle.Text = boxName
-                                .Chart.ChartTitle.Font.Size = pptSize
-                            End With
-
-                            reportObj.Copy()
-                            newShape = pptSlide.Shapes.Paste
-
-                            With newShape
-                                .Top = top + 0.02 * height
-                                .Left = left + 0.02 * width
-                                .Width = width * 0.96
-                                .Height = height * 0.96
-                            End With
-
-                            'Call awinDeleteChart(reportObj)
-
-                            Try
-                                reportObj.Delete()
-                                'DiagramList.Remove(DiagramList.Count)
-                            Catch ex As Exception
-
-                            End Try
-
-                        Case "Bisherige Zielerreichung"
-
-                            pptSize = .TextFrame2.TextRange.Font.Size
-                            .TextFrame2.TextRange.Text = " "
-
-                            htop = 100
-                            hleft = 100
-                            hheight = awinSettings.ChartHoehe2
-                            hwidth = 340
-                            obj = Nothing
-
-
-                            Try
-
-                                Call awinCreateZielErreichungsDiagramm(obj, -1, htop, hleft, hheight, hwidth, False, True)
+                                htop = 100
+                                hleft = 100
+                                hheight = awinSettings.ChartHoehe2
+                                hwidth = 340
+                                obj = Nothing
+                                Call awinCreateAuslastungsDiagramm(obj, htop, hleft, hwidth, hheight, True)
 
                                 reportObj = obj
 
                                 With reportObj
-                                    '.Chart.ChartTitle.Text = boxName
+                                    .Chart.ChartTitle.Text = boxName
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
+
+                                reportObj.Copy()
+                                newShape = pptSlide.Shapes.Paste
+
+                                With newShape
+                                    .Top = top + 0.02 * height
+                                    .Left = left + 0.02 * width
+                                    .Width = width * 0.96
+                                    .Height = height * 0.96
+                                End With
+
+
+                                Try
+                                    reportObj.Delete()
+                                    'DiagramList.Remove(DiagramList.Count)
+                                Catch ex As Exception
+
+                                End Try
+
+
+                            Case "Details Unterauslastung"
+
+                                boxName = boxName & " (PT)"
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+                                htop = 100
+                                hleft = 100
+                                hheight = awinSettings.ChartHoehe2
+                                hwidth = 340
+                                obj = Nothing
+                                Call createAuslastungsDetailPie(obj, 2, htop, hleft, hheight, hwidth, True)
+
+                                reportObj = obj
+
+                                With reportObj
+                                    .Chart.ChartTitle.Text = boxName
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
@@ -2436,110 +2350,24 @@ Public Module testModule
 
                                 End Try
 
-                            Catch ex As Exception
 
-                                .TextFrame2.TextRange.Text = ex.Message
+                            Case "Details Überauslastung"
 
-                            End Try
-
-
-
-                        Case "Prognose Zielerreichung"
-
-                            pptSize = .TextFrame2.TextRange.Font.Size
-                            .TextFrame2.TextRange.Text = " "
-
-                            htop = 100
-                            hleft = 100
-                            hheight = awinSettings.ChartHoehe2
-                            hwidth = 340
-                            obj = Nothing
-
-
-                            Try
-
-                                Call awinCreateZielErreichungsDiagramm(obj, 1, htop, hleft, hheight, hwidth, False, True)
-
-                                reportObj = obj
-
-                                With reportObj
-                                    '.Chart.ChartTitle.Text = boxName
-                                    .Chart.ChartTitle.Font.Size = pptSize
-                                End With
-
-                                reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
-
-                                With newShape
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
-                                End With
-
-
-
-                                Try
-
-                                    reportObj.Delete()
-
-                                Catch ex As Exception
-
-                                End Try
-                            Catch ex As Exception
-
-                                .TextFrame2.TextRange.Text = ex.Message
-
-                            End Try
-                            
-
-
-
-                        Case "Phase"
-
-
-                            myCollection.Clear()
-
-                            Dim qstr(20) As String
-                            Dim phName As String = " "
-                            qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
-
-                            ' Aufbau der Collection 
-                            For i = 0 To qstr.Length - 1
-
-                                Try
-                                    phName = qstr(i).Trim
-                                    If PhaseDefinitions.Contains(phName) Then
-                                        myCollection.Add(phName, phName)
-                                    End If
-                                Catch ex As Exception
-                                    Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
-                                End Try
-
-                            Next
-
-
-                            If myCollection.Count > 0 Then
-
+                                boxName = boxName & " (PT)"
                                 pptSize = .TextFrame2.TextRange.Font.Size
                                 .TextFrame2.TextRange.Text = " "
 
                                 htop = 100
                                 hleft = 100
-                                hheight = miniHeight  ' height of all charts
-                                hwidth = miniWidth   ' width of all charts
+                                hheight = awinSettings.ChartHoehe2
+                                hwidth = 340
                                 obj = Nothing
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(0), True)
+                                Call createAuslastungsDetailPie(obj, 1, htop, hleft, hheight, hwidth, True)
 
                                 reportObj = obj
 
                                 With reportObj
-                                    If myCollection.Count > 1 Then
-                                        .Chart.ChartTitle.Text = "Phasen Übersicht"
-                                    Else
-                                        .Chart.ChartTitle.Text = boxName
-                                    End If
-
+                                    .Chart.ChartTitle.Text = boxName
                                     .Chart.ChartTitle.Font.Size = pptSize
                                 End With
 
@@ -2554,7 +2382,6 @@ Public Module testModule
                                 End With
 
                                 'Call awinDeleteChart(reportObj)
-                                ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
 
                                 Try
                                     reportObj.Delete()
@@ -2563,237 +2390,410 @@ Public Module testModule
 
                                 End Try
 
-                            Else
-                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
-                            End If
-
-                        Case "Meilenstein"
 
 
-                            myCollection.Clear()
-                            Dim MSnameList As SortedList(Of String, String)
-                            MSnameList = ShowProjekte.getMilestoneNames
-
-                            Dim qstr(20) As String
-                            Dim msName As String = " "
-                            qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
-
-                            ' Aufbau der Collection 
-                            For i = 0 To qstr.Length - 1
-
-                                Try
-                                    msName = qstr(i).Trim
-                                    If MSnameList.ContainsKey(msName) Then
-                                        myCollection.Add(msName, msName)
-                                    End If
-                                Catch ex As Exception
-                                    Call MsgBox("Fehler: Phasen Name " & msName & " konnte nicht erkannt werden ...")
-                                End Try
-
-                            Next
-
-
-                            If myCollection.Count > 0 Then
+                            Case "Bisherige Zielerreichung"
 
                                 pptSize = .TextFrame2.TextRange.Font.Size
                                 .TextFrame2.TextRange.Text = " "
 
                                 htop = 100
                                 hleft = 100
-                                hheight = miniHeight  ' height of all charts
-                                hwidth = miniWidth   ' width of all charts
+                                hheight = awinSettings.ChartHoehe2
+                                hwidth = 340
                                 obj = Nothing
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(5), True)
-
-                                reportObj = obj
-
-                                With reportObj
-                                    If myCollection.Count > 1 Then
-                                        .Chart.ChartTitle.Text = "Meilenstein Übersicht"
-                                    Else
-                                        .Chart.ChartTitle.Text = boxName
-                                    End If
-
-                                    .Chart.ChartTitle.Font.Size = pptSize
-                                End With
-
-                                reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
-
-                                With newShape
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
-                                End With
 
 
                                 Try
-                                    reportObj.Delete()
-                                Catch ex As Exception
 
-                                End Try
+                                    Call awinCreateZielErreichungsDiagramm(obj, -1, htop, hleft, hheight, hwidth, False, True)
 
-                            Else
-                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
-                            End If
+                                    reportObj = obj
 
+                                    With reportObj
+                                        '.Chart.ChartTitle.Text = boxName
+                                        .Chart.ChartTitle.Font.Size = pptSize
+                                    End With
 
-                        Case "Rolle"
+                                    reportObj.Copy()
+                                    newShape = pptSlide.Shapes.Paste
 
+                                    With newShape
+                                        .Top = top + 0.02 * height
+                                        .Left = left + 0.02 * width
+                                        .Width = width * 0.96
+                                        .Height = height * 0.96
+                                    End With
 
-                            myCollection.Clear()
+                                    'Call awinDeleteChart(reportObj)
 
-                            Dim qstr(20) As String
-                            Dim roleName As String = " "
-                            qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
-
-                            ' Aufbau der Collection 
-                            For i = 0 To qstr.Length - 1
-
-                                Try
-                                    roleName = qstr(i).Trim
-                                    If RoleDefinitions.Contains(roleName) Then
-                                        myCollection.Add(roleName, roleName)
-                                    End If
-                                Catch ex As Exception
-                                    Call MsgBox("Fehler: Rolle " & roleName & " konnte nicht erkannt werden ...")
-                                End Try
-
-                            Next
-
-
-                            If myCollection.Count > 0 Then
-
-                                pptSize = .TextFrame2.TextRange.Font.Size
-                                .TextFrame2.TextRange.Text = " "
-
-                                htop = 100
-                                hleft = 100
-                                hheight = miniHeight  ' height of all charts
-                                hwidth = miniWidth   ' width of all charts
-                                obj = Nothing
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True)
-
-                                reportObj = obj
-                                ' jetzt wird die Überschrift neu bestimmt ...
-                                With reportObj
-                                    Dim tmpTitle() As String = .Chart.ChartTitle.Text.Split(New Char() {"(", ")"}, 3)
                                     Try
-                                        .Chart.ChartTitle.Text = qualifier & " (" & tmpTitle(1) & ")"
+                                        reportObj.Delete()
+                                        'DiagramList.Remove(DiagramList.Count)
                                     Catch ex As Exception
-                                        .Chart.ChartTitle.Text = qualifier
+
                                     End Try
-                                    .Chart.ChartTitle.Font.Size = pptSize
-                                End With
 
-                                reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
-
-                                With newShape
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
-                                End With
-
-                                'Call awinDeleteChart(reportObj)
-                                ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
-
-                                Try
-                                    reportObj.Delete()
                                 Catch ex As Exception
+
+                                    .TextFrame2.TextRange.Text = ex.Message
 
                                 End Try
 
-                            Else
-                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
-                            End If
-
-                        Case "Kostenart"
 
 
-                            myCollection.Clear()
-                            Dim qstr(20) As String
-                            Dim costName As String = " "
-                            qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
-
-                            ' Aufbau der Collection 
-                            For i = 0 To qstr.Length - 1
-
-                                Try
-                                    costName = qstr(i).Trim
-                                    If CostDefinitions.Contains(costName) Then
-                                        myCollection.Add(costName, costName)
-                                    End If
-                                Catch ex As Exception
-                                    Call MsgBox("Fehler: Kostenart " & costName & " konnte nicht erkannt werden ...")
-                                End Try
-
-                            Next
-
-
-                            If myCollection.Count > 0 Then
+                            Case "Prognose Zielerreichung"
 
                                 pptSize = .TextFrame2.TextRange.Font.Size
                                 .TextFrame2.TextRange.Text = " "
 
                                 htop = 100
                                 hleft = 100
-                                hheight = miniHeight  ' height of all charts
-                                hwidth = miniWidth   ' width of all charts
+                                hheight = awinSettings.ChartHoehe2
+                                hwidth = 340
                                 obj = Nothing
-                                Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True)
 
-                                reportObj = obj
-
-                                With reportObj
-                                    Dim tmpTitle() As String = .Chart.ChartTitle.Text.Split(New Char() {"(", ")"}, 3)
-                                    Try
-                                        .Chart.ChartTitle.Text = qualifier & " (" & tmpTitle(1) & ")"
-                                    Catch ex As Exception
-                                        .Chart.ChartTitle.Text = qualifier
-                                    End Try
-                                    .Chart.ChartTitle.Font.Size = pptSize
-                                End With
-
-                                reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
-
-                                With newShape
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
-                                End With
-
-                                'Call awinDeleteChart(reportObj)
-                                ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
 
                                 Try
-                                    reportObj.Delete()
-                                    'DiagramList.Remove(DiagramList.Count)
+
+                                    Call awinCreateZielErreichungsDiagramm(obj, 1, htop, hleft, hheight, hwidth, False, True)
+
+                                    reportObj = obj
+
+                                    With reportObj
+                                        '.Chart.ChartTitle.Text = boxName
+                                        .Chart.ChartTitle.Font.Size = pptSize
+                                    End With
+
+                                    reportObj.Copy()
+                                    newShape = pptSlide.Shapes.Paste
+
+                                    With newShape
+                                        .Top = top + 0.02 * height
+                                        .Left = left + 0.02 * width
+                                        .Width = width * 0.96
+                                        .Height = height * 0.96
+                                    End With
+
+
+
+                                    Try
+
+                                        reportObj.Delete()
+
+                                    Catch ex As Exception
+
+                                    End Try
                                 Catch ex As Exception
+
+                                    .TextFrame2.TextRange.Text = ex.Message
 
                                 End Try
 
-                            Else
-                                .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
-                            End If
+
+                            Case "Phase"
 
 
-                        Case "Stand:"
-                            .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d")
+                                myCollection.Clear()
 
-                        Case "Zeitraum:"
-                            .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(showRangeLeft, showRangeRight)
+                                Dim qstr(20) As String
+                                Dim phName As String = " "
+                                qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
 
-                        Case Else
+                                ' Aufbau der Collection 
+                                For i = 0 To qstr.Length - 1
 
+                                    Try
+                                        phName = qstr(i).Trim
+                                        If PhaseDefinitions.Contains(phName) Then
+                                            myCollection.Add(phName, phName)
+                                        End If
+                                    Catch ex As Exception
+                                        Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
+                                    End Try
+
+                                Next
+
+
+                                If myCollection.Count > 0 Then
+
+                                    pptSize = .TextFrame2.TextRange.Font.Size
+                                    .TextFrame2.TextRange.Text = " "
+
+                                    htop = 100
+                                    hleft = 100
+                                    hheight = miniHeight  ' height of all charts
+                                    hwidth = miniWidth   ' width of all charts
+                                    obj = Nothing
+                                    Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(0), True)
+
+                                    reportObj = obj
+
+                                    With reportObj
+                                        If myCollection.Count > 1 Then
+                                            .Chart.ChartTitle.Text = "Phasen Übersicht"
+                                        Else
+                                            .Chart.ChartTitle.Text = boxName
+                                        End If
+
+                                        .Chart.ChartTitle.Font.Size = pptSize
+                                    End With
+
+                                    reportObj.Copy()
+                                    newShape = pptSlide.Shapes.Paste
+
+                                    With newShape
+                                        .Top = top + 0.02 * height
+                                        .Left = left + 0.02 * width
+                                        .Width = width * 0.96
+                                        .Height = height * 0.96
+                                    End With
+
+                                    'Call awinDeleteChart(reportObj)
+                                    ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                                    Try
+                                        reportObj.Delete()
+                                        'DiagramList.Remove(DiagramList.Count)
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                Else
+                                    .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                                End If
+
+
+
+                            Case "Meilenstein"
+
+                                myCollection.Clear()
+                                Dim MSnameList As SortedList(Of String, String)
+                                MSnameList = ShowProjekte.getMilestoneNames
+
+                                Dim qstr(20) As String
+                                Dim msName As String = " "
+                                qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                                ' Aufbau der Collection 
+                                For i = 0 To qstr.Length - 1
+
+                                    Try
+                                        msName = qstr(i).Trim
+                                        If MSnameList.ContainsKey(msName) Then
+                                            myCollection.Add(msName, msName)
+                                        End If
+                                    Catch ex As Exception
+                                        Call MsgBox("Fehler: Phasen Name " & msName & " konnte nicht erkannt werden ...")
+                                    End Try
+
+                                Next
+
+
+                                If myCollection.Count > 0 Then
+
+                                    pptSize = .TextFrame2.TextRange.Font.Size
+                                    .TextFrame2.TextRange.Text = " "
+
+                                    htop = 100
+                                    hleft = 100
+                                    hheight = miniHeight  ' height of all charts
+                                    hwidth = miniWidth   ' width of all charts
+                                    obj = Nothing
+                                    Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(5), True)
+
+                                    reportObj = obj
+
+                                    With reportObj
+                                        If myCollection.Count > 1 Then
+                                            .Chart.ChartTitle.Text = "Meilenstein Übersicht"
+                                        Else
+                                            .Chart.ChartTitle.Text = boxName
+                                        End If
+
+                                        .Chart.ChartTitle.Font.Size = pptSize
+                                    End With
+
+                                    reportObj.Copy()
+                                    newShape = pptSlide.Shapes.Paste
+
+                                    With newShape
+                                        .Top = top + 0.02 * height
+                                        .Left = left + 0.02 * width
+                                        .Width = width * 0.96
+                                        .Height = height * 0.96
+                                    End With
+
+
+                                    Try
+                                        reportObj.Delete()
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                Else
+                                    .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                                End If
+
+
+
+                            Case "Rolle"
+
+
+                                myCollection.Clear()
+
+                                Dim qstr(20) As String
+                                Dim roleName As String = " "
+                                qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                                ' Aufbau der Collection 
+                                For i = 0 To qstr.Length - 1
+
+                                    Try
+                                        roleName = qstr(i).Trim
+                                        If RoleDefinitions.Contains(roleName) Then
+                                            myCollection.Add(roleName, roleName)
+                                        End If
+                                    Catch ex As Exception
+                                        Call MsgBox("Fehler: Rolle " & roleName & " konnte nicht erkannt werden ...")
+                                    End Try
+
+                                Next
+
+
+                                If myCollection.Count > 0 Then
+
+                                    pptSize = .TextFrame2.TextRange.Font.Size
+                                    .TextFrame2.TextRange.Text = " "
+
+                                    htop = 100
+                                    hleft = 100
+                                    hheight = miniHeight  ' height of all charts
+                                    hwidth = miniWidth   ' width of all charts
+                                    obj = Nothing
+                                    Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(1), True)
+
+                                    reportObj = obj
+                                    ' jetzt wird die Überschrift neu bestimmt ...
+                                    With reportObj
+                                        Dim tmpTitle() As String = .Chart.ChartTitle.Text.Split(New Char() {"(", ")"}, 3)
+                                        Try
+                                            .Chart.ChartTitle.Text = qualifier & " (" & tmpTitle(1) & ")"
+                                        Catch ex As Exception
+                                            .Chart.ChartTitle.Text = qualifier
+                                        End Try
+                                        .Chart.ChartTitle.Font.Size = pptSize
+                                    End With
+
+                                    reportObj.Copy()
+                                    newShape = pptSlide.Shapes.Paste
+
+                                    With newShape
+                                        .Top = top + 0.02 * height
+                                        .Left = left + 0.02 * width
+                                        .Width = width * 0.96
+                                        .Height = height * 0.96
+                                    End With
+
+                                    'Call awinDeleteChart(reportObj)
+                                    ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                                    Try
+                                        reportObj.Delete()
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                Else
+                                    .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                                End If
+
+
+
+                            Case "Kostenart"
+
+
+                                myCollection.Clear()
+                                Dim qstr(20) As String
+                                Dim costName As String = " "
+                                qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                                ' Aufbau der Collection 
+                                For i = 0 To qstr.Length - 1
+
+                                    Try
+                                        costName = qstr(i).Trim
+                                        If CostDefinitions.Contains(costName) Then
+                                            myCollection.Add(costName, costName)
+                                        End If
+                                    Catch ex As Exception
+                                        Call MsgBox("Fehler: Kostenart " & costName & " konnte nicht erkannt werden ...")
+                                    End Try
+
+                                Next
+
+
+                                If myCollection.Count > 0 Then
+
+                                    pptSize = .TextFrame2.TextRange.Font.Size
+                                    .TextFrame2.TextRange.Text = " "
+
+                                    htop = 100
+                                    hleft = 100
+                                    hheight = miniHeight  ' height of all charts
+                                    hwidth = miniWidth   ' width of all charts
+                                    obj = Nothing
+                                    Call awinCreateprcCollectionDiagram(myCollection, obj, htop, hleft, hwidth, hheight, False, DiagrammTypen(2), True)
+
+                                    reportObj = obj
+
+                                    With reportObj
+                                        Dim tmpTitle() As String = .Chart.ChartTitle.Text.Split(New Char() {"(", ")"}, 3)
+                                        Try
+                                            .Chart.ChartTitle.Text = qualifier & " (" & tmpTitle(1) & ")"
+                                        Catch ex As Exception
+                                            .Chart.ChartTitle.Text = qualifier
+                                        End Try
+                                        .Chart.ChartTitle.Font.Size = pptSize
+                                    End With
+
+                                    reportObj.Copy()
+                                    newShape = pptSlide.Shapes.Paste
+
+                                    With newShape
+                                        .Top = top + 0.02 * height
+                                        .Left = left + 0.02 * width
+                                        .Width = width * 0.96
+                                        .Height = height * 0.96
+                                    End With
+
+                                    'Call awinDeleteChart(reportObj)
+                                    ' der Titel wird geändert im Report, deswegen wird das Diagramm  nicht gefunden in awinDeleteChart 
+
+                                    Try
+                                        reportObj.Delete()
+                                        'DiagramList.Remove(DiagramList.Count)
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                Else
+                                    .TextFrame2.TextRange.Text = "nicht definiert: " & qualifier
+                                End If
+
+
+                            Case "Stand:"
+                                .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d")
+
+
+                            Case "Zeitraum:"
+                                .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(showRangeLeft, showRangeRight)
+
+                            Case Else
 
                         End Select
 
-'bis hierher neu
+
                         If notYetDone Then
 
                             pptSize = .TextFrame2.TextRange.Font.Size
