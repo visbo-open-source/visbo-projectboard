@@ -239,6 +239,7 @@ Public Module Module1
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public projektFilesOrdner As String = "ProjectFiles"
     Public deletedFilesOrdner As String = "DeletedFiles"
+    Public rplanimportFilesOrdner As String = "RPLANImport"
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"
     ' Public projektDetail As String = "Project Detail.xlsx"
     Public projektAustausch As String = requirementsOrdner & "Projekt-Steckbrief.xlsx"

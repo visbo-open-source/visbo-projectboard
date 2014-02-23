@@ -81,7 +81,7 @@ Public Module awinGeneralModules
         'Dim Start As Integer, Dauer As Integer
         'Dim startdate As Date
         'Dim zeile As Integer
-        Dim pname As String
+        'Dim pname As String
         Dim c As Excel.Range
         'Dim marge As Double
         'Dim sfit As Double, risk As Double
@@ -433,8 +433,6 @@ Public Module awinGeneralModules
 
         showtimezone = True
 
-        'ThemaUte
-
         ' jetzt werden die Projekt-Vorlagen ausgelesen 
         Dim dirName As String = awinPath & projektVorlagenOrdner
         Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
@@ -446,8 +444,9 @@ Public Module awinGeneralModules
                 appInstance.Workbooks.Open(dateiName)
                 Dim hproj As New clsProjektvorlage
                 Call awinImportProject(Nothing, hproj, True, Date.Now)
+                ' Auslesen der Projektvorlage wird wie das Importieren eines Projekts behandelt, nur am Ende in die Liste der Projektvorlagen eingehängt
+                ' Kennzeichen für Projektvorlage ist der 3.Parameter im Aufruf (isTemplate)
 
-                'Call awinReadProjectTemplate(pname, False)
                 Projektvorlagen.Add(hproj)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
             
@@ -975,47 +974,57 @@ Public Module awinGeneralModules
 
                     Dim pStartDate As Date
                     Dim pEndDate As Date
+                    Dim ok As Boolean = True
 
 
                     For i = anfang To ende
-                        phaseName = .Cells(i, 2).value.trim
-                        cphase = New clsPhase(parent:=hproj)
-                        cphase.name = phaseName
+                        Try
+                            phaseName = .Cells(i, 2).value.trim
+                        Catch ex As Exception
+                            phaseName = ""
+                            ok = False
+                        End Try
 
-                        If PhaseDefinitions.Contains(phaseName) Then
-                            ' nichts tun 
-                        Else
-                            ' in die Phase-Definitions aufnehmen 
+                        If ok Then
+                            cphase = New clsPhase(parent:=hproj)
+                            cphase.name = phaseName
 
-                            Dim hphase As clsPhasenDefinition
-                            hphase = New clsPhasenDefinition
+                            If PhaseDefinitions.Contains(phaseName) Then
+                                ' nichts tun 
+                            Else
+                                ' in die Phase-Definitions aufnehmen 
 
-                            hphase.farbe = .Cells(i, 1).Interior.Color
-                            hphase.name = phaseName
-                            hphase.UID = phaseIX
-                            phaseIX = phaseIX + 1
+                                Dim hphase As clsPhasenDefinition
+                                hphase = New clsPhasenDefinition
+
+                                hphase.farbe = .Cells(i, 1).Interior.Color
+                                hphase.name = phaseName
+                                hphase.UID = phaseIX
+                                phaseIX = phaseIX + 1
 
 
-                            Try
-                                PhaseDefinitions.Add(hphase)
-                            Catch ex As Exception
+                                Try
+                                    PhaseDefinitions.Add(hphase)
+                                Catch ex As Exception
 
-                            End Try
+                                End Try
 
+                            End If
+
+
+                            pStartDate = CDate(.Cells(i, 3).value)
+                            pEndDate = CDate(.Cells(i, 4).value)
+                            startoffset = DateDiff(DateInterval.Day, hproj.startDate, pStartDate)
+                            duration = DateDiff(DateInterval.Day, pStartDate, pEndDate) + 1
+
+                            ' es werden nur Phasen aufgenommen, die auch tasächlich eine Länge über einen Tag haben  
+
+                            If duration > 1 Then
+                                cphase.changeStartandDauer(startoffset, duration)
+                                hproj.AddPhase(cphase)
+                            End If
                         End If
 
-
-                        pStartDate = CDate(.Cells(i, 3).value)
-                        pEndDate = CDate(.Cells(i, 4).value)
-                        startoffset = DateDiff(DateInterval.Day, hproj.startDate, pStartDate)
-                        duration = DateDiff(DateInterval.Day, pStartDate, pEndDate) + 1
-
-                        ' es werden nur Phasen aufgenommen, die auch tasächlich eine Länge über einen Tag haben  
-
-                        If duration > 1 Then
-                            cphase.changeStartandDauer(startoffset, duration)
-                            hproj.AddPhase(cphase)
-                        End If
 
                     Next
 

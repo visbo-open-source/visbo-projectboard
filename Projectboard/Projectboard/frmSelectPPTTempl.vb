@@ -62,7 +62,6 @@ Public Class frmSelectPPTTempl
         ' hier muss unterschieden werden, ob Projekt oder Portfolio-Report soll erzeugt werden
         If calledfrom = "Portfolio" Then
             dirName = awinPath & RepPortfolioVorOrdner
-            'Call MsgBox("hier bin ich bei createReportPortfolio_click   " & RepVorlagenDropbox.Text)
             vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
             Try
                 createReport.Enabled = False
@@ -97,65 +96,6 @@ Public Class frmSelectPPTTempl
             Catch ex As Exception
                 Call MsgBox(ex.Message)
             End Try
-
-            'If awinSelection Is Nothing Then
-
-            '    '    ' jetzt die Aktion durchführen ...
-
-            '    '    For Each singleShp In awinSelection
-            '    '        With singleShp
-            '    '            If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-            '    '                (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-            '    '                 And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
-
-            '    '                Try
-            '    '                    hproj = ShowProjekte.getProject(singleShp.Name)
-            '    '                Catch ex As Exception
-            '    '                    Call MsgBox(singleShp.Name & " nicht gefunden ...")
-            '    '                    appInstance.EnableEvents = formerEE
-            '    '                    appInstance.ScreenUpdating = formerSU
-            '    '                    Exit Sub
-            '    '                End Try
-
-            '    '                If Not projekthistorie Is Nothing Then
-            '    '                    If projekthistorie.Count > 0 Then
-            '    '                        vglName = projekthistorie.First.name
-            '    '                    End If
-            '    '                End If
-
-            '    '                With hproj
-            '    '                    pName = .name
-            '    '                    variantName = .variantName
-            '    '                End With
-
-            '    '                If vglName.Trim <> pName.Trim Then
-            '    '                    ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-
-            '    '                    Try
-            '    '                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-            '    '                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-            '    '                        projekthistorie.Add(Date.Now, hproj)
-            '    '                    Catch ex As Exception
-            '    '                        projekthistorie = Nothing
-            '    '                    End Try
-
-            '    '                Else
-            '    '                    ' der aktuelle Stand hproj muss hinzugefügt werden 
-            '    '                    Dim lastElem As Integer = projekthistorie.Count - 1
-            '    '                    projekthistorie.RemoveAt(lastElem)
-            '    '                    projekthistorie.Add(Date.Now, hproj)
-            '    '                End If
-
-            '    '                Call createPPTSlidesFromProject(hproj, vorlagenDateiName)
-
-            '    '            End If
-            '    '        End With
-            '    '    Next
-
-            '    Call MsgBox("vorher Projekt selektieren ...")
-            'End If
-
-            'Call awinDeSelect()
 
         End If
 

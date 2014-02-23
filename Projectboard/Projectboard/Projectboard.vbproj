@@ -146,6 +146,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
+    <Compile Include="frmSelectRPlanImport.Designer.vb">
+      <DependentUpon>frmSelectRPlanImport.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmSelectRPlanImport.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmSelectPPTTempl.Designer.vb">
       <DependentUpon>frmSelectPPTTempl.vb</DependentUpon>
     </Compile>
@@ -214,6 +220,9 @@
     <EmbeddedResource Include="frmSelectPPTTempl.resx">
       <DependentUpon>frmSelectPPTTempl.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmSelectRPlanImport.resx">
+      <DependentUpon>frmSelectRPlanImport.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmShowProjCharacteristics.resx">
       <DependentUpon>frmShowProjCharacteristics.vb</DependentUpon>
     </EmbeddedResource>
@@ -231,7 +240,9 @@
     <None Include="app.config" />
     <None Include="My Project\DataSources\frmAmpelBewertung.datasource" />
     <None Include="My Project\DataSources\frmCreateRolloutProject.datasource" />
-    <None Include="My Project\DataSources\frmSelectPPTTempl.datasource" />
+    <None Include="My Project\DataSources\frmSelectPPTTempl.datasource">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="My Project\DataSources\frmShowProjCharacteristics.datasource" />
     <None Include="My Project\DataSources\Globals.datasource" />
     <None Include="My Project\DataSources\MySettings.datasource" />
