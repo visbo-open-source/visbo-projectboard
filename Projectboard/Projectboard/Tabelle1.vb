@@ -12,19 +12,27 @@ Public Class Tabelle1
     Private Sub Tabelle1_ActivateEvent() Handles Me.ActivateEvent
 
 
-
-
-        Dim cbar As CommandBar
-
         ' die Short Cut Menues aus Excel alle de-aktivieren ...
         ' das wird jetzt in Tabelle1 , also der Projekt-Tafel gemacht
         ' es wird beim Verlassen der Tabelle1 wieder aufgehoben 
-        For Each cbar In appInstance.CommandBars
 
-            If cbar.Type = MsoBarType.msoBarTypePopup Then
-                cbar.Enabled = False
-            End If
-        Next
+        'Dim cbar As CommandBar
+
+        'For Each cbar In appInstance.CommandBars
+
+
+        '    If cbar.Type = MsoBarType.msoBarTypePopup And _
+        '        (cbar.Name = "Shapes" Or _
+        '         cbar.Name = "Cell" Or _
+        '         cbar.Name = "Plot Area" Or _
+        '         cbar.Name = "Chart" Or _
+        '         cbar.Name = "Diagram") Then
+
+        '        cbar.Enabled = False
+        '    Else
+        '        cbar.Enabled = True
+        '    End If
+        'Next
 
         Application.DisplayFormulaBar = False
 
@@ -41,7 +49,9 @@ Public Class Tabelle1
 
         End With
 
-        Application.ScreenUpdating = True
+        If Application.ScreenUpdating = False Then
+            Application.ScreenUpdating = True
+        End If
 
     End Sub
 
@@ -79,22 +89,23 @@ Public Class Tabelle1
         Catch ex As Exception
 
         End Try
-
         appInstance.EnableEvents = True
+
     End Sub
 
     Private Sub Tabelle1_Deactivate() Handles Me.Deactivate
 
-        Dim cbar As CommandBar
+
 
         ' die Short Cut Menues aus Excel wieder alle aktivieren ...
-        
-        For Each cbar In appInstance.CommandBars
+        'Dim cbar As CommandBar
 
-            If cbar.Type = MsoBarType.msoBarTypePopup Then
-                cbar.Enabled = True
-            End If
-        Next
+        'For Each cbar In appInstance.CommandBars
+
+        '    cbar.Enabled = True
+
+
+        'Next
 
 
     End Sub
@@ -210,4 +221,6 @@ Public Class Tabelle1
 
 
     End Sub
+
+    
 End Class
