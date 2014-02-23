@@ -1124,13 +1124,30 @@ Public Module Module1
 
         Try
             appInstance.CommandBars("awinRightClickinPortfolio").Delete()
-            appInstance.CommandBars("awinCellRightClick").Delete()
-            appInstance.CommandBars("awinHeaderRightClick").Delete()
-            appInstance.CommandBars("Cell").Reset()
         Catch ex As Exception
 
         End Try
 
+        Try
+            appInstance.CommandBars("awinRightClickinPRCChart").Delete()
+        Catch ex As Exception
+
+        End Try
+
+
+        ' die Short Cut Menues aus Excel wieder alle aktivieren ...
+        'Dim cbar As CommandBar
+
+        'For Each cbar In appInstance.CommandBars
+
+        '    cbar.Enabled = True
+        '    'Try
+        '    '    cbar.Reset()
+        '    'Catch ex As Exception
+
+        '    'End Try
+
+        'Next
 
 
     End Sub

@@ -59,16 +59,16 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_Shutdown() Handles Me.Shutdown
 
-        Dim cbar As CommandBar
+        'Dim cbar As CommandBar
 
         
         ' die Short Cut Menues aus Excel alle wieder aktivieren ...
-        For Each cbar In appInstance.CommandBars
+        'For Each cbar In appInstance.CommandBars
 
-            If cbar.Type = MsoBarType.msoBarTypePopup Then
-                cbar.Enabled = True
-            End If
-        Next
+        '    If cbar.Type = MsoBarType.msoBarTypePopup Then
+        '        cbar.Enabled = True
+        '    End If
+        'Next
 
 
     End Sub
