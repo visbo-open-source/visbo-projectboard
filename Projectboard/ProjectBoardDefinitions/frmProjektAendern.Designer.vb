@@ -43,7 +43,7 @@ Partial Class frmProjektAendern
         Me.pName.Enabled = False
         Me.pName.Location = New System.Drawing.Point(40, 42)
         Me.pName.Name = "pName"
-        Me.pName.Size = New System.Drawing.Size(86, 16)
+        Me.pName.Size = New System.Drawing.Size(111, 21)
         Me.pName.TabIndex = 18
         Me.pName.Text = "Projekt-Name"
         '
@@ -52,28 +52,28 @@ Partial Class frmProjektAendern
         Me.projectName.Location = New System.Drawing.Point(187, 39)
         Me.projectName.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.projectName.Name = "projectName"
-        Me.projectName.Size = New System.Drawing.Size(270, 23)
+        Me.projectName.Size = New System.Drawing.Size(270, 27)
         Me.projectName.TabIndex = 17
         '
         'risiko
         '
         Me.risiko.Location = New System.Drawing.Point(383, 179)
         Me.risiko.Name = "risiko"
-        Me.risiko.Size = New System.Drawing.Size(74, 23)
+        Me.risiko.Size = New System.Drawing.Size(74, 27)
         Me.risiko.TabIndex = 35
         '
         'sFit
         '
         Me.sFit.Location = New System.Drawing.Point(383, 144)
         Me.sFit.Name = "sFit"
-        Me.sFit.Size = New System.Drawing.Size(74, 23)
+        Me.sFit.Size = New System.Drawing.Size(74, 27)
         Me.sFit.TabIndex = 34
         '
         'Erloes
         '
         Me.Erloes.Location = New System.Drawing.Point(383, 109)
         Me.Erloes.Name = "Erloes"
-        Me.Erloes.Size = New System.Drawing.Size(74, 23)
+        Me.Erloes.Size = New System.Drawing.Size(74, 27)
         Me.Erloes.TabIndex = 33
         '
         'Label4
@@ -83,7 +83,7 @@ Partial Class frmProjektAendern
         Me.Label4.Font = New System.Drawing.Font("Tahoma", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label4.Location = New System.Drawing.Point(38, 77)
         Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(74, 16)
+        Me.Label4.Size = New System.Drawing.Size(95, 21)
         Me.Label4.TabIndex = 32
         Me.Label4.Text = "Projekt-Typ"
         '
@@ -92,7 +92,7 @@ Partial Class frmProjektAendern
         Me.ruleEngine.AutoSize = True
         Me.ruleEngine.Location = New System.Drawing.Point(38, 245)
         Me.ruleEngine.Name = "ruleEngine"
-        Me.ruleEngine.Size = New System.Drawing.Size(135, 16)
+        Me.ruleEngine.Size = New System.Drawing.Size(174, 21)
         Me.ruleEngine.TabIndex = 30
         Me.ruleEngine.TabStop = True
         Me.ruleEngine.Text = "Regeln und Prämissen"
@@ -104,7 +104,7 @@ Partial Class frmProjektAendern
         Me.Label3.Enabled = False
         Me.Label3.Location = New System.Drawing.Point(38, 182)
         Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(115, 16)
+        Me.Label3.Size = New System.Drawing.Size(151, 21)
         Me.Label3.TabIndex = 27
         Me.Label3.Text = "Umsetzungs-Risiko"
         '
@@ -114,7 +114,7 @@ Partial Class frmProjektAendern
         Me.Label2.Enabled = False
         Me.Label2.Location = New System.Drawing.Point(38, 147)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(102, 16)
+        Me.Label2.Size = New System.Drawing.Size(132, 21)
         Me.Label2.TabIndex = 26
         Me.Label2.Text = "Strategischer Fit"
         '
@@ -124,16 +124,16 @@ Partial Class frmProjektAendern
         Me.Label1.Enabled = False
         Me.Label1.Location = New System.Drawing.Point(38, 112)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(76, 16)
+        Me.Label1.Size = New System.Drawing.Size(100, 21)
         Me.Label1.TabIndex = 25
         Me.Label1.Text = "Budget (T€)"
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(370, 294)
+        Me.AbbrButton.Location = New System.Drawing.Point(316, 294)
         Me.AbbrButton.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(87, 28)
+        Me.AbbrButton.Size = New System.Drawing.Size(141, 28)
         Me.AbbrButton.TabIndex = 31
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
@@ -154,12 +154,12 @@ Partial Class frmProjektAendern
         Me.vorlagenName.Location = New System.Drawing.Point(187, 74)
         Me.vorlagenName.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.vorlagenName.Name = "vorlagenName"
-        Me.vorlagenName.Size = New System.Drawing.Size(270, 23)
+        Me.vorlagenName.Size = New System.Drawing.Size(270, 27)
         Me.vorlagenName.TabIndex = 36
         '
         'frmProjektAendern
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 16.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 19.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(490, 358)
         Me.Controls.Add(Me.vorlagenName)

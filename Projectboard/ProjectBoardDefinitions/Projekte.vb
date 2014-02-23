@@ -11213,293 +11213,293 @@ Public Module Projekte
 
 
 
-    Public Sub awinReadProjectTemplate(ByVal pname As String, ByVal intern As Boolean)
+    'Public Sub awinReadProjectTemplate(ByVal pname As String, ByVal intern As Boolean)
 
 
-        Dim lastRow As Integer
-        Dim rng As Excel.Range
-        Dim zelle As Excel.Range
-        Dim zeile As Integer, spalte As Integer
-        Dim hproj As New clsProjektvorlage
+    '    Dim lastRow As Integer
+    '    Dim rng As Excel.Range
+    '    Dim zelle As Excel.Range
+    '    Dim zeile As Integer, spalte As Integer
+    '    Dim hproj As New clsProjektvorlage
 
-        zeile = 1
-        spalte = 1
+    '    zeile = 1
+    '    spalte = 1
 
 
-        Try
-            With appInstance.ActiveWorkbook.Worksheets("General Information")
+    '    Try
+    '        With appInstance.ActiveWorkbook.Worksheets("General Information")
 
-                hproj.VorlagenName = CType(.cells(zeile, spalte + 1).value, String).Trim
-                hproj.Schrift = .cells(zeile, spalte + 1).font.size
-                hproj.Schriftfarbe = .cells(zeile, spalte + 1).font.color
-                hproj.farbe = .cells(zeile, spalte + 1).interior.color
+    '            hproj.VorlagenName = CType(.cells(zeile, spalte + 1).value, String).Trim
+    '            hproj.Schrift = .cells(zeile, spalte + 1).font.size
+    '            hproj.Schriftfarbe = .cells(zeile, spalte + 1).font.color
+    '            hproj.farbe = .cells(zeile, spalte + 1).interior.color
 
-                ' earliest
-                hproj.earliestStart = -6
-                ' latest
-                hproj.latestStart = 6
+    '            ' earliest
+    '            hproj.earliestStart = -6
+    '            ' latest
+    '            hproj.latestStart = 6
 
 
-            End With
-        Catch ex As Exception
-            Throw New ArgumentException("Fehler beim auslesen General Information")
-        End Try
+    '        End With
+    '    Catch ex As Exception
+    '        Throw New ArgumentException("Fehler beim auslesen General Information")
+    '    End Try
 
 
-        Try
-            With appInstance.ActiveWorkbook.Worksheets("Project Needs")
+    '    Try
+    '        With appInstance.ActiveWorkbook.Worksheets("Project Needs")
 
-                Dim chkPhase As Boolean = True
-                Dim Xwerte As Double()
-                Dim crole As clsRolle
-                Dim cphase As New clsPhase(hproj, True)
-                Dim ccost As clsKostenart
-                Dim phaseName As String
-                Dim anfang As Integer, ende As Integer
-                Dim farbeAktuell As Object
-                Dim r As Integer, k As Integer
-                'Dim valueRange As Excel.Range
+    '            Dim chkPhase As Boolean = True
+    '            Dim Xwerte As Double()
+    '            Dim crole As clsRolle
+    '            Dim cphase As New clsPhase(hproj, True)
+    '            Dim ccost As clsKostenart
+    '            Dim phaseName As String
+    '            Dim anfang As Integer, ende As Integer
+    '            Dim farbeAktuell As Object
+    '            Dim r As Integer, k As Integer
+    '            'Dim valueRange As Excel.Range
 
-                zeile = 2
+    '            zeile = 2
 
-                lastRow = System.Math.Max(.cells(2000, 1).End(XlDirection.xlUp).row, .cells(2000, 2).End(XlDirection.xlUp).row) + 1
-                rng = .range(.cells(2, 1), .cells(lastRow, 1))
+    '            lastRow = System.Math.Max(.cells(2000, 1).End(XlDirection.xlUp).row, .cells(2000, 2).End(XlDirection.xlUp).row) + 1
+    '            rng = .range(.cells(2, 1), .cells(lastRow, 1))
 
-                For Each zelle In rng
-                    Select Case chkPhase
-                        Case True
-                            ' hier wird die Phasen Information ausgelesen
+    '            For Each zelle In rng
+    '                Select Case chkPhase
+    '                    Case True
+    '                        ' hier wird die Phasen Information ausgelesen
 
-                            If Len(CType(zelle.Value, String)) > 1 Then
-                                phaseName = CType(zelle.Value, String).Trim
+    '                        If Len(CType(zelle.Value, String)) > 1 Then
+    '                            phaseName = CType(zelle.Value, String).Trim
 
-                                If Len(phaseName) > 0 Then
+    '                            If Len(phaseName) > 0 Then
 
-                                    cphase = New clsPhase(hproj, True)
+    '                                cphase = New clsPhase(hproj, True)
 
-                                    ' Auslesen der Phasen Dauer
-                                    anfang = 1
-                                    While zelle.Offset(0, anfang + 1).Interior.ColorIndex = -4142
-                                        anfang = anfang + 1
-                                    End While
+    '                                ' Auslesen der Phasen Dauer
+    '                                anfang = 1
+    '                                While zelle.Offset(0, anfang + 1).Interior.ColorIndex = -4142
+    '                                    anfang = anfang + 1
+    '                                End While
 
-                                    ende = anfang + 1
-                                    farbeAktuell = zelle.Offset(0, ende).Interior.Color
-                                    While zelle.Offset(0, ende + 1).Interior.Color = farbeAktuell
-                                        ende = ende + 1
-                                    End While
-                                    ende = ende - 1
+    '                                ende = anfang + 1
+    '                                farbeAktuell = zelle.Offset(0, ende).Interior.Color
+    '                                While zelle.Offset(0, ende + 1).Interior.Color = farbeAktuell
+    '                                    ende = ende + 1
+    '                                End While
+    '                                ende = ende - 1
 
-                                    chkPhase = False
+    '                                chkPhase = False
 
 
-                                    With cphase
-                                        .name = phaseName
-                                        ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
-                                        Dim startOffset As Integer = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(anfang - 1))
-                                        'Dim dauerIndays As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(anfang - 1), _
-                                        '                                                        StartofCalendar.AddMonths(ende).AddDays(-1)) + 1
-                                        Dim dauerIndays As Integer = calcDauerIndays(StartofCalendar.AddDays(startOffset), ende - anfang + 1, True)
-                                        .changeStartandDauer(startOffset, dauerIndays)
+    '                                With cphase
+    '                                    .name = phaseName
+    '                                    ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
+    '                                    Dim startOffset As Integer = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(anfang - 1))
+    '                                    'Dim dauerIndays As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(anfang - 1), _
+    '                                    '                                                        StartofCalendar.AddMonths(ende).AddDays(-1)) + 1
+    '                                    Dim dauerIndays As Integer = calcDauerIndays(StartofCalendar.AddDays(startOffset), ende - anfang + 1, True)
+    '                                    .changeStartandDauer(startOffset, dauerIndays)
 
-                                        .Offset = 0
-                                    End With
+    '                                    .Offset = 0
+    '                                End With
 
-                                End If
+    '                            End If
 
-                            End If
+    '                        End If
 
 
 
-                        Case False ' auslesen Rollen- bzw. Kosten-Information
+    '                    Case False ' auslesen Rollen- bzw. Kosten-Information
 
-                            ' hier wird die Rollen bzw Kosten Information ausgelesen
-                            Dim hname As String
-                            Try
-                                hname = CType(zelle.Offset(0, 1).Value, String).Trim
-                            Catch ex1 As Exception
-                                hname = ""
-                            End Try
+    '                        ' hier wird die Rollen bzw Kosten Information ausgelesen
+    '                        Dim hname As String
+    '                        Try
+    '                            hname = CType(zelle.Offset(0, 1).Value, String).Trim
+    '                        Catch ex1 As Exception
+    '                            hname = ""
+    '                        End Try
 
 
-                            If Len(hname) > 0 Then
+    '                        If Len(hname) > 0 Then
 
-                                '
-                                ' handelt es sich um die Ressourcen Definition?
-                                '
-                                If RoleDefinitions.Contains(hname) Then
-                                    Try
-                                        r = RoleDefinitions.getRoledef(hname).UID
+    '                            '
+    '                            ' handelt es sich um die Ressourcen Definition?
+    '                            '
+    '                            If RoleDefinitions.Contains(hname) Then
+    '                                Try
+    '                                    r = RoleDefinitions.getRoledef(hname).UID
 
-                                        ReDim Xwerte(ende - anfang)
+    '                                    ReDim Xwerte(ende - anfang)
 
 
-                                        For m = anfang To ende
-                                            Xwerte(m - anfang) = zelle.Offset(0, m + 1).Value
-                                        Next m
+    '                                    For m = anfang To ende
+    '                                        Xwerte(m - anfang) = zelle.Offset(0, m + 1).Value
+    '                                    Next m
 
-                                        crole = New clsRolle(ende - anfang)
-                                        With crole
-                                            .RollenTyp = r
-                                            .Xwerte = Xwerte
-                                        End With
+    '                                    crole = New clsRolle(ende - anfang)
+    '                                    With crole
+    '                                        .RollenTyp = r
+    '                                        .Xwerte = Xwerte
+    '                                    End With
 
-                                        With cphase
-                                            .AddRole(crole)
-                                        End With
-                                    Catch ex As Exception
-                                        '
-                                        ' handelt es sich um die Kostenart Definition?
-                                        ' 
+    '                                    With cphase
+    '                                        .AddRole(crole)
+    '                                    End With
+    '                                Catch ex As Exception
+    '                                    '
+    '                                    ' handelt es sich um die Kostenart Definition?
+    '                                    ' 
 
 
-                                    End Try
+    '                                End Try
 
-                                ElseIf CostDefinitions.Contains(hname) Then
+    '                            ElseIf CostDefinitions.Contains(hname) Then
 
-                                    Try
+    '                                Try
 
-                                        k = CostDefinitions.getCostdef(hname).UID
+    '                                    k = CostDefinitions.getCostdef(hname).UID
 
-                                        ReDim Xwerte(ende - anfang)
+    '                                    ReDim Xwerte(ende - anfang)
 
-                                        For m = anfang To ende
-                                            Xwerte(m - anfang) = zelle.Offset(0, m + 1).Value
-                                        Next m
+    '                                    For m = anfang To ende
+    '                                        Xwerte(m - anfang) = zelle.Offset(0, m + 1).Value
+    '                                    Next m
 
-                                        ccost = New clsKostenart(ende - anfang)
-                                        With ccost
-                                            .KostenTyp = k
-                                            .Xwerte = Xwerte
-                                        End With
+    '                                    ccost = New clsKostenart(ende - anfang)
+    '                                    With ccost
+    '                                        .KostenTyp = k
+    '                                        .Xwerte = Xwerte
+    '                                    End With
 
 
-                                        With cphase
-                                            .AddCost(ccost)
-                                        End With
+    '                                    With cphase
+    '                                        .AddCost(ccost)
+    '                                    End With
 
-                                    Catch ex As Exception
+    '                                Catch ex As Exception
 
-                                    End Try
+    '                                End Try
 
-                                End If
+    '                            End If
 
 
-                            Else
+    '                        Else
 
-                                chkPhase = True
-                                hproj.AddPhase(cphase)
+    '                            chkPhase = True
+    '                            hproj.AddPhase(cphase)
 
-                            End If
+    '                        End If
 
 
-                    End Select
-                    zeile = zeile + 1
-                Next zelle
+    '                End Select
+    '                zeile = zeile + 1
+    '            Next zelle
 
 
 
-            End With
-        Catch ex As Exception
-            Throw New ArgumentException("Fehler in awinImportProject, Lesen Project Needs")
-        End Try
+    '        End With
+    '    Catch ex As Exception
+    '        Throw New ArgumentException("Fehler in awinImportProject, Lesen Project Needs")
+    '    End Try
 
 
-        ' hier werden die mit den Phasen verbundenen Results ausgelesen ...
+    '    ' hier werden die mit den Phasen verbundenen Results ausgelesen ...
 
-        Try
-            With appInstance.ActiveWorkbook.Worksheets("Settings")
-                rng = .Range("Phasen")
-                Dim rngZeile As Excel.Range
-                Dim lastColumn As Integer
-                Dim resultName As String = ""
-                Dim phaseName As String
-                Dim tmpPhase As New clsPhase(hproj, True)
-                Dim tmpStr() As String
-                Dim defaultOffset As Integer
+    '    Try
+    '        With appInstance.ActiveWorkbook.Worksheets("Settings")
+    '            rng = .Range("Phasen")
+    '            Dim rngZeile As Excel.Range
+    '            Dim lastColumn As Integer
+    '            Dim resultName As String = ""
+    '            Dim phaseName As String
+    '            Dim tmpPhase As New clsPhase(hproj, True)
+    '            Dim tmpStr() As String
+    '            Dim defaultOffset As Integer
 
 
-                Dim anzTage As Integer
+    '            Dim anzTage As Integer
 
-                For Each zelle In rng
+    '            For Each zelle In rng
 
-                    Try
-                        phaseName = zelle.Value.trim
+    '                Try
+    '                    phaseName = zelle.Value.trim
 
-                        tmpPhase = hproj.getPhase(phaseName)
-                        defaultOffset = tmpPhase.dauerInDays
-                    Catch ex As Exception
+    '                    tmpPhase = hproj.getPhase(phaseName)
+    '                    defaultOffset = tmpPhase.dauerInDays
+    '                Catch ex As Exception
 
-                    End Try
+    '                End Try
 
-                    If Not tmpPhase Is Nothing Then
+    '                If Not tmpPhase Is Nothing Then
 
-                        rngZeile = rng.Rows(zelle.Row)
-                        lastColumn = .cells(zelle.Row, 2000).End(XlDirection.xlToLeft).column
+    '                    rngZeile = rng.Rows(zelle.Row)
+    '                    lastColumn = .cells(zelle.Row, 2000).End(XlDirection.xlToLeft).column
 
-                        Dim specified As Boolean
-                        For i = 4 To lastColumn
+    '                    Dim specified As Boolean
+    '                    For i = 4 To lastColumn
 
-                            specified = False
-                            Try
-                                resultName = .cells(zelle.Row, i).value.ToString.Trim
+    '                        specified = False
+    '                        Try
+    '                            resultName = .cells(zelle.Row, i).value.ToString.Trim
 
-                                tmpStr = resultName.Split(New Char() {"(", ")"}, 10)
+    '                            tmpStr = resultName.Split(New Char() {"(", ")"}, 10)
 
-                                If tmpStr.Length > 1 Then
+    '                            If tmpStr.Length > 1 Then
 
-                                    Try
-                                        If awinSettings.offsetEinheit = "d" Then
-                                            anzTage = CType(tmpStr(1), Integer)
-                                        Else
-                                            anzTage = CType(tmpStr(1), Integer) * 7
-                                        End If
+    '                                Try
+    '                                    If awinSettings.offsetEinheit = "d" Then
+    '                                        anzTage = CType(tmpStr(1), Integer)
+    '                                    Else
+    '                                        anzTage = CType(tmpStr(1), Integer) * 7
+    '                                    End If
 
-                                        resultName = tmpStr(0).Trim
-                                        specified = True
-                                    Catch ex1 As Exception
-                                        resultName = .cells(zelle.Row, i).value.ToString.Trim
-                                        anzTage = defaultOffset
-                                    End Try
+    '                                    resultName = tmpStr(0).Trim
+    '                                    specified = True
+    '                                Catch ex1 As Exception
+    '                                    resultName = .cells(zelle.Row, i).value.ToString.Trim
+    '                                    anzTage = defaultOffset
+    '                                End Try
 
-                                End If
+    '                            End If
 
 
-                                Dim tmpResult As New clsResult(parent:=tmpPhase)
+    '                            Dim tmpResult As New clsResult(parent:=tmpPhase)
 
-                                If resultName.Length > 0 Then
-                                    With tmpResult
-                                        .name = resultName
-                                        If specified Then
-                                            .offset = anzTage
-                                        Else
-                                            .offset = defaultOffset
-                                        End If
-                                    End With
+    '                            If resultName.Length > 0 Then
+    '                                With tmpResult
+    '                                    .name = resultName
+    '                                    If specified Then
+    '                                        .offset = anzTage
+    '                                    Else
+    '                                        .offset = defaultOffset
+    '                                    End If
+    '                                End With
 
-                                    tmpPhase.AddResult(tmpResult)
+    '                                tmpPhase.AddResult(tmpResult)
 
-                                End If
-                            Catch ex As Exception
+    '                            End If
+    '                        Catch ex As Exception
 
-                            End Try
-                        Next
+    '                        End Try
+    '                    Next
 
-                    End If
+    '                End If
 
-                Next
+    '            Next
 
-            End With
-        Catch ex As Exception
+    '        End With
+    '    Catch ex As Exception
 
-        End Try
+    '    End Try
 
 
 
-        Projektvorlagen.Add(hproj)
+    '    Projektvorlagen.Add(hproj)
 
 
-    End Sub
+    'End Sub
 
 
 
