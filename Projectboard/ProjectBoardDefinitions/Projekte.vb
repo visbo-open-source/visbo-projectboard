@@ -12272,7 +12272,13 @@ Public Module Projekte
                             .leadPerson = " "
                             .shpUID = ""
                             .StartOffset = 0
-                            .Status = ProjektStatus(0)
+
+                            If DateDiff(DateInterval.Month, .startDate, Date.Now) < -6 Then
+                                .Status = ProjektStatus(0)
+                            Else
+                                .Status = ProjektStatus(1)
+                            End If
+
                             '.tfSpalte = 0
                             .tfZeile = tafelZeile
                             .timeStamp = importDate

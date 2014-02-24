@@ -473,13 +473,19 @@ Public Module awinGeneralModules
 
 
         ' bestimmen der Spaltenbreite und Spaltenhöhe ...
+        Dim testCase As String = appInstance.ActiveWorkbook.Name
         Dim wsName3 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(3)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+        'wsName3 = CType(CType(appInstance.ActiveWorkbook, Excel.Workbook).Worksheets(arrWsNames(3)), Excel.Worksheet)
+
         Dim tmpRange As Excel.Range
-        With wsName3
 
+        'With wsName3
+        ''    .Activate()
+        'End With
 
-        End With
+        Dim tempWSName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
 
         Dim tmpStart As Date
         Try
@@ -601,7 +607,7 @@ Public Module awinGeneralModules
 
             End With
         Catch ex As Exception
-
+            'Call MsgBox("oops - unerwarteter Fehler ...")
         End Try
 
 
@@ -745,6 +751,7 @@ Public Module awinGeneralModules
         Dim anfang As Integer, ende As Integer
         Dim cphase As clsPhase
         Dim cresult As clsResult
+        Dim cbewertung As clsBewertung
         Dim ix As Integer
         Dim tmpStr(20) As String
         Dim aktuelleZeile As String
@@ -757,6 +764,8 @@ Public Module awinGeneralModules
         Dim vorlagenName As String
         Dim phaseName As String
         Dim zufall As New Random(10)
+        Dim farbKennung As Integer
+        Dim responsible As String
 
 
 
@@ -804,6 +813,9 @@ Public Module awinGeneralModules
                     aktuelleZeile = activeWSListe.Cells(zeile, 2).value.Trim
                     startDate = CDate(activeWSListe.Cells(zeile, 3).value)
                     endDate = CDate(activeWSListe.Cells(zeile, 4).value)
+                    farbKennung = CInt(activeWSListe.Cells(zeile, 12).value)
+                    responsible = CStr(activeWSListe.Cells(zeile, 9).value)
+
 
                     duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
                     If duration < 0 Then
@@ -892,6 +904,8 @@ Public Module awinGeneralModules
                         hproj.VorlagenName = vorlagenName
                         hproj.earliestStart = vproj.earliestStart
                         hproj.latestStart = vproj.latestStart
+                        hproj.ampelStatus = farbKennung
+                        hproj.leadPerson = responsible
 
                     Catch ex As Exception
                         Throw New Exception("es gibt keine entsprechende Vorlage ..  " & vbLf & ex.Message)
@@ -904,7 +918,12 @@ Public Module awinGeneralModules
                         hproj.startDate = startDate
                         hproj.earliestStartDate = hproj.startDate.AddMonths(hproj.earliestStart)
                         hproj.latestStartDate = hproj.startDate.AddMonths(hproj.latestStart)
-                        hproj.Status = ProjektStatus(0)
+                        If DateDiff(DateInterval.Month, startDate, Date.Now) <= 0 Then
+                            hproj.Status = ProjektStatus(0)
+                        Else
+                            hproj.Status = ProjektStatus(1)
+                        End If
+
                         hproj.StrategicFit = zufall.NextDouble * 10
                         hproj.Risiko = zufall.NextDouble * 10
                         hproj.volume = zufall.NextDouble * 1000000
@@ -929,47 +948,18 @@ Public Module awinGeneralModules
                     cresult = New clsResult(parent:=cphase)
                     cresult.name = "SOP"
                     cresult.setDate = sopDate
+
+                    cbewertung = New clsBewertung
+                    cbewertung.colorIndex = farbKennung
+                    cbewertung.description = " .. es wurde  keine Erläuterung abgegeben .. "
+                    cresult.addBewertung(cbewertung)
+
                     cphase.AddResult(cresult)
 
                     hproj.AddPhase(cphase)
 
 
                     Dim phaseIX As Integer = PhaseDefinitions.Count + 1
-
-                    ' jetzt wird  eine <SOP-Phase angelegt> , um die Auswertungen zu machen 
-                    ' wird später ersetzt durch Zählen von Meilensteinen
-
-                    'cphase = New clsPhase(parent:=hproj)
-                    'cphase.name = "SOP"
-                    'startoffset = DateDiff(DateInterval.Day, hproj.startDate, tmpStartSop)
-                    'duration = DateDiff(DateInterval.Day, tmpStartSop, sopDate) + 1
-                    'cphase.changeStartandDauer(startoffset, duration)
-                    'hproj.AddPhase(cphase)
-
-                    'If PhaseDefinitions.Contains(cphase.name) Then
-                    '    ' nichts tun 
-                    'Else
-                    '    ' in die Phase-Definitions aufnehmen 
-
-                    '    Dim hphase As clsPhasenDefinition
-                    '    hphase = New clsPhasenDefinition
-
-                    '    hphase.farbe = awinSettings.AmpelGruen
-                    '    hphase.name = cphase.name
-                    '    hphase.UID = phaseIX
-                    '    phaseIX = phaseIX + 1
-
-
-                    '    Try
-                    '        PhaseDefinitions.Add(hphase)
-                    '    Catch ex As Exception
-
-                    '    End Try
-
-                    'End If
-
-
-                    ' Ende der Sonderbehandlung Phase SOP 
 
 
                     Dim pStartDate As Date
@@ -1048,7 +1038,7 @@ Public Module awinGeneralModules
 
             End With
         Catch ex As Exception
-            Throw New Exception("Fehler in Datei Projekt-Inventur " & vbLf & ex.Message & vbLf & pName)
+            Throw New Exception("Fehler in Datei BMW Projekt-Inventur " & vbLf & ex.Message & vbLf & pName)
         End Try
 
 
@@ -1350,7 +1340,7 @@ Public Module awinGeneralModules
                         'projDauer = calcDauerIndays(phaseStartdate, phaseEnddate)
                         firsttime = True
                     End With
-                    Call MsgBox("Projektnamen/Phasen Konflikt in awinImportProjekt" & vbLf & "Problem wurde behoben")
+                    'Call MsgBox("Projektnamen/Phasen Konflikt in awinImportProjekt" & vbLf & "Problem wurde behoben")
 
                 End If
 
