@@ -294,6 +294,9 @@ Imports Microsoft.Office.Interop.Excel
 
         enableOnUpdate = False
 
+        ' damit man was sieht
+        'appInstance.ActiveSheet.screenupdating = True
+
 
 
         Try
