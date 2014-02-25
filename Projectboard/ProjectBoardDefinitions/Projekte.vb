@@ -10920,6 +10920,9 @@ Public Module Projekte
 
         Dim pstart As Integer = hproj.Start
 
+        ''separates Excelfile öffnen aus Testzwecken
+        'appInstance.Workbooks.Open(awinPath & "Testfile.xlsx")
+
         With appInstance.Worksheets(arrWsNames(5))
             ' hier wird die erste Zeile beschrieben 
 
@@ -10935,7 +10938,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-
+    
 
             zeile = 2
             spalte = 1
@@ -11025,6 +11028,16 @@ Public Module Projekte
                 Next k
                 zeile = zeile + 1
             Next p
+
+
+            ' hier werden nun die Phasen in einer Dropbox fixiert
+            rng = .Range(.Cells(2, 1), .cells(200, 1))
+            InputValidationforRange(rng, 2, True)
+
+            ' hier werden nun die Rollen und Kosten in Dropbox (2.Spalte) eingetragen
+            rng = .Range(.Cells(2, 2), .cells(200, 2))
+            InputValidationforRange(rng, 1, True)
+
 
         End With
 
@@ -12342,6 +12355,80 @@ Public Module Projekte
 
     End Sub
 
+    '
+    Private Sub InputValidationforRange(ByRef selrange As Range, ByVal stage As Integer, showvalidation As Boolean)
+
+        ' Diese Subroutine erstellt ein Dropdownliste für die Felder von selrange mit den Phasen und Rollen als Auswahl
+        ' für stage = 1: Rollen-Kostenarten-Liste
+
+        ' für stage = 2: Phasen-Liste
+
+        Dim inputstr As String = " ", iTitle As String = " ", eMessage As String = " "
+        Dim i As Integer
+        Dim wasTrue As Boolean
+
+        wasTrue = False
+
+
+        If appInstance.Application.EnableEvents = True Then
+            wasTrue = True
+            appInstance.Application.EnableEvents = False
+        End If
+
+        If showvalidation = True Then
+
+            If stage = 1 Then
+                'Rollen in die Auswahlliste aufnehmen
+                inputstr = RoleDefinitions.getRoledef(1).name
+                For i = 2 To RoleDefinitions.Count
+                    inputstr = inputstr & ";" & RoleDefinitions.getRoledef(i).name
+                Next i
+                'Kostenarten zur Auswahlliste hinzufügen
+                For i = 2 To CostDefinitions.Count - 1
+                    inputstr = inputstr & ";" & CostDefinitions.getCostdef(i).name
+                Next i
+                iTitle = "Rollen/Kostenarten"
+                eMessage = "nur Rollen/Kostenarten aus der Liste sind zugelassen ! "
+            ElseIf stage = 2 Then
+                ' Phasen in die Auswahlliste aufnehmen
+                inputstr = PhaseDefinitions.getPhaseDef(1).name
+                For i = 2 To PhaseDefinitions.Count
+                    inputstr = inputstr & ";" & PhaseDefinitions.getPhaseDef(i).name
+                Next
+                iTitle = "Phasen"
+                eMessage = "nur Phasen aus der Liste sind zugelassen ! "
+            End If
+
+
+            With selrange.Validation
+                .Delete()
+                .Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, Operator:= _
+                           XlFormatConditionOperator.xlBetween, Formula1:=inputstr)
+                .IgnoreBlank = True
+                .InCellDropdown = True
+                .InputTitle = iTitle
+                .ErrorTitle = "Fehler"
+                .InputMessage = "bitte auswählen"
+                .ErrorMessage = eMessage
+                .ShowInput = True
+                .ShowError = True
+            End With
+
+        Else
+            With selrange.Validation
+                .Delete()
+            End With
+            selrange.Locked = True
+        End If
+
+        If wasTrue Then
+            appInstance.Application.EnableEvents = True
+        End If
+
+    End Sub
+
+
+
     'Public Function zeichneShapeOfProject(ByRef hproj As clsProjekt, _
     '                                     ByVal zeile As Integer, _
     '                                     ByVal drawPhases As Boolean) As Excel.Shape
@@ -12488,4 +12575,6 @@ Public Module Projekte
 
 
     'End Function
+
+    
 End Module
