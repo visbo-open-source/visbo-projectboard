@@ -167,3 +167,7 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+Projectboard/Projectboard/bin/Debug/requirements/ProjectTemplates/IT Einführungsprojekt.xlsx
+Projectboard/Projectboard/bin/Debug/requirements/ProjectTemplates/IT Entwicklungsprojekt.xlsx
+Projectboard/Projectboard/bin/Debug/requirements/ProjectTemplates/Innovationsprojekt.xlsx
+Projectboard/Projectboard/bin/Debug/requirements/boarddossier.pptx
