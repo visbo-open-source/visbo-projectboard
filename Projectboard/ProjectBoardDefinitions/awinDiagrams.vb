@@ -2172,11 +2172,12 @@ Public Module awinDiagrams
         If datenreihe.Sum = 0 Then
 
             If future < 0 Then
-                Call MsgBox("es gibt im betrachteten Zeitraum keine Ergebnisse aus der Vergangenheit ...")
+                Throw New Exception("es gibt im betrachteten Zeitraum keine Ergebnisse aus der Vergangenheit ...")
+
             ElseIf future > 0 Then
-                Call MsgBox("es gibt im betrachteten Zeitraum keine geplanten, zukünftigen Ergebnisse ...")
+                Throw New Exception("es gibt im betrachteten Zeitraum keine geplanten, zukünftigen Ergebnisse ...")
             Else
-                Call MsgBox("es gibt im betrachteten Zeitraum keine vergangenen oder zukünftigen Ergebnisse ...")
+                Throw New Exception("es gibt im betrachteten Zeitraum keine vergangenen oder zukünftigen Ergebnisse ...")
             End If
 
         Else
@@ -5196,9 +5197,12 @@ Public Module awinDiagrams
         Dim zoom As Double
         Dim minWindowWidth As Double, minWindowHeight As Double
 
-       
+        Dim testWBName As String = appInstance.ActiveWorkbook.Name
+        Dim testWSName As String = CType(appInstance.ActiveSheet, Excel.Worksheet).Name
+        Dim testEnable As Boolean = appInstance.EnableEvents
         Try
-            appInstance.ActiveWorkbook.Windows(windowNames(5)).Activate()
+            appInstance.Worksheets(arrWsNames(3)).activate()
+            'appInstance.ActiveWorkbook.Windows(windowNames(5)).Activate()
         Catch ex As Exception
             Call MsgBox("Window " & windowNames(5) & " existiert nicht mehr !")
             Exit Sub

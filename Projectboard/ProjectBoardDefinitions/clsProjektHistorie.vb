@@ -184,7 +184,11 @@
                         ' in diesem Fall wurde kein Planungs-Stand im gesuchten Monat gefunden ...
                         If i > 0 Then
                             ' jetzt wird gekennzeichnet, dass einfach die Bewertung des Vormonats übernommen wurde: + 12 Std
-                            milestoneDate = tmpValues(i - 1).AddHours(12)
+                            ' aber nur, wenn der Wert von vorher nicht schon die Kennung hatte ....
+                            If DateDiff(DateInterval.Hour, tmpValues(i - 1).Date, tmpValues(i - 1)) < 7 Then
+                                milestoneDate = tmpValues(i - 1).AddHours(12)
+                            End If
+
                         Else
                             milestoneDate = awinSettings.nullDatum
                         End If

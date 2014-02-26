@@ -12,6 +12,11 @@ Public Class Tabelle2
         Dim formerEE As Boolean = Application.EnableEvents
         Application.EnableEvents = False
 
+        ' bei betreten dieses Tabellenblattes soll es auf false gesetzt werden - 
+        ' in dem Moment, wo tabelle1 wieder aktiviert wird, also bei tabelle1.activate wird es auf true gesetzt ... 
+
+        enableOnUpdate = False
+
 
         With Application.ActiveSheet
 

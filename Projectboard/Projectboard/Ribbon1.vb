@@ -85,7 +85,7 @@ Imports Microsoft.Office.Interop.Excel
     Sub awinSetModusHistory(control As IRibbonControl)
 
         demoModusHistory = Not demoModusHistory
-        historicDate = #1/31/2014#
+        historicDate = #11/28/2013#
         historicDate = historicDate.AddHours(16)
         If demoModusHistory Then
             Call MsgBox("Demo Modus History: Ein")
@@ -292,6 +292,7 @@ Imports Microsoft.Office.Interop.Excel
         'Dim tmpShapes As Excel.Shapes
         Dim hproj As clsProjekt
 
+        ' es wird vbeim Betreten der Tabelle2 nochmal auf False gesetzt ... und insbesondere bei Activate Tabelle1 (!) auf true gesetzt, nicht vorher wieder
         enableOnUpdate = False
 
         ' damit man was sieht
@@ -353,7 +354,8 @@ Imports Microsoft.Office.Interop.Excel
         End If
 
 
-        enableOnUpdate = True
+        ' das muss hier de-aktiviert werden, weil durch non-modalen Aufruf des Formulars enableonupdate wieder auf true gesetzt wird 
+        ' enableOnUpdate = True
 
 
 
@@ -798,7 +800,7 @@ Imports Microsoft.Office.Interop.Excel
     Public Sub Tom2G4B1RPLANImport(control As IRibbonControl)
 
 
-        Dim projektInventurFile As String = requirementsOrdner & "RPLAN Projekte.xlsx"
+        'Dim projektInventurFile As String = requirementsOrdner & "RPLAN Projekte.xlsx"
         Dim dateiName As String
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
@@ -827,6 +829,7 @@ Imports Microsoft.Office.Interop.Excel
                 Call importProjekteEintragen(myCollection, importDate)
 
             Catch ex As Exception
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                 Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
                 Exit Sub
             End Try

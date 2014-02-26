@@ -513,7 +513,6 @@
 
             Dim isVorlage As Boolean
             Dim tmpValue As Integer
-            'Dim checkValue As Integer = _relEnde + _Offset
 
             Try
 
