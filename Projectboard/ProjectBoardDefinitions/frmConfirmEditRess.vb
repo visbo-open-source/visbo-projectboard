@@ -13,7 +13,7 @@ Public Class frmConfirmEditRess
 
         'Änderung 30.7.13 Screenupdating = false gesetzt , damit das Geflacker aufhört 
         appInstance.ScreenUpdating = False
-        enableOnUpdate = True
+        'enableOnUpdate = True
         MyBase.Close()
 
     End Sub
@@ -40,7 +40,7 @@ Public Class frmConfirmEditRess
         End Try
 
         Try
-            enableOnUpdate = False
+            'enableOnUpdate = False
             hproj.copyAttrTo(newproj, False)
 
             With newproj
@@ -118,7 +118,7 @@ Public Class frmConfirmEditRess
             MyBase.Close()
 
         Catch ex As Exception
-            enableOnUpdate = True
+            'enableOnUpdate = True
             Call MsgBox(ex.Message)
 
         End Try
@@ -139,7 +139,7 @@ Public Class frmConfirmEditRess
             .activate()
         End With
 
-        enableOnUpdate = True
+        'enableOnUpdate = True
     End Sub
 
 
@@ -148,7 +148,7 @@ Public Class frmConfirmEditRess
         Me.Top = frmCoord(PTfrm.editRess, PTpinfo.top)
         Me.Left = frmCoord(PTfrm.editRess, PTpinfo.left)
 
-        enableOnUpdate = False
+        'enableOnUpdate = False
 
     End Sub
 End Class
