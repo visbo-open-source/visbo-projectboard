@@ -292,6 +292,7 @@ Imports Microsoft.Office.Interop.Excel
         'Dim tmpShapes As Excel.Shapes
         Dim hproj As clsProjekt
 
+        ' es wird vbeim Betreten der Tabelle2 nochmal auf False gesetzt ... und insbesondere bei Activate Tabelle1 (!) auf true gesetzt, nicht vorher wieder
         enableOnUpdate = False
 
         ' damit man was sieht
@@ -353,7 +354,8 @@ Imports Microsoft.Office.Interop.Excel
         End If
 
 
-        enableOnUpdate = True
+        ' das muss hier de-aktiviert werden, weil durch non-modalen Aufruf des Formulars enableonupdate wieder auf true gesetzt wird 
+        ' enableOnUpdate = True
 
 
 

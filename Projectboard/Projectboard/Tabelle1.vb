@@ -53,6 +53,8 @@ Public Class Tabelle1
             Application.ScreenUpdating = True
         End If
 
+        enableOnUpdate = True
+
     End Sub
 
     Private Sub Tabelle1_Startup() Handles Me.Startup
