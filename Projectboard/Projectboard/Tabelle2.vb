@@ -12,6 +12,8 @@ Public Class Tabelle2
         Dim formerEE As Boolean = Application.EnableEvents
         Application.EnableEvents = False
 
+        Application.ScreenUpdating = False
+
         ' bei betreten dieses Tabellenblattes soll es auf false gesetzt werden - 
         ' in dem Moment, wo tabelle1 wieder aktiviert wird, also bei tabelle1.activate wird es auf true gesetzt ... 
 
@@ -124,6 +126,7 @@ Public Class Tabelle2
 
 
         Application.EnableEvents = formerEE
+        Application.ScreenUpdating = True
 
     End Sub
 
@@ -143,14 +146,6 @@ Public Class Tabelle2
 
     Private Sub Tabelle2_Deactivate() Handles Me.Deactivate
 
-        ' die Short Cut Menues aus Excel alle de-aktivieren ...
-        'For Each cbar In appInstance.CommandBars
-
-        '    If cbar.Type = MsoBarType.msoBarTypePopup Then
-        '        cbar.Enabled = False
-        '    End If
-        'Next
-        'Me.Visible = XlSheetVisibility.xlSheetHidden
 
     End Sub
 
