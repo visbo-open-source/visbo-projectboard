@@ -4,16 +4,10 @@ Imports Microsoft.Office.Interop.Excel
 Public Class frmConfirmEditRess
 
     Public selectedProject As String
+    Private okButtonClicked As Boolean
 
     Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
 
-        'With appInstance.Worksheets(arrWsNames(3))
-        '    .activate()
-        'End With
-
-        'Änderung 30.7.13 Screenupdating = false gesetzt , damit das Geflacker aufhört 
-        appInstance.ScreenUpdating = False
-        'enableOnUpdate = True
         MyBase.Close()
 
     End Sub
@@ -28,7 +22,6 @@ Public Class frmConfirmEditRess
         Dim tmpShapes As Shapes
 
 
-
         Try
             pname = selectedProject
             hproj = ShowProjekte.getProject(pname)
@@ -40,7 +33,7 @@ Public Class frmConfirmEditRess
         End Try
 
         Try
-            'enableOnUpdate = False
+
             hproj.copyAttrTo(newproj, False)
 
             With newproj
@@ -56,16 +49,20 @@ Public Class frmConfirmEditRess
             ' jetzt müssen die Ampel Bewertung und Meilenstein Bwertungen übernommen werden ...
             hproj.copyBewertungenTo(newproj)
 
-            'Änderung 30.7.13 Screenupdating = false gesetzt , damit das Geflacker aufhört 
+            ''Änderung 30.7.13 Screenupdating = false gesetzt , damit das Geflacker aufhört 
             appInstance.ScreenUpdating = False
+
+
+            ' jetzt wird das Formular geschlossen ; das ist notwendig, bevor das Shpae geschrieben wird 
+            ' es kann sonst zu Seiteneffekten kommen, dass die Shape Koordinaten geändert werden 
+            ' durch mybase.close wird auch gewechselt auf Tabelle1 ...
+            okButtonClicked = True ' damit bei Form_closed kein Enableonupdate bzw ScreenUpdate gemacht wird 
+            MyBase.Close()
+
 
             ' jetzt muss die Projektdarstellung gelöscht werden ...
             Call clearProjektinPlantafel(pname)
 
-            ' Änderung 26.7: roentgenblick ison wird jetzt in clearProjektinPlantafel behandelt
-            'If roentgenBlick.isOn Then
-            '    Call NoshowNeedsofProject(pname)
-            'End If
 
             If pname = newproj.name Then
 
@@ -98,8 +95,6 @@ Public Class frmConfirmEditRess
             ' dann müssen die Diagramme neu gezeichnet werden 
             Call awinNeuZeichnenDiagramme(3)
 
-            'enableOnUpdate = True
-
             ' jetzt muss der Select des neuen Shapes gemacht werden 
 
             Try
@@ -111,35 +106,48 @@ Public Class frmConfirmEditRess
                 End With
 
             Catch ex As Exception
-
+                shpElement = Nothing
             End Try
 
-            
-            MyBase.Close()
+
 
         Catch ex As Exception
-            'enableOnUpdate = True
+            enableOnUpdate = True
+            appInstance.ScreenUpdating = True
             Call MsgBox(ex.Message)
 
         End Try
-        ' Änderung 8.11 
-        'enableOnUpdate = True
+
+        ' jetzt wird enableOnupdate wieder auf True gesetzt 
+        enableOnUpdate = True
+        appInstance.ScreenUpdating = True
+
     End Sub
 
     Private Sub frmConfirmEditRess_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
 
-        'Änderung 8.11.13 Screenupdating = false gesetzt , damit das Geflacker aufhört 
-        appInstance.ScreenUpdating = False
-
+        
         frmCoord(PTfrm.editRess, PTpinfo.top) = Me.Top
         frmCoord(PTfrm.editRess, PTpinfo.left) = Me.Left
-       
+
+        ' jetzt wird auf Tabelle 1 zurückgewechselt ; es ist notwendig, das zu machen, bevor das Shape geschrieben wird; 
+        ' andernfalls werden die Shape Koordinaten leicht verändert 
+        ' und es ist notwendig es hier zu machen, weil das von Schliessen, Abbrechen, OK her erreicht werden muss 
+
+        If Not okButtonClicked Then
+            appInstance.ScreenUpdating = False
+        End If
 
         With appInstance.Worksheets(arrWsNames(3))
             .activate()
         End With
 
-        'enableOnUpdate = True
+        If Not okButtonClicked Then
+            ' jetzt wird enableOnupdate wieder auf True gesetzt 
+            enableOnUpdate = True
+            appInstance.ScreenUpdating = True
+        End If
+
     End Sub
 
 
@@ -148,7 +156,8 @@ Public Class frmConfirmEditRess
         Me.Top = frmCoord(PTfrm.editRess, PTpinfo.top)
         Me.Left = frmCoord(PTfrm.editRess, PTpinfo.left)
 
-        'enableOnUpdate = False
+        okButtonClicked = False
+
 
     End Sub
 End Class
