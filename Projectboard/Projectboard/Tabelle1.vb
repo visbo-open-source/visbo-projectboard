@@ -12,28 +12,6 @@ Public Class Tabelle1
     Private Sub Tabelle1_ActivateEvent() Handles Me.ActivateEvent
 
 
-        ' die Short Cut Menues aus Excel alle de-aktivieren ...
-        ' das wird jetzt in Tabelle1 , also der Projekt-Tafel gemacht
-        ' es wird beim Verlassen der Tabelle1 wieder aufgehoben 
-
-        'Dim cbar As CommandBar
-
-        'For Each cbar In appInstance.CommandBars
-
-
-        '    If cbar.Type = MsoBarType.msoBarTypePopup And _
-        '        (cbar.Name = "Shapes" Or _
-        '         cbar.Name = "Cell" Or _
-        '         cbar.Name = "Plot Area" Or _
-        '         cbar.Name = "Chart" Or _
-        '         cbar.Name = "Diagram") Then
-
-        '        cbar.Enabled = False
-        '    Else
-        '        cbar.Enabled = True
-        '    End If
-        'Next
-
         Application.DisplayFormulaBar = False
 
         With Application.ActiveWindow
@@ -49,11 +27,6 @@ Public Class Tabelle1
 
         End With
 
-        If Application.ScreenUpdating = False Then
-            Application.ScreenUpdating = True
-        End If
-
-        enableOnUpdate = True
 
     End Sub
 
@@ -98,16 +71,6 @@ Public Class Tabelle1
     Private Sub Tabelle1_Deactivate() Handles Me.Deactivate
 
 
-
-        ' die Short Cut Menues aus Excel wieder alle aktivieren ...
-        'Dim cbar As CommandBar
-
-        'For Each cbar In appInstance.CommandBars
-
-        '    cbar.Enabled = True
-
-
-        'Next
 
 
     End Sub
