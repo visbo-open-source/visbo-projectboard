@@ -69,7 +69,6 @@ Public Class frmSelectPPTTempl
                 Me.Cursor = Cursors.WaitCursor
 
                 BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
-                'Call createPPTSlidesFromConstellation(vorlagenDateiName)
 
             Catch ex As Exception
                 Call MsgBox(ex.Message)
@@ -77,14 +76,15 @@ Public Class frmSelectPPTTempl
 
         ElseIf calledfrom = "Projekt" Then
             dirName = awinPath & RepProjectVorOrdner
-            'Call MsgBox("hier bin ich bei createReportProjekt_click   " & RepVorlagenDropbox.Text)
             vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
+
             Try
                 'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
                 awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
             Catch ex As Exception
                 awinSelection = Nothing
             End Try
+
             Try
                 createReport.Enabled = False
                 RepVorlagenDropbox.Enabled = False

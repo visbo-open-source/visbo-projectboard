@@ -68,13 +68,16 @@ Imports Microsoft.Office.Interop.Excel
             Call awinLoadConstellation(constellationName)
 
             appInstance.ScreenUpdating = False
-            Call diagramsVisible(False)
+            'Call diagramsVisible(False)
             Call awinClearPlanTafel()
             Call awinZeichnePlanTafel()
             Call awinNeuZeichnenDiagramme(2)
-            Call diagramsVisible(True)
+            'Call diagramsVisible(True)
             appInstance.ScreenUpdating = True
             Call MsgBox(constellationName & " wurde geladen ...")
+
+            ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
+            currentConstellation = constellationName
 
         End If
         enableOnUpdate = True
@@ -1690,7 +1693,7 @@ Imports Microsoft.Office.Interop.Excel
                 End With
             Next
             Dim obj As New Object
-            Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
         End If
@@ -1745,7 +1748,7 @@ Imports Microsoft.Office.Interop.Excel
             Next
             Dim obj As New Object
 
-            Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.FitRisikoVol, PTpfdk.FitRisikoVol, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
             'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
@@ -1815,7 +1818,7 @@ Imports Microsoft.Office.Interop.Excel
             Dim obj As New Object
 
             Try
-                Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
             Catch ex As Exception
 
             End Try
@@ -2361,7 +2364,7 @@ Imports Microsoft.Office.Interop.Excel
             Next
 
             ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
 
 
             With auswahlFenster
@@ -2708,7 +2711,7 @@ Imports Microsoft.Office.Interop.Excel
 
 
         ' jetzt stehen in der listOfItems die Namen der Phasen 
-        Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+        Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
 
         von = showRangeLeft
         bis = showRangeRight
@@ -3121,7 +3124,7 @@ Imports Microsoft.Office.Interop.Excel
         Dim obj As New Object
 
         Try
-            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
         Catch ex As Exception
 
         End Try
@@ -3164,7 +3167,7 @@ Imports Microsoft.Office.Interop.Excel
         Dim obj As New Object
 
         Try
-            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisikoVol, PTpfdk.FitRisikoVol, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
             'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
         Catch ex As Exception
 
@@ -3211,7 +3214,7 @@ Imports Microsoft.Office.Interop.Excel
         Dim obj As New Object
 
         Try
-            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
         Catch ex As Exception
 
         End Try
@@ -3258,7 +3261,7 @@ Imports Microsoft.Office.Interop.Excel
         Dim obj As New Object
 
         Try
-            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ZeitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ZeitRisiko, 0, False, True, True, top, left, width, height)
         Catch ex As Exception
 
         End Try

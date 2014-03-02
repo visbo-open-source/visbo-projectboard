@@ -176,15 +176,11 @@ namespace ScottLogic.Controls.PieChart
 
                 if ((bool)checkbox.IsChecked)
                 {
-                    // nichts tun 
-                }
-                //andernfalls: Symbole löschen 
-                else
-                {
-                   
+                    //andernfalls: Symbole löschen 
                     Module1.awinDeleteMilestoneShapes(1);
-                                       
                 }
+                
+               
                 
             }
         }

@@ -148,12 +148,17 @@ namespace WpfWindow
                         int farbID = 4;
                         SortedList<string, string> nameList = new SortedList<string, string>();
 
+
+                        if (this.checkbox1.IsChecked == true)
+                        {
+                            Module1.awinDeleteMilestoneShapes(1);
+                        }
+
                         foreach (string name in this.listbox.SelectedItems)
                         {
                             nameList.Add(name, name);
                         }
-
-
+                        
                         Projekte.awinZeichneMilestones(nameList, farbID, false);
 
 
@@ -202,7 +207,10 @@ namespace WpfWindow
                     int farbID = 4;
                     VBCollection myCollection = new VBCollection();
 
-                   
+                    if (this.checkbox1.IsChecked == true)
+                    {
+                        Module1.awinDeleteMilestoneShapes(3);
+                    }
                         
                     foreach (string name in this.listbox.SelectedItems)
                     {

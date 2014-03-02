@@ -795,33 +795,34 @@ Public Class clsProjekt
                 _startDate = value
                 _Start = DateDiff(DateInterval.Month, StartofCalendar, value) + 1
                 updatePhases = True
+                If differenzInTagen <> 0 Then
+                    ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
+                    currentConstellation = ""
+                End If
 
             ElseIf _startDate = NullDatum Then
                 _startDate = value
                 _Start = DateDiff(DateInterval.Month, StartofCalendar, value) + 1
+                If differenzInTagen <> 0 Then
+                    ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
+                    currentConstellation = ""
+                End If
             Else
                 ' es muss geprüft werden, ob es noch im Planungs-Stadium ist: nur dann darf noch verschoben werden ...
                 If _Status = ProjektStatus(0) Then
                     _startDate = value
                     _Start = DateDiff(DateInterval.Month, StartofCalendar, value) + 1
                     updatePhases = True
+                    If differenzInTagen <> 0 Then
+                        ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
+                        currentConstellation = ""
+                    End If
+
                 Else
                     Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
                 End If
 
             End If
-
-            'If updatePhases Then
-
-            '    If olddate <> NullDatum And differenzInTagen <> 0 Then
-            '        Dim chkValue As Integer, oldvalue As Integer
-            '        ' jetzt müssen die Phasen-Werte verändert werden 
-            '        For p = 1 To Me.CountPhases
-
-            '        Next
-            '    End If
-
-            'End If
 
 
         End Set
@@ -965,7 +966,9 @@ Public Class clsProjekt
     Public ReadOnly Property risikoKostenfaktor As Double
         Get
             Dim tmp As Double
-            tmp = (Me.Risiko - weightStrategicFit * Me.StrategicFit) / 100
+            'tmp = (Me.Risiko - weightStrategicFit * Me.StrategicFit) / 100'
+            ' wieso soll das Risiko geringer sein, wenn die Strategische Relevanz höher ist ? 
+            tmp = Me.Risiko / 100
             If tmp < 0 Then
                 tmp = 0
             End If

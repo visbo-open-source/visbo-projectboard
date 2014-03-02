@@ -7846,13 +7846,18 @@ Public Module Projekte
         Dim shp As Excel.Shape
 
         For Each shp In appInstance.ActiveSheet.Shapes
-            With shp
-                If shp.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                    shp.AutoShapeType = MsoAutoShapeType.msoShapeIsoscelesTriangle Or _
-                    shp.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
-                    .Delete()
-                End If
-            End With
+            If shp.HasChart Then
+                ' do nothing, sollen ja erhalten bleiben 
+            Else
+                With shp
+                    If shp.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
+                        shp.AutoShapeType = MsoAutoShapeType.msoShapeIsoscelesTriangle Or _
+                        shp.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
+                        .Delete()
+                    End If
+                End With
+            End If
+            
         Next shp
 
         ' Änderung 26.7 weil Zahlen stehen blieben beim Neuladen einer neuen Konstellation

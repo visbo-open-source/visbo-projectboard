@@ -16,6 +16,8 @@
                 AllShapes.Add(shpUID, pname)
             End If
 
+            ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
+            currentConstellation = ""
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -59,6 +61,9 @@
             If SID <> "" Then
                 AllShapes.Remove(SID)
             End If
+
+            ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss das zurückgesetzt werden 
+            currentConstellation = ""
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -817,19 +822,6 @@
                 With hproj
                     prAnfang = .Start + .StartOffset
                     prEnde = .Start + .Dauer - 1 + .StartOffset
-                    ' die Marge wird hier nicht benötigt ..
-
-
-                    'If .Risiko > 1 Then
-                    '    SRweight = weightStrategicFit * .StrategicFit / .Risiko
-                    'Else
-                    '    SRweight = .StrategicFit
-                    'End If
-
-                    'If SRweight > 1 Then
-                    '    SRweight = 1
-                    'End If
-
 
                 End With
 

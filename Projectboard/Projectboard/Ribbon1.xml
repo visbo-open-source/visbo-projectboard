@@ -65,7 +65,7 @@
           <button id="PT0G2B1" label="Status" onAction="Tom2G2M5M1B3ShowStatus" />
           <separator id="PT0G2s1"/>
           <menu id="PT0G2M0" label="Phasen">
-            <button id="PT0G2M0B1" label="Phasen visualisieren" onAction="PT0VisualizePhasesAll" />
+            <button id="PT0G2M0B1" label="Phasen anzeigen" onAction="PT0VisualizePhasesAll" />
             <button id="PT0G2M0B2" label="Summen Charts" onAction="PT0ShowPortfolioPhasen" />
           </menu>
           <separator id="PT0G2s2"/>
@@ -77,10 +77,10 @@
           <separator id="PT0G2s3"/>
           <menu id="PT0G2M2" label="Meilensteine">
             <button id="PT0G2M2B1" label="Ampel Übersicht" onAction="PT0ShowZieleUebersicht" />
-            <button id="PT0G2M2B2" label="Alle anzeigen" onAction="Tom2G2M5M2B5ShowMilestones" />
-            <button id="PT0G2M2B3" label="Auswahl anzeigen" onAction="PTShowAllMilestonesByName" />
+            <!--<button id="PT0G2M2B2" label="Alle anzeigen" onAction="Tom2G2M5M2B5ShowMilestones" />-->
+            <button id="PT0G2M2B3" label="Meilensteine anzeigen" onAction="PTShowAllMilestonesByName" />
             <button id="PT0G2M2B4" label="Summen Charts" onAction="PTShowMilestoneSummen" />
-            <button id="PT0G2M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
+            <!--<button id="PT0G2M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />-->
           </menu>
           <separator id="PT0G2s4"/>
           <button id="PT0G2B3" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
@@ -126,7 +126,7 @@
         </group>
         <!---->
         <group id="PT2G2" label="Portfolio">
-          <button id="PT2G2B1" label="Neu/Speichern" onAction="awinNeueKonstellation" />
+          <button id="PT2G2B1" label="Neu/Aktualisieren" onAction="awinNeueKonstellation" />
           <separator id="PT2G2s1"/>
           <button id="PT2G2B2" label="Laden" onAction="awinLadenKonstellation" />
           <separator id="PT2G2s2"/>

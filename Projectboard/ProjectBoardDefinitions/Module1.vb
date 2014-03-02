@@ -38,6 +38,7 @@ Public Module Module1
     Public ImportProjekte As New clsProjekte
     Public DeletedProjekte As New clsProjekte
     Public projectConstellations As New clsConstellations
+    Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
 
     ' hier wird die Projekt Historie eines Projektes aufgenommen 
     Public projekthistorie As New clsProjektHistorie
@@ -444,43 +445,34 @@ Public Module Module1
     '
     ' prüft , ob übergebenes Diagramm ein Rollen Diagramm ist - in R steht ggf als Ergebnis die entsprechende Rollen-Nummer; 0 wenn es kein Rollen Diagramm ist
     '
-    Function istRollenDiagramm(ByRef chtobj As ChartObject, ByRef rolle As Integer) As Boolean
-        Dim r As Integer
+    Function istRollenDiagramm(ByRef chtobj As ChartObject) As Boolean
+
         Dim found As Boolean
-        Dim anzRollen As Integer
-        Dim chtTitle As String
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
 
 
-        anzRollen = RoleDefinitions.Count
 
-        r = 1
-        rolle = 0
+
         found = False
+        chtobjName = chtobj.Name
 
         Try
-            chtTitle = chtobj.Chart.ChartTitle.Text
+
+            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
+
+                If CInt(tmpStr(1)) = PTpfdk.Rollen Then
+
+                    found = True
+
+                End If
+
+            End If
+
         Catch ex As Exception
-            chtTitle = " "
         End Try
 
-        While Not found And r <= anzRollen
-            If chtTitle Like RoleDefinitions.getRoledef(r).name & "*" Then
-                'If RoleDefinitions.getRoledef(r).name = chtobj.Chart.ChartTitle.text Then
-                found = True
-            Else
-                r = r + 1
-            End If
-        End While
-
-        If chtTitle Like ("Rollen-Übersicht" & "*") Then
-            'If chtobj.Chart.ChartTitle.text = "Rollen-Übersicht" Then
-            found = True
-            r = RoleDefinitions.Count + 1
-        End If
-
-        If found Then
-            rolle = r
-        End If
 
         istRollenDiagramm = found
 
@@ -580,51 +572,34 @@ Public Module Module1
     '
     ' prüft , ob übergebenes Diagramm ein Kosten Diagramm ist - in kostenart steht ggf als Ergebnis die entsprechende Kostenart-Nummer; 0 wenn es kein Kostenart Diagramm ist
     '
-    Function istKostenartDiagramm(ByRef chtobj As ChartObject, ByRef kostenart As Integer) As Boolean
+    Function istKostenartDiagramm(ByRef chtobj As ChartObject) As Boolean
 
-        Dim k As Integer
+
         Dim found As Boolean
-        Dim anzKostenarten As Integer
-        Dim chtTitle As String
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
 
-        anzKostenarten = CostDefinitions.Count
-        k = 1
-        kostenart = 0
+
         found = False
 
+
+        chtobjName = chtobj.Name
+
         Try
-            chtTitle = chtobj.Chart.ChartTitle.Text
-        Catch ex As Exception
-            chtTitle = " "
-        End Try
 
+            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
-        While Not found And k <= anzKostenarten
-            If chtTitle Like CostDefinitions.getCostdef(k).name & "*" Then
+                If CInt(tmpStr(1)) = PTpfdk.Kosten Then
 
-                ' folgende 2 Zeilen notwendig, weil sonst das Anzeigen-Projekt-Personalkosten so interpretiert wird, als
-                ' ob es ein summen-Diagramm wäre  (15.7.2013)
-                If chtTitle.Length <= CostDefinitions.getCostdef(k).name.Length + 15 Then
                     found = True
-                Else
-                    k = k + 1
+
                 End If
-                'If CostDefinitions.getCostdef(k).name = chtobj.Chart.ChartTitle.text Then
 
-            Else
-                k = k + 1
             End If
-        End While
 
-        'If chtobj.Chart.ChartTitle.text = "Kosten-Übersicht" Then
-        If chtTitle Like ("Kosten-Übersicht" & "*") Then
-            found = True
-            k = CostDefinitions.Count + 1
-        End If
-
-        If found Then
-            kostenart = k
-        End If
+        Catch ex As Exception
+        End Try
 
         istKostenartDiagramm = found
 
@@ -633,46 +608,73 @@ Public Module Module1
     '
     ' prüft , ob übergebenes Diagramm ein Phasen Diagramm ist - in phasenart steht ggf als Ergebnis die entsprechende Phasen-Nummer; 0 wenn es kein Phasen Diagramm ist
     '
-    Function istPhasenDiagramm(ByRef chtobj As ChartObject, ByRef phasenart As Integer) As Boolean
+    Function istPhasenDiagramm(ByRef chtobj As ChartObject) As Boolean
 
-        Dim p As Integer
+
         Dim found As Boolean
-        Dim anzPhasen As Integer
-        Dim chtTitle As String
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
 
-        anzPhasen = PhaseDefinitions.Count
-        p = 1
-        phasenart = 0
         found = False
 
+
+        chtobjName = chtobj.Name
+
         Try
-            chtTitle = chtobj.Chart.ChartTitle.Text
-        Catch ex As Exception
-            chtTitle = " "
-        End Try
 
-        While Not found And p <= anzPhasen
-            If chtTitle Like PhaseDefinitions.getPhaseDef(p).name & "*" Then
-                'If compareString = chtobj.Chart.ChartTitle.text Then
-                found = True
-            Else
-                p = p + 1
+            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
+
+                If CInt(tmpStr(1)) = PTpfdk.Phasen Then
+
+                    found = True
+
+                End If
+
             End If
-        End While
 
-        If chtTitle Like ("Phasen-Übersicht" & "*") Then
-            found = True
-            p = CostDefinitions.Count + 1
-        End If
-
-
-        If found Then
-            phasenart = p
-        End If
+        Catch ex As Exception
+        End Try
 
         istPhasenDiagramm = found
 
     End Function
+
+    '
+    ' prüft , ob übergebenes Diagramm ein Meilenstein Diagramm ist - in phasenart steht ggf als Ergebnis die entsprechende Phasen-Nummer; 0 wenn es kein Phasen Diagramm ist
+    '
+    Function istMileStoneDiagramm(ByRef chtobj As ChartObject) As Boolean
+
+
+        Dim found As Boolean
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
+
+        
+        found = False
+
+
+        chtobjName = chtobj.Name
+
+        Try
+
+            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
+
+                If CInt(tmpStr(1)) = PTpfdk.Meilenstein Then
+                    found = True
+
+                End If
+
+            End If
+
+        Catch ex As Exception
+        End Try
+
+        istMileStoneDiagramm = found
+
+    End Function
+
 
     '
     ' prüft , ob übergebenes Diagramm ein Rollen Diagramm ist - in R steht ggf als Ergebnis die entsprechende Rollen-Nummer; 0 wenn es kein Rollen Diagramm ist
@@ -1533,7 +1535,7 @@ Public Module Module1
                 .projectName = kvp.Key
                 .show = True
                 .Start = kvp.Value.startDate
-                .variantName = ""
+                .variantName = kvp.Value.variantName
                 .zeile = kvp.Value.tfZeile
             End With
             newC.Add(newConstellationItem)
@@ -1604,12 +1606,12 @@ Public Module Module1
 
                 End If
             Catch ex As Exception
-
+                ' still-to-do:
+                ' hier muss das Projekt aus der Datenbank geholt werden ; 
+                ' dazu muss diese Sub in ein anderes Modul transferiert werden 
             End Try
 
         Next
-
-
 
     End Sub
 

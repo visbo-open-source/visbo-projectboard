@@ -915,7 +915,7 @@ Public Module testModule
                                 'hwidth = 12 * boxWidth
                                 'hheight = 8 * boxHeight
 
-                                Call awinCreatePortfolioDiagramms(mycollection, obj, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, True, False, True, False, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagramms(mycollection, obj, PTpfdk.FitRisiko, 0, True, False, True, False, htop, hleft, hwidth, hheight)
                                 reportObj = obj
 
                                 notYetDone = True
@@ -1554,7 +1554,7 @@ Public Module testModule
         Dim shapeRange As pptNS.ShapeRange = Nothing
         Dim presentationFile As String = awinPath & requirementsOrdner & "boarddossier.pptx"
         Dim pptShape As pptNS.Shape
-        Dim portfolioName As String = "Multi Projekt Übersicht"
+        Dim portfolioName As String = currentConstellation
         Dim top As Double, left As Double, width As Double, height As Double
         Dim htop As Double, hleft As Double, hwidth As Double, hheight As Double
         Dim pptSize As Integer = 18
@@ -2149,7 +2149,7 @@ Public Module testModule
                                 hwidth = 0.4 * maxScreenWidth
                                 hheight = 0.6 * maxScreenHeight
                                 obj = Nothing
-                                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, 0, False, True, True, htop, hleft, hwidth, hheight)
 
 
                                 reportObj = obj
