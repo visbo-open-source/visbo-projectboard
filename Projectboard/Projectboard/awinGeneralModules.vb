@@ -1290,254 +1290,259 @@ Public Module awinGeneralModules
         ' ------------------------------------------------------------------------------------------------------
         ' Einlesen der Ressourcen
         ' ------------------------------------------------------------------------------------------------------
-
+        Dim wsRessourcen As Excel.Worksheet
         Try
-            Dim wsRessourcen As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Ressourcen"), _
+            wsRessourcen = CType(appInstance.ActiveWorkbook.Worksheets("Ressourcen"), _
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-
-            With wsRessourcen
-
-                Dim rng As Excel.Range
-                Dim zelle As Excel.Range
-                Dim chkPhase As Boolean = True
-                Dim chkRolle As Boolean = True
-                Dim firsttime As Boolean = False
-                Dim added As Boolean = True
-                Dim Xwerte As Double()
-                Dim crole As clsRolle
-                Dim cphase As New clsPhase(hproj)
-                Dim ccost As clsKostenart
-                Dim phaseName As String = ""
-
-                Dim anfang As Integer, ende As Integer  ', projDauer As Integer
-
-                Dim farbeAktuell As Object
-                Dim r As Integer, k As Integer
-
-
-                .Unprotect(Password:="x")       ' Blattschutz aufheben
-
-
-                Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
-
-                rng = .Range("Phasen_des_Projekts")
-
-                If CStr(.Range("Phasen_des_Projekts").Cells(1).value) <> hproj.name Then
-
-                    ' ProjektPhase wird hinzugefügt
-                    cphase = New clsPhase(parent:=hproj)
-                    added = False
-                    phaseName = hproj.name
-
-                    ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
-                    With cphase
-                        .name = phaseName
-                        Dim startOffset As Integer = 0
-                        .changeStartandDauer(startOffset, ProjektdauerIndays)
-                        Dim phaseStartdate As Date = .getStartDate
-                        Dim phaseEnddate As Date = .getEndDate
-                        'projDauer = calcDauerIndays(phaseStartdate, phaseEnddate)
-                        firsttime = True
-                    End With
-                    'Call MsgBox("Projektnamen/Phasen Konflikt in awinImportProjekt" & vbLf & "Problem wurde behoben")
-
-                End If
-
-                zeile = 0
-
-                For Each zelle In rng
-
-                    zeile = zeile + 1
-
-                    ' nachsehen, ob Phase angegeben oder Rolle/Kosten
-                    If Len(CType(zelle.Value, String)) > 1 Then
-                        phaseName = CType(zelle.Value, String).Trim
-                    Else
-                        phaseName = ""
-                    End If
-
-                    ' hier wird die Rollen bzw Kosten Information ausgelesen
-                    Dim hname As String
-                    Try
-                        hname = CType(zelle.Offset(0, 1).Value, String).Trim
-                    Catch ex1 As Exception
-                        hname = ""
-                    End Try
-
-                    If Len(phaseName) > 0 And Len(hname) <= 0 Then
-                        chkPhase = True
-                        chkRolle = False
-                        If Not firsttime Then
-                            firsttime = True
-                        End If
-                    End If
-
-                    If Len(phaseName) <= 0 And Len(hname) > 0 Then
-                        If zeile = 1 Then
-                            Call MsgBox(" es fehlt die ProjektPhase")
-                        Else
-                            chkPhase = False
-                            chkRolle = True
-                        End If
-                    Else
-                    End If
-
-                    If Len(phaseName) > 0 And Len(hname) > 0 Then
-                        chkPhase = True
-                        chkRolle = True
-                    End If
-
-                    If Len(phaseName) <= 0 And Len(hname) <= 0 Then
-                        chkPhase = False
-                        chkRolle = False
-                        ' beim 1.mal: abspeichern der letzten Phase mit Ihren Rollen
-                        ' beim 2.mal: for - Schleife abbrechen
-                    End If
-
-                    Select Case chkPhase
-                        Case True
-                            If Not added Then
-                                hproj.AddPhase(cphase)
-                            End If
-
-                            cphase = New clsPhase(parent:=hproj)
-                            added = False
-
-                            ' Auslesen der Phasen Dauer
-                            anfang = 1  ' anfang enthält den rel.Anfang einer Phase
-                            Try
-                                While CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142 And
-                                    Not (CType(zelle.Offset(0, anfang + 1).Value, String) = "x")
-                                    anfang = anfang + 1
-                                End While
-                            Catch ex As Exception
-                                Throw New ArgumentException("Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
-                                                            "Bitte überprüfen Sie dies.")
-                            End Try
-
-                            ende = anfang + 1
-
-                            If CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142 Then
-                                While CType(zelle.Offset(0, ende + 1).Value, String) = "x"
-                                    ende = ende + 1
-                                End While
-                                ende = ende - 1
-                            Else
-                                farbeAktuell = zelle.Offset(0, anfang + 1).Interior.Color
-                                While CInt(zelle.Offset(0, ende + 1).Interior.Color) = CInt(farbeAktuell)
-
-                                    ende = ende + 1
-                                End While
-                                ende = ende - 1
-                            End If
-
-                            With cphase
-                                .name = phaseName
-                                ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
-                                Dim startOffset As Integer
-                                Dim dauerIndays As Integer
-                                startOffset = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
-                                dauerIndays = calcDauerIndays(hproj.startDate.AddDays(startOffset), ende - anfang + 1, True)
-
-                                .changeStartandDauer(startOffset, dauerIndays)
-                                .Offset = 0
-
-                                ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
-                                Dim phaseStartdate As Date = .getStartDate
-                                Dim phaseEnddate As Date = .getEndDate
-
-                            End With
-                            Select Case chkRolle
-                                Case True
-                                    Throw New ArgumentException("Rollen/Kosten-Bedarfe zur Phase '" & phaseName & "' bitte in die darauffolgenden Zeilen eintragen")
-                                Case False  ' es wurde nur eine Phase angegeben: korrekt
-
-                            End Select
-
-                        Case False ' auslesen Rollen- bzw. Kosten-Information
-
-                            Select Case chkRolle
-                                Case True
-                                    ' hier wird die Rollen bzw Kosten Information ausgelesen
-                                    '
-                                    ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
-                                    '
-                                    If RoleDefinitions.Contains(hname) Then
-                                        Try
-                                            r = CInt(RoleDefinitions.getRoledef(hname).UID)
-
-                                            ReDim Xwerte(ende - anfang)
-
-
-                                            For m = anfang To ende
-                                                Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
-                                            Next m
-
-                                            crole = New clsRolle(ende - anfang + 1)
-                                            With crole
-                                                .RollenTyp = r
-                                                .Xwerte = Xwerte
-                                            End With
-
-                                            With cphase
-                                                .AddRole(crole)
-                                            End With
-                                        Catch ex As Exception
-                                            '
-                                            ' handelt es sich um die Kostenart Definition?
-                                            '
-                                        End Try
-
-                                    ElseIf CostDefinitions.Contains(hname) Then
-
-                                        Try
-
-                                            k = CInt(CostDefinitions.getCostdef(hname).UID)
-
-                                            ReDim Xwerte(ende - anfang)
-
-                                            For m = anfang To ende
-                                                Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
-                                            Next m
-
-                                            ccost = New clsKostenart(ende - anfang + 1)
-                                            With ccost
-                                                .KostenTyp = k
-                                                .Xwerte = Xwerte
-                                            End With
-
-
-                                            With cphase
-                                                .AddCost(ccost)
-                                            End With
-
-                                        Catch ex As Exception
-
-                                        End Try
-
-                                    End If
-
-                                Case False  ' es wurde weder Phase noch Rolle angegeben. 
-                                    If firsttime Then
-                                        firsttime = False
-                                    Else 'beim 2. mal: letzte Phase hinzufügen; ENDE von For-Schleife for each Zelle
-                                        hproj.AddPhase(cphase)
-                                        Exit For
-                                    End If
-
-                            End Select
-
-                    End Select
-
-                Next zelle
-
-
-            End With
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in awinImportProject, Lesen Ressourcen von '" & hproj.name & "' " & vbLf & ex.Message)
+            wsRessourcen = Nothing
         End Try
 
+        If Not IsNothing(wsRessourcen) Then
+
+            Try
+                With wsRessourcen
+                    Dim rng As Excel.Range
+                    Dim zelle As Excel.Range
+                    Dim chkPhase As Boolean = True
+                    Dim chkRolle As Boolean = True
+                    Dim firsttime As Boolean = False
+                    Dim added As Boolean = True
+                    Dim Xwerte As Double()
+                    Dim crole As clsRolle
+                    Dim cphase As New clsPhase(hproj)
+                    Dim ccost As clsKostenart
+                    Dim phaseName As String = ""
+
+                    Dim anfang As Integer, ende As Integer  ', projDauer As Integer
+
+                    Dim farbeAktuell As Object
+                    Dim r As Integer, k As Integer
+
+
+                    .Unprotect(Password:="x")       ' Blattschutz aufheben
+
+
+                    Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
+
+                    rng = .Range("Phasen_des_Projekts")
+
+                    If CStr(.Range("Phasen_des_Projekts").Cells(1).value) <> hproj.name Then
+
+                        ' ProjektPhase wird hinzugefügt
+                        cphase = New clsPhase(parent:=hproj)
+                        added = False
+                        phaseName = hproj.name
+
+                        ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
+                        With cphase
+                            .name = phaseName
+                            Dim startOffset As Integer = 0
+                            .changeStartandDauer(startOffset, ProjektdauerIndays)
+                            Dim phaseStartdate As Date = .getStartDate
+                            Dim phaseEnddate As Date = .getEndDate
+                            'projDauer = calcDauerIndays(phaseStartdate, phaseEnddate)
+                            firsttime = True
+                        End With
+                        'Call MsgBox("Projektnamen/Phasen Konflikt in awinImportProjekt" & vbLf & "Problem wurde behoben")
+
+                    End If
+
+                    zeile = 0
+
+                    For Each zelle In rng
+
+                        zeile = zeile + 1
+
+                        ' nachsehen, ob Phase angegeben oder Rolle/Kosten
+                        If Len(CType(zelle.Value, String)) > 1 Then
+                            phaseName = CType(zelle.Value, String).Trim
+                        Else
+                            phaseName = ""
+                        End If
+
+                        ' hier wird die Rollen bzw Kosten Information ausgelesen
+                        Dim hname As String
+                        Try
+                            hname = CType(zelle.Offset(0, 1).Value, String).Trim
+                        Catch ex1 As Exception
+                            hname = ""
+                        End Try
+
+                        If Len(phaseName) > 0 And Len(hname) <= 0 Then
+                            chkPhase = True
+                            chkRolle = False
+                            If Not firsttime Then
+                                firsttime = True
+                            End If
+                        End If
+
+                        If Len(phaseName) <= 0 And Len(hname) > 0 Then
+                            If zeile = 1 Then
+                                Call MsgBox(" es fehlt die ProjektPhase")
+                            Else
+                                chkPhase = False
+                                chkRolle = True
+                            End If
+                        Else
+                        End If
+
+                        If Len(phaseName) > 0 And Len(hname) > 0 Then
+                            chkPhase = True
+                            chkRolle = True
+                        End If
+
+                        If Len(phaseName) <= 0 And Len(hname) <= 0 Then
+                            chkPhase = False
+                            chkRolle = False
+                            ' beim 1.mal: abspeichern der letzten Phase mit Ihren Rollen
+                            ' beim 2.mal: for - Schleife abbrechen
+                        End If
+
+                        Select Case chkPhase
+                            Case True
+                                If Not added Then
+                                    hproj.AddPhase(cphase)
+                                End If
+
+                                cphase = New clsPhase(parent:=hproj)
+                                added = False
+
+                                ' Auslesen der Phasen Dauer
+                                anfang = 1  ' anfang enthält den rel.Anfang einer Phase
+                                Try
+                                    While CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142 And
+                                        Not (CType(zelle.Offset(0, anfang + 1).Value, String) = "x")
+                                        anfang = anfang + 1
+                                    End While
+                                Catch ex As Exception
+                                    Throw New ArgumentException("Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
+                                                                "Bitte überprüfen Sie dies.")
+                                End Try
+
+                                ende = anfang + 1
+
+                                If CInt(zelle.Offset(0, anfang + 1).Interior.ColorIndex) = -4142 Then
+                                    While CType(zelle.Offset(0, ende + 1).Value, String) = "x"
+                                        ende = ende + 1
+                                    End While
+                                    ende = ende - 1
+                                Else
+                                    farbeAktuell = zelle.Offset(0, anfang + 1).Interior.Color
+                                    While CInt(zelle.Offset(0, ende + 1).Interior.Color) = CInt(farbeAktuell)
+
+                                        ende = ende + 1
+                                    End While
+                                    ende = ende - 1
+                                End If
+
+                                With cphase
+                                    .name = phaseName
+                                    ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
+                                    Dim startOffset As Integer
+                                    Dim dauerIndays As Integer
+                                    startOffset = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(anfang - 1))
+                                    dauerIndays = calcDauerIndays(hproj.startDate.AddDays(startOffset), ende - anfang + 1, True)
+
+                                    .changeStartandDauer(startOffset, dauerIndays)
+                                    .Offset = 0
+
+                                    ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
+                                    Dim phaseStartdate As Date = .getStartDate
+                                    Dim phaseEnddate As Date = .getEndDate
+
+                                End With
+                                Select Case chkRolle
+                                    Case True
+                                        Throw New ArgumentException("Rollen/Kosten-Bedarfe zur Phase '" & phaseName & "' bitte in die darauffolgenden Zeilen eintragen")
+                                    Case False  ' es wurde nur eine Phase angegeben: korrekt
+
+                                End Select
+
+                            Case False ' auslesen Rollen- bzw. Kosten-Information
+
+                                Select Case chkRolle
+                                    Case True
+                                        ' hier wird die Rollen bzw Kosten Information ausgelesen
+                                        '
+                                        ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
+                                        '
+                                        If RoleDefinitions.Contains(hname) Then
+                                            Try
+                                                r = CInt(RoleDefinitions.getRoledef(hname).UID)
+
+                                                ReDim Xwerte(ende - anfang)
+
+
+                                                For m = anfang To ende
+                                                    Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+                                                Next m
+
+                                                crole = New clsRolle(ende - anfang + 1)
+                                                With crole
+                                                    .RollenTyp = r
+                                                    .Xwerte = Xwerte
+                                                End With
+
+                                                With cphase
+                                                    .AddRole(crole)
+                                                End With
+                                            Catch ex As Exception
+                                                '
+                                                ' handelt es sich um die Kostenart Definition?
+                                                '
+                                            End Try
+
+                                        ElseIf CostDefinitions.Contains(hname) Then
+
+                                            Try
+
+                                                k = CInt(CostDefinitions.getCostdef(hname).UID)
+
+                                                ReDim Xwerte(ende - anfang)
+
+                                                For m = anfang To ende
+                                                    Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+                                                Next m
+
+                                                ccost = New clsKostenart(ende - anfang + 1)
+                                                With ccost
+                                                    .KostenTyp = k
+                                                    .Xwerte = Xwerte
+                                                End With
+
+
+                                                With cphase
+                                                    .AddCost(ccost)
+                                                End With
+
+                                            Catch ex As Exception
+
+                                            End Try
+
+                                        End If
+
+                                    Case False  ' es wurde weder Phase noch Rolle angegeben. 
+                                        If firsttime Then
+                                            firsttime = False
+                                        Else 'beim 2. mal: letzte Phase hinzufügen; ENDE von For-Schleife for each Zelle
+                                            hproj.AddPhase(cphase)
+                                            Exit For
+                                        End If
+
+                                End Select
+
+                        End Select
+
+                    Next zelle
+
+
+                End With
+            Catch ex As Exception
+                Throw New ArgumentException("Fehler in awinImportProject, Lesen Ressourcen von '" & hproj.name & "' " & vbLf & ex.Message)
+            End Try
+
+        End If
 
         '' hier wurde jetzt die Reihenfolge geändert - erst werden die Phasen Definitionen eingelesen ..
 
@@ -1599,10 +1604,36 @@ Public Module awinGeneralModules
                         Dim objectName As String
                         Dim startDate As Date, endeDate As Date
                         Dim bezug As String
-                        Dim isPhase As Boolean = False
 
+                        Dim isPhase As Boolean = False
+                        Dim isMeilenstein As Boolean = False
+                        Dim cphaseExisted As Boolean = True
 
                         Try
+                            ' Wenn es keine Phasen gibt in diesem Projekt, so wird trotzdem die Phase1, die ProjektPhase erzeugt.
+
+                            If hproj.AllPhases.Count = 0 Then
+                                Dim duration As Integer
+                                Dim offset As Integer
+
+                                ' Erzeuge ProjektPhase mit Länge des Projekts
+                                cphase = New clsPhase(parent:=hproj)
+                                cphase.name = hproj.name
+                                'cphaseExisted = False       ' Phase existiert noch nicht
+
+                                offset = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate)
+
+                                If ProjektdauerIndays < 1 Or offset < 0 Then
+                                    Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
+                                                        offset.ToString & ", " & duration.ToString)
+                                End If
+
+                                cphase.changeStartandDauer(offset, ProjektdauerIndays)
+                                hproj.AddPhase(cphase)
+
+                            End If                            'Phase 1 ist nun angelegt
+
+
                             Try
                                 Nummer = CType(.Cells(zeile, columnOffset).value, String).Trim
                             Catch ex As Exception
@@ -1610,9 +1641,29 @@ Public Module awinGeneralModules
                                 Exit For ' Ende der For-Schleife, wenn keine laufende Nummer mehr existiert
                             End Try
 
+                            Try
+                                ' bestimme, worum es sich handelt: Phase oder Meilenstein
+                                objectName = CType(.Cells(zeile, columnOffset + 1).value, String).Trim
+                            Catch ex As Exception
+                                objectName = Nothing
+                                Throw New Exception("In Tabelle 'Termine' ist der PhasenName nicht angegeben ")
+                                Exit For ' Ende der For-Schleife, wenn keine laufende Nummer mehr existiert
+                            End Try
 
-                            ' bestimme, worum es sich handelt: Phase oder Meilenstein
-                            objectName = CType(.Cells(zeile, columnOffset + 1).value, String).Trim
+
+                            If PhaseDefinitions.Contains(objectName) Then
+                                isPhase = True
+                                isMeilenstein = False
+                            Else
+                                If hproj.name = objectName Then
+                                    isPhase = True
+                                    isMeilenstein = False
+                                Else
+                                    isPhase = False
+                                    isMeilenstein = True
+                                End If
+                            End If
+
 
                             Try
                                 bezug = CType(.Cells(zeile, columnOffset + 2).value, String).Trim
@@ -1629,6 +1680,8 @@ Public Module awinGeneralModules
                             endeDate = CDate(.Cells(zeile, columnOffset + 4).value)
 
                             If DateDiff(DateInterval.Month, hproj.startDate, startDate) < 0 Then
+                                ' kein Startdatum angegeben
+
                                 If startDate <> Date.MinValue Then
                                     cphase = Nothing
                                     Throw New Exception("Die Phase '" & objectName & "' beginnt vor dem Projekt !" & vbLf &
@@ -1637,21 +1690,26 @@ Public Module awinGeneralModules
                                     ' objectName ist ein Meilenstein
                                     cphase = hproj.getPhase(bezug)
                                     If IsNothing(cphase) Then
-                                        cphase = hproj.getPhase(1)
+                                        If hproj.AllPhases.Count > 0 Then
+                                            cphase = hproj.getPhase(1)
+                                        Else
+                                            ' Erzeuge ProjektPhase mit Länge des Projekts
+
+                                        End If
+
                                     End If
-
                                 End If
+                                'isPhase = False
 
-                                isPhase = False
                             Else
                                 'objectName ist eine Phase
-                                isPhase = True
+                                'isPhase = True
 
                                 ' ist der Phasen Name in der Liste der definitionen überhaupt bekannt ? 
                                 If Not PhaseDefinitions.Contains(objectName) Then
 
                                     ' jetzt noch prüfen, ob es sich um die Phase (1) handelt, dann kann sie ja nicht in der PhaseDefinitions enthalten sein  ..
-                                    If hproj.getPhase(1).name <> objectName Then
+                                    If hproj.name <> objectName Then
                                         Throw New Exception("Phase '" & objectName & "' ist nicht definiert!" & vbLf &
                                                        "Bitte löschen Sie diese Phase aus '" & hproj.name & "'.xlsx, Tabellenblatt 'Termine'")
                                     End If
@@ -1664,6 +1722,7 @@ Public Module awinGeneralModules
                                 If IsNothing(cphase) Then
                                     cphase = New clsPhase(parent:=hproj)
                                     cphase.name = objectName
+                                    cphaseExisted = False       ' Phase existiert noch nicht
                                 End If
                             End If
 
@@ -1702,12 +1761,15 @@ Public Module awinGeneralModules
                                         Next
                                     End If
 
+
                                     If inkonsistent Then
                                         anzFehler = anzFehler + 1
                                         Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
                                                              "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & hproj.name & ".xlsx'")
                                     End If
-
+                                    If Not cphaseExisted Then
+                                        hproj.AddPhase(cphase)
+                                    End If
 
                                 Catch ex As Exception
                                     Throw New Exception(ex.Message)
@@ -1791,7 +1853,7 @@ Public Module awinGeneralModules
             End Try
 
             If anzFehler > 0 Then
-                Call MsgBox("Anzahl Fehler bei Import der Termine von" & hproj.name & " : " & anzFehler)
+                Call MsgBox("Anzahl Fehler bei Import der Termine von " & hproj.name & " : " & anzFehler)
             End If
 
         Catch ex As Exception
