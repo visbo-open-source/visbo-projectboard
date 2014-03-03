@@ -2,6 +2,7 @@
 Imports Microsoft.Office.Interop.Excel
 Imports System.Windows.Forms
 Imports Microsoft.Office.Core
+Imports Microsoft.VisualBasic.Constants
 
 
 Public Module Projekte
@@ -10415,17 +10416,30 @@ Public Module Projekte
                 columnOffset = 1
 
                 If hproj.CountPhases = 0 Then
-                    ' Projekt-Name eintragen, Dauer einfärben
+                    ' Projekt-Name eintragen, Dauer einfärben, 28.2. genaues Start- und Endedatum in Kommentar eintragen
 
                     .range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).value = hproj.name
                     .range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).Interior.Color = hproj.farbe
                     rng = .Range("Zeitmatrix")(.Cells(rowOffset, columnOffset), .Cells(rowOffset, columnOffset + hproj.Dauer - 1))
                     rng.Interior.Color = hproj.farbe
+                    .cells(rowOffset, columnOffset).AddComment()
+                    With .cells(rowOffset, columnOffset).Comment
+                        .Visible = False
+                        .Text(Text:="Start:" & Chr(10) & hproj.startDate)
+                        .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                    End With
+                    .cells(rowOffset, columnOffset + hproj.Dauer - 1).AddComment()
+                    With .cells(rowOffset, columnOffset + hproj.Dauer - 1).Comment
+                        .Visible = False
+                        .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
+                        .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                    End With
                     rowOffset = rowOffset + 1
                 End If
 
                 For p = 1 To hproj.CountPhases
                     cphase = hproj.getPhase(p)
+
                     ' Phasen-Name eintragen, Dauer einfärben
                     itemName = cphase.name
 
@@ -10442,10 +10456,22 @@ Public Module Projekte
                         For d = 1 To hproj.Dauer
                             .Range("Zeitmatrix").Cells(rowOffset, columnOffset + d - 1).Interior.Color = hproj.farbe
                         Next d
+                        ' Startdatum in Kommentar eintragen
+                        .Range("Zeitmatrix").cells(rowOffset, columnOffset).AddComment()
+                        With .Range("Zeitmatrix").cells(rowOffset, columnOffset).Comment
+                            .Visible = False
+                            .Text(Text:="Start:" & Chr(10) & hproj.startDate)
+                            .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                        End With
+                        .Range("Zeitmatrix").cells(rowOffset, columnOffset + hproj.Dauer - 1).AddComment()
+                        With .Range("Zeitmatrix").cells(rowOffset, columnOffset + hproj.Dauer - 1).Comment
+                            .Visible = False
+                            .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
+                            .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                        End With
+
 
                         d = appInstance.WorksheetFunction.CountA(.range("Phasen_des_Projekts"))
-
-
 
                     Else
                         .range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).value = itemName
@@ -10453,6 +10479,29 @@ Public Module Projekte
                             .Range("Zeitmatrix").Cells(rowOffset, cphase.relStart + d - 1).Interior.Color = phasenFarbe
                         Next d
 
+                        ' Kommentar mit Start- und Endedatum eintragen
+                        If cphase.relStart = cphase.relEnde Then
+                            ' cphase ist nur ein Kästchen breit, d.h. Start-und EndeDatum müssen in einem Kommentar stehen
+                            .Range("Zeitmatrix").cells(rowOffset, cphase.relStart).AddComment()
+                            With .Range("Zeitmatrix").cells(rowOffset, cphase.relStart).Comment
+                                .Visible = False
+                                .Text(Text:="Start:" & Chr(10) & cphase.getStartDate & Chr(10) & "Ende:" & Chr(10) & cphase.getEndDate)
+                            End With
+                        Else
+                            .Range("Zeitmatrix").cells(rowOffset, cphase.relStart).AddComment()
+                            With .Range("Zeitmatrix").cells(rowOffset, cphase.relStart).Comment
+                                .Visible = False
+                                .Text(Text:="Start:" & Chr(10) & cphase.getStartDate)
+                                .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                            End With
+                            .Range("Zeitmatrix").cells(rowOffset, cphase.relEnde).AddComment()
+                            With .Range("Zeitmatrix").cells(rowOffset, cphase.relEnde).Comment
+                                .Visible = False
+                                .Text(Text:="Ende:" & Chr(10) & cphase.getEndDate)
+                                .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                            End With
+                        End If
+                        ' ende Kommentar eintragen in Ressourcen
                     End If
 
                     rowOffset = rowOffset + 1
@@ -10953,6 +11002,20 @@ Public Module Projekte
                 .cells(zeile, spalte).value = hproj.name
                 rng = .Range(.Cells(zeile, spalte + 2), .Cells(zeile, spalte + 1 + hproj.Dauer))
                 rng.Interior.Color = hproj.farbe
+                ' Kommentar am Anfang und am Ende der Phase mit Datum
+                .cells(zeile, spalte + 2).AddComment()
+                With .cells(zeile, spalte + 2).Comment
+                    .Visible = False
+                    .Text(Text:="Start:" & Chr(10) & hproj.startDate)
+                    .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                End With
+
+                .cells(zeile, spalte + 1 + hproj.Dauer).AddComment()
+                With .cells(zeile, spalte + 1 + hproj.Dauer).Comment
+                    .Visible = False
+                    .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
+                    .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                End With
                 zeile = zeile + 1
             End If
 
@@ -10986,12 +11049,45 @@ Public Module Projekte
                     .cells(zeile, spalte).value = hproj.name
                     rng = .Range(.Cells(zeile, spalte + 2), .Cells(zeile, spalte + 1 + hproj.Dauer))
                     rng.Interior.Color = hproj.farbe
+                    .cells(zeile, spalte + 2).AddComment()
+                    With .cells(zeile, spalte + 2).Comment
+                        .Visible = False
+                        .Text(Text:="Start:" & Chr(10) & hproj.startDate)
+                        .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                    End With
+
+                    .cells(zeile, spalte + 1 + hproj.Dauer).AddComment()
+                    With .cells(zeile, spalte + 1 + hproj.Dauer).Comment
+                        .Visible = False
+                        .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
+                        .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                    End With
                     zeile = zeile + 1
                 Else
                     ' Phasen Name eintragen, Dauer der Phase einfärben
                     .cells(zeile, spalte).value = itemName
                     rng = .Range(.Cells(zeile, spalte + 1 + cphase.relStart), .Cells(zeile, spalte + 1 + cphase.relEnde))
                     rng.Interior.Color = phasenFarbe
+                    .cells(zeile, spalte + 1 + cphase.relStart).AddComment()
+                    If cphase.relStart = cphase.relEnde Then
+                        With .cells(zeile, spalte + 1 + cphase.relStart).Comment
+                            .Visible = False
+                            .Text(Text:="Start:" & Chr(10) & cphase.getStartDate & Chr(10) & "Ende:" & Chr(10) & cphase.getEndDate)
+                        End With
+                    Else
+                        With .cells(zeile, spalte + 1 + cphase.relStart).Comment
+                            .Visible = False
+                            .Text(Text:="Start:" & Chr(10) & cphase.getStartDate)
+                            .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                        End With
+                        .cells(zeile, spalte + 1 + cphase.relEnde).AddComment()
+                        With .cells(zeile, spalte + 1 + cphase.relEnde).Comment
+                            .Visible = False
+                            .Text(Text:="Ende:" & Chr(10) & cphase.getEndDate)
+                            .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
+                        End With
+                    End If
+
                     zeile = zeile + 1
                 End If
 
