@@ -123,7 +123,7 @@ Public Module awinGeneralModules
         ergebnisChartName(2) = "Verbesserungs-Potential"
         ergebnisChartName(3) = "Risiko-Abschlag"
 
-        ReDim portfolioDiagrammtitel(15)
+        ReDim portfolioDiagrammtitel(18)
         portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
@@ -140,6 +140,9 @@ Public Module awinGeneralModules
         portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
         portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
         portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
+        portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
+        portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Qualitativer Vergleich mit letztem Stand"
+        portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Qualitativer Vergleich mit Beauftragungs-Stand"
 
 
         windowNames(0) = "Cockpit Phasen"
@@ -622,6 +625,10 @@ Public Module awinGeneralModules
         Dim request As New Request(awinSettings.databaseName)
         projectConstellations = request.retrieveConstellationsFromDB()
 
+
+        ' hier werden jetzt auch alle Abhängigkeiten geladen 
+        allDependencies = request.retrieveDependenciesFromDB()
+        Dim axt As Integer = 9
 
         'hier wird die Start-Konfiguration gespeichert
         '5.11. ausblenden
@@ -1743,16 +1750,19 @@ Public Module awinGeneralModules
                                     bewertungsAmpel = CType(.Cells(zeile, columnOffset + 5).value, Integer)
                                     explanation = CType(.Cells(zeile, columnOffset + 6).value, String)
 
-                                    If bewertungsAmpel <= 0 Or bewertungsAmpel > 3 Then
-                                        ' es gibt keine Bewertung 
-                                    Else
-                                        With cBewertung
-                                            '.bewerterName = resultVerantwortlich
-                                            .colorIndex = bewertungsAmpel
-                                            .datum = importDatum
-                                            .description = explanation
-                                        End With
+                                    If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                        ' es gibt keine Bewertung
+                                        bewertungsAmpel = 0
                                     End If
+
+                                    ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                    With cBewertung
+                                        '.bewerterName = resultVerantwortlich
+                                        .colorIndex = bewertungsAmpel
+                                        .datum = importDatum
+                                        .description = explanation
+                                    End With
+
 
 
                                     With cResult

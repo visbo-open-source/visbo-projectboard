@@ -71,6 +71,10 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsDependenciesOfPDB.vb" />
+    <Compile Include="clsDependencies.vb" />
+    <Compile Include="clsDependenciesOfP.vb" />
+    <Compile Include="clsDependency.vb" />
     <Compile Include="clsProjektHistorie.vb" />
     <Compile Include="clsWPFPieValues.vb" />
     <Compile Include="clsMilestone.vb" />

@@ -39,6 +39,7 @@ Public Module Module1
     Public DeletedProjekte As New clsProjekte
     Public projectConstellations As New clsConstellations
     Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
+    Public allDependencies As New clsDependencies
 
     ' hier wird die Projekt Historie eines Projektes aufgenommen 
     Public projekthistorie As New clsProjektHistorie
@@ -120,7 +121,14 @@ Public Module Module1
         AmpelFarbe = 13
         ProjektFarbe = 14
         FitRisikoVol = 15
+        Dependencies = 16
+        betterWorseL = 17 ' es wird mit dem letzten Stand verglichen
+        betterWorseB = 18 ' es wird mit dem Beauftragunsg-Stand verglichen
     End Enum
+
+    ' wird in awinSetTypen dimensioniert und gesetzt 
+    Public portfolioDiagrammtitel() As String
+
 
 
     ' Enumeration History Change Criteria: um anzugeben, welche Veränderung man in der History eines Projektes sucht 
@@ -144,6 +152,16 @@ Public Module Module1
         green = 1
         yellow = 2
         red = 3
+    End Enum
+
+
+    Public Enum PTdpndncy
+        schwach = 1
+        stark = 3
+    End Enum
+
+    Public Enum PTdpndncyType
+        inhalt = 1
     End Enum
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
@@ -181,9 +199,7 @@ Public Module Module1
         height = 3
     End Enum
 
-    ' wird in awinSetTypen dimensioniert und gesetzt 
-    Public portfolioDiagrammtitel() As String
-
+   
     Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
 
     Public weightStrategicFit As Double
@@ -683,12 +699,31 @@ Public Module Module1
 
         Dim found As Boolean = False
 
-        With chtobj
-            If .Chart.SeriesCollection(1).ChartType = Excel.XlChartType.xlBubble3DEffect Then
-                found = True
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
+
+
+        chtobjName = chtobj.Name
+
+        Try
+
+            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
+
+                If CInt(tmpStr(1)) = PTpfdk.FitRisiko Or _
+                    CInt(tmpStr(1)) = PTpfdk.FitRisikoVol Or _
+                    CInt(tmpStr(1)) = PTpfdk.ComplexRisiko Or _
+                    CInt(tmpStr(1)) = PTpfdk.Dependencies Or _
+                    CInt(tmpStr(1)) = PTpfdk.ZeitRisiko Then
+
+                    found = True
+
+                End If
+
             End If
 
-        End With
+        Catch ex As Exception
+        End Try
 
         istPortfolioDiagramm = found
 
@@ -1664,10 +1699,16 @@ Public Module Module1
                             End If
                             formStatus.Visible = False
                         Case 3
-                            If (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue) Then
+                            If (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue And .Title <> "Dependency") Then
                                 .Delete()
                             End If
                             formPhase.Visible = False
+
+                        Case 4
+                            If (.Connector = MsoTriState.msoTrue And .Title = "Dependency") Then
+                                .Delete()
+                            End If
+
                         Case Else
 
                     End Select

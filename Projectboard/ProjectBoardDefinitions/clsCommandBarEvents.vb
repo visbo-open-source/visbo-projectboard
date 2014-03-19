@@ -124,9 +124,10 @@ Public Class clsCommandBarEvents
                     ' Änderung 5.11: prüfung auf hasChart ist notwendig, um zusammengesetztes Projekt-Shape von Chart zu unterscheiden ...
                     ' Änderung 17.11: prüfung auf Connector ist notwendig, um zusammengesetztes Shape von Connector = Phasen-Shape zu unterscheiden
 
-                    If shpelement.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle Or _
+                    If Not shpelement.AlternativeText = "Test" And _
+                        (shpelement.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle Or _
                         (shpelement.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeMixed And Not shpelement.HasChart _
-                         And Not shpelement.Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                         And Not shpelement.Connector = Microsoft.Office.Core.MsoTriState.msoTrue)) Then
 
                         SID = shpelement.ID.ToString
 
@@ -136,7 +137,7 @@ Public Class clsCommandBarEvents
                         spalte = System.Math.Truncate(shpelement.Left / boxWidth) + 1
 
 
-                        laengeinMon = shpelement.Width / boxWidth
+                        laengeInMon = shpelement.Width / boxWidth
 
 
                         ' ist das Shape schon bekannt ?  
@@ -149,9 +150,14 @@ Public Class clsCommandBarEvents
                             hproj = ShowProjekte.getProjectS(SID)
 
                             ' das muss nur visuell korrigiert werden , ansonsten nicht in den Projekt-Definitionen 
-                            If shpelement.Height <> boxHeight * 0.8 Then
-                                shpelement.Height = boxHeight * 0.8
+
+                            ' nur korrigieren, wenn es nicht ein zusammengesetztes Shape ist 
+                            If shpelement.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle Then
+                                If shpelement.Height <> boxHeight * 0.8 Then
+                                    shpelement.Height = boxHeight * 0.8
+                                End If
                             End If
+
 
                             ' just in case - falls jdn rotiert ...
                             Try
@@ -231,43 +237,45 @@ Public Class clsCommandBarEvents
                                         '
                                         ' zusammengesetztes Shape 
                                         '
-                                        Dim phasenName As String
-                                        Dim phaseShapeName As String
-                                        Dim phasenShpElement As Excel.Shape
 
-                                        ' jetzt jedes Shape entsprechend anpassen 
-                                        For i = 1 To hproj.CountPhases
-                                            phasenName = hproj.getPhase(i).name
-                                            phaseShapeName = hproj.name & "#" & phasenName & "#" & i.ToString
+                                        ' ab hier: das wird nicht mehr benötigt : die Drawphases wird es so nicht mehr geben ....
+                                        'Dim phasenName As String
+                                        'Dim phaseShapeName As String
+                                        'Dim phasenShpElement As Excel.Shape
 
-                                            Try
-                                                phasenShpElement = shpelement.groupItem(phaseShapeName)
-                                                hproj.CalculateShapeCoord(i, top, left, width, height)
+                                        '' jetzt jedes Shape entsprechend anpassen 
+                                        'For i = 1 To hproj.CountPhases
+                                        '    phasenName = hproj.getPhase(i).name
+                                        '    phaseShapeName = hproj.name & "#" & phasenName & "#" & i.ToString
 
-                                                With phasenShpElement
-                                                    .Top = top
-                                                    .Left = left
-                                                    .Width = width
-                                                    .Height = height
-                                                    .Rotation = 0.0
-                                                End With
+                                        '    Try
+                                        '        phasenShpElement = shpelement.groupItem(phaseShapeName)
+                                        '        hproj.CalculateShapeCoord(i, top, left, width, height)
 
-                                            Catch ex As Exception
+                                        '        With phasenShpElement
+                                        '            .Top = top
+                                        '            .Left = left
+                                        '            .Width = width
+                                        '            .Height = height
+                                        '            .Rotation = 0.0
+                                        '        End With
 
-                                            End Try
+                                        '    Catch ex As Exception
 
-                                        Next
+                                        '    End Try
 
-                                        ' jetzt noch das Gesamt Shape, das zusammengesetzte ausrichten 
-                                        hproj.CalculateShapeCoord(top, left, width, height)
+                                        'Next
 
-                                        With shpelement
-                                            .Top = top
-                                            .Left = left
-                                            .Width = width
-                                            .Height = height
-                                            .Rotation = 0.0
-                                        End With
+                                        '' jetzt noch das Gesamt Shape, das zusammengesetzte ausrichten 
+                                        'hproj.CalculateShapeCoord(top, left, width, height)
+
+                                        'With shpelement
+                                        '    .Top = top
+                                        '    .Left = left
+                                        '    .Width = width
+                                        '    .Height = height
+                                        '    .Rotation = 0.0
+                                        'End With
 
 
                                     Else
@@ -300,23 +308,29 @@ Public Class clsCommandBarEvents
 
                                 ChartsNeedUpdate = ChartsNeedUpdate Or changeWasValid
                             Else
-                                With hproj
 
-                                    .tfZeile = zeile
-                                    '.tfSpalte = spalte
-                                    .CalculateShapeCoord(top, left, width, height)
+                                If shpelement.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeMixed Then
+                                    ' hier dann was machen, wenn auch angeboten wird, die Shapes komplett zu zeichnen 
+                                Else
+                                    With hproj
 
-                                End With
+                                        .tfZeile = zeile
+                                        '.tfSpalte = spalte
+                                        .CalculateShapeCoord(top, left, width, height)
 
-                                ' das Shape in das Raster schnappen lassen ....  
-                                With shpelement
-                                    .Top = top
-                                    .Left = left
-                                    .Width = width
-                                    .Height = height
-                                    .Rotation = 0.0
-                                    
-                                End With
+                                    End With
+
+                                    ' das Shape in das Raster schnappen lassen ....  
+                                    With shpelement
+                                        .Top = top
+                                        .Left = left
+                                        .Width = width
+                                        .Height = height
+                                        .Rotation = 0.0
+
+                                    End With
+                                End If
+
                             End If
 
                             Try
@@ -480,7 +494,10 @@ Public Class clsCommandBarEvents
                         End If
 
                     ElseIf shpelement.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeMixed And _
-                           shpelement.Connector = Microsoft.Office.Core.MsoTriState.msoTrue Then
+                           shpelement.Connector = Microsoft.Office.Core.MsoTriState.msoTrue Or _
+                           shpelement.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle And _
+                           shpelement.AlternativeText = "Test" Then
+
 
                         If formPhase Is Nothing Then
                             formPhase = New frmPhaseInformation

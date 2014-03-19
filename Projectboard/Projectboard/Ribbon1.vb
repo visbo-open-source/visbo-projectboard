@@ -88,13 +88,40 @@ Imports Microsoft.Office.Interop.Excel
     Sub awinSetModusHistory(control As IRibbonControl)
 
         demoModusHistory = Not demoModusHistory
-        historicDate = #11/28/2013#
+        historicDate = #2/27/2014#
         historicDate = historicDate.AddHours(16)
         If demoModusHistory Then
             Call MsgBox("Demo Modus History: Ein")
         Else
             Call MsgBox("Demo Modus History: Aus")
         End If
+
+    End Sub
+
+    Sub PT5StoreProjects(control As IRibbonControl)
+
+        Dim zeitStempel As Date
+
+        If AlleProjekte.Count > 0 Then
+
+            Call StoreAllProjectsinDB()
+
+            zeitStempel = AlleProjekte.First.Value.timeStamp
+
+            Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+
+            ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
+            Try
+                If projekthistorie.Count > 0 Then
+                    projekthistorie.clear()
+                End If
+            Catch ex As Exception
+
+            End Try
+        Else
+            Call MsgBox("keine Projekte zu speichern ...")
+        End If
+
 
     End Sub
 
@@ -278,6 +305,19 @@ Imports Microsoft.Office.Interop.Excel
 
         appInstance.EnableEvents = True
 
+
+    End Sub
+
+    Sub PTDefineDependencies(control As IRibbonControl)
+
+        Dim defineDependencies As New frmDependencies
+        Dim result As DialogResult
+
+        enableOnUpdate = False
+
+        result = defineDependencies.ShowDialog()
+
+        enableOnUpdate = True
 
     End Sub
 
@@ -716,7 +756,7 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
- 
+
 
     ''' <summary>
     ''' EinzelProjekt Report mit selektierter Vorlage erstellen
@@ -839,7 +879,7 @@ Imports Microsoft.Office.Interop.Excel
         Else
             Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
         End If
-        
+
 
 
         enableOnUpdate = True
@@ -1222,6 +1262,7 @@ Imports Microsoft.Office.Interop.Excel
         Else
             ' jetzt werden die Projekt-Symbole ohne Phasen Darstellung gezeichnet 
             ProjectBoardDefinitions.My.Settings.drawPhases = False
+            Call awinLoadConstellation("Last")
             Call awinClearPlanTafel()
             Call awinZeichnePlanTafel()
         End If
@@ -1308,6 +1349,74 @@ Imports Microsoft.Office.Interop.Excel
                 repObj = Nothing
                 Dim noColorCollection As New Collection
                 Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+
+                appInstance.EnableEvents = True
+                appInstance.ScreenUpdating = True
+            Else
+                Call MsgBox("bitte nur ein Projekt selektieren")
+                'For Each singleShp In awinSelection
+                '    With singleShp
+                '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                '            nrSelPshp = nrSelPshp + 1
+                '            SID = .ID.ToString
+                '        End If
+                '    End With
+                'Next
+            End If
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+
+    End Sub
+
+    ''' <summary>
+    ''' für BMW Akquise erzeugt 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub Tom2G2M1B1Phasen2(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+        Dim hproj As clsProjekt
+        Dim pname As String
+
+
+        enableOnUpdate = False
+
+        Dim awinSelection As Excel.ShapeRange
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            If awinSelection.Count = 1 Then
+                ' jetzt die Aktion durchführen ...
+                singleShp = awinSelection.Item(1)
+                pname = singleShp.Name
+
+                Try
+                    hproj = ShowProjekte.getProject(pname)
+                Catch ex As Exception
+                    Call MsgBox("Projekt nicht gefunden ..." & pname)
+                    Exit Sub
+                End Try
+
+                appInstance.EnableEvents = False
+                appInstance.ScreenUpdating = False
+
+                ' da die erste Phase mit der ganzen Höhe, dann nur mit der halben Höhe gezeichnet wird: 
+                Dim anzahlZeilen As Integer = CInt((getNeededSpace(hproj) + 1) / 2)
+
+                Call moveShapesDown(hproj.tfZeile + 1, anzahlZeilen)
+                Call ZeichneProjektinPlanTafel2(pname, hproj.tfZeile)
+
 
                 appInstance.EnableEvents = True
                 appInstance.ScreenUpdating = True
@@ -1757,6 +1866,101 @@ Imports Microsoft.Office.Interop.Excel
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
         appInstance.ScreenUpdating = formerSU
+
+    End Sub
+
+    Sub Tom2G2M1B6Abhaengigkeit(control As IRibbonControl)
+
+
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim singleShp As Excel.Shape
+        Dim myCollection As New Collection
+        Dim deleteList As New Collection
+        Dim hproj As clsProjekt
+        Dim pname As String
+
+        Dim activeNumber As Integer             ' Kennzahl: auf wieviele Projekte strahlt es aus ?
+        Dim passiveNumber As Integer            ' Kennzahl: von wievielen Projekten abhängig 
+
+
+
+
+        Dim awinSelection As Excel.ShapeRange
+
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+
+        enableOnUpdate = False
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+                With singleShp
+                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
+                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
+                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+
+                        myCollection.Add(.Name, .Name)
+                        top = .Top + boxHeight + 2
+                        left = .Left - 3
+                        width = 12 * boxWidth
+                        height = 8 * boxHeight
+
+                    End If
+                End With
+            Next
+
+            For i = 1 To myCollection.Count
+                pname = myCollection.Item(i)
+                Try
+                    hproj = ShowProjekte.getProject(pname)
+                    activeNumber = allDependencies.activeNumber(pname, PTdpndncyType.inhalt)
+                    passiveNumber = allDependencies.passiveNumber(pname, PTdpndncyType.inhalt)
+                    If activeNumber = 0 And passiveNumber = 0 Then
+                        deleteList.Add(pname)
+                    End If
+                Catch ex As Exception
+
+                End Try
+            Next
+
+            ' jetzt müssen die Projekte rausgenommen werden, die keine Abhängigkeiten haben 
+            For i = 1 To deleteList.Count
+                pname = deleteList.Item(i)
+                Try
+                    myCollection.Remove(pname)
+                Catch ex As Exception
+
+                End Try
+            Next
+
+            If myCollection.Count > 0 Then
+                Dim obj As New Object
+                Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.Dependencies, 0, False, True, True, top, left, width, height)
+            Else
+                Call MsgBox("diese Projekte haben keine Abhängigkeiten")
+            End If
+
+
+
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+        appInstance.ScreenUpdating = formerSU
+
 
     End Sub
 
@@ -2574,6 +2778,65 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
+    ''' <summary>
+    ''' zeigt die Abhängigkeiten der ausgewählten Projekte an ...
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT0ShowDependencies(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+        Dim myCollection As New Collection
+        Dim hproj As clsProjekt
+        Dim awinSelection As Excel.ShapeRange
+        Dim atleastOne As Boolean = False
+
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            ' erst noch alle Connectoren löschen ... 
+
+            Call awinDeleteMilestoneShapes(4)
+
+            For Each singleShp In awinSelection
+
+                Try
+
+                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    Call zeichneDependenciesOfProject(hproj, PTdpndncyType.inhalt, 0)
+                    atleastOne = True
+
+                Catch ex As Exception
+                    'Call MsgBox("Projekt " & singleShp.Name & " hat keine Abhängigkeiten")
+                End Try
+
+
+
+            Next
+
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+
+
+
+    End Sub
+
     Sub Tom2G2M5B3NoShowSymbols(control As IRibbonControl)
         Call awinDeleteMilestoneShapes(0)
     End Sub
@@ -3179,6 +3442,156 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
+    Sub PT0ShowAbhaengigkeiten(control As IRibbonControl)
+
+        Dim selectionType As Integer = -1 ' keine Einschränkung
+        Dim myCollection As New Collection
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim sichtbarerBereich As Excel.Range
+        Dim deleteList As New Collection
+        Dim hproj As clsProjekt
+        Dim pname As String
+
+        Dim activeNumber As Integer             ' Kennzahl: auf wieviele Projekte strahlt es aus ?
+        Dim passiveNumber As Integer            ' Kennzahl: von wievielen Projekten abhängig 
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+
+
+
+        For i = 1 To myCollection.Count
+            pname = myCollection.Item(i)
+            Try
+                hproj = ShowProjekte.getProject(pname)
+                activeNumber = allDependencies.activeNumber(pname, PTdpndncyType.inhalt)
+                passiveNumber = allDependencies.passiveNumber(pname, PTdpndncyType.inhalt)
+                If activeNumber = 0 And passiveNumber = 0 Then
+                    deleteList.Add(pname)
+                End If
+            Catch ex As Exception
+
+            End Try
+        Next
+
+        ' jetzt müssen die Projekte rausgenommen werden, die keine Abhängigkeiten haben 
+        For i = 1 To deleteList.Count
+            pname = deleteList.Item(i)
+            Try
+                myCollection.Remove(pname)
+            Catch ex As Exception
+
+            End Try
+        Next
+
+
+        With appInstance.ActiveWindow
+            sichtbarerBereich = .VisibleRange
+            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
+            If left < sichtbarerBereich.Left Then
+                left = sichtbarerBereich.Left + 2
+            End If
+
+            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+            If top < sichtbarerBereich.Top Then
+                top = sichtbarerBereich.Top + 2
+            End If
+
+        End With
+
+        width = 600
+        height = 450
+
+        Dim obj As New Object
+
+        Try
+            If myCollection.Count > 0 Then
+                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.Dependencies, 0, False, True, True, top, left, width, height)
+            Else
+                Call MsgBox(" es gibt in diesem Zeitraum keine Projekte mit Abhängigkeiten")
+            End If
+
+
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+        appInstance.ScreenUpdating = True
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' zeigt an , welche Projekte Management Attention verdienen/benötigen, weil sie besser/schlechter als geplant laufen
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT0ShowAttention(control As IRibbonControl)
+
+        Dim selectionType As Integer = -1 ' keine Einschränkung
+        Dim myCollection As New Collection
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim sichtbarerBereich As Excel.Range
+        Dim deleteList As New Collection
+        'Dim hproj As clsProjekt
+        'Dim pname As String
+
+        ' zeit verkürzt/verlängert; Kosten niedriger/höher; welche Ampel Farbe 
+        Dim timeCostColor(2) As Double
+
+        
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+
+
+
+
+        With appInstance.ActiveWindow
+            sichtbarerBereich = .VisibleRange
+            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
+            If left < sichtbarerBereich.Left Then
+                left = sichtbarerBereich.Left + 2
+            End If
+
+            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+            If top < sichtbarerBereich.Top Then
+                top = sichtbarerBereich.Top + 2
+            End If
+
+        End With
+
+        width = 600
+        height = 450
+
+        Dim obj As New Object
+
+        Try
+            If myCollection.Count > 0 Then
+                Call awinCreateBetterWorsePortfolio(myCollection, obj, False, PTpfdk.betterWorseL, 0, False, True, True, top, left, width, height)
+            Else
+                Call MsgBox(" es gibt in diesem Zeitraum keine Projekte mit Abhängigkeiten")
+            End If
+
+
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+        appInstance.ScreenUpdating = True
+
+
+    End Sub
 
     Sub PT0ShowComplexRisiko(control As IRibbonControl)
 

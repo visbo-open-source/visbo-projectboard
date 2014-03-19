@@ -38,7 +38,11 @@
 
         If AllProjects.ContainsKey(pname) Then
             Try
-
+                If AllShapes.ContainsValue(pname) Then
+                    Dim ix As Integer
+                    ix = AllShapes.IndexOfValue(pname)
+                    AllShapes.RemoveAt(ix)
+                End If
                 AllShapes.Add(shpUID, pname)
 
             Catch ex As Exception

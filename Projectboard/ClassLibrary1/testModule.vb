@@ -745,10 +745,6 @@ Public Module testModule
 
                                 ' jetzt die Aktion durchführen ...
 
-                                If hproj.timeStamp.Date = lastproj.timeStamp.Date Then
-                                    lastproj = projekthistorie.ElementAtorBefore(lastproj.timeStamp.Date.AddMinutes(-5))
-                                End If
-
                                 If lastproj Is Nothing Then
                                     Throw New Exception("es gibt keinen letzten Strand")
                                 End If
@@ -2876,7 +2872,10 @@ Public Module testModule
                     kvp.Value.timeStamp = jetzt
                 End If
 
-                Call request.storeProjectToDB(kvp.Value)
+                If request.storeProjectToDB(kvp.Value) Then
+                Else
+                    Call MsgBox("Fehler in Schreiben Projekt " & kvp.Key)
+                End If
             Catch ex As Exception
                 Call MsgBox(ex.Message)
             End Try
@@ -2890,12 +2889,33 @@ Public Module testModule
         For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
 
             Try
-                Call request.storeConstellationToDB(kvp.Value)
+                If request.storeConstellationToDB(kvp.Value) Then
+                Else
+                    Call MsgBox("Fehler in Schreiben Constellation " & kvp.Key)
+                End If
             Catch ex As Exception
                 Call MsgBox(ex.Message)
             End Try
 
         Next
+
+
+        ' jetzt werden alle Abhängigkeiten weggeschreiben 
+
+        For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
+
+            Try
+                If request.storeDependencyofPToDB(kvp.Value) Then
+                Else
+                    Call MsgBox("Fehler in Schreiben Dependency " & kvp.Key)
+                End If
+            Catch ex As Exception
+                Call MsgBox(ex.Message)
+            End Try
+
+
+        Next
+
 
         enableOnUpdate = True
 
@@ -4870,4 +4890,670 @@ Public Module testModule
 
 
     End Sub
+
+    ''' <summary>
+    ''' Portfolio - Diagramme erstellen gemäß dem angegebenen charttype
+    ''' derzeit möglich: PTpfdk.FitRisiko; PTpfdk.ZeitRisiko; PTpfdk.ComplexRisiko; PTpfdk.FitRisikoVol
+    ''' bubbleColor kann derzeit PTpfdk.ProjektFarbe oder PTpfdk.AmpelFarbe sein.
+    ''' </summary>
+    ''' <param name="ProjektListe"></param>
+    ''' <param name="repChart"></param>
+    ''' <param name="isProjektCharakteristik"></param>
+    ''' <param name="charttype"></param>
+    ''' <param name="bubbleColor"></param>
+    ''' <param name="showNegativeValues"></param>
+    ''' <param name="showLabels"></param>
+    ''' <param name="chartBorderVisible"></param>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="width"></param>
+    ''' <param name="height"></param>
+    ''' <remarks></remarks>
+    Sub awinCreateBetterWorsePortfolio(ByRef ProjektListe As Collection, ByRef repChart As Object, isProjektCharakteristik As Boolean, _
+                                         charttype As Integer, bubbleColor As Integer, showNegativeValues As Boolean, showLabels As Boolean, chartBorderVisible As Boolean, _
+                                         top As Double, left As Double, width As Double, height As Double)
+
+
+        Dim anzDiagrams As Integer, i As Integer
+        Dim found As Boolean
+        Dim pname As String = ""
+        Dim hproj As New clsProjekt, vproj As clsProjekt
+        Dim anzBubbles As Integer
+        Dim riskValues() As Double
+        Dim xAchsenValues() As Double
+        Dim bubbleValues() As Double, tempArray() As Double
+        Dim nameValues() As String
+        Dim colorValues() As Object
+        Dim positionValues() As String
+        Dim diagramTitle As String = ""
+        Dim pfDiagram As clsDiagramm
+        Dim pfChart As clsEventsPfCharts
+        'Dim chtTitle As String
+        Dim hilfsstring As String = ""
+        Dim chtobjName As String = windowNames(3)
+        Dim smallfontsize As Double, titlefontsize As Double
+        Dim singleProject As Boolean
+        Dim vglProjekte As New clsProjekte
+        Dim vglName As String = ""
+        Dim compareToLast As Boolean = True
+        Dim request As New Request(awinSettings.databaseName)
+        Dim timeCostColor(2) As Double
+
+
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim formerEE As Boolean = appInstance.EnableEvents
+
+        appInstance.ScreenUpdating = False
+
+        If ProjektListe.Count > 1 Then
+            singleProject = False
+        Else
+            singleProject = True
+        End If
+
+
+        If width > 450 Then
+            titlefontsize = 20
+            smallfontsize = 10
+        ElseIf width > 250 Then
+            titlefontsize = 14
+            smallfontsize = 8
+        Else
+            titlefontsize = 12
+            smallfontsize = 8
+        End If
+
+        Select Case charttype
+            Case PTpfdk.betterWorseL
+
+                compareToLast = True
+
+                If isProjektCharakteristik Then
+                    diagramTitle = portfolioDiagrammtitel(PTpfdk.betterWorseL)
+                Else
+                    diagramTitle = portfolioDiagrammtitel(PTpfdk.betterWorseL) & _
+                                    vbLf & textZeitraum(showRangeLeft, showRangeRight)
+                End If
+
+            Case PTpfdk.betterWorseB
+
+                compareToLast = False
+
+                If isProjektCharakteristik Then
+                    diagramTitle = portfolioDiagrammtitel(PTpfdk.betterWorseB)
+                Else
+                    diagramTitle = portfolioDiagrammtitel(PTpfdk.betterWorseB) & _
+                                    vbLf & textZeitraum(showRangeLeft, showRangeRight)
+                End If
+
+        End Select
+
+        ' in der Projektliste sind jetzt laufende Projekte; jetzt wird bestimmt, welche innerhalb der 
+        ' nicht-der-Rede-wert Fraktion sind 
+
+
+        For i = 1 To ProjektListe.Count
+            pname = ProjektListe.Item(i)
+
+            Try
+                hproj = ShowProjekte.getProject(pname)
+                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:="", _
+                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                If compareToLast Then
+                    vproj = projekthistorie.Last
+                Else
+                    vproj = projekthistorie.beauftragung
+                End If
+
+                If Not IsNothing(vproj) Then
+
+                    timeCostColor = hproj.getTimeCostIndex(vproj, 1, Date.Now)
+                    vglProjekte.Add(vproj)
+                End If
+
+            Catch ex As Exception
+                projekthistorie = Nothing
+            End Try
+
+        Next
+
+
+
+        ' hier werden die Werte bestimmt ...
+        Try
+            ReDim riskValues(ProjektListe.Count - 1)
+            ReDim xAchsenValues(ProjektListe.Count - 1)
+            ReDim bubbleValues(ProjektListe.Count - 1)
+            ReDim nameValues(ProjektListe.Count - 1)
+            ReDim colorValues(ProjektListe.Count - 1)
+            ReDim PfChartBubbleNames(ProjektListe.Count - 1)
+            ReDim positionValues(ProjektListe.Count - 1)
+        Catch ex As Exception
+
+            Throw New ArgumentException("Fehler in CreateBetterWorsePortfolio " & ex.Message)
+
+        End Try
+
+
+        anzBubbles = 0
+        ' neuer Typ: 8.3.14 Abhängigkeiten
+        Dim tmpstr(10) As String                ' nur für Zeit/Risiko Chart erforderlich
+        Dim activeDepIndex As Integer           ' Kennzahl: wieviel Projekte sind abhängig, wie stark strahlt das Projekt 
+        Dim passiveDepIndex As Integer          ' Kennzahl: von wievielen Projekten abhängig
+        Dim activeNumber As Integer             ' Kennzahl: auf wieviele Projekte strahlt es aus ?
+        Dim passiveNumber As Integer            ' Kennzahl: von wievielen Projekten abhängig 
+        Dim activeMax As Integer = 0
+        Dim passiveMax As Integer = 0
+
+        For i = 1 To ProjektListe.Count
+            pname = ProjektListe.Item(i)
+            Try
+                hproj = ShowProjekte.getProject(pname)
+                With hproj
+
+                    ' neuer Typ: 8.3.14 Abhängigkeiten
+                    If charttype = PTpfdk.Dependencies Then
+                        ' wird um eins erhöht damit es nicht auf der Nulllinie liegt 
+                        activeDepIndex = allDependencies.activeIndex(pname, PTdpndncyType.inhalt) + 1
+                        If activeMax < activeDepIndex Then
+                            activeMax = activeDepIndex
+                        End If
+                        activeNumber = allDependencies.activeNumber(pname, PTdpndncyType.inhalt)
+                        ' wird um eins erhöht damit es nicht auf der Nulllinie liegt 
+                        passiveDepIndex = allDependencies.passiveIndex(pname, PTdpndncyType.inhalt) + 1
+                        If passiveMax < passiveDepIndex Then
+                            passiveMax = passiveDepIndex
+                        End If
+                        passiveNumber = allDependencies.passiveNumber(pname, PTdpndncyType.inhalt)
+                        riskValues(anzBubbles) = activeDepIndex
+                    Else
+                        riskValues(anzBubbles) = .Risiko
+                    End If
+
+
+                    If bubbleColor = PTpfdk.ProjektFarbe Then
+
+                        ' Projekttyp wird farblich gekennzeichent
+                        colorValues(anzBubbles) = .farbe
+
+                    Else ' bubbleColor ist AmpelFarbe
+
+                        ' ProjektStatus wird farblich gekennzeichnet
+                        Select Case hproj.ampelStatus
+                            Case 0
+                                '"Ampel nicht bewertet"
+                                colorValues(anzBubbles) = awinSettings.AmpelNichtBewertet
+                            Case 1
+                                '"Ampel Grün"
+                                colorValues(anzBubbles) = awinSettings.AmpelGruen
+                            Case 2
+                                '"Ampel Gelb"
+                                colorValues(anzBubbles) = awinSettings.AmpelGelb
+                            Case 3
+                                '"Ampel Rot"
+                                colorValues(anzBubbles) = awinSettings.AmpelRot
+                        End Select
+                    End If
+
+                    Select Case charttype
+                        Case PTpfdk.FitRisiko
+
+                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
+                            bubbleValues(anzBubbles) = .ProjectMarge                                ' Marge
+                            nameValues(anzBubbles) = .name
+                            If singleProject Then
+                                PfChartBubbleNames(anzBubbles) = Format(bubbleValues(anzBubbles), "##0.#%")
+                            Else
+                                PfChartBubbleNames(anzBubbles) = .name & _
+                                    " (" & Format(bubbleValues(anzBubbles), "##0.#%") & ")"
+                            End If
+                        Case PTpfdk.FitRisikoVol
+
+                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
+                            bubbleValues(anzBubbles) = .volume
+                            nameValues(anzBubbles) = .name
+
+                            PfChartBubbleNames(anzBubbles) = .name & _
+                                " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"
+
+                        Case PTpfdk.ZeitRisiko
+
+                            xAchsenValues(anzBubbles) = .dauerInDays / 365 * 12                    'Zeit
+                            bubbleValues(anzBubbles) = System.Math.Round(.volume / 10000) * 10
+                            nameValues(anzBubbles) = .name & " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)"
+                            PfChartBubbleNames(anzBubbles) = .name & _
+                                    " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)"
+
+                        Case PTpfdk.ComplexRisiko
+
+                            xAchsenValues(anzBubbles) = .complexity                                'Complex
+                            bubbleValues(anzBubbles) = .volume                                     'Volumen
+                            nameValues(anzBubbles) = .name
+                            PfChartBubbleNames(anzBubbles) = .name & _
+                             " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"
+
+
+                        Case PTpfdk.Dependencies
+                            ' neuer Typ: 8.3.14 Abhängigkeiten
+
+                            xAchsenValues(anzBubbles) = passiveDepIndex                            'Abhängigkeiten
+                            bubbleValues(anzBubbles) = .StrategicFit
+                            nameValues(anzBubbles) = .name
+
+                            PfChartBubbleNames(anzBubbles) = .name & _
+                                " (" & passiveNumber.ToString & ", " & activeNumber.ToString & ")"
+
+
+                    End Select
+                End With
+                anzBubbles = anzBubbles + 1
+            Catch ex As Exception
+
+            End Try
+        Next
+
+
+        chtobjName = getKennung("pf", charttype, ProjektListe)
+
+
+
+        ' bestimmen der besten Position für die Werte ...
+        Dim labelPosition(4) As String
+        labelPosition(0) = "oben"
+        labelPosition(1) = "rechts"
+        labelPosition(2) = "unten"
+        labelPosition(3) = "links"
+        labelPosition(4) = "mittig"
+
+        For i = 0 To anzBubbles - 1
+
+            positionValues(i) = pfchartIstFrei(i, xAchsenValues, riskValues)
+
+        Next
+
+
+
+        With appInstance.Worksheets(arrWsNames(3))
+            anzDiagrams = .ChartObjects.Count
+            '
+            ' um welches Diagramm handelt es sich ...
+            '
+            i = 1
+            found = False
+            While i <= anzDiagrams And Not found
+                If chtobjName = .chartObjects(i).name Then
+                    found = True
+                    repChart = .ChartObjects(i)
+                    Exit Sub
+                Else
+                    i = i + 1
+                End If
+
+                'Select Case charttype
+                '    Case PTpfdk.FitRisiko
+
+                '        Try
+                '            chtTitle = .ChartObjects(i).Chart.ChartTitle.text
+                '        Catch ex As Exception
+                '            chtTitle = " "
+                '        End Try
+                '        If chtTitle Like ("*" & diagramTitle & "*") Then
+                '            found = True
+                '            repChart = .ChartObjects(i)
+                '            Exit Sub
+                '        Else
+                '            i = i + 1
+                '        End If
+
+                '    Case Else
+                '        ' für Zeit/Risiko und 
+                '        ' für Complex/Risiko und 
+                '        ' für Strategie/FitRisikoVolume
+                '        hilfsstring = .chartObjects(i).name
+                '        If chtobjName = .chartObjects(i).name Then
+                '            found = True
+                '            repChart = .ChartObjects(i)
+                '            Exit Sub
+                '        Else
+                '            i = i + 1
+                '        End If
+                'End Select
+            End While
+
+
+            ReDim tempArray(anzBubbles - 1)
+
+
+            With appInstance.Charts.Add
+
+                .SeriesCollection.NewSeries()
+                .SeriesCollection(1).name = diagramTitle
+                .SeriesCollection(1).ChartType = xlNS.XlChartType.xlBubble3DEffect
+
+                For i = 1 To anzBubbles
+                    tempArray(i - 1) = xAchsenValues(i - 1)
+                Next i
+                .SeriesCollection(1).XValues = tempArray
+
+                For i = 1 To anzBubbles
+                    tempArray(i - 1) = riskValues(i - 1)
+                Next i
+                .SeriesCollection(1).Values = tempArray
+
+                For i = 1 To anzBubbles
+                    If bubbleValues(i - 1) < 0.01 And bubbleValues(i - 1) > -0.01 Then
+                        tempArray(i - 1) = 0.01
+                    ElseIf bubbleValues(i - 1) < 0 Then
+                        ' negative Werte werden Positiv dargestellt mit roten Beschriftung siehe unten
+                        tempArray(i - 1) = System.Math.Abs(bubbleValues(i - 1))
+                    Else
+                        tempArray(i - 1) = bubbleValues(i - 1)
+                    End If
+                Next i
+                .SeriesCollection(1).BubbleSizes = tempArray
+
+                Dim series1 As xlNS.Series = _
+                        CType(.SeriesCollection(1),  _
+                                xlNS.Series)
+                Dim point1 As xlNS.Point = _
+                            CType(series1.Points(1), xlNS.Point)
+
+
+                For i = 1 To anzBubbles
+
+                    With CType(.SeriesCollection(1).Points(i), xlNS.Point)
+
+                        If showLabels Then
+                            Try
+                                .HasDataLabel = True
+
+                                With .DataLabel
+                                    .Text = PfChartBubbleNames(i - 1)
+                                    '.Text = nameValues(i - 1)
+                                    If singleProject Then
+                                        .Font.Size = awinSettings.CPfontsizeItems + 4
+                                    Else
+                                        .Font.Size = awinSettings.CPfontsizeItems
+                                    End If
+
+                                    Select Case positionValues(i - 1)
+                                        Case labelPosition(0)
+                                            .Position = xlNS.XlDataLabelPosition.xlLabelPositionAbove
+                                        Case labelPosition(1)
+                                            .Position = xlNS.XlDataLabelPosition.xlLabelPositionRight
+                                        Case labelPosition(2)
+                                            .Position = xlNS.XlDataLabelPosition.xlLabelPositionBelow
+                                        Case labelPosition(3)
+                                            .Position = xlNS.XlDataLabelPosition.xlLabelPositionLeft
+                                        Case Else
+                                            .Position = xlNS.XlDataLabelPosition.xlLabelPositionCenter
+                                    End Select
+                                End With
+                            Catch ex As Exception
+
+                            End Try
+                        Else
+                            .HasDataLabel = False
+                        End If
+
+                        .Interior.Color = colorValues(i - 1)
+
+                        ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
+                        If bubbleValues(i - 1) < 0 Then
+                            .DataLabel.Font.Color = awinSettings.AmpelRot
+                        End If
+
+                    End With
+                Next i
+
+
+
+                '.ChartGroups(1).BubbleScale = sollte in Abhängigkeit der width gemacht werden 
+                With .ChartGroups(1)
+                    If singleProject Then
+                        .BubbleScale = 20
+                    Else
+                        .BubbleScale = 20
+                    End If
+
+                    .SizeRepresents = xlNS.XlSizeRepresents.xlSizeIsArea
+                    If showNegativeValues Then
+                        .shownegativeBubbles = True
+                    Else
+                        .shownegativeBubbles = False
+
+                    End If
+                End With
+
+
+                .HasAxis(xlNS.XlAxisType.xlCategory) = True
+                .HasAxis(xlNS.XlAxisType.xlValue) = True
+
+                With CType(.Axes(xlNS.XlAxisType.xlCategory), xlNS.Axis)
+                    .HasMajorGridlines = False
+                    If charttype = PTpfdk.Dependencies Then
+                        .MajorTickMark = XlTickMark.xlTickMarkNone
+                        .TickLabelPosition = XlTickLabelPosition.xlTickLabelPositionNone
+                    End If
+
+                End With
+
+                With CType(.Axes(xlNS.XlAxisType.xlValue), xlNS.Axis)
+                    .HasMajorGridlines = False
+                    If charttype = PTpfdk.Dependencies Then
+                        .MajorTickMark = XlTickMark.xlTickMarkNone
+                        .TickLabelPosition = XlTickLabelPosition.xlTickLabelPositionNone
+                    End If
+                End With
+
+
+                Select Case charttype
+                    Case PTpfdk.FitRisiko
+
+                        With .Axes(xlNS.XlAxisType.xlCategory)
+                            .HasTitle = True
+                            .MinimumScale = 0
+                            .MaximumScale = 11
+                            With .AxisTitle
+                                .Characters.text = "strategischer Fit"
+                                .Characters.Font.Size = titlefontsize
+                                .Characters.Font.Bold = False
+                            End With
+                            With .TickLabels.Font
+                                .FontStyle = "Normal"
+                                .Bold = True
+                                .Size = awinSettings.fontsizeItems
+
+                            End With
+
+                        End With
+
+                    Case PTpfdk.FitRisikoVol
+
+                        With .Axes(xlNS.XlAxisType.xlCategory)
+                            .HasTitle = True
+                            .MinimumScale = 0
+                            .MaximumScale = 11
+                            With .AxisTitle
+                                .Characters.text = "strategischer Fit"
+                                .Characters.Font.Size = titlefontsize
+                                .Characters.Font.Bold = False
+                            End With
+                            With .TickLabels.Font
+                                .FontStyle = "Normal"
+                                .Bold = True
+                                .Size = awinSettings.fontsizeItems
+
+                            End With
+
+                        End With
+
+                    Case PTpfdk.ZeitRisiko
+
+                        With .Axes(xlNS.XlAxisType.xlCategory)
+                            .HasTitle = True
+                            .MinimumScale = 15.0
+                            .MaximumScale = System.Math.Round(xAchsenValues.Max / 10 + 0.5) * 10
+                            With .AxisTitle
+                                .Characters.text = "Projekt-Dauer"
+                                .Characters.Font.Size = titlefontsize
+                                .Characters.Font.Bold = False
+                            End With
+                            With .TickLabels.Font
+                                .FontStyle = "Normal"
+                                .Bold = True
+                                .Size = awinSettings.fontsizeItems
+
+                            End With
+                        End With
+
+                    Case PTpfdk.ComplexRisiko
+
+                        With .Axes(xlNS.XlAxisType.xlCategory)
+                            .HasTitle = True
+                            .MinimumScale = 0
+                            .MaximumScale = 1.1
+                            With .AxisTitle
+                                .Characters.text = "Komplexität"
+                                .Characters.Font.Size = titlefontsize
+                                .Characters.Font.Bold = False
+                            End With
+                            With .TickLabels.Font
+                                .FontStyle = "Normal"
+                                .Bold = True
+                                .Size = awinSettings.fontsizeItems
+
+                            End With
+
+                        End With
+
+                    Case PTpfdk.Dependencies
+                        With .Axes(xlNS.XlAxisType.xlCategory)
+                            .HasTitle = True
+                            .MinimumScale = 0
+                            .MaximumScale = passiveMax + 1
+
+                            With .AxisTitle
+                                .Characters.text = "Abhängigkeit"
+                                .Characters.Font.Size = titlefontsize
+                                .Characters.Font.Bold = False
+                            End With
+                            With .TickLabels.Font
+                                .FontStyle = "Normal"
+                                .Bold = True
+                                .Size = awinSettings.fontsizeItems
+
+                            End With
+
+                        End With
+
+                End Select
+
+
+                ' für , Strategie/RisikoMarge,Strategie/RisikoVolume, Zeit/Risiko und Complex/Risiko gültig
+
+                Select Case charttype
+                    Case PTpfdk.Dependencies
+                        With CType(.Axes(xlNS.XlAxisType.xlValue), xlNS.Axis)
+                            .HasTitle = True
+                            .MinimumScale = 0
+                            .MaximumScale = activeMax + 1
+
+                            ' .ReversePlotOrder = True
+                            With .AxisTitle
+                                .Characters.Text = "Ausstrahlung"
+                                .Characters.Font.Size = titlefontsize
+                                .Characters.Font.Bold = False
+                            End With
+
+                            With .TickLabels.Font
+                                .FontStyle = "Normal"
+                                .Bold = True
+                                .Size = awinSettings.fontsizeItems
+                            End With
+                        End With
+
+                    Case Else
+                        With .Axes(xlNS.XlAxisType.xlValue)
+                            .HasTitle = True
+                            .MinimumScale = 0
+                            .MaximumScale = 11
+                            ' .ReversePlotOrder = True
+                            With .AxisTitle
+                                .Characters.text = "Risiko"
+                                .Characters.Font.Size = titlefontsize
+                                .Characters.Font.Bold = False
+                            End With
+
+                            With .TickLabels.Font
+                                .FontStyle = "Normal"
+                                .bold = True
+                                .Size = awinSettings.fontsizeItems
+                            End With
+                        End With
+                End Select
+
+
+                .HasLegend = False
+                .HasTitle = True
+                .ChartTitle.text = diagramTitle
+                .ChartTitle.Characters.Font.Size = awinSettings.fontsizeTitle
+
+                ' Events disablen, wegen Report erstellen
+                appInstance.EnableEvents = False
+                .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                appInstance.EnableEvents = formerEE
+                ' Events sind wieder zurückgesetzt
+            End With
+
+
+            appInstance.ShowChartTipNames = False
+            appInstance.ShowChartTipValues = False
+
+            With .ChartObjects(anzDiagrams + 1)
+                .top = top
+                .left = left
+                .width = width
+                .height = height
+                .name = chtobjName
+            End With
+
+
+
+            With appInstance.ActiveSheet
+                Try
+                    With appInstance.ActiveSheet
+                        .Shapes(chtobjName).line.visible = chartBorderVisible
+                    End With
+                Catch ex As Exception
+
+                End Try
+            End With
+
+            pfDiagram = New clsDiagramm
+
+            pfChart = New clsEventsPfCharts
+            pfChart.PfChartEvents = .ChartObjects(anzDiagrams + 1).Chart
+
+            pfDiagram.setDiagramEvent = pfChart
+
+            With pfDiagram
+
+                .kennung = getKennung("pf", charttype, ProjektListe)
+                .DiagrammTitel = diagramTitle
+                .diagrammTyp = DiagrammTypen(3)                     ' Portfolio
+                .gsCollection = ProjektListe
+                .isCockpitChart = False
+
+            End With
+
+            DiagramList.Add(pfDiagram)
+            repChart = .ChartObjects(anzDiagrams + 1)
+
+        End With
+
+        appInstance.ScreenUpdating = formerSU
+
+    End Sub  ' Ende Prozedur awinCreatePortfolioChartDiagramm
+
 End Module

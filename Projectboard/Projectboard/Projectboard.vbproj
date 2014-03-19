@@ -146,6 +146,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
+    <Compile Include="frmDependencies.Designer.vb">
+      <DependentUpon>frmDependencies.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmDependencies.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmSelectRPlanImport.Designer.vb">
       <DependentUpon>frmSelectRPlanImport.vb</DependentUpon>
     </Compile>
@@ -208,6 +214,9 @@
     <Compile Include="ThisWorkbook.vb">
       <DependentUpon>Projectboard.xlsx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="frmDependencies.resx">
+      <DependentUpon>frmDependencies.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmMoveTimeSpan.resx">
       <DependentUpon>frmMoveTimeSpan.vb</DependentUpon>
     </EmbeddedResource>
@@ -347,7 +356,7 @@
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{BAA0C2D2-18E2-41B9-852F-F413020CAA33}">
-        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{825100CF-0BA7-47EA-A084-DCF3308DAF74}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files (x86)\Microsoft Office\Office14\Excel.exe" DebugInfoCommandLine="&quot;[$OUTPUT]Projectboard.xlsx&quot;" />
+        <ProjectProperties HostName="Projectboard.xlsx" HostPackage="{825100CF-0BA7-47EA-A084-DCF3308DAF74}" OfficeVersion="14.0" VstxVersion="4.0" ApplicationType="XLS" Language="VB" TemplatesPath="VSTOTemplates" DebugInfoExeName="C:\Program Files\Microsoft Office\Office14\Excel.exe" DebugInfoCommandLine="&quot;[$OUTPUT]Projectboard.xlsx&quot;" />
         <Host Name="Excel Document" Path=".\Projectboard.xlsx" PublishedHash="453AD57C08540C0F42079FCA83BE658033F2D2F9">
           <HostItem Name="Tabelle1" Code="Tabelle1.vb" CanonicalName="Tabelle1" PublishedHash="82ADB180198A3C1EDCF257AE533322806316B8E0" DisplayName="Tabelle1" Blueprint="Tabelle1.Designer.xml" GeneratedCode="Tabelle1.Designer.vb" />
           <HostItem Name="Tabelle2" Code="Tabelle2.vb" CanonicalName="Tabelle2" PublishedHash="1477224DA095CF7893DCD4FB2D03FFF48FFAABFD" DisplayName="Tabelle2" Blueprint="Tabelle2.Designer.xml" GeneratedCode="Tabelle2.Designer.vb" />
