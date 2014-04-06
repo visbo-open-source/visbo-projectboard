@@ -77,8 +77,8 @@ namespace MongoDbAccess
                 
 
                 var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
-                            .Where(c => c.tfSpalte >= startMonat-Module1.maxProjektdauer && c.startDate <= zeitraumEnde)
-                            //.Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart)
+                            //.Where(c => c.tfSpalte >= startMonat-Module1.maxProjektdauer && c.startDate <= zeitraumEnde)
+                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart)
                             .Select(c => c.name)
                             .Distinct();
 

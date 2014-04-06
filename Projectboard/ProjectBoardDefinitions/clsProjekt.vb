@@ -774,7 +774,7 @@ Public Class clsProjekt
     ''' <remarks></remarks>
     Public ReadOnly Property endeDate As Date
         Get
-            endeDate = Me.startDate.AddDays(Me.dauerInDays - 1)
+            endeDate = Me.startDate.AddDays(Me.dauerInDays - 1).Date
         End Get
     End Property
 
@@ -784,8 +784,8 @@ Public Class clsProjekt
             startDate = _startDate
         End Get
 
-        Set(value As Date)
-
+        Set(newValue As Date)
+            Dim value As Date = newValue.Date
             Dim olddate As Date = _startDate
             Dim differenzInTagen As Integer = DateDiff(DateInterval.Day, olddate, value)
             Dim updatePhases As Boolean = False
@@ -835,7 +835,7 @@ Public Class clsProjekt
         End Get
         Set(value As Date)
 
-            _earliestStartDate = value
+            _earliestStartDate = value.Date
 
 
         End Set
@@ -854,7 +854,7 @@ Public Class clsProjekt
         Set(value As Date)
             Dim Heute As Date = Now
 
-            _earliestStartDate = value
+            _earliestStartDate = value.Date
 
 
         End Set
@@ -867,7 +867,7 @@ Public Class clsProjekt
         Set(value As Date)
             Dim heute As Date = Now
 
-            _latestStartDate = value
+            _latestStartDate = value.Date
 
         End Set
     End Property
@@ -886,7 +886,7 @@ Public Class clsProjekt
         Set(value As Date)
             Dim heute As Date = Now
 
-            _latestStartDate = value
+            _latestStartDate = value.Date
 
 
         End Set

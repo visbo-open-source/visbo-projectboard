@@ -454,7 +454,8 @@ Public Module awinGeneralModules
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
             
             Catch ex As Exception
-                Call MsgBox(ex.Message & ": " & dateiName)
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                Call MsgBox(ex.Message)
             End Try
 
 
@@ -1540,7 +1541,13 @@ Public Module awinGeneralModules
 
 
                                                 For m = anfang To ende
-                                                    Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+
+                                                    Try
+                                                        Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+                                                    Catch ex As Exception
+                                                        Xwerte(m - anfang) = 0.0
+                                                    End Try
+
                                                 Next m
 
                                                 crole = New clsRolle(ende - anfang + 1)
@@ -1567,7 +1574,12 @@ Public Module awinGeneralModules
                                                 ReDim Xwerte(ende - anfang)
 
                                                 For m = anfang To ende
-                                                    Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+                                                    Try
+                                                        Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+                                                    Catch ex As Exception
+                                                        Xwerte(m - anfang) = 0.0
+                                                    End Try
+
                                                 Next m
 
                                                 ccost = New clsKostenart(ende - anfang + 1)
@@ -1667,7 +1679,7 @@ Public Module awinGeneralModules
                         Dim cBewertung As clsBewertung
                         Dim cphase As clsPhase
                         Dim objectName As String
-                        Dim startDate As Date, endeDate As Date
+                        Dim xlsStartDate As Date, xlsEndeDate As Date
                         Dim bezug As String
 
                         Dim isPhase As Boolean = False
@@ -1686,7 +1698,7 @@ Public Module awinGeneralModules
                                 cphase.name = hproj.name
                                 'cphaseExisted = False       ' Phase existiert noch nicht
 
-                                offset = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate)
+                                offset = 0
 
                                 If ProjektdauerIndays < 1 Or offset < 0 Then
                                     Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
@@ -1737,20 +1749,21 @@ Public Module awinGeneralModules
                             End Try
 
                             Try
-                                startDate = CDate(.Cells(zeile, columnOffset + 3).value)
+                                xlsStartDate = CDate(.Cells(zeile, columnOffset + 3).value).Date
                             Catch ex As Exception
-                                startDate = Date.MinValue
+                                xlsStartDate = Date.MinValue
                             End Try
 
-                            endeDate = CDate(.Cells(zeile, columnOffset + 4).value)
+                            xlsEndeDate = CDate(.Cells(zeile, columnOffset + 4).value).Date
 
-                            If DateDiff(DateInterval.Month, hproj.startDate, startDate) < 0 Then
-                                ' kein Startdatum angegeben
+                            If DateDiff(DateInterval.Month, hproj.startDate, xlsStartDate) < 0 Then
+                                ' wenn der Phasen Start vor dem Projekt-Start liegt 
 
-                                If startDate <> Date.MinValue Then
+                               
+                                If xlsStartDate <> Date.MinValue Then
                                     cphase = Nothing
-                                    Throw New Exception("Die Phase '" & objectName & "' beginnt vor dem Projekt !" & vbLf &
-                                                 "Bitte korrigieren Sie dies in der Datei'" & hproj.name & ".xlsx'")
+                                    Throw New Exception("Phase/Meilenstein '" & objectName & "' beginnt vor dem Projekt !" & vbLf &
+                                                 "Bitte korrigieren Sie dies in der Datei '" & hproj.name & ".xlsx'")
                                 Else
                                     ' objectName ist ein Meilenstein
                                     cphase = hproj.getPhase(bezug)
@@ -1764,7 +1777,7 @@ Public Module awinGeneralModules
 
                                     End If
                                 End If
-                                'isPhase = False
+                                ''isPhase = False
 
                             Else
                                 'objectName ist eine Phase
@@ -1798,8 +1811,8 @@ Public Module awinGeneralModules
                                     Dim offset As Integer
 
 
-                                    duration = calcDauerIndays(startDate, endeDate)
-                                    offset = DateDiff(DateInterval.Day, hproj.startDate, startDate)
+                                    duration = calcDauerIndays(xlsStartDate, xlsEndeDate)
+                                    offset = DateDiff(DateInterval.Day, hproj.startDate.Date, xlsStartDate)
 
                                     If duration < 1 Or offset < 0 Then
                                         Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
@@ -1830,7 +1843,7 @@ Public Module awinGeneralModules
                                     If inkonsistent Then
                                         anzFehler = anzFehler + 1
                                         Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
-                                                             "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & hproj.name & ".xlsx'")
+                                                             "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
                                     End If
                                     If Not cphaseExisted Then
                                         hproj.AddPhase(cphase)
@@ -1854,13 +1867,13 @@ Public Module awinGeneralModules
                                     cBewertung = New clsBewertung
 
                                     resultName = objectName.Trim
-                                    resultDate = endeDate
+                                    resultDate = xlsEndeDate
 
                                     ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
                                     If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
                                         resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
                                     Else
-                                        If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
+                                        If DateDiff(DateInterval.Day, endedateProjekt, xlsEndeDate) > 0 Then
                                             Call MsgBox("der Meilenstein '" & resultName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
                                                         "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '" & hproj.name & ".xlsx")
                                         End If
