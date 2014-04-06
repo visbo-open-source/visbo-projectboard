@@ -256,6 +256,8 @@ Public Module testModule
                         kennzeichnung = "Tabelle Veränderungen" Or _
                         kennzeichnung = "Tabelle Vergleich letzter Stand" Or _
                         kennzeichnung = "Tabelle Vergleich Beauftragung" Or _
+                        kennzeichnung = "Tabelle OneGlance Beauftragung" Or _
+                        kennzeichnung = "Tabelle OneGlance letzter Stand" Or _
                         kennzeichnung = "Ergebnis" Or _
                         kennzeichnung = "Strategie/Risiko" Or _
                         kennzeichnung = "Teilprojekte" Or _
@@ -859,6 +861,22 @@ Public Module testModule
 
                                 End Try
 
+                            Case "Tabelle OneGlance letzter Stand"
+
+                                Try
+                                    Call zeichneProjektTabelleOneGlance(pptSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternShape, hproj, lastproj)
+                                Catch ex As Exception
+
+                                End Try
+
+                            Case "Tabelle OneGlance Beauftragung"
+
+                                Try
+                                    Call zeichneProjektTabelleOneGlance(pptSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternShape, hproj, bproj)
+                                Catch ex As Exception
+
+                                End Try
+
                             Case "Tabelle Veränderungen"
 
                                 Try
@@ -885,9 +903,20 @@ Public Module testModule
                             Case "Ergebnis"
 
 
-                                'deleteStack.Add(.Name, .Name)
-                                'Try
-                                Call createProjektErgebnisCharakteristik2(hproj, obj)
+
+                                If qualifier = "letzter Stand" Then
+
+                                    Call createProjektErgebnisCharakteristik2(lproj, obj, 1)
+                                ElseIf qualifier = "Beauftragung" Then
+
+                                    Call createProjektErgebnisCharakteristik2(bproj, obj, 0)
+                                Else
+
+                                    Call createProjektErgebnisCharakteristik2(hproj, obj, 2)
+                                End If
+
+                               
+
                                 reportObj = obj
 
                                 Dim ax As xlNS.Axis = reportObj.Chart.Axes(xlNS.XlAxisType.xlCategory)
@@ -1650,36 +1679,38 @@ Public Module testModule
                         kennzeichnung = "nicht identifizierbar"
                     End Try
 
-                    If kennzeichnung = "Portfolio-Name" Or _
-                        kennzeichnung = "Projekt-Tafel" Or _
-                        kennzeichnung = "Projekt-Tafel Phasen" Or _
-                        kennzeichnung = "Tabelle Zielerreichung" Or _
-                        kennzeichnung = "Tabelle Projektstatus" Or _
-                        kennzeichnung = "Fortschritt Personalkosten" Or _
-                        kennzeichnung = "Fortschritt Sonstige Kosten" Or _
-                        kennzeichnung = "Fortschritt Gesamtkosten" Or _
-                        kennzeichnung = "Fortschritt Rolle" Or _
-                        kennzeichnung = "Fortschritt Kostenart" Or _
-                        kennzeichnung = "Ergebnis Verbesserungspotential" Or _
-                        kennzeichnung = "Ergebnis" Or _
-                        kennzeichnung = "Strategie/Risiko/Marge" Or _
-                        kennzeichnung = "Strategie/Risiko/Volumen" Or _
-                        kennzeichnung = "Zeit/Risiko/Volumen" Or _
-                        kennzeichnung = "Übersicht Auslastung" Or _
-                        kennzeichnung = "Details Unterauslastung" Or _
-                        kennzeichnung = "Details Überauslastung" Or _
-                        kennzeichnung = "Bisherige Zielerreichung" Or _
-                        kennzeichnung = "Prognose Zielerreichung" Or _
-                        kennzeichnung = "Phase" Or _
-                        kennzeichnung = "Rolle" Or _
-                        kennzeichnung = "Kostenart" Or _
-                        kennzeichnung = "Meilenstein" Or _
-                        kennzeichnung = "Stand:" Or _
-                        kennzeichnung = "Zeitraum:" Then
+                        If kennzeichnung = "Portfolio-Name" Or _
+                            kennzeichnung = "Projekt-Tafel" Or _
+                            kennzeichnung = "Projekt-Tafel Phasen" Or _
+                            kennzeichnung = "Tabelle Zielerreichung" Or _
+                            kennzeichnung = "Tabelle Projektstatus" Or _
+                            kennzeichnung = "Übersicht Besser/Schlechter" Or _
+                            kennzeichnung = "Tabelle Besser/Schlechter" Or _
+                            kennzeichnung = "Fortschritt Personalkosten" Or _
+                            kennzeichnung = "Fortschritt Sonstige Kosten" Or _
+                            kennzeichnung = "Fortschritt Gesamtkosten" Or _
+                            kennzeichnung = "Fortschritt Rolle" Or _
+                            kennzeichnung = "Fortschritt Kostenart" Or _
+                            kennzeichnung = "Ergebnis Verbesserungspotential" Or _
+                            kennzeichnung = "Ergebnis" Or _
+                            kennzeichnung = "Strategie/Risiko/Marge" Or _
+                            kennzeichnung = "Strategie/Risiko/Volumen" Or _
+                            kennzeichnung = "Zeit/Risiko/Volumen" Or _
+                            kennzeichnung = "Übersicht Auslastung" Or _
+                            kennzeichnung = "Details Unterauslastung" Or _
+                            kennzeichnung = "Details Überauslastung" Or _
+                            kennzeichnung = "Bisherige Zielerreichung" Or _
+                            kennzeichnung = "Prognose Zielerreichung" Or _
+                            kennzeichnung = "Phase" Or _
+                            kennzeichnung = "Rolle" Or _
+                            kennzeichnung = "Kostenart" Or _
+                            kennzeichnung = "Meilenstein" Or _
+                            kennzeichnung = "Stand:" Or _
+                            kennzeichnung = "Zeitraum:" Then
 
-                        listofShapes.Add(pptShape)
+                            listofShapes.Add(pptShape)
 
-                    End If
+                        End If
 
 
                 End With
@@ -2265,6 +2296,121 @@ Public Module testModule
                                 Catch ex As Exception
 
                                 End Try
+
+
+                            Case "Übersicht Besser/Schlechter"
+
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+
+                                Dim showAbsoluteDiff As Boolean = True
+                                Dim isTimeTimeVgl As Boolean = False
+                                Dim vglTyp As Integer = 1
+                                Dim charttype As Integer = PTpfdk.betterWorseB
+                                Dim bubbleValueTyp As Integer = PTbubble.strategicFit
+                                Dim showLabels As Boolean = True
+
+                                Dim qstr(20) As String
+                                qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+
+                                ' Bestimmen der Parameter  
+                                For i = 0 To qstr.Length - 1
+
+                                    Select Case i
+                                        Case 0
+
+                                            If qstr(i).Length > 0 Then
+                                                showAbsoluteDiff = CBool(qstr(i))
+                                            End If
+
+                                        Case 1
+                                            If qstr(i).Length > 0 Then
+                                                isTimeTimeVgl = CBool(qstr(i))
+                                            End If
+
+                                        Case 2
+                                            If qstr(i).Length > 0 Then
+                                                vglTyp = CInt(qstr(i))
+                                            End If
+
+                                        Case 3
+                                            If qstr(i).Length > 0 Then
+
+                                                If CBool(qstr(i)) Then
+                                                    charttype = PTpfdk.betterWorseB
+                                                Else
+                                                    charttype = PTpfdk.betterWorseL
+                                                End If
+
+                                            End If
+
+                                        Case 4
+                                            If qstr(i).Length > 0 Then
+                                                bubbleValueTyp = CInt(qstr(i))
+                                            End If
+
+                                        Case 5
+                                            If qstr(i).Length > 0 Then
+                                                showLabels = CBool(qstr(i))
+                                            End If
+
+
+                                    End Select
+
+                                Next
+
+
+                                Dim selectionType As Integer = PTpsel.lfundab ' nur laufende und abgeschlossene Projekte 
+                                von = showRangeLeft
+                                bis = showRangeRight
+                                myCollection = ShowProjekte.withinTimeFrame(selectionType, von, bis)
+
+                                htop = 50
+                                hleft = (showRangeRight - 1) * boxWidth
+                                hwidth = 0.4 * maxScreenWidth
+                                hheight = 0.6 * maxScreenHeight
+                                obj = Nothing
+
+
+                                Try
+                                    Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=showAbsoluteDiff, isTimeTimeVgl:=isTimeTimeVgl, vglTyp:=vglTyp, _
+                                                    charttype:=charttype, bubbleColor:=0, bubbleValueTyp:=bubbleValueTyp, showLabels:=showLabels, chartBorderVisible:=True, _
+                                                    top:=htop, left:=hleft, width:=hwidth, height:=hheight)
+
+
+
+
+                                    reportObj = obj
+
+                                    With reportObj
+                                        '.Chart.ChartTitle.Text = boxName
+                                        .Chart.ChartTitle.Font.Size = pptSize
+                                    End With
+
+                                    reportObj.Copy()
+                                    newShape = pptSlide.Shapes.Paste
+
+                                    With newShape
+                                        .Top = top + 0.02 * height
+                                        .Left = left + 0.02 * width
+                                        .Width = width * 0.96
+                                        .Height = height * 0.96
+                                    End With
+
+
+                                    Try
+                                        reportObj.Delete()
+                                        'DiagramList.Remove(DiagramList.Count)
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                End Try
+
+                               
 
 
                             Case "Übersicht Auslastung"
@@ -3756,7 +3902,8 @@ Public Module testModule
         Dim todoListe As New SortedList(Of Long, clsProjekt)
         Dim key As Long
 
-        timeFrameProjekte = ShowProjekte.withinTimeFrame(0, showRangeLeft, showRangeRight)
+        Dim selectionType As Integer = -1
+        timeFrameProjekte = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
         For Each pname As String In timeFrameProjekte
             hproj = ShowProjekte.getProject(pname)
@@ -4233,6 +4380,8 @@ Public Module testModule
         Dim farbeNegativ As Long
         Dim farbeStern As Long
         Dim unterschiede As New Collection
+        Dim TimeCostColor(2) As Double
+        Dim TimeTimeColor(2) As Double
 
 
         Try
@@ -4407,7 +4556,41 @@ Public Module testModule
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
                                 Else
                                     If unterschiede.Contains(PThcc.phasen) Then
-                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, sternShape, farbeStern)
+                                        TimeTimeColor = hproj.getTimeTimeColor(vglproj, True, Date.Now)
+
+                                        If TimeTimeColor(0) < 0 Then
+
+                                            If TimeTimeColor(1) < 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv)
+                                            ElseIf TimeTimeColor(1) > 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv, farbeNegativ)
+                                            Else
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv, farbeNeutral)
+                                            End If
+
+                                        ElseIf TimeTimeColor(0) > 0 Then
+
+                                            If TimeTimeColor(1) < 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ, farbePositiv)
+                                            ElseIf TimeTimeColor(1) > 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ)
+                                            Else
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ, farbeNeutral)
+                                            End If
+
+                                        Else
+
+                                            If TimeTimeColor(1) < 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral, farbePositiv)
+                                            ElseIf TimeTimeColor(1) > 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral, farbeNegativ)
+                                            Else
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                            End If
+
+                                        End If
+
+                                        'Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, sternShape, farbeStern)
                                         CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
                                         CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
                                     Else
@@ -4428,7 +4611,42 @@ Public Module testModule
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
                                 Else
                                     If unterschiede.Contains(PThcc.resultdates) Or unterschiede.Contains(PThcc.resultampel) Then
-                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, sternShape, farbeStern)
+
+                                        TimeTimeColor = hproj.getTimeTimeColor(vglproj, True, Date.Now)
+
+                                        If TimeTimeColor(0) < 0 Then
+
+                                            If TimeTimeColor(1) < 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv)
+                                            ElseIf TimeTimeColor(1) > 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv, farbeNegativ)
+                                            Else
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv, farbeNeutral)
+                                            End If
+
+                                        ElseIf TimeTimeColor(0) > 0 Then
+
+                                            If TimeTimeColor(1) < 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ, farbePositiv)
+                                            ElseIf TimeTimeColor(1) > 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ)
+                                            Else
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ, farbeNeutral)
+                                            End If
+
+                                        Else
+
+                                            If TimeTimeColor(1) < 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral, farbePositiv)
+                                            ElseIf TimeTimeColor(1) > 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral, farbeNegativ)
+                                            Else
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                            End If
+
+                                        End If
+
+                                        'Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, sternShape, farbeStern)
                                         CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
                                         CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
                                     Else
@@ -4587,6 +4805,204 @@ Public Module testModule
     End Sub
 
     ''' <summary>
+    ''' analog zu TabelleVergleich, allerdigs reduziert auf die drei Elemente Kosten, zeit, Qualität
+    ''' </summary>
+    ''' <param name="pptslide"></param>
+    ''' <param name="pptShape"></param>
+    ''' <param name="gleichShape"></param>
+    ''' <param name="steigendShape"></param>
+    ''' <param name="fallendShape"></param>
+    ''' <param name="ampelShape"></param>
+    ''' <param name="sternShape"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="vglproj"></param>
+    ''' <remarks></remarks>
+    Sub zeichneProjektTabelleOneGlance(ByRef pptslide As pptNS.Slide, ByRef pptShape As pptNS.Shape, ByVal gleichShape As pptNS.Shape, ByVal steigendShape As pptNS.Shape, ByVal fallendShape As pptNS.Shape, _
+                                               ByVal ampelShape As pptNS.Shape, ByVal sternShape As pptNS.Shape, ByVal hproj As clsProjekt, ByVal vglproj As clsProjekt)
+        Dim anzZeilen As Integer
+        Dim tabelle As pptNS.Table
+        Dim zeile As Integer
+        Dim tmpStr As String
+        Dim tableLeft As Double = pptShape.Left
+        Dim tableTop As Double = pptShape.Top
+        Dim kennung As String
+        Dim aktBudget As Double, vglBudget As Double
+        Dim aktPersCost As Double, vglPersCost As Double
+        Dim aktSonstCost As Double, vglSonstCost As Double
+        Dim aktRiskCost As Double, vglRiskCost As Double
+        Dim aktErgebnis As Double, vglErgebnis As Double
+        Dim farbePositiv As Long
+        Dim farbeNeutral As Long
+        Dim farbeNegativ As Long
+        Dim farbeStern As Long
+        Dim unterschiede As New Collection
+        Dim TimeCostColor(2) As Double
+        Dim TimeTimeColor(2) As Double
+
+
+        Try
+            farbePositiv = steigendShape.Fill.ForeColor.RGB
+            farbeNeutral = gleichShape.Fill.ForeColor.RGB
+            farbeNegativ = fallendShape.Fill.ForeColor.RGB
+            farbeStern = sternShape.Fill.ForeColor.RGB
+        Catch ex As Exception
+
+        End Try
+
+
+        ' jetzt wird festgestellt, wo es über all Unterschiede gibt 
+        ' wird für Bewertung Termine und Meilensteine benötigt 
+        unterschiede = hproj.listOfDifferences(vglproj, True, 0)
+
+        ' jetzt werden die aktuellen bzw Vergleichswerte der finanziellen KPIs bestimmt 
+        Try
+            hproj.calculateRoundedKPI(aktBudget, aktPersCost, aktSonstCost, aktRiskCost, aktErgebnis)
+
+            If Not IsNothing(vglproj) Then
+                vglproj.calculateRoundedKPI(vglBudget, vglPersCost, vglSonstCost, vglRiskCost, vglErgebnis)
+            End If
+
+        Catch ex As Exception
+
+
+
+        End Try
+
+        If pptShape.HasTable Then
+            tabelle = pptShape.Table
+            anzZeilen = tabelle.Rows.Count
+            If anzZeilen > 1 Then
+                zeile = 1
+                ' jetzt wird die Überschrift aktualisiert 
+                With tabelle
+
+                    CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Projekt" & vbLf & hproj.name
+
+                    tmpStr = CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text
+                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
+
+
+                    ' jetzt werden die Zeilen abgearbeitet, beginnend mit 2
+                    For zeile = 2 To anzZeilen
+
+                        Try
+                            kennung = CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text.Trim
+                        Catch ex As Exception
+                            kennung = ""
+                        End Try
+
+                        Dim aktvalue As Double
+                        Dim vglValue As Double
+                        Select Case kennung
+
+                            Case "Gesamtkosten"
+
+                                aktvalue = aktPersCost + aktSonstCost
+                                vglValue = vglPersCost + aktSonstCost
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = " nicht verfügbar"
+                                Else
+                                    If aktvalue = vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                    ElseIf aktvalue > vglValue Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ)
+
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv)
+                                    End If
+
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = aktvalue.ToString & " T€"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglValue.ToString & " T€"
+                                End If
+
+
+
+
+
+
+
+                            Case "Termine"
+
+
+                                If IsNothing(vglproj) Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                    CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
+                                    CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
+                                Else
+                                    If unterschiede.Contains(PThcc.phasen) Or unterschiede.Contains(PThcc.resultdates) Then
+                                        TimeTimeColor = hproj.getTimeTimeColor(vglproj, True, Date.Now)
+
+                                        If TimeTimeColor(0) < 0 Then
+
+                                            If TimeTimeColor(1) < 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv)
+                                            ElseIf TimeTimeColor(1) > 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv, farbeNegativ)
+                                            Else
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbePositiv, farbeNeutral)
+                                            End If
+
+                                        ElseIf TimeTimeColor(0) > 0 Then
+
+                                            If TimeTimeColor(1) < 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ, farbePositiv)
+                                            ElseIf TimeTimeColor(1) > 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ)
+                                            Else
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbeNegativ, farbeNeutral)
+                                            End If
+
+                                        Else
+
+                                            If TimeTimeColor(1) < 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral, farbePositiv)
+                                            ElseIf TimeTimeColor(1) > 0 Then
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral, farbeNegativ)
+                                            Else
+                                                Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                            End If
+
+                                        End If
+
+                                        'Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, sternShape, farbeStern)
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Ende: " & hproj.endeDate.ToShortDateString
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Ende: " & vglproj.endeDate.ToShortDateString
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+                                        CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Ende: " & hproj.endeDate.ToShortDateString
+                                        CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Ende: " & vglproj.endeDate.ToShortDateString
+                                    End If
+                                End If
+
+
+                            Case "Erläuterung"
+
+                                aktvalue = hproj.ampelStatus
+                                vglValue = vglproj.ampelStatus
+
+                                CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
+                                CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglproj.ampelErlaeuterung
+
+                            Case Else
+
+
+                        End Select
+
+
+                    Next
+
+                End With
+
+            End If
+        End If
+
+    End Sub
+
+    ''' <summary>
     ''' zeichnet das übergebene Symbol in die per zeile, spalte angegebene Tabellen-Zelle
     ''' </summary>
     ''' <param name="pptslide"></param>
@@ -4638,6 +5054,69 @@ Public Module testModule
             .Top = tabelle.Cell(tbZeile, tbSpalte).Shape.Top + (tabelle.Cell(tbZeile, tbSpalte).Shape.Height - .Height) / 2
             .Left = tabelle.Cell(tbZeile, tbSpalte).Shape.Left + (tabelle.Cell(tbZeile, tbSpalte).Shape.Width - .Width) / 2
             .Fill.ForeColor.RGB = farbkennung
+
+        End With
+
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' ergänzt zum Symbol noch die Linenfarbe als Hinweis wie der nächste Meilenstein aussieht 
+    ''' </summary>
+    ''' <param name="pptslide"></param>
+    ''' <param name="tabelle"></param>
+    ''' <param name="tbZeile"></param>
+    ''' <param name="tbSpalte"></param>
+    ''' <param name="zeichen"></param>
+    ''' <param name="farbkennung"></param>
+    ''' <param name="lineColor"></param>
+    ''' <remarks></remarks>
+    Sub zeichneTrendSymbol(ByRef pptslide As pptNS.Slide, ByRef tabelle As pptNS.Table, ByVal tbZeile As Integer, ByVal tbSpalte As Integer, _
+                                    ByVal zeichen As pptNS.Shape, ByVal farbkennung As Long, ByVal lineColor As Long)
+
+        Dim korrFaktor As Double = 1.0
+        Dim newZeichen As pptNS.ShapeRange
+
+        zeichen.Copy()
+        newZeichen = pptslide.Shapes.Paste
+
+        ' ist der Pfeil größer als die Zelle ? 
+        If tabelle.Cell(tbZeile, tbSpalte).Shape.Width < newZeichen(1).Width Or _
+             tabelle.Cell(tbZeile, tbSpalte).Shape.Height < newZeichen(1).Height Then
+            ' dann am kleineren orientieren 
+
+            Try
+                korrFaktor = System.Math.Min(tabelle.Cell(tbZeile, tbSpalte).Shape.Width / newZeichen(1).Width, tabelle.Cell(tbZeile, tbSpalte).Shape.Height / newZeichen(1).Height)
+            Catch ex As Exception
+                ' in diesem Fall bleibt Korrfaktor auf 1.0 
+            End Try
+
+
+        End If
+
+        ' Anpassen derPfeilgröße
+        If korrFaktor < 1.0 Then
+
+            korrFaktor = korrFaktor * 0.98
+
+            With newZeichen(1)
+                .Width = korrFaktor * .Width
+                .Height = korrFaktor * .Height
+            End With
+
+        End If
+
+        ' jetzt bestimmen der Left , Top Koordinaten des Pfeils und setzen der Farbe
+
+        With newZeichen(1)
+
+            .Top = tabelle.Cell(tbZeile, tbSpalte).Shape.Top + (tabelle.Cell(tbZeile, tbSpalte).Shape.Height - .Height) / 2
+            .Left = tabelle.Cell(tbZeile, tbSpalte).Shape.Left + (tabelle.Cell(tbZeile, tbSpalte).Shape.Width - .Width) / 2
+            .Fill.ForeColor.RGB = farbkennung
+            .Line.ForeColor.RGB = lineColor
+            .Line.Weight = 2
 
         End With
 
@@ -4891,17 +5370,17 @@ Public Module testModule
 
     End Sub
 
+  
     ''' <summary>
     ''' Portfolio - Diagramme erstellen gemäß dem angegebenen charttype
-    ''' derzeit möglich: PTpfdk.FitRisiko; PTpfdk.ZeitRisiko; PTpfdk.ComplexRisiko; PTpfdk.FitRisikoVol
-    ''' bubbleColor kann derzeit PTpfdk.ProjektFarbe oder PTpfdk.AmpelFarbe sein.
     ''' </summary>
     ''' <param name="ProjektListe"></param>
     ''' <param name="repChart"></param>
-    ''' <param name="isProjektCharakteristik"></param>
-    ''' <param name="charttype"></param>
+    ''' <param name="showAbsoluteDiff">sollen die Unterschiede absolut oder prozentual angezeigt werden</param>
+    ''' <param name="vglTyp">0: vergleiche Projekt-Ende ; 1: vergleiche mit nächstem Meilenstein </param>
+    ''' <param name="charttype">betterWorseL - Vergleich mit letztem Stand
+    ''' betterWorseB - Vergleich mit Beauftragungs-Stand</param>
     ''' <param name="bubbleColor"></param>
-    ''' <param name="showNegativeValues"></param>
     ''' <param name="showLabels"></param>
     ''' <param name="chartBorderVisible"></param>
     ''' <param name="top"></param>
@@ -4909,9 +5388,10 @@ Public Module testModule
     ''' <param name="width"></param>
     ''' <param name="height"></param>
     ''' <remarks></remarks>
-    Sub awinCreateBetterWorsePortfolio(ByRef ProjektListe As Collection, ByRef repChart As Object, isProjektCharakteristik As Boolean, _
-                                         charttype As Integer, bubbleColor As Integer, showNegativeValues As Boolean, showLabels As Boolean, chartBorderVisible As Boolean, _
-                                         top As Double, left As Double, width As Double, height As Double)
+    Sub awinCreateBetterWorsePortfolio(ByRef ProjektListe As Collection, ByRef repChart As Object, ByVal showAbsoluteDiff As Boolean, ByVal isTimeTimeVgl As Boolean, ByVal vglTyp As Integer, _
+                                             ByVal charttype As Integer, ByVal bubbleColor As Integer, ByVal bubbleValueTyp As Integer, _
+                                             ByVal showLabels As Boolean, ByVal chartBorderVisible As Boolean, _
+                                             ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double)
 
 
         Dim anzDiagrams As Integer, i As Integer
@@ -4919,7 +5399,7 @@ Public Module testModule
         Dim pname As String = ""
         Dim hproj As New clsProjekt, vproj As clsProjekt
         Dim anzBubbles As Integer
-        Dim riskValues() As Double
+        Dim yAchsenValues() As Double
         Dim xAchsenValues() As Double
         Dim bubbleValues() As Double, tempArray() As Double
         Dim nameValues() As String
@@ -4933,12 +5413,34 @@ Public Module testModule
         Dim chtobjName As String = windowNames(3)
         Dim smallfontsize As Double, titlefontsize As Double
         Dim singleProject As Boolean
-        Dim vglProjekte As New clsProjekte
+        Dim outOfToleranceProjekte As New SortedList(Of String, Double())
         Dim vglName As String = ""
         Dim compareToLast As Boolean = True
         Dim request As New Request(awinSettings.databaseName)
-        Dim timeCostColor(2) As Double
+        Dim variantName As String = ""
+        Dim tolerancePercent As Double = 0.02
+        Dim toleranceTimeAbs As Integer = 5
+        Dim toleranceCostAbs As Integer = 2
+        ' die Folgenden Werte nehmen die min/max Abweichungen in Time and Cost auf; dient dazu die Skalierung korrekt darzustellen 
+        Dim minTime As Double, maxTime As Double
+        Dim minTC As Double, maxTC As Double
 
+        Dim relTimeTolerance As Double = awinSettings.timeToleranzRel
+        Dim absTimeTolerance As Double = awinSettings.timeToleranzAbs
+        Dim relCostTolerance As Double = awinSettings.costToleranzRel
+        Dim absCostTolerance As Double = awinSettings.costToleranzAbs
+
+        Dim timeTCColor(2) As Double
+        Dim xAchsenNames(1) As String
+        Dim yAchsenNames(1) As String
+        Dim anzkeinVproj As Integer = 0
+
+        xAchsenNames(0) = "langsamer"
+        xAchsenNames(1) = "schneller"
+        yAchsenNames(0) = "teurer"
+        yAchsenNames(1) = "günstiger"
+        minTime = 10000
+        minTC = 10000
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -4963,27 +5465,26 @@ Public Module testModule
             smallfontsize = 8
         End If
 
+        Dim tmpanz As Integer = projekthistorie.liste.Count
+
         Select Case charttype
             Case PTpfdk.betterWorseL
 
                 compareToLast = True
-
-                If isProjektCharakteristik Then
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.betterWorseL)
+                If showAbsoluteDiff Then
+                    diagramTitle = "Absolute " & portfolioDiagrammtitel(PTpfdk.betterWorseL)
                 Else
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.betterWorseL) & _
-                                    vbLf & textZeitraum(showRangeLeft, showRangeRight)
+                    diagramTitle = "Prozentuale " & portfolioDiagrammtitel(PTpfdk.betterWorseL)
                 End If
+
 
             Case PTpfdk.betterWorseB
 
                 compareToLast = False
-
-                If isProjektCharakteristik Then
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.betterWorseB)
+                If showAbsoluteDiff Then
+                    diagramTitle = "Absolute " & portfolioDiagrammtitel(PTpfdk.betterWorseB)
                 Else
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.betterWorseB) & _
-                                    vbLf & textZeitraum(showRangeLeft, showRangeRight)
+                    diagramTitle = "Prozentuale " & portfolioDiagrammtitel(PTpfdk.betterWorseB)
                 End If
 
         End Select
@@ -4991,13 +5492,14 @@ Public Module testModule
         ' in der Projektliste sind jetzt laufende Projekte; jetzt wird bestimmt, welche innerhalb der 
         ' nicht-der-Rede-wert Fraktion sind 
 
-
+        Dim anzOK As Integer = 0
         For i = 1 To ProjektListe.Count
             pname = ProjektListe.Item(i)
 
             Try
                 hproj = ShowProjekte.getProject(pname)
-                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:="", _
+                variantName = hproj.variantName
+                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
                 If compareToLast Then
                     vproj = projekthistorie.Last
@@ -5007,8 +5509,121 @@ Public Module testModule
 
                 If Not IsNothing(vproj) Then
 
-                    timeCostColor = hproj.getTimeCostIndex(vproj, 1, Date.Now)
-                    vglProjekte.Add(vproj)
+
+                    If isTimeTimeVgl Then
+                        timeTCColor = hproj.getTimeTimeColor(vproj, showAbsoluteDiff, Date.Now)
+                    Else
+                        timeTCColor = hproj.getTimeCostColor(vproj, vglTyp, showAbsoluteDiff, Date.Now)
+                    End If
+
+
+                    If showAbsoluteDiff Then
+
+                        If isTimeTimeVgl Then
+                            If timeTCColor(0) > -1 * absTimeTolerance And timeTCColor(0) < absTimeTolerance _
+                            And timeTCColor(1) > -1 * absTimeTolerance And timeTCColor(1) < absTimeTolerance Then
+                                ' liegt im erlaubten Toleranz-Korridor 
+                                anzOK = anzOK + 1
+                            Else
+                                If timeTCColor(0) < minTime Then
+                                    minTime = timeTCColor(0)
+                                End If
+                                If timeTCColor(0) > maxTime Then
+                                    maxTime = timeTCColor(0)
+                                End If
+
+                                If timeTCColor(1) < minTC Then
+                                    minTC = timeTCColor(1)
+                                End If
+                                If timeTCColor(1) > maxTC Then
+                                    maxTC = timeTCColor(1)
+                                End If
+
+                                outOfToleranceProjekte.Add(vproj.name, timeTCColor)
+                            End If
+                        Else
+
+                            If timeTCColor(0) > -1 * absTimeTolerance And timeTCColor(0) < absTimeTolerance _
+                             And timeTCColor(1) > -1 * absCostTolerance And timeTCColor(1) < absCostTolerance Then
+                                ' liegt im erlaubten Toleranz-Korridor 
+                                anzOK = anzOK + 1
+                            Else
+                                If timeTCColor(0) < minTime Then
+                                    minTime = timeTCColor(0)
+                                End If
+                                If timeTCColor(0) > maxTime Then
+                                    maxTime = timeTCColor(0)
+                                End If
+
+                                If timeTCColor(1) < minTC Then
+                                    minTC = timeTCColor(1)
+                                End If
+                                If timeTCColor(1) > maxTC Then
+                                    maxTC = timeTCColor(1)
+                                End If
+
+                                outOfToleranceProjekte.Add(vproj.name, timeTCColor)
+                            End If
+
+                            
+                        End If
+                        
+                    Else
+
+                        If isTimeTimeVgl Then
+
+                            If timeTCColor(0) > 1 - relTimeTolerance And timeTCColor(0) < 1 + relTimeTolerance And _
+                                timeTCColor(1) > 1 - relTimeTolerance And timeTCColor(1) < 1 + relTimeTolerance Then
+                                ' liegt im erlaubten Toleranz-Korridor 
+                                anzOK = anzOK + 1
+                            Else
+                                If timeTCColor(0) < minTime Then
+                                    minTime = timeTCColor(0)
+                                End If
+                                If timeTCColor(0) > maxTime Then
+                                    maxTime = timeTCColor(0)
+                                End If
+
+                                If timeTCColor(1) < minTC Then
+                                    minTC = timeTCColor(1)
+                                End If
+                                If timeTCColor(1) > maxTC Then
+                                    maxTC = timeTCColor(1)
+                                End If
+
+                                outOfToleranceProjekte.Add(vproj.name, timeTCColor)
+                            End If
+
+                        Else
+                            If timeTCColor(0) > 1 - relTimeTolerance And timeTCColor(0) < 1 + relTimeTolerance And _
+                                timeTCColor(1) > 1 - relCostTolerance And timeTCColor(1) < 1 + relCostTolerance Then
+                                ' liegt im erlaubten Toleranz-Korridor 
+                                anzOK = anzOK + 1
+                            Else
+                                If timeTCColor(0) < minTime Then
+                                    minTime = timeTCColor(0)
+                                End If
+                                If timeTCColor(0) > maxTime Then
+                                    maxTime = timeTCColor(0)
+                                End If
+
+                                If timeTCColor(1) < minTC Then
+                                    minTC = timeTCColor(1)
+                                End If
+                                If timeTCColor(1) > maxTC Then
+                                    maxTC = timeTCColor(1)
+                                End If
+
+                                outOfToleranceProjekte.Add(vproj.name, timeTCColor)
+                            End If
+                        End If
+
+                        
+                    End If
+
+                Else
+                    anzkeinVproj = anzkeinVproj + 1
+
                 End If
 
             Catch ex As Exception
@@ -5021,13 +5636,13 @@ Public Module testModule
 
         ' hier werden die Werte bestimmt ...
         Try
-            ReDim riskValues(ProjektListe.Count - 1)
-            ReDim xAchsenValues(ProjektListe.Count - 1)
-            ReDim bubbleValues(ProjektListe.Count - 1)
-            ReDim nameValues(ProjektListe.Count - 1)
-            ReDim colorValues(ProjektListe.Count - 1)
-            ReDim PfChartBubbleNames(ProjektListe.Count - 1)
-            ReDim positionValues(ProjektListe.Count - 1)
+            ReDim yAchsenValues(outOfToleranceProjekte.Count - 1)
+            ReDim xAchsenValues(outOfToleranceProjekte.Count - 1)
+            ReDim bubbleValues(outOfToleranceProjekte.Count - 1)
+            ReDim nameValues(outOfToleranceProjekte.Count - 1)
+            ReDim colorValues(outOfToleranceProjekte.Count - 1)
+            ReDim PfChartBubbleNames(outOfToleranceProjekte.Count - 1)
+            ReDim positionValues(outOfToleranceProjekte.Count - 1)
         Catch ex As Exception
 
             Throw New ArgumentException("Fehler in CreateBetterWorsePortfolio " & ex.Message)
@@ -5035,118 +5650,115 @@ Public Module testModule
         End Try
 
 
-        anzBubbles = 0
+        anzBubbles = outOfToleranceProjekte.Count
+
+        If anzBubbles = 0 Then
+            Dim logMessage As String
+            Dim tmpValue1 As Double, tmpValue2 As Double
+
+
+            If isTimeTimeVgl Then
+                If showAbsoluteDiff Then
+                    logMessage = "es gibt keine Projekte mit Abweichungen, die größer als die tolerierten Werte sind" & vbLf & _
+                                    "Zeit-Toleranz Projekt-Ende: +/-" & absTimeTolerance & " Tage" & vbLf & _
+                                    "Zeit-Toleranz nächster Meilenstein: +/-" & absTimeTolerance & " Tage"
+                Else
+                    tmpValue1 = relTimeTolerance * 100
+                    logMessage = "es gibt keine Projekte mit Abweichungen, die größer als die tolerierten Werte sind" & vbLf & _
+                                    "Zeit-Toleranz Projekt-Ende: +/-" & tmpValue1.ToString("##0.#") & "%" & vbLf & _
+                                    "Zeit-Toleranz nächster Meilenstein: +/-" & tmpValue1.ToString("##0.#") & "%"
+                End If
+            Else
+                If showAbsoluteDiff Then
+                    logMessage = "es gibt keine Projekte mit Abweichungen, die größer als die tolerierten Werte sind" & vbLf & _
+                                    "Zeit-Toleranz: +/-" & absTimeTolerance & " Tage" & vbLf & _
+                                    "Kosten-Toleranz: +/-" & absCostTolerance & " T€"
+                Else
+                    tmpValue1 = relTimeTolerance * 100
+                    tmpValue2 = relCostTolerance * 100
+                    logMessage = "es gibt keine Projekte mit Abweichungen, die größer als die tolerierten Werte sind" & vbLf & _
+                                    "Zeit-Toleranz: +/-" & tmpValue1.ToString("##0.#") & "%" & vbLf & _
+                                    "Kosten-Toleranz: +/-" & tmpValue2.ToString("##0.#") & "%"
+
+                End If
+
+            End If
+
+            appInstance.ScreenUpdating = formerSU
+            appInstance.EnableEvents = formerEE
+            Throw New Exception(logMessage)
+
+        End If
+
+
         ' neuer Typ: 8.3.14 Abhängigkeiten
         Dim tmpstr(10) As String                ' nur für Zeit/Risiko Chart erforderlich
-        Dim activeDepIndex As Integer           ' Kennzahl: wieviel Projekte sind abhängig, wie stark strahlt das Projekt 
-        Dim passiveDepIndex As Integer          ' Kennzahl: von wievielen Projekten abhängig
-        Dim activeNumber As Integer             ' Kennzahl: auf wieviele Projekte strahlt es aus ?
-        Dim passiveNumber As Integer            ' Kennzahl: von wievielen Projekten abhängig 
-        Dim activeMax As Integer = 0
-        Dim passiveMax As Integer = 0
 
-        For i = 1 To ProjektListe.Count
-            pname = ProjektListe.Item(i)
+        For i = 1 To outOfToleranceProjekte.Count
+
+
             Try
+                pname = outOfToleranceProjekte.ElementAt(i - 1).Key
+                timeTCColor = outOfToleranceProjekte.ElementAt(i - 1).Value
                 hproj = ShowProjekte.getProject(pname)
-                With hproj
 
-                    ' neuer Typ: 8.3.14 Abhängigkeiten
-                    If charttype = PTpfdk.Dependencies Then
-                        ' wird um eins erhöht damit es nicht auf der Nulllinie liegt 
-                        activeDepIndex = allDependencies.activeIndex(pname, PTdpndncyType.inhalt) + 1
-                        If activeMax < activeDepIndex Then
-                            activeMax = activeDepIndex
-                        End If
-                        activeNumber = allDependencies.activeNumber(pname, PTdpndncyType.inhalt)
-                        ' wird um eins erhöht damit es nicht auf der Nulllinie liegt 
-                        passiveDepIndex = allDependencies.passiveIndex(pname, PTdpndncyType.inhalt) + 1
-                        If passiveMax < passiveDepIndex Then
-                            passiveMax = passiveDepIndex
-                        End If
-                        passiveNumber = allDependencies.passiveNumber(pname, PTdpndncyType.inhalt)
-                        riskValues(anzBubbles) = activeDepIndex
-                    Else
-                        riskValues(anzBubbles) = .Risiko
-                    End If
+                xAchsenValues(i - 1) = timeTCColor(0)
+                yAchsenValues(i - 1) = timeTCColor(1)
 
+                If bubbleColor = PTpfdk.ProjektFarbe Then
 
-                    If bubbleColor = PTpfdk.ProjektFarbe Then
+                    ' Projekttyp wird farblich gekennzeichent
+                    colorValues(anzBubbles) = hproj.farbe
 
-                        ' Projekttyp wird farblich gekennzeichent
-                        colorValues(anzBubbles) = .farbe
+                Else ' bubbleColor ist AmpelFarbe
 
-                    Else ' bubbleColor ist AmpelFarbe
-
-                        ' ProjektStatus wird farblich gekennzeichnet
-                        Select Case hproj.ampelStatus
-                            Case 0
-                                '"Ampel nicht bewertet"
-                                colorValues(anzBubbles) = awinSettings.AmpelNichtBewertet
-                            Case 1
-                                '"Ampel Grün"
-                                colorValues(anzBubbles) = awinSettings.AmpelGruen
-                            Case 2
-                                '"Ampel Gelb"
-                                colorValues(anzBubbles) = awinSettings.AmpelGelb
-                            Case 3
-                                '"Ampel Rot"
-                                colorValues(anzBubbles) = awinSettings.AmpelRot
-                        End Select
-                    End If
-
-                    Select Case charttype
-                        Case PTpfdk.FitRisiko
-
-                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
-                            bubbleValues(anzBubbles) = .ProjectMarge                                ' Marge
-                            nameValues(anzBubbles) = .name
-                            If singleProject Then
-                                PfChartBubbleNames(anzBubbles) = Format(bubbleValues(anzBubbles), "##0.#%")
-                            Else
-                                PfChartBubbleNames(anzBubbles) = .name & _
-                                    " (" & Format(bubbleValues(anzBubbles), "##0.#%") & ")"
-                            End If
-                        Case PTpfdk.FitRisikoVol
-
-                            xAchsenValues(anzBubbles) = .StrategicFit                                'Stragegie
-                            bubbleValues(anzBubbles) = .volume
-                            nameValues(anzBubbles) = .name
-
-                            PfChartBubbleNames(anzBubbles) = .name & _
-                                " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"
-
-                        Case PTpfdk.ZeitRisiko
-
-                            xAchsenValues(anzBubbles) = .dauerInDays / 365 * 12                    'Zeit
-                            bubbleValues(anzBubbles) = System.Math.Round(.volume / 10000) * 10
-                            nameValues(anzBubbles) = .name & " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)"
-                            PfChartBubbleNames(anzBubbles) = .name & _
-                                    " (" & Format(bubbleValues(anzBubbles), "##0.#") & " T)"
-
-                        Case PTpfdk.ComplexRisiko
-
-                            xAchsenValues(anzBubbles) = .complexity                                'Complex
-                            bubbleValues(anzBubbles) = .volume                                     'Volumen
-                            nameValues(anzBubbles) = .name
-                            PfChartBubbleNames(anzBubbles) = .name & _
-                             " (" & Format(bubbleValues(anzBubbles) / 1000, "##0.#") & " T)"
-
-
-                        Case PTpfdk.Dependencies
-                            ' neuer Typ: 8.3.14 Abhängigkeiten
-
-                            xAchsenValues(anzBubbles) = passiveDepIndex                            'Abhängigkeiten
-                            bubbleValues(anzBubbles) = .StrategicFit
-                            nameValues(anzBubbles) = .name
-
-                            PfChartBubbleNames(anzBubbles) = .name & _
-                                " (" & passiveNumber.ToString & ", " & activeNumber.ToString & ")"
-
-
+                    ' ProjektStatus wird farblich gekennzeichnet
+                    Select Case CInt(timeTCColor(2))
+                        Case PTfarbe.none
+                            colorValues(i - 1) = awinSettings.AmpelNichtBewertet
+                        Case PTfarbe.green
+                            colorValues(i - 1) = awinSettings.AmpelGruen
+                        Case PTfarbe.yellow
+                            colorValues(i - 1) = awinSettings.AmpelGelb
+                        Case PTfarbe.red
+                            colorValues(i - 1) = awinSettings.AmpelRot
                     End Select
-                End With
-                anzBubbles = anzBubbles + 1
+                End If
+
+                nameValues(i - 1) = hproj.name
+                PfChartBubbleNames(i - 1) = nameValues(i - 1)
+
+                Select Case bubbleValueTyp
+
+                    Case PTbubble.strategicFit
+                        bubbleValues(i - 1) = hproj.StrategicFit
+                        'PfChartBubbleNames(i - 1) = nameValues(i - 1) & _
+                        '            " (" & Format(bubbleValues(i - 1), "##0.#") & ", "
+
+                    Case PTbubble.depencencies
+                        bubbleValues(i - 1) = allDependencies.activeIndex(hproj.name, PTdpndncyType.inhalt) + 1
+                        'PfChartBubbleNames(i - 1) = nameValues(i - 1) & _
+                        '            " (" & Format(bubbleValues(i - 1), "##0") & ", "
+
+                    Case PTbubble.marge
+                        bubbleValues(i - 1) = hproj.ProjectMarge
+                        If bubbleValues(i - 1) = 0 Then
+                            bubbleValues(i - 1) = 0.005
+                        End If
+                        'PfChartBubbleNames(i - 1) = nameValues(i - 1) & _
+                        '            " (" & Format(bubbleValues(i - 1) * 100, "##0.#") & "%, "
+
+                End Select
+
+                'If showAbsoluteDiff Then
+                '    PfChartBubbleNames(i - 1) = PfChartBubbleNames(i - 1) & _
+                '                    Format(timeTCColor(0), "##0") & ", " & Format(timeTCColor(1), "##0.#") & " T€)"
+                'Else
+                '    PfChartBubbleNames(i - 1) = PfChartBubbleNames(i - 1) & _
+                '                    Format(timeTCColor(0) * 100, "##0.#") & "%, " & Format(timeTCColor(1) * 100, "##0.#") & "%)"
+                'End If
+
+
             Catch ex As Exception
 
             End Try
@@ -5167,7 +5779,7 @@ Public Module testModule
 
         For i = 0 To anzBubbles - 1
 
-            positionValues(i) = pfchartIstFrei(i, xAchsenValues, riskValues)
+            positionValues(i) = pfchartIstFrei(i, xAchsenValues, yAchsenValues)
 
         Next
 
@@ -5180,6 +5792,7 @@ Public Module testModule
             '
             i = 1
             found = False
+
             While i <= anzDiagrams And Not found
                 If chtobjName = .chartObjects(i).name Then
                     found = True
@@ -5189,46 +5802,25 @@ Public Module testModule
                     i = i + 1
                 End If
 
-                'Select Case charttype
-                '    Case PTpfdk.FitRisiko
-
-                '        Try
-                '            chtTitle = .ChartObjects(i).Chart.ChartTitle.text
-                '        Catch ex As Exception
-                '            chtTitle = " "
-                '        End Try
-                '        If chtTitle Like ("*" & diagramTitle & "*") Then
-                '            found = True
-                '            repChart = .ChartObjects(i)
-                '            Exit Sub
-                '        Else
-                '            i = i + 1
-                '        End If
-
-                '    Case Else
-                '        ' für Zeit/Risiko und 
-                '        ' für Complex/Risiko und 
-                '        ' für Strategie/FitRisikoVolume
-                '        hilfsstring = .chartObjects(i).name
-                '        If chtobjName = .chartObjects(i).name Then
-                '            found = True
-                '            repChart = .ChartObjects(i)
-                '            Exit Sub
-                '        Else
-                '            i = i + 1
-                '        End If
-                'End Select
             End While
 
 
-            ReDim tempArray(anzBubbles - 1)
+            If anzBubbles = 0 Then
+                Dim logMessage As String = ""
+            Else
 
+            End If
+
+            ReDim tempArray(anzBubbles - 1)
 
             With appInstance.Charts.Add
 
                 .SeriesCollection.NewSeries()
                 .SeriesCollection(1).name = diagramTitle
+
+
                 .SeriesCollection(1).ChartType = xlNS.XlChartType.xlBubble3DEffect
+
 
                 For i = 1 To anzBubbles
                     tempArray(i - 1) = xAchsenValues(i - 1)
@@ -5236,7 +5828,7 @@ Public Module testModule
                 .SeriesCollection(1).XValues = tempArray
 
                 For i = 1 To anzBubbles
-                    tempArray(i - 1) = riskValues(i - 1)
+                    tempArray(i - 1) = yAchsenValues(i - 1)
                 Next i
                 .SeriesCollection(1).Values = tempArray
 
@@ -5250,7 +5842,11 @@ Public Module testModule
                         tempArray(i - 1) = bubbleValues(i - 1)
                     End If
                 Next i
+
+
                 .SeriesCollection(1).BubbleSizes = tempArray
+
+
 
                 Dim series1 As xlNS.Series = _
                         CType(.SeriesCollection(1),  _
@@ -5293,6 +5889,14 @@ Public Module testModule
 
                             End Try
                         Else
+
+                            Try
+                                With .DataLabel
+                                    .Text = PfChartBubbleNames(i - 1)
+                                End With
+                            Catch ex As Exception
+
+                            End Try
                             .HasDataLabel = False
                         End If
 
@@ -5307,9 +5911,11 @@ Public Module testModule
                 Next i
 
 
-
                 '.ChartGroups(1).BubbleScale = sollte in Abhängigkeit der width gemacht werden 
+
+
                 With .ChartGroups(1)
+
                     If singleProject Then
                         .BubbleScale = 20
                     Else
@@ -5317,181 +5923,190 @@ Public Module testModule
                     End If
 
                     .SizeRepresents = xlNS.XlSizeRepresents.xlSizeIsArea
-                    If showNegativeValues Then
-                        .shownegativeBubbles = True
-                    Else
-                        .shownegativeBubbles = False
+                    .shownegativeBubbles = True
 
-                    End If
                 End With
+
 
 
                 .HasAxis(xlNS.XlAxisType.xlCategory) = True
                 .HasAxis(xlNS.XlAxisType.xlValue) = True
 
                 With CType(.Axes(xlNS.XlAxisType.xlCategory), xlNS.Axis)
+
                     .HasMajorGridlines = False
-                    If charttype = PTpfdk.Dependencies Then
-                        .MajorTickMark = XlTickMark.xlTickMarkNone
-                        .TickLabelPosition = XlTickLabelPosition.xlTickLabelPositionNone
+                    .HasTitle = True
+
+                    With .AxisTitle
+                        If isTimeTimeVgl Then
+                            .Characters.Text = "Zeit-Abweichung bis nächster Meilenstein"
+                        Else
+                            .Characters.Text = "Zeit-Abweichung bis nächster Meilenstein"
+                        End If
+
+                        .Characters.Font.Size = titlefontsize
+                        .Characters.Font.Bold = False
+                    End With
+
+                    With .TickLabels.Font
+                        .FontStyle = "Normal"
+                        .Bold = False
+                        .Size = awinSettings.fontsizeItems - 2
+
+                    End With
+
+
+                    If showAbsoluteDiff Then
+
+                        .MajorUnit = 10.0
+                        .CrossesAt = 0.0
+                        .MinimumScale = minTime - 10
+                        .MaximumScale = maxTime + 10
+
+
+                    Else
+                        .MajorUnit = 0.25
+                        .CrossesAt = 1.0
+
+                        If minTime > 0.5 Then
+                            .MinimumScale = 0.5
+                        Else
+                            .MinimumScale = minTime - 0.1
+                            If .MinimumScale <= 0 Then
+                                .MinimumScale = 0.05
+                            End If
+                        End If
+
+                        If maxTime < 1.5 Then
+                            .MaximumScale = 1.5
+                        Else
+                            .MaximumScale = maxTime + 0.1
+                        End If
+
                     End If
+
+                    .MajorTickMark = XlTickMark.xlTickMarkCross
+                    .TickLabelPosition = XlTickLabelPosition.xlTickLabelPositionNextToAxis
 
                 End With
 
                 With CType(.Axes(xlNS.XlAxisType.xlValue), xlNS.Axis)
+
                     .HasMajorGridlines = False
-                    If charttype = PTpfdk.Dependencies Then
-                        .MajorTickMark = XlTickMark.xlTickMarkNone
-                        .TickLabelPosition = XlTickLabelPosition.xlTickLabelPositionNone
+                    .HasTitle = True
+
+                    With .AxisTitle
+
+                        ' beschriftet werden muss sie mit Zeit werden, weil es intuitiv besser verstehbar ist
+                        ' Achsen schneiden sich bei 1
+                        '.Characters.text = "Kosten"
+                        If isTimeTimeVgl Then
+                            .Characters.Text = "Zeitabweichung Projektende"
+                        Else
+                            .Characters.Text = "Kosten-Abweichung"
+                        End If
+
+                        .Characters.Font.Size = titlefontsize
+                        .Characters.Font.Bold = False
+                    End With
+
+
+                    With .TickLabels.Font
+                        .FontStyle = "Normal"
+                        .Bold = False
+                        .Size = awinSettings.fontsizeItems - 2
+                    End With
+
+
+                    If showAbsoluteDiff Then
+                        .MajorUnit = 10.0
+                        .CrossesAt = 0.0
+                        .MinimumScale = minTC - 10
+                        .MaximumScale = maxTC + 10
+                    Else
+                        .MajorUnit = 0.25
+                        .CrossesAt = 1.0
+
+                        If minTC > 0.5 Then
+                            .MinimumScale = 0.5
+                        Else
+                            .MinimumScale = minTC - 0.1
+                            If .MinimumScale <= 0 Then
+                                .MinimumScale = 0.05
+                            End If
+                        End If
+
+                        If maxTC < 1.5 Then
+                            .MaximumScale = 1.5
+                        Else
+                            .MaximumScale = maxTC + 0.1
+                        End If
+
+
                     End If
+
+                    .MajorTickMark = XlTickMark.xlTickMarkCross
+                    .TickLabelPosition = XlTickLabelPosition.xlTickLabelPositionNextToAxis
+
                 End With
 
 
-                Select Case charttype
-                    Case PTpfdk.FitRisiko
 
-                        With .Axes(xlNS.XlAxisType.xlCategory)
-                            .HasTitle = True
-                            .MinimumScale = 0
-                            .MaximumScale = 11
-                            With .AxisTitle
-                                .Characters.text = "strategischer Fit"
-                                .Characters.Font.Size = titlefontsize
-                                .Characters.Font.Bold = False
-                            End With
-                            With .TickLabels.Font
-                                .FontStyle = "Normal"
-                                .Bold = True
-                                .Size = awinSettings.fontsizeItems
+                If anzkeinVproj > 0 Then
 
-                            End With
+                    If showAbsoluteDiff Then
 
-                        End With
+                        If isTimeTimeVgl Then
+                            diagramTitle = diagramTitle & vbLf & _
+                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage)" & _
+                            anzkeinVproj & " Projekte ohne letzten Stand"
+                        Else
+                            diagramTitle = diagramTitle & vbLf & _
+                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage, +/-" & absCostTolerance & " T€), " & _
+                            anzkeinVproj & " Projekte ohne letzten Stand"
+                        End If
+                        
+                    Else
+                        If isTimeTimeVgl Then
+                            Dim tmpValue1 As Double = relTimeTolerance * 100
+                            diagramTitle = diagramTitle & vbLf & _
+                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%)" & _
+                            anzkeinVproj & " Projekte ohne letzten Stand"
+                        Else
+                            Dim tmpValue1 As Double = relTimeTolerance * 100
+                            Dim tmpvalue2 As Double = relCostTolerance * 100
+                            diagramTitle = diagramTitle & vbLf & _
+                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%, +/-" & tmpvalue2.ToString("##0.#") & "%), " & _
+                            anzkeinVproj & " Projekte ohne letzten Stand"
+                        End If
+                    End If
 
-                    Case PTpfdk.FitRisikoVol
+                Else
+                    If showAbsoluteDiff Then
 
-                        With .Axes(xlNS.XlAxisType.xlCategory)
-                            .HasTitle = True
-                            .MinimumScale = 0
-                            .MaximumScale = 11
-                            With .AxisTitle
-                                .Characters.text = "strategischer Fit"
-                                .Characters.Font.Size = titlefontsize
-                                .Characters.Font.Bold = False
-                            End With
-                            With .TickLabels.Font
-                                .FontStyle = "Normal"
-                                .Bold = True
-                                .Size = awinSettings.fontsizeItems
+                        If isTimeTimeVgl Then
+                            diagramTitle = diagramTitle & vbLf & _
+                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage)" 
+                        Else
+                            diagramTitle = diagramTitle & vbLf & _
+                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage, +/-" & absCostTolerance & " T€), " 
+                        End If
 
-                            End With
+                    Else
+                        If isTimeTimeVgl Then
+                            Dim tmpValue1 As Double = relTimeTolerance * 100
+                            diagramTitle = diagramTitle & vbLf & _
+                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%)" 
+                        Else
+                            Dim tmpValue1 As Double = relTimeTolerance * 100
+                            Dim tmpvalue2 As Double = relCostTolerance * 100
+                            diagramTitle = diagramTitle & vbLf & _
+                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%, +/-" & tmpvalue2.ToString("##0.#") & "%), " 
+                        End If
+                    End If
+                End If
 
-                        End With
-
-                    Case PTpfdk.ZeitRisiko
-
-                        With .Axes(xlNS.XlAxisType.xlCategory)
-                            .HasTitle = True
-                            .MinimumScale = 15.0
-                            .MaximumScale = System.Math.Round(xAchsenValues.Max / 10 + 0.5) * 10
-                            With .AxisTitle
-                                .Characters.text = "Projekt-Dauer"
-                                .Characters.Font.Size = titlefontsize
-                                .Characters.Font.Bold = False
-                            End With
-                            With .TickLabels.Font
-                                .FontStyle = "Normal"
-                                .Bold = True
-                                .Size = awinSettings.fontsizeItems
-
-                            End With
-                        End With
-
-                    Case PTpfdk.ComplexRisiko
-
-                        With .Axes(xlNS.XlAxisType.xlCategory)
-                            .HasTitle = True
-                            .MinimumScale = 0
-                            .MaximumScale = 1.1
-                            With .AxisTitle
-                                .Characters.text = "Komplexität"
-                                .Characters.Font.Size = titlefontsize
-                                .Characters.Font.Bold = False
-                            End With
-                            With .TickLabels.Font
-                                .FontStyle = "Normal"
-                                .Bold = True
-                                .Size = awinSettings.fontsizeItems
-
-                            End With
-
-                        End With
-
-                    Case PTpfdk.Dependencies
-                        With .Axes(xlNS.XlAxisType.xlCategory)
-                            .HasTitle = True
-                            .MinimumScale = 0
-                            .MaximumScale = passiveMax + 1
-
-                            With .AxisTitle
-                                .Characters.text = "Abhängigkeit"
-                                .Characters.Font.Size = titlefontsize
-                                .Characters.Font.Bold = False
-                            End With
-                            With .TickLabels.Font
-                                .FontStyle = "Normal"
-                                .Bold = True
-                                .Size = awinSettings.fontsizeItems
-
-                            End With
-
-                        End With
-
-                End Select
-
-
-                ' für , Strategie/RisikoMarge,Strategie/RisikoVolume, Zeit/Risiko und Complex/Risiko gültig
-
-                Select Case charttype
-                    Case PTpfdk.Dependencies
-                        With CType(.Axes(xlNS.XlAxisType.xlValue), xlNS.Axis)
-                            .HasTitle = True
-                            .MinimumScale = 0
-                            .MaximumScale = activeMax + 1
-
-                            ' .ReversePlotOrder = True
-                            With .AxisTitle
-                                .Characters.Text = "Ausstrahlung"
-                                .Characters.Font.Size = titlefontsize
-                                .Characters.Font.Bold = False
-                            End With
-
-                            With .TickLabels.Font
-                                .FontStyle = "Normal"
-                                .Bold = True
-                                .Size = awinSettings.fontsizeItems
-                            End With
-                        End With
-
-                    Case Else
-                        With .Axes(xlNS.XlAxisType.xlValue)
-                            .HasTitle = True
-                            .MinimumScale = 0
-                            .MaximumScale = 11
-                            ' .ReversePlotOrder = True
-                            With .AxisTitle
-                                .Characters.text = "Risiko"
-                                .Characters.Font.Size = titlefontsize
-                                .Characters.Font.Bold = False
-                            End With
-
-                            With .TickLabels.Font
-                                .FontStyle = "Normal"
-                                .bold = True
-                                .Size = awinSettings.fontsizeItems
-                            End With
-                        End With
-                End Select
+                
 
 
                 .HasLegend = False
@@ -5507,8 +6122,8 @@ Public Module testModule
             End With
 
 
-            appInstance.ShowChartTipNames = False
-            appInstance.ShowChartTipValues = False
+            'appInstance.ShowChartTipNames = False
+            'appInstance.ShowChartTipValues = False
 
             With .ChartObjects(anzDiagrams + 1)
                 .top = top

@@ -30,6 +30,7 @@ Partial Class frmconfirmOptimierung
         '
         'ButtonJA
         '
+        Me.ButtonJA.DialogResult = System.Windows.Forms.DialogResult.OK
         Me.ButtonJA.Location = New System.Drawing.Point(37, 66)
         Me.ButtonJA.Name = "ButtonJA"
         Me.ButtonJA.Size = New System.Drawing.Size(75, 23)
@@ -39,6 +40,7 @@ Partial Class frmconfirmOptimierung
         '
         'ButtonNEIN
         '
+        Me.ButtonNEIN.DialogResult = System.Windows.Forms.DialogResult.Cancel
         Me.ButtonNEIN.Location = New System.Drawing.Point(222, 66)
         Me.ButtonNEIN.Name = "ButtonNEIN"
         Me.ButtonNEIN.Size = New System.Drawing.Size(75, 23)

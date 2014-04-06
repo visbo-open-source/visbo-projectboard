@@ -49,6 +49,13 @@
     ' Settings für Import / Export
     Property EinzelRessExport As Integer
 
+    ' Settings für ToleranzKorridor TimeCost
+    Property timeToleranzRel As Double
+    Property timeToleranzAbs As Double
+
+    Property costToleranzRel As Double
+    Property costToleranzAbs As Double
+
 
     Sub New()
 
@@ -87,6 +94,11 @@
         ' Settings für Import / Export 
         _EinzelRessExport = 0
 
+        ' Settings für Besser/Schlechter Diagramm 
+        _timeToleranzRel = 0.02
+        _timeToleranzAbs = 3
+        _costToleranzRel = 0.02
+        _costToleranzAbs = 2
 
     End Sub
 End Class

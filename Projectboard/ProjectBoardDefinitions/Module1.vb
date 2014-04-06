@@ -102,6 +102,18 @@ Public Module Module1
     Public Const summentitel11 As String = "Details zur Unter-Auslastung"
     Public Const maxProjektdauer As Integer = 60
 
+    Public Enum PTbubble
+        strategicFit = 0
+        depencencies = 1
+        marge = 2
+    End Enum
+
+    Public Enum PTpsel
+        alle = -1
+        laufend = 0
+        lfundab = 1
+        abgeschlossen = 2
+    End Enum
 
     ' Enumeration Portfolio Diagramm Kennung 
     Public Enum PTpfdk
@@ -134,6 +146,7 @@ Public Module Module1
     ' Enumeration History Change Criteria: um anzugeben, welche Veränderung man in der History eines Projektes sucht 
 
     Public Enum PThcc
+        none = 0
         perscost = 1
         othercost = 2
         budget = 3
@@ -156,11 +169,13 @@ Public Module Module1
 
 
     Public Enum PTdpndncy
+        none = 0
         schwach = 1
         stark = 3
     End Enum
 
     Public Enum PTdpndncyType
+        none = 0
         inhalt = 1
     End Enum
 
@@ -387,7 +402,12 @@ Public Module Module1
             Try
                 hproj = ShowProjekte.getProject(pname)
                 key = hproj.name & "#" & hproj.variantName
-                DeletedProjekte.Add(hproj)
+                Try
+                    DeletedProjekte.Add(hproj)
+                Catch ex As Exception
+                    ' nichts tun, dann wurde das eben schon mal gelöscht ..
+                End Try
+
             Catch ex As Exception
                 Call MsgBox(" Fehler in Delete " & pname & " , Modul: awinLoescheProjekt")
                 Exit Sub
@@ -1464,6 +1484,35 @@ Public Module Module1
 
     End Sub
 
+    Public Function magicBoardZeileIstFrei(ByVal zeile As Integer) As Boolean
+        Dim istfrei = True
+        Dim ix As Integer = 1
+        Dim anzahlP As Integer = ShowProjekte.Count
+
+        If zeile >= 2 Then
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                With kvp.Value
+                    If zeile = .tfZeile Then
+                        istfrei = False
+                        Exit For
+                    End If
+                End With
+
+            Next
+
+        Else
+
+            istfrei = False
+
+        End If
+        
+        magicBoardZeileIstFrei = istfrei
+    End Function
+
+
+
     Public Function magicBoardIstFrei(ByRef mycollection As Collection, ByVal pname As String, ByVal zeile As Integer, _
                                       ByVal spalte As Integer, ByVal laenge As Integer) As Boolean
         Dim istfrei = True
@@ -1680,9 +1729,11 @@ Public Module Module1
                         Case 0
                             If .AutoShapeType = MsoAutoShapeType.msoShapeDiamond Or _
                                 .AutoShapeType = MsoAutoShapeType.msoShapeOval Or _
-                                (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue) Then
+                                (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue) Or _
+                                (.Connector = MsoTriState.msoTrue And .Title = "Dependency") Then
                                 .Delete()
                             End If
+
                             ' Schließen der Status Anzeige Fenster
                             formMilestone.Visible = False
                             formStatus.Visible = False

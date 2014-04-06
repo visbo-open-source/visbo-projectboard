@@ -5815,7 +5815,8 @@ Public Module Projekte
 
     ''' <summary>
     ''' diese Sub zeigt das vorauss. Projektergebnis in einem Chart an - Erloes, Risiko Kosten, Personalkosten, Sonstige Kosten und 
-    ''' dann den vermutl. Projekt-Ertrag   
+    ''' dann den vermutl. Projekt-Ertrag
+    ''' auswahl: 0=beauftragung; 1: letzter Stand; 2: aktueller Stand   
     ''' </summary>
     ''' <param name="hproj">das Projekt</param>
     ''' <param name="reportObj">
@@ -5823,7 +5824,7 @@ Public Module Projekte
     ''' wird für das Reporting benötigt 
     ''' </param>
     ''' <remarks></remarks>
-    Public Sub createProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef reportObj As Object)
+    Public Sub createProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef reportObj As Object, ByVal auswahl As Integer)
 
         Dim diagramTitle As String
         Dim anzDiagrams As Integer
@@ -5870,7 +5871,7 @@ Public Module Projekte
         With hproj
 
             .calculateRoundedKPI(projektErloes, projektPersKosten, projektSonstKosten, projektRisikoKosten, projektErgebnis)
-            
+
             itemValue(0) = projektErloes
             itemColor(0) = ergebnisfarbe1
 
@@ -5892,7 +5893,14 @@ Public Module Projekte
         End With
 
 
-        titelTeile(0) = pname & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        If auswahl = 0 Then
+            titelTeile(0) = pname & " (Beauftragung)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        ElseIf auswahl = 1 Then
+            titelTeile(0) = pname & " (letzter Stand)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        Else
+            titelTeile(0) = pname & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        End If
+
         titelTeilLaengen(0) = titelTeile(0).Length
         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
         titelTeilLaengen(1) = titelTeile(1).Length
@@ -6588,6 +6596,7 @@ Public Module Projekte
         Dim abstand As Integer
         Dim returnValue As DialogResult
         Dim bestaetigeLoeschen As New frmconfirmDeletePrj
+        Dim zeile As Integer
 
         enableOnUpdate = False
 
@@ -6595,22 +6604,27 @@ Public Module Projekte
             returnValue = bestaetigeLoeschen.ShowDialog
 
             If returnValue = DialogResult.OK Then
+
+                zeile = ShowProjekte.getProject(vprojektname).tfZeile
                 Call awinLoescheProjekt(vprojektname)
                 Call awinClkReset(abstand)
 
                 ' ein Projekt wurde gelöscht  - typus = 3
                 Call awinNeuZeichnenDiagramme("3")
+
+                Call moveShapesUp1(zeile)
             Else
                 Throw New ArgumentException("Abbruch")
             End If
 
         Else
+            zeile = ShowProjekte.getProject(vprojektname).tfZeile
             Call awinLoescheProjekt(vprojektname)
             Call awinClkReset(abstand)
 
             ' ein Projekt wurde gelöscht  - typus = 3
             Call awinNeuZeichnenDiagramme("3")
-
+            Call moveShapesUp1(zeile)
         End If
 
 
@@ -6620,39 +6634,28 @@ Public Module Projekte
     End Sub
 
     Public Sub awinDeleteChart(ByRef chtobj As ChartObject)
-        Dim chtTitle As String
-        Dim found As Boolean
+        Dim kennung As String
+        
 
-
-        found = False
+        ' in der DiagramList wird die letzte Position gespeichert , deshlab ist es kontra produktiv , das zu löschen 
 
         Try
-            chtTitle = chtobj.Chart.ChartTitle.Text
+            kennung = chtobj.Name
         Catch ex As Exception
-            chtTitle = " "
+            kennung = "?"
         End Try
 
+        Try
+            With DiagramList.getDiagramm(kennung)
+                .top = chtobj.Top
+                .left = chtobj.Left
+            End With
+        Catch ex As Exception
 
-        If istCockpitDiagramm(chtobj) And TypOfCockpitChart(chtobj) >= 0 Then
-            Call awinLoescheCockpitCharts(TypOfCockpitChart(chtobj))
+        End Try
 
-        Else
-            chtobj.Delete()
+        chtobj.Delete()
 
-            ' jetzt in DiagrammList suchen ...
-            ' Änderung 18.10.13 nicht mehr löschen, weil in der Diagrammliste jetzt die letzte Position des Diagrammes gespeichert wird 
-            'i = 1
-            'While i <= DiagramList.Count And Not found
-            '    If (chtTitle Like (DiagramList.getDiagramm(i).DiagrammTitel & "*")) And _
-            '                      (DiagramList.getDiagramm(i).isCockpitChart = False) Then
-            '        DiagramList.Remove(i)
-            '        found = True
-            '    Else
-            '        i = i + 1
-            '    End If
-            'End While
-
-        End If
 
     End Sub
 
@@ -9227,6 +9230,78 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' verschiebt alle Shapes, die ab vonZeile liegen um eins nach oben
+    ''' vorher wird aber geprüft, on das frei ist   
+    ''' </summary>
+    ''' <param name="vonZeile"></param>
+    ''' <remarks></remarks>
+    Public Sub moveShapesUp1(ByVal vonZeile As Integer)
+
+        Dim worksheetShapes As Excel.Shapes
+        Dim shpElement As Excel.Shape
+        Dim formerEOU As Boolean = enableOnUpdate
+        Dim zielZeileIsFrei As Boolean = False
+        Dim anzahlZeilen As Integer = 1
+        Dim zielZeile As Integer = vonZeile
+
+
+        Dim obererRand As Double = topOfMagicBoard + (vonZeile - 1) * boxHeight
+        Dim differenz As Double = anzahlZeilen * boxHeight
+
+        enableOnUpdate = False
+
+
+        If magicBoardZeileIstFrei(zielZeile) Then
+
+            Try
+
+                worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+
+            Catch ex As Exception
+                Throw New Exception("in moveShapesUp : keine Shapes Zuordnung möglich ")
+            End Try
+
+
+            ' jetzt werden die Shapes verschoben ...
+            For i = 1 To worksheetShapes.Count
+                shpElement = worksheetShapes.Item(i)
+
+                With shpElement
+
+                    If Not .HasChart Then
+
+                        If .Top >= obererRand Then
+                            .Top = .Top - differenz
+                        End If
+
+
+                    End If
+
+                End With
+
+            Next
+
+            ' jetzt werden die Projekte angepasst 
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                With kvp.Value
+                    If .tfZeile >= vonZeile And .tfZeile - anzahlZeilen >= 2 Then
+                        .tfZeile = .tfZeile - anzahlZeilen
+                    End If
+                End With
+
+            Next
+
+        End If
+
+        
+
+        enableOnUpdate = formerEOU
+
+    End Sub
+
     Public Sub zeichneStatusSymbolInPlantafel(ByVal hproj As clsProjekt, ByVal number As Integer)
         Dim top As Double, left As Double, height As Double, width As Double
         Dim worksheetShapes As Excel.Shapes
@@ -10718,7 +10793,7 @@ Public Module Projekte
 
         appInstance.ScreenUpdating = False
         Call diagramsVisible(False)
-        Call awinZeichnePlanTafel()
+        'Call awinZeichnePlanTafel()
         Call awinNeuZeichnenDiagramme(1)
         Call diagramsVisible(True)
         appInstance.ScreenUpdating = True
@@ -12949,7 +13024,7 @@ Public Module Projekte
                             .shpUID = ""
                             .StartOffset = 0
 
-                            If DateDiff(DateInterval.Month, .startDate, Date.Now) < -6 Then
+                            If DateDiff(DateInterval.Month, .startDate, Date.Now) < -1 Then
                                 .Status = ProjektStatus(0)
                             Else
                                 .Status = ProjektStatus(1)

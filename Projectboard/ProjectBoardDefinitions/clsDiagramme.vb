@@ -9,7 +9,13 @@
 
     Public Sub Add(diagram As clsDiagramm)
 
+
         Try
+
+            If AllDiagrams.ContainsKey(diagram.kennung) Then
+                AllDiagrams.Remove(diagram.kennung)
+            End If
+
             AllDiagrams.Add(diagram.kennung, diagram)
         Catch ex As Exception
 

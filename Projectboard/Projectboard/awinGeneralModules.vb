@@ -141,8 +141,8 @@ Public Module awinGeneralModules
         portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
         portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
         portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
-        portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Qualitativer Vergleich mit letztem Stand"
-        portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Qualitativer Vergleich mit Beauftragungs-Stand"
+        portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
+        portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
 
 
         windowNames(0) = "Cockpit Phasen"
@@ -770,6 +770,7 @@ Public Module awinGeneralModules
         Dim startoffset As Integer, duration As Integer
         Dim vorlagenName As String
         Dim phaseName As String
+        Dim itemName As String
         Dim zufall As New Random(10)
         Dim farbKennung As Integer
         Dim responsible As String
@@ -972,54 +973,111 @@ Public Module awinGeneralModules
                     Dim pStartDate As Date
                     Dim pEndDate As Date
                     Dim ok As Boolean = True
-
+                    Dim lastPhaseName As String = cphase.name
 
                     For i = anfang To ende
+
                         Try
-                            phaseName = .Cells(i, 2).value.trim
+                            itemName = .Cells(i, 2).value.trim
                         Catch ex As Exception
-                            phaseName = ""
+                            itemName = ""
                             ok = False
                         End Try
 
                         If ok Then
-                            cphase = New clsPhase(parent:=hproj)
-                            cphase.name = phaseName
-
-                            If PhaseDefinitions.Contains(phaseName) Then
-                                ' nichts tun 
-                            Else
-                                ' in die Phase-Definitions aufnehmen 
-
-                                Dim hphase As clsPhasenDefinition
-                                hphase = New clsPhasenDefinition
-
-                                hphase.farbe = .Cells(i, 1).Interior.Color
-                                hphase.name = phaseName
-                                hphase.UID = phaseIX
-                                phaseIX = phaseIX + 1
-
-
-                                Try
-                                    PhaseDefinitions.Add(hphase)
-                                Catch ex As Exception
-
-                                End Try
-
-                            End If
-
 
                             pStartDate = CDate(.Cells(i, 3).value)
                             pEndDate = CDate(.Cells(i, 4).value)
                             startoffset = DateDiff(DateInterval.Day, hproj.startDate, pStartDate)
                             duration = DateDiff(DateInterval.Day, pStartDate, pEndDate) + 1
 
-                            ' es werden nur Phasen aufgenommen, die auch tasächlich eine Länge über einen Tag haben  
-
                             If duration > 1 Then
+                                ' es handelt sich um eine Phase 
+                                phaseName = itemName
+                                cphase = New clsPhase(parent:=hproj)
+                                cphase.name = phaseName
+
+                                If PhaseDefinitions.Contains(phaseName) Then
+                                    ' nichts tun 
+                                Else
+                                    ' in die Phase-Definitions aufnehmen 
+
+                                    Dim hphase As clsPhasenDefinition
+                                    hphase = New clsPhasenDefinition
+
+                                    hphase.farbe = .Cells(i, 1).Interior.Color
+                                    hphase.name = phaseName
+                                    hphase.UID = phaseIX
+                                    phaseIX = phaseIX + 1
+
+                                    Try
+                                        PhaseDefinitions.Add(hphase)
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End If
+
                                 cphase.changeStartandDauer(startoffset, duration)
                                 hproj.AddPhase(cphase)
+                                lastPhaseName = cphase.name
+
+                            ElseIf duration = 1 Then
+
+                                Try
+                                    ' es handelt sich um einen Meilenstein 
+
+                                    Dim bewertungsAmpel As Integer
+                                    Dim explanation As String
+
+                                    bewertungsAmpel = CInt(.Cells(i, 12).value)
+                                    explanation = CStr(.Cells(i, 1).value)
+
+                                    cphase = hproj.getPhase(lastPhaseName)
+                                    cresult = New clsResult(parent:=cphase)
+                                    cbewertung = New clsBewertung
+
+
+
+                                    If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                        ' es gibt keine Bewertung
+                                        bewertungsAmpel = 0
+                                    End If
+
+                                    ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                    With cbewertung
+                                        '.bewerterName = resultVerantwortlich
+                                        .colorIndex = bewertungsAmpel
+                                        .datum = Date.Now
+                                        .description = explanation
+                                    End With
+
+                                    With cresult
+                                        .name = itemName
+                                        .setDate = pEndDate
+                                        If Not cbewertung Is Nothing Then
+                                            .addBewertung(cbewertung)
+                                        End If
+                                    End With
+
+                                    With cphase
+                                        .addresult(cresult)
+                                    End With
+                                Catch ex As Exception
+
+                                End Try
+
+                                
+
+                                
                             End If
+                            
+
+                           
+
+                            ' handelt es sich um eine Phase oder um einen Meilenstein ? 
+
+                           
                         End If
 
 

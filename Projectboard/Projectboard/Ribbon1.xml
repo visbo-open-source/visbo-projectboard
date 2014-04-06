@@ -92,9 +92,10 @@
           <!--<button id="PT0G2B5" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />-->
           <!--<button id="PT0G2B6" label="Zeit/Risiko/Volumen" onAction="PT0ShowZeitRisiko" />-->
           <button id="PT0G2B7" label="Abhängigkeiten" onAction="PT0ShowAbhaengigkeiten" />
-          <button id="PT0G2B8" label="besser/schlechter" onAction="PT0ShowAttention" />
+          <button id="PT0G2B8" label="besser/schlechter als letzter Stand" onAction="PT0ShowAttentionL" />
+          <button id="PT0G2B9" label="besser/schlechter als Beauftragung" onAction="PT0ShowAttentionB" />
           <separator id="PT0G2s5"/>
-          <button id="PT0G2B9" label="Ergebnis" onAction="PT0ShowPortfolioErgebnis" />
+          <button id="PT0G2B10" label="Ergebnis" onAction="PT0ShowPortfolioErgebnis" />
         </group>
       </tab>
       <!--
@@ -210,6 +211,11 @@
           <!--<toggleButton id="PT5G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>-->
           <checkBox id="PT6G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>
           <button id="Pt6G2B2" label="Zeitraum ändern" onAction="PT5changeTimeSpan" />
+        </group>
+        <group id ="PT6G3" label ="Symbole, Charts und Grafiken löschen">
+          <!--<toggleButton id="PT5G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>-->
+          <button id="Pt6G3B0" label="Meilensteine, Phasen, Stati"  onAction="Tom2G2M5B3NoShowSymbols" />
+          <button id="Pt6G3B1" label="Charts"  onAction="PT6DeleteCharts" />
         </group>
       </tab>
      </tabs>

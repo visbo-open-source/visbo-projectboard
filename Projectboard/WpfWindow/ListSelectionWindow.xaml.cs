@@ -190,7 +190,18 @@ namespace WpfWindow
 
                     // hier wird die Aktion durchgeführt 
                     object repObj = null;
-                    Projekte.createMsTrendAnalysisOfProject(ref hproj, ref repObj, ref myCollection, this.chTop, this.chLeft, this.chHeight, this.chWidth);
+                    
+                    try
+                    {
+                        Projekte.createMsTrendAnalysisOfProject(ref hproj, ref repObj, ref myCollection, this.chTop, this.chLeft, this.chHeight, this.chWidth);
+                    }
+
+                        catch
+                    {
+                        MessageBox.Show ("es gibt noch keinen Trend");
+                    }
+                       
+                    
 
                     //clsProjekt hproj = Module1.selectedProjekte.get_getProject(1);
 

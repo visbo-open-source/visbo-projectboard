@@ -290,13 +290,55 @@
             Dim tmpListe As New Collection
             ' selection type wird aktuell noch ignoriert .... 
 
+
+            
             For Each kvp In Me.AllProjects
+
                 With kvp.Value
+
                     If (.Start + .StartOffset > bis) Or (.Start + .StartOffset + .Dauer - 1 < von) Then
+                        ' dann liegt das Projekt ausserhalb des Zeitraums und muss überhaupt nicht berücksichtig werden 
                     Else
-                        tmpListe.Add(kvp.Key, kvp.Key)
+
+                        Select Case selectionType
+
+                            Case PTpsel.alle
+                                tmpListe.Add(kvp.Key, kvp.Key)
+
+                            Case PTpsel.laufend
+
+                                If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 And _
+                                    .Status <> ProjektStatus(3) And _
+                                    .Status <> ProjektStatus(4) Then
+
+                                    tmpListe.Add(kvp.Key, kvp.Key)
+
+                                End If
+
+                            Case PTpsel.lfundab
+
+                                If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 Then
+
+                                    tmpListe.Add(kvp.Key, kvp.Key)
+
+                                End If
+
+                            Case PTpsel.abgeschlossen
+
+                                If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 And _
+                                   (.Status = ProjektStatus(3) Or _
+                                   .Status = ProjektStatus(4)) Then
+
+                                    tmpListe.Add(kvp.Key, kvp.Key)
+
+                                End If
+
+                        End Select
+
+
                     End If
                 End With
+
             Next
 
             withinTimeFrame = tmpListe

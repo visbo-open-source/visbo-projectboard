@@ -822,7 +822,7 @@ Public Module awinDiagrams
                 foundDiagramm = DiagramList.getDiagramm(chtobjName)
                 With foundDiagramm
                     top = .top
-                    'left = .left
+                    left = .left
                     'width = .width
                     'height = .height
                 End With

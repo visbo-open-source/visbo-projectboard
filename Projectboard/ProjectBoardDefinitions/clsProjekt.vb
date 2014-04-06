@@ -1510,16 +1510,10 @@ Public Class clsProjekt
 
     ''' <summary>
     ''' gibt zurück, 
-    ''' in gettimeCostIndex(0): ob das Projekt schneller oder langsamer als das Vergleichsprojekt ist ;
-    ''' in gettimeCostIndex(1): ob das Projekt günstiger oder teurer als das Vergleichsprojekt ist ;
-    ''' in gettimeCostIndex(2): welche Bewertung der vergangene/nächste/letzte Meilenstein hat ob das Projekt schneller oder langsamer als das Vergleichsprojekt ist ;
-    ''' auswahl=0: es wird das Projektende, also die Projektdauer zugrundegelegt; 
-    ''' auswahl=1: es wird der nächste Meilenstein zugrundegelegt , also die Dauer bis Erreichen dieses Meilensteins
-    ''' wenn auswahl = 1 ist der "nächste Meilenstein" der Meilenstein, der als nächstes nach refdate kommt
-    ''' wenn auswahl = 0 , dann ist refdate irrelevant 
-    ''' aktuell gibt der Index die prozentuale abweichung wieder; 
-    ''' das heißt 10 Tage Verschiebung sind in einem 2-Jahres Projekt etwas ganz anderes wie in einem 
-    ''' Vier-Wochen Projekt
+    ''' in gettimeCostColor(0): ob das Projekt schneller oder langsamer als das Vergleichsprojekt ist ;
+    ''' in gettimeCostColor(1): ob das Projekt günstiger oder teurer als das Vergleichsprojekt ist ;
+    ''' in gettimeCostColor(2): welche Bewertung der nächste bzw. letzte  Meilenstein (in Abhängigkeit von Auswahl) hat 
+    ''' 
     ''' </summary>
     ''' <param name="vproj"></param>
     ''' meist der Planungs-Stand zur Zeit der Beauftragung, oder aber der letzte Stand
@@ -1534,7 +1528,7 @@ Public Class clsProjekt
     ''' </value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getTimeCostIndex(ByVal vproj As clsProjekt, ByVal auswahl As Integer, ByVal refDate As Date) As Double()
+    Public ReadOnly Property getTimeCostColor(ByVal vproj As clsProjekt, ByVal auswahl As Integer, ByVal showAbsoluteDiff As Boolean, ByVal refDate As Date) As Double()
         Get
             Dim tmpValue(2) As Double
             Dim curMsName As String = ""
@@ -1548,18 +1542,32 @@ Public Class clsProjekt
             Dim chkDate1 As Date, chkDate2 As Date, tmpDate As Date
 
             If auswahl = 0 Then
-                tmpValue(0) = Me.dauerInDays / vproj.dauerInDays
-                tmpValue(1) = Me.getSummeKosten / vproj.getSummeKosten
-                tmpValue(2) = Me.ampelStatus
+                If showAbsoluteDiff Then
+                    tmpValue(0) = Me.dauerInDays - vproj.dauerInDays
+                    tmpValue(1) = Me.getSummeKosten - vproj.getSummeKosten
+                    tmpValue(2) = Me.ampelStatus
+                Else
+                    tmpValue(0) = Me.dauerInDays / vproj.dauerInDays
+                    tmpValue(1) = Me.getSummeKosten / vproj.getSummeKosten
+                    tmpValue(2) = Me.ampelStatus
+                End If
+                
+
             ElseIf auswahl = 1 Then
 
                 Dim nullWert As Integer = DateDiff(DateInterval.Day, Me.startDate, refDate) + 1
 
                 If nullWert > Me.dauerInDays Then
                     ' Projekt ist bereits beendet ...
-                    tmpValue(0) = Me.dauerInDays / vproj.dauerInDays
-                    tmpValue(1) = Me.getSummeKosten / vproj.getSummeKosten
-                    tmpValue(2) = Me.ampelStatus
+                    If showAbsoluteDiff Then
+                        tmpValue(0) = Me.dauerInDays - vproj.dauerInDays
+                        tmpValue(1) = Me.getSummeKosten - vproj.getSummeKosten
+                        tmpValue(2) = Me.ampelStatus
+                    Else
+                        tmpValue(0) = Me.dauerInDays / vproj.dauerInDays
+                        tmpValue(1) = Me.getSummeKosten / vproj.getSummeKosten
+                        tmpValue(2) = Me.ampelStatus
+                    End If
                 Else
 
                     Dim vglWert1 As Integer = -1
@@ -1653,18 +1661,36 @@ Public Class clsProjekt
 
                         End If
 
-
-                        tmpValue(0) = vglWert1 / vglWert2
                         relMonat1 = getColumnOfDate(chkDate1) - Me.Start
                         relMonat2 = getColumnOfDate(chkDate2) - vproj.Start
-                        ' nun jeweils die Summen bis zum angegebenen Monat aufsummieren ....
-                        ' ... und die Kennzahl berechnen 
-                        tmpValue(1) = Me.getSummeKosten(relMonat1) / vproj.getSummeKosten(relMonat2)
+
+                        If showAbsoluteDiff Then
+                            tmpValue(0) = vglWert1 - vglWert2
+
+                            ' nun jeweils die Summen bis zum angegebenen Monat aufsummieren ....
+                            ' ... und die Kennzahl berechnen 
+                            tmpValue(1) = Me.getSummeKosten(relMonat1) - vproj.getSummeKosten(relMonat2)
+                            tmpValue(2) = tmpColor
+                        Else
+                            tmpValue(0) = vglWert1 / vglWert2
+                            ' nun jeweils die Summen bis zum angegebenen Monat aufsummieren ....
+                            ' ... und die Kennzahl berechnen 
+                            tmpValue(1) = Me.getSummeKosten(relMonat1) / vproj.getSummeKosten(relMonat2)
+                            tmpValue(2) = tmpColor
+                        End If
+
+                        
 
                     Else
-                        tmpValue(0) = Me.dauerInDays / vproj.dauerInDays
-                        tmpValue(1) = Me.getSummeKosten / vproj.getSummeKosten
-                        tmpValue(2) = Me.ampelStatus
+                        If showAbsoluteDiff Then
+                            tmpValue(0) = Me.dauerInDays - vproj.dauerInDays
+                            tmpValue(1) = Me.getSummeKosten - vproj.getSummeKosten
+                            tmpValue(2) = Me.ampelStatus
+                        Else
+                            tmpValue(0) = Me.dauerInDays / vproj.dauerInDays
+                            tmpValue(1) = Me.getSummeKosten / vproj.getSummeKosten
+                            tmpValue(2) = Me.ampelStatus
+                        End If
                     End If
 
                 End If
@@ -1682,13 +1708,176 @@ Public Class clsProjekt
                 tmpValue(2) = 0
             End If
 
-            getTimeCostIndex = tmpValue
+            getTimeCostColor = tmpValue
 
 
         End Get
     End Property
 
+    Public ReadOnly Property getTimeTimeColor(ByVal vproj As clsProjekt, ByVal showAbsoluteDiff As Boolean, ByVal refDate As Date) As Double()
+        Get
+            Dim tmpValue(2) As Double
+            Dim curMsName As String = ""
+            Dim curPhName As String = ""
+            Dim curAbstand As Integer = 10000
+            Dim tmpAbstand As Integer
+            Dim tmpPhase As clsPhase
+            Dim tmpColor As Integer = -1
+            Dim anzResults As Integer
+            Dim chkDate1 As Date, chkDate2 As Date, tmpDate As Date
 
+            ' hier ist jetzt klar, was die Unterschiede im Vergleich Projektende/Projektende sind
+            If showAbsoluteDiff Then
+                tmpValue(0) = Me.dauerInDays - vproj.dauerInDays
+
+            Else
+                tmpValue(0) = Me.dauerInDays / vproj.dauerInDays
+
+            End If
+
+
+
+            Dim nullWert As Integer = DateDiff(DateInterval.Day, Me.startDate, refDate) + 1
+
+            If nullWert > Me.dauerInDays Then
+                ' Projekt ist bereits beendet ...
+                If showAbsoluteDiff Then
+                    tmpValue(1) = tmpValue(0)
+                    tmpValue(2) = Me.ampelStatus
+                Else
+                    tmpValue(1) = tmpValue(0)
+                    tmpValue(2) = Me.ampelStatus
+                End If
+            Else
+
+                Dim vglWert1 As Integer = -1
+                Dim vglWert2 As Integer = -1
+
+                ' bestimme die Phase und Meilenstein , der als nächstes nach refdate kommt 
+                For p = 1 To Me.CountPhases
+
+                    tmpPhase = Me.getPhase(p)
+                    anzResults = tmpPhase.CountResults
+
+
+                    For r = 1 To anzResults
+                        tmpDate = tmpPhase.getResult(r).getDate
+                        tmpAbstand = DateDiff(DateInterval.Day, refDate, tmpDate)
+                        If tmpAbstand > 0 And tmpAbstand < curAbstand Then
+                            curMsName = tmpPhase.getResult(r).name
+                            curPhName = tmpPhase.name
+                            curAbstand = tmpAbstand
+                            chkDate1 = tmpDate
+                            tmpColor = tmpPhase.getResult(r).getBewertung(1).colorIndex
+                        End If
+                    Next
+
+                    tmpDate = tmpPhase.getEndDate
+                    ' falls es in dieser Phase keinen Meilenstein gab ... oder falls das Phasen Ende noch vor dem Meilenstein lag
+                    If tmpPhase.dauerInDays > nullWert And tmpPhase.dauerInDays - nullWert < curAbstand Then
+                        curMsName = ""
+                        curPhName = tmpPhase.name
+                        curAbstand = tmpPhase.dauerInDays - nullWert
+                        chkDate1 = tmpDate
+                        If tmpColor = -1 Then
+                            tmpColor = Me.ampelStatus
+                        End If
+                    End If
+
+                Next
+
+                ' jetzt ist sichergestellt , daß es zumindest curPhName (current PhaseName) gibt, evtl auch curMsName (current MilestoneName)
+                If curPhName <> "" Then
+                    vglWert1 = curAbstand + nullWert
+                    ' jetzt muss der Vergleichswert2 bestimmt werden ...
+                    tmpPhase = vproj.getPhase(curPhName)
+
+                    If IsNothing(tmpPhase) Then
+                        ' im vergleichsprojekt gibt es die Phase gar nicht , also muss auf das Gesamtprojekt verglichen werden 
+                        vglWert1 = Me.dauerInDays
+                        vglWert2 = vproj.dauerInDays
+                        chkDate1 = Me.endeDate
+                        chkDate2 = vproj.endeDate
+                    Else
+
+                        If curMsName <> "" Then
+                            Dim tmpResult As clsResult
+                            tmpResult = tmpPhase.getResult(curMsName)
+                            ' gibt es den Meilenstein in der Phase ? 
+                            If IsNothing(tmpResult) Then
+
+                                ' die beiden Phasen-Ende als Vergleichskriterien nehmen 
+                                With Me.getPhase(curPhName)
+                                    vglWert1 = .startOffsetinDays + .dauerInDays
+                                    chkDate1 = .getEndDate
+                                End With
+
+                                With tmpPhase
+                                    vglWert2 = .startOffsetinDays + .dauerInDays
+                                    chkDate2 = .getEndDate
+                                End With
+
+                            Else
+
+                                With tmpPhase
+                                    vglWert2 = .startOffsetinDays + tmpResult.offset
+                                    chkDate2 = tmpResult.getDate
+                                End With
+
+                            End If
+
+                        Else
+                            With Me.getPhase(curPhName)
+                                vglWert1 = .startOffsetinDays + .dauerInDays
+                                chkDate1 = .getEndDate
+                            End With
+
+                            With tmpPhase
+                                vglWert2 = .startOffsetinDays + .dauerInDays
+                                chkDate2 = .getEndDate
+                            End With
+
+                        End If
+
+                    End If
+
+                    
+                    If showAbsoluteDiff Then
+                        tmpValue(1) = vglWert1 - vglWert2
+                        tmpValue(2) = tmpColor
+                    Else
+                        
+                        tmpValue(1) = vglWert1 / vglWert2
+                        tmpValue(2) = tmpColor
+                    End If
+
+
+
+                Else
+                    If showAbsoluteDiff Then
+                        tmpValue(1) = Me.dauerInDays - vproj.dauerInDays
+                        tmpValue(2) = Me.ampelStatus
+                    Else
+                        tmpValue(1) = Me.dauerInDays / vproj.dauerInDays
+                        tmpValue(2) = Me.ampelStatus
+                    End If
+                End If
+
+            End If
+
+
+
+
+            ' Sicherstellen Konsistenzbedingung: Farbe kann nicht negativ sein  
+            If tmpValue(2) < 0 Then
+                tmpValue(2) = 0
+            End If
+
+            getTimeTimeColor = tmpValue
+
+
+        End Get
+    End Property
 
     '
     ' übergibt in Project Marge die berechnete Marge: Erloes - Kosten

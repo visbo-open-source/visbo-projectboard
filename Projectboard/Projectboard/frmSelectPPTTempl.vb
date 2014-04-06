@@ -36,7 +36,7 @@ Public Class frmSelectPPTTempl
                 RepVorlagenDropbox.Items.Add(dateiName)
             Next i
         Catch ex As Exception
-            Call MsgBox(ex.Message & ": " & dateiName)
+            'Call MsgBox(ex.Message & ": " & dateiName)
         End Try
 
     End Sub

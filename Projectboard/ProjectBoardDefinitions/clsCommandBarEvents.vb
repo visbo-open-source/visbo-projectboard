@@ -353,15 +353,20 @@ Public Class clsCommandBarEvents
                             Dim zaehler As Integer = 1
 
                             pname = ""
-                            zeile = findeMagicBoardPosition(selCollection, pname, zeile, spalte, laengeInMon)
+                            ' Änderung 25.3.14
+                            ' ein kopiertes Projekt sollte jetzt in der nächsten Zeile platziert werden 
+                            'zeile = findeMagicBoardPosition(selCollection, pname, zeile, spalte, laengeInMon)
 
-
+                            
                             pname = shpelement.Name & " - Kopie " & zaehler
 
 
                             Dim oldproj As clsProjekt
                             Try
                                 oldproj = ShowProjekte.getProject(shpName) ' der shpName ist identisch mit dem Projekt-Namen aus dem kopiert wurde
+                                ' Änderung 25.3.14 wegen Kopiertes Projekt soll einfach in der nächsten Zeile gezeichnet werden  
+                                zeile = oldproj.tfZeile + 1
+                                Call moveShapesDown(zeile, 1)
                             Catch ex As Exception
                                 Throw New ArgumentException("Projekt in OnUpdate nicht gefunden: " & shpName)
                                 Exit Sub

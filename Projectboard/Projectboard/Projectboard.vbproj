@@ -146,6 +146,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
+    <Compile Include="frmBetterWorseSettings.Designer.vb">
+      <DependentUpon>frmBetterWorseSettings.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmBetterWorseSettings.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmDependencies.Designer.vb">
       <DependentUpon>frmDependencies.vb</DependentUpon>
     </Compile>
@@ -214,6 +220,9 @@
     <Compile Include="ThisWorkbook.vb">
       <DependentUpon>Projectboard.xlsx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="frmBetterWorseSettings.resx">
+      <DependentUpon>frmBetterWorseSettings.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmDependencies.resx">
       <DependentUpon>frmDependencies.vb</DependentUpon>
     </EmbeddedResource>

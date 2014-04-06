@@ -125,6 +125,30 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
+    Sub PT6DeleteCharts(control As IRibbonControl)
+
+        Dim anzDiagrams As Integer
+        Dim chtobj As Excel.ChartObject
+        Dim i As Integer = 0
+
+        With appInstance.Worksheets(arrWsNames(3))
+
+            anzDiagrams = .ChartObjects.Count
+
+            While i < anzDiagrams
+
+                chtobj = .ChartObjects(1)
+                Call awinDeleteChart(chtobj)
+                i = i + 1
+
+            End While
+
+
+        End With
+
+
+    End Sub
+
     ''' <summary>
     ''' wird aktuell verwendet , um eine Stelle für Testen bestimmter Funktionalitäten zu haben
     ''' ohne dass eine neue Ribbon Erweiterung gemacht werden muss
@@ -3528,31 +3552,30 @@ Imports Microsoft.Office.Interop.Excel
 
 
     ''' <summary>
-    ''' zeigt an , welche Projekte Management Attention verdienen/benötigen, weil sie besser/schlechter als geplant laufen
+    ''' zeigt an , welche Projekte Management Attention verdienen/benötigen, weil sie besser/schlechter als der letzte Stand geplant laufen
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Sub PT0ShowAttention(control As IRibbonControl)
+    Sub PT0ShowAttentionL(control As IRibbonControl)
 
-        Dim selectionType As Integer = -1 ' keine Einschränkung
+        Dim selectionType As Integer
         Dim myCollection As New Collection
         Dim top As Double, left As Double, width As Double, height As Double
         Dim sichtbarerBereich As Excel.Range
         Dim deleteList As New Collection
-        'Dim hproj As clsProjekt
-        'Dim pname As String
 
-        ' zeit verkürzt/verlängert; Kosten niedriger/höher; welche Ampel Farbe 
-        Dim timeCostColor(2) As Double
 
-        
+
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
+        ' hier muss noch geklärt werden, welche Projekte betrachtet werden; es mcht keinen Sinn, 
+        'das nur an den TimeFrame zu koppeln, es geht im wesentlichen um aktuell laufende und vergangene Projekte 
+        ' Frage : was ist mit bereits beauftragten Projekten, die noch gar nicht begonnen haben, deren Planung aber bereits schlechter als beauftragt ist ? 
+
+        selectionType = PTpsel.lfundab
         myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
-
-
 
 
         With appInstance.ActiveWindow
@@ -3576,9 +3599,17 @@ Imports Microsoft.Office.Interop.Excel
 
         Try
             If myCollection.Count > 0 Then
-                Call awinCreateBetterWorsePortfolio(myCollection, obj, False, PTpfdk.betterWorseL, 0, False, True, True, top, left, width, height)
+
+                Try
+                    Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=True, isTimeTimeVgl:=False, vglTyp:=1, _
+                                                    charttype:=PTpfdk.betterWorseL, bubbleColor:=0, bubbleValueTyp:=PTbubble.strategicFit, showLabels:=True, chartBorderVisible:=True, _
+                                                    top:=top, left:=left, width:=width, height:=height)
+                Catch ex As Exception
+                    Call MsgBox(ex.Message)
+                End Try
+
             Else
-                Call MsgBox(" es gibt in diesem Zeitraum keine Projekte mit Abhängigkeiten")
+                Call MsgBox(" es gibt in diesem Zeitraum keine laufenden / abgeschlossenen Projekte")
             End If
 
 
@@ -3592,6 +3623,75 @@ Imports Microsoft.Office.Interop.Excel
 
 
     End Sub
+
+    Sub PT0ShowAttentionB(control As IRibbonControl)
+
+        Dim selectionType As Integer
+        Dim myCollection As New Collection
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim sichtbarerBereich As Excel.Range
+        Dim deleteList As New Collection
+
+
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        ' hier muss noch geklärt werden, welche Projekte betrachtet werden; es mcht keinen Sinn, 
+        'das nur an den TimeFrame zu koppeln, es geht im wesentlichen um aktuell laufende und vergangene Projekte 
+        ' Frage : was ist mit bereits beauftragten Projekten, die noch gar nicht begonnen haben, deren Planung aber bereits schlechter als beauftragt ist ? 
+
+        selectionType = PTpsel.lfundab
+        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+
+
+        With appInstance.ActiveWindow
+            sichtbarerBereich = .VisibleRange
+            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
+            If left < sichtbarerBereich.Left Then
+                left = sichtbarerBereich.Left + 2
+            End If
+
+            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+            If top < sichtbarerBereich.Top Then
+                top = sichtbarerBereich.Top + 2
+            End If
+
+        End With
+
+        width = 600
+        height = 450
+
+        Dim obj As New Object
+
+        Try
+            If myCollection.Count > 0 Then
+
+                Try
+                    Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=True, isTimeTimeVgl:=False, vglTyp:=1, _
+                                                    charttype:=PTpfdk.betterWorseB, bubbleColor:=0, bubbleValueTyp:=PTbubble.strategicFit, showLabels:=True, chartBorderVisible:=True, _
+                                                    top:=top, left:=left, width:=width, height:=height)
+                Catch ex As Exception
+                    Call MsgBox(ex.Message)
+                End Try
+
+            Else
+                Call MsgBox(" es gibt in diesem Zeitraum keine laufenden bzw. abgeschlossenen Projekte")
+            End If
+
+
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+        appInstance.ScreenUpdating = True
+
+
+    End Sub
+
 
     Sub PT0ShowComplexRisiko(control As IRibbonControl)
 
@@ -3776,7 +3876,7 @@ Imports Microsoft.Office.Interop.Excel
                 Dim hproj As clsProjekt
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name)
-                    Call createProjektErgebnisCharakteristik2(hproj, dummyObj)
+                    Call createProjektErgebnisCharakteristik2(hproj, dummyObj, 2)
                 Catch ex As Exception
                     Call MsgBox("Name nicht gefunden : " & singleShp.Name)
                 End Try
