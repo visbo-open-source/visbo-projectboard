@@ -822,7 +822,7 @@ Public Module awinDiagrams
                 foundDiagramm = DiagramList.getDiagramm(chtobjName)
                 With foundDiagramm
                     top = .top
-                    'left = .left
+                    left = .left
                     'width = .width
                     'height = .height
                 End With
@@ -1469,6 +1469,7 @@ Public Module awinDiagrams
                         einheit = " "
                         objektFarbe = PhaseDefinitions.getPhaseDef(prcName).farbe
                         datenreihe = ShowProjekte.getCountPhasesInMonth(prcName)
+
                         ' Ergänzung wegen Anzeige der selektierten Objekte ... 
                         tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName)
                         For ix = 0 To bis - von
@@ -4775,7 +4776,7 @@ Public Module awinDiagrams
     Sub awinNeuZeichnenDiagramme(ByVal typus As Integer)
         Dim anz_diagrams As Integer
         Dim chtobj As ChartObject
-        Dim i As Integer, r As Integer, p As Integer, k As Integer, e As Integer
+        Dim i As Integer, p As Integer, e As Integer
 
 
         ' typus:
@@ -4799,8 +4800,8 @@ Public Module awinDiagrams
                     '
                     '
                     Case 1 ' Projekt wurde verschoben
-                        If istRollenDiagramm(chtobj, r) Or istKostenartDiagramm(chtobj, k) Or _
-                            istPhasenDiagramm(chtobj, p) Or istErgebnisDiagramm(chtobj, e) Then
+                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
                             Call awinUpdateprcCollectionDiagram(chtobj)
 
@@ -4810,7 +4811,7 @@ Public Module awinDiagrams
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -4844,22 +4845,11 @@ Public Module awinDiagrams
                             End If
 
 
-                            'ElseIf istKostenartDiagramm(chtobj, k) Then ' muss ggf das mini-Chart aktualisiert werden
-                            '    If chtobj.width <= miniWidth * 1.05 Then
-                            '        Call awin_aktualisiereMiniChart(chtobj)
-                            '    End If
-
-                            'ElseIf istPhasenDiagramm(chtobj, p) Then
-
-                            '    Set phaseCollection = New clsPhasen
-                            '    phaseCollection.Add PhaseDefinitions.getPhaseDef(p)
-                            '    Call awinShowPhaseCollectionDiagram(phaseCollection)
-                            '    Set phaseCollection = Nothing
 
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
-                            ' nichts
 
+                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
 
                         Else ' ist Projekt-Charakteristik Diagramm
 
@@ -4868,8 +4858,8 @@ Public Module awinDiagrams
                         '
                     Case 2 ' Projekt wurde eingefügt
                         '
-                        If istRollenDiagramm(chtobj, r) Or istKostenartDiagramm(chtobj, k) Or _
-                            istPhasenDiagramm(chtobj, p) Or istErgebnisDiagramm(chtobj, e) Then
+                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
                             Call awinUpdateprcCollectionDiagram(chtobj)
 
@@ -4880,7 +4870,7 @@ Public Module awinDiagrams
                                 Call awinUpdateErgebnisDiagramm(chtobj)
 
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
 
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
@@ -4918,15 +4908,15 @@ Public Module awinDiagrams
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-                            Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
 
 
                         Else ' ist Projekt-Charakteristik Diagramm
                         End If
 
                     Case 3 ' Projekt wurde gelöscht
-                        If istRollenDiagramm(chtobj, r) Or istKostenartDiagramm(chtobj, k) Or _
-                            istPhasenDiagramm(chtobj, p) Or istErgebnisDiagramm(chtobj, e) Then
+                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
                             Call awinUpdateprcCollectionDiagram(chtobj)
 
@@ -4936,7 +4926,7 @@ Public Module awinDiagrams
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -4970,24 +4960,25 @@ Public Module awinDiagrams
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-                            Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
 
 
                         Else ' ist Projekt-Charakteristik Diagramm
                         End If
 
                     Case 4 ' betrachteter Zeitraum wurde geändert
-                        If istRollenDiagramm(chtobj, r) Or istKostenartDiagramm(chtobj, k) Or _
-                            istPhasenDiagramm(chtobj, p) Or istErgebnisDiagramm(chtobj, e) Then
+                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
                             Call awinUpdateprcCollectionDiagram(chtobj)
+
 
                         ElseIf istSummenDiagramm(chtobj, p) Then
 
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -5020,24 +5011,19 @@ Public Module awinDiagrams
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-
+                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
 
                         Else ' ist Projekt-Charakteristik Diagramm
                         End If
 
                     Case 5 ' Stammdaten wurden geändert
-                        If istRollenDiagramm(chtobj, r) Then
 
-
-                        ElseIf istKostenartDiagramm(chtobj, k) Then
-
-
-                        ElseIf istSummenDiagramm(chtobj, p) Then
+                        If istSummenDiagramm(chtobj, p) Then
 
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -5066,7 +5052,7 @@ Public Module awinDiagrams
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-                            Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
 
                         ElseIf istErgebnisDiagramm(chtobj, e) Then
 
@@ -5077,8 +5063,8 @@ Public Module awinDiagrams
 
                     Case 6 ' Ressourcen Bedarf eines existierenden Projektes wurde geändert
 
-                        If istRollenDiagramm(chtobj, r) Or istKostenartDiagramm(chtobj, k) Or _
-                            istPhasenDiagramm(chtobj, p) Or istErgebnisDiagramm(chtobj, e) Then
+                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
                             Call awinUpdateprcCollectionDiagram(chtobj)
 
@@ -5087,7 +5073,7 @@ Public Module awinDiagrams
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -5116,7 +5102,7 @@ Public Module awinDiagrams
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-                            Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
 
 
                         Else ' ist Projekt-Charakteristik Diagramm
@@ -5124,8 +5110,8 @@ Public Module awinDiagrams
 
                     Case 7 ' Kosten Bedarf eines existierenden Projektes wurde geändert
 
-                        If istRollenDiagramm(chtobj, r) Or istKostenartDiagramm(chtobj, k) Or _
-                            istPhasenDiagramm(chtobj, p) Or istErgebnisDiagramm(chtobj, e) Then
+                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
                             Call awinUpdateprcCollectionDiagram(chtobj)
 
@@ -5134,7 +5120,7 @@ Public Module awinDiagrams
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -5144,7 +5130,7 @@ Public Module awinDiagrams
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-                            Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
 
 
                         Else ' ist Projekt-Charakteristik Diagramm oder Phasen Diagramm
@@ -5152,8 +5138,8 @@ Public Module awinDiagrams
 
                     Case 8 ' Selection hat sich geändert 
 
-                        If istRollenDiagramm(chtobj, r) Or istKostenartDiagramm(chtobj, k) Or _
-                            istPhasenDiagramm(chtobj, p) Or istErgebnisDiagramm(chtobj, e) Then
+                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
                             Call awinUpdateprcCollectionDiagram(chtobj)
 
@@ -5162,7 +5148,7 @@ Public Module awinDiagrams
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
                             ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
@@ -5172,7 +5158,7 @@ Public Module awinDiagrams
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-                            Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
+                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
 
 
                         Else ' ist Projekt-Charakteristik Diagramm oder Phasen Diagramm

@@ -15,7 +15,7 @@
             </c:PieChartLayout>
             
             
-            <CheckBox x:Name="keepSymbols" Content="Symbole behalten" IsChecked="False" Margin="30,10,0,0"/>
+            <CheckBox x:Name="keepSymbols" Content="andere löschen" IsChecked="False" Margin="30,10,0,0"/>
 
         </StackPanel>        
     </Grid>

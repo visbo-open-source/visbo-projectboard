@@ -29,13 +29,16 @@
       <!--
       
       -->
-      <tab id="PT0" label="Informieren">
+      <tab id="PT0" label="Visualisieren">
         <group id="PT0G1" label="Projekt">
-          <button id="PT0G1B1" label="Status" onAction="PT0ShowProjektStatus" />
+          <button id="PT0G1B0" label="Status" onAction="PT0ShowProjektStatus" />
+          <separator id="PT0G1s0"/>
+          <button id="PT0G1B1" label="Abhängigkeiten" onAction="PT0ShowDependencies" />
           <separator id="PT0G1s1"/>
           <menu id="PT0G1M0" label="Phasen">
-            <button id="PT0G1M0B1" label="Einzelne Phasen" onAction="PT0VisualizePhases" />
+            <button id="PT0G1M0B1" label="Namen wählen" onAction="PT0VisualizePhases" />
             <button id="PT0G1M0B2" label="Phasen Übersicht" onAction="Tom2G2M1B1Phasen" />
+            <!--<button id="PT0G1M0B3" label="Phasen Darstellung" onAction="Tom2G2M1B1Phasen2" />-->
           </menu>
           <separator id="PT0G1s2"/>
           <menu id="PT0G1M1" label="Ressourcen">
@@ -44,10 +47,10 @@
           </menu>
           <separator id="PT0G1s3"/>
           <menu id="PT0G1M2" label="Meilensteine">
-            <button id="PT0G1M2B1" label="Grün" onAction="Tom2G2M5M2B1ShowMilestones" />
+            <!--<button id="PT0G1M2B1" label="Grün" onAction="Tom2G2M5M2B1ShowMilestones" />
             <button id="PT0G1M2B2" label="Gelb" onAction="Tom2G2M5M2B2ShowMilestones" />
             <button id="PT0G1M2B3" label="Rot" onAction="Tom2G2M5M2B3ShowMilestones" />
-            <button id="PT0G1M2B4" label="Grau" onAction="Tom2G2M5M2B4ShowMilestones" />
+            <button id="PT0G1M2B4" label="Grau" onAction="Tom2G2M5M2B4ShowMilestones" />-->
             <button id="PT0G1M2B5" label="Alle" onAction="Tom2G2M5M2B5ShowMilestones" />
             <button id="PT0G1M2B6" label="Namen wählen" onAction="PTShowMilestonesByName" />
             <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="PTShowMilestoneTrend" />
@@ -56,16 +59,17 @@
           <separator id="PT0G1s4"/>
           <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
           <button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />
+          <button id="PT0G1B5" label="Abhängigkeiten" onAction="Tom2G2M1B6Abhaengigkeit" />
           <!--<button id="PT0G1B4" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />-->
           <separator id="PT0G1s5"/>
-          <button id="PT0G1B5" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
+          <button id="PT0G1B6" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
         </group>
         <!---->
         <group id="PT0G2" label="Portfolio">
           <button id="PT0G2B1" label="Status" onAction="Tom2G2M5M1B3ShowStatus" />
           <separator id="PT0G2s1"/>
           <menu id="PT0G2M0" label="Phasen">
-            <button id="PT0G2M0B1" label="Phasen visualisieren" onAction="PT0VisualizePhasesAll" />
+            <button id="PT0G2M0B1" label="Namen wählen" onAction="PT0VisualizePhasesAll" />
             <button id="PT0G2M0B2" label="Summen Charts" onAction="PT0ShowPortfolioPhasen" />
           </menu>
           <separator id="PT0G2s2"/>
@@ -77,18 +81,21 @@
           <separator id="PT0G2s3"/>
           <menu id="PT0G2M2" label="Meilensteine">
             <button id="PT0G2M2B1" label="Ampel Übersicht" onAction="PT0ShowZieleUebersicht" />
-            <button id="PT0G2M2B2" label="Alle anzeigen" onAction="Tom2G2M5M2B5ShowMilestones" />
-            <button id="PT0G2M2B3" label="Auswahl anzeigen" onAction="PTShowAllMilestonesByName" />
+            <!--<button id="PT0G2M2B2" label="Alle anzeigen" onAction="Tom2G2M5M2B5ShowMilestones" />-->
+            <button id="PT0G2M2B3" label="Namen wählen" onAction="PTShowAllMilestonesByName" />
             <button id="PT0G2M2B4" label="Summen Charts" onAction="PTShowMilestoneSummen" />
-            <button id="PT0G2M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
+            <!--<button id="PT0G2M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />-->
           </menu>
           <separator id="PT0G2s4"/>
           <button id="PT0G2B3" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
           <button id="PT0G2B4" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />
           <!--<button id="PT0G2B5" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />-->
           <!--<button id="PT0G2B6" label="Zeit/Risiko/Volumen" onAction="PT0ShowZeitRisiko" />-->
+          <button id="PT0G2B7" label="Abhängigkeiten" onAction="PT0ShowAbhaengigkeiten" />
+          <button id="PT0G2B8" label="besser/schlechter als letzter Stand" onAction="PT0ShowAttentionL" />
+          <button id="PT0G2B9" label="besser/schlechter als Beauftragung" onAction="PT0ShowAttentionB" />
           <separator id="PT0G2s5"/>
-          <button id="PT0G2B7" label="Ergebnis" onAction="PT0ShowPortfolioErgebnis" />
+          <button id="PT0G2B10" label="Ergebnis" onAction="PT0ShowPortfolioErgebnis" />
         </group>
       </tab>
       <!--
@@ -126,11 +133,16 @@
         </group>
         <!---->
         <group id="PT2G2" label="Portfolio">
-          <button id="PT2G2B1" label="Neu/Speichern" onAction="awinNeueKonstellation" />
+          <button id="PT2G2B1" label="Neu/Aktualisieren" onAction="awinNeueKonstellation" />
           <separator id="PT2G2s1"/>
           <button id="PT2G2B2" label="Laden" onAction="awinLadenKonstellation" />
           <separator id="PT2G2s2"/>
           <button id="PT2G2B3" label="Löschen" onAction="awinTestNewFunctions" />
+        </group>
+        <group id="PT2G3" label="Projekt Abhängigkeiten">
+          <button id="PT2G3B1" label="Definieren" onAction="PTDefineDependencies" />
+          <separator id="PT2G3s1"/>
+          <button id="PT2G3B2" label="Löschen" onAction="PTDeleteDependencies" />
         </group>
       </tab>
       <!--
@@ -180,15 +192,30 @@
         </group>
 
       </tab>
-      <tab id ="PT5" label ="Einstellungen">
-        <group id ="PT5G1" label ="Projekt-Form">
-          <!--<toggleButton id="PT5G1B1" label="Phasen zeichnen" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen"/>-->
-          <checkBox id="PT5G1B1" label="Phasen zeichnen" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen"/>
+      <tab id ="PT5" label ="Datenbank">
+        <group id ="PT5G1" label ="Laden">
+          <button id="PT5G1B1" label="Programme" onAction="PT5DatenbankLoadPrograms" />
+          <button id="PT5G1B2" label="Portfolios" onAction="PT5DatenbankLoadPortfolios" />
+          <button id="PT5G1B3" label="Zeitraum" onAction="PT5DatenbankLoadZeitraum" />
         </group>
-        <group id ="PT5G2" label ="Zeitraum">
+        <group id ="PT5G2" label ="Speichern">
+          <button id="Pt5G2B1" label="Projekte speichern" onAction="PT5StoreProjects" />
+        </group>
+      </tab>
+      <tab id ="PT6" label ="Einstellungen">
+        <group id ="PT6G1" label ="Projekt-Form">
+          <!--<toggleButton id="PT5G1B1" label="Phasen zeichnen" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen"/>-->
+          <checkBox id="PT6G1B1" label="Extended Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen"/>
+        </group>
+        <group id ="PT6G2" label ="Zeitraum">
           <!--<toggleButton id="PT5G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>-->
-          <checkBox id="PT5G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>
-          <button id="Pt5G2B2" label="Zeitraum ändern" onAction="PT5changeTimeSpan" />
+          <checkBox id="PT6G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>
+          <button id="Pt6G2B2" label="Zeitraum ändern" onAction="PT5changeTimeSpan" />
+        </group>
+        <group id ="PT6G3" label ="Symbole, Charts und Grafiken löschen">
+          <!--<toggleButton id="PT5G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>-->
+          <button id="Pt6G3B0" label="Meilensteine, Phasen, Stati"  onAction="Tom2G2M5B3NoShowSymbols" />
+          <button id="Pt6G3B1" label="Charts"  onAction="PT6DeleteCharts" />
         </group>
       </tab>
      </tabs>

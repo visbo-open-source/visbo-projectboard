@@ -302,27 +302,42 @@ Public Class clsEventsPrcCharts
 
                     returnValue = bestaetigeOptimierung.ShowDialog
                     If returnValue = DialogResult.OK Then
+
+                        Call ClearPlanTafelfromOptArrows()
+
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
                             Try
+
                                 With kvp.Value
-                                    .startDate = StartofCalendar.AddMonths(.Start + .StartOffset - 1)
-                                    .StartOffset = 0
+
+                                    If .StartOffset <> 0 And .Status = ProjektStatus(0) Then
+                                        .startDate = .startDate.AddMonths(.StartOffset)
+                                        .StartOffset = 0
+
+                                        ' jetzt wird das Shape in der Plantafel gelöscht 
+                                        Call clearProjektinPlantafel(.name)
+                                        Call ZeichneProjektinPlanTafel(.name, .tfZeile, False)
+                                    End If
+
                                 End With
                             Catch ex As Exception
                                 Call MsgBox("Projekt: " & kvp.Key & " : Startzeitpunkt liegt in der Vergangenheit ")
                             End Try
 
                         Next
-                        Call ClearPlanTafelfromOptArrows()
+
                         Call visualisiereErgebnis()
                         OptimierungsErgebnis.Clear()
                     Else
+
+                        Call ClearPlanTafelfromOptArrows()
+
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
                             With kvp.Value
                                 .StartOffset = 0
                             End With
                         Next
-                        Call ClearPlanTafelfromOptArrows()
+
                         Call visualisiereErgebnis()
                         OptimierungsErgebnis.Clear()
                     End If

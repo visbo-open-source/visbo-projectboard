@@ -38,6 +38,8 @@ Public Module Module1
     Public ImportProjekte As New clsProjekte
     Public DeletedProjekte As New clsProjekte
     Public projectConstellations As New clsConstellations
+    Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
+    Public allDependencies As New clsDependencies
 
     ' hier wird die Projekt Historie eines Projektes aufgenommen 
     Public projekthistorie As New clsProjektHistorie
@@ -100,6 +102,18 @@ Public Module Module1
     Public Const summentitel11 As String = "Details zur Unter-Auslastung"
     Public Const maxProjektdauer As Integer = 60
 
+    Public Enum PTbubble
+        strategicFit = 0
+        depencencies = 1
+        marge = 2
+    End Enum
+
+    Public Enum PTpsel
+        alle = -1
+        laufend = 0
+        lfundab = 1
+        abgeschlossen = 2
+    End Enum
 
     ' Enumeration Portfolio Diagramm Kennung 
     Public Enum PTpfdk
@@ -119,12 +133,20 @@ Public Module Module1
         AmpelFarbe = 13
         ProjektFarbe = 14
         FitRisikoVol = 15
+        Dependencies = 16
+        betterWorseL = 17 ' es wird mit dem letzten Stand verglichen
+        betterWorseB = 18 ' es wird mit dem Beauftragunsg-Stand verglichen
     End Enum
+
+    ' wird in awinSetTypen dimensioniert und gesetzt 
+    Public portfolioDiagrammtitel() As String
+
 
 
     ' Enumeration History Change Criteria: um anzugeben, welche Veränderung man in der History eines Projektes sucht 
 
     Public Enum PThcc
+        none = 0
         perscost = 1
         othercost = 2
         budget = 3
@@ -143,6 +165,18 @@ Public Module Module1
         green = 1
         yellow = 2
         red = 3
+    End Enum
+
+
+    Public Enum PTdpndncy
+        none = 0
+        schwach = 1
+        stark = 3
+    End Enum
+
+    Public Enum PTdpndncyType
+        none = 0
+        inhalt = 1
     End Enum
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
@@ -180,9 +214,7 @@ Public Module Module1
         height = 3
     End Enum
 
-    ' wird in awinSetTypen dimensioniert und gesetzt 
-    Public portfolioDiagrammtitel() As String
-
+   
     Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
 
     Public weightStrategicFit As Double
@@ -370,7 +402,12 @@ Public Module Module1
             Try
                 hproj = ShowProjekte.getProject(pname)
                 key = hproj.name & "#" & hproj.variantName
-                DeletedProjekte.Add(hproj)
+                Try
+                    DeletedProjekte.Add(hproj)
+                Catch ex As Exception
+                    ' nichts tun, dann wurde das eben schon mal gelöscht ..
+                End Try
+
             Catch ex As Exception
                 Call MsgBox(" Fehler in Delete " & pname & " , Modul: awinLoescheProjekt")
                 Exit Sub
@@ -444,43 +481,34 @@ Public Module Module1
     '
     ' prüft , ob übergebenes Diagramm ein Rollen Diagramm ist - in R steht ggf als Ergebnis die entsprechende Rollen-Nummer; 0 wenn es kein Rollen Diagramm ist
     '
-    Function istRollenDiagramm(ByRef chtobj As ChartObject, ByRef rolle As Integer) As Boolean
-        Dim r As Integer
+    Function istRollenDiagramm(ByRef chtobj As ChartObject) As Boolean
+
         Dim found As Boolean
-        Dim anzRollen As Integer
-        Dim chtTitle As String
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
 
 
-        anzRollen = RoleDefinitions.Count
 
-        r = 1
-        rolle = 0
+
         found = False
+        chtobjName = chtobj.Name
 
         Try
-            chtTitle = chtobj.Chart.ChartTitle.Text
+
+            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
+
+                If CInt(tmpStr(1)) = PTpfdk.Rollen Then
+
+                    found = True
+
+                End If
+
+            End If
+
         Catch ex As Exception
-            chtTitle = " "
         End Try
 
-        While Not found And r <= anzRollen
-            If chtTitle Like RoleDefinitions.getRoledef(r).name & "*" Then
-                'If RoleDefinitions.getRoledef(r).name = chtobj.Chart.ChartTitle.text Then
-                found = True
-            Else
-                r = r + 1
-            End If
-        End While
-
-        If chtTitle Like ("Rollen-Übersicht" & "*") Then
-            'If chtobj.Chart.ChartTitle.text = "Rollen-Übersicht" Then
-            found = True
-            r = RoleDefinitions.Count + 1
-        End If
-
-        If found Then
-            rolle = r
-        End If
 
         istRollenDiagramm = found
 
@@ -580,51 +608,34 @@ Public Module Module1
     '
     ' prüft , ob übergebenes Diagramm ein Kosten Diagramm ist - in kostenart steht ggf als Ergebnis die entsprechende Kostenart-Nummer; 0 wenn es kein Kostenart Diagramm ist
     '
-    Function istKostenartDiagramm(ByRef chtobj As ChartObject, ByRef kostenart As Integer) As Boolean
+    Function istKostenartDiagramm(ByRef chtobj As ChartObject) As Boolean
 
-        Dim k As Integer
+
         Dim found As Boolean
-        Dim anzKostenarten As Integer
-        Dim chtTitle As String
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
 
-        anzKostenarten = CostDefinitions.Count
-        k = 1
-        kostenart = 0
+
         found = False
 
+
+        chtobjName = chtobj.Name
+
         Try
-            chtTitle = chtobj.Chart.ChartTitle.Text
-        Catch ex As Exception
-            chtTitle = " "
-        End Try
 
+            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
-        While Not found And k <= anzKostenarten
-            If chtTitle Like CostDefinitions.getCostdef(k).name & "*" Then
+                If CInt(tmpStr(1)) = PTpfdk.Kosten Then
 
-                ' folgende 2 Zeilen notwendig, weil sonst das Anzeigen-Projekt-Personalkosten so interpretiert wird, als
-                ' ob es ein summen-Diagramm wäre  (15.7.2013)
-                If chtTitle.Length <= CostDefinitions.getCostdef(k).name.Length + 15 Then
                     found = True
-                Else
-                    k = k + 1
+
                 End If
-                'If CostDefinitions.getCostdef(k).name = chtobj.Chart.ChartTitle.text Then
 
-            Else
-                k = k + 1
             End If
-        End While
 
-        'If chtobj.Chart.ChartTitle.text = "Kosten-Übersicht" Then
-        If chtTitle Like ("Kosten-Übersicht" & "*") Then
-            found = True
-            k = CostDefinitions.Count + 1
-        End If
-
-        If found Then
-            kostenart = k
-        End If
+        Catch ex As Exception
+        End Try
 
         istKostenartDiagramm = found
 
@@ -633,46 +644,73 @@ Public Module Module1
     '
     ' prüft , ob übergebenes Diagramm ein Phasen Diagramm ist - in phasenart steht ggf als Ergebnis die entsprechende Phasen-Nummer; 0 wenn es kein Phasen Diagramm ist
     '
-    Function istPhasenDiagramm(ByRef chtobj As ChartObject, ByRef phasenart As Integer) As Boolean
+    Function istPhasenDiagramm(ByRef chtobj As ChartObject) As Boolean
 
-        Dim p As Integer
+
         Dim found As Boolean
-        Dim anzPhasen As Integer
-        Dim chtTitle As String
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
 
-        anzPhasen = PhaseDefinitions.Count
-        p = 1
-        phasenart = 0
         found = False
 
+
+        chtobjName = chtobj.Name
+
         Try
-            chtTitle = chtobj.Chart.ChartTitle.Text
-        Catch ex As Exception
-            chtTitle = " "
-        End Try
 
-        While Not found And p <= anzPhasen
-            If chtTitle Like PhaseDefinitions.getPhaseDef(p).name & "*" Then
-                'If compareString = chtobj.Chart.ChartTitle.text Then
-                found = True
-            Else
-                p = p + 1
+            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
+
+                If CInt(tmpStr(1)) = PTpfdk.Phasen Then
+
+                    found = True
+
+                End If
+
             End If
-        End While
 
-        If chtTitle Like ("Phasen-Übersicht" & "*") Then
-            found = True
-            p = CostDefinitions.Count + 1
-        End If
-
-
-        If found Then
-            phasenart = p
-        End If
+        Catch ex As Exception
+        End Try
 
         istPhasenDiagramm = found
 
     End Function
+
+    '
+    ' prüft , ob übergebenes Diagramm ein Meilenstein Diagramm ist - in phasenart steht ggf als Ergebnis die entsprechende Phasen-Nummer; 0 wenn es kein Phasen Diagramm ist
+    '
+    Function istMileStoneDiagramm(ByRef chtobj As ChartObject) As Boolean
+
+
+        Dim found As Boolean
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
+
+        
+        found = False
+
+
+        chtobjName = chtobj.Name
+
+        Try
+
+            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
+
+                If CInt(tmpStr(1)) = PTpfdk.Meilenstein Then
+                    found = True
+
+                End If
+
+            End If
+
+        Catch ex As Exception
+        End Try
+
+        istMileStoneDiagramm = found
+
+    End Function
+
 
     '
     ' prüft , ob übergebenes Diagramm ein Rollen Diagramm ist - in R steht ggf als Ergebnis die entsprechende Rollen-Nummer; 0 wenn es kein Rollen Diagramm ist
@@ -681,12 +719,31 @@ Public Module Module1
 
         Dim found As Boolean = False
 
-        With chtobj
-            If .Chart.SeriesCollection(1).ChartType = Excel.XlChartType.xlBubble3DEffect Then
-                found = True
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
+
+
+        chtobjName = chtobj.Name
+
+        Try
+
+            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
+
+                If CInt(tmpStr(1)) = PTpfdk.FitRisiko Or _
+                    CInt(tmpStr(1)) = PTpfdk.FitRisikoVol Or _
+                    CInt(tmpStr(1)) = PTpfdk.ComplexRisiko Or _
+                    CInt(tmpStr(1)) = PTpfdk.Dependencies Or _
+                    CInt(tmpStr(1)) = PTpfdk.ZeitRisiko Then
+
+                    found = True
+
+                End If
+
             End If
 
-        End With
+        Catch ex As Exception
+        End Try
 
         istPortfolioDiagramm = found
 
@@ -1427,6 +1484,35 @@ Public Module Module1
 
     End Sub
 
+    Public Function magicBoardZeileIstFrei(ByVal zeile As Integer) As Boolean
+        Dim istfrei = True
+        Dim ix As Integer = 1
+        Dim anzahlP As Integer = ShowProjekte.Count
+
+        If zeile >= 2 Then
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                With kvp.Value
+                    If zeile = .tfZeile Then
+                        istfrei = False
+                        Exit For
+                    End If
+                End With
+
+            Next
+
+        Else
+
+            istfrei = False
+
+        End If
+        
+        magicBoardZeileIstFrei = istfrei
+    End Function
+
+
+
     Public Function magicBoardIstFrei(ByRef mycollection As Collection, ByVal pname As String, ByVal zeile As Integer, _
                                       ByVal spalte As Integer, ByVal laenge As Integer) As Boolean
         Dim istfrei = True
@@ -1533,7 +1619,7 @@ Public Module Module1
                 .projectName = kvp.Key
                 .show = True
                 .Start = kvp.Value.startDate
-                .variantName = ""
+                .variantName = kvp.Value.variantName
                 .zeile = kvp.Value.tfZeile
             End With
             newC.Add(newConstellationItem)
@@ -1604,12 +1690,12 @@ Public Module Module1
 
                 End If
             Catch ex As Exception
-
+                ' still-to-do:
+                ' hier muss das Projekt aus der Datenbank geholt werden ; 
+                ' dazu muss diese Sub in ein anderes Modul transferiert werden 
             End Try
 
         Next
-
-
 
     End Sub
 
@@ -1643,9 +1729,11 @@ Public Module Module1
                         Case 0
                             If .AutoShapeType = MsoAutoShapeType.msoShapeDiamond Or _
                                 .AutoShapeType = MsoAutoShapeType.msoShapeOval Or _
-                                (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue) Then
+                                (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue) Or _
+                                (.Connector = MsoTriState.msoTrue And .Title = "Dependency") Then
                                 .Delete()
                             End If
+
                             ' Schließen der Status Anzeige Fenster
                             formMilestone.Visible = False
                             formStatus.Visible = False
@@ -1662,10 +1750,16 @@ Public Module Module1
                             End If
                             formStatus.Visible = False
                         Case 3
-                            If (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue) Then
+                            If (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue And .Title <> "Dependency") Then
                                 .Delete()
                             End If
                             formPhase.Visible = False
+
+                        Case 4
+                            If (.Connector = MsoTriState.msoTrue And .Title = "Dependency") Then
+                                .Delete()
+                            End If
+
                         Case Else
 
                     End Select

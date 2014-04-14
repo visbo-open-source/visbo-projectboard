@@ -796,9 +796,13 @@
 
     End Property
 
-    '
-    ' übergibt in getsummekosten die Summe aller Kosten: Personalkosten plus alle anderen Kostenarten
-    '
+
+    ''' <summary>
+    ''' übergibt in getsummekosten die Summe aller Kosten: Personalkosten plus alle anderen Kostenarten
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getSummeKosten() As Double
 
         Get
@@ -833,6 +837,69 @@
                     For i = 0 To _Dauer - 1
                         costSum = costSum + costValues(i)
                         costValues(i) = 0
+                    Next i
+                Next r
+
+                getSummeKosten = costSum
+
+            Else
+                getSummeKosten = 0
+            End If
+
+        End Get
+
+    End Property
+
+
+    ''' <summary>
+    ''' berechnet die Summe nur bis zum index.ten Monaten 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSummeKosten(ByVal index As Integer) As Double
+
+        Get
+            Dim costValues() As Double
+            Dim ErgebnisListe As New Collection
+            Dim costSum As Double
+            Dim anzKostenarten As Integer
+            Dim i As Integer, r As Integer
+            Dim costname As String
+
+            If _Dauer > 0 Then
+
+                If index > _Dauer - 1 Then
+                    index = _Dauer - 1
+                End If
+
+                ReDim costValues(_Dauer - 1)
+                costValues = Me.getAllPersonalKosten
+
+                costSum = 0
+                For i = 0 To index
+
+                    costSum = costSum + costValues(i)
+
+                Next i
+                '
+                ' jetzt sind in der Summe die Personalkosten drin ....
+                '
+
+                ' Jetzt werden die einzelnen Kostenarten auf die gleiche Art und Weise geholt
+                ErgebnisListe = Me.getUsedKosten
+
+                anzKostenarten = ErgebnisListe.Count
+                For r = 1 To anzKostenarten
+                    costname = ErgebnisListe.Item(r)
+
+                    ReDim costValues(_Dauer - 1)
+                    costValues = Me.getKostenBedarf(costname)
+                    For i = 0 To index
+
+                        costSum = costSum + costValues(i)
+
                     Next i
                 Next r
 

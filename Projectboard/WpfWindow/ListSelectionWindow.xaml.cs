@@ -148,12 +148,17 @@ namespace WpfWindow
                         int farbID = 4;
                         SortedList<string, string> nameList = new SortedList<string, string>();
 
+
+                        if (this.checkbox1.IsChecked == true)
+                        {
+                            Module1.awinDeleteMilestoneShapes(1);
+                        }
+
                         foreach (string name in this.listbox.SelectedItems)
                         {
                             nameList.Add(name, name);
                         }
-
-
+                        
                         Projekte.awinZeichneMilestones(nameList, farbID, false);
 
 
@@ -185,7 +190,18 @@ namespace WpfWindow
 
                     // hier wird die Aktion durchgeführt 
                     object repObj = null;
-                    Projekte.createMsTrendAnalysisOfProject(ref hproj, ref repObj, ref myCollection, this.chTop, this.chLeft, this.chHeight, this.chWidth);
+                    
+                    try
+                    {
+                        Projekte.createMsTrendAnalysisOfProject(ref hproj, ref repObj, ref myCollection, this.chTop, this.chLeft, this.chHeight, this.chWidth);
+                    }
+
+                        catch
+                    {
+                        MessageBox.Show ("es gibt noch keinen Trend");
+                    }
+                       
+                    
 
                     //clsProjekt hproj = Module1.selectedProjekte.get_getProject(1);
 
@@ -202,7 +218,10 @@ namespace WpfWindow
                     int farbID = 4;
                     VBCollection myCollection = new VBCollection();
 
-                   
+                    if (this.checkbox1.IsChecked == true)
+                    {
+                        Module1.awinDeleteMilestoneShapes(3);
+                    }
                         
                     foreach (string name in this.listbox.SelectedItems)
                     {

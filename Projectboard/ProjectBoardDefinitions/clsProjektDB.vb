@@ -10,6 +10,7 @@
     Public tfSpalte As Integer
     Public tfZeile As Integer
     Public startDate As Date
+    Public endDate As Date
     Public earliestStartDate As Date
     Public latestStartDate As Date
     Public status As String
@@ -57,6 +58,7 @@
             Me.tfSpalte = .tfspalte
             Me.tfZeile = .tfZeile
             Me.startDate = .startDate.ToUniversalTime
+            Me.endDate = .endeDate.ToUniversalTime
             Me.earliestStartDate = .earliestStartDate.ToUniversalTime
             Me.latestStartDate = .latestStartDate.ToUniversalTime
             Me.status = .Status

@@ -118,29 +118,29 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_BeforeSave(SaveAsUI As Boolean, ByRef Cancel As Boolean) Handles Me.BeforeSave
 
-        Dim zeitStempel As Date
+        'Dim zeitStempel As Date
 
         Cancel = True
 
-        If AlleProjekte.Count > 0 Then
+        'If AlleProjekte.Count > 0 Then
 
-            Call StoreAllProjectsinDB()
+        '    Call StoreAllProjectsinDB()
 
-            zeitStempel = AlleProjekte.First.Value.timeStamp
+        '    zeitStempel = AlleProjekte.First.Value.timeStamp
 
-            Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+        '    Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
 
-            ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
-            Try
-                If projekthistorie.Count > 0 Then
-                    projekthistorie.clear()
-                End If
-            Catch ex As Exception
+        '    ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
+        '    Try
+        '        If projekthistorie.Count > 0 Then
+        '            projekthistorie.clear()
+        '        End If
+        '    Catch ex As Exception
 
-            End Try
-        Else
-            Call MsgBox("keine Projekte zu speichern ...")
-        End If
+        '    End Try
+        'Else
+        '    Call MsgBox("keine Projekte zu speichern ...")
+        'End If
         
 
 

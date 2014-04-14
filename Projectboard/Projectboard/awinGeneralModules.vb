@@ -123,7 +123,7 @@ Public Module awinGeneralModules
         ergebnisChartName(2) = "Verbesserungs-Potential"
         ergebnisChartName(3) = "Risiko-Abschlag"
 
-        ReDim portfolioDiagrammtitel(15)
+        ReDim portfolioDiagrammtitel(18)
         portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
@@ -140,6 +140,9 @@ Public Module awinGeneralModules
         portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
         portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
         portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
+        portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
+        portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
+        portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
 
 
         windowNames(0) = "Cockpit Phasen"
@@ -453,7 +456,8 @@ Public Module awinGeneralModules
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
             
             Catch ex As Exception
-                Call MsgBox(ex.Message & ": " & dateiName)
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                Call MsgBox(ex.Message)
             End Try
 
 
@@ -625,6 +629,10 @@ Public Module awinGeneralModules
         projectConstellations = request.retrieveConstellationsFromDB()
 
 
+        ' hier werden jetzt auch alle Abhängigkeiten geladen 
+        allDependencies = request.retrieveDependenciesFromDB()
+        Dim axt As Integer = 9
+
         'hier wird die Start-Konfiguration gespeichert
         '5.11. ausblenden
         'Call awinStoreConstellation("Start")
@@ -765,6 +773,7 @@ Public Module awinGeneralModules
         Dim startoffset As Integer, duration As Integer
         Dim vorlagenName As String
         Dim phaseName As String
+        Dim itemName As String
         Dim zufall As New Random(10)
         Dim farbKennung As Integer
         Dim responsible As String
@@ -967,54 +976,111 @@ Public Module awinGeneralModules
                     Dim pStartDate As Date
                     Dim pEndDate As Date
                     Dim ok As Boolean = True
-
+                    Dim lastPhaseName As String = cphase.name
 
                     For i = anfang To ende
+
                         Try
-                            phaseName = .Cells(i, 2).value.trim
+                            itemName = .Cells(i, 2).value.trim
                         Catch ex As Exception
-                            phaseName = ""
+                            itemName = ""
                             ok = False
                         End Try
 
                         If ok Then
-                            cphase = New clsPhase(parent:=hproj)
-                            cphase.name = phaseName
-
-                            If PhaseDefinitions.Contains(phaseName) Then
-                                ' nichts tun 
-                            Else
-                                ' in die Phase-Definitions aufnehmen 
-
-                                Dim hphase As clsPhasenDefinition
-                                hphase = New clsPhasenDefinition
-
-                                hphase.farbe = .Cells(i, 1).Interior.Color
-                                hphase.name = phaseName
-                                hphase.UID = phaseIX
-                                phaseIX = phaseIX + 1
-
-
-                                Try
-                                    PhaseDefinitions.Add(hphase)
-                                Catch ex As Exception
-
-                                End Try
-
-                            End If
-
 
                             pStartDate = CDate(.Cells(i, 3).value)
                             pEndDate = CDate(.Cells(i, 4).value)
                             startoffset = DateDiff(DateInterval.Day, hproj.startDate, pStartDate)
                             duration = DateDiff(DateInterval.Day, pStartDate, pEndDate) + 1
 
-                            ' es werden nur Phasen aufgenommen, die auch tasächlich eine Länge über einen Tag haben  
-
                             If duration > 1 Then
+                                ' es handelt sich um eine Phase 
+                                phaseName = itemName
+                                cphase = New clsPhase(parent:=hproj)
+                                cphase.name = phaseName
+
+                                If PhaseDefinitions.Contains(phaseName) Then
+                                    ' nichts tun 
+                                Else
+                                    ' in die Phase-Definitions aufnehmen 
+
+                                    Dim hphase As clsPhasenDefinition
+                                    hphase = New clsPhasenDefinition
+
+                                    hphase.farbe = .Cells(i, 1).Interior.Color
+                                    hphase.name = phaseName
+                                    hphase.UID = phaseIX
+                                    phaseIX = phaseIX + 1
+
+                                    Try
+                                        PhaseDefinitions.Add(hphase)
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End If
+
                                 cphase.changeStartandDauer(startoffset, duration)
                                 hproj.AddPhase(cphase)
+                                lastPhaseName = cphase.name
+
+                            ElseIf duration = 1 Then
+
+                                Try
+                                    ' es handelt sich um einen Meilenstein 
+
+                                    Dim bewertungsAmpel As Integer
+                                    Dim explanation As String
+
+                                    bewertungsAmpel = CInt(.Cells(i, 12).value)
+                                    explanation = CStr(.Cells(i, 1).value)
+
+                                    cphase = hproj.getPhase(lastPhaseName)
+                                    cresult = New clsResult(parent:=cphase)
+                                    cbewertung = New clsBewertung
+
+
+
+                                    If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                        ' es gibt keine Bewertung
+                                        bewertungsAmpel = 0
+                                    End If
+
+                                    ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                    With cbewertung
+                                        '.bewerterName = resultVerantwortlich
+                                        .colorIndex = bewertungsAmpel
+                                        .datum = Date.Now
+                                        .description = explanation
+                                    End With
+
+                                    With cresult
+                                        .name = itemName
+                                        .setDate = pEndDate
+                                        If Not cbewertung Is Nothing Then
+                                            .addBewertung(cbewertung)
+                                        End If
+                                    End With
+
+                                    With cphase
+                                        .addresult(cresult)
+                                    End With
+                                Catch ex As Exception
+
+                                End Try
+
+                                
+
+                                
                             End If
+                            
+
+                           
+
+                            ' handelt es sich um eine Phase oder um einen Meilenstein ? 
+
+                           
                         End If
 
 
@@ -1514,7 +1580,13 @@ Public Module awinGeneralModules
 
 
                                                 For m = anfang To ende
-                                                    Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+
+                                                    Try
+                                                        Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+                                                    Catch ex As Exception
+                                                        Xwerte(m - anfang) = 0.0
+                                                    End Try
+
                                                 Next m
 
                                                 crole = New clsRolle(ende - anfang + 1)
@@ -1541,7 +1613,12 @@ Public Module awinGeneralModules
                                                 ReDim Xwerte(ende - anfang)
 
                                                 For m = anfang To ende
-                                                    Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+                                                    Try
+                                                        Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+                                                    Catch ex As Exception
+                                                        Xwerte(m - anfang) = 0.0
+                                                    End Try
+
                                                 Next m
 
                                                 ccost = New clsKostenart(ende - anfang + 1)
@@ -1643,12 +1720,14 @@ Public Module awinGeneralModules
 
                         For zeile = rowOffset + 1 To lastrow
 
+
                             Dim cResult As clsResult
                             Dim cBewertung As clsBewertung
                             Dim cphase As clsPhase
                             Dim objectName As String
                             Dim startDate As Date, endeDate As Date
                             Dim bezug As String
+
 
                             Dim isPhase As Boolean = False
                             Dim isMeilenstein As Boolean = False
@@ -1666,7 +1745,7 @@ Public Module awinGeneralModules
                                     cphase.name = hproj.name
                                     'cphaseExisted = False       ' Phase existiert noch nicht
 
-                                    offset = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate)
+                                    offset = 0
 
                                     If ProjektdauerIndays < 1 Or offset < 0 Then
                                         Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
@@ -1740,10 +1819,12 @@ Public Module awinGeneralModules
                                             Else
                                                 ' Erzeuge ProjektPhase mit Länge des Projekts
 
+
                                             End If
 
                                         End If
                                     End If
+
                                     'isPhase = False
 
                                 Else
@@ -1778,8 +1859,10 @@ Public Module awinGeneralModules
                                         Dim offset As Integer
 
 
+
                                         duration = calcDauerIndays(startDate, endeDate)
                                         offset = DateDiff(DateInterval.Day, hproj.startDate, startDate)
+
 
                                         If duration < 1 Or offset < 0 Then
                                             Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
@@ -1806,15 +1889,15 @@ Public Module awinGeneralModules
                                             Next
                                         End If
 
+                                    If inkonsistent Then
+                                        anzFehler = anzFehler + 1
+                                        Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
+                                                             "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
+                                    End If
+                                    If Not cphaseExisted Then
+                                        hproj.AddPhase(cphase)
+                                    End If
 
-                                        If inkonsistent Then
-                                            anzFehler = anzFehler + 1
-                                            Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
-                                                                 "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & hproj.name & ".xlsx'")
-                                        End If
-                                        If Not cphaseExisted Then
-                                            hproj.AddPhase(cphase)
-                                        End If
 
                                     Catch ex As Exception
                                         Throw New Exception(ex.Message)
@@ -1844,22 +1927,26 @@ Public Module awinGeneralModules
                                                 Call MsgBox("der Meilenstein '" & resultName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
                                                             "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '" & hproj.name & ".xlsx")
                                             End If
+
                                         End If
 
                                         ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
                                         bewertungsAmpel = CType(.Cells(zeile, columnOffset + 5).value, Integer)
                                         explanation = CType(.Cells(zeile, columnOffset + 6).value, String)
 
-                                        If bewertungsAmpel <= 0 Or bewertungsAmpel > 3 Then
-                                            ' es gibt keine Bewertung 
-                                        Else
-                                            With cBewertung
-                                                '.bewerterName = resultVerantwortlich
-                                                .colorIndex = bewertungsAmpel
-                                                .datum = importDatum
-                                                .description = explanation
-                                            End With
-                                        End If
+
+                                    If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                        ' es gibt keine Bewertung
+                                        bewertungsAmpel = 0
+                                    End If
+                                        ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                    With cBewertung
+                                        '.bewerterName = resultVerantwortlich
+                                        .colorIndex = bewertungsAmpel
+                                        .datum = importDatum
+                                        .description = explanation
+                                    End With
+
 
 
                                         With cResult

@@ -16,6 +16,8 @@
                 AllShapes.Add(shpUID, pname)
             End If
 
+            ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss die currentConstellation zurückgesetzt werden 
+            currentConstellation = ""
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -36,7 +38,11 @@
 
         If AllProjects.ContainsKey(pname) Then
             Try
-
+                If AllShapes.ContainsValue(pname) Then
+                    Dim ix As Integer
+                    ix = AllShapes.IndexOfValue(pname)
+                    AllShapes.RemoveAt(ix)
+                End If
                 AllShapes.Add(shpUID, pname)
 
             Catch ex As Exception
@@ -59,6 +65,9 @@
             If SID <> "" Then
                 AllShapes.Remove(SID)
             End If
+
+            ' mit diesem Vorgang wird die Konstellation geändert , deshalb muss das zurückgesetzt werden 
+            currentConstellation = ""
 
         Catch ex As Exception
             Throw New ArgumentException(ex.Message)
@@ -281,13 +290,55 @@
             Dim tmpListe As New Collection
             ' selection type wird aktuell noch ignoriert .... 
 
+
+            
             For Each kvp In Me.AllProjects
+
                 With kvp.Value
+
                     If (.Start + .StartOffset > bis) Or (.Start + .StartOffset + .Dauer - 1 < von) Then
+                        ' dann liegt das Projekt ausserhalb des Zeitraums und muss überhaupt nicht berücksichtig werden 
                     Else
-                        tmpListe.Add(kvp.Key, kvp.Key)
+
+                        Select Case selectionType
+
+                            Case PTpsel.alle
+                                tmpListe.Add(kvp.Key, kvp.Key)
+
+                            Case PTpsel.laufend
+
+                                If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 And _
+                                    .Status <> ProjektStatus(3) And _
+                                    .Status <> ProjektStatus(4) Then
+
+                                    tmpListe.Add(kvp.Key, kvp.Key)
+
+                                End If
+
+                            Case PTpsel.lfundab
+
+                                If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 Then
+
+                                    tmpListe.Add(kvp.Key, kvp.Key)
+
+                                End If
+
+                            Case PTpsel.abgeschlossen
+
+                                If DateDiff(DateInterval.Day, .startDate, Date.Now) > 0 And _
+                                   (.Status = ProjektStatus(3) Or _
+                                   .Status = ProjektStatus(4)) Then
+
+                                    tmpListe.Add(kvp.Key, kvp.Key)
+
+                                End If
+
+                        End Select
+
+
                     End If
                 End With
+
             Next
 
             withinTimeFrame = tmpListe
@@ -817,19 +868,6 @@
                 With hproj
                     prAnfang = .Start + .StartOffset
                     prEnde = .Start + .Dauer - 1 + .StartOffset
-                    ' die Marge wird hier nicht benötigt ..
-
-
-                    'If .Risiko > 1 Then
-                    '    SRweight = weightStrategicFit * .StrategicFit / .Risiko
-                    'Else
-                    '    SRweight = .StrategicFit
-                    'End If
-
-                    'If SRweight > 1 Then
-                    '    SRweight = 1
-                    'End If
-
 
                 End With
 
