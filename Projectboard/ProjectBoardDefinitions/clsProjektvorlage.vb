@@ -83,6 +83,42 @@
         End With
 
     End Sub
+    Public Overridable Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date)
+        Dim p As Integer
+        Dim newphase As clsPhase
+        Dim ProjectDauerInDays As Integer
+        Dim CorrectFactor As Double
+
+        With newproject
+            .startDate = startdate
+            .farbe = farbe
+            .Schrift = Schrift
+            .Schriftfarbe = Schriftfarbe
+            .name = ""
+            .VorlagenName = VorlagenName
+            .earliestStart = _earliestStart
+            .latestStart = _latestStart
+
+            ProjectDauerInDays = calcDauerIndays(startdate, endedate)
+            CorrectFactor = ProjectDauerInDays / Me.dauerInDays
+
+
+            For p = 0 To Me.CountPhases - 1
+                newphase = New clsPhase(newproject)
+                If CorrectFactor = 1.0 Then
+                    AllPhases.Item(p).CopyTo(newphase)
+                Else
+                    AllPhases.Item(p).korrCopyTo(newphase, CorrectFactor)
+                End If
+
+                .AddPhase(newphase)
+            Next p
+
+
+        End With
+
+    End Sub
+
 
     Public ReadOnly Property Liste() As List(Of clsPhase)
 

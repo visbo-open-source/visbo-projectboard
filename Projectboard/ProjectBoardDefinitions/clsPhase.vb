@@ -76,7 +76,7 @@
                 Try
                     If Me.name <> Me.Parent.getPhase(1).name Then
                         ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
-                        Me.Parent.keepPhase1consistent()
+                        Me.Parent.keepPhase1consistent(Me.startOffsetinDays + Me.dauerInDays)
                     End If
                 Catch ex As Exception
 
@@ -735,7 +735,7 @@
 
 
             ' Änderung 16.1.2014: zuerst die Rollen und Kosten übertragen, dann die relStart und RelEnde, dann die Results
-            ' die evtrl enstehende Inkonsistenz zwischen Länder der Arrays der Rollen/Kostenarten und dem neuen relende/relstart wird in Kauf genommen 
+            ' die evtl. enstehende Inkonsistenz zwischen Längen der Arrays der Rollen/Kostenarten und dem neuen relende/relstart wird in Kauf genommen 
             ' und nur korrigiert , wenn explizit gewünscht (Parameter awinsettings.autoCorrectBedarfe = true 
 
             .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
@@ -744,6 +744,111 @@
                 newresult = New clsResult(parent:=newphase)
                 Me.getResult(r).CopyTo(newresult)
                 .AddResult(newresult)
+            Next
+
+        End With
+
+    End Sub
+    Public Sub korrCopyTo(ByRef newphase As clsPhase, ByVal corrFactor As Double)
+        Dim r As Integer, k As Integer
+        Dim newrole As clsRolle, oldrole As clsRolle
+        Dim newcost As clsKostenart, oldcost As clsKostenart
+        Dim newresult As clsResult, oldresult As clsResult
+        ' Dimension ist die Länge des Arrays , der kopiert werden soll; 
+        ' mit der eingeführten Unschärfe ist nicht mehr gewährleistet, 
+        ' daß relende-relstart die tatsächliche Dimension des Arrays wiedergibt 
+        Dim dimension As Integer
+        Dim hname As String
+        Dim newXwerte() As Double
+        'Dim h1wert As Double
+        'Dim h2wert As Double
+
+        With newphase
+            .minDauer = Me._minDauer
+            .maxDauer = Me._maxDauer
+            .earliestStart = Me._earliestStart
+            .latestStart = Me._latestStart
+            .Offset = Me._Offset
+
+            .name = _name
+
+            'h1wert = System.Math.Round(Me._startOffsetinDays * corrFactor)
+            'h2wert = CInt(Me._startOffsetinDays * corrFactor)
+
+            'h1wert = System.Math.Round(Me._dauerInDays * corrFactor)
+            'h2wert = CInt(Me._dauerInDays * corrFactor)
+
+            .changeStartandDauer(CInt(Me._startOffsetinDays * corrFactor), CInt(Me._dauerInDays * corrFactor))
+
+            For r = 1 To Me.CountRoles
+                Try
+
+                    oldrole = Me.getRole(r)
+                    dimension = newphase.relEnde - newphase.relStart
+                    newrole = New clsRolle(dimension)
+                    ReDim newXwerte(dimension)
+                    hname = oldrole.name
+
+                    Call berechneBedarfe(oldrole.Xwerte, corrFactor, newXwerte)
+
+                   
+                    With newrole
+                        .RollenTyp = oldrole.RollenTyp
+                        .Xwerte = newXwerte
+                    End With
+                    With newphase
+                        .AddRole(newrole)
+                    End With
+                Catch ex As Exception
+
+                    '
+                    ' handelt es sich um die Kostenart Definition?
+                    '
+                End Try
+
+            Next r
+
+
+            For k = 1 To Me.CountCosts
+                Try
+                    oldcost = Me.getCost(k)
+                    newcost = New clsKostenart(newphase.relEnde - newphase.relStart)
+
+                    ReDim newXwerte(newphase.relEnde - newphase.relStart)
+                    hname = oldcost.name
+
+                    Call berechneBedarfe(oldcost.Xwerte, corrFactor, newXwerte)
+
+                    With newcost
+                        .KostenTyp = oldcost.KostenTyp
+                        .Xwerte = newXwerte
+                    End With
+                    With newphase
+                        .AddCost(newcost)
+                    End With
+
+                Catch ex As Exception
+
+                    '
+                    ' handelt es sich um die Kostenart Definition?
+                    '
+                End Try
+            Next k
+
+
+            ' Änderung 16.1.2014: zuerst die Rollen und Kosten übertragen, dann die relStart und RelEnde, dann die Results
+            ' die evtl. enstehende Inkonsistenz zwischen Längen der Arrays der Rollen/Kostenarten und dem neuen relende/relstart wird in Kauf genommen 
+            ' und nur korrigiert , wenn explizit gewünscht (Parameter awinsettings.autoCorrectBedarfe = true 
+
+            ' alt .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
+
+            For r = 1 To Me.AllResults.Count
+                newresult = New clsResult(parent:=newphase)
+                Me.getResult(r).CopyTo(newresult)
+                ' korrigiert den Offset der Meilensteine 
+                newresult.offset = System.Math.Round(CLng(Me.getResult(r).offset * corrFactor))
+
+                .addresult(newresult)
             Next
 
         End With
