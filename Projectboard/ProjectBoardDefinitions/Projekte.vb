@@ -5816,7 +5816,8 @@ Public Module Projekte
 
     ''' <summary>
     ''' diese Sub zeigt das vorauss. Projektergebnis in einem Chart an - Erloes, Risiko Kosten, Personalkosten, Sonstige Kosten und 
-    ''' dann den vermutl. Projekt-Ertrag   
+    ''' dann den vermutl. Projekt-Ertrag
+    ''' auswahl: 0=beauftragung; 1: letzter Stand; 2: aktueller Stand   
     ''' </summary>
     ''' <param name="hproj">das Projekt</param>
     ''' <param name="reportObj">
@@ -5824,7 +5825,7 @@ Public Module Projekte
     ''' wird für das Reporting benötigt 
     ''' </param>
     ''' <remarks></remarks>
-    Public Sub createProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef reportObj As Object)
+    Public Sub createProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef reportObj As Object, ByVal auswahl As Integer)
 
         Dim diagramTitle As String
         Dim anzDiagrams As Integer
@@ -5871,7 +5872,7 @@ Public Module Projekte
         With hproj
 
             .calculateRoundedKPI(projektErloes, projektPersKosten, projektSonstKosten, projektRisikoKosten, projektErgebnis)
-            
+
             itemValue(0) = projektErloes
             itemColor(0) = ergebnisfarbe1
 
@@ -5893,7 +5894,14 @@ Public Module Projekte
         End With
 
 
-        titelTeile(0) = pname & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        If auswahl = 0 Then
+            titelTeile(0) = pname & " (Beauftragung)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        ElseIf auswahl = 1 Then
+            titelTeile(0) = pname & " (letzter Stand)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        Else
+            titelTeile(0) = pname & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+        End If
+
         titelTeilLaengen(0) = titelTeile(0).Length
         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
         titelTeilLaengen(1) = titelTeile(1).Length
@@ -6590,6 +6598,7 @@ Public Module Projekte
         Dim abstand As Integer
         Dim returnValue As DialogResult
         Dim bestaetigeLoeschen As New frmconfirmDeletePrj
+        Dim zeile As Integer
 
         enableOnUpdate = False
 
@@ -6597,22 +6606,27 @@ Public Module Projekte
             returnValue = bestaetigeLoeschen.ShowDialog
 
             If returnValue = DialogResult.OK Then
+
+                zeile = ShowProjekte.getProject(vprojektname).tfZeile
                 Call awinLoescheProjekt(vprojektname)
                 Call awinClkReset(abstand)
 
                 ' ein Projekt wurde gelöscht  - typus = 3
                 Call awinNeuZeichnenDiagramme("3")
+
+                Call moveShapesUp1(zeile)
             Else
                 Throw New ArgumentException("Abbruch")
             End If
 
         Else
+            zeile = ShowProjekte.getProject(vprojektname).tfZeile
             Call awinLoescheProjekt(vprojektname)
             Call awinClkReset(abstand)
 
             ' ein Projekt wurde gelöscht  - typus = 3
             Call awinNeuZeichnenDiagramme("3")
-
+            Call moveShapesUp1(zeile)
         End If
 
 
@@ -6622,39 +6636,28 @@ Public Module Projekte
     End Sub
 
     Public Sub awinDeleteChart(ByRef chtobj As ChartObject)
-        Dim chtTitle As String
-        Dim found As Boolean
+        Dim kennung As String
+        
 
-
-        found = False
+        ' in der DiagramList wird die letzte Position gespeichert , deshlab ist es kontra produktiv , das zu löschen 
 
         Try
-            chtTitle = chtobj.Chart.ChartTitle.Text
+            kennung = chtobj.Name
         Catch ex As Exception
-            chtTitle = " "
+            kennung = "?"
         End Try
 
+        Try
+            With DiagramList.getDiagramm(kennung)
+                .top = chtobj.Top
+                .left = chtobj.Left
+            End With
+        Catch ex As Exception
 
-        If istCockpitDiagramm(chtobj) And TypOfCockpitChart(chtobj) >= 0 Then
-            Call awinLoescheCockpitCharts(TypOfCockpitChart(chtobj))
+        End Try
 
-        Else
-            chtobj.Delete()
+        chtobj.Delete()
 
-            ' jetzt in DiagrammList suchen ...
-            ' Änderung 18.10.13 nicht mehr löschen, weil in der Diagrammliste jetzt die letzte Position des Diagrammes gespeichert wird 
-            'i = 1
-            'While i <= DiagramList.Count And Not found
-            '    If (chtTitle Like (DiagramList.getDiagramm(i).DiagrammTitel & "*")) And _
-            '                      (DiagramList.getDiagramm(i).isCockpitChart = False) Then
-            '        DiagramList.Remove(i)
-            '        found = True
-            '    Else
-            '        i = i + 1
-            '    End If
-            'End While
-
-        End If
 
     End Sub
 
@@ -7848,13 +7851,19 @@ Public Module Projekte
         Dim shp As Excel.Shape
 
         For Each shp In appInstance.ActiveSheet.Shapes
-            With shp
-                If shp.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                    shp.AutoShapeType = MsoAutoShapeType.msoShapeIsoscelesTriangle Or _
-                    shp.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
-                    .Delete()
-                End If
-            End With
+            If shp.HasChart Then
+                ' do nothing, sollen ja erhalten bleiben 
+            Else
+                shp.Delete()
+                'With shp
+                '    If shp.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
+                '        shp.AutoShapeType = MsoAutoShapeType.msoShapeIsoscelesTriangle Or _
+                '        shp.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
+                '        .Delete()
+                '    End If
+                'End With
+            End If
+            
         Next shp
 
         ' Änderung 26.7 weil Zahlen stehen blieben beim Neuladen einer neuen Konstellation
@@ -7909,30 +7918,86 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Sub awinZeichnePlanTafel()
 
-
-        Dim zeile As Integer
-        Dim nrCols As Integer
-
-
-
-
-        '
-        ' wieviele Spalten sind im Vorlagen Sheet relevant 
-        '
-        nrCols = 4
-        zeile = 2
-
+        Dim todoListe As New SortedList(Of Double, String)
+        Dim key As Double
         Dim pname As String
-        Dim tryzeile As Integer
+        Dim zeile As Integer, lastZeile As Integer, curZeile As Integer, max As Integer
+        Dim lastZeileOld As Integer
+        Dim hproj As clsProjekt
 
+
+
+
+        ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-            pname = kvp.Key
-            tryzeile = kvp.Value.tfZeile
-            If tryzeile <= 1 Then
-                tryzeile = -1
-            End If
-            Call ZeichneProjektinPlanTafel(pname, tryzeile, False) ' es wird versucht, an der alten Stelle zu zeichnen 
+
+            With kvp.Value
+                key = 10000 * .tfZeile + kvp.Value.Start
+                todoListe.Add(key, .name)
+            End With
+
         Next
+
+        zeile = 2
+        lastZeile = 0
+
+
+        If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
+            ' dann sollen die Projekte im extended mode gezeichnet werden 
+            ' jetzt erst mal die Konstellation "last" speichern
+            Call awinStoreConstellation("Last")
+
+            ' jetzt die todoListe abarbeiten
+            For i = 1 To todoListe.Count
+                pname = todoListe.ElementAt(i - 1).Value
+                hproj = ShowProjekte.getProject(pname)
+
+                If i = 1 Then
+                    curZeile = hproj.tfZeile
+                    lastZeileOld = hproj.tfZeile
+                    lastZeile = curZeile
+                    max = curZeile
+                Else
+                    If lastZeileOld = hproj.tfZeile Then
+                        curZeile = lastZeile
+                    Else
+                        lastZeile = max
+                        lastZeileOld = hproj.tfZeile
+                    End If
+
+                End If
+
+                hproj.tfZeile = curZeile
+                lastZeile = curZeile
+                Call ZeichneProjektinPlanTafel2(pname, curZeile)
+                curZeile = lastZeile + 1 + CInt((curZeile - lastZeile + 1) / 2)
+
+
+                If curZeile > max Then
+                    max = curZeile
+                End If
+
+
+            Next
+
+        Else
+
+
+            Dim tryzeile As Integer
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                pname = kvp.Key
+                tryzeile = kvp.Value.tfZeile
+                If tryzeile <= 1 Then
+                    tryzeile = -1
+                End If
+                Call ZeichneProjektinPlanTafel(pname, tryzeile, False) ' es wird versucht, an der alten Stelle zu zeichnen 
+            Next
+
+
+        End If
+
+
 
 
 
@@ -8794,6 +8859,451 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' zeichnet das Projekt "pname" in die Plantafel; 
+    ''' wenn es bereits vorhanden ist: keine Aktion  
+    ''' tryzeile wird zurückgegeben : ab da kann das nächste Projekt gezeichnet werden 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub ZeichneProjektinPlanTafel2(ByVal pname As String, ByRef tryzeile As Integer)
+
+
+        Dim drawphases As Boolean = My.Settings.drawPhases
+        Dim phasenName As String
+        Dim phaseShapeName As String
+        Dim hproj As clsProjekt
+        Dim start As Integer
+        Dim laenge As Integer
+        Dim status As String
+        Dim pMarge As Double
+        Dim pcolor As Object, schriftfarbe As Object
+        Dim schriftgroesse As Integer
+        Dim zeile As Integer
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim oldShape As Excel.Shape, groupShpElement As Excel.Shape
+        'Dim shpExistsAlready As Boolean
+        Dim shpUID As String
+        'Dim tmpshapes As Excel.Shapes = appInstance.ActiveSheet.shapes
+        Dim worksheetShapes As Excel.Shapes
+        Dim heute As Date = Date.Now
+
+        Dim shpExists As Boolean
+
+
+        Try
+
+            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+
+        Catch ex As Exception
+            Throw New Exception("in ZeichneProjektinPlanTafel : keine Shapes Zuordnung möglich ")
+        End Try
+
+        Try
+            hproj = ShowProjekte.getProject(pname)
+            With hproj
+                laenge = .Dauer
+                shpUID = .shpUID
+                start = .Start + .StartOffset
+                pcolor = .farbe
+                schriftfarbe = .Schriftfarbe
+                schriftgroesse = .Schrift
+                status = .Status
+                pMarge = .ProjectMarge
+            End With
+        Catch ex As Exception
+            Throw New ArgumentException("in zeichneProjektinBoard - Projektname existiert nicht: " & pname)
+        End Try
+
+
+        ' prüfen, ob das Shape bereits existiert ...
+        If shpUID <> "" Then
+            Try
+                oldShape = worksheetShapes.Item(pname)
+                shpExists = True
+                top = oldShape.Top
+                left = oldShape.Left
+            Catch ex As Exception
+                shpExists = False
+                oldShape = Nothing
+            End Try
+        Else
+            shpExists = False
+            oldShape = Nothing
+        End If
+
+
+
+        '
+        ' ist dort überhaupt Platz ? wenn nicht, dann Zeile mit freiem Platz suchen ...
+        If tryzeile < 2 Then
+            tryzeile = 2
+        End If
+
+        'Dim myCollection As New Collection
+        'myCollection.Add(pname)
+        'zeile = findeMagicBoardPosition(myCollection, pname, tryzeile, start, laenge)
+
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+
+
+        If shpExists Then
+
+            oldShape.Delete()
+            shpExists = False
+
+        End If
+
+
+
+
+        ' ///////////////
+        ' Start neuer code 
+        ' ///////////////
+
+        ' hier wird der vorher bestimmte Wert gesetzt, wo das Shape gezeichnet werden kann 
+        zeile = tryzeile
+
+
+        Dim shapeGroupListe() As Object
+        Dim anzGroupElemente As Integer = 0
+        Dim shapesCollection As New Collection
+
+
+        oldShape = Nothing
+
+        Dim zeilenOffset As Integer = 0
+        Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
+        For i = 1 To hproj.CountPhases
+
+            With hproj.getPhase(i)
+
+                phasenName = .name
+                If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+                    zeilenOffset = zeilenOffset + 1
+                    lastEndDate = StartofCalendar.AddDays(-1)
+                End If
+
+                If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+                    lastEndDate = .getEndDate
+                End If
+
+            End With
+
+            hproj.CalculateShapeCoord(i, zeilenOffset, top, left, width, height)
+
+
+
+            Try
+
+                oldShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
+                        Left:=left, Top:=top, Width:=width, Height:=height)
+
+            Catch ex As Exception
+                Throw New Exception("in zeichneProjektinPlantafel2 : keine Shape-Erstellung möglich ...  ")
+            End Try
+
+
+            phaseShapeName = pname & "#" & phasenName & "#" & i.ToString
+            With oldShape
+                .Name = phaseShapeName
+                .Title = phasenName
+                .AlternativeText = "Test"
+            End With
+
+            Call defineShapeAppearance(hproj, oldShape, i)
+
+
+            Try
+                shapesCollection.Add(phaseShapeName, Key:=phaseShapeName)
+            Catch ex As Exception
+
+            End Try
+
+
+            ' jetzt müssen alle Meilensteine dieser Phase gezeichnet werden 
+
+            With hproj.getPhase(i)
+                Dim msName As String
+                Dim msShape As Excel.Shape
+
+                For r = 1 To .CountResults
+
+                    Dim cResult As clsResult
+                    Dim cBewertung As clsBewertung
+
+                    cResult = .getResult(r)
+                    cBewertung = cResult.getBewertung(1)
+
+                    hproj.calculateResultCoord(cResult.getDate, zeilenOffset, top, left, width, height)
+
+
+                    msName = hproj.name & "#" & .name & "#M" & r.ToString
+                    ' existiert das schon ? 
+                    Try
+                        msShape = worksheetShapes.Item(msName)
+                    Catch ex As Exception
+                        msShape = Nothing
+                    End Try
+
+                    If msShape Is Nothing Then
+
+
+                        msShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, _
+                                                        Left:=left, Top:=top, Width:=width, Height:=height)
+
+                        With msShape
+                            .Name = msName
+                            .Title = cResult.name
+                            .AlternativeText = cBewertung.description
+                        End With
+
+
+                        Call defineResultAppearance(hproj, 0, msShape, cBewertung)
+
+
+
+                        'shapesCollection.Add(resultShape.Name)
+                    Else
+                        ' Koordinaten anpassen 
+                        msShape.Top = top
+                    End If
+
+                    Try
+                        shapesCollection.Add(msName, Key:=msName)
+                    Catch ex As Exception
+
+                    End Try
+
+                Next
+
+            End With
+
+
+        Next
+
+
+        ' hier werden die Shapes gruppiert
+        anzGroupElemente = shapesCollection.Count
+
+        If anzGroupElemente > 1 Then
+            ' es macht nur Sinn zu gruppieren, wenn es mehr als 1 Element ist ....
+
+            ReDim shapeGroupListe(anzGroupElemente - 1)
+            For i = 1 To anzGroupElemente
+                shapeGroupListe(i - 1) = shapesCollection.Item(i)
+            Next
+
+            Dim ShapeGroup As Excel.ShapeRange
+            ShapeGroup = worksheetShapes.Range(shapeGroupListe)
+            groupShpElement = ShapeGroup.Group()
+
+        Else
+            ' in diesem Fall besteht das Projekt nur aus einer einzigen Phase
+            groupShpElement = oldShape
+
+        End If
+
+        Try
+            With groupShpElement
+                .Name = pname
+                .AlternativeText = "Test"
+
+                hproj.shpUID = .ID.ToString
+                hproj.tfZeile = zeile
+            End With
+        Catch ex As Exception
+            Throw New Exception("in zeichneShapeOfProject : dem shape kann kein Name zugewiesen werden ....   ")
+        End Try
+
+        ' jetzt muss das neue Shape in der ShowProjekte.ShapeListe eingetragen werden ..
+        ShowProjekte.AddShape(pname, shpUID:=groupShpElement.ID.ToString)
+
+
+
+        'If roentgenBlick.isOn Then
+        '    With roentgenBlick
+        '        Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
+        '    End With
+        'End If
+
+        ' jetzt muss zurückgegeben werden, ab wo das nächste gezeichnet werden kann 
+        tryzeile = tryzeile + zeilenOffset
+
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt die Anzahl Zeilen zurück, die das Projekt im "expanded View Mode" benötigt 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getNeededSpace(ByVal hproj As clsProjekt) As Integer
+
+        Dim phasenName As String
+        Dim zeilenOffset As Integer
+        Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
+
+        For i = 1 To hproj.CountPhases
+
+            With hproj.getPhase(i)
+
+                phasenName = .name
+                If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+                    zeilenOffset = zeilenOffset + 1
+                    lastEndDate = StartofCalendar.AddDays(-1)
+                End If
+
+                If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+                    lastEndDate = .getEndDate
+                End If
+
+            End With
+
+        Next
+
+        getNeededSpace = zeilenOffset
+
+    End Function
+
+
+    ''' <summary>
+    ''' verschiebt ab Zeile "von" um "anzahlZeilen" alle Projekt-Shapes nach unten 
+    ''' aktualisiert auch die tfzeile in den Projekten entsprechend
+    ''' </summary>
+    ''' <param name="anzahlZeilen"></param>
+    ''' <remarks></remarks>
+    Public Sub moveShapesDown(ByVal vonZeile As Integer, ByVal anzahlZeilen As Integer)
+
+        Dim worksheetShapes As Excel.Shapes
+        Dim shpElement As Excel.Shape
+        Dim formerEOU As Boolean = enableOnUpdate
+
+        Dim obererRand As Double = topOfMagicBoard + (vonZeile - 1) * boxHeight
+        Dim differenz As Double = anzahlZeilen * boxHeight
+
+        enableOnUpdate = False
+
+        Try
+
+            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+
+        Catch ex As Exception
+            Throw New Exception("in moveShapesDown : keine Shapes Zuordnung möglich ")
+        End Try
+
+
+        ' jetzt werden die Shapes verschoben ...
+        For i = 1 To worksheetShapes.Count
+            shpElement = worksheetShapes.Item(i)
+
+            With shpElement
+
+                If Not .HasChart Then
+
+                    If .Top >= obererRand Then
+                        .Top = .Top + differenz
+                    End If
+
+
+                End If
+
+            End With
+
+        Next
+
+        ' jetzt werden die Projekte angepasst 
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            With kvp.Value
+                If .tfZeile >= vonZeile Then
+                    .tfZeile = .tfZeile + anzahlZeilen
+                End If
+            End With
+
+        Next
+
+        enableOnUpdate = formerEOU
+
+    End Sub
+
+    ''' <summary>
+    ''' verschiebt alle Shapes, die ab vonZeile liegen um eins nach oben
+    ''' vorher wird aber geprüft, on das frei ist   
+    ''' </summary>
+    ''' <param name="vonZeile"></param>
+    ''' <remarks></remarks>
+    Public Sub moveShapesUp1(ByVal vonZeile As Integer)
+
+        Dim worksheetShapes As Excel.Shapes
+        Dim shpElement As Excel.Shape
+        Dim formerEOU As Boolean = enableOnUpdate
+        Dim zielZeileIsFrei As Boolean = False
+        Dim anzahlZeilen As Integer = 1
+        Dim zielZeile As Integer = vonZeile
+
+
+        Dim obererRand As Double = topOfMagicBoard + (vonZeile - 1) * boxHeight
+        Dim differenz As Double = anzahlZeilen * boxHeight
+
+        enableOnUpdate = False
+
+
+        If magicBoardZeileIstFrei(zielZeile) Then
+
+            Try
+
+                worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+
+            Catch ex As Exception
+                Throw New Exception("in moveShapesUp : keine Shapes Zuordnung möglich ")
+            End Try
+
+
+            ' jetzt werden die Shapes verschoben ...
+            For i = 1 To worksheetShapes.Count
+                shpElement = worksheetShapes.Item(i)
+
+                With shpElement
+
+                    If Not .HasChart Then
+
+                        If .Top >= obererRand Then
+                            .Top = .Top - differenz
+                        End If
+
+
+                    End If
+
+                End With
+
+            Next
+
+            ' jetzt werden die Projekte angepasst 
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                With kvp.Value
+                    If .tfZeile >= vonZeile And .tfZeile - anzahlZeilen >= 2 Then
+                        .tfZeile = .tfZeile - anzahlZeilen
+                    End If
+                End With
+
+            Next
+
+        End If
+
+        
+
+        enableOnUpdate = formerEOU
+
+    End Sub
+
     Public Sub zeichneStatusSymbolInPlantafel(ByVal hproj As clsProjekt, ByVal number As Integer)
         Dim top As Double, left As Double, height As Double, width As Double
         Dim worksheetShapes As Excel.Shapes
@@ -9071,6 +9581,225 @@ Public Module Projekte
 
 
     End Sub
+
+    ''' <summary>
+    ''' zeichnet die Abhängigkeiten zu dem übergebenen Projekt 
+    ''' </summary>
+    ''' <param name="hproj">Projekt, dessen Abhängigkeiten dargestellt werden sollen</param>
+    ''' <param name="type">welche Art Abhängigkeit soll dargestellt werden</param>
+    ''' <param name="auswahl">0: sowohl incoming als outgoing Abhängigkeiten
+    ''' 1: nur outgoing Abhängigkeiten
+    ''' 2: nur incoming abhängigkeiten</param>
+    ''' <remarks></remarks>
+    Public Sub zeichneDependenciesOfProject(ByVal hproj As clsProjekt, ByVal type As Integer, ByVal auswahl As Integer)
+
+        Dim listeDep As Collection ' nimmt die Liste der abhängigen Projekte auf
+        Dim depListe As Collection ' nimmt die Liste der Projekte auf, von denen hproj abhängig ist 
+        Dim pShape As Excel.Shape
+        Dim dpShape As Excel.Shape
+        Dim newConnector As Excel.Shape
+        Dim X1, X2, Y1, Y2 As Single
+        Dim dProj As clsProjekt
+        Dim curDependency As clsDependency
+
+        Dim pName As String = hproj.name, dpName As String
+
+        Dim tmpshapes As Excel.Shapes
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerEOU As Boolean = enableOnUpdate
+
+
+
+        listeDep = allDependencies.activeListe(hproj.name, PTdpndncyType.inhalt)
+        depListe = allDependencies.passiveListe(hproj.name, PTdpndncyType.inhalt)
+
+        If listeDep.Count = 0 And depListe.Count = 0 Then
+            ' es gibt keine Abhängigkeiten
+            Throw New Exception("keine Abhängigkeiten vorhanden")
+        Else
+            ' jetzt werden die Abhängigkeiten gezeichnet ...
+
+
+            ' Event Behandlung ausschalten 
+            enableOnUpdate = False
+            appInstance.EnableEvents = False
+
+            tmpshapes = appInstance.Worksheets(arrWsNames(3)).shapes
+            pShape = tmpshapes.Item(pName)
+
+            ' outgoing dependencies
+            If auswahl = 0 Or auswahl = 1 Then
+
+                For d = 1 To listeDep.Count
+
+                    Try
+                        dpName = listeDep.Item(d)
+                        dpShape = tmpshapes.Item(dpName)
+                        dProj = ShowProjekte.getProject(dpName)
+                        Dim curDegree As Integer
+                        curDependency = allDependencies.getDependency(PTdpndncyType.inhalt, pName, dpName)
+                        If Not IsNothing(curDependency) Then
+                            curDegree = curDependency.degree
+                        Else
+                            curDegree = PTdpndncy.schwach
+                        End If
+
+                        Dim newShapeName As String = pName.Trim & "#" & dpName.Trim
+
+                        ' prüfen , ob das Shape schon existiert ? 
+                        Try
+
+                            newConnector = tmpshapes.Item(newShapeName)
+
+                            With newConnector
+                                If curDegree = PTdpndncy.schwach Then
+                                    .Line.Weight = 4.0
+                                    .Line.DashStyle = MsoLineDashStyle.msoLineLongDash
+                                Else
+                                    .Line.Weight = 4.0
+                                    .Line.DashStyle = MsoLineDashStyle.msoLineSolid
+                                End If
+                            End With
+                            
+
+
+                        Catch ex As Exception
+
+                            Call calculateDepCoord(pShape, dpShape, X1, Y1, X2, Y2)
+                            newConnector = tmpshapes.AddConnector(MsoConnectorType.msoConnectorStraight, X1, Y1, X2, Y2)
+
+                            With newConnector
+                                .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadTriangle
+                                .ConnectorFormat.BeginConnect(pShape, 3)
+                                .ConnectorFormat.EndConnect(dpShape, 1)
+                                .Line.ForeColor.RGB = awinSettings.AmpelRot
+                                If curDegree = PTdpndncy.schwach Then
+                                    .Line.Weight = 4.0
+                                    .Line.DashStyle = MsoLineDashStyle.msoLineLongDash
+                                Else
+                                    .Line.Weight = 4.0
+                                    .Line.DashStyle = MsoLineDashStyle.msoLineSolid
+                                End If
+                                .Name = newShapeName
+                                .Title = "Dependency"
+                            End With
+
+                        End Try
+
+                        
+
+                    Catch ex As Exception
+
+                    End Try
+
+                Next
+
+
+            End If
+
+            ' incoming dependencies
+            dpShape = tmpshapes.Item(pName)
+            dpName = pName
+            dProj = hproj
+            If auswahl = 0 Or auswahl = 2 Then
+
+                For d = 1 To depListe.Count
+
+                    Try
+                        pName = depListe.Item(d)
+                        pShape = tmpshapes.Item(pName)
+                        hproj = ShowProjekte.getProject(pName)
+
+                        Dim curDegree As Integer
+                        curDependency = allDependencies.getDependency(PTdpndncyType.inhalt, pName, dpName)
+                        If Not IsNothing(curDependency) Then
+                            curDegree = curDependency.degree
+                        Else
+                            curDegree = PTdpndncy.schwach
+                        End If
+
+                        Dim newShapeName As String = pName.Trim & "#" & dpName.Trim
+
+                        ' prüfen , ob das Shape schon existiert ? 
+                        Try
+
+                            newConnector = tmpshapes.Item(newShapeName)
+
+                            With newConnector
+                                If curDegree = PTdpndncy.schwach Then
+                                    .Line.Weight = 4.0
+                                    .Line.DashStyle = MsoLineDashStyle.msoLineLongDash
+                                Else
+                                    .Line.Weight = 4.0
+                                    .Line.DashStyle = MsoLineDashStyle.msoLineSolid
+                                End If
+                            End With
+
+
+                        Catch ex As Exception
+
+                            Call calculateDepCoord(pShape, dpShape, X1, Y1, X2, Y2)
+                            newConnector = tmpshapes.AddConnector(MsoConnectorType.msoConnectorStraight, X1, Y1, X2, Y2)
+
+                            With newConnector
+                                .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadTriangle
+                                .ConnectorFormat.BeginConnect(pShape, 3)
+                                .ConnectorFormat.EndConnect(dpShape, 1)
+                                .Line.ForeColor.RGB = awinSettings.AmpelRot
+                                If curDegree = PTdpndncy.schwach Then
+                                    .Line.Weight = 4.0
+                                    .Line.DashStyle = MsoLineDashStyle.msoLineLongDash
+                                Else
+                                    .Line.Weight = 4.0
+                                    .Line.DashStyle = MsoLineDashStyle.msoLineSolid
+                                End If
+                                .Name = newShapeName
+                                .Title = "Dependency"
+                            End With
+
+                        End Try
+
+                    Catch ex As Exception
+
+                    End Try
+
+                Next
+
+
+            End If
+
+            ' Event Behandlung auf vorherigen Zustand setzen ...
+            appInstance.EnableEvents = formerEE
+            enableOnUpdate = formerEOU
+        End If
+    End Sub
+
+   
+    ''' <summary>
+    ''' berechnet die Koordinaten des Abhängigkeit-Konnektors - der Linie
+    ''' </summary>
+    ''' <param name="pShape"></param>
+    ''' <param name="dpShape"></param>
+    ''' <param name="X1"></param>
+    ''' <param name="Y1"></param>
+    ''' <param name="X2"></param>
+    ''' <param name="Y2"></param>
+    ''' <remarks></remarks>
+    Public Sub calculateDepCoord(ByVal pShape As Excel.Shape, ByVal dpShape As Excel.Shape, _
+                                     ByRef X1 As Single, ByRef Y1 As Single, ByRef X2 As Single, ByRef Y2 As Single)
+
+        With pShape
+            X1 = .Left + .Width / 2
+            Y1 = .Top + .Height
+        End With
+        
+        With dpShape
+            X2 = .Left + .Width / 2
+            Y2 = .Top
+        End With
+
+    End Sub
+
 
     Public Sub zeichnePhasenInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal farbTyp As Integer, _
                                                       ByVal numberIt As Boolean, ByRef msNumber As Integer, ByVal report As Boolean)
@@ -9777,7 +10506,7 @@ Public Module Projekte
             If roentgenBlick.isOn Then
                 .TextFrame2.TextRange.Text = ""
             Else
-                If phasenIndex = 2 Then
+                If phasenIndex = 1 Then
                     With .TextFrame2
                         .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
                         .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
@@ -9789,11 +10518,19 @@ Public Module Projekte
                 End If
             End If
 
-            If status = ProjektStatus(0) Then
-                .Adjustments.Item(1) = 0.5
+            If phasenIndex = 1 Then
+
+                If status = ProjektStatus(0) Then
+                    .Adjustments.Item(1) = 0.5
+                Else
+                    .Adjustments.Item(1) = 0.25
+                End If
+
             Else
-                .Adjustments.Item(1) = 0.25
+                .Adjustments.Item(1) = 0.0
             End If
+
+            
 
 
         End With
@@ -10058,7 +10795,7 @@ Public Module Projekte
 
         appInstance.ScreenUpdating = False
         Call diagramsVisible(False)
-        Call awinZeichnePlanTafel()
+        'Call awinZeichnePlanTafel()
         Call awinNeuZeichnenDiagramme(1)
         Call diagramsVisible(True)
         appInstance.ScreenUpdating = True
@@ -10940,19 +11677,20 @@ Public Module Projekte
         End Try
 
 
-
+        Dim newFileName As String = awinPath & projektFilesOrdner & "\" & fileName
         Try
-            My.Computer.FileSystem.DeleteFile(awinPath & projektFilesOrdner & "\" & fileName)
+            My.Computer.FileSystem.DeleteFile(newFileName)
         Catch ex As Exception
 
         End Try
 
         Try
-            appInstance.ActiveWorkbook.SaveAs(awinPath & projektFilesOrdner & "\" & fileName, _
+            appInstance.ActiveWorkbook.SaveAs(newFileName, _
                                           ConflictResolution:=XlSaveConflictResolution.xlLocalSessionChanges
                                           )
         Catch ex As Exception
-
+            appInstance.EnableEvents = formerEE
+            Throw New ArgumentException("Fehler beim Schreiben")
         End Try
 
 
@@ -11842,7 +12580,7 @@ Public Module Projekte
                         Next
 
                     End If
-
+                
             End Select
         Catch ex As Exception
             IDkennung = IDkennung & "#?"
@@ -12383,7 +13121,7 @@ Public Module Projekte
                             .shpUID = ""
                             .StartOffset = 0
 
-                            If DateDiff(DateInterval.Month, .startDate, Date.Now) < -6 Then
+                            If DateDiff(DateInterval.Month, .startDate, Date.Now) < -1 Then
                                 .Status = ProjektStatus(0)
                             Else
                                 .Status = ProjektStatus(1)

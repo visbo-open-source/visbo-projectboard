@@ -23,6 +23,7 @@ namespace MongoDbAccess
         public MongoDatabase Database { get; set; }
         public MongoCollection CollectionProjects { get; set; }
         public MongoCollection CollectionConstellations { get; set; }
+        public MongoCollection CollectionDependencies { get; set; }
 
         public Request()
         {
@@ -31,6 +32,7 @@ namespace MongoDbAccess
             Database = Server.GetDatabase("projectboard");
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
+            CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
         }
 
         public Request(string databaseName)
@@ -40,6 +42,7 @@ namespace MongoDbAccess
             Database = Server.GetDatabase(databaseName);
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
+            CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
         }
 
         public bool collectionEmpty(string name)
@@ -74,7 +77,8 @@ namespace MongoDbAccess
                 
 
                 var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
-                            .Where(c => c.tfSpalte >= startMonat-Module1.maxProjektdauer && c.startDate <= zeitraumEnde)
+                            //.Where(c => c.tfSpalte >= startMonat-Module1.maxProjektdauer && c.startDate <= zeitraumEnde)
+                            .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart)
                             .Select(c => c.name)
                             .Distinct();
 
@@ -178,5 +182,33 @@ namespace MongoDbAccess
 
             return result;
         }
+
+        public bool storeDependencyofPToDB(clsDependenciesOfP d)
+        {
+            var depDB = new clsDependenciesOfPDB();
+            depDB.copyFrom(d);
+            depDB.Id = depDB.projectName;
+            return CollectionDependencies.Save(depDB).Ok;
+        }
+
+        public clsDependencies  retrieveDependenciesFromDB()
+        {
+            var result = new clsDependencies();
+
+
+            var DependenciesOfPDB = CollectionDependencies.AsQueryable<clsDependenciesOfPDB>()
+                                 .Select(depDB => depDB);
+            foreach (clsDependenciesOfPDB depDB in DependenciesOfPDB)
+            {
+                var newDofP = new clsDependenciesOfP();
+                depDB.copyTo(ref newDofP);
+                result.Add(newDofP, true);
+            }
+
+
+
+            return result;
+        }
+
     }
 }

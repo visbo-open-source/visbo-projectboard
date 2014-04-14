@@ -90,15 +90,10 @@ namespace WPFPieChart
 
             if ((bool)checkbox.IsChecked)
             {
-                // nichts tun 
-            }
-            //andernfalls: Symbole löschen 
-            else
-            {
-
+                // Symbole löschen
                 Module1.awinDeleteMilestoneShapes(1);
-
             }
+            
            
         }
 
