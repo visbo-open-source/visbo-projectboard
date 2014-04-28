@@ -301,16 +301,25 @@ Imports Microsoft.Office.Interop.Excel
 
         returnValue = ProjektEingabe.ShowDialog
 
-        If returnValue = DialogResult.OK Then
+        If returnValue = DialogResult.Yes Then
             With ProjektEingabe
 
 
                 Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
-                                       CType(.Erloes.Text, Double), zeile, _
+                                       Date.MinValue, CType(.Erloes.Text, Double), zeile, _
                                        CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text))
             End With
         End If
 
+        If returnValue = DialogResult.No Then
+            With ProjektEingabe
+
+
+                Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
+                                       CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
+                                       CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text))
+            End With
+        End If
         enableOnUpdate = True
 
     End Sub
