@@ -105,11 +105,11 @@
 
             For p = 0 To Me.CountPhases - 1
                 newphase = New clsPhase(newproject)
-                If CorrectFactor = 1.0 Then
-                    AllPhases.Item(p).CopyTo(newphase)
-                Else
-                    AllPhases.Item(p).korrCopyTo(newphase, CorrectFactor)
-                End If
+                'If CorrectFactor = 1.0 Then
+                '    AllPhases.Item(p).CopyTo(newphase)
+                'Else
+                AllPhases.Item(p).korrCopyTo(newphase, CorrectFactor)
+                'End If
 
                 .AddPhase(newphase)
             Next p
