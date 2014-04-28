@@ -840,7 +840,7 @@ Public Module testModule
 
                                 Try
                                     Call zeichneProjektTabelleZiele(pptShape, hproj)
-                                    
+
                                 Catch ex As Exception
 
                                 End Try
@@ -915,7 +915,7 @@ Public Module testModule
                                     Call createProjektErgebnisCharakteristik2(hproj, obj, 2)
                                 End If
 
-                               
+
 
                                 reportObj = obj
 
@@ -1535,7 +1535,7 @@ Public Module testModule
                 End Try
 
             Next
-            
+
 
             ' jetzt muss die ListofShapes wieder geleert werden 
 
@@ -1653,31 +1653,31 @@ Public Module testModule
                 worker.ReportProgress(0, e)
                 pptSlide = pptPresentation.Slides(anzahlSlides + j)
 
-         
-            ' jetzt werden die Charts gezeichnet 
-            anzShapes = pptSlide.Shapes.Count
+
+                ' jetzt werden die Charts gezeichnet 
+                anzShapes = pptSlide.Shapes.Count
 
 
-            ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
-            For i = 1 To anzShapes
-                pptShape = pptSlide.Shapes(i)
-                qualifier = ""
-                With pptShape
+                ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
+                For i = 1 To anzShapes
+                    pptShape = pptSlide.Shapes(i)
+                    qualifier = ""
+                    With pptShape
 
-                    Dim tmpStr(3) As String
-                    Try
+                        Dim tmpStr(3) As String
+                        Try
 
-                        If .Title <> "" Then
-                            kennzeichnung = .Title
-                        Else
-                            tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {"(", ")"}, 3)
-                            kennzeichnung = tmpStr(0).Trim
-                        End If
+                            If .Title <> "" Then
+                                kennzeichnung = .Title
+                            Else
+                                tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {"(", ")"}, 3)
+                                kennzeichnung = tmpStr(0).Trim
+                            End If
 
 
-                    Catch ex As Exception
-                        kennzeichnung = "nicht identifizierbar"
-                    End Try
+                        Catch ex As Exception
+                            kennzeichnung = "nicht identifizierbar"
+                        End Try
 
                         If kennzeichnung = "Portfolio-Name" Or _
                             kennzeichnung = "Projekt-Tafel" Or _
@@ -1713,7 +1713,7 @@ Public Module testModule
                         End If
 
 
-                End With
+                    End With
                 Next
 
 
@@ -2410,7 +2410,7 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = ex.Message
                                 End Try
 
-                               
+
 
 
                             Case "Übersicht Auslastung"
@@ -3932,7 +3932,7 @@ Public Module testModule
                     cResult = cphase.getResult(r)
 
                     cBewertung = cResult.getBewertung(1)
-                    
+
                     resultColumn = getColumnOfDate(cResult.getDate)
 
                     If farbTypenListe.Contains(cBewertung.colorIndex) Then
@@ -4392,7 +4392,7 @@ Public Module testModule
         Catch ex As Exception
 
         End Try
-        
+
 
         ' jetzt wird festgestellt, wo es über all Unterschiede gibt 
         ' wird für Bewertung Termine und Meilensteine benötigt 
@@ -5370,7 +5370,7 @@ Public Module testModule
 
     End Sub
 
-  
+
     ''' <summary>
     ''' Portfolio - Diagramme erstellen gemäß dem angegebenen charttype
     ''' </summary>
@@ -5565,9 +5565,9 @@ Public Module testModule
                                 outOfToleranceProjekte.Add(vproj.name, timeTCColor)
                             End If
 
-                            
+
                         End If
-                        
+
                     Else
 
                         If isTimeTimeVgl Then
@@ -5618,7 +5618,7 @@ Public Module testModule
                             End If
                         End If
 
-                        
+
                     End If
 
                 Else
@@ -6065,7 +6065,7 @@ Public Module testModule
                             anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage, +/-" & absCostTolerance & " T€), " & _
                             anzkeinVproj & " Projekte ohne letzten Stand"
                         End If
-                        
+
                     Else
                         If isTimeTimeVgl Then
                             Dim tmpValue1 As Double = relTimeTolerance * 100
@@ -6086,27 +6086,27 @@ Public Module testModule
 
                         If isTimeTimeVgl Then
                             diagramTitle = diagramTitle & vbLf & _
-                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage)" 
+                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage)"
                         Else
                             diagramTitle = diagramTitle & vbLf & _
-                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage, +/-" & absCostTolerance & " T€), " 
+                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & absTimeTolerance & " Tage, +/-" & absCostTolerance & " T€), "
                         End If
 
                     Else
                         If isTimeTimeVgl Then
                             Dim tmpValue1 As Double = relTimeTolerance * 100
                             diagramTitle = diagramTitle & vbLf & _
-                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%)" 
+                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%)"
                         Else
                             Dim tmpValue1 As Double = relTimeTolerance * 100
                             Dim tmpvalue2 As Double = relCostTolerance * 100
                             diagramTitle = diagramTitle & vbLf & _
-                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%, +/-" & tmpvalue2.ToString("##0.#") & "%), " 
+                            anzOK.ToString & " Projekte innerhalb der Toleranz (+/-" & tmpValue1.ToString("##0.#") & "%, +/-" & tmpvalue2.ToString("##0.#") & "%), "
                         End If
                     End If
                 End If
 
-                
+
 
 
                 .HasLegend = False

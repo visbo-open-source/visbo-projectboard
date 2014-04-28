@@ -5,6 +5,7 @@ Public Class frmProjektEingabe1
     'Private dateIsStart As Boolean = False
     Private vorlagenDauer As Integer
     Public calcProjektStart As Date
+    Public calcProjektEnde As Date
 
     Private Sub frmProjektEingabe1_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
 
@@ -62,18 +63,19 @@ Public Class frmProjektEingabe1
 
             Me.Erloes.Text = hvalue.ToString("N0")
 
-
-            If dateIsStart.Checked Then
+            ' Die Dauer des Projekts soll gleich der Dauer der Vorlage sein.
+            If dauerUnverändert.Checked Then
                 .kennzeichnungDate.Text = "Start"
                 .DateTimeProject.Value = Date.Now.AddMonths(1)
-
+                .DateTimeEnde.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
             Else
-                .kennzeichnungDate.Text = "Ende"
-                .DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
+                .kennzeichnungDate.Text = "Start"
+                .DateTimeProject.Value = Date.Now.AddMonths(1)
+                .DateTimeEnde.Value = Date.Now.AddMonths(1)
 
             End If
 
-           
+
 
             .Top = frmCoord(PTfrm.eingabeProj, PTpinfo.top)
             .Left = frmCoord(PTfrm.eingabeProj, PTpinfo.left)
@@ -123,14 +125,20 @@ Public Class frmProjektEingabe1
             End If
         End With
 
-        If dateIsStart.Checked Then
+        If dauerUnverändert.Checked Then
             calcProjektStart = DateTimeProject.Value
+            calcProjektEnde = DateTimeProject.Value.AddDays(vorlagenDauer - 1).AddMonths(1)
+            DialogResult = System.Windows.Forms.DialogResult.Yes
         Else
-            'vorlagendauer As Integer = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex).dauerInDays
-            calcProjektStart = DateTimeProject.Value.AddDays(-1 * (vorlagenDauer - 1))
+            calcProjektStart = DateTimeProject.Value
+            calcProjektEnde = DateTimeEnde.Value
+            DialogResult = System.Windows.Forms.DialogResult.No
+
+            ''vorlagendauer As Integer = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex).dauerInDays
+            'calcProjektStart = DateTimeProject.Value.AddDays(-1 * (vorlagenDauer - 1))
         End If
 
-        DialogResult = System.Windows.Forms.DialogResult.OK
+        'DialogResult = System.Windows.Forms.DialogResult.OK
         MyBase.Close()
 
     End Sub
@@ -242,8 +250,12 @@ Public Class frmProjektEingabe1
             vorlagenDauer = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex).dauerInDays
             diff = vorlagenDauer - oldVorlagenDauer
 
-            If Not dateIsStart.Checked Then
-                DateTimeProject.Value = DateTimeProject.Value.AddDays(diff)
+            If dauerUnverändert.Checked Then
+                ' Startdatum bleibt, EndeDatum wird aus neuer Vorlage und Startdatum errechnet
+                DateTimeProject.Value = DateTimeProject.Value
+                DateTimeEnde.Value = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
+            Else
+                ' Startdatum und Endedatum bleiben identisch
             End If
 
         Catch ex As Exception
@@ -255,36 +267,78 @@ Public Class frmProjektEingabe1
 
 
 
-    Private Sub DateTimeProject_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeProject.ValueChanged
+ 
+    Private Sub DateTimeEnde_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeEnde.ValueChanged
 
 
 
-        If dateIsStart.Checked Then
+        If dauerUnverändert.Checked Then
+            'StartDatum muss gemäß Vorlagendauer errechnet werden
             If DateDiff(DateInterval.Month, StartofCalendar, DateTimeProject.Value) < 0 Then
                 Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
                 DateTimeProject.Value = Date.Now.AddMonths(1)
+            Else
+                calcProjektEnde = DateTimeEnde.Value
+                DateTimeProject.Value = DateTimeEnde.Value.AddDays(-(vorlagenDauer - 1))
+                calcProjektStart = DateTimeProject.Value
             End If
         Else
             If DateDiff(DateInterval.Month, StartofCalendar.AddDays(vorlagenDauer - 1), DateTimeProject.Value) < 0 Then
                 Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
-                DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
+                DateTimeProject.Value = Date.Now.AddMonths(1)
+                'DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
+            Else
+                calcProjektStart = DateTimeProject.Value
+                calcProjektEnde = DateTimeEnde.Value
             End If
         End If
 
 
     End Sub
 
-    Private Sub dateIsStart_CheckedChanged(sender As Object, e As EventArgs) Handles dateIsStart.CheckedChanged
+    Private Sub DateTimeProject_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeProject.ValueChanged
 
-        If dateIsStart.Checked Then
+
+
+        If dauerUnverändert.Checked Then
+            'StartDatum muss gemäß Vorlagendauer errechnet werden
+            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeProject.Value) < 0 Then
+                Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
+                DateTimeProject.Value = Date.Now.AddMonths(1)
+            Else
+                calcProjektStart = DateTimeProject.Value
+                DateTimeEnde.Value = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
+                calcProjektEnde = DateTimeEnde.Value
+
+            End If
+        Else
+            If DateDiff(DateInterval.Month, StartofCalendar.AddDays(vorlagenDauer - 1), DateTimeProject.Value) < 0 Then
+                Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
+                DateTimeProject.Value = Date.Now.AddMonths(1)
+                'DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
+            Else
+                calcProjektStart = DateTimeProject.Value
+                calcProjektEnde = DateTimeEnde.Value
+            End If
+        End If
+
+
+    End Sub
+
+    Private Sub dauerUnverändert_CheckedChanged(sender As Object, e As EventArgs) Handles dauerUnverändert.CheckedChanged
+
+        If dauerUnverändert.Checked Then
             ' es war vorher auf Datum = End-Datum
             kennzeichnungDate.Text = "Start"
-            DateTimeProject.Value = DateTimeProject.Value.AddDays(-1 * (vorlagenDauer - 1))
+            DateTimeProject.Value = DateTimeProject.Value
+            DateTimeEnde.Value = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
         Else
             ' es war vorher auf Datum = Start-Datum
-            kennzeichnungDate.Text = "Ende"
-            DateTimeProject.Value = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
+            kennzeichnungDate.Text = "Start"
+            DateTimeEnde.Value = DateTimeEnde.Value
 
         End If
     End Sub
+
+ 
 End Class

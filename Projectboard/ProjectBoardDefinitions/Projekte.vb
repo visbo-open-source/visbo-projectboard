@@ -6385,8 +6385,9 @@ Public Module Projekte
     ''' <param name="risk">Wert für das Risiko</param>
     ''' <param name="volume">Wert für das Volumen</param>
     ''' <remarks></remarks>
-    Public Sub TrageivProjektein(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, ByVal erloes As Double, _
-                              ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal volume As Double)
+    Public Sub TrageivProjektein(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, _
+                                 ByVal endedate As Date, ByVal erloes As Double, _
+                                 ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal volume As Double)
         Dim newprojekt As Boolean
         Dim hproj As clsProjekt
         Dim pStatus As String = ProjektStatus(0)
@@ -6408,7 +6409,15 @@ Public Module Projekte
         hproj = New clsProjekt
 
         Try
-            Projektvorlagen.getProject(vorlagenName).CopyTo(hproj)
+            If endedate = Date.MinValue Then
+                ' dauerUnverändert wurde gewählt
+                Projektvorlagen.getProject(vorlagenName).CopyTo(hproj)
+            Else
+                ' Projektdauer wurde durch Start- und Endedatum im Formular angegeben
+                ' (dauerUnverändert nicht angekreuzt)
+                Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate)
+            End If
+
         Catch ex As Exception
             Call MsgBox("es gibt keine entsprechende Vorlage ..")
             Exit Sub
