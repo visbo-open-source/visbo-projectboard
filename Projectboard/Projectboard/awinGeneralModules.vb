@@ -1129,6 +1129,7 @@ Public Module awinGeneralModules
         Dim startSpalte As Integer
         Dim vglName As String
         Dim hproj As clsProjekt
+        Dim vproj As clsProjektvorlage
         Dim geleseneProjekte As Integer
         Dim ProjektdauerIndays As Integer = 0
 
@@ -1153,9 +1154,19 @@ Public Module awinGeneralModules
 
                     If Projektvorlagen.Liste.ContainsKey(vName) Then
 
+                        vproj = Projektvorlagen.getProject(vName)
+
                         start = CDate(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
                         ende = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        ProjektdauerIndays = calcDauerIndays(start, ende)
+                        If start <> Date.MinValue And ende <> Date.MinValue Then
+                            ProjektdauerIndays = calcDauerIndays(start, ende)
+                        ElseIf start <> Date.MinValue Then
+                            ProjektdauerIndays = vproj.dauerInDays
+                            ende = calcDatum(start, vproj.dauerInDays)
+                        ElseIf ende <> Date.MinValue Then
+                            ProjektdauerIndays = vproj.dauerInDays
+                            start = calcDatum(ende, -vproj.dauerInDays)
+                        End If
 
                         'startSpalte = CInt(DateDiff(DateInterval.Month, StartofCalendar, start) + 1)
                         If startSpalte < 1 Then
@@ -1197,7 +1208,7 @@ Public Module awinGeneralModules
 
                     End If
 
-                    zeile = zeile + 1
+                        zeile = zeile + 1
 
                 End While
 

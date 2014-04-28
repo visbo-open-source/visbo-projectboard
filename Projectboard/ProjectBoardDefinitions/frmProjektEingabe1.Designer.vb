@@ -41,7 +41,7 @@ Partial Class frmProjektEingabe1
         Me.volume = New System.Windows.Forms.TextBox()
         Me.DateTimeProject = New System.Windows.Forms.DateTimePicker()
         Me.dauerUnverändert = New System.Windows.Forms.CheckBox()
-        Me.Label6 = New System.Windows.Forms.Label()
+        Me.kennzeichnungEnde = New System.Windows.Forms.Label()
         Me.DateTimeEnde = New System.Windows.Forms.DateTimePicker()
         CType(Me.selectedMonth, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
@@ -228,20 +228,21 @@ Partial Class frmProjektEingabe1
         Me.dauerUnverändert.AutoSize = True
         Me.dauerUnverändert.Location = New System.Drawing.Point(301, 213)
         Me.dauerUnverändert.Name = "dauerUnverändert"
-        Me.dauerUnverändert.Size = New System.Drawing.Size(171, 25)
+        Me.dauerUnverändert.Size = New System.Drawing.Size(169, 25)
         Me.dauerUnverändert.TabIndex = 27
-        Me.dauerUnverändert.Text = "Dauer unverändert"
+        Me.dauerUnverändert.Text = "Dauer wie Vorlage"
         Me.dauerUnverändert.UseVisualStyleBackColor = True
         '
-        'Label6
+        'kennzeichnungEnde
         '
-        Me.Label6.AutoSize = True
-        Me.Label6.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label6.Location = New System.Drawing.Point(42, 285)
-        Me.Label6.Name = "Label6"
-        Me.Label6.Size = New System.Drawing.Size(42, 18)
-        Me.Label6.TabIndex = 28
-        Me.Label6.Text = "Ende"
+        Me.kennzeichnungEnde.AutoSize = True
+        Me.kennzeichnungEnde.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.kennzeichnungEnde.ForeColor = System.Drawing.SystemColors.ControlText
+        Me.kennzeichnungEnde.Location = New System.Drawing.Point(42, 285)
+        Me.kennzeichnungEnde.Name = "kennzeichnungEnde"
+        Me.kennzeichnungEnde.Size = New System.Drawing.Size(47, 20)
+        Me.kennzeichnungEnde.TabIndex = 28
+        Me.kennzeichnungEnde.Text = "Ende"
         '
         'DateTimeEnde
         '
@@ -257,7 +258,7 @@ Partial Class frmProjektEingabe1
         Me.BackColor = System.Drawing.SystemColors.Window
         Me.ClientSize = New System.Drawing.Size(557, 401)
         Me.Controls.Add(Me.DateTimeEnde)
-        Me.Controls.Add(Me.Label6)
+        Me.Controls.Add(Me.kennzeichnungEnde)
         Me.Controls.Add(Me.dauerUnverändert)
         Me.Controls.Add(Me.DateTimeProject)
         Me.Controls.Add(Me.volume)
@@ -306,6 +307,6 @@ Partial Class frmProjektEingabe1
     Public WithEvents volume As System.Windows.Forms.TextBox
     Public WithEvents DateTimeProject As System.Windows.Forms.DateTimePicker
     Friend WithEvents dauerUnverändert As System.Windows.Forms.CheckBox
-    Friend WithEvents Label6 As System.Windows.Forms.Label
     Friend WithEvents DateTimeEnde As System.Windows.Forms.DateTimePicker
+    Public WithEvents kennzeichnungEnde As System.Windows.Forms.Label
 End Class
