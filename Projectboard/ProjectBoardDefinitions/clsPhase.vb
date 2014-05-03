@@ -76,7 +76,7 @@
                 Try
                     If Me.name <> Me.Parent.getPhase(1).name Then
                         ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
-                        Me.Parent.keepPhase1consistent()
+                        Me.Parent.keepPhase1consistent(Me.startOffsetinDays + Me.dauerInDays)
                     End If
                 Catch ex As Exception
 

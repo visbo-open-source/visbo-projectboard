@@ -136,6 +136,7 @@ Public Module Module1
         Dependencies = 16
         betterWorseL = 17 ' es wird mit dem letzten Stand verglichen
         betterWorseB = 18 ' es wird mit dem Beauftragunsg-Stand verglichen
+        Budget = 19
     End Enum
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
@@ -571,6 +572,7 @@ Public Module Module1
             ElseIf chtTitle Like (summentitel2 & "*") Then
                 found = True
                 rwert = 2
+                ' summentitel3, summentitel4 nicht mehr relevant
             ElseIf chtTitle Like (summentitel3 & "*") Then
                 found = True
                 rwert = 3
@@ -600,6 +602,29 @@ Public Module Module1
                 rwert = 11
             End If
         End With
+
+        ' das folgende soll das zukünftige Schema werden 
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
+        chtobjName = chtobj.Name
+
+        Try
+
+            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
+
+                If CInt(tmpStr(1)) = PTpfdk.Budget Then
+
+                    found = True
+                    rwert = PTpfdk.Budget
+
+                End If
+
+            End If
+
+        Catch ex As Exception
+        End Try
+
 
         istSummenDiagramm = found
 

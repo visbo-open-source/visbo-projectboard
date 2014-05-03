@@ -312,7 +312,16 @@ Public Class clsEventsPrcCharts
 
                                     If .StartOffset <> 0 And .Status = ProjektStatus(0) Then
                                         .startDate = .startDate.AddMonths(.StartOffset)
+
+                                        If .StartOffset < 0 Then
+                                            .earliestStart = .earliestStart - .StartOffset
+                                            .latestStart = .latestStart - .StartOffset
+                                        Else
+                                            .latestStart = .latestStart - .StartOffset
+                                            .earliestStart = .earliestStart - .StartOffset
+                                        End If
                                         .StartOffset = 0
+
 
                                         ' jetzt wird das Shape in der Plantafel gelöscht 
                                         Call clearProjektinPlantafel(.name)
@@ -484,11 +493,10 @@ Public Class clsEventsPrcCharts
                 '
                 If diagOBJ.diagrammTyp = DiagrammTypen(0) And diagOBJ.gsCollection.Count > 0 Then
 
-                    Dim alleFarben As Integer = 4
 
                     For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                        Call zeichnePhasenInProjekt(kvp.Value, diagOBJ.gsCollection, alleFarben, selMonth, selMonth, False, msNumber, False)
+                        Call zeichnePhasenInProjekt(kvp.Value, diagOBJ.gsCollection, selMonth, selMonth, False, msNumber)
 
                     Next
 

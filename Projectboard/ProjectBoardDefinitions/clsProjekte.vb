@@ -741,6 +741,80 @@
     End Property
 
 
+    ''' <summary>
+    ''' gibt über alle betrachteten Projekte die anteiligen Budget Werte zurück  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBudgetValuesInMonth() As Double()
+        Get
+
+            Dim projektBudget As Double
+            Dim budgetValues() As Double
+            Dim Dauer As Integer
+            Dim zeitraum As Integer
+            Dim i As Integer
+            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+            Dim hproj As clsProjekt
+            
+            Dim tempArray() As Double
+            Dim prAnfang As Integer, prEnde As Integer
+            
+
+            Dim avgBudget As Double
+
+
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim budgetValues(zeitraum)
+
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+
+                hproj = kvp.Value
+
+                Dauer = hproj.Dauer
+                projektBudget = hproj.Erloes
+                avgBudget = projektBudget / hproj.Dauer
+
+
+                'ReDim tempArray(Dauer - 1)
+                tempArray = kvp.Value.budgetWerte
+
+                If tempArray.Sum = 0 Then
+                    For i = 0 To Dauer - 1
+                        tempArray(i) = avgBudget
+                    Next
+                End If
+                
+
+                With hproj
+
+                    prAnfang = .Start + .StartOffset
+                    prEnde = .Start + .Dauer - 1 + .StartOffset
+
+                End With
+
+                anzLoops = 0
+                Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                If anzLoops > 0 Then
+
+
+                    For i = 0 To anzLoops - 1
+                        budgetValues(ixZeitraum + i) = budgetValues(ixZeitraum + i) + tempArray(ix + i)
+                    Next i
+
+
+                End If
+
+            Next kvp
+
+            getBudgetValuesInMonth = budgetValues
+
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' gibt über alle betrachteten Projekte die Earned Values zurück; 
@@ -851,12 +925,14 @@
             'Dim persCost As Boolean
             'Dim SRweight As Double ' nimmt die Gewichtung auf:= strategic Fit / Risiko
             Dim riskweightedMarge As Double
+            Dim heuteColumn As Integer
 
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
 
             zeitraum = showRangeRight - showRangeLeft
             ReDim riskValues(zeitraum)
 
+            heuteColumn = getColumnOfDate(Date.Today)
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
                 hproj = kvp.Value
@@ -870,6 +946,8 @@
                     prEnde = .Start + .Dauer - 1 + .StartOffset
 
                 End With
+
+                Dim heuteIndex As Integer = heuteColumn - prAnfang
 
                 anzLoops = 0
                 Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
@@ -887,7 +965,11 @@
 
 
                     For i = 0 To anzLoops - 1
-                        riskValues(ixZeitraum + i) = riskValues(ixZeitraum + i) + tempArray(ix + i) * riskweightedMarge
+                        ' Änderung 2.5.14 : es sollen nur die in der Zukunft liegenden Monate mit einem Risiko Aufschlag bedacht werden 
+                        If ix + i >= heuteIndex Then
+                            riskValues(ixZeitraum + i) = riskValues(ixZeitraum + i) + tempArray(ix + i) * riskweightedMarge
+                        End If
+
                     Next i
 
 
@@ -899,6 +981,65 @@
 
         End Get
 
+    End Property
+
+    ''' <summary>
+    ''' gibt die Gesamtkosten über alle Projekte im betrachteten Zeitraum zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getTotalCostValuesInMonth() As Double()
+        Get
+            Dim costValues() As Double
+            Dim Dauer As Integer
+            Dim zeitraum As Integer
+            Dim i As Integer
+            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+            Dim hproj As clsProjekt
+            Dim tempArray() As Double
+            Dim prAnfang As Integer, prEnde As Integer
+
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+
+           
+
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim costValues(zeitraum)
+
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+                hproj = kvp.Value
+
+                Dauer = hproj.Dauer
+
+                ReDim tempArray(Dauer - 1)
+
+                With hproj
+                    prAnfang = .Start + .StartOffset
+                    prEnde = .Start + .Dauer - 1 + .StartOffset
+                End With
+
+                anzLoops = 0
+                Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                If anzLoops > 0 Then
+
+                    tempArray = hproj.getGesamtKostenBedarf
+
+                    For i = 0 To anzLoops - 1
+                        costValues(ixZeitraum + i) = costValues(ixZeitraum + i) + tempArray(ix + i)
+                    Next i
+
+
+                End If
+                'hproj = Nothing
+            Next kvp
+
+            getTotalCostValuesInMonth = costValues
+
+        End Get
     End Property
 
     '
@@ -1412,11 +1553,12 @@
         End Get
     End Property
 
-    Public ReadOnly Property getAverage(myCollection As Collection, isRole As Boolean) As Double
+    Public ReadOnly Property getAverage(ByVal myCollection As Collection, ByVal diagrammtyp As String) As Double
         Get
-            Dim rcValues(,) As Double, tmpValues() As Double
+
+            Dim tmpValues() As Double
             Dim tmpSum As Double
-            Dim ix As Integer
+
             Dim zeitraum As Integer
             Dim rcName As String
             Dim i As Integer
@@ -1424,7 +1566,7 @@
 
             anzElements = myCollection.Count
             zeitraum = showRangeRight - showRangeLeft
-            ReDim rcValues(anzElements - 1, zeitraum)
+
 
             tmpSum = 0.0
 
@@ -1432,17 +1574,18 @@
                 rcName = myCollection.Item(i)
 
                 ReDim tmpValues(zeitraum)
-                If isRole Then
+
+                If diagrammtyp = DiagrammTypen(0) Then
+                    tmpValues = Me.getCountPhasesInMonth(rcName)
+                ElseIf diagrammtyp = DiagrammTypen(1) Then
                     tmpValues = Me.getRoleValuesInMonth(rcName)
-                Else
+                ElseIf diagrammtyp = DiagrammTypen(2) Then
                     tmpValues = Me.getCostValuesInMonth(rcName)
                 End If
 
 
-                For ix = 0 To zeitraum
-                    tmpSum = tmpSum + tmpValues(ix)
-                    rcValues(i - 1, ix) = tmpValues(ix)
-                Next ix
+                tmpSum = tmpSum + tmpValues.Sum
+                
             Next i
 
             getAverage = tmpSum / (zeitraum + 1)
@@ -1450,10 +1593,10 @@
         End Get
     End Property
 
-    Public ReadOnly Property getDeviationfromAverage(myCollection As Collection, avgValue As Double, isRole As Boolean) As Double
+    Public ReadOnly Property getDeviationfromAverage(ByVal myCollection As Collection, ByVal avgValue As Double, ByVal diagrammTyp As String) As Double
 
         Get
-            Dim rcValues(,) As Double, tmpValues() As Double
+            Dim rcValues() As Double, tmpValues() As Double
             Dim sumAboveAvg As Double, tmpSum As Double
             Dim ix As Integer
             Dim zeitraum As Integer
@@ -1463,34 +1606,35 @@
 
             anzElements = myCollection.Count
             zeitraum = showRangeRight - showRangeLeft
-            ReDim rcValues(anzElements - 1, zeitraum)
+            ReDim rcValues(zeitraum)
             tmpSum = 0.0
 
             For i = 1 To myCollection.Count
                 rcName = myCollection.Item(i)
 
                 ReDim tmpValues(zeitraum)
-                If isRole Then
+
+                If diagrammTyp = DiagrammTypen(0) Then
+                    tmpValues = Me.getCountPhasesInMonth(rcName)
+                ElseIf diagrammTyp = DiagrammTypen(1) Then
                     tmpValues = Me.getRoleValuesInMonth(rcName)
-                Else
+                ElseIf diagrammTyp = DiagrammTypen(2) Then
                     tmpValues = Me.getCostValuesInMonth(rcName)
                 End If
 
 
                 For ix = 0 To zeitraum
-                    tmpSum = tmpSum + tmpValues(ix)
-                    rcValues(i - 1, ix) = tmpValues(ix)
+                    rcValues(ix) = rcValues(ix) + tmpValues(ix)
                 Next ix
+
             Next i
 
             sumAboveAvg = 0.0
 
             For ix = 0 To zeitraum
-                tmpSum = 0.0
-                For i = 1 To myCollection.Count
-                    tmpSum = tmpSum + rcValues(i - 1, ix)
-                Next i
-                sumAboveAvg = sumAboveAvg + (tmpSum - avgValue) * (tmpSum - avgValue)
+                
+                sumAboveAvg = sumAboveAvg + (rcValues(ix) - avgValue) * (rcValues(ix) - avgValue)
+
             Next ix
 
             getDeviationfromAverage = sumAboveAvg

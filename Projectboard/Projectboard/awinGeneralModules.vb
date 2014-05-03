@@ -11,11 +11,85 @@ Public Module awinGeneralModules
 
 
     ''' <summary>
+    ''' erzeugt die monatlichen Budget Werte für ein Projekt
+    ''' berechnet aus dem Wert für Erloes, verteilt nach einem Schlüssel, der sich aus Marge und Kostenbedarf ergibt 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <remarks></remarks>
+
+    Friend Sub awinCreateBudgetWerte(ByRef hproj As clsProjekt)
+
+        
+        Dim costValues() As Double, budgetValues() As Double
+        Dim curBudget As Double, avgbudget As Double
+
+
+        costValues = hproj.getGesamtKostenBedarf
+        ReDim budgetValues(costValues.Length - 1)
+
+        curBudget = hproj.Erloes
+        avgbudget = curBudget / costValues.Length
+
+        If costValues.Sum > 0 Then
+            Dim pMarge As Double = hproj.ProjectMarge
+            For i = 0 To costValues.Length - 1
+                budgetValues(i) = costValues(i) * (1 + pMarge)
+            Next
+        Else
+            For i = 0 To costValues.Length - 1
+                budgetValues(i) = avgbudget
+            Next
+        End If
+
+
+        hproj.budgetWerte = budgetValues
+
+
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert die Budget werte , wobei die Charakteristik erhalten bleibt 
+    ''' Vorbedingung ist, daß das bisherige Budget > 0 Null ist 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="newBudget">Gesamt Wert des neuen Budgets</param>
+    ''' <remarks></remarks>
+    Friend Sub awinUpdateBudgetWerte(ByRef hproj As clsProjekt, ByVal newBudget As Double)
+
+
+
+        Dim curValues() As Double, budgetValues() As Double
+        Dim oldBudget As Double
+        Dim faktor As Double
+
+        curValues = hproj.budgetWerte
+        ReDim budgetValues(curValues.Length - 1)
+        oldBudget = curValues.Sum
+
+        If oldBudget = 0 Then
+            Throw New Exception("altes Budget darf beim Update nicht Null sein")
+        Else
+            If newBudget <= 0 Then
+                ' budgetvalues ist bereits auf Null gesetzt  
+            Else
+                faktor = newBudget / oldBudget
+                For i = 0 To curValues.Length - 1
+                    budgetValues(i) = curValues(i) * faktor
+                Next
+            End If
+
+        End If
+
+        hproj.budgetWerte = budgetValues
+
+    End Sub
+
+    ''' <summary>
     ''' schreibt evtl neu durch Inventur hinzugekommene Phasen in 
     ''' das Customization File 
     ''' </summary>
     ''' <remarks></remarks>
-    Sub awinWritePhaseDefinitions()
+    Friend Sub awinWritePhaseDefinitions()
 
         Dim phaseDefs As Range
         Dim foundRow As Integer
@@ -75,7 +149,7 @@ Public Module awinGeneralModules
 
     End Sub
 
-    Sub awinsetTypen()
+    Friend Sub awinsetTypen()
 
         Dim i As Integer
         'Dim Start As Integer, Dauer As Integer
@@ -123,7 +197,7 @@ Public Module awinGeneralModules
         ergebnisChartName(2) = "Verbesserungs-Potential"
         ergebnisChartName(3) = "Risiko-Abschlag"
 
-        ReDim portfolioDiagrammtitel(18)
+        ReDim portfolioDiagrammtitel(20)
         portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
@@ -143,6 +217,7 @@ Public Module awinGeneralModules
         portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
         portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
         portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
+        portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
 
 
         windowNames(0) = "Cockpit Phasen"
@@ -452,7 +527,7 @@ Public Module awinGeneralModules
 
                 Projektvorlagen.Add(hproj)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-            
+
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                 Call MsgBox(ex.Message)
@@ -646,7 +721,7 @@ Public Module awinGeneralModules
     '
     '
     '
-    Sub awinChangeTimeSpan(ByVal von As Integer, ByVal bis As Integer)
+    Public Sub awinChangeTimeSpan(ByVal von As Integer, ByVal bis As Integer)
 
         'Dim k As Integer
 
@@ -1871,7 +1946,7 @@ Public Module awinGeneralModules
 
                                     ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
                                     If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
-                                        resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
+                                        resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
                                     Else
                                         If DateDiff(DateInterval.Day, endedateProjekt, xlsEndeDate) > 0 Then
                                             Call MsgBox("der Meilenstein '" & resultName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
@@ -2027,6 +2102,8 @@ Public Module awinGeneralModules
         Dim request As New Request(databaseName)
         Dim lastConstellation As New clsConstellation
         Dim projekteImZeitraum As New SortedList(Of String, clsProjekt)
+        Dim projektHistorie As New clsProjektHistorie
+        Dim laengeInTagen As Integer
 
         projekteImZeitraum = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
 
@@ -2036,9 +2113,13 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
 
                 Try
+                    laengeInTagen = kvp.Value.dauerInDays
+                    Dim keyStr As String = kvp.Value.name & "#" & kvp.Value.variantName
+                    AlleProjekte.Add(keyStr, kvp.Value)
 
-                    AlleProjekte.Add(kvp.Key, kvp.Value)
                     ShowProjekte.Add(kvp.Value)
+
+                    Call awinCreateBudgetWerte(kvp.Value)
                     Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile, False)
 
                 Catch ex As Exception
@@ -2056,13 +2137,11 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
 
                 Try
-                    'If Not kvp.Value.isConsistent Then
-
-                    'Call MsgBox("Inkonsistent: " & kvp.Value.name)
-
-                    'End If
-
+                    laengeInTagen = kvp.Value.dauerInDays
                     ShowProjekte.Add(kvp.Value)
+
+                    Call awinCreateBudgetWerte(kvp.Value)
+
                     Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile, False)
 
                 Catch ex As Exception

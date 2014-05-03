@@ -6437,28 +6437,30 @@ Public Module Projekte
         End Try
 
         ' Anpassen der Daten für die Termine 
-        ' wenn Samstag oder Sonntag, dann auf den Freitag davor legen   
+        ' wenn Samstag oder Sonntag, dann auf den Freitag davor legen 
+        ' nein - das darf nicht gemacht werden; evtl liegt ja dann der Meilenstein vor der Phase 
+        ' grundsätzlich sollte der Anwender hier bestimmen, nicht das Programm
 
 
-        Dim cphase As clsPhase
+        'Dim cphase As clsPhase
 
-        Dim resultDate As Date
+        'Dim resultDate As Date
 
-        For p = 1 To hproj.CountPhases
-            cphase = hproj.getPhase(p)
-            For r = 1 To cphase.CountResults
+        'For p = 1 To hproj.CountPhases
+        '    cphase = hproj.getPhase(p)
+        '    For r = 1 To cphase.CountResults
 
-                With cphase.getResult(r)
-                    resultDate = .getDate
-                    If resultDate.DayOfWeek = DayOfWeek.Saturday Then
-                        .offset = .offset - 1
-                    ElseIf resultDate.DayOfWeek = DayOfWeek.Sunday Then
-                        .offset = .offset - 2
-                    End If
-                End With
+        '        With cphase.getResult(r)
+        '            resultDate = .getDate
+        '            'If resultDate.DayOfWeek = DayOfWeek.Saturday Then
+        '            '    .offset = .offset - 1
+        '            'ElseIf resultDate.DayOfWeek = DayOfWeek.Sunday Then
+        '            '    .offset = .offset - 2
+        '            'End If
+        '        End With
 
-            Next
-        Next
+        '    Next
+        'Next
 
 
 
@@ -8101,7 +8103,7 @@ Public Module Projekte
                 If diagrammTyp = DiagrammTypen(1) Then
                     referenceValue = .getbadCostOfRole(myCollection)
                 Else
-                    referenceValue = .getDeviationfromAverage(myCollection, avgValue, False)
+                    referenceValue = .getDeviationfromAverage(myCollection, avgValue, diagrammTyp)
                 End If
 
                 newReferenceValue = -1
@@ -8128,7 +8130,7 @@ Public Module Projekte
                                     If diagrammTyp = DiagrammTypen(1) Then
                                         currentValue = .getbadCostOfRole(myCollection)
                                     Else
-                                        currentValue = .getDeviationfromAverage(myCollection, avgValue, False)
+                                        currentValue = .getDeviationfromAverage(myCollection, avgValue, diagrammTyp)
                                     End If
 
                                     If currentValue < bestValue Then
@@ -8181,7 +8183,7 @@ Public Module Projekte
                         If diagrammTyp = DiagrammTypen(1) Then
                             currentValue = .getbadCostOfRole(myCollection)
                         Else
-                            currentValue = .getDeviationfromAverage(myCollection, avgValue, False)
+                            currentValue = .getDeviationfromAverage(myCollection, avgValue, diagrammTyp)
                         End If
 
                         If currentValue < newReferenceValue Then
@@ -8246,7 +8248,7 @@ Public Module Projekte
         If myCollection.Count >= 1 Then
 
 
-            If diagrammTyp = DiagrammTypen(1) Or diagrammTyp = DiagrammTypen(2) Or diagrammTyp = DiagrammTypen(4) Then
+            If diagrammTyp = DiagrammTypen(0) Or diagrammTyp = DiagrammTypen(1) Or diagrammTyp = DiagrammTypen(2) Or diagrammTyp = DiagrammTypen(4) Then
 
                 ' to do Liste aufbauen
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
@@ -8345,9 +8347,9 @@ Public Module Projekte
 
         If DiagrammTyp = DiagrammTypen(1) Or DiagrammTyp = DiagrammTypen(4) Then
             value = ShowProjekte.getbadCostOfRole(myCollection)
-        ElseIf DiagrammTyp = DiagrammTypen(2) Then
-            avgValue = ShowProjekte.getAverage(myCollection, False)
-            value = ShowProjekte.getDeviationfromAverage(myCollection, avgValue, False)
+        ElseIf DiagrammTyp = DiagrammTypen(0) Or DiagrammTyp = DiagrammTypen(2) Then
+            avgValue = ShowProjekte.getAverage(myCollection, DiagrammTyp)
+            value = ShowProjekte.getDeviationfromAverage(myCollection, avgValue, DiagrammTyp)
         Else
             Throw New ArgumentException("Optimierung ist für diesen Diagramm-Typ nicht implementiert")
         End If
@@ -8386,7 +8388,14 @@ Public Module Projekte
 
     End Function
 
-    Public Sub awinZeichnePhasen(ByVal nameList As Collection, ByVal farbTyp As Integer, ByVal numberIt As Boolean)
+    ''' <summary>
+    ''' zeichnet für alle selektierten Projekte die Phasen, die in Namelist angegeben sind;  
+    ''' wenn namelist leer ist, werden alle Phasen des Projektes angezeigt
+    ''' </summary>
+    ''' <param name="nameList">enthält die Namen der Phasen, die gezeichnet werden sollen; alle, wenn leer</param>
+    ''' <param name="numberIt">gibt an, ob di ePhasen nummeriert werden sollen</param>
+    ''' <remarks></remarks>
+    Public Sub awinZeichnePhasen(ByVal nameList As Collection, ByVal numberIt As Boolean)
 
         'Dim request As New Request(awinSettings.databaseName)
         Dim singleShp As Excel.Shape
@@ -8430,7 +8439,7 @@ Public Module Projekte
 
                             Try
                                 pName = hproj.name
-                                Call zeichnePhasenInProjekt(hproj, nameList, farbTyp, False, 0, False)
+                                Call zeichnePhasenInProjekt(hproj, nameList, False, 0)
 
                             Catch ex As Exception
 
@@ -8462,10 +8471,10 @@ Public Module Projekte
 
                 ' wenn ein Zeitraum gesetzt ist, dann nur anzeigen, was in diesem Zeitraum liegt 
                 If showRangeLeft < showRangeRight And showRangeLeft > 0 Then
-                    Call zeichnePhasenInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, False, 0, False)
+                    Call zeichnePhasenInProjekt(kvp.Value, nameList, showRangeLeft, showRangeRight, False, msNumber)
                 Else
                     ' von jedem Projekt die Phasen anzeigen 
-                    Call zeichnePhasenInProjekt(kvp.Value, nameList, farbTyp, False, 0, False)
+                    Call zeichnePhasenInProjekt(kvp.Value, nameList, False, 0)
                 End If
 
 
@@ -8859,7 +8868,7 @@ Public Module Projekte
     End Sub
 
     ''' <summary>
-    ''' zeichnet das Projekt "pname" in die Plantafel; 
+    ''' zeichnet das Projekt "pname" im Extended Mode in die Plantafel; 
     ''' wenn es bereits vorhanden ist: keine Aktion  
     ''' tryzeile wird zurückgegeben : ab da kann das nächste Projekt gezeichnet werden 
     ''' </summary>
@@ -8879,7 +8888,7 @@ Public Module Projekte
         Dim schriftgroesse As Integer
         Dim zeile As Integer
         Dim top As Double, left As Double, width As Double, height As Double
-        Dim oldShape As Excel.Shape, groupShpElement As Excel.Shape
+        Dim oldShape As Excel.Shape, phasenShape As Excel.Shape, groupShpElement As Excel.Shape
         'Dim shpExistsAlready As Boolean
         Dim shpUID As String
         'Dim tmpshapes As Excel.Shapes = appInstance.ActiveSheet.shapes
@@ -8938,10 +8947,6 @@ Public Module Projekte
             tryzeile = 2
         End If
 
-        'Dim myCollection As New Collection
-        'myCollection.Add(pname)
-        'zeile = findeMagicBoardPosition(myCollection, pname, tryzeile, start, laenge)
-
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -8968,36 +8973,37 @@ Public Module Projekte
 
         Dim shapeGroupListe() As Object
         Dim anzGroupElemente As Integer = 0
-        Dim shapesCollection As New Collection
+        Dim projectShapesCollection As New Collection
+        Dim phaseShapesCollection As New Collection
 
 
         oldShape = Nothing
+        phasenShape = Nothing
 
         Dim zeilenOffset As Integer = 0
         Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
+
         For i = 1 To hproj.CountPhases
 
             With hproj.getPhase(i)
 
                 phasenName = .name
-                If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
-                    zeilenOffset = zeilenOffset + 1
-                    lastEndDate = StartofCalendar.AddDays(-1)
-                End If
+                'If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+                '    zeilenOffset = zeilenOffset + 1
+                '    lastEndDate = StartofCalendar.AddDays(-1)
+                'End If
 
-                If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
-                    lastEndDate = .getEndDate
-                End If
+                'If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+                '    lastEndDate = .getEndDate
+                'End If
 
             End With
 
-            hproj.CalculateShapeCoord(i, zeilenOffset, top, left, width, height)
-
-
 
             Try
-
-                oldShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
+                zeilenOffset = 0
+                hproj.CalculateShapeCoord(i, zeilenOffset, top, left, width, height)
+                phasenShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
                         Left:=left, Top:=top, Width:=width, Height:=height)
 
             Catch ex As Exception
@@ -9006,17 +9012,17 @@ Public Module Projekte
 
 
             phaseShapeName = pname & "#" & phasenName & "#" & i.ToString
-            With oldShape
+            With phasenShape
                 .Name = phaseShapeName
                 .Title = phasenName
-                .AlternativeText = "Test"
+                .AlternativeText = "Phase"
             End With
 
-            Call defineShapeAppearance(hproj, oldShape, i)
+            Call defineShapeAppearance(hproj, phasenShape, i)
 
 
             Try
-                shapesCollection.Add(phaseShapeName, Key:=phaseShapeName)
+                projectShapesCollection.Add(phaseShapeName, Key:=phaseShapeName)
             Catch ex As Exception
 
             End Try
@@ -9056,43 +9062,77 @@ Public Module Projekte
                         With msShape
                             .Name = msName
                             .Title = cResult.name
-                            .AlternativeText = cBewertung.description
+                            .AlternativeText = "Meilenstein"
                         End With
 
 
                         Call defineResultAppearance(hproj, 0, msShape, cBewertung)
 
-
-
-                        'shapesCollection.Add(resultShape.Name)
                     Else
                         ' Koordinaten anpassen 
                         msShape.Top = top
                     End If
 
                     Try
-                        shapesCollection.Add(msName, Key:=msName)
+                        projectShapesCollection.Add(msName, Key:=msName)
                     Catch ex As Exception
 
                     End Try
 
                 Next
 
+                ' hier werden die Phase und die Meilensteine zu einem gruppierten Shape zusammengefasst 
+                ' das wird hier nicht mehr gemacht - mehrfach verschachtelte Gruppen verursachen Fehler bei der Koordinaten Auslesung 
+                'anzGroupElemente = phaseShapesCollection.Count
+
+                'If anzGroupElemente > 1 Then
+
+                '    ' es macht nur Sinn zu gruppieren, wenn es mehr als 1 Element ist ....
+
+                '    ReDim shapeGroupListe(anzGroupElemente - 1)
+                '    For l = 1 To anzGroupElemente
+                '        shapeGroupListe(l - 1) = phaseShapesCollection.Item(l)
+                '    Next
+
+                '    Dim ShapeGroup As Excel.ShapeRange
+                '    ShapeGroup = worksheetShapes.Range(shapeGroupListe)
+                '    groupShpElement = ShapeGroup.Group()
+                '    With groupShpElement
+                '        .Name = pname & "-Gruppierung Phase " & i.ToString
+                '        .AlternativeText = "Phase"
+                '    End With
+
+                'ElseIf anzGroupElemente = 1 Then
+
+                '    groupShpElement = phasenShape
+
+                'Else
+                '    groupShpElement = Nothing
+
+                'End If
+
+                
+
             End With
 
+            'If Not IsNothing(groupShpElement) Then
+            '    projectShapesCollection.Add(groupShpElement.Name, Key:=groupShpElement.Name)
+            'End If
+
+            'phaseShapesCollection.Clear()
 
         Next
 
 
         ' hier werden die Shapes gruppiert
-        anzGroupElemente = shapesCollection.Count
+        anzGroupElemente = projectShapesCollection.Count
 
         If anzGroupElemente > 1 Then
             ' es macht nur Sinn zu gruppieren, wenn es mehr als 1 Element ist ....
 
             ReDim shapeGroupListe(anzGroupElemente - 1)
             For i = 1 To anzGroupElemente
-                shapeGroupListe(i - 1) = shapesCollection.Item(i)
+                shapeGroupListe(i - 1) = projectShapesCollection.Item(i)
             Next
 
             Dim ShapeGroup As Excel.ShapeRange
@@ -9101,14 +9141,15 @@ Public Module Projekte
 
         Else
             ' in diesem Fall besteht das Projekt nur aus einer einzigen Phase
-            groupShpElement = oldShape
+            groupShpElement = phasenShape
 
         End If
 
         Try
             With groupShpElement
                 .Name = pname
-                .AlternativeText = "Test"
+                .AlternativeText = "Projekt"
+
 
                 hproj.shpUID = .ID.ToString
                 hproj.tfZeile = zeile
@@ -9117,18 +9158,33 @@ Public Module Projekte
             Throw New Exception("in zeichneShapeOfProject : dem shape kann kein Name zugewiesen werden ....   ")
         End Try
 
+        ' Check Test 
+        'Dim testShape As Excel.Shape
+        'Dim testShapeRange1 As Excel.ShapeRange, testShapeRange2 As Excel.ShapeRange
+        'Dim testName As String = " "
+        'Dim ok As Boolean = False
+
+        'Try
+        '    testShapeRange1 = groupShpElement.Ungroup
+
+        '    For Each testShapeRange2 In testShapeRange1
+
+        '        For Each testShape In testShapeRange2
+        '            testName = testShape.Name
+        '        Next
+
+        '    Next
+
+        'Catch ex As Exception
+        '    ok = False
+        'End Try
+
+        
+
         ' jetzt muss das neue Shape in der ShowProjekte.ShapeListe eingetragen werden ..
         ShowProjekte.AddShape(pname, shpUID:=groupShpElement.ID.ToString)
 
 
-
-        'If roentgenBlick.isOn Then
-        '    With roentgenBlick
-        '        Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
-        '    End With
-        'End If
-
-        ' jetzt muss zurückgegeben werden, ab wo das nächste gezeichnet werden kann 
         tryzeile = tryzeile + zeilenOffset
 
         appInstance.EnableEvents = formerEE
@@ -9800,8 +9856,17 @@ Public Module Projekte
     End Sub
 
 
-    Public Sub zeichnePhasenInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal farbTyp As Integer, _
-                                                      ByVal numberIt As Boolean, ByRef msNumber As Integer, ByVal report As Boolean)
+    ''' <summary>
+    ''' zeichnet für das angegebene Projekt hproj alle in namenliste enthaltenen Phasen
+    ''' wenn namenliste leer ist, werden alle Phasen des Projekts gezeichnet
+    ''' numberit steuet, ob die Phase für Reporting Zwecke eine Nummerierung erhalten soll 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="namenListe"></param>
+    ''' <param name="numberIt"></param>
+    ''' <param name="msNumber"></param>
+    ''' <remarks></remarks>
+    Public Sub zeichnePhasenInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal numberIt As Boolean, ByRef msNumber As Integer)
 
         Dim top1 As Double, left1 As Double, top2 As Double, left2 As Double
         Dim nummer As Integer, gesamtZahl As Integer
@@ -9945,8 +10010,21 @@ Public Module Projekte
     End Sub
 
 
-    Public Sub zeichnePhasenInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal farbTyp As Integer, ByVal vonMonth As Integer, ByVal bisMonth As Integer, _
-                                                          ByVal numberIt As Boolean, ByRef msNumber As Integer, ByVal report As Boolean)
+    ''' <summary>
+    ''' zeichnet für das angegebene Projekt hproj alle in namenliste enthaltenen Phasen, sofern das Projekt innerhalb 
+    ''' der vonMonth, bisMonth aufgespannten Grenzen liegt 
+    ''' wenn namenliste leer ist, werden alle Phasen des Projekts gezeichnet
+    ''' numberit steuet, ob die Phase für Reporting Zwecke eine Nummerierung erhalten soll 
+    ''' </summary>
+    ''' <param name="hproj">das Projekt-Objekt</param>
+    ''' <param name="namenListe">Liste der Phasen, die gezeichnet werden sollen</param>
+    ''' <param name="vonMonth">linker rand des Kalenderzeitraums, der betrachtet werden soll</param>
+    ''' <param name="bisMonth">rechter Rand des Kalenderzeitraums, der betrachtet werden soll</param>
+    ''' <param name="numberIt">soll nummeriert werden </param>
+    ''' <param name="msNumber">Start der Nummerierung</param>
+    ''' <remarks></remarks>
+    Public Sub zeichnePhasenInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal vonMonth As Integer, ByVal bisMonth As Integer, _
+                                                              ByVal numberIt As Boolean, ByRef msNumber As Integer)
 
         Dim top1 As Double, left1 As Double, top2 As Double, left2 As Double
         Dim nummer As Integer, gesamtZahl As Integer
@@ -9982,7 +10060,7 @@ Public Module Projekte
 
 
         Try
-            'bringt eine List von Phasen Namen zurück, die den angegeben Zeitraum berühren / überdecken
+            'bringt eine List von Phasen Namen zurück, die den angegebenen Zeitraum berühren / überdecken
             todoListe = hproj.withinTimeFrame(0, vonMonth, bisMonth)
 
         Catch ex As Exception
@@ -12748,6 +12826,190 @@ Public Module Projekte
 
 
     End Sub
+
+    ''' <summary>
+    ''' überprüft, ob sich das Shape in Breite bzw. Position verändert hat
+    ''' wenn ja, werden die Phasen Daten entsprechend geändert 
+    ''' </summary>
+    ''' <param name="phaseShape"></param>
+    ''' <remarks></remarks>
+    Public Sub updatePhaseStartDuration(ByVal phaseShape As Excel.Shape)
+
+        Dim tmpstr() As String
+        Dim projectName As String
+        Dim phaseName As String
+        Dim phaseNr As Integer
+        Dim cPhase As clsPhase
+        Dim zeilenoffset As Integer
+
+        Dim ok As Boolean = True
+        Dim hproj As New clsProjekt
+
+        Dim top1 As Double, top2 As Double, left1 As Double, left2 As Double
+        Dim ld As Double
+
+        Dim phasenStart As Integer
+        Dim phasenDauer As Integer 
+        Dim actionNeeded As Boolean = False
+
+        Dim sollLeft As Double, sollWidth As Double, sollTop As Double, sollHeight As Double
+        Dim istLeft As Double, istWidth As Double
+
+        Dim projectShapes As Excel.Shapes = appInstance.Worksheets(arrWsNames(3)).shapes
+        Dim suchstring = phaseShape.Name
+
+        Dim projectShape As Excel.ShapeRange, shapeSammlung As Excel.ShapeRange
+        Dim pShape As Excel.Shape
+
+
+        With phaseShape
+
+            istLeft = .Left
+            istWidth = .Width
+
+            tmpstr = .Name.Split(New Char() {"#"}, 10)
+            projectName = tmpstr(0)
+
+        End With
+
+        Try
+            hproj = ShowProjekte.getProject(projectName)
+        Catch ex As Exception
+            hproj = Nothing
+            ok = False
+        End Try
+
+
+       
+
+        If ok Then
+
+           
+
+            cPhase = New clsPhase(hproj)
+            Try
+                phaseName = tmpstr(1).Trim
+                cPhase = hproj.getPhase(phaseName)
+
+                ' jetzt muss geprüft werden, ob sich die Start-Position, Länge oder Endposition geändert hat 
+
+                If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
+
+                    projectShape = projectShapes.Range(projectName)
+                    shapeSammlung = projectShape.Ungroup()
+
+                    ' muss hier gemacht werden, weil die Koordinaten andere sind, wenn das Shape noch gruppiert ist 
+                    With phaseShape
+
+                        istLeft = .Left
+                        istWidth = .Width
+
+                    End With
+
+
+                    phaseNr = CInt(tmpstr(2))
+                    zeilenoffset = 0
+                    Call hproj.CalculateShapeCoord(phaseNr, zeilenoffset, sollTop, sollLeft, sollWidth, sollHeight)
+
+                    'Dim korrfaktorleft As Double = istLeft - sollLeft
+                    'Dim korrfakttorwidth As Double = istWidth - sollWidth
+                    'Dim korr1 As Double = istLeft / sollLeft
+                    'Dim korr2 As Double = istWidth / sollWidth
+                    '' ggf Height und Top anpassen 
+
+                    'sollLeft = istLeft
+                    'sollWidth = istWidth
+                    With phaseShape
+
+                        If .Height <> sollHeight Then
+                            .Height = sollHeight
+                        End If
+
+                        If .Top <> sollTop Then
+                            .Top = sollTop
+                        End If
+
+                    End With
+
+                    ' jetzt wird wieder regruppiert
+                    pShape = shapeSammlung.Regroup
+                    With pShape
+
+                        .Name = projectName
+                        .AlternativeText = "Projekt"
+                        hproj.shpUID = .ID.ToString
+
+                    End With
+
+                    ' jetzt muss das auch in der Liste Showprojekte eingetragen werden 
+                    ShowProjekte.AddShape(projectName, hproj.shpUID)
+
+
+                Else
+                    Call cPhase.calculateLineCoord(hproj.tfZeile, 1, 1, top1, left1, top2, left2, ld)
+                    sollLeft = left1
+                    sollWidth = left2 - left1
+                    sollTop = top1 - boxHeight * 0.3 * 0.5
+                End If
+
+                If System.Math.Abs(sollLeft - istLeft) > 0.5 Or _
+                    System.Math.Abs(sollWidth - istWidth) > 0.5 Then
+                    ' dann muss der Start bzw. die Duration geändert werden  
+
+                    phasenStart = CInt(365 * istLeft / (12 * boxWidth)) - DateDiff(DateInterval.Day, StartofCalendar, hproj.startDate)
+                    If phasenStart < 0 Then
+                        phasenStart = 0
+                    End If
+
+                    phasenDauer = CInt(365 * (istLeft + istWidth) / (12 * boxWidth)) - DateDiff(DateInterval.Day, StartofCalendar, hproj.startDate) - phasenStart
+
+                    Call cPhase.changeStartandDauer(phasenStart, phasenDauer)
+                    actionNeeded = True
+                    ' dann der Ordnung halber auf die Soll-Werte setzen 
+
+                    With phaseShape
+                        .Top = sollTop
+                    End With
+
+                   
+
+                Else
+                    ' dann der Ordnung halber auf die Soll-Werte setzen 
+
+                    If ProjectBoardDefinitions.My.Settings.drawPhases = False Then
+
+                        With phaseShape
+
+                            .Left = sollLeft
+                            .Width = sollWidth
+                            .Top = sollTop
+
+                        End With
+
+                    End If
+
+                End If
+
+
+            Catch ex As Exception
+                phaseName = ""
+                ok = False
+            End Try
+
+
+        Else
+            'Call MsgBox("keine Information abrufbar ...")
+        End If
+
+        If actionNeeded Then
+            Call awinNeuZeichnenDiagramme(1)
+        End If
+
+
+
+
+    End Sub
+
 
     Public Sub updatePhaseInformation(ByVal phaseShape As Excel.Shape)
 

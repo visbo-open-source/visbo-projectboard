@@ -9,7 +9,29 @@
     Friend _Dauer As Integer
     Private _earliestStart As Integer
     Private _latestStart As Integer
+    Private _budgetWerte() As Double
 
+
+    ''' <summary>
+    ''' gibt die Budgetwerte des Projekts zurück
+    ''' die werden 
+    ''' beim Laden aus der Datenbank bestimmt oder 
+    ''' beim Ändern des Erlös Werts 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property budgetWerte As Double()
+        Get
+            budgetWerte = _budgetWerte
+        End Get
+        Set(value As Double())
+            'ReDim _budgetWerte(value.Length - 1)
+            If value.Sum > 0 Then
+                _budgetWerte = value
+            End If
+        End Set
+    End Property
 
     ''' <summary>
     ''' Bezugsdatum ist hier der StartofCalendar
@@ -616,6 +638,7 @@
 
         End Get
     End Property
+
 
     '
     ' übergibt in KostenBedarf die Werte der Kostenart <costId>

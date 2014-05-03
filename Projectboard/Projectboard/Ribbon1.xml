@@ -95,7 +95,8 @@
           <button id="PT0G2B8" label="besser/schlechter als letzter Stand" onAction="PT0ShowAttentionL" />
           <button id="PT0G2B9" label="besser/schlechter als Beauftragung" onAction="PT0ShowAttentionB" />
           <separator id="PT0G2s5"/>
-          <button id="PT0G2B10" label="Ergebnis" onAction="PT0ShowPortfolioErgebnis" />
+          <button id="PT0G2B10" label="Budget/Kosten" onAction="PT0ShowPortfolioBudgetCost" />
+          <button id="PT0G2B11" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" />
         </group>
       </tab>
       <!--
