@@ -2130,8 +2130,10 @@ Public Module Module1
 
     Public Function calcDatum(ByVal datum As Date, ByVal dauerInDays As Integer) As Date
 
-        If dauerInDays <> 0 Then
+        If dauerInDays > 0 Then
             calcDatum = datum.AddDays(dauerInDays - 1)
+        ElseIf dauerInDays < 0 Then
+            calcDatum = datum.AddDays(dauerInDays + 1)
         Else
             Throw New Exception("Dauer von Null ist unzulässig ..")
         End If

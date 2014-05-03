@@ -25,8 +25,8 @@ Public Class clsProjekt
     Private _ampelErlaeuterung As String
     Private _name As String
 
-
-    Private NullDatum As Date = "23.6.1914"
+    ' geändert 07.04.2014: Damit jedes Projekt auf der Projekttafel angezeigt werden kann.
+    Private NullDatum As Date = StartofCalendar
 
 
 
@@ -951,7 +951,7 @@ Public Class clsProjekt
 
     Public Sub keepPhase1consistent(ByVal phasenEnde As Integer)
 
-        
+
         If Me.getPhase(1).dauerInDays < phasenEnde Then
             Me.getPhase(1).changeStartandDauerPhase1(0, phasenEnde)
             ' im Nebeneffekt wird ausserdem _Dauer aktualisiert  
@@ -963,7 +963,6 @@ Public Class clsProjekt
 
 
     End Sub
-    
 
 
     Public Sub clearBewertungen()
@@ -1448,7 +1447,7 @@ Public Class clsProjekt
                 For r = 1 To cphase.CountResults
                     newresult = New clsResult(parent:=newphase)
                     cphase.getResult(r).CopyToWithoutBewertung(newresult)
-                    newphase.AddResult(newresult)
+                    newphase.addresult(newresult)
                 Next
 
             Catch ex As Exception
@@ -1482,7 +1481,7 @@ Public Class clsProjekt
                 For r = 1 To cphase.CountResults
                     newresult = New clsResult(parent:=newphase)
                     cphase.getResult(r).CopyTo(newresult)
-                    newphase.AddResult(newresult)
+                    newphase.addresult(newresult)
                 Next
 
             Catch ex As Exception

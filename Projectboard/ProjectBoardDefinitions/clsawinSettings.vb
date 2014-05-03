@@ -42,6 +42,9 @@
     ' nicht mehr ganz passt 
     Property autoCorrectBedarfe As Boolean
 
+    ' sollen Bedarfe proportional zur Streckung oder Stauchung eines Projekt angepasst werden
+    Property propAnpassRess As Boolean
+
     ' Settings für die letzte User Selektion in der Tafel 
     Property selectedColumn As Integer
     Property selectedRow As Integer

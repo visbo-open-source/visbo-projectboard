@@ -6385,8 +6385,9 @@ Public Module Projekte
     ''' <param name="risk">Wert für das Risiko</param>
     ''' <param name="volume">Wert für das Volumen</param>
     ''' <remarks></remarks>
-    Public Sub TrageivProjektein(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, ByVal erloes As Double, _
-                              ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal volume As Double)
+    Public Sub TrageivProjektein(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, _
+                                 ByVal endedate As Date, ByVal erloes As Double, _
+                                 ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal volume As Double)
         Dim newprojekt As Boolean
         Dim hproj As clsProjekt
         Dim pStatus As String = ProjektStatus(0)
@@ -6408,7 +6409,15 @@ Public Module Projekte
         hproj = New clsProjekt
 
         Try
-            Projektvorlagen.getProject(vorlagenName).CopyTo(hproj)
+            If endedate = Date.MinValue Then
+                ' dauerUnverändert wurde gewählt
+                Projektvorlagen.getProject(vorlagenName).CopyTo(hproj)
+            Else
+                ' Projektdauer wurde durch Start- und Endedatum im Formular angegeben
+                ' (dauerUnverändert nicht angekreuzt)
+                Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate)
+            End If
+
         Catch ex As Exception
             Call MsgBox("es gibt keine entsprechende Vorlage ..")
             Exit Sub
@@ -6514,9 +6523,10 @@ Public Module Projekte
     '
     ' Sub trägt ein individuelles Projekt ein
     '
-    Public Sub erstelleÍnventurProjekt(ByRef hproj As clsProjekt, ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, ByVal erloes As Double, _
-                          ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
-                          ByVal volume As Double, ByVal complexity As Double, ByVal businessUnit As String, ByVal description As String)
+    Public Sub erstelleInventurProjekt(ByRef hproj As clsProjekt, ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, ByVal endedate As Date, _
+                                       ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
+                                       ByVal volume As Double, ByVal complexity As Double, ByVal businessUnit As String, ByVal description As String)
+
         Dim newprojekt As Boolean
         Dim pStatus As String = ProjektStatus(0)
         Dim zeile As Integer = tafelZeile
@@ -6534,12 +6544,12 @@ Public Module Projekte
 
 
         Try
-            Projektvorlagen.getProject(vorlagenName).CopyTo(hproj)
+            Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate)
+            'Projektvorlagen.getProject(vorlagenName).CopyTo(hproj)
         Catch ex As Exception
             Call MsgBox("es gibt keine entsprechende Vorlage ..")
             Exit Sub
         End Try
-
 
         Try
             With hproj
@@ -6552,8 +6562,8 @@ Public Module Projekte
                 .Status = ProjektStatus(0)
                 .StrategicFit = sfit
                 .Risiko = risk
-                .volume = volume
-                .complexity = complexity
+                .volume = 0         ' in Projekt-Inventur Spalte "Volume" nicht mehr enthalten
+                .complexity = 0     ' in Projekt-Inventur "Spalte Complexity" nicht mehr enthalten
                 .businessUnit = businessUnit
                 .description = description
                 .tfZeile = tafelZeile
@@ -13672,5 +13682,79 @@ Public Module Projekte
 
     'End Function
 
-    
+    Public Sub berechneBedarfe(ByVal oldXwerte() As Double, ByVal corrFakt As Double, ByRef newValues() As Double)
+        Dim k As Integer
+        'Dim Durchschn As Double
+        'Dim Min As Double
+        'Dim Max As Double
+        'Dim oldAnteil() As Double
+        'Dim newAnteil() As Double
+        Dim newXwerte() As Double
+        Dim gesBedarf As Double
+        Dim Rest As Double
+        Dim result As Integer
+
+        ReDim newXwerte(newValues.Length - 1)
+
+
+        If newValues.Length = oldXwerte.Length Then
+
+            'Bedarfe-Verteilung bleibt wie gehabt
+            newXwerte = oldXwerte
+        Else
+            gesBedarf = oldXwerte.Sum
+
+            'ReDim oldAnteil(oldXwerte.Length - 1)
+            'For k = 0 To oldXwerte.Length - 1
+            '    oldAnteil(k) = oldXwerte(k) / gesBedarf
+            'Next k
+
+
+            If awinSettings.propAnpassRess Then
+                ' Gesamter Bedarf dieser Rolle/Kosten wird gemäß streckung bzw. stauchung des Projekts korrigiert
+                gesBedarf = System.Math.Round(gesBedarf * corrFakt)
+            End If
+
+            For k = 0 To newXwerte.Length - 1
+                newXwerte(k) = System.Math.Round(gesBedarf / newXwerte.Length)
+            Next k
+
+            ' Rest wird auf alle newXwerte verteilt
+
+            Rest = gesBedarf - newXwerte.Sum
+
+            k = newXwerte.Length - 1
+            While Rest <> 0
+                If Rest > 0 Then
+                    newXwerte(k) = newXwerte(k) + 1
+                    Rest = Rest - 1
+                Else
+                    newXwerte(k) = newXwerte(k) - 1
+                    Rest = Rest + 1
+                End If
+                result = System.Math.DivRem(k - 1, newXwerte.Length, k) ' modulo - Funktion
+            End While
+
+            '' oldXwerte auf newXwerte verteilen, berechne
+
+            'For k = 0 To newXwerte.Length - 1
+            '    newXwerte(k) = gesBedarf * oldAnteil(k)
+            'Next k
+
+            'Rest = gesBedarf - newXwerte.Sum
+            'If Rest <> 0 Then
+            '    ReDim newAnteil(newValues.Length - 1)
+            '    For k = 0 To newXwerte.Length - 1
+            '        newAnteil(k) = newXwerte(k) / newXwerte.Sum
+            '        newXwerte(k) = newXwerte(k) + Rest * newAnteil(k)
+            '    Next k
+            'End If
+            ' newXwerte auf ganze Zahlen runden
+
+        End If
+
+        newValues = newXwerte
+
+    End Sub
+ 
 End Module
