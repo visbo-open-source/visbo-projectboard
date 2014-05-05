@@ -13381,12 +13381,13 @@ Public Module Projekte
 
                     Try
                         With hproj
-
-                            .earliestStart = 0
+                            ' 5.5.2014 ur: soll nicht wieder auf 0 gesetzt werden, sondern Einstellung beibehalten
+                            '.earliestStart = 0
                             .earliestStartDate = .startDate
 
                             .Id = vglName & "#" & importDate.ToString
-                            .latestStart = 0
+                            ' 5.5.2014 ur: soll nicht wieder auf 0 gesetzt werden, sondern Einstellung beibehalten
+                            '.latestStart = 0
                             .latestStartDate = .startDate
                             .leadPerson = " "
                             .shpUID = ""
