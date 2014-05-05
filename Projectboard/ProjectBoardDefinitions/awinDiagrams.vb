@@ -1806,6 +1806,287 @@ Public Module awinDiagrams
     End Sub
 
 
+    ''' <summary>
+    ''' aktualisiert das Budget Ergebnis Diagramm 
+    ''' </summary>
+    ''' <param name="chtObj">Verweis aus das zu aktualisierende Chart</param>
+    ''' <remarks></remarks>
+    Sub awinUpdateBudgetErgebnisDiagramm(ByRef chtObj As Excel.ChartObject)
+
+        Dim diagramTitle As String
+        Dim i As Integer
+        Dim minScale As Double
+        Dim Xdatenreihe(4) As String
+        Dim valueDatenreihe1(4) As Double
+        Dim valueDatenreihe2(4) As Double
+        Dim itemColor(4) As Object
+        Dim itemValue(4) As Double
+
+        Dim budgetSum As Double, costPast As Double, costFuture As Double, riskValue As Double
+        Dim zeitraumCost As Double
+        Dim costValues() As Double
+        Dim ertragsWert As Double
+        Dim minColumn As Integer, maxColumn As Integer, heuteColumn As Integer, heuteIndex As Integer
+        Dim future As Boolean = False
+
+        heuteColumn = getColumnOfDate(Date.Today)
+        heuteIndex = heuteColumn - showRangeLeft
+
+        minColumn = showRangeLeft
+        maxColumn = showRangeRight
+
+        Dim mycollection As New Collection
+
+        Dim ErgebnisListeR As New Collection
+
+
+
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        appInstance.ScreenUpdating = False
+
+
+
+        Xdatenreihe(0) = "Budget Summe"
+        If heuteColumn >= minColumn + 1 And heuteColumn <= maxColumn Then
+            Xdatenreihe(2) = "bisherige Kosten" & vbLf & textZeitraum(minColumn, heuteColumn - 1)
+            Xdatenreihe(3) = "Prognose Kosten" & vbLf & textZeitraum(heuteColumn, maxColumn)
+        ElseIf heuteColumn > maxColumn Then
+            future = False
+            Xdatenreihe(2) = "bisherige Kosten" & vbLf & textZeitraum(minColumn, maxColumn)
+            Xdatenreihe(3) = "Prognose Kosten" & vbLf & "existieren nicht"
+        ElseIf heuteColumn <= minColumn Then
+            future = True
+            Xdatenreihe(2) = "bisherige Kosten" & vbLf & "existieren nicht"
+            Xdatenreihe(3) = "Prognose Kosten" & vbLf & textZeitraum(minColumn, maxColumn)
+        End If
+
+        Xdatenreihe(1) = "Risiko-Abschlag"
+        Xdatenreihe(4) = "Ergebnis"
+
+        Dim positiv As Boolean = True
+
+        ' Ausrechnen amteiliges Budget, das i Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
+        budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        costValues = ShowProjekte.getTotalCostValuesInMonth
+        zeitraumCost = System.Math.Round(costValues.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+
+        Dim zeitraumLaenge = costValues.Length - 1
+        costPast = 0
+        For i = 0 To Min(heuteIndex - 1, zeitraumLaenge)
+            costPast = costPast + costValues(i)
+        Next
+        costPast = System.Math.Round(costPast / 10, mode:=MidpointRounding.ToEven) * 10
+
+
+        costFuture = 0
+        For i = Max(0, heuteIndex) To zeitraumLaenge
+            costFuture = costFuture + costValues(i)
+        Next
+        costFuture = System.Math.Round(costFuture / 10, mode:=MidpointRounding.ToEven) * 10
+
+        Dim korrektur As Double = zeitraumCost - (costPast + costFuture)
+        If future Then
+            costFuture = costFuture + korrektur
+        Else
+            costPast = costPast + korrektur
+            If costPast < 0 Then
+                costFuture = costFuture + costPast
+                costPast = 0
+            End If
+        End If
+
+        ' das ist der Risiko Abschlag  
+        riskValue = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+        itemValue(0) = budgetSum
+        itemColor(0) = ergebnisfarbe1
+
+
+        Dim currentWert As Double = itemValue(0)
+
+
+        ' das ist der Risiko-Abschlag 
+        itemValue(1) = riskValue
+        itemColor(1) = iProjektFarbe
+
+        ' das sind die Kosten der Vergangenheit
+        itemValue(2) = costPast
+        itemColor(2) = farbeExterne
+
+        ' das sind die Kosten der Zukunft
+        itemValue(3) = costFuture
+        itemColor(3) = farbeExterne
+
+        ' das ist der Ertrag 
+        ertragsWert = budgetSum - (costPast + costFuture + riskValue)
+        itemValue(4) = ertragsWert
+        If ertragsWert > 0 Then
+            itemColor(4) = ergebnisfarbe2
+        Else
+            itemColor(4) = farbeExterne
+        End If
+
+        diagramTitle = portfolioDiagrammtitel(PTpfdk.Budget) & " " & textZeitraum(showRangeLeft, showRangeRight)
+
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+
+        With appInstance.Worksheets(arrWsNames(3))
+
+
+
+            If ertragsWert < 0 Then
+                minScale = System.Math.Round(ertragsWert / 10, mode:=MidpointRounding.ToEven) * 10
+            Else
+                minScale = 0
+            End If
+
+            'Dim htxt As String
+            Dim valueCrossesNull As Boolean = False
+
+            With chtObj.Chart
+                ' remove extra series
+                Do Until .SeriesCollection.Count = 0
+                    .SeriesCollection(1).Delete()
+                Loop
+                Dim crossindex As Integer = -1
+
+                ' bestimmen des Anfangs  
+                Dim iv = 0
+                valueDatenreihe1(iv) = 0
+                valueDatenreihe2(iv) = itemValue(iv)
+                currentWert = itemValue(iv)
+                Dim formerValue As Double = currentWert
+                Dim negativeFromNull As Boolean = False
+
+                ' alle nächsten Zwischen-Werte 
+                For iv = 1 To 3
+                    If formerValue <= 0 Then
+                        negativeFromNull = True
+                    Else
+                        negativeFromNull = False
+                    End If
+
+                    currentWert = currentWert - itemValue(iv)
+                    valueCrossesNull = (currentWert + itemValue(iv) > 0) And (currentWert < 0)
+
+                    If currentWert >= 0 Then
+                        valueDatenreihe1(iv) = currentWert
+                        valueDatenreihe2(iv) = itemValue(iv)
+                    ElseIf valueCrossesNull Then
+                        valueDatenreihe1(iv) = currentWert
+                        valueDatenreihe2(iv) = itemValue(iv) - currentWert * (-1) ' notwendig da currentWert ja negativ ist ..
+                        crossindex = iv + 1
+                    ElseIf negativeFromNull Then
+                        valueDatenreihe1(iv) = formerValue
+                        valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                    Else
+                        valueDatenreihe1(iv) = currentWert
+                        valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                    End If
+
+                    formerValue = currentWert
+                Next
+
+                ' bestimmen des Ende 
+                iv = 4
+                valueDatenreihe1(iv) = 0
+                valueDatenreihe2(iv) = itemValue(iv)
+
+
+
+                'series
+                With .SeriesCollection.NewSeries
+                    .name = "Bottom"
+                    .HasDataLabels = False
+                    .Interior.colorindex = -4142
+                    .Values = valueDatenreihe1
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnStacked
+                    If crossindex > 0 Then
+                        ' es gab einen Übergang , dort muss Bottom auf die entsprechende Farbe gesetzt werden 
+                        With .Points(crossindex)
+                            .Interior.color = itemColor(crossindex - 1)
+                        End With
+                    End If
+
+                End With
+
+                With .SeriesCollection.NewSeries
+                    .name = "Top"
+                    .HasDataLabels = True
+                    .Values = valueDatenreihe2
+                    .XValues = Xdatenreihe
+                    .ChartType = Excel.XlChartType.xlColumnStacked
+
+                    For iv = 0 To 4
+
+                        With .Points(iv + 1)
+                            .HasDataLabel = True
+                            .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
+                            .Interior.color = itemColor(iv)
+                            .DataLabel.Font.Size = awinSettings.fontsizeLegend
+                            Try
+                                .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
+                            Catch ex As Exception
+
+                            End Try
+                        End With
+
+                    Next
+
+                End With
+
+                .HasAxis(Excel.XlAxisType.xlCategory) = True
+                .HasAxis(Excel.XlAxisType.xlValue) = False
+
+                With .Axes(Excel.XlAxisType.xlCategory)
+                    .HasTitle = False
+                    If minScale < 0 Then
+                        .TickLabelPosition = Excel.Constants.xlLow
+                    End If
+                    '.MinimumScale = 0
+
+                End With
+
+
+                Try
+                    With .Axes(Excel.XlAxisType.xlValue)
+                        .HasTitle = False
+                        .HasMajorGridlines = False
+                        .hasminorgridlines = False
+                        If minScale < 0 Then
+                            .MinimumScale = System.Math.Round((minScale - 1) / 10, mode:=MidpointRounding.ToEven) * 10
+                        Else
+                            .MinimumScale = 0
+                        End If
+                    End With
+                Catch ex As Exception
+
+                End Try
+
+
+                .HasLegend = False
+                .HasTitle = True
+
+                .ChartTitle.Text = diagramTitle
+                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+            End With
+
+        End With
+
+
+        appInstance.EnableEvents = formerEE
+        appInstance.ScreenUpdating = formerSU
+
+
+    End Sub
+
+
     '
     '
     '
@@ -3183,8 +3464,9 @@ Public Module awinDiagrams
         Dim valueDatenreihe2(3) As Double
         Dim itemColor(3) As Object
         Dim itemValue(3) As Double
-        Dim earnedValue As Double, additionalCostExt As Double, riskValue As Double, internwithoutProject As Double
+        Dim earnedValue As Double, additionalCostExt As Double, internwithoutProject As Double
         Dim ertragsWert As Double
+        Dim zeitraumBudget As Double, zeitraumCost As Double, zeitraumRisiko As Double
 
         Dim mycollection As New Collection
 
@@ -3198,12 +3480,23 @@ Public Module awinDiagrams
 
         Dim positiv As Boolean = True
 
-        ' das ist der Earned Value 
-        earnedValue = System.Math.Round(ShowProjekte.getEarnedValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
-        ' das ist der Risiko Abschlag  
-        riskValue = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
 
-        itemValue(0) = earnedValue - riskValue
+        ' neu 
+        ' Ausrechnen amteiliges Budget, das im Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
+        zeitraumBudget = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        zeitraumCost = System.Math.Round(ShowProjekte.getTotalCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+        ' das ist der Risiko Abschlag  
+        zeitraumRisiko = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+
+        ' das ist der Earned Value 
+        earnedValue = zeitraumBudget - (zeitraumCost + zeitraumRisiko)
+
+        itemValue(0) = earnedValue
+
+
+
         If itemValue(0) >= 0 Then
             itemColor(0) = ergebnisfarbe1
         Else
@@ -3224,7 +3517,7 @@ Public Module awinDiagrams
         itemColor(2) = awinSettings.AmpelGelb
 
         ' das ist der Ertrag 
-        ertragsWert = earnedValue - (riskValue + additionalCostExt + internwithoutProject)
+        ertragsWert = earnedValue - (additionalCostExt + internwithoutProject)
         itemValue(3) = ertragsWert
         If ertragsWert > 0 Then
             itemColor(3) = ergebnisfarbe2
@@ -3785,8 +4078,10 @@ Public Module awinDiagrams
         Dim valueDatenreihe2(3) As Double
         Dim itemColor(3) As Object
         Dim itemValue(3) As Double
-        Dim earnedValue As Double, additionalCostExt As Double, riskValue As Double, internwithoutProject As Double
+        Dim earnedValue As Double, additionalCostExt As Double, internwithoutProject As Double
         Dim ertragsWert As Double
+        Dim zeitraumBudget As Double, zeitraumCost As Double, zeitraumRisiko As Double
+
 
         Dim mycollection As New Collection
         Dim chtobjName As String
@@ -3831,12 +4126,20 @@ Public Module awinDiagrams
 
         Dim positiv As Boolean = True
 
-        ' das ist der Earned Value 
-        earnedValue = System.Math.Round(ShowProjekte.getEarnedValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
-        ' das ist der Risiko Abschlag  
-        riskValue = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
 
-        itemValue(0) = earnedValue - riskValue
+        ' Ausrechnen amteiliges Budget, das im Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
+        zeitraumBudget = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        zeitraumCost = System.Math.Round(ShowProjekte.getTotalCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+        ' das ist der Risiko Abschlag  
+        zeitraumRisiko = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+
+        ' das ist der Earned Value 
+        earnedValue = zeitraumBudget - (zeitraumCost + zeitraumRisiko)
+
+        itemValue(0) = earnedValue
+
         If itemValue(0) >= 0 Then
             itemColor(0) = ergebnisfarbe1
         Else
@@ -3857,7 +4160,7 @@ Public Module awinDiagrams
         itemColor(2) = awinSettings.AmpelGelb
 
         ' das ist der Ertrag 
-        ertragsWert = earnedValue - (riskValue + additionalCostExt + internwithoutProject)
+        ertragsWert = earnedValue - (additionalCostExt + internwithoutProject)
         itemValue(3) = ertragsWert
         If ertragsWert > 0 Then
             itemColor(3) = ergebnisfarbe2
@@ -3983,6 +4286,405 @@ Public Module awinDiagrams
                         .ChartType = Excel.XlChartType.xlColumnStacked
 
                         For iv = 0 To 3
+
+                            With .Points(iv + 1)
+                                .HasDataLabel = True
+                                .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
+                                .Interior.color = itemColor(iv)
+                                .DataLabel.Font.Size = awinSettings.fontsizeLegend
+                                Try
+                                    .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
+                                Catch ex As Exception
+
+                                End Try
+                            End With
+
+                        Next
+
+                    End With
+
+                    .HasAxis(Excel.XlAxisType.xlCategory) = True
+                    .HasAxis(Excel.XlAxisType.xlValue) = False
+
+                    With .Axes(Excel.XlAxisType.xlCategory)
+                        .HasTitle = False
+                        If minScale < 0 Then
+                            .TickLabelPosition = Excel.Constants.xlLow
+                        End If
+                        '.MinimumScale = 0
+
+                    End With
+
+                    'Dim hax As Excel.Axis
+                    'With hax
+                    '    .HasMajorGridlines
+                    '    .hasminor()
+                    'End With
+
+                    Try
+                        With .Axes(Excel.XlAxisType.xlValue)
+                            .HasTitle = False
+                            .HasMajorGridlines = False
+                            .hasminorgridlines = False
+                            If minScale < 0 Then
+                                .MinimumScale = System.Math.Round((minScale - 1) / 10, mode:=MidpointRounding.ToEven) * 10
+                            Else
+                                .MinimumScale = 0
+                            End If
+                        End With
+                    Catch ex As Exception
+
+                    End Try
+
+
+                    .HasLegend = False
+                    'With .Legend
+                    '    .Position = XlConstants.xlTop
+                    '    .Font.Size = 8
+                    'End With
+                    .HasTitle = True
+
+                    .ChartTitle.Text = diagramTitle
+                    .ChartTitle.font.size = awinSettings.fontsizeTitle
+                    .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                End With
+
+                With .ChartObjects(anzDiagrams + 1)
+                    .top = top
+                    .left = left
+                    .width = width
+                    .height = height
+                    .name = chtobjName
+                End With
+
+                repObj = .ChartObjects(anzDiagrams + 1)
+
+                ' jetzt muss die letzte Position des Diagramms gespeichert werden , wenn es nicht aus der Reporting Engine 
+                ' aufgerufen wurde
+                If Not calledfromReporting Then
+
+                    Dim prcDiagram As New clsDiagramm
+
+                    ' Anfang Event Handling für Chart 
+                    Dim prcChart As New clsEventsPrcCharts
+                    prcChart.PrcChartEvents = .ChartObjects(anzDiagrams + 1).Chart
+                    prcDiagram.setDiagramEvent = prcChart
+                    ' Ende Event Handling für Chart 
+
+
+                    With prcDiagram
+                        .DiagrammTitel = diagramTitle
+                        .diagrammTyp = DiagrammTypen(4)
+                        .gsCollection = Nothing
+                        .isCockpitChart = False
+                        .top = top
+                        .left = left
+                        .width = width
+                        .height = height
+                        .kennung = chtobjName
+                    End With
+
+                    ' eintragen in die sortierte Liste mit .kennung als dem Schlüssel 
+                    ' wenn das Diagramm bereits existiert, muss es gelöscht werden, dann neu ergänzt ... 
+                    Try
+                        DiagramList.Add(prcDiagram)
+                    Catch ex As Exception
+
+                        Try
+                            DiagramList.Remove(prcDiagram.kennung)
+                            DiagramList.Add(prcDiagram)
+                        Catch ex1 As Exception
+
+                        End Try
+
+
+                    End Try
+
+                End If
+
+            End If
+
+
+        End With
+
+        'Call awinScrollintoView()
+        appInstance.EnableEvents = formerEE
+        appInstance.ScreenUpdating = formerSU
+
+
+    End Sub
+
+    ''' <summary>
+    ''' zeigt an, wieviel bisher vom Budget aufgebraucht wurde und was noch aussteht
+    ''' </summary>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="width"></param>
+    ''' <param name="height"></param>
+    ''' <param name="isCockpitChart"></param>
+    ''' <remarks></remarks>
+    Sub awinCreateBudgetErgebnisDiagramm(ByRef repObj As Object, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
+                                   ByVal isCockpitChart As Boolean, ByVal calledfromReporting As Boolean)
+
+        Dim diagramTitle As String
+        Dim anzDiagrams As Integer
+        Dim found As Boolean
+        'Dim plen As Integer
+        Dim i As Integer
+        Dim minScale As Double
+        Dim Xdatenreihe(4) As String
+        Dim valueDatenreihe1(4) As Double
+        Dim valueDatenreihe2(4) As Double
+        Dim itemColor(4) As Object
+        Dim itemValue(4) As Double
+
+        Dim budgetSum As Double, costPast As Double, costFuture As Double, riskValue As Double
+        Dim zeitraumCost As Double
+        Dim costValues() As Double
+        Dim ertragsWert As Double
+        Dim minColumn As Integer, maxColumn As Integer, heuteColumn As integer, heuteIndex As Integer
+        Dim future As Boolean = False
+
+        heuteColumn = getColumnOfDate(Date.Today)
+        heuteIndex = heuteColumn - showRangeLeft
+
+        minColumn = showRangeLeft
+        maxColumn = showRangeRight
+
+        Dim mycollection As New Collection
+        Dim chtobjName As String
+
+        'Dim hproj As clsProjekt
+        Dim ErgebnisListeR As New Collection
+
+        mycollection.Add("Ergebnis")
+        chtobjName = getKennung("pf", PTpfdk.Budget, mycollection)
+        mycollection.Clear()
+
+        If Not calledfromReporting Then
+
+            Dim foundDiagramm As clsDiagramm
+
+            ' wenn die Werte für dieses Diagramm bereits einmal gespeichert wurden ... -> übernehmen 
+            Try
+                foundDiagramm = DiagramList.getDiagramm(chtobjName)
+                With foundDiagramm
+                    top = .top
+                    left = .left
+                    width = .width
+                    height = .height
+                End With
+            Catch ex As Exception
+
+
+            End Try
+        End If
+
+
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        appInstance.ScreenUpdating = False
+
+
+
+        Xdatenreihe(0) = "Budget Summe"
+        If heuteColumn >= minColumn + 1 And heuteColumn <= maxColumn Then
+            Xdatenreihe(2) = "bisherige Kosten" & vbLf & textZeitraum(minColumn, heuteColumn - 1)
+            Xdatenreihe(3) = "Prognose Kosten" & vbLf & textZeitraum(heuteColumn, maxColumn)
+        ElseIf heuteColumn > maxColumn Then
+            future = False
+            Xdatenreihe(2) = "bisherige Kosten" & vbLf & textZeitraum(minColumn, maxColumn)
+            Xdatenreihe(3) = "Prognose Kosten" & vbLf & "existieren nicht"
+        ElseIf heuteColumn <= minColumn Then
+            future = True
+            Xdatenreihe(2) = "bisherige Kosten" & vbLf & "existieren nicht"
+            Xdatenreihe(3) = "Prognose Kosten" & vbLf & textZeitraum(minColumn, maxColumn)
+        End If
+
+        Xdatenreihe(1) = "Risiko-Abschlag"
+        Xdatenreihe(4) = "Ergebnis"
+
+        Dim positiv As Boolean = True
+
+        ' Ausrechnen amteiliges Budget, das i Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
+        budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+        costValues = ShowProjekte.getTotalCostValuesInMonth
+        zeitraumCost = System.Math.Round(costValues.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+
+        Dim zeitraumLaenge = costValues.Length - 1
+        costPast = 0
+        For i = 0 To Min(heuteIndex - 1, zeitraumLaenge)
+            costPast = costPast + costValues(i)
+        Next
+        costPast = System.Math.Round(costPast / 10, mode:=MidpointRounding.ToEven) * 10
+
+
+        costFuture = 0
+        For i = Max(0, heuteIndex) To zeitraumLaenge
+            costFuture = costFuture + costValues(i)
+        Next
+        costFuture = System.Math.Round(costFuture / 10, mode:=MidpointRounding.ToEven) * 10
+
+        Dim korrektur As Double = zeitraumCost - (costPast + costFuture)
+        If future Then
+            costFuture = costFuture + korrektur
+        Else
+            costPast = costPast + korrektur
+            If costPast < 0 Then
+                costFuture = costFuture + costPast
+                costPast = 0
+            End If
+        End If
+
+        ' das ist der Risiko Abschlag  
+        riskValue = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+        itemValue(0) = budgetSum
+        itemColor(0) = ergebnisfarbe1
+       
+
+        Dim currentWert As Double = itemValue(0)
+
+
+        ' das ist der Risiko-Abschlag 
+        itemValue(1) = riskValue
+        itemColor(1) = iProjektFarbe
+
+        ' das sind die Kosten der Vergangenheit
+        itemValue(2) = costPast
+        itemColor(2) = farbeExterne
+
+        ' das sind die Kosten der Zukunft
+        itemValue(3) = costFuture
+        itemColor(3) = farbeExterne
+
+        ' das ist der Ertrag 
+        ertragsWert = budgetSum - (costPast + costFuture + riskValue)
+        itemValue(4) = ertragsWert
+        If ertragsWert > 0 Then
+            itemColor(4) = ergebnisfarbe2
+        Else
+            itemColor(4) = farbeExterne
+        End If
+
+        diagramTitle = portfolioDiagrammtitel(PTpfdk.Budget) & " " & textZeitraum(showRangeLeft, showRangeRight)
+        
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+
+        With appInstance.Worksheets(arrWsNames(3))
+            anzDiagrams = .ChartObjects.Count
+
+            '
+            ' um welches Diagramm handelt es sich ...
+            '
+            i = 1
+            found = False
+            While i <= anzDiagrams And Not found
+
+
+                If .ChartObjects(i).Name = chtobjName Then
+                    found = True
+                Else
+                    i = i + 1
+                End If
+
+            End While
+
+
+
+            If found Then
+                repObj = .ChartObjects(i)
+                'MsgBox(" Diagramm wird bereits angezeigt ...")
+            Else
+
+                If ertragsWert < 0 Then
+                    minScale = System.Math.Round(ertragsWert / 10, mode:=MidpointRounding.ToEven) * 10
+                Else
+                    minScale = 0
+                End If
+
+                'Dim htxt As String
+                Dim valueCrossesNull As Boolean = False
+
+                With appInstance.Charts.Add
+                    ' remove extra series
+                    Do Until .SeriesCollection.Count = 0
+                        .SeriesCollection(1).Delete()
+                    Loop
+                    Dim crossindex As Integer = -1
+
+                    ' bestimmen des Anfangs  
+                    Dim iv = 0
+                    valueDatenreihe1(iv) = 0
+                    valueDatenreihe2(iv) = itemValue(iv)
+                    currentWert = itemValue(iv)
+                    Dim formerValue As Double = currentWert
+                    Dim negativeFromNull As Boolean = False
+
+                    ' alle nächsten Zwischen-Werte 
+                    For iv = 1 To 3
+                        If formerValue <= 0 Then
+                            negativeFromNull = True
+                        Else
+                            negativeFromNull = False
+                        End If
+
+                        currentWert = currentWert - itemValue(iv)
+                        valueCrossesNull = (currentWert + itemValue(iv) > 0) And (currentWert < 0)
+
+                        If currentWert >= 0 Then
+                            valueDatenreihe1(iv) = currentWert
+                            valueDatenreihe2(iv) = itemValue(iv)
+                        ElseIf valueCrossesNull Then
+                            valueDatenreihe1(iv) = currentWert
+                            valueDatenreihe2(iv) = itemValue(iv) - currentWert * (-1) ' notwendig da currentWert ja negativ ist ..
+                            crossindex = iv + 1
+                        ElseIf negativeFromNull Then
+                            valueDatenreihe1(iv) = formerValue
+                            valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                        Else
+                            valueDatenreihe1(iv) = currentWert
+                            valueDatenreihe2(iv) = itemValue(iv) * (-1)
+                        End If
+
+                        formerValue = currentWert
+                    Next
+
+                    ' bestimmen des Ende 
+                    iv = 4
+                    valueDatenreihe1(iv) = 0
+                    valueDatenreihe2(iv) = itemValue(iv)
+
+
+
+                    'series
+                    With .SeriesCollection.NewSeries
+                        .name = "Bottom"
+                        .HasDataLabels = False
+                        .Interior.colorindex = -4142
+                        .Values = valueDatenreihe1
+                        .XValues = Xdatenreihe
+                        .ChartType = Excel.XlChartType.xlColumnStacked
+                        If crossindex > 0 Then
+                            ' es gab einen Übergang , dort muss Bottom auf die entsprechende Farbe gesetzt werden 
+                            With .Points(crossindex)
+                                .Interior.color = itemColor(crossindex - 1)
+                            End With
+                        End If
+
+                    End With
+
+                    With .SeriesCollection.NewSeries
+                        .name = "Top"
+                        .HasDataLabels = True
+                        .Values = valueDatenreihe2
+                        .XValues = Xdatenreihe
+                        .ChartType = Excel.XlChartType.xlColumnStacked
+
+                        For iv = 0 To 4
 
                             With .Points(iv + 1)
                                 .HasDataLabel = True
@@ -4787,7 +5489,7 @@ Public Module awinDiagrams
         ' 5 - Stammdaten ändern
         ' 6 - Ressourcen-Bedarfe, Kapas ändern
         ' 7 - Kosten-Bedarfe , Budgets ändern
-        ' 8 - Summen- und Portfolio diagramme
+        ' 8 - Selektion geändert
 
 
 
@@ -4842,6 +5544,13 @@ Public Module awinDiagrams
 
                                 End Try
 
+                                ' p = 19 
+                            ElseIf p = PTpfdk.Budget Then
+                                Try
+                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                                Catch ex As Exception
+
+                                End Try
                             End If
 
 
@@ -4868,16 +5577,12 @@ Public Module awinDiagrams
 
                             If p = 1 Then
                                 Call awinUpdateErgebnisDiagramm(chtobj)
-
                             ElseIf p = 2 Then
                                 Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
                             ElseIf p = 4 Then
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
-
                             ElseIf p = 5 Then
                                 Call awinUpdateEffizienzDiagramm2(chtobj)
-
                             ElseIf p = 6 Or p = 7 Or p = 8 Then
                                 Try
                                     Call awinUpdateColorDistributionDiagramm(chtobj)
@@ -4903,7 +5608,16 @@ Public Module awinDiagrams
                                 Catch ex As Exception
 
                                 End Try
+
+                                ' p = 19 
+                            ElseIf p = PTpfdk.Budget Then
+                                Try
+                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                                Catch ex As Exception
+
+                                End Try
                             End If
+
 
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
@@ -4937,6 +5651,7 @@ Public Module awinDiagrams
                                 Catch ex As Exception
 
                                 End Try
+
                             ElseIf p = 9 Then
                                 Try
                                     Call awinUpdateAuslastungsDiagramm(chtobj)
@@ -4955,7 +5670,16 @@ Public Module awinDiagrams
                                 Catch ex As Exception
 
                                 End Try
+
+                                ' p = 19 
+                            ElseIf p = PTpfdk.Budget Then
+                                Try
+                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                                Catch ex As Exception
+
+                                End Try
                             End If
+
 
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
@@ -4989,6 +5713,7 @@ Public Module awinDiagrams
                                 Catch ex As Exception
 
                                 End Try
+
                             ElseIf p = 9 Then
                                 Try
                                     Call awinUpdateAuslastungsDiagramm(chtobj)
@@ -5007,7 +5732,16 @@ Public Module awinDiagrams
                                 Catch ex As Exception
 
                                 End Try
+
+                                ' p = 19 
+                            ElseIf p = PTpfdk.Budget Then
+                                Try
+                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                                Catch ex As Exception
+
+                                End Try
                             End If
+
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
 
@@ -5028,6 +5762,13 @@ Public Module awinDiagrams
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
                                 Call awinUpdateEffizienzDiagramm2(chtobj)
+                            ElseIf p = 6 Or p = 7 Or p = 8 Then
+                                Try
+                                    Call awinUpdateColorDistributionDiagramm(chtobj)
+                                Catch ex As Exception
+
+                                End Try
+
                             ElseIf p = 9 Then
                                 Try
                                     Call awinUpdateAuslastungsDiagramm(chtobj)
@@ -5046,7 +5787,16 @@ Public Module awinDiagrams
                                 Catch ex As Exception
 
                                 End Try
+
+                                ' p = 19 
+                            ElseIf p = PTpfdk.Budget Then
+                                Try
+                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                                Catch ex As Exception
+
+                                End Try
                             End If
+
 
 
 
@@ -5078,6 +5828,13 @@ Public Module awinDiagrams
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
                                 Call awinUpdateEffizienzDiagramm2(chtobj)
+                            ElseIf p = 6 Or p = 7 Or p = 8 Then
+                                Try
+                                    Call awinUpdateColorDistributionDiagramm(chtobj)
+                                Catch ex As Exception
+
+                                End Try
+
                             ElseIf p = 9 Then
                                 Try
                                     Call awinUpdateAuslastungsDiagramm(chtobj)
@@ -5096,7 +5853,16 @@ Public Module awinDiagrams
                                 Catch ex As Exception
 
                                 End Try
+
+                                ' p = 19 
+                            ElseIf p = PTpfdk.Budget Then
+                                Try
+                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                                Catch ex As Exception
+
+                                End Try
                             End If
+
 
 
 
@@ -5125,7 +5891,14 @@ Public Module awinDiagrams
                                 Call awinUpdatePersCostStructureDiagramm(chtobj)
                             ElseIf p = 5 Then
                                 Call awinUpdateEffizienzDiagramm2(chtobj)
+                            ElseIf p = PTpfdk.Budget Then
+                                Try
+                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                                Catch ex As Exception
+
+                                End Try
                             End If
+
 
 
                         ElseIf istPortfolioDiagramm(chtobj, p) Then
@@ -5142,23 +5915,23 @@ Public Module awinDiagrams
                             istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
                             Call awinUpdateprcCollectionDiagram(chtobj)
+                            ' später ergänzen, wenn die Selektion sich auf alle oder mehrere Charts auswirken soll 
+                            'ElseIf istSummenDiagramm(chtobj, p) Then
 
-                        ElseIf istSummenDiagramm(chtobj, p) Then
-
-                            If p = 1 Then
-                                Call awinUpdateErgebnisDiagramm(chtobj)
-                            ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                            ElseIf p = 4 Then
-                                Call awinUpdatePersCostStructureDiagramm(chtobj)
-                            ElseIf p = 5 Then
-                                Call awinUpdateEffizienzDiagramm2(chtobj)
-                            End If
+                            '    If p = 1 Then
+                            '        Call awinUpdateErgebnisDiagramm(chtobj)
+                            '    ElseIf p = 2 Then
+                            '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
+                            '    ElseIf p = 4 Then
+                            '        Call awinUpdatePersCostStructureDiagramm(chtobj)
+                            '    ElseIf p = 5 Then
+                            '        Call awinUpdateEffizienzDiagramm2(chtobj)
+                            '    End If
 
 
-                        ElseIf istPortfolioDiagramm(chtobj, p) Then
+                            'ElseIf istPortfolioDiagramm(chtobj, p) Then
 
-                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
+                            '    Call awinUpdatePortfolioDiagrams(chtobj, 0)
 
 
                         Else ' ist Projekt-Charakteristik Diagramm oder Phasen Diagramm

@@ -1691,6 +1691,7 @@ Public Module testModule
                             kennzeichnung = "Fortschritt Gesamtkosten" Or _
                             kennzeichnung = "Fortschritt Rolle" Or _
                             kennzeichnung = "Fortschritt Kostenart" Or _
+                            kennzeichnung = "Übersicht Budget" Or _
                             kennzeichnung = "Ergebnis Verbesserungspotential" Or _
                             kennzeichnung = "Ergebnis" Or _
                             kennzeichnung = "Strategie/Risiko/Marge" Or _
@@ -1958,7 +1959,7 @@ Public Module testModule
 
                                         If phNameCollection.Count > 0 Then
 
-                                            Call awinZeichnePhasen(phNameCollection, 4, False)
+                                            Call awinZeichnePhasen(phNameCollection, False)
                                             rng.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
                                             colorrng.Interior.ColorIndex = -4142
 
@@ -2121,6 +2122,42 @@ Public Module testModule
 
                                 End Try
 
+                            Case "Übersicht Budget"
+
+                                boxName = boxName & " (T€)"
+                                pptSize = .TextFrame2.TextRange.Font.Size
+                                .TextFrame2.TextRange.Text = " "
+
+                                htop = 100
+                                hleft = 100
+                                hwidth = 450
+                                hheight = awinSettings.ChartHoehe1
+                                obj = Nothing
+                                Call awinCreateBudgetErgebnisDiagramm(obj, htop, hleft, hwidth, hheight, False, True)
+
+                                reportObj = obj
+
+                                With reportObj
+                                    '.Chart.ChartTitle.Text = boxName
+                                    .Chart.ChartTitle.Font.Size = pptSize
+                                End With
+
+                                reportObj.Copy()
+                                newShape = pptSlide.Shapes.Paste
+
+                                With newShape
+                                    .Top = top + 0.02 * height
+                                    .Left = left + 0.02 * width
+                                    .Width = width * 0.96
+                                    .Height = height * 0.96
+                                End With
+
+                                Try
+                                    reportObj.Delete()
+                                    'DiagramList.Remove(DiagramList.Count)
+                                Catch ex As Exception
+
+                                End Try
 
                             Case "Ergebnis"
 
@@ -4983,6 +5020,28 @@ Public Module testModule
 
                                 aktvalue = hproj.ampelStatus
                                 vglValue = vglproj.ampelStatus
+
+
+                                If aktvalue = vglValue Then
+                                    Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
+
+                                ElseIf aktvalue > vglValue Then
+
+                                    If aktvalue = 1 Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbePositiv)
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbeNegativ)
+                                    End If
+
+                                Else
+
+                                    If aktvalue = 0 Then
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, fallendShape, farbeNegativ)
+                                    Else
+                                        Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, steigendShape, farbePositiv)
+                                    End If
+
+                                End If
 
                                 CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
                                 CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglproj.ampelErlaeuterung

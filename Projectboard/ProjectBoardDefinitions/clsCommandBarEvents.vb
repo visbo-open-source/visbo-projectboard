@@ -124,7 +124,7 @@ Public Class clsCommandBarEvents
                     ' Änderung 5.11: prüfung auf hasChart ist notwendig, um zusammengesetztes Projekt-Shape von Chart zu unterscheiden ...
                     ' Änderung 17.11: prüfung auf Connector ist notwendig, um zusammengesetztes Shape von Connector = Phasen-Shape zu unterscheiden
 
-                    If Not shpelement.AlternativeText = "Test" And _
+                    If Not shpelement.AlternativeText = "Phase" And _
                         (shpelement.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle Or _
                         (shpelement.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeMixed And Not shpelement.HasChart _
                          And Not shpelement.Connector = Microsoft.Office.Core.MsoTriState.msoTrue)) Then
@@ -170,7 +170,8 @@ Public Class clsCommandBarEvents
                             pname = hproj.name
 
                             With hproj
-                                If Abs(shpelement.Width - (hproj.dauerInDays / 365) * boxWidth * 12) > 0.02 * ((hproj.dauerInDays / 365) * boxWidth * 12) Then
+                                If Abs(shpelement.Width - (hproj.dauerInDays / 365) * boxWidth * 12) > 0.02 * ((hproj.dauerInDays / 365) * boxWidth * 12) And _
+                                    Not ProjectBoardDefinitions.My.Settings.drawPhases = True Then
 
                                     shpelement.Width = (hproj.dauerInDays / 365) * boxWidth * 12
                                     somethingChanged = True
@@ -357,7 +358,7 @@ Public Class clsCommandBarEvents
                             ' ein kopiertes Projekt sollte jetzt in der nächsten Zeile platziert werden 
                             'zeile = findeMagicBoardPosition(selCollection, pname, zeile, spalte, laengeInMon)
 
-                            
+
                             pname = shpelement.Name & " - Kopie " & zaehler
 
 
@@ -501,7 +502,7 @@ Public Class clsCommandBarEvents
                     ElseIf shpelement.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeMixed And _
                            shpelement.Connector = Microsoft.Office.Core.MsoTriState.msoTrue Or _
                            shpelement.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle And _
-                           shpelement.AlternativeText = "Test" Then
+                           shpelement.AlternativeText = "Phase" Then
 
 
                         If formPhase Is Nothing Then
@@ -514,6 +515,8 @@ Public Class clsCommandBarEvents
                             End If
                         End If
 
+
+                        Call updatePhaseStartDuration(shpelement)
                         Call updatePhaseInformation(shpelement)
 
 
