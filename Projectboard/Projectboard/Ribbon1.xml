@@ -118,6 +118,7 @@
           <menu id="PT2G1M1" label="Editieren">
             <button id="PT2G1M1B1" label="Ressourcen Bedarfe" onAction="Tom2G1Resources" />
             <button id="PT2G1M1B2" label="Strategie/Risiko/Budget" onAction="Tom2G1Attribute" />
+            <button id="PT2G1M1B3" label="Zeitspanne f. Projektstart" onAction="Tom2G1EarliestLatestStart" />
           </menu>
           <separator id="PT2G1s3"/>
           <button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />

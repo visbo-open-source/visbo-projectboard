@@ -11,7 +11,9 @@
     Public tfZeile As Integer
     Public startDate As Date
     Public endDate As Date
+    Public earliestStart As Integer
     Public earliestStartDate As Date
+    Public latestStart As Integer
     Public latestStartDate As Date
     Public status As String
     Public ampelStatus As Integer
@@ -61,6 +63,8 @@
             Me.endDate = .endeDate.ToUniversalTime
             Me.earliestStartDate = .earliestStartDate.ToUniversalTime
             Me.latestStartDate = .latestStartDate.ToUniversalTime
+            Me.earliestStart = .earliestStart
+            Me.latestStart = .latestStart
             Me.status = .Status
             Me.ampelStatus = .ampelStatus
             Me.ampelErlaeuterung = .ampelErlaeuterung
@@ -105,6 +109,8 @@
             .startDate = Me.startDate.ToLocalTime
             .earliestStartDate = Me.earliestStartDate.ToLocalTime
             .latestStartDate = Me.latestStartDate.ToLocalTime
+            .earliestStart = Me.earliestStart
+            .latestStart = Me.latestStart
             .Status = Me.status
             .ampelStatus = Me.ampelStatus
             .ampelErlaeuterung = Me.ampelErlaeuterung

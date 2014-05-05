@@ -753,7 +753,7 @@
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle, oldrole As clsRolle
         Dim newcost As clsKostenart, oldcost As clsKostenart
-        Dim newresult As clsResult, oldresult As clsResult
+        Dim newresult As clsResult
         ' Dimension ist die Länge des Arrays , der kopiert werden soll; 
         ' mit der eingeführten Unschärfe ist nicht mehr gewährleistet, 
         ' daß relende-relstart die tatsächliche Dimension des Arrays wiedergibt 
