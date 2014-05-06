@@ -10,12 +10,14 @@ Imports System.Windows
 Public Module awinGeneralModules
 
 
+   
+
     ''' <summary>
     ''' schreibt evtl neu durch Inventur hinzugekommene Phasen in 
     ''' das Customization File 
     ''' </summary>
     ''' <remarks></remarks>
-    Sub awinWritePhaseDefinitions()
+    Friend Sub awinWritePhaseDefinitions()
 
         Dim phaseDefs As Range
         Dim foundRow As Integer
@@ -75,7 +77,7 @@ Public Module awinGeneralModules
 
     End Sub
 
-    Sub awinsetTypen()
+    Friend Sub awinsetTypen()
 
         Dim i As Integer
         'Dim Start As Integer, Dauer As Integer
@@ -123,7 +125,7 @@ Public Module awinGeneralModules
         ergebnisChartName(2) = "Verbesserungs-Potential"
         ergebnisChartName(3) = "Risiko-Abschlag"
 
-        ReDim portfolioDiagrammtitel(18)
+        ReDim portfolioDiagrammtitel(20)
         portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
@@ -143,6 +145,7 @@ Public Module awinGeneralModules
         portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
         portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
         portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
+        portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
 
 
         windowNames(0) = "Cockpit Phasen"
@@ -454,7 +457,7 @@ Public Module awinGeneralModules
 
                 Projektvorlagen.Add(hproj)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-            
+
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                 Call MsgBox(ex.Message)
@@ -648,7 +651,7 @@ Public Module awinGeneralModules
     '
     '
     '
-    Sub awinChangeTimeSpan(ByVal von As Integer, ByVal bis As Integer)
+    Public Sub awinChangeTimeSpan(ByVal von As Integer, ByVal bis As Integer)
 
         'Dim k As Integer
 
@@ -1946,17 +1949,17 @@ Public Module awinGeneralModules
                                         explanation = CType(.Cells(zeile, columnOffset + 6).value, String)
 
 
-                                    If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
-                                        ' es gibt keine Bewertung
-                                        bewertungsAmpel = 0
-                                    End If
+                                        If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                            ' es gibt keine Bewertung
+                                            bewertungsAmpel = 0
+                                        End If
                                         ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
-                                    With cBewertung
-                                        '.bewerterName = resultVerantwortlich
-                                        .colorIndex = bewertungsAmpel
-                                        .datum = importDatum
-                                        .description = explanation
-                                    End With
+                                        With cBewertung
+                                            '.bewerterName = resultVerantwortlich
+                                            .colorIndex = bewertungsAmpel
+                                            .datum = importDatum
+                                            .description = explanation
+                                        End With
 
 
 
@@ -2090,6 +2093,8 @@ Public Module awinGeneralModules
         Dim request As New Request(databaseName)
         Dim lastConstellation As New clsConstellation
         Dim projekteImZeitraum As New SortedList(Of String, clsProjekt)
+        Dim projektHistorie As New clsProjektHistorie
+        Dim laengeInTagen As Integer
 
         projekteImZeitraum = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
 
@@ -2099,10 +2104,14 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
 
                 Try
+                    laengeInTagen = kvp.Value.dauerInDays
+                    Dim keyStr As String = kvp.Value.name & "#" & kvp.Value.variantName
+                    AlleProjekte.Add(keyStr, kvp.Value)
 
-                    AlleProjekte.Add(kvp.Key, kvp.Value)
                     ShowProjekte.Add(kvp.Value)
-                    Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile, False)
+
+                    Call awinCreateBudgetWerte(kvp.Value)
+                    Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile)
 
                 Catch ex As Exception
                     ' nichts tun - das Projekt ist einfach nur schon da .... 
@@ -2119,14 +2128,12 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
 
                 Try
-                    'If Not kvp.Value.isConsistent Then
-
-                    'Call MsgBox("Inkonsistent: " & kvp.Value.name)
-
-                    'End If
-
+                    laengeInTagen = kvp.Value.dauerInDays
                     ShowProjekte.Add(kvp.Value)
-                    Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile, False)
+
+                    Call awinCreateBudgetWerte(kvp.Value)
+
+                    Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile)
 
                 Catch ex As Exception
                     Call MsgBox(ex.Message)

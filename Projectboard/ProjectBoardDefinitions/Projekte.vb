@@ -6440,34 +6440,39 @@ Public Module Projekte
                 plen = .Dauer
                 pcolor = .farbe
             End With
+
+            Call awinCreateBudgetWerte(hproj)
+
         Catch ex As Exception
             Call MsgBox(ex.Message)
             Exit Sub
         End Try
 
         ' Anpassen der Daten für die Termine 
-        ' wenn Samstag oder Sonntag, dann auf den Freitag davor legen   
+        ' wenn Samstag oder Sonntag, dann auf den Freitag davor legen 
+        ' nein - das darf nicht gemacht werden; evtl liegt ja dann der Meilenstein vor der Phase 
+        ' grundsätzlich sollte der Anwender hier bestimmen, nicht das Programm
 
 
-        Dim cphase As clsPhase
+        'Dim cphase As clsPhase
 
-        Dim resultDate As Date
+        'Dim resultDate As Date
 
-        For p = 1 To hproj.CountPhases
-            cphase = hproj.getPhase(p)
-            For r = 1 To cphase.CountResults
+        'For p = 1 To hproj.CountPhases
+        '    cphase = hproj.getPhase(p)
+        '    For r = 1 To cphase.CountResults
 
-                With cphase.getResult(r)
-                    resultDate = .getDate
-                    If resultDate.DayOfWeek = DayOfWeek.Saturday Then
-                        .offset = .offset - 1
-                    ElseIf resultDate.DayOfWeek = DayOfWeek.Sunday Then
-                        .offset = .offset - 2
-                    End If
-                End With
+        '        With cphase.getResult(r)
+        '            resultDate = .getDate
+        '            'If resultDate.DayOfWeek = DayOfWeek.Saturday Then
+        '            '    .offset = .offset - 1
+        '            'ElseIf resultDate.DayOfWeek = DayOfWeek.Sunday Then
+        '            '    .offset = .offset - 2
+        '            'End If
+        '        End With
 
-            Next
-        Next
+        '    Next
+        'Next
 
 
 
@@ -6495,7 +6500,7 @@ Public Module Projekte
         End Try
 
 
-        Call ZeichneProjektinPlanTafel(pname:=pname, tryzeile:=0, showresults:=False)
+        Call ZeichneProjektinPlanTafel(pname:=pname, tryzeile:=0)
 
 
         '
@@ -6608,34 +6613,38 @@ Public Module Projekte
         Dim returnValue As DialogResult
         Dim bestaetigeLoeschen As New frmconfirmDeletePrj
         Dim zeile As Integer
+        Dim hproj As clsProjekt
+        Dim anzahlZeilen As Integer
 
         enableOnUpdate = False
+        hproj = ShowProjekte.getProject(vprojektname)
+        anzahlZeilen = getNeededSpace(hproj)
 
         If firstCall Then
             returnValue = bestaetigeLoeschen.ShowDialog
 
             If returnValue = DialogResult.OK Then
 
-                zeile = ShowProjekte.getProject(vprojektname).tfZeile
+                zeile = hproj.tfZeile
                 Call awinLoescheProjekt(vprojektname)
                 Call awinClkReset(abstand)
 
                 ' ein Projekt wurde gelöscht  - typus = 3
                 Call awinNeuZeichnenDiagramme("3")
 
-                Call moveShapesUp1(zeile)
+                Call moveShapesUp(zeile, anzahlZeilen)
             Else
                 Throw New ArgumentException("Abbruch")
             End If
 
         Else
-            zeile = ShowProjekte.getProject(vprojektname).tfZeile
+            zeile = hproj.tfZeile
             Call awinLoescheProjekt(vprojektname)
             Call awinClkReset(abstand)
 
             ' ein Projekt wurde gelöscht  - typus = 3
             Call awinNeuZeichnenDiagramme("3")
-            Call moveShapesUp1(zeile)
+            Call moveShapesUp(zeile, anzahlZeilen)
         End If
 
 
@@ -6646,7 +6655,7 @@ Public Module Projekte
 
     Public Sub awinDeleteChart(ByRef chtobj As ChartObject)
         Dim kennung As String
-        
+
 
         ' in der DiagramList wird die letzte Position gespeichert , deshlab ist es kontra produktiv , das zu löschen 
 
@@ -6699,7 +6708,7 @@ Public Module Projekte
                     .timeStamp = Date.Now
                 End With
 
-                Call ZeichneProjektinPlanTafel(pname, zeile, False)
+                Call ZeichneProjektinPlanTafel(pname, zeile)
 
             Catch ex As Exception
                 Call MsgBox(" Fehler in Beauftragung " & pname & " , Modul: awinBeauftragung")
@@ -6731,7 +6740,7 @@ Public Module Projekte
                     .timeStamp = Date.Now
                 End With
 
-                Call ZeichneProjektinPlanTafel(pname, zeile, False)
+                Call ZeichneProjektinPlanTafel(pname, zeile)
 
             Catch ex As Exception
                 Call MsgBox(" Fehler in Zurücknahme Beauftragung " & pname & " , Modul: awinCancelBeauftragung")
@@ -7872,7 +7881,7 @@ Public Module Projekte
                 '    End If
                 'End With
             End If
-            
+
         Next shp
 
         ' Änderung 26.7 weil Zahlen stehen blieben beim Neuladen einer neuen Konstellation
@@ -7978,8 +7987,9 @@ Public Module Projekte
 
                 hproj.tfZeile = curZeile
                 lastZeile = curZeile
-                Call ZeichneProjektinPlanTafel2(pname, curZeile)
-                curZeile = lastZeile + 1 + CInt((curZeile - lastZeile + 1) / 2)
+                'Call ZeichneProjektinPlanTafel2(pname, curZeile)
+                Call ZeichneProjektinPlanTafel(pname, curZeile)
+                curZeile = lastZeile + getNeededSpace(hproj)
 
 
                 If curZeile > max Then
@@ -8000,7 +8010,7 @@ Public Module Projekte
                 If tryzeile <= 1 Then
                     tryzeile = -1
                 End If
-                Call ZeichneProjektinPlanTafel(pname, tryzeile, False) ' es wird versucht, an der alten Stelle zu zeichnen 
+                Call ZeichneProjektinPlanTafel(pname, tryzeile) ' es wird versucht, an der alten Stelle zu zeichnen 
             Next
 
 
@@ -8074,7 +8084,7 @@ Public Module Projekte
             Dim pname As String
             While zeile <= letztezeile
                 pname = .cells(zeile, 1).value
-                Call ZeichneProjektinPlanTafel(pname, -1, False) ' es muss nicht an der alten Stelle gezeichnet werden ... 
+                Call ZeichneProjektinPlanTafel(pname, -1) ' es muss nicht an der alten Stelle gezeichnet werden ... 
                 zeile = zeile + 1
             End While
 
@@ -8111,7 +8121,7 @@ Public Module Projekte
                 If diagrammTyp = DiagrammTypen(1) Then
                     referenceValue = .getbadCostOfRole(myCollection)
                 Else
-                    referenceValue = .getDeviationfromAverage(myCollection, avgValue, False)
+                    referenceValue = .getDeviationfromAverage(myCollection, avgValue, diagrammTyp)
                 End If
 
                 newReferenceValue = -1
@@ -8138,7 +8148,7 @@ Public Module Projekte
                                     If diagrammTyp = DiagrammTypen(1) Then
                                         currentValue = .getbadCostOfRole(myCollection)
                                     Else
-                                        currentValue = .getDeviationfromAverage(myCollection, avgValue, False)
+                                        currentValue = .getDeviationfromAverage(myCollection, avgValue, diagrammTyp)
                                     End If
 
                                     If currentValue < bestValue Then
@@ -8191,7 +8201,7 @@ Public Module Projekte
                         If diagrammTyp = DiagrammTypen(1) Then
                             currentValue = .getbadCostOfRole(myCollection)
                         Else
-                            currentValue = .getDeviationfromAverage(myCollection, avgValue, False)
+                            currentValue = .getDeviationfromAverage(myCollection, avgValue, diagrammTyp)
                         End If
 
                         If currentValue < newReferenceValue Then
@@ -8256,13 +8266,11 @@ Public Module Projekte
         If myCollection.Count >= 1 Then
 
 
-            If diagrammTyp = DiagrammTypen(1) Or diagrammTyp = DiagrammTypen(2) Or diagrammTyp = DiagrammTypen(4) Then
+            If diagrammTyp = DiagrammTypen(0) Or diagrammTyp = DiagrammTypen(1) Or diagrammTyp = DiagrammTypen(2) Or diagrammTyp = DiagrammTypen(4) Then
 
                 ' to do Liste aufbauen
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-                    ' testweise
-                    kvp.Value.earliestStart = -3
-                    kvp.Value.latestStart = 3
+
                     If relevantForOptimization(kvp.Value) Then
                         toDoListe.Add(kvp.Key, kvp.Key)
                     End If
@@ -8282,18 +8290,18 @@ Public Module Projekte
                 While toDoListe.Count > 0 And Not Abbruch
 
                     Dim i As Integer
-                    Dim kvp As clsProjekt
+                    Dim curProj As clsProjekt
 
                     For i = 1 To toDoListe.Count
-                        kvp = ShowProjekte.getProject(toDoListe.Item(i))
+                        curProj = ShowProjekte.getProject(toDoListe.Item(i))
 
                         startoffset = 0
 
                         ' hier wird der beste Wert für das einzelne Projekt gesucht ....  
-                        'For versatz = kvp.earliestStart To kvp.latestStart
-                        For versatz = -3 To 3
+
+                        For versatz = curProj.earliestStart To curProj.latestStart
                             If versatz <> 0 Then
-                                kvp.StartOffset = versatz
+                                curProj.StartOffset = versatz
                                 currentValue = berechneOptimierungsWert(diagrammTyp, myCollection)
 
                                 If currentValue < bestValue Then
@@ -8304,13 +8312,13 @@ Public Module Projekte
                         Next versatz
 
                         ' zurücksetzen des StartOffsets im Projekt, weil hier ja erst verschiedene Konstellationen probiert werden  
-                        kvp.StartOffset = 0
+                        curProj.StartOffset = 0
 
                         If startoffset <> 0 Then ' es gab eine Verbesserung 
                             'lokalesOptimum = New clsOptimizationObject
                             With lokalesOptimum
                                 If bestValue < .bestValue Then
-                                    .projectName = kvp.name
+                                    .projectName = curProj.name
                                     .bestValue = bestValue
                                     .startOffset = startoffset
                                     ' Call awinVisualizeProject
@@ -8355,9 +8363,9 @@ Public Module Projekte
 
         If DiagrammTyp = DiagrammTypen(1) Or DiagrammTyp = DiagrammTypen(4) Then
             value = ShowProjekte.getbadCostOfRole(myCollection)
-        ElseIf DiagrammTyp = DiagrammTypen(2) Then
-            avgValue = ShowProjekte.getAverage(myCollection, False)
-            value = ShowProjekte.getDeviationfromAverage(myCollection, avgValue, False)
+        ElseIf DiagrammTyp = DiagrammTypen(0) Or DiagrammTyp = DiagrammTypen(2) Then
+            avgValue = ShowProjekte.getAverage(myCollection, DiagrammTyp)
+            value = ShowProjekte.getDeviationfromAverage(myCollection, avgValue, DiagrammTyp)
         Else
             Throw New ArgumentException("Optimierung ist für diesen Diagramm-Typ nicht implementiert")
         End If
@@ -8396,7 +8404,14 @@ Public Module Projekte
 
     End Function
 
-    Public Sub awinZeichnePhasen(ByVal nameList As Collection, ByVal farbTyp As Integer, ByVal numberIt As Boolean)
+    ''' <summary>
+    ''' zeichnet für alle selektierten Projekte die Phasen, die in Namelist angegeben sind;  
+    ''' wenn namelist leer ist, werden alle Phasen des Projektes angezeigt
+    ''' </summary>
+    ''' <param name="nameList">enthält die Namen der Phasen, die gezeichnet werden sollen; alle, wenn leer</param>
+    ''' <param name="numberIt">gibt an, ob di ePhasen nummeriert werden sollen</param>
+    ''' <remarks></remarks>
+    Public Sub awinZeichnePhasen(ByVal nameList As Collection, ByVal numberIt As Boolean)
 
         'Dim request As New Request(awinSettings.databaseName)
         Dim singleShp As Excel.Shape
@@ -8440,7 +8455,7 @@ Public Module Projekte
 
                             Try
                                 pName = hproj.name
-                                Call zeichnePhasenInProjekt(hproj, nameList, farbTyp, False, 0, False)
+                                Call zeichnePhasenInProjekt(hproj, nameList, False, 0)
 
                             Catch ex As Exception
 
@@ -8472,10 +8487,10 @@ Public Module Projekte
 
                 ' wenn ein Zeitraum gesetzt ist, dann nur anzeigen, was in diesem Zeitraum liegt 
                 If showRangeLeft < showRangeRight And showRangeLeft > 0 Then
-                    Call zeichnePhasenInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, False, 0, False)
+                    Call zeichnePhasenInProjekt(kvp.Value, nameList, showRangeLeft, showRangeRight, False, msNumber)
                 Else
                     ' von jedem Projekt die Phasen anzeigen 
-                    Call zeichnePhasenInProjekt(kvp.Value, nameList, farbTyp, False, 0, False)
+                    Call zeichnePhasenInProjekt(kvp.Value, nameList, False, 0)
                 End If
 
 
@@ -8604,12 +8619,13 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="pname"></param>
     ''' <remarks></remarks>
-    Public Sub ZeichneProjektinPlanTafel(ByVal pname As String, ByVal tryzeile As Integer, ByVal showresults As Boolean)
+    Public Sub ZeichneProjektinPlanTafel(ByVal pname As String, ByVal tryzeile As Integer)
 
 
         Dim drawphases As Boolean = My.Settings.drawPhases
         Dim phasenName As String
         Dim phaseShapeName As String
+        Dim msShapeName As String
 
         Dim start As Integer
         Dim laenge As Integer
@@ -8620,12 +8636,13 @@ Public Module Projekte
         Dim zeile As Integer
         Dim hproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
-        Dim shpElement As Excel.Shape, groupShpElement As Excel.Shape
-        'Dim shpExistsAlready As Boolean
+        Dim projectShape As Excel.Shape
+        Dim phaseShape As Excel.Shape, milestoneShape As Excel.Shape
         Dim shpUID As String
         'Dim tmpshapes As Excel.Shapes = appInstance.ActiveSheet.shapes
         Dim worksheetShapes As Excel.Shapes
         Dim heute As Date = Date.Now
+        Dim tmpShapeRange As Excel.ShapeRange
 
         Dim shpExists As Boolean
 
@@ -8658,15 +8675,15 @@ Public Module Projekte
         ' prüfen, ob das Shape bereits existiert ...
         If shpUID <> "" Then
             Try
-                shpElement = worksheetShapes.Item(pname)
+                projectShape = worksheetShapes.Item(pname)
                 shpExists = True
             Catch ex As Exception
                 shpExists = False
-                shpElement = Nothing
+                projectShape = Nothing
             End Try
         Else
             shpExists = False
-            shpElement = Nothing
+            projectShape = Nothing
         End If
 
 
@@ -8683,180 +8700,240 @@ Public Module Projekte
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents
+        enableOnUpdate = False
         appInstance.EnableEvents = False
 
 
 
         If shpExists Then
-            
+
             If drawphases Then
 
+                ' ungroup Shape, damit die einzelnen Phasen- bzw Milestone Shapes im Zugriff sind 
+                Try
+                    tmpShapeRange = projectShape.Ungroup
+                Catch ex As Exception
+                    tmpShapeRange = Nothing
+                End Try
+
+                Dim cphase As clsPhase
+
                 For i = 1 To hproj.CountPhases
-                    phasenName = hproj.getPhase(i).name
+                    cphase = hproj.getPhase(i)
+                    phasenName = cphase.name
                     phaseShapeName = pname & "#" & phasenName & "#" & i.ToString
 
                     Try
-                        shpElement = worksheetShapes.Item(phaseShapeName)
-                        Call defineShapeAppearance(hproj, shpElement, i)
+                        phaseShape = worksheetShapes.Item(phaseShapeName)
+                        Call defineShapeAppearance(hproj, phaseShape, i)
                     Catch ex As Exception
 
                     End Try
 
+                    For r = 1 To cphase.CountResults
+
+                        Dim cResult As clsResult
+                        Dim cBewertung As clsBewertung
+
+                        cResult = cphase.getResult(r)
+                        cBewertung = cResult.getBewertung(1)
+
+                        msShapeName = hproj.name & "#" & cphase.name & "#M" & r.ToString
+                        ' existiert das schon ? 
+                        Try
+                            milestoneShape = worksheetShapes.Item(msShapeName)
+                            Call defineResultAppearance(hproj, 0, milestoneShape, cBewertung)
+                        Catch ex As Exception
+
+                        End Try
+
+
+                    Next
+
 
                 Next
 
+                ' Gruppieren des Shapes 
+                projectShape = tmpShapeRange.Group
+
+
+
             Else
-                Call defineShapeAppearance(hproj, shpElement)
+                Call defineShapeAppearance(hproj, projectShape)
+
             End If
 
-
-            ' jetzt prüfen, ob die Ergebnis Meilensteine angezeigt werden sollen oder auch schon angezeigt werden  
-            'If showresults Then
-
-            'Call zeichneResultMilestonesInPlantafel(hproj)
-
-            'End If
 
         Else
 
             ' ///////////////
-            ' Start neuer code 
+            ' Shape existiert noch nicht 
             ' ///////////////
 
             ' hier wird der vorher bestimmte Wert gesetzt, wo das Shape gezeichnet werden kann 
             hproj.tfZeile = zeile
 
-            If drawphases And hproj.CountPhases > 1 Then
-
+            If drawphases And (hproj.CountPhases > 1 Or hproj.getMilestones.Count > 0) Then
+                ' stelle das Projekt im Extended Mode dar  
                 Dim shapeGroupListe() As Object
                 Dim anzGroupElemente As Integer = 0
-                Dim shapesCollection As New Collection
+                Dim projectShapesCollection As New Collection
 
 
-                shpElement = Nothing
+                'oldShape = Nothing
+                phaseShape = Nothing
+
+                Dim zeilenOffset As Integer = 0
+                Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
 
                 For i = 1 To hproj.CountPhases
-                    phasenName = hproj.getPhase(i).name
-                    hproj.CalculateShapeCoord(i, top, left, width, height)
 
+                    With hproj.getPhase(i)
+
+                        phasenName = .name
+
+                    End With
 
 
                     Try
-                        If i = 1 Then
-                            shpElement = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapePentagon, _
-                               Left:=left, Top:=top, Width:=width, Height:=height)
-                        Else
-                            shpElement = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeChevron, _
-                               Left:=left, Top:=top, Width:=width, Height:=height)
-                        End If
+                        zeilenOffset = 0
+                        hproj.CalculateShapeCoord(i, zeilenOffset, top, left, width, height)
+                        phaseShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
+                                Left:=left, Top:=top, Width:=width, Height:=height)
+
                     Catch ex As Exception
-                        Throw New Exception("in zeichneShapeOfProject : keine Shape-Erstellung möglich ...  ")
+                        Throw New Exception("in zeichneProjektinPlantafel2 : keine Shape-Erstellung möglich ...  ")
                     End Try
 
 
                     phaseShapeName = pname & "#" & phasenName & "#" & i.ToString
-                    With shpElement
+                    With phaseShape
                         .Name = phaseShapeName
                         .Title = phasenName
+                        .AlternativeText = "Phase"
                     End With
 
-                    Call defineShapeAppearance(hproj, shpElement, i)
+                    Call defineShapeAppearance(hproj, phaseShape, i)
 
 
                     Try
-                        shapesCollection.Add(phaseShapeName, Key:=phaseShapeName)
+                        projectShapesCollection.Add(phaseShapeName, Key:=phaseShapeName)
                     Catch ex As Exception
 
                     End Try
 
 
+                    ' jetzt müssen alle Meilensteine dieser Phase gezeichnet werden 
+
+                    With hproj.getPhase(i)
+                        Dim msName As String
+                        Dim msShape As Excel.Shape
+
+                        For r = 1 To .CountResults
+
+                            Dim cResult As clsResult
+                            Dim cBewertung As clsBewertung
+
+                            cResult = .getResult(r)
+                            cBewertung = cResult.getBewertung(1)
+
+                            hproj.calculateResultCoord(cResult.getDate, zeilenOffset, top, left, width, height)
+
+
+                            msName = hproj.name & "#" & .name & "#M" & r.ToString
+                            ' existiert das schon ? 
+                            Try
+                                msShape = worksheetShapes.Item(msName)
+                            Catch ex As Exception
+                                msShape = Nothing
+                            End Try
+
+                            If msShape Is Nothing Then
+
+
+                                msShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, _
+                                                                Left:=left, Top:=top, Width:=width, Height:=height)
+
+                                With msShape
+                                    .Name = msName
+                                    .Title = cResult.name
+                                    .AlternativeText = "Meilenstein"
+                                End With
+
+
+                                Call defineResultAppearance(hproj, 0, msShape, cBewertung)
+
+                            Else
+                                ' Koordinaten anpassen 
+                                msShape.Top = top
+                            End If
+
+                            Try
+                                projectShapesCollection.Add(msName, Key:=msName)
+                            Catch ex As Exception
+
+                            End Try
+
+                        Next
+
+
+                    End With
+
                 Next
 
-                ' hier jetzt noch den Text ergänzen
 
                 ' hier werden die Shapes gruppiert
-                anzGroupElemente = shapesCollection.Count
+                anzGroupElemente = projectShapesCollection.Count
 
                 If anzGroupElemente > 1 Then
                     ' es macht nur Sinn zu gruppieren, wenn es mehr als 1 Element ist ....
 
                     ReDim shapeGroupListe(anzGroupElemente - 1)
                     For i = 1 To anzGroupElemente
-                        shapeGroupListe(i - 1) = shapesCollection.Item(i)
+                        shapeGroupListe(i - 1) = projectShapesCollection.Item(i)
                     Next
 
                     Dim ShapeGroup As Excel.ShapeRange
                     ShapeGroup = worksheetShapes.Range(shapeGroupListe)
-                    groupShpElement = ShapeGroup.Group()
+                    projectShape = ShapeGroup.Group()
 
                 Else
                     ' in diesem Fall besteht das Projekt nur aus einer einzigen Phase
-                    groupShpElement = shpElement
+                    projectShape = phaseShape
 
                 End If
-
-                Try
-                    With groupShpElement
-                        .Name = pname
-                        hproj.shpUID = .ID.ToString
-                        hproj.tfZeile = zeile
-                    End With
-                Catch ex As Exception
-                    Throw New Exception("in zeichneShapeOfProject : dem shape kann kein Name zugewiesen werden ....   ")
-                End Try
-
-                ' jetzt muss das neue Shape in der ShowProjekte.ShapeListe eingetragen werden ..
-                ShowProjekte.AddShape(pname, shpUID:=groupShpElement.ID.ToString)
-
-
+                projectShape.Name = pname
 
             Else
+                ' stelle das Projekt im Einzeilen Mode dar
 
                 With hproj
                     .CalculateShapeCoord(top, left, width, height)
                     .tfZeile = zeile
                 End With
 
-                shpElement = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
+                projectShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
                         Left:=left, Top:=top, Width:=width, Height:=height)
 
 
-                With shpElement
-                    .Name = pname
-                    hproj.shpUID = .ID.ToString
-                End With
+                projectShape.Name = pname
+                Call defineShapeAppearance(hproj, projectShape)
 
-                Call defineShapeAppearance(hproj, shpElement)
 
-                ' jetzt muss das neue Shape in der ShowProjekte.ShapeListe eingetragen werden ..
-                ShowProjekte.AddShape(pname, shpUID:=shpElement.ID.ToString)
             End If
 
-            '' //////////////
-            '' Start alter Code 
-            '' //////////////
-            'With hproj
-            '    '.tfSpalte = start
-            '    .tfZeile = zeile
-            '    .CalculateShapeCoord(top, left, width, height)
-            'End With
-
-            'shpElement = .Shapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
-            '            left:=left, top:=top, width:=width, height:=height)
-
-            'With shpElement
-            '    .Name = pname
-            '    hproj.shpUID = .ID.ToString
-            'End With
-
-            'Call defineShapeAppearance(hproj, shpElement)
-
-
-            '' jetzt muss das neue Shape in der ShowProjekte.ShapeListe eingetragen werden ..
-            'ShowProjekte.AddShape(pname, shpUID:=shpElement.ID.ToString)
 
         End If
 
+        With projectShape
+            .AlternativeText = "Projekt"
+            hproj.shpUID = .ID.ToString
+            hproj.tfZeile = zeile
+        End With
+
+
+        ' jetzt muss das neue Shape in der ShowProjekte.ShapeListe eingetragen werden ..
+        ShowProjekte.AddShape(pname, shpUID:=projectShape.ID.ToString)
 
         If roentgenBlick.isOn Then
             With roentgenBlick
@@ -8865,285 +8942,334 @@ Public Module Projekte
         End If
 
         appInstance.EnableEvents = formerEE
+        enableOnUpdate = True
 
     End Sub
 
-    ''' <summary>
-    ''' zeichnet das Projekt "pname" in die Plantafel; 
-    ''' wenn es bereits vorhanden ist: keine Aktion  
-    ''' tryzeile wird zurückgegeben : ab da kann das nächste Projekt gezeichnet werden 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub ZeichneProjektinPlanTafel2(ByVal pname As String, ByRef tryzeile As Integer)
+    ' ''' <summary>
+    ' ''' zeichnet das Projekt "pname" im Extended Mode in die Plantafel; 
+    ' ''' wenn es bereits vorhanden ist: keine Aktion  
+    ' ''' tryzeile wird zurückgegeben : ab da kann das nächste Projekt gezeichnet werden 
+    ' ''' </summary>
+    ' ''' <remarks></remarks>
+    ' ist jetzt in zeichneProjektinPlantafel aufgegangen
+    'Public Sub ZeichneProjektinPlanTafel2(ByVal pname As String, ByRef tryzeile As Integer)
 
+
+    '    Dim drawphases As Boolean = My.Settings.drawPhases
+    '    Dim phasenName As String
+    '    Dim phaseShapeName As String
+    '    Dim hproj As clsProjekt
+    '    Dim start As Integer
+    '    Dim laenge As Integer
+    '    Dim status As String
+    '    Dim pMarge As Double
+    '    Dim pcolor As Object, schriftfarbe As Object
+    '    Dim schriftgroesse As Integer
+    '    Dim zeile As Integer
+    '    Dim top As Double, left As Double, width As Double, height As Double
+    '    Dim oldShape As Excel.Shape, phasenShape As Excel.Shape, groupShpElement As Excel.Shape
+    '    'Dim shpExistsAlready As Boolean
+    '    Dim shpUID As String
+    '    'Dim tmpshapes As Excel.Shapes = appInstance.ActiveSheet.shapes
+    '    Dim worksheetShapes As Excel.Shapes
+    '    Dim heute As Date = Date.Now
 
-        Dim drawphases As Boolean = My.Settings.drawPhases
-        Dim phasenName As String
-        Dim phaseShapeName As String
-        Dim hproj As clsProjekt
-        Dim start As Integer
-        Dim laenge As Integer
-        Dim status As String
-        Dim pMarge As Double
-        Dim pcolor As Object, schriftfarbe As Object
-        Dim schriftgroesse As Integer
-        Dim zeile As Integer
-        Dim top As Double, left As Double, width As Double, height As Double
-        Dim oldShape As Excel.Shape, groupShpElement As Excel.Shape
-        'Dim shpExistsAlready As Boolean
-        Dim shpUID As String
-        'Dim tmpshapes As Excel.Shapes = appInstance.ActiveSheet.shapes
-        Dim worksheetShapes As Excel.Shapes
-        Dim heute As Date = Date.Now
+    '    Dim shpExists As Boolean
 
-        Dim shpExists As Boolean
 
+    '    Try
 
-        Try
+    '        worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
-            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+    '    Catch ex As Exception
+    '        Throw New Exception("in ZeichneProjektinPlanTafel : keine Shapes Zuordnung möglich ")
+    '    End Try
 
-        Catch ex As Exception
-            Throw New Exception("in ZeichneProjektinPlanTafel : keine Shapes Zuordnung möglich ")
-        End Try
+    '    Try
+    '        hproj = ShowProjekte.getProject(pname)
+    '        With hproj
+    '            laenge = .Dauer
+    '            shpUID = .shpUID
+    '            start = .Start + .StartOffset
+    '            pcolor = .farbe
+    '            schriftfarbe = .Schriftfarbe
+    '            schriftgroesse = .Schrift
+    '            status = .Status
+    '            pMarge = .ProjectMarge
+    '        End With
+    '    Catch ex As Exception
+    '        Throw New ArgumentException("in zeichneProjektinBoard - Projektname existiert nicht: " & pname)
+    '    End Try
 
-        Try
-            hproj = ShowProjekte.getProject(pname)
-            With hproj
-                laenge = .Dauer
-                shpUID = .shpUID
-                start = .Start + .StartOffset
-                pcolor = .farbe
-                schriftfarbe = .Schriftfarbe
-                schriftgroesse = .Schrift
-                status = .Status
-                pMarge = .ProjectMarge
-            End With
-        Catch ex As Exception
-            Throw New ArgumentException("in zeichneProjektinBoard - Projektname existiert nicht: " & pname)
-        End Try
 
+    '    ' prüfen, ob das Shape bereits existiert ...
+    '    If shpUID <> "" Then
+    '        Try
+    '            oldShape = worksheetShapes.Item(pname)
+    '            shpExists = True
+    '            top = oldShape.Top
+    '            left = oldShape.Left
+    '        Catch ex As Exception
+    '            shpExists = False
+    '            oldShape = Nothing
+    '        End Try
+    '    Else
+    '        shpExists = False
+    '        oldShape = Nothing
+    '    End If
 
-        ' prüfen, ob das Shape bereits existiert ...
-        If shpUID <> "" Then
-            Try
-                oldShape = worksheetShapes.Item(pname)
-                shpExists = True
-                top = oldShape.Top
-                left = oldShape.Left
-            Catch ex As Exception
-                shpExists = False
-                oldShape = Nothing
-            End Try
-        Else
-            shpExists = False
-            oldShape = Nothing
-        End If
 
 
+    '    '
+    '    ' ist dort überhaupt Platz ? wenn nicht, dann Zeile mit freiem Platz suchen ...
+    '    If tryzeile < 2 Then
+    '        tryzeile = 2
+    '    End If
 
-        '
-        ' ist dort überhaupt Platz ? wenn nicht, dann Zeile mit freiem Platz suchen ...
-        If tryzeile < 2 Then
-            tryzeile = 2
-        End If
 
-        'Dim myCollection As New Collection
-        'myCollection.Add(pname)
-        'zeile = findeMagicBoardPosition(myCollection, pname, tryzeile, start, laenge)
+    '    Dim formerEE As Boolean = appInstance.EnableEvents
+    '    appInstance.EnableEvents = False
 
 
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        appInstance.EnableEvents = False
 
+    '    If shpExists Then
 
+    '        oldShape.Delete()
+    '        shpExists = False
 
-        If shpExists Then
+    '    End If
 
-            oldShape.Delete()
-            shpExists = False
 
-        End If
 
 
+    '    ' ///////////////
+    '    ' Start neuer code 
+    '    ' ///////////////
 
+    '    ' hier wird der vorher bestimmte Wert gesetzt, wo das Shape gezeichnet werden kann 
+    '    zeile = tryzeile
 
-        ' ///////////////
-        ' Start neuer code 
-        ' ///////////////
 
-        ' hier wird der vorher bestimmte Wert gesetzt, wo das Shape gezeichnet werden kann 
-        zeile = tryzeile
+    '    Dim shapeGroupListe() As Object
+    '    Dim anzGroupElemente As Integer = 0
+    '    Dim projectShapesCollection As New Collection
+    '    Dim phaseShapesCollection As New Collection
 
 
-        Dim shapeGroupListe() As Object
-        Dim anzGroupElemente As Integer = 0
-        Dim shapesCollection As New Collection
+    '    oldShape = Nothing
+    '    phasenShape = Nothing
 
+    '    Dim zeilenOffset As Integer = 0
+    '    Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
 
-        oldShape = Nothing
+    '    For i = 1 To hproj.CountPhases
 
-        Dim zeilenOffset As Integer = 0
-        Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
-        For i = 1 To hproj.CountPhases
+    '        With hproj.getPhase(i)
 
-            With hproj.getPhase(i)
+    '            phasenName = .name
+    '            'If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+    '            '    zeilenOffset = zeilenOffset + 1
+    '            '    lastEndDate = StartofCalendar.AddDays(-1)
+    '            'End If
 
-                phasenName = .name
-                If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
-                    zeilenOffset = zeilenOffset + 1
-                    lastEndDate = StartofCalendar.AddDays(-1)
-                End If
+    '            'If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+    '            '    lastEndDate = .getEndDate
+    '            'End If
 
-                If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
-                    lastEndDate = .getEndDate
-                End If
+    '        End With
 
-            End With
 
-            hproj.CalculateShapeCoord(i, zeilenOffset, top, left, width, height)
+    '        Try
+    '            zeilenOffset = 0
+    '            hproj.CalculateShapeCoord(i, zeilenOffset, top, left, width, height)
+    '            phasenShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
+    '                    Left:=left, Top:=top, Width:=width, Height:=height)
 
+    '        Catch ex As Exception
+    '            Throw New Exception("in zeichneProjektinPlantafel2 : keine Shape-Erstellung möglich ...  ")
+    '        End Try
 
 
-            Try
+    '        phaseShapeName = pname & "#" & phasenName & "#" & i.ToString
+    '        With phasenShape
+    '            .Name = phaseShapeName
+    '            .Title = phasenName
+    '            .AlternativeText = "Phase"
+    '        End With
 
-                oldShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
-                        Left:=left, Top:=top, Width:=width, Height:=height)
+    '        Call defineShapeAppearance(hproj, phasenShape, i)
 
-            Catch ex As Exception
-                Throw New Exception("in zeichneProjektinPlantafel2 : keine Shape-Erstellung möglich ...  ")
-            End Try
 
+    '        Try
+    '            projectShapesCollection.Add(phaseShapeName, Key:=phaseShapeName)
+    '        Catch ex As Exception
 
-            phaseShapeName = pname & "#" & phasenName & "#" & i.ToString
-            With oldShape
-                .Name = phaseShapeName
-                .Title = phasenName
-                .AlternativeText = "Test"
-            End With
+    '        End Try
 
-            Call defineShapeAppearance(hproj, oldShape, i)
 
+    '        ' jetzt müssen alle Meilensteine dieser Phase gezeichnet werden 
 
-            Try
-                shapesCollection.Add(phaseShapeName, Key:=phaseShapeName)
-            Catch ex As Exception
+    '        With hproj.getPhase(i)
+    '            Dim msName As String
+    '            Dim msShape As Excel.Shape
 
-            End Try
+    '            For r = 1 To .CountResults
 
+    '                Dim cResult As clsResult
+    '                Dim cBewertung As clsBewertung
 
-            ' jetzt müssen alle Meilensteine dieser Phase gezeichnet werden 
+    '                cResult = .getResult(r)
+    '                cBewertung = cResult.getBewertung(1)
 
-            With hproj.getPhase(i)
-                Dim msName As String
-                Dim msShape As Excel.Shape
+    '                hproj.calculateResultCoord(cResult.getDate, zeilenOffset, top, left, width, height)
 
-                For r = 1 To .CountResults
 
-                    Dim cResult As clsResult
-                    Dim cBewertung As clsBewertung
+    '                msName = hproj.name & "#" & .name & "#M" & r.ToString
+    '                ' existiert das schon ? 
+    '                Try
+    '                    msShape = worksheetShapes.Item(msName)
+    '                Catch ex As Exception
+    '                    msShape = Nothing
+    '                End Try
 
-                    cResult = .getResult(r)
-                    cBewertung = cResult.getBewertung(1)
+    '                If msShape Is Nothing Then
 
-                    hproj.calculateResultCoord(cResult.getDate, zeilenOffset, top, left, width, height)
 
+    '                    msShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, _
+    '                                                    Left:=left, Top:=top, Width:=width, Height:=height)
 
-                    msName = hproj.name & "#" & .name & "#M" & r.ToString
-                    ' existiert das schon ? 
-                    Try
-                        msShape = worksheetShapes.Item(msName)
-                    Catch ex As Exception
-                        msShape = Nothing
-                    End Try
+    '                    With msShape
+    '                        .Name = msName
+    '                        .Title = cResult.name
+    '                        .AlternativeText = "Meilenstein"
+    '                    End With
 
-                    If msShape Is Nothing Then
 
+    '                    Call defineResultAppearance(hproj, 0, msShape, cBewertung)
 
-                        msShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, _
-                                                        Left:=left, Top:=top, Width:=width, Height:=height)
+    '                Else
+    '                    ' Koordinaten anpassen 
+    '                    msShape.Top = top
+    '                End If
 
-                        With msShape
-                            .Name = msName
-                            .Title = cResult.name
-                            .AlternativeText = cBewertung.description
-                        End With
+    '                Try
+    '                    projectShapesCollection.Add(msName, Key:=msName)
+    '                Catch ex As Exception
 
+    '                End Try
 
-                        Call defineResultAppearance(hproj, 0, msShape, cBewertung)
+    '            Next
 
+    '            ' hier werden die Phase und die Meilensteine zu einem gruppierten Shape zusammengefasst 
+    '            ' das wird hier nicht mehr gemacht - mehrfach verschachtelte Gruppen verursachen Fehler bei der Koordinaten Auslesung 
+    '            'anzGroupElemente = phaseShapesCollection.Count
 
+    '            'If anzGroupElemente > 1 Then
 
-                        'shapesCollection.Add(resultShape.Name)
-                    Else
-                        ' Koordinaten anpassen 
-                        msShape.Top = top
-                    End If
+    '            '    ' es macht nur Sinn zu gruppieren, wenn es mehr als 1 Element ist ....
 
-                    Try
-                        shapesCollection.Add(msName, Key:=msName)
-                    Catch ex As Exception
+    '            '    ReDim shapeGroupListe(anzGroupElemente - 1)
+    '            '    For l = 1 To anzGroupElemente
+    '            '        shapeGroupListe(l - 1) = phaseShapesCollection.Item(l)
+    '            '    Next
 
-                    End Try
+    '            '    Dim ShapeGroup As Excel.ShapeRange
+    '            '    ShapeGroup = worksheetShapes.Range(shapeGroupListe)
+    '            '    groupShpElement = ShapeGroup.Group()
+    '            '    With groupShpElement
+    '            '        .Name = pname & "-Gruppierung Phase " & i.ToString
+    '            '        .AlternativeText = "Phase"
+    '            '    End With
 
-                Next
+    '            'ElseIf anzGroupElemente = 1 Then
 
-            End With
+    '            '    groupShpElement = phasenShape
 
+    '            'Else
+    '            '    groupShpElement = Nothing
 
-        Next
+    '            'End If
 
 
-        ' hier werden die Shapes gruppiert
-        anzGroupElemente = shapesCollection.Count
 
-        If anzGroupElemente > 1 Then
-            ' es macht nur Sinn zu gruppieren, wenn es mehr als 1 Element ist ....
+    '        End With
 
-            ReDim shapeGroupListe(anzGroupElemente - 1)
-            For i = 1 To anzGroupElemente
-                shapeGroupListe(i - 1) = shapesCollection.Item(i)
-            Next
+    '        'If Not IsNothing(groupShpElement) Then
+    '        '    projectShapesCollection.Add(groupShpElement.Name, Key:=groupShpElement.Name)
+    '        'End If
 
-            Dim ShapeGroup As Excel.ShapeRange
-            ShapeGroup = worksheetShapes.Range(shapeGroupListe)
-            groupShpElement = ShapeGroup.Group()
+    '        'phaseShapesCollection.Clear()
 
-        Else
-            ' in diesem Fall besteht das Projekt nur aus einer einzigen Phase
-            groupShpElement = oldShape
+    '    Next
 
-        End If
 
-        Try
-            With groupShpElement
-                .Name = pname
-                .AlternativeText = "Test"
+    '    ' hier werden die Shapes gruppiert
+    '    anzGroupElemente = projectShapesCollection.Count
 
-                hproj.shpUID = .ID.ToString
-                hproj.tfZeile = zeile
-            End With
-        Catch ex As Exception
-            Throw New Exception("in zeichneShapeOfProject : dem shape kann kein Name zugewiesen werden ....   ")
-        End Try
+    '    If anzGroupElemente > 1 Then
+    '        ' es macht nur Sinn zu gruppieren, wenn es mehr als 1 Element ist ....
 
-        ' jetzt muss das neue Shape in der ShowProjekte.ShapeListe eingetragen werden ..
-        ShowProjekte.AddShape(pname, shpUID:=groupShpElement.ID.ToString)
+    '        ReDim shapeGroupListe(anzGroupElemente - 1)
+    '        For i = 1 To anzGroupElemente
+    '            shapeGroupListe(i - 1) = projectShapesCollection.Item(i)
+    '        Next
 
+    '        Dim ShapeGroup As Excel.ShapeRange
+    '        ShapeGroup = worksheetShapes.Range(shapeGroupListe)
+    '        groupShpElement = ShapeGroup.Group()
 
+    '    Else
+    '        ' in diesem Fall besteht das Projekt nur aus einer einzigen Phase
+    '        groupShpElement = phasenShape
 
-        'If roentgenBlick.isOn Then
-        '    With roentgenBlick
-        '        Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
-        '    End With
-        'End If
+    '    End If
 
-        ' jetzt muss zurückgegeben werden, ab wo das nächste gezeichnet werden kann 
-        tryzeile = tryzeile + zeilenOffset
+    '    Try
+    '        With groupShpElement
+    '            .Name = pname
+    '            .AlternativeText = "Projekt"
 
-        appInstance.EnableEvents = formerEE
 
-    End Sub
+    '            hproj.shpUID = .ID.ToString
+    '            hproj.tfZeile = zeile
+    '        End With
+    '    Catch ex As Exception
+    '        Throw New Exception("in zeichneShapeOfProject : dem shape kann kein Name zugewiesen werden ....   ")
+    '    End Try
+
+    '    ' Check Test 
+    '    'Dim testShape As Excel.Shape
+    '    'Dim testShapeRange1 As Excel.ShapeRange, testShapeRange2 As Excel.ShapeRange
+    '    'Dim testName As String = " "
+    '    'Dim ok As Boolean = False
+
+    '    'Try
+    '    '    testShapeRange1 = groupShpElement.Ungroup
+
+    '    '    For Each testShapeRange2 In testShapeRange1
+
+    '    '        For Each testShape In testShapeRange2
+    '    '            testName = testShape.Name
+    '    '        Next
+
+    '    '    Next
+
+    '    'Catch ex As Exception
+    '    '    ok = False
+    '    'End Try
+
+
+
+    '    ' jetzt muss das neue Shape in der ShowProjekte.ShapeListe eingetragen werden ..
+    '    ShowProjekte.AddShape(pname, shpUID:=groupShpElement.ID.ToString)
+
+
+    '    tryzeile = tryzeile + zeilenOffset
+
+    '    appInstance.EnableEvents = formerEE
+
+    'End Sub
 
     ''' <summary>
     ''' gibt die Anzahl Zeilen zurück, die das Projekt im "expanded View Mode" benötigt 
@@ -9156,26 +9282,43 @@ Public Module Projekte
         Dim phasenName As String
         Dim zeilenOffset As Integer
         Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
+        Dim tmpValue As Integer
 
-        For i = 1 To hproj.CountPhases
+        If ProjectBoardDefinitions.My.Settings.drawPhases Then
 
-            With hproj.getPhase(i)
+            For i = 1 To hproj.CountPhases
 
-                phasenName = .name
-                If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
-                    zeilenOffset = zeilenOffset + 1
-                    lastEndDate = StartofCalendar.AddDays(-1)
-                End If
+                With hproj.getPhase(i)
 
-                If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
-                    lastEndDate = .getEndDate
-                End If
+                    phasenName = .name
+                    If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+                        zeilenOffset = zeilenOffset + 1
+                        lastEndDate = StartofCalendar.AddDays(-1)
+                    End If
 
-            End With
+                    If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+                        lastEndDate = .getEndDate
+                    End If
 
-        Next
+                End With
 
-        getNeededSpace = zeilenOffset
+
+            Next
+
+            If hproj.CountPhases > 1 Then
+                tmpValue = CInt((zeilenOffset + 1) / 2) + 1
+            Else
+                tmpValue = 1
+            End If
+
+
+        Else
+            tmpValue = 1
+        End If
+
+
+        getNeededSpace = tmpValue
+
 
     End Function
 
@@ -9247,13 +9390,12 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="vonZeile"></param>
     ''' <remarks></remarks>
-    Public Sub moveShapesUp1(ByVal vonZeile As Integer)
+    Public Sub moveShapesUp(ByVal vonZeile As Integer, ByVal anzahlZeilen As Integer)
 
         Dim worksheetShapes As Excel.Shapes
         Dim shpElement As Excel.Shape
         Dim formerEOU As Boolean = enableOnUpdate
         Dim zielZeileIsFrei As Boolean = False
-        Dim anzahlZeilen As Integer = 1
         Dim zielZeile As Integer = vonZeile
 
 
@@ -9307,7 +9449,7 @@ Public Module Projekte
 
         End If
 
-        
+
 
         enableOnUpdate = formerEOU
 
@@ -9669,7 +9811,7 @@ Public Module Projekte
                                     .Line.DashStyle = MsoLineDashStyle.msoLineSolid
                                 End If
                             End With
-                            
+
 
 
                         Catch ex As Exception
@@ -9695,7 +9837,7 @@ Public Module Projekte
 
                         End Try
 
-                        
+
 
                     Catch ex As Exception
 
@@ -9783,7 +9925,7 @@ Public Module Projekte
         End If
     End Sub
 
-   
+
     ''' <summary>
     ''' berechnet die Koordinaten des Abhängigkeit-Konnektors - der Linie
     ''' </summary>
@@ -9801,7 +9943,7 @@ Public Module Projekte
             X1 = .Left + .Width / 2
             Y1 = .Top + .Height
         End With
-        
+
         With dpShape
             X2 = .Left + .Width / 2
             Y2 = .Top
@@ -9810,8 +9952,17 @@ Public Module Projekte
     End Sub
 
 
-    Public Sub zeichnePhasenInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal farbTyp As Integer, _
-                                                      ByVal numberIt As Boolean, ByRef msNumber As Integer, ByVal report As Boolean)
+    ''' <summary>
+    ''' zeichnet für das angegebene Projekt hproj alle in namenliste enthaltenen Phasen
+    ''' wenn namenliste leer ist, werden alle Phasen des Projekts gezeichnet
+    ''' numberit steuet, ob die Phase für Reporting Zwecke eine Nummerierung erhalten soll 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="namenListe"></param>
+    ''' <param name="numberIt"></param>
+    ''' <param name="msNumber"></param>
+    ''' <remarks></remarks>
+    Public Sub zeichnePhasenInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal numberIt As Boolean, ByRef msNumber As Integer)
 
         Dim top1 As Double, left1 As Double, top2 As Double, left2 As Double
         Dim nummer As Integer, gesamtZahl As Integer
@@ -9955,8 +10106,21 @@ Public Module Projekte
     End Sub
 
 
-    Public Sub zeichnePhasenInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal farbTyp As Integer, ByVal vonMonth As Integer, ByVal bisMonth As Integer, _
-                                                          ByVal numberIt As Boolean, ByRef msNumber As Integer, ByVal report As Boolean)
+    ''' <summary>
+    ''' zeichnet für das angegebene Projekt hproj alle in namenliste enthaltenen Phasen, sofern das Projekt innerhalb 
+    ''' der vonMonth, bisMonth aufgespannten Grenzen liegt 
+    ''' wenn namenliste leer ist, werden alle Phasen des Projekts gezeichnet
+    ''' numberit steuet, ob die Phase für Reporting Zwecke eine Nummerierung erhalten soll 
+    ''' </summary>
+    ''' <param name="hproj">das Projekt-Objekt</param>
+    ''' <param name="namenListe">Liste der Phasen, die gezeichnet werden sollen</param>
+    ''' <param name="vonMonth">linker rand des Kalenderzeitraums, der betrachtet werden soll</param>
+    ''' <param name="bisMonth">rechter Rand des Kalenderzeitraums, der betrachtet werden soll</param>
+    ''' <param name="numberIt">soll nummeriert werden </param>
+    ''' <param name="msNumber">Start der Nummerierung</param>
+    ''' <remarks></remarks>
+    Public Sub zeichnePhasenInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal vonMonth As Integer, ByVal bisMonth As Integer, _
+                                                              ByVal numberIt As Boolean, ByRef msNumber As Integer)
 
         Dim top1 As Double, left1 As Double, top2 As Double, left2 As Double
         Dim nummer As Integer, gesamtZahl As Integer
@@ -9992,7 +10156,7 @@ Public Module Projekte
 
 
         Try
-            'bringt eine List von Phasen Namen zurück, die den angegeben Zeitraum berühren / überdecken
+            'bringt eine List von Phasen Namen zurück, die den angegebenen Zeitraum berühren / überdecken
             todoListe = hproj.withinTimeFrame(0, vonMonth, bisMonth)
 
         Catch ex As Exception
@@ -10539,7 +10703,7 @@ Public Module Projekte
                 .Adjustments.Item(1) = 0.0
             End If
 
-            
+
 
 
         End With
@@ -11735,7 +11899,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-    
+
 
             zeile = 2
             spalte = 1
@@ -12589,7 +12753,7 @@ Public Module Projekte
                         Next
 
                     End If
-                
+
             End Select
         Catch ex As Exception
             IDkennung = IDkennung & "#?"
@@ -12758,6 +12922,190 @@ Public Module Projekte
 
 
     End Sub
+
+    ''' <summary>
+    ''' überprüft, ob sich das Shape in Breite bzw. Position verändert hat
+    ''' wenn ja, werden die Phasen Daten entsprechend geändert 
+    ''' </summary>
+    ''' <param name="phaseShape"></param>
+    ''' <remarks></remarks>
+    Public Sub updatePhaseStartDuration(ByVal phaseShape As Excel.Shape)
+
+        Dim tmpstr() As String
+        Dim projectName As String
+        Dim phaseName As String
+        Dim phaseNr As Integer
+        Dim cPhase As clsPhase
+        Dim zeilenoffset As Integer
+
+        Dim ok As Boolean = True
+        Dim hproj As New clsProjekt
+
+        Dim top1 As Double, top2 As Double, left1 As Double, left2 As Double
+        Dim ld As Double
+
+        Dim phasenStart As Integer
+        Dim phasenDauer As Integer
+        Dim actionNeeded As Boolean = False
+
+        Dim sollLeft As Double, sollWidth As Double, sollTop As Double, sollHeight As Double
+        Dim istLeft As Double, istWidth As Double
+
+        Dim projectShapes As Excel.Shapes = appInstance.Worksheets(arrWsNames(3)).shapes
+        Dim suchstring = phaseShape.Name
+
+        Dim projectShape As Excel.ShapeRange, shapeSammlung As Excel.ShapeRange
+        Dim pShape As Excel.Shape
+
+
+        With phaseShape
+
+            istLeft = .Left
+            istWidth = .Width
+
+            tmpstr = .Name.Split(New Char() {"#"}, 10)
+            projectName = tmpstr(0)
+
+        End With
+
+        Try
+            hproj = ShowProjekte.getProject(projectName)
+        Catch ex As Exception
+            hproj = Nothing
+            ok = False
+        End Try
+
+
+
+
+        If ok Then
+
+
+
+            cPhase = New clsPhase(hproj)
+            Try
+                phaseName = tmpstr(1).Trim
+                cPhase = hproj.getPhase(phaseName)
+
+                ' jetzt muss geprüft werden, ob sich die Start-Position, Länge oder Endposition geändert hat 
+
+                If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
+
+                    projectShape = projectShapes.Range(projectName)
+                    shapeSammlung = projectShape.Ungroup()
+
+                    ' muss hier gemacht werden, weil die Koordinaten andere sind, wenn das Shape noch gruppiert ist 
+                    With phaseShape
+
+                        istLeft = .Left
+                        istWidth = .Width
+
+                    End With
+
+
+                    phaseNr = CInt(tmpstr(2))
+                    zeilenoffset = 0
+                    Call hproj.CalculateShapeCoord(phaseNr, zeilenoffset, sollTop, sollLeft, sollWidth, sollHeight)
+
+                    'Dim korrfaktorleft As Double = istLeft - sollLeft
+                    'Dim korrfakttorwidth As Double = istWidth - sollWidth
+                    'Dim korr1 As Double = istLeft / sollLeft
+                    'Dim korr2 As Double = istWidth / sollWidth
+                    '' ggf Height und Top anpassen 
+
+                    'sollLeft = istLeft
+                    'sollWidth = istWidth
+                    With phaseShape
+
+                        If .Height <> sollHeight Then
+                            .Height = sollHeight
+                        End If
+
+                        If .Top <> sollTop Then
+                            .Top = sollTop
+                        End If
+
+                    End With
+
+                    ' jetzt wird wieder regruppiert
+                    pShape = shapeSammlung.Regroup
+                    With pShape
+
+                        .Name = projectName
+                        .AlternativeText = "Projekt"
+                        hproj.shpUID = .ID.ToString
+
+                    End With
+
+                    ' jetzt muss das auch in der Liste Showprojekte eingetragen werden 
+                    ShowProjekte.AddShape(projectName, hproj.shpUID)
+
+
+                Else
+                    Call cPhase.calculateLineCoord(hproj.tfZeile, 1, 1, top1, left1, top2, left2, ld)
+                    sollLeft = left1
+                    sollWidth = left2 - left1
+                    sollTop = top1 - boxHeight * 0.3 * 0.5
+                End If
+
+                If System.Math.Abs(sollLeft - istLeft) > 0.5 Or _
+                    System.Math.Abs(sollWidth - istWidth) > 0.5 Then
+                    ' dann muss der Start bzw. die Duration geändert werden  
+
+                    phasenStart = CInt(365 * istLeft / (12 * boxWidth)) - DateDiff(DateInterval.Day, StartofCalendar, hproj.startDate)
+                    If phasenStart < 0 Then
+                        phasenStart = 0
+                    End If
+
+                    phasenDauer = CInt(365 * (istLeft + istWidth) / (12 * boxWidth)) - DateDiff(DateInterval.Day, StartofCalendar, hproj.startDate) - phasenStart
+
+                    Call cPhase.changeStartandDauer(phasenStart, phasenDauer)
+                    actionNeeded = True
+                    ' dann der Ordnung halber auf die Soll-Werte setzen 
+
+                    With phaseShape
+                        .Top = sollTop
+                    End With
+
+
+
+                Else
+                    ' dann der Ordnung halber auf die Soll-Werte setzen 
+
+                    If ProjectBoardDefinitions.My.Settings.drawPhases = False Then
+
+                        With phaseShape
+
+                            .Left = sollLeft
+                            .Width = sollWidth
+                            .Top = sollTop
+
+                        End With
+
+                    End If
+
+                End If
+
+
+            Catch ex As Exception
+                phaseName = ""
+                ok = False
+            End Try
+
+
+        Else
+            'Call MsgBox("keine Information abrufbar ...")
+        End If
+
+        If actionNeeded Then
+            Call awinNeuZeichnenDiagramme(1)
+        End If
+
+
+
+
+    End Sub
+
 
     Public Sub updatePhaseInformation(ByVal phaseShape As Excel.Shape)
 
@@ -13006,11 +13354,6 @@ Public Module Projekte
                             .Schriftfarbe = cproj.Schriftfarbe
                             .earliestStart = cproj.earliestStart
                             .earliestStartDate = cproj.earliestStartDate
-                            If cproj.Erloes > 0 Then
-                                ' dann soll der alte Wert beibehalten werden 
-                                .Erloes = cproj.Erloes
-                            End If
-
                             .Id = vglName & "#" & importDate.ToString
                             .latestStart = cproj.latestStart
                             .latestStartDate = cproj.latestStartDate
@@ -13051,6 +13394,17 @@ Public Module Projekte
                             If .volume = 0 Then
                                 .volume = cproj.volume
                             End If
+
+                            If cproj.Erloes > 0 Then
+                                ' dann soll der alte Wert beibehalten werden 
+                                .Erloes = cproj.Erloes
+                                If .Dauer = cproj.Dauer Then
+                                    .budgetWerte = cproj.budgetWerte
+                                Else
+                                    Call awinCreateBudgetWerte(hproj)
+                                End If
+                            End If
+
 
                             Dim unterschiede As New Collection
                             ' jetzt wird geprüft , ob die beiden Projekte von den Werten her unterschiedlich sind 
@@ -13144,6 +13498,7 @@ Public Module Projekte
 
                         End With
 
+                        Call awinCreateBudgetWerte(hproj)
                         tafelZeile = tafelZeile + 1
                     Catch ex1 As Exception
                         Throw New ArgumentException("Fehler bei Übernahme der Attribute des alten Projektes" & vbLf & ex1.Message)
@@ -13171,7 +13526,7 @@ Public Module Projekte
                         End If
 
                         ' zeichne das neue Shape in der Plan-Tafel 
-                        Call ZeichneProjektinPlanTafel(pname, hproj.tfZeile, False)
+                        Call ZeichneProjektinPlanTafel(pname, hproj.tfZeile)
 
                         ' jetzt müssen die ggf aktuell gezeigten Diagramme neu gezeichnet werden 
                         Call awinNeuZeichnenDiagramme(2)
@@ -13495,5 +13850,11 @@ Public Module Projekte
         newValues = newXwerte
 
     End Sub
- 
+
+    Public Function kindOfShape(ByVal shape As Excel.Shape) As Integer
+
+
+
+    End Function
+
 End Module

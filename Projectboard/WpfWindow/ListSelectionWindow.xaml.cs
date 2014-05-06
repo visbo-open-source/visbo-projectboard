@@ -215,7 +215,7 @@ namespace WpfWindow
                 }
                 else if (this.Title == "Phasen visualisieren")
                 {
-                    int farbID = 4;
+                    
                     VBCollection myCollection = new VBCollection();
 
                     if (this.checkbox1.IsChecked == true)
@@ -228,7 +228,7 @@ namespace WpfWindow
                         myCollection.Add(name, name);
                     }
 
-                    Projekte.awinZeichnePhasen(myCollection, farbID, false);
+                    Projekte.awinZeichnePhasen(myCollection, false);
 
                     Module1.appInstance.EnableEvents = true;
                     Module1.enableOnUpdate = true;

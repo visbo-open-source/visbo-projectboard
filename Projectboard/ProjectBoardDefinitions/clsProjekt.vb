@@ -183,6 +183,9 @@ Public Class clsProjekt
             Dim hdates As SortedList(Of Date, String)
             Dim cdates As SortedList(Of Date, String)
 
+            Dim verify As Integer = Me.dauerInDays
+            verify = vglproj.dauerInDays
+
 
             Select Case type
 
@@ -948,11 +951,16 @@ Public Class clsProjekt
 
     Public Sub keepPhase1consistent(ByVal phasenEnde As Integer)
 
+
         If Me.getPhase(1).dauerInDays < phasenEnde Then
             Me.getPhase(1).changeStartandDauerPhase1(0, phasenEnde)
             ' im Nebeneffekt wird ausserdem _Dauer aktualisiert  
             Dim projektLaengeInDays As Integer = Me.dauerInDays
         End If
+
+
+
+
 
     End Sub
 
@@ -1929,8 +1937,22 @@ Public Class clsProjekt
         End Get
 
         Set(value As Integer)
+            Dim heuteColumn As Integer = getColumnOfDate(Date.Today)
+            Dim reasonableValue As Integer
+
             If value <= 0 Then
-                _earliestStart = value
+                If Me.Start + value > heuteColumn Then
+                    ' es ist zugelassen 
+                    _earliestStart = value
+                Else
+                    ' das Projekt kann frühestens im Folge Monat beginnen  
+                    reasonableValue = heuteColumn + 1 - Me.Start
+                    If reasonableValue > 0 Then
+                        reasonableValue = 0
+                    End If
+                    _earliestStart = reasonableValue
+                End If
+
             End If
         End Set
     End Property
@@ -2054,7 +2076,17 @@ Public Class clsProjekt
 
     End Sub
 
+    ''' <summary>
+    ''' berechnet die Koordinaten der Phase mit Nummer  phaseNr. 
+    ''' </summary>
+    ''' <param name="phaseNr"></param>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="width"></param>
+    ''' <param name="height"></param>
+    ''' <remarks></remarks>
     Public Sub CalculateShapeCoord(ByVal phaseNr As Integer, ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
+
         Dim cphase As clsPhase
 
         Try
@@ -2113,9 +2145,46 @@ Public Class clsProjekt
 
     End Sub
 
-    Public Sub CalculateShapeCoord(ByVal phaseNr As Integer, ByVal zeilenOffset As Integer,
-                                   ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
+    ''' <summary>
+    ''' gibt für die angegebene Phasen-Nummer den zeilenoffset zurück sowie die 
+    ''' Werte für top, left, width, height des Phasen-Shapes
+    ''' </summary>
+    ''' <param name="phaseNr"></param>
+    ''' <param name="zeilenOffset"></param>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="width"></param>
+    ''' <param name="height"></param>
+    ''' <remarks></remarks>
+    Public Sub CalculateShapeCoord(ByVal phaseNr As Integer, ByRef zeilenOffset As Integer,
+                                       ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
         Dim cphase As clsPhase
+        Dim phasenName As String
+        Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
+
+
+        If phaseNr > Me.CountPhases Then
+            Throw New ArgumentException("es gibt diese Phasen-Numer nicht: " & phaseNr & vbLf & _
+                                         "Projekt: " & Me.name & ", Anzahl Phasen: " & Me.CountPhases)
+        End If
+
+        For i = 1 To phaseNr
+
+            With Me.getPhase(i)
+
+                phasenName = .name
+                If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+                    zeilenOffset = zeilenOffset + 1
+                    lastEndDate = StartofCalendar.AddDays(-1)
+                End If
+
+                If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+                    lastEndDate = .getEndDate
+                End If
+
+            End With
+        Next
+
 
         Try
 
@@ -2150,7 +2219,7 @@ Public Class clsProjekt
 
 
             Else
-            Throw New ArgumentException("es kann kein Shape berechnet werden für : " & cphase.name)
+                Throw New ArgumentException("es kann kein Shape berechnet werden für : " & cphase.name)
             End If
 
         Catch ex As Exception

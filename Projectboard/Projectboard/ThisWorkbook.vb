@@ -11,6 +11,7 @@ Public Class ThisWorkbook
     ' 2012 ff
     ' Nicht authorisierte Verwendung nicht gestattet 
 
+
     Protected Overrides Function CreateRibbonExtensibilityObject() As Microsoft.Office.Core.IRibbonExtensibility
         Return New Ribbon1()
     End Function
@@ -70,6 +71,8 @@ Public Class ThisWorkbook
         '    End If
         'Next
 
+        
+        appInstance.EnableEvents = True
 
     End Sub
 
@@ -166,5 +169,14 @@ Public Class ThisWorkbook
         ' hier sollen jetzt noch die Phasen weggeschrieben werden 
         Call awinWritePhaseDefinitions()
 
+        appInstance.EnableEvents = False
+        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+        'appInstance.EnableEvents = True
+
+
+
+        'appInstance.Quit()
+
     End Sub
+
 End Class

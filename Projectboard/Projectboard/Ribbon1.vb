@@ -451,6 +451,7 @@ Imports Microsoft.Office.Interop.Excel
 
         Dim awinSelection As Excel.ShapeRange
         Dim hproj As clsProjekt
+        Dim databaseName As String = awinSettings.databaseName
 
         enableOnUpdate = False
 
@@ -484,10 +485,28 @@ Imports Microsoft.Office.Interop.Excel
                     If returnValue = DialogResult.OK Then
                         With hproj
                             .timeStamp = Date.Now
-                            .Erloes = CType(ProjektAendern.Erloes.Text, Double)
+
+                            If .Erloes <> CType(ProjektAendern.Erloes.Text, Double) Then
+                                If .Erloes = 0 Then
+                                    .Erloes = CType(ProjektAendern.Erloes.Text, Double)
+                                    Call awinCreateBudgetWerte(hproj)
+                                Else
+                                    Try
+                                        Call awinUpdateBudgetWerte(hproj, CType(ProjektAendern.Erloes.Text, Double))
+                                        .Erloes = CType(ProjektAendern.Erloes.Text, Double)
+                                    Catch ex As Exception
+                                        .Erloes = CType(ProjektAendern.Erloes.Text, Double)
+                                        Call awinCreateBudgetWerte(hproj)
+                                    End Try
+
+                                End If
+                            End If
+
                             .StrategicFit = CType(ProjektAendern.sFit.Text, Double)
                             .Risiko = CType(ProjektAendern.risiko.Text, Double)
+
                         End With
+
                         Call awinNeuZeichnenDiagramme(5)
                     End If
 
@@ -1574,11 +1593,12 @@ Imports Microsoft.Office.Interop.Excel
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
 
-                ' da die erste Phase mit der ganzen Höhe, dann nur mit der halben Höhe gezeichnet wird: 
-                Dim anzahlZeilen As Integer = CInt((getNeededSpace(hproj) + 1) / 2)
+                ' bestimme die Anzahl Zeilen, die benötigt wird  
+                Dim anzahlZeilen As Integer = getNeededSpace(hproj)
 
                 Call moveShapesDown(hproj.tfZeile + 1, anzahlZeilen)
-                Call ZeichneProjektinPlanTafel2(pname, hproj.tfZeile)
+                'Call ZeichneProjektinPlanTafel2(pname, hproj.tfZeile)
+                Call ZeichneProjektinPlanTafel(pname, hproj.tfZeile)
 
 
                 appInstance.EnableEvents = True
@@ -3925,6 +3945,43 @@ Imports Microsoft.Office.Interop.Excel
         Call awinDeSelect()
 
     End Sub
+
+    Sub PT0ShowPortfolioBudgetCost(control As IRibbonControl)
+        Dim selectionType As Integer = -1 ' keine Einschränkung
+        Dim top As Double, left As Double, width As Double, height As Double
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        Dim sichtbarerBereich As Excel.Range
+
+        height = awinSettings.ChartHoehe2
+        width = 450
+
+        With appInstance.ActiveWindow
+            sichtbarerBereich = .VisibleRange
+            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - width) / 2
+            If left < sichtbarerBereich.Left Then
+                left = sichtbarerBereich.Left + 2
+            End If
+
+            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - height) / 2
+            If top < sichtbarerBereich.Top Then
+                top = sichtbarerBereich.Top + 2
+            End If
+
+        End With
+
+
+
+        Dim obj As Object = Nothing
+        Call awinCreateBudgetErgebnisDiagramm(obj, top, left, width, height, False, False)
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+    End Sub
+
 
     Sub PT0ShowPortfolioErgebnis(control As IRibbonControl)
         Dim selectionType As Integer = -1 ' keine Einschränkung

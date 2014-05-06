@@ -87,7 +87,7 @@ Public Class frmConfirmEditRess
             ' dann muss das Projekt neu gezeichnet werden - muss gemacht werden; es könnte sich ja die Darstellung geändert haben 
 
             ' Änderung 26.7 roentgenblick ison wird jetzt in zeichneProjektinPlantafel behandelt
-            Call ZeichneProjektinPlanTafel(pname, tryzeile, False)
+            Call ZeichneProjektinPlanTafel(pname, tryzeile)
             shpUID = newproj.shpUID
 
             

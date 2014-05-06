@@ -45,7 +45,7 @@
                         
                         toDoListe.Add(pname)
                         Dim shortName As String = hproj.name
-                        Call ZeichneProjektinPlanTafel(shortName, tfz, False)
+                        Call ZeichneProjektinPlanTafel(shortName, tfz)
                     Catch ex As Exception
 
                     End Try
