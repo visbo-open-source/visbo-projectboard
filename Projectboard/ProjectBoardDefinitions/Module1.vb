@@ -1539,7 +1539,7 @@ Public Module Module1
 
 
     Public Function magicBoardIstFrei(ByRef mycollection As Collection, ByVal pname As String, ByVal zeile As Integer, _
-                                      ByVal spalte As Integer, ByVal laenge As Integer) As Boolean
+                                      ByVal spalte As Integer, ByVal laenge As Integer, ByVal anzahlZeilen As Integer) As Boolean
         Dim istfrei = True
         Dim ix As Integer = 1
         Dim anzahlP As Integer = ShowProjekte.Count
@@ -1547,9 +1547,9 @@ Public Module Module1
 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-            If pname <> kvp.Key And Not mycollection.Contains(kvp.Key) Then
+            If pname <> kvp.Key And Not mycollection.Contains(kvp.Key) And kvp.Value.shpUID <> "" Then
                 With kvp.Value
-                    If zeile = .tfZeile Then
+                    If .tfZeile >= zeile And .tfZeile <= zeile + anzahlZeilen Then
                         If spalte <= .tfspalte Then
                             If spalte + laenge - 1 >= .tfspalte Then
                                 istfrei = False
@@ -1570,6 +1570,11 @@ Public Module Module1
     Public Function findeMagicBoardPosition(ByRef mycollection As Collection, ByVal pname As String, ByVal zeile As Integer, ByVal spalte As Integer, ByVal laenge As Integer) As Integer
         Dim lookDown As Boolean = True
         Dim tryoben As Integer, tryunten As Integer
+        Dim anzahlzeilen As Integer
+
+        
+        Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
+        anzahlzeilen = getNeededSpace(hproj) - 1
 
         ' Konsistenzbedingung prüfen ... 
         If zeile < 2 Then
@@ -1580,7 +1585,7 @@ Public Module Module1
             mycollection.Add(pname, pname)
         End If
 
-        If Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge) Then
+        If Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen) Then
             tryoben = zeile - 1
             tryunten = zeile + 1
 
@@ -1588,7 +1593,7 @@ Public Module Module1
             zeile = tryunten
             lookDown = True
 
-            While Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge)
+            While Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen)
                 'lookDown = Not lookDown
                 If lookDown Then
                     tryunten = tryunten + 1
@@ -2139,5 +2144,81 @@ Public Module Module1
         End If
 
     End Function
+
+    ''' <summary>
+    ''' erzeugt die monatlichen Budget Werte für ein Projekt
+    ''' berechnet aus dem Wert für Erloes, verteilt nach einem Schlüssel, der sich aus Marge und Kostenbedarf ergibt 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <remarks></remarks>
+
+    Public Sub awinCreateBudgetWerte(ByRef hproj As clsProjekt)
+
+
+        Dim costValues() As Double, budgetValues() As Double
+        Dim curBudget As Double, avgbudget As Double
+
+
+        costValues = hproj.getGesamtKostenBedarf
+        ReDim budgetValues(costValues.Length - 1)
+
+        curBudget = hproj.Erloes
+        avgbudget = curBudget / costValues.Length
+
+        If curBudget > 0 Then
+            If costValues.Sum > 0 Then
+                Dim pMarge As Double = hproj.ProjectMarge
+                For i = 0 To costValues.Length - 1
+                    budgetValues(i) = costValues(i) * (1 + pMarge)
+                Next
+            Else
+                For i = 0 To costValues.Length - 1
+                    budgetValues(i) = avgbudget
+                Next
+            End If
+        End If
+
+
+        hproj.budgetWerte = budgetValues
+
+
+    End Sub
+
+    ''' <summary>
+    ''' aktualisiert die Budget werte , wobei die Charakteristik erhalten bleibt 
+    ''' Vorbedingung ist, daß das bisherige Budget > 0 Null ist 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="newBudget">Gesamt Wert des neuen Budgets</param>
+    ''' <remarks></remarks>
+    Public Sub awinUpdateBudgetWerte(ByRef hproj As clsProjekt, ByVal newBudget As Double)
+
+
+
+        Dim curValues() As Double, budgetValues() As Double
+        Dim oldBudget As Double
+        Dim faktor As Double
+
+        curValues = hproj.budgetWerte
+        ReDim budgetValues(curValues.Length - 1)
+        oldBudget = curValues.Sum
+
+        If oldBudget = 0 Then
+            Throw New Exception("altes Budget darf beim Update nicht Null sein")
+        Else
+            If newBudget <= 0 Then
+                ' budgetvalues ist bereits auf Null gesetzt  
+            Else
+                faktor = newBudget / oldBudget
+                For i = 0 To curValues.Length - 1
+                    budgetValues(i) = curValues(i) * faktor
+                Next
+            End If
+
+        End If
+
+        hproj.budgetWerte = budgetValues
+
+    End Sub
 
 End Module

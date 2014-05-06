@@ -10,79 +10,7 @@ Imports System.Windows
 Public Module awinGeneralModules
 
 
-    ''' <summary>
-    ''' erzeugt die monatlichen Budget Werte für ein Projekt
-    ''' berechnet aus dem Wert für Erloes, verteilt nach einem Schlüssel, der sich aus Marge und Kostenbedarf ergibt 
-    ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <remarks></remarks>
-
-    Friend Sub awinCreateBudgetWerte(ByRef hproj As clsProjekt)
-
-        
-        Dim costValues() As Double, budgetValues() As Double
-        Dim curBudget As Double, avgbudget As Double
-
-
-        costValues = hproj.getGesamtKostenBedarf
-        ReDim budgetValues(costValues.Length - 1)
-
-        curBudget = hproj.Erloes
-        avgbudget = curBudget / costValues.Length
-
-        If costValues.Sum > 0 Then
-            Dim pMarge As Double = hproj.ProjectMarge
-            For i = 0 To costValues.Length - 1
-                budgetValues(i) = costValues(i) * (1 + pMarge)
-            Next
-        Else
-            For i = 0 To costValues.Length - 1
-                budgetValues(i) = avgbudget
-            Next
-        End If
-
-
-        hproj.budgetWerte = budgetValues
-
-
-    End Sub
-
-    ''' <summary>
-    ''' aktualisiert die Budget werte , wobei die Charakteristik erhalten bleibt 
-    ''' Vorbedingung ist, daß das bisherige Budget > 0 Null ist 
-    ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <param name="newBudget">Gesamt Wert des neuen Budgets</param>
-    ''' <remarks></remarks>
-    Friend Sub awinUpdateBudgetWerte(ByRef hproj As clsProjekt, ByVal newBudget As Double)
-
-
-
-        Dim curValues() As Double, budgetValues() As Double
-        Dim oldBudget As Double
-        Dim faktor As Double
-
-        curValues = hproj.budgetWerte
-        ReDim budgetValues(curValues.Length - 1)
-        oldBudget = curValues.Sum
-
-        If oldBudget = 0 Then
-            Throw New Exception("altes Budget darf beim Update nicht Null sein")
-        Else
-            If newBudget <= 0 Then
-                ' budgetvalues ist bereits auf Null gesetzt  
-            Else
-                faktor = newBudget / oldBudget
-                For i = 0 To curValues.Length - 1
-                    budgetValues(i) = curValues(i) * faktor
-                Next
-            End If
-
-        End If
-
-        hproj.budgetWerte = budgetValues
-
-    End Sub
+   
 
     ''' <summary>
     ''' schreibt evtl neu durch Inventur hinzugekommene Phasen in 
@@ -2183,7 +2111,7 @@ Public Module awinGeneralModules
                     ShowProjekte.Add(kvp.Value)
 
                     Call awinCreateBudgetWerte(kvp.Value)
-                    Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile, False)
+                    Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile)
 
                 Catch ex As Exception
                     ' nichts tun - das Projekt ist einfach nur schon da .... 
@@ -2205,7 +2133,7 @@ Public Module awinGeneralModules
 
                     Call awinCreateBudgetWerte(kvp.Value)
 
-                    Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile, False)
+                    Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile)
 
                 Catch ex As Exception
                     Call MsgBox(ex.Message)

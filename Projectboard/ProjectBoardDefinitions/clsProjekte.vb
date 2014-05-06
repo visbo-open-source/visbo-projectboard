@@ -781,10 +781,18 @@
                 'ReDim tempArray(Dauer - 1)
                 tempArray = kvp.Value.budgetWerte
 
-                If tempArray.Sum = 0 Then
+                If IsNothing(tempArray) Then
+                    ReDim tempArray(Dauer - 1)
                     For i = 0 To Dauer - 1
                         tempArray(i) = avgBudget
                     Next
+                Else
+                    If tempArray.Sum = 0 Then
+                        ReDim tempArray(Dauer - 1)
+                        For i = 0 To Dauer - 1
+                            tempArray(i) = avgBudget
+                        Next
+                    End If
                 End If
                 
 
