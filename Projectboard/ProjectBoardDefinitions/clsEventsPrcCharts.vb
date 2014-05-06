@@ -325,7 +325,7 @@ Public Class clsEventsPrcCharts
 
                                         ' jetzt wird das Shape in der Plantafel gelöscht 
                                         Call clearProjektinPlantafel(.name)
-                                        Call ZeichneProjektinPlanTafel(.name, .tfZeile, False)
+                                        Call ZeichneProjektinPlanTafel(.name, .tfZeile)
                                     End If
 
                                 End With

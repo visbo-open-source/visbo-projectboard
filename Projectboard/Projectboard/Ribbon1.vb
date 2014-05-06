@@ -1463,11 +1463,12 @@ Imports Microsoft.Office.Interop.Excel
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
 
-                ' da die erste Phase mit der ganzen Höhe, dann nur mit der halben Höhe gezeichnet wird: 
-                Dim anzahlZeilen As Integer = CInt((getNeededSpace(hproj) + 1) / 2)
+                ' bestimme die Anzahl Zeilen, die benötigt wird  
+                Dim anzahlZeilen As Integer = getNeededSpace(hproj)
 
                 Call moveShapesDown(hproj.tfZeile + 1, anzahlZeilen)
-                Call ZeichneProjektinPlanTafel2(pname, hproj.tfZeile)
+                'Call ZeichneProjektinPlanTafel2(pname, hproj.tfZeile)
+                Call ZeichneProjektinPlanTafel(pname, hproj.tfZeile)
 
 
                 appInstance.EnableEvents = True

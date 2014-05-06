@@ -1937,8 +1937,22 @@ Public Class clsProjekt
         End Get
 
         Set(value As Integer)
+            Dim heuteColumn As Integer = getColumnOfDate(Date.Today)
+            Dim reasonableValue As Integer
+
             If value <= 0 Then
-                _earliestStart = value
+                If Me.Start + value > heuteColumn Then
+                    ' es ist zugelassen 
+                    _earliestStart = value
+                Else
+                    ' das Projekt kann frühestens im Folge Monat beginnen  
+                    reasonableValue = heuteColumn + 1 - Me.Start
+                    If reasonableValue > 0 Then
+                        reasonableValue = 0
+                    End If
+                    _earliestStart = reasonableValue
+                End If
+
             End If
         End Set
     End Property

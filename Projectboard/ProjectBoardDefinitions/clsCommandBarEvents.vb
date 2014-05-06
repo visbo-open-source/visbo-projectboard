@@ -344,7 +344,7 @@ Public Class clsCommandBarEvents
 
 
                         Else
-                            'Print("In OnUpdate: nicht gefunden !")
+                            '
                             ' das Shape ist neu dazu gekommen, also kopiert worden und muss in die Liste aufgenommen werden 
                             updateKennung = 2
                             ChartsNeedUpdate = True
@@ -361,13 +361,15 @@ Public Class clsCommandBarEvents
 
                             pname = shpelement.Name & " - Kopie " & zaehler
 
-
+                            Dim anzahlZeilen As Integer
                             Dim oldproj As clsProjekt
                             Try
                                 oldproj = ShowProjekte.getProject(shpName) ' der shpName ist identisch mit dem Projekt-Namen aus dem kopiert wurde
+
                                 ' Änderung 25.3.14 wegen Kopiertes Projekt soll einfach in der nächsten Zeile gezeichnet werden  
+                                anzahlZeilen = getNeededSpace(oldproj)
                                 zeile = oldproj.tfZeile + 1
-                                Call moveShapesDown(zeile, 1)
+                                Call moveShapesDown(zeile, anzahlZeilen)
                             Catch ex As Exception
                                 Throw New ArgumentException("Projekt in OnUpdate nicht gefunden: " & shpName)
                                 Exit Sub
@@ -380,7 +382,7 @@ Public Class clsCommandBarEvents
                                 .name = pname
                                 .shpUID = shpelement.ID.ToString
                                 '.dauer = laenge
-                                .tfZeile = zeile
+                                .tfZeile = zeile + anzahlzeilen - 1
                                 '.tfSpalte = spalte
                                 .Status = ProjektStatus(0)
                                 ' Änderung 8.11 : ein neues Projekt sollte in der Zukunft angelegt werden, wenn oldproj.startdate in der Vergangenheit liegt - 
@@ -397,6 +399,13 @@ Public Class clsCommandBarEvents
                                 .variantName = ""
                                 ' Änderung 19.8 : Bewertungen löschen in dem kopierten Projekt, ausserdem Status auf <geplant> setzen 
                                 .clearBewertungen()
+
+                                ' das Budget wird auf Null gesetzt , ebenso die monatlichen Budget-Werte
+                                .Erloes = 0
+                                Dim budgetvalues() As Double
+                                ReDim budgetvalues(.Dauer - 1)
+                                .budgetWerte = budgetvalues
+
                             End With
 
                             Dim successful As Boolean = False
@@ -433,49 +442,12 @@ Public Class clsCommandBarEvents
                                 '
                                 ' zusammengesetztes Shape 
                                 '
-                                Dim phasenName As String
-                                Dim newShapeName As String
-                                Dim phaseShapeName As String
-                                Dim phasenShpElement As Excel.Shape
-
-                                ' jetzt jedes Shape entsprechend anpassen 
-                                For i = 1 To hproj.CountPhases
-                                    phasenName = oldproj.getPhase(i).name
-                                    phaseShapeName = oldproj.name & "#" & phasenName & "#" & i.ToString
-                                    newShapeName = hproj.name & "#" & phasenName & "#" & i.ToString
-
-                                    Try
-                                        phasenShpElement = shpelement.groupItem(phaseShapeName)
-                                        phasenShpElement.Name = newShapeName
-                                        hproj.CalculateShapeCoord(i, top, left, width, height)
-
-                                        With phasenShpElement
-                                            .Top = top
-                                            .Left = left
-                                            .Width = width
-                                            .Height = height
-                                            .Rotation = 0.0
-                                        End With
-
-                                        Call defineShapeAppearance(hproj, phasenShpElement, i)
-                                    Catch ex As Exception
-
-                                    End Try
-
-                                Next
-
-                                ' jetzt noch das Gesamt Shape, das zusammengesetzte ausrichten 
-                                hproj.CalculateShapeCoord(top, left, width, height)
-
-                                With shpelement
-                                    .Name = pname
-                                    .Top = top
-                                    .Left = left
-                                    .Width = width
-                                    .Height = height
-                                    .Rotation = 0.0
-                                End With
-
+                                ' jetzt wird das kopierte Shape gelöscht 
+                                enableOnUpdate = False
+                                shpelement.Delete()
+                                Call ZeichneProjektinPlanTafel(pname, hproj.tfZeile)
+                                enableOnUpdate = True
+                                
 
                             Else
                                 hproj.CalculateShapeCoord(top, left, width, height)
