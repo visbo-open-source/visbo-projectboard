@@ -537,10 +537,140 @@ Imports Microsoft.Office.Interop.Excel
     End Sub
 
     ''' <summary>
+    ''' earliest und latest Start eines Projektes ändern 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub Tom2G1EarliestLatestStart(control As IRibbonControl)
+
+        Dim setStartEnd As New frmEarliestLatestStart
+
+        Dim returnValue As DialogResult
+        enableOnUpdate = False
+        Dim awinSelection As Excel.ShapeRange
+        Dim i As Integer
+        Dim hproj As clsProjekt
+        Dim singleShp As Excel.Shape
+        Dim pname As String
+
+
+        ' es wird vbeim Betreten der Tabelle2 nochmal auf False gesetzt ... und insbesondere bei Activate Tabelle1 (!) auf true gesetzt, nicht vorher wieder
+        enableOnUpdate = False
+
+        ' damit man was sieht
+        'appInstance.ActiveSheet.screenupdating = True
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' Es muss mindestens 1 Projekt selektiert sein
+            For i = 1 To awinSelection.Count
+
+                singleShp = awinSelection.Item(i)
+
+                If i = 1 Then
+
+                    ' jetzt die Aktion durchführen ...
+                    Try
+                        hproj = ShowProjekte.getProject(singleShp.Name)
+                        pname = hproj.name
+                        With setStartEnd
+
+                            .EarliestStart.Value = hproj.earliestStart
+                            .LatestStart.Value = hproj.latestStart
+
+
+                        End With
+                    Catch ex As Exception
+                        Call MsgBox(" Fehler in Zeitspanne Projektstart " & singleShp.Name & " , Modul: Tom2G1EarliestLatestStart")
+                        enableOnUpdate = True
+                        Exit Sub
+                    End Try
+                Else
+
+                    Try
+                        hproj = ShowProjekte.getProject(singleShp.Name)
+                        pname = hproj.name
+                        With setStartEnd
+
+                            If .EarliestStart.Value <> hproj.earliestStart Or .LatestStart.Value <> hproj.latestStart Then
+
+                                .EarliestStart.Value = 0
+                                .LatestStart.Value = 0
+
+                            End If
+
+                        End With
+                    Catch ex As Exception
+                        Call MsgBox(" Fehler in Zeitspanne ProjektStart " & singleShp.Name & " , Modul: Tom2G1EarliestLatestStart")
+                        enableOnUpdate = True
+                        Exit Sub
+                    End Try
+
+                End If
+            Next i
+
+
+            returnValue = setStartEnd.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+
+                For i = 1 To awinSelection.Count
+
+                    singleShp = awinSelection.Item(i)
+
+                    ' jetzt die Aktion durchführen ...
+                    Try
+                        hproj = ShowProjekte.getProject(singleShp.Name)
+                        pname = hproj.name
+                        With setStartEnd
+
+                            hproj.earliestStart = .EarliestStart.Value
+                            hproj.latestStart = .LatestStart.Value
+                            hproj.earliestStartDate = hproj.startDate.AddMonths(.EarliestStart.Value)
+                            hproj.latestStartDate = hproj.startDate.AddMonths(.LatestStart.Value)
+
+                        End With
+                    Catch ex As Exception
+                        Call MsgBox(" Fehler in Zeitspanne Projektstart " & singleShp.Name & " , Modul: Tom2G1EarliestLatestStart")
+                        enableOnUpdate = True
+                        Exit Sub
+                    End Try
+
+                Next i
+
+                'Call MsgBox(" earliestStart und LatestEnd aus Formular für alle selektierten Projekte übernehmen")
+
+            ElseIf returnValue = DialogResult.Cancel Then
+                'Call MsgBox("Default soll gelten")
+
+            End If
+        Else
+
+            Call MsgBox("Es muss mindestens ein Projekt selektiert sein")
+
+        End If
+
+        Call awinDeSelect()
+
+        'appInstance.ScreenUpdating = True
+        enableOnUpdate = True
+
+
+    End Sub
+
+    ''' <summary>
     ''' Projekt ins Noshow stellen  
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
+    ''' 
     Sub Tom2G1NoShow(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape

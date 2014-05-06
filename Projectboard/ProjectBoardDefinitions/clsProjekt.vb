@@ -1993,10 +1993,12 @@ Public Class clsProjekt
                                                value = ProjektStatus(3) Or _
                                                value = ProjektStatus(4) Then
                 _Status = value
-                _earliestStart = 0
-                _latestStart = 0
-                _earliestStartDate = _startDate
-                _latestStartDate = _startDate
+                ' 2.5.2014 ur: Die nächsten Befehle sind auskommentiert, weil ein beauftragtes Projekt
+                ' nicht zwangsweise bereits gestartet wurde 
+                '_earliestStart = 0
+                '_latestStart = 0
+                '_earliestStartDate = _startDate
+                '_latestStartDate = _startDate
             Else
                 Call MsgBox("unzulässiger Wert für Status")
             End If
