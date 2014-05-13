@@ -11163,7 +11163,7 @@ Public Module Projekte
             Exit Sub
         End Try
 
-        appInstance.ActiveWorkbook.Close()
+        appInstance.ActiveWorkbook.Close(SaveChanges:=False)  'UR:06.05.2014 PROJEKTSteckbrief darf nicht geändert werden
         appInstance.ScreenUpdating = True
 
     End Sub
@@ -13851,10 +13851,10 @@ Public Module Projekte
 
     End Sub
 
-    Public Function kindOfShape(ByVal shape As Excel.Shape) As Integer
+    'Public Function kindOfShape(ByVal shape As Excel.Shape) As Integer
 
 
 
-    End Function
+    'End Function
 
 End Module

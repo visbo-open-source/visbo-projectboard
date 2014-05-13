@@ -436,7 +436,7 @@ Public Module awinGeneralModules
 
         ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
         appInstance.EnableEvents = False
-        appInstance.ActiveWorkbook.Close()
+        appInstance.ActiveWorkbook.Close(SaveChanges:=False) ' ur: 6.5.2014 savechanges hinzugefügt
         appInstance.EnableEvents = True
 
         showtimezone = True

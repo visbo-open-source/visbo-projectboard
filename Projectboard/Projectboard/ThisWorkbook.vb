@@ -61,8 +61,7 @@ Public Class ThisWorkbook
     Private Sub ThisWorkbook_Shutdown() Handles Me.Shutdown
 
         'Dim cbar As CommandBar
-
-        
+       
         ' die Short Cut Menues aus Excel alle wieder aktivieren ...
         'For Each cbar In appInstance.CommandBars
 
@@ -71,8 +70,12 @@ Public Class ThisWorkbook
         '    End If
         'Next
 
-        
+        'Call MsgBox(" in shutdown")
+
+
         appInstance.EnableEvents = True
+
+        'Application.Quit()
 
     End Sub
 
@@ -83,14 +86,13 @@ Public Class ThisWorkbook
         Dim plantafel As Excel.Window
 
 
+        'Call MsgBox(" in Open")
 
 
         Application.Worksheets(arrWsNames(3)).Activate()
         
         plantafel = Application.ActiveWindow
-
         
-
         With plantafel
             .Caption = windowNames(5)
             .ScrollRow = 1
@@ -98,7 +100,7 @@ Public Class ThisWorkbook
             .Visible = True
             .Zoom = 100
         End With
-        'appInstance.DisplayFormulaBar = False
+
 
         If appInstance.Windows.Count < 2 Then
             Try
@@ -122,8 +124,10 @@ Public Class ThisWorkbook
     Private Sub ThisWorkbook_BeforeSave(SaveAsUI As Boolean, ByRef Cancel As Boolean) Handles Me.BeforeSave
 
         'Dim zeitStempel As Date
+        'Call MsgBox(" in BeforeSave")
 
         Cancel = True
+
 
         'If AlleProjekte.Count > 0 Then
 
@@ -155,6 +159,10 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_BeforeClose(ByRef Cancel As Boolean) Handles Me.BeforeClose
 
+        Dim result As Integer
+        Dim projektespeichern As New frmProjekteSpeichern
+        Dim returnValue As DialogResult
+
         If roentgenBlick.isOn Then
             Call awinNoshowProjectNeeds()
             With roentgenBlick
@@ -169,13 +177,47 @@ Public Class ThisWorkbook
         ' hier sollen jetzt noch die Phasen weggeschrieben werden 
         Call awinWritePhaseDefinitions()
 
-        appInstance.EnableEvents = False
-        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-        'appInstance.EnableEvents = True
 
+        returnValue = projektespeichern.ShowDialog
 
+        If returnValue = DialogResult.Yes Then
 
-        'appInstance.Quit()
+            Dim zeitStempel As Date
+
+            If AlleProjekte.Count > 0 Then
+
+                Call StoreAllProjectsinDB()
+
+                zeitStempel = AlleProjekte.First.Value.timeStamp
+
+                Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+
+                ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
+                Try
+                    If projekthistorie.Count > 0 Then
+                        projekthistorie.clear()
+                    End If
+                Catch ex As Exception
+
+                End Try
+            Else
+                Call MsgBox("keine Projekte zu speichern ...")
+            End If
+
+        End If
+
+        'result = MsgBox("Sollen diese Projekte gespeichert werden?", MsgBoxStyle.YesNo)
+
+        'If result = MsgBoxResult.Yes Then
+
+        '    Call MsgBox("Projekte speichern")
+        'Else
+        '    Call MsgBox("projekte nicht speichern")
+
+        'End If
+        ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
+        Application.ActiveWorkbook.Saved = True
+        Application.Quit()
 
     End Sub
 
