@@ -77,67 +77,64 @@
 
     'Public KostenDefinitionsBereich As String
 
+    ''' <summary>
+    ''' kopiert die Attribute einer Projektvorlage in newproject;  bei der Quelle handelt es sich um eine 
+    ''' Vorlage  
+    ''' </summary>
+    ''' <param name="newproject"></param>
+    ''' <remarks></remarks>
+    ''' 
+    Public Overridable Sub copyAttrTo(ByRef newproject As clsProjekt)
+
+        With newproject
+            .farbe = Me.farbe
+            .Schrift = Me.Schrift
+            .Schriftfarbe = Me.Schriftfarbe
+            .VorlagenName = Me.VorlagenName
+            .earliestStart = _earliestStart
+            .latestStart = _latestStart
+            .name = ""
+        End With
+
+
+    End Sub
 
     Public Overridable Sub CopyTo(ByRef newproject As clsProjekt)
         Dim p As Integer
         Dim newphase As clsPhase
 
+        Call copyAttrTo(newproject)
 
-        With newproject
-            .farbe = farbe
-            .Schrift = Schrift
-            .Schriftfarbe = Schriftfarbe
-            .name = ""
-            .VorlagenName = VorlagenName
-            .earliestStart = _earliestStart
-            .latestStart = _latestStart
+        For p = 0 To Me.CountPhases - 1
+            newphase = New clsPhase(newproject)
+            AllPhases.Item(p).CopyTo(newphase)
+            newproject.AddPhase(newphase)
+        Next p
 
-
-
-
-            For p = 0 To Me.CountPhases - 1
-                newphase = New clsPhase(newproject)
-                AllPhases.Item(p).CopyTo(newphase)
-                .AddPhase(newphase)
-            Next p
-
-
-        End With
 
     End Sub
+
+
     Public Overridable Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date)
         Dim p As Integer
         Dim newphase As clsPhase
         Dim ProjectDauerInDays As Integer
         Dim CorrectFactor As Double
 
-        With newproject
-            .startDate = startdate
-            .farbe = farbe
-            .Schrift = Schrift
-            .Schriftfarbe = Schriftfarbe
-            .name = ""
-            .VorlagenName = VorlagenName
-            .earliestStart = _earliestStart
-            .latestStart = _latestStart
+        Call copyAttrTo(newproject)
 
-            ProjectDauerInDays = calcDauerIndays(startdate, endedate)
-            CorrectFactor = ProjectDauerInDays / Me.dauerInDays
+        newproject.startDate = startdate
 
+        ProjectDauerInDays = calcDauerIndays(startdate, endedate)
+        CorrectFactor = ProjectDauerInDays / Me.dauerInDays
 
-            For p = 0 To Me.CountPhases - 1
-                newphase = New clsPhase(newproject)
-                'If CorrectFactor = 1.0 Then
-                '    AllPhases.Item(p).CopyTo(newphase)
-                'Else
-                AllPhases.Item(p).korrCopyTo(newphase, CorrectFactor)
-                'End If
+        For p = 0 To Me.CountPhases - 1
+            newphase = New clsPhase(newproject)
+            AllPhases.Item(p).korrCopyTo(newphase, CorrectFactor)
 
-                .AddPhase(newphase)
-            Next p
+            newproject.AddPhase(newphase)
+        Next p
 
-
-        End With
 
     End Sub
 

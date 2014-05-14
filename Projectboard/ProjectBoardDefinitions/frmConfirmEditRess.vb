@@ -34,7 +34,7 @@ Public Class frmConfirmEditRess
 
         Try
 
-            hproj.copyAttrTo(newproj, False)
+            hproj.copyAttrTo(newproj)
 
             With newproj
                 .name = hproj.name

@@ -159,7 +159,7 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_BeforeClose(ByRef Cancel As Boolean) Handles Me.BeforeClose
 
-        Dim result As Integer
+
         Dim projektespeichern As New frmProjekteSpeichern
         Dim returnValue As DialogResult
 
