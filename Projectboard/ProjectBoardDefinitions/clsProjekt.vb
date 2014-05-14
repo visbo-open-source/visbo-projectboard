@@ -993,43 +993,35 @@ Public Class clsProjekt
         End Get
     End Property
     ''' <summary>
-    ''' kopiert die Attribute eines Projektes in newproject; unterscheidet dabei , ob es sich bei der Quelle um eine 
-    ''' Vorlage handelt oder ein normales Projekt 
+    ''' kopiert die Attribute eines Projektes in newproject;  bei der Quelle handelt es sich um 
+    ''' ein normales Projekt 
     ''' </summary>
     ''' <param name="newproject"></param>
-    ''' <param name="isVorlage"></param>
     ''' <remarks></remarks>
-    Public Sub copyAttrTo(ByRef newproject As clsProjekt, isVorlage As Boolean)
+    Public Overloads Sub copyAttrTo(ByRef newproject As clsProjekt)
 
         With newproject
-            .farbe = farbe
-            .Schrift = Schrift
-            .Schriftfarbe = Schriftfarbe
-            .VorlagenName = VorlagenName
-            .Risiko = Risiko
-            .StrategicFit = StrategicFit
-            .Erloes = Erloes
 
-
-
-            If isVorlage Then
-                .earliestStart = _earliestStart
-                .latestStart = _latestStart
-                .name = ""
-
-            Else
-                .StartOffset = _StartOffset
-                .startDate = _startDate
-                .earliestStartDate = _earliestStartDate
-                .latestStartDate = _latestStartDate
-                .earliestStart = _earliestStart
-                .latestStart = _latestStart
-                .leadPerson = ""
-                '.ProjectMarge = imarge
-            End If
-
+            .farbe = Me.farbe
+            .Schrift = Me.Schrift
+            .Schriftfarbe = Me.Schriftfarbe
+            .VorlagenName = Me.VorlagenName
+            .Risiko = Me.Risiko
+            .StrategicFit = Me.StrategicFit
+            .Erloes = Me.Erloes
+            .description = Me.description
+            .volume = Me.volume
+            .complexity = Me.complexity
+            .businessUnit = Me.businessUnit
+            .StartOffset = _StartOffset
+            .startDate = _startDate
+            .earliestStartDate = _earliestStartDate
+            .latestStartDate = _latestStartDate
+            .earliestStart = _earliestStart
+            .latestStart = _latestStart
+            .leadPerson = _leadPerson
+            '.ProjectMarge = imarge
             .Status = _Status
-
 
         End With
 
@@ -1499,7 +1491,7 @@ Public Class clsProjekt
 
         Dim newphase As clsPhase
 
-        Call copyAttrTo(newproject, True)
+        Call copyAttrTo(newproject)
 
         For Each hphase In MyBase.Liste
             newphase = New clsPhase(newproject)
@@ -1510,18 +1502,34 @@ Public Class clsProjekt
 
     End Sub
 
-    Public Overloads Sub CopyTo(ByRef newproject As clsProjekt, isVorlage As Boolean)
 
+    Public Overrides Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date)
+        Dim p As Integer
         Dim newphase As clsPhase
+        Dim ProjectDauerInDays As Integer
+        Dim CorrectFactor As Double
 
-        Call copyAttrTo(newproject, isVorlage)
+        Call copyAttrTo(newproject)
 
-        For Each hphase In MyBase.Liste
-            newphase = New clsPhase(newproject)
-            hphase.CopyTo(newphase)
-            newproject.AddPhase(newphase)
-        Next
+        With newproject
+            .startDate = startdate
+            .earliestStart = _earliestStart
+            .latestStart = _latestStart
 
+            ProjectDauerInDays = calcDauerIndays(startdate, endedate)
+            CorrectFactor = ProjectDauerInDays / Me.dauerInDays
+
+
+            For p = 0 To Me.CountPhases - 1
+                newphase = New clsPhase(newproject)
+
+                AllPhases.Item(p).korrCopyTo(newphase, CorrectFactor)
+
+                .AddPhase(newphase)
+            Next p
+
+
+        End With
 
     End Sub
 
@@ -1568,7 +1576,7 @@ Public Class clsProjekt
                     tmpValue(1) = Me.getSummeKosten / vproj.getSummeKosten
                     tmpValue(2) = Me.ampelStatus
                 End If
-                
+
 
             ElseIf auswahl = 1 Then
 
@@ -1696,7 +1704,7 @@ Public Class clsProjekt
                             tmpValue(2) = tmpColor
                         End If
 
-                        
+
 
                     Else
                         If showAbsoluteDiff Then
@@ -1858,12 +1866,12 @@ Public Class clsProjekt
 
                     End If
 
-                    
+
                     If showAbsoluteDiff Then
                         tmpValue(1) = vglWert1 - vglWert2
                         tmpValue(2) = tmpColor
                     Else
-                        
+
                         tmpValue(1) = vglWert1 / vglWert2
                         tmpValue(2) = tmpColor
                     End If
@@ -2306,7 +2314,7 @@ Public Class clsProjekt
 
     End Sub
 
-   
+
 
     Public Sub calculateStatusCoord(ByVal resultDate As Date, ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
 

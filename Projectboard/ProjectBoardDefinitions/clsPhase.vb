@@ -999,6 +999,99 @@
 
     End Sub
 
+    Public Sub berechneBedarfe(ByVal oldXwerte() As Double, ByVal corrFakt As Double, ByRef newValues() As Double)
+        Dim k As Integer
+        'Dim Durchschn As Double
+        'Dim Min As Double
+        'Dim Max As Double
+        'Dim oldAnteil() As Double
+        'Dim newAnteil() As Double
+        Dim newXwerte() As Double
+        Dim gesBedarf As Double
+        Dim Rest As Double
+        Dim result As Integer
+        Dim hDatum As Date
+        Dim anzDaysthisMonth As Double
+
+        ReDim newXwerte(newValues.Length - 1)
+
+
+        If newValues.Length = oldXwerte.Length Then
+
+            'Bedarfe-Verteilung bleibt wie gehabt
+            newXwerte = oldXwerte
+        Else
+            gesBedarf = oldXwerte.Sum
+
+            'ReDim oldAnteil(oldXwerte.Length - 1)
+            'For k = 0 To oldXwerte.Length - 1
+            '    oldAnteil(k) = oldXwerte(k) / gesBedarf
+            'Next k
+
+
+            If awinSettings.propAnpassRess Then
+                ' Gesamter Bedarf dieser Rolle/Kosten wird gemäß streckung bzw. stauchung des Projekts korrigiert
+                gesBedarf = System.Math.Round(gesBedarf * corrFakt)
+            End If
+
+            For k = 0 To newXwerte.Length - 1
+
+                If k = 0 Then
+                    hDatum = getStartDate
+                    anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
+                    anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
+
+                ElseIf k = newXwerte.Length - 1 Then
+                    hDatum = getEndDate
+                    anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
+
+                Else
+                    hDatum = getStartDate
+                    anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
+                End If
+               
+                newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
+
+                'newXwerte(k) = System.Math.Round(gesBedarf / newXwerte.Length)
+            Next k
+
+            ' Rest wird auf alle newXwerte verteilt
+
+            Rest = gesBedarf - newXwerte.Sum
+
+            k = newXwerte.Length - 1
+            While Rest <> 0
+                If Rest > 0 Then
+                    newXwerte(k) = newXwerte(k) + 1
+                    Rest = Rest - 1
+                Else
+                    newXwerte(k) = newXwerte(k) - 1
+                    Rest = Rest + 1
+                End If
+                result = System.Math.DivRem(k - 1, newXwerte.Length, k) ' modulo - Funktion
+            End While
+
+            '' oldXwerte auf newXwerte verteilen, berechne
+
+            'For k = 0 To newXwerte.Length - 1
+            '    newXwerte(k) = gesBedarf * oldAnteil(k)
+            'Next k
+
+            'Rest = gesBedarf - newXwerte.Sum
+            'If Rest <> 0 Then
+            '    ReDim newAnteil(newValues.Length - 1)
+            '    For k = 0 To newXwerte.Length - 1
+            '        newAnteil(k) = newXwerte(k) / newXwerte.Sum
+            '        newXwerte(k) = newXwerte(k) + Rest * newAnteil(k)
+            '    Next k
+            'End If
+            ' newXwerte auf ganze Zahlen runden
+
+        End If
+
+        newValues = newXwerte
+
+    End Sub
     'Public Sub New()
 
     '    AllRoles = New List(Of clsRolle)

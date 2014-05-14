@@ -376,7 +376,7 @@ Public Class clsCommandBarEvents
                             End Try
 
                             hproj = New clsProjekt
-                            oldproj.CopyTo(hproj, False)
+                            oldproj.CopyTo(hproj)
 
                             With hproj
                                 .name = pname
