@@ -855,6 +855,30 @@
 
     End Sub
 
+    ''' <summary>
+    ''' passt die Offsets der Meilensteine an, wenn per Drag und Drop die entsprechende Phase 
+    ''' gedehnt oder gestaucht wurde  
+    ''' </summary>
+    ''' <param name="faktor"></param>
+    ''' <remarks></remarks>
+    Public Sub adjustMilestones(ByVal faktor As Double)
+        Dim newOffset As Integer
+        For r = 1 To Me.AllResults.Count
+            
+            ' korrigiert den Offset der Meilensteine 
+            newOffset = System.Math.Round(CLng(Me.getResult(r).offset * faktor))
+
+            If newOffset < 0 Then
+                newOffset = 0
+            ElseIf newOffset > Me.dauerInDays Then
+                newOffset = Me.dauerInDays - 1
+            End If
+
+            Me.getResult(r).offset = newOffset
+        Next
+
+    End Sub
+
     Public Property Role(ByVal index As Integer) As clsRolle
         Get
             Role = AllRoles.Item(index - 1)

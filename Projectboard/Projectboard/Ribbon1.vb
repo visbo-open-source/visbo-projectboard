@@ -157,21 +157,70 @@ Imports Microsoft.Office.Interop.Excel
     ''' <remarks></remarks>
     Sub awinTestNewFunctions(control As IRibbonControl)
         'Call MsgBox("Anzahl Aufrufe: " & anzahlCalls)
-        Dim ok As Boolean = True
+
+        Dim awinSelection As Excel.ShapeRange
+        Dim i As Integer
+        Dim hproj As clsProjekt
+        Dim singleShp As Excel.Shape
+        Dim ausgabeString As String = ""
+        Dim vglWert As Integer
+        Dim curCoord() As Double
+        Dim key As String
 
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        enableOnUpdate = False
 
-            If Not kvp.Value.isConsistent Then
-                Call MsgBox("inkonsistenz: " & kvp.Key)
-                ok = False
-            End If
+        
 
-        Next
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
 
-        If ok Then
-            Call MsgBox("keine Inkonsistenz gefunden ...")
+        If Not awinSelection Is Nothing Then
+
+            ' Es muss mindestens 1 Projekt selektiert sein
+            For i = 1 To awinSelection.Count
+
+                singleShp = awinSelection.Item(i)
+                key = singleShp.Name
+                hproj = ShowProjekte.getProject(singleShp.Name)
+                vglWert = calcYCoordToZeile(singleShp.Top)
+                curCoord = projectboardShapes.getCoord(singleShp.Name)
+
+                ausgabeString = ausgabeString & hproj.name & ": " & hproj.tfZeile.ToString & _
+                                 " - " & vglWert.ToString & "; " & _
+                                 calcXCoordToDate(singleShp.Left).ToShortDateString & " vs. " & hproj.startDate.ToShortDateString & _
+                                 " vs. " & calcXCoordToDate(curCoord(1)).ToShortDateString & singleShp.Left.ToString & vbLf
+
+                
+            Next i
+
+
         End If
+
+
+
+        Call awinDeSelect()
+        Call MsgBox(ausgabeString)
+
+        enableOnUpdate = True
+
+        ' für andere Zwecke ... 
+
+        'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+        '    If Not kvp.Value.isConsistent Then
+        '        Call MsgBox("inkonsistenz: " & kvp.Key)
+        '        ok = False
+        '    End If
+
+        'Next
+
+        'If ok Then
+        '    Call MsgBox("keine Inkonsistenz gefunden ...")
+        'End If
 
         'Dim anzProjekte As Integer = ShowProjekte.Liste.Count
         'Dim anzShapes As Integer = ShowProjekte.shpListe.Count
@@ -1444,7 +1493,7 @@ Imports Microsoft.Office.Interop.Excel
         Else
             ' jetzt werden die Projekt-Symbole ohne Phasen Darstellung gezeichnet 
             ProjectBoardDefinitions.My.Settings.drawPhases = False
-            Call awinLoadConstellation("Last")
+            'Call awinLoadConstellation("Last")
             Call awinClearPlanTafel()
             Call awinZeichnePlanTafel()
         End If

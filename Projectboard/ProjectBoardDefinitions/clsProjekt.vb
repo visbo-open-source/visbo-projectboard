@@ -827,6 +827,10 @@ Public Class clsProjekt
 
             End If
 
+            ' um _Dauer neu zu berechnen ; ergänzt am 12.5.2014
+            If differenzInTagen <> 0 Then
+                Dim anzahlTage As Integer = Me.dauerInDays
+            End If
 
         End Set
     End Property
@@ -1002,14 +1006,17 @@ Public Class clsProjekt
     Public Sub copyAttrTo(ByRef newproject As clsProjekt, isVorlage As Boolean)
 
         With newproject
-            .farbe = farbe
-            .Schrift = Schrift
-            .Schriftfarbe = Schriftfarbe
-            .VorlagenName = VorlagenName
-            .Risiko = Risiko
-            .StrategicFit = StrategicFit
-            .Erloes = Erloes
-
+            .farbe = Me.farbe
+            .Schrift = Me.Schrift
+            .Schriftfarbe = Me.Schriftfarbe
+            .VorlagenName = Me.VorlagenName
+            .Risiko = Me.Risiko
+            .StrategicFit = Me.StrategicFit
+            .Erloes = Me.Erloes
+            .description = Me.description
+            .volume = Me.volume
+            .complexity = Me.complexity
+            .businessUnit = Me.businessUnit
 
 
             If isVorlage Then
@@ -1024,8 +1031,7 @@ Public Class clsProjekt
                 .latestStartDate = _latestStartDate
                 .earliestStart = _earliestStart
                 .latestStart = _latestStart
-                .leadPerson = ""
-                '.ProjectMarge = imarge
+                .leadPerson = _leadPerson
             End If
 
             .Status = _Status
