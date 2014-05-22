@@ -179,46 +179,30 @@ Public Class ThisWorkbook
 
 
         returnValue = projektespeichern.ShowDialog
+        Try
 
-        If returnValue = DialogResult.Yes Then
+            If returnValue = DialogResult.Yes Then
 
-            Dim zeitStempel As Date
+                If AlleProjekte.Count > 0 Then
 
-            If AlleProjekte.Count > 0 Then
+                    Call StoreAllProjectsinDB()
 
-                Call StoreAllProjectsinDB()
+                Else
+                    Call MsgBox("keine Projekte zu speichern ...")
+                End If
 
-                zeitStempel = AlleProjekte.First.Value.timeStamp
-
-                Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
-
-                ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
-                Try
-                    If projekthistorie.Count > 0 Then
-                        projekthistorie.clear()
-                    End If
-                Catch ex As Exception
-
-                End Try
-            Else
-                Call MsgBox("keine Projekte zu speichern ...")
             End If
 
-        End If
+            ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
+            Application.ActiveWorkbook.Saved = True
+            Application.Quit()
 
-        'result = MsgBox("Sollen diese Projekte gespeichert werden?", MsgBoxStyle.YesNo)
-
-        'If result = MsgBoxResult.Yes Then
-
-        '    Call MsgBox("Projekte speichern")
-        'Else
-        '    Call MsgBox("projekte nicht speichern")
-
-        'End If
-        ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
-        Application.ActiveWorkbook.Saved = True
-        Application.Quit()
-
+        Catch ex As Exception
+            ' Bei Fehler, soll Excel nicht geschlossen werden.
+            Call MsgBox(ex.Message)
+            Application.ActiveWorkbook.Saved = True
+            Cancel = True ' Event Schließen soll nicht ausgeführt werden
+        End Try
     End Sub
 
 End Class

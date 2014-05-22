@@ -4,6 +4,7 @@ Imports System.Math
 Public Class clsCommandBarEvents
     Public WithEvents cmdbars As Microsoft.Office.Core.CommandBars
 
+    ' appInstance.OnKey("{clear}", MsgBox("delelte gedrückt")) eventuell für bestimmte Tastenkombi Entf
 
 
     Private Sub cmdbars_OnUpdate() Handles cmdbars.OnUpdate

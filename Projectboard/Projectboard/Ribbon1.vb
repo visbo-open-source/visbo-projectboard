@@ -50,6 +50,7 @@ Imports Microsoft.Office.Interop.Excel
 
         enableOnUpdate = False
         returnValue = storeConstellationFrm.ShowDialog
+        Call awinStoreConstellation(storeConstellationFrm.ComboBox1.Text)
         enableOnUpdate = True
 
     End Sub
@@ -100,28 +101,18 @@ Imports Microsoft.Office.Interop.Excel
 
     Sub PT5StoreProjects(control As IRibbonControl)
 
-        Dim zeitStempel As Date
+        Try
+            If AlleProjekte.Count > 0 Then
 
-        If AlleProjekte.Count > 0 Then
+                Call StoreAllProjectsinDB()
 
-            Call StoreAllProjectsinDB()
+            Else
+                Call MsgBox("keine Projekte zu speichern ...")
+            End If
+        Catch ex As Exception
 
-            zeitStempel = AlleProjekte.First.Value.timeStamp
-
-            Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
-
-            ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
-            Try
-                If projekthistorie.Count > 0 Then
-                    projekthistorie.clear()
-                End If
-            Catch ex As Exception
-
-            End Try
-        Else
-            Call MsgBox("keine Projekte zu speichern ...")
-        End If
-
+            Call MsgBox(ex.Message)
+        End Try
 
     End Sub
 
@@ -296,30 +287,46 @@ Imports Microsoft.Office.Interop.Excel
         Dim ProjektEingabe As New frmProjektEingabe1
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
+        Dim request As New Request(awinSettings.databaseName)
 
         enableOnUpdate = False
+        appInstance.EnableEvents = True
 
         returnValue = ProjektEingabe.ShowDialog
 
-        If returnValue = DialogResult.Yes Then
+        If returnValue = DialogResult.OK Then
             With ProjektEingabe
 
+                If request.pingMongoDb() Then
 
-                Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
-                                       Date.MinValue, CType(.Erloes.Text, Double), zeile, _
-                                       CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text))
+                    If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="") Then
+
+                        ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
+
+                        Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
+                                           CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
+                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text))
+                    Else
+                        Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
+                    End If
+
+                Else
+
+                    mongoDBaktiv = False
+                    Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
+                    appInstance.ScreenUpdating = True
+
+                    ' Projekt soll trotzdem angezeigt werden
+                    Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
+                                           CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
+                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text))
+
+                End If
+
             End With
         End If
 
-        If returnValue = DialogResult.No Then
-            With ProjektEingabe
-
-
-                Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
-                                       CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                       CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text))
-            End With
-        End If
+ 
         enableOnUpdate = True
 
     End Sub
@@ -2363,10 +2370,16 @@ Imports Microsoft.Office.Interop.Excel
                 End With
 
                 If vglName.Trim <> pName.Trim Then
-                    ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                    projekthistorie.Add(Date.Now, hproj)
+                    If request.pingMongoDb() Then
+                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                        projekthistorie.Add(Date.Now, hproj)
+                    Else
+                        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
+                        projekthistorie.clear()
+                    End If
+                   
                 Else
                     ' der aktuelle Stand hproj muss hinzugefügt werden 
                     Dim lastElem As Integer = projekthistorie.Count - 1
@@ -2799,111 +2812,117 @@ Imports Microsoft.Office.Interop.Excel
         Catch ex As Exception
             awinSelection = Nothing
         End Try
+        If request.pingMongoDb() Then
 
-        If Not awinSelection Is Nothing Then
+            If Not awinSelection Is Nothing Then
 
-            ' eingangs-prüfung, ob auch nur ein Element selektiert wurde ...
-            If awinSelection.Count = 1 Then
-                ' Aktion durchführen ...
+                ' eingangs-prüfung, ob auch nur ein Element selektiert wurde ...
+                If awinSelection.Count = 1 Then
 
-                singleShp = awinSelection.Item(1)
+                    ' Aktion durchführen ...
 
-                Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
-                    nameList = hproj.getMilestones
+                    singleShp = awinSelection.Item(1)
 
-                    ' jetzt muss die ProjektHistorie aufgebaut werden 
-                    With hproj
-                        pName = .name
-                        variantName = .variantName
-                    End With
+                    Try
+                        hproj = ShowProjekte.getProject(singleShp.Name)
+                        nameList = hproj.getMilestones
 
-                    If Not projekthistorie Is Nothing Then
-                        If projekthistorie.Count > 0 Then
-                            vglName = projekthistorie.First.name
+                        ' jetzt muss die ProjektHistorie aufgebaut werden 
+                        With hproj
+                            pName = .name
+                            variantName = .variantName
+                        End With
+
+                        If Not projekthistorie Is Nothing Then
+                            If projekthistorie.Count > 0 Then
+                                vglName = projekthistorie.First.name
+                            End If
                         End If
-                    End If
 
-                    If vglName.Trim <> pName.Trim Then
-                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                        projekthistorie.Add(Date.Now, hproj)
-                    Else
-                        ' der aktuelle Stand hproj muss hinzugefügt werden 
-                        Dim lastElem As Integer = projekthistorie.Count - 1
-                        projekthistorie.RemoveAt(lastElem)
-                        projekthistorie.Add(Date.Now, hproj)
-                    End If
+                        If vglName.Trim <> pName.Trim Then
+
+                            ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                            projekthistorie.Add(Date.Now, hproj)
 
 
-                    If nameList.Count > 0 Then
+                        Else
+                            ' der aktuelle Stand hproj muss hinzugefügt werden 
+                            Dim lastElem As Integer = projekthistorie.Count - 1
+                            projekthistorie.RemoveAt(lastElem)
+                            projekthistorie.Add(Date.Now, hproj)
+                        End If
+
+                        If nameList.Count > 0 Then
 
 
-                        appInstance.EnableEvents = False
-                        enableOnUpdate = False
+                            appInstance.EnableEvents = False
+                            enableOnUpdate = False
 
-                        repObj = Nothing
-
-
-
-                        For Each kvp As KeyValuePair(Of Date, String) In nameList
-                            listOfItems.Add(kvp.Value)
-                        Next
-
-                        With singleShp
-                            top = .Top + boxHeight + 5
-                            left = .Left - 5
-                        End With
-
-                        height = 2 * ((nameList.Count - 1) * 20 + 110)
-                        width = System.Math.Max(hproj.Dauer * boxWidth + 10, 24 * boxWidth + 10)
-
-                        'Try
-
-                        '    Call createMsTrendAnalysisOfProject(hproj, repObj, listOfItems, top, left, height, width)
-
-                        'Catch ex As Exception
-
-                        '    Call MsgBox(ex.Message)
-
-                        'End Try
+                            repObj = Nothing
 
 
 
-                        ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-                        Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+                            For Each kvp As KeyValuePair(Of Date, String) In nameList
+                                listOfItems.Add(kvp.Value)
+                            Next
+
+                            With singleShp
+                                top = .Top + boxHeight + 5
+                                left = .Left - 5
+                            End With
+
+                            height = 2 * ((nameList.Count - 1) * 20 + 110)
+                            width = System.Math.Max(hproj.Dauer * boxWidth + 10, 24 * boxWidth + 10)
+
+                            'Try
+
+                            '    Call createMsTrendAnalysisOfProject(hproj, repObj, listOfItems, top, left, height, width)
+
+                            'Catch ex As Exception
+
+                            '    Call MsgBox(ex.Message)
+
+                            'End Try
 
 
-                        With auswahlFenster
 
-                            .kennung = " "
-                            .chTyp = DiagrammTypen(6)
-                            .chTop = top
-                            .chLeft = left
-                            .chWidth = width
-                            .chHeight = height
-
-                        End With
-                        auswahlFenster.Show()
-
-                    Else
-                        Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
-                    End If
+                            ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
+                            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
 
 
-                Catch ex As Exception
-                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
-                End Try
+                            With auswahlFenster
 
+                                .kennung = " "
+                                .chTyp = DiagrammTypen(6)
+                                .chTop = top
+                                .chLeft = left
+                                .chWidth = width
+                                .chHeight = height
+
+                            End With
+                            auswahlFenster.Show()
+
+                        Else
+                            Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+                        End If
+
+                    Catch ex As Exception
+                        Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                    End Try
+
+                Else
+                    Call MsgBox("bitte nur ein Projekt selektieren ...")
+                End If
             Else
-                Call MsgBox("bitte nur ein Projekt selektieren ...")
+                Call MsgBox("vorher ein Projekt selektieren ...")
             End If
 
         Else
-            Call MsgBox("vorher ein Projekt selektieren ...")
+            Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
+            'projekthistorie.clear()
         End If
-
         enableOnUpdate = True
         appInstance.EnableEvents = True
 
@@ -4397,100 +4416,110 @@ Imports Microsoft.Office.Interop.Excel
             awinSelection = Nothing
         End Try
 
-        If Not awinSelection Is Nothing Then
+
+        If request.pingMongoDb() Then
+
+            If Not awinSelection Is Nothing Then
 
 
-            If awinSelection.Count = 1 Then
+                If awinSelection.Count = 1 Then
 
-                Dim lastElem As Integer
+                    Dim lastElem As Integer
 
-                ' jetzt die Aktion durchführen ...
-                singleShp1 = awinSelection.Item(1)
-
-
-                Try
-                    hproj = ShowProjekte.getProject(singleShp1.Name)
-                Catch ex As Exception
-                    Call MsgBox("Projekt nicht gefunden ...")
-                    enableOnUpdate = True
-                    Exit Sub
-                End Try
-
-                ' jetzt ggf die Projekt-Historie aufbauen
-
-                If Not projekthistorie Is Nothing Then
-                    If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.name
-                    End If
-                End If
-
-                With hproj
-                    pName = .name
-                    variantName = .variantName
-                End With
-
-                If vglName.Trim <> pName.Trim Then
-                    ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                    projekthistorie.Add(Date.Now, hproj)
-                    lastElem = projekthistorie.Count - 1
-                Else
-                    ' der aktuelle Stand hproj muss hinzugefügt werden 
-                    lastElem = projekthistorie.Count - 1
-                    projekthistorie.RemoveAt(lastElem)
-                    projekthistorie.Add(Date.Now, hproj)
-                End If
+                    ' jetzt die Aktion durchführen ...
+                    singleShp1 = awinSelection.Item(1)
 
 
-                If projekthistorie.Count = 1 Then
+                    Try
+                        hproj = ShowProjekte.getProject(singleShp1.Name)
+                    Catch ex As Exception
+                        Call MsgBox("Projekt nicht gefunden ...")
+                        enableOnUpdate = True
+                        Exit Sub
+                    End Try
 
-                    Call MsgBox(" es gibt zu diesem Projekt noch keine Historie")
+                    ' jetzt ggf die Projekt-Historie aufbauen
 
-                Else
-
-                    cproj = projekthistorie.ElementAt(lastElem - 1)
-
-                    top = singleShp1.Top + boxHeight + 2
-                    left = singleShp1.Left - 5
-                    If left <= 0 Then
-                        left = 5
+                    If Not projekthistorie Is Nothing Then
+                        If projekthistorie.Count > 0 Then
+                            vglName = projekthistorie.First.name
+                        End If
                     End If
 
-                    height = 380
-                    width = System.Math.Max(hproj.dauerInDays / 365 * 12 * boxWidth + 7, cproj.dauerInDays / 365 * 12 * boxWidth + 7)
-                    scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
-
-                    Dim repObj As Excel.ChartObject
-                    appInstance.EnableEvents = False
-                    appInstance.ScreenUpdating = False
-
-                    noColorCollection = getPhasenUnterschiede(hproj, cproj)
-
-                    repObj = Nothing
-                    Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
-
-                    With repObj
-                        top = .Top + .Height + 3
+                    With hproj
+                        pName = .name
+                        variantName = .variantName
                     End With
 
+                    If vglName.Trim <> pName.Trim Then
 
-                    repObj = Nothing
-                    Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, "letzter Stand")
+                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                        projekthistorie.Add(Date.Now, hproj)
+                        lastElem = projekthistorie.Count - 1
 
-                    appInstance.ScreenUpdating = True
+
+                    Else
+                        ' der aktuelle Stand hproj muss hinzugefügt werden 
+                        lastElem = projekthistorie.Count - 1
+                        projekthistorie.RemoveAt(lastElem)
+                        projekthistorie.Add(Date.Now, hproj)
+                    End If
+
+
+                    If projekthistorie.Count <= 1 Then
+
+                        Call MsgBox(" es gibt zu diesem Projekt noch keine Historie")
+
+                    Else
+
+                        cproj = projekthistorie.ElementAt(lastElem - 1)
+
+                        top = singleShp1.Top + boxHeight + 2
+                        left = singleShp1.Left - 5
+                        If left <= 0 Then
+                            left = 5
+                        End If
+
+                        height = 380
+                        width = System.Math.Max(hproj.dauerInDays / 365 * 12 * boxWidth + 7, cproj.dauerInDays / 365 * 12 * boxWidth + 7)
+                        scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
+
+                        Dim repObj As Excel.ChartObject
+                        appInstance.EnableEvents = False
+                        appInstance.ScreenUpdating = False
+
+                        noColorCollection = getPhasenUnterschiede(hproj, cproj)
+
+                        repObj = Nothing
+                        Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+
+                        With repObj
+                            top = .Top + .Height + 3
+                        End With
+
+
+                        repObj = Nothing
+                        Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, "letzter Stand")
+
+                        appInstance.ScreenUpdating = True
+
+                    End If
+
+
+
+
+                Else
+                    Call MsgBox("bitte nur ein Projekt selektieren")
 
                 End If
-
-
-
-
             Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
-
+                Call MsgBox("ein Projekt selektieren, um es mit seinem letzten Stand zu vergleichen")
             End If
         Else
-            Call MsgBox("ein Projekt selektieren, um es mit seinem letzten Stand zu vergleichen")
+            Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+            projekthistorie.clear()
         End If
 
         enableOnUpdate = True
@@ -4524,105 +4553,112 @@ Imports Microsoft.Office.Interop.Excel
             awinSelection = Nothing
         End Try
 
-        If Not awinSelection Is Nothing Then
+        If request.pingMongoDb() Then
 
+            If Not awinSelection Is Nothing Then
 
-            If awinSelection.Count = 1 Then
+                If awinSelection.Count = 1 Then
 
-                Dim lastElem As Integer
+                    Dim lastElem As Integer
 
-                ' jetzt die Aktion durchführen ...
-                singleShp1 = awinSelection.Item(1)
-
-
-                Try
-                    hproj = ShowProjekte.getProject(singleShp1.Name)
-                Catch ex As Exception
-                    Call MsgBox("Projekt nicht gefunden ...")
-                    enableOnUpdate = True
-                    Exit Sub
-                End Try
-
-                ' jetzt ggf die Projekt-Historie aufbauen
-
-                If Not projekthistorie Is Nothing Then
-                    If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.name
-                    End If
-                End If
-
-                With hproj
-                    pName = .name
-                    variantName = .variantName
-                End With
-
-                If vglName.Trim <> pName.Trim Then
-                    ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                    projekthistorie.Add(Date.Now, hproj)
-                    lastElem = projekthistorie.Count - 1
-                Else
-                    ' der aktuelle Stand hproj muss hinzugefügt werden 
-                    lastElem = projekthistorie.Count - 1
-                    projekthistorie.RemoveAt(lastElem)
-                    projekthistorie.Add(Date.Now, hproj)
-                End If
-
-
-                If projekthistorie.Count = 1 Then
-
-                    Call MsgBox(" es gibt zu diesem Projekt noch keine Historie")
-
-                Else
+                    ' jetzt die Aktion durchführen ...
+                    singleShp1 = awinSelection.Item(1)
 
 
                     Try
-                        cproj = projekthistorie.beauftragung
-                        top = singleShp1.Top + boxHeight + 2
-                        left = singleShp1.Left - 5
-                        If left <= 0 Then
-                            left = 5
-                        End If
-
-                        height = 380
-                        width = System.Math.Max(hproj.dauerInDays / 365 * 12 * boxWidth + 7, cproj.dauerInDays / 365 * 12 * boxWidth + 7)
-                        scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
-
-                        Dim repObj As Excel.ChartObject
-                        appInstance.EnableEvents = False
-                        appInstance.ScreenUpdating = False
-
-                        noColorCollection = getPhasenUnterschiede(hproj, cproj)
-
-                        repObj = Nothing
-                        Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
-
-                        With repObj
-                            top = .Top + .Height + 3
-                        End With
-
-
-                        repObj = Nothing
-                        Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, "Beauftragung")
-
+                        hproj = ShowProjekte.getProject(singleShp1.Name)
                     Catch ex As Exception
-
-                        Call MsgBox("es ist kein Beauftragungs-Stand vorhanden")
-
+                        Call MsgBox("Projekt nicht gefunden ...")
+                        enableOnUpdate = True
+                        Exit Sub
                     End Try
 
+                    ' jetzt ggf die Projekt-Historie aufbauen
+
+                    If Not projekthistorie Is Nothing Then
+                        If projekthistorie.Count > 0 Then
+                            vglName = projekthistorie.First.name
+                        End If
+                    End If
+
+                    With hproj
+                        pName = .name
+                        variantName = .variantName
+                    End With
+
+                    If vglName.Trim <> pName.Trim Then
+
+                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                        projekthistorie.Add(Date.Now, hproj)
+                        lastElem = projekthistorie.Count - 1
+
+
+                    Else
+                        ' der aktuelle Stand hproj muss hinzugefügt werden 
+                        lastElem = projekthistorie.Count - 1
+                        projekthistorie.RemoveAt(lastElem)
+                        projekthistorie.Add(Date.Now, hproj)
+                    End If
+
+
+                    If projekthistorie.Count = 1 Then
+
+                        Call MsgBox(" es gibt zu diesem Projekt noch keine Historie")
+
+                    Else
+
+
+                        Try
+                            cproj = projekthistorie.beauftragung
+                            top = singleShp1.Top + boxHeight + 2
+                            left = singleShp1.Left - 5
+                            If left <= 0 Then
+                                left = 5
+                            End If
+
+                            height = 380
+                            width = System.Math.Max(hproj.dauerInDays / 365 * 12 * boxWidth + 7, cproj.dauerInDays / 365 * 12 * boxWidth + 7)
+                            scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
+
+                            Dim repObj As Excel.ChartObject
+                            appInstance.EnableEvents = False
+                            appInstance.ScreenUpdating = False
+
+                            noColorCollection = getPhasenUnterschiede(hproj, cproj)
+
+                            repObj = Nothing
+                            Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+
+                            With repObj
+                                top = .Top + .Height + 3
+                            End With
+
+
+                            repObj = Nothing
+                            Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, "Beauftragung")
+
+                        Catch ex As Exception
+
+                            Call MsgBox("es ist kein Beauftragungs-Stand vorhanden")
+
+                        End Try
+
+
+                    End If
+
+                Else
+                    Call MsgBox("bitte nur ein Projekt selektieren")
 
                 End If
-
             Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
-
+                Call MsgBox("ein Projekt selektieren, um es mit seinem letzten Stand zu vergleichen")
             End If
-        Else
-            Call MsgBox("ein Projekt selektieren, um es mit seinem letzten Stand zu vergleichen")
-        End If
 
+        Else
+            Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+        End If
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
@@ -4702,70 +4738,77 @@ Imports Microsoft.Office.Interop.Excel
             awinSelection = Nothing
         End Try
 
-        If Not awinSelection Is Nothing Then
+        If request.pingMongoDb() Then
 
-            If awinSelection.Count = 1 Then
-                ' jetzt die Aktion durchführen ...
-                singleShp = awinSelection.Item(1)
+            If Not awinSelection Is Nothing Then
+
+                If awinSelection.Count = 1 Then
+                    ' jetzt die Aktion durchführen ...
+                    singleShp = awinSelection.Item(1)
 
 
-                hproj = ShowProjekte.getProject(singleShp.Name)
-                With hproj
-                    pName = .name
-                    variantName = .variantName
-                End With
-
-                If Not projekthistorie Is Nothing Then
-                    If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.name
-                    End If
-                End If
-
-                If vglName.Trim <> pName.Trim Then
-                    ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                    projekthistorie.Add(Date.Now, hproj)
-                Else
-                    ' der aktuelle Stand hproj muss hinzugefügt werden 
-                    Dim lastElem As Integer = projekthistorie.Count - 1
-                    projekthistorie.RemoveAt(lastElem)
-                    projekthistorie.Add(Date.Now, hproj)
-                End If
-
-                Dim nrSnapshots As Integer = projekthistorie.Count
-
-                If nrSnapshots > 0 Then
-                    With singleShp
-                        top = .Top + boxHeight + 2
-                        left = .Left - 3
+                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    With hproj
+                        pName = .name
+                        variantName = .variantName
                     End With
-                    width = System.Math.Max(nrSnapshots * boxWidth * 0.65, 300)
 
-                    height = 16 * boxHeight
-                    Dim repObj As Object = Nothing
-                    Call createTrendSfit(repObj, top, left, height, width)
+                    If Not projekthistorie Is Nothing Then
+                        If projekthistorie.Count > 0 Then
+                            vglName = projekthistorie.First.name
+                        End If
+                    End If
+
+                    If vglName.Trim <> pName.Trim Then
+
+                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                        projekthistorie.Add(Date.Now, hproj)
+
+                    Else
+                        ' der aktuelle Stand hproj muss hinzugefügt werden 
+                        Dim lastElem As Integer = projekthistorie.Count - 1
+                        projekthistorie.RemoveAt(lastElem)
+                        projekthistorie.Add(Date.Now, hproj)
+                    End If
+
+                    Dim nrSnapshots As Integer = projekthistorie.Count
+
+                    If nrSnapshots > 0 Then
+                        With singleShp
+                            top = .Top + boxHeight + 2
+                            left = .Left - 3
+                        End With
+                        width = System.Math.Max(nrSnapshots * boxWidth * 0.65, 300)
+
+                        height = 16 * boxHeight
+                        Dim repObj As Object = Nothing
+                        Call createTrendSfit(repObj, top, left, height, width)
+
+                    Else
+                        Call MsgBox("es gibt noch keine Projekt-Historie zu " & pName)
+                    End If
+
+
+
 
                 Else
-                    Call MsgBox("es gibt noch keine Projekt-Historie zu " & pName)
+                    Call MsgBox("bitte nur ein Projekt selektieren")
+                    'For Each singleShp In awinSelection
+                    '    With singleShp
+                    '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                    '            nrSelPshp = nrSelPshp + 1
+                    '            SID = .ID.ToString
+                    '        End If
+                    '    End With
+                    'Next
                 End If
-
-
-
-
             Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
-                'For Each singleShp In awinSelection
-                '    With singleShp
-                '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
-                '            nrSelPshp = nrSelPshp + 1
-                '            SID = .ID.ToString
-                '        End If
-                '    End With
-                'Next
+                Call MsgBox("vorher Projekt selektieren ...")
             End If
         Else
-            Call MsgBox("vorher Projekt selektieren ...")
+            Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
         End If
 
         enableOnUpdate = True
@@ -4818,10 +4861,16 @@ Imports Microsoft.Office.Interop.Excel
                 End If
 
                 If vglName.Trim <> pName.Trim Then
-                    ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                    projekthistorie.Add(Date.Now, hproj)
+                    If request.pingMongoDb() Then
+                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                        projekthistorie.Add(Date.Now, hproj)
+                    Else
+                        Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+                        projekthistorie.clear()
+                    End If
+                  
                 Else
                     ' der aktuelle Stand hproj muss hinzugefügt werden 
                     Dim lastElem As Integer = projekthistorie.Count - 1
@@ -4888,43 +4937,55 @@ Imports Microsoft.Office.Interop.Excel
         End If
 
         enableOnUpdate = False
+        appInstance.EnableEvents = True
 
 
+            Try
+                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+            Catch ex As Exception
+                awinSelection = Nothing
+            End Try
 
-        Try
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
+            If Not awinSelection Is Nothing Then
 
-        If Not awinSelection Is Nothing Then
+                If awinSelection.Count = 1 Then
+                    ' jetzt die Aktion durchführen ...
+                    singleShp = awinSelection.Item(1)
+                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    With hproj
+                        pName = .name
+                        variantName = .variantName
+                        'Try
+                        '    variantName = .variantName.Trim
+                        'Catch ex As Exception
+                        '    variantName = ""
+                        'End Try
 
-            If awinSelection.Count = 1 Then
-                ' jetzt die Aktion durchführen ...
-                singleShp = awinSelection.Item(1)
-                hproj = ShowProjekte.getProject(singleShp.Name)
-                With hproj
-                    pName = .name
-                    variantName = .variantName
-                    'Try
-                    '    variantName = .variantName.Trim
-                    'Catch ex As Exception
-                    '    variantName = ""
-                    'End Try
+                    End With
 
-                End With
-
-                If Not projekthistorie Is Nothing Then
-                    If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.name
+                    If Not projekthistorie Is Nothing Then
+                        If projekthistorie.Count > 0 Then
+                            vglName = projekthistorie.First.name
+                        End If
                     End If
-                End If
 
-                If vglName.Trim <> pName.Trim Then
-                    ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                    projekthistorie.Add(Date.Now, hproj)
+                    If vglName.Trim <> pName.Trim Then
+
+                    If request.pingMongoDb() Then
+                        ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                        If projekthistorie.Count <> 0 Then
+
+                            projekthistorie.Add(Date.Now, hproj)
+
+                        End If
+
+                    Else
+                        Call MsgBox("Datenbank-Verbindung ist unterbrochen")
+                        projekthistorie.clear()
+                    End If
+
                 Else
                     ' der aktuelle Stand hproj muss hinzugefügt werden 
                     Dim lastElem As Integer = projekthistorie.Count - 1
@@ -4933,65 +4994,65 @@ Imports Microsoft.Office.Interop.Excel
                 End If
 
 
-                Dim nrSnapshots As Integer = projekthistorie.Count
+                    Dim nrSnapshots As Integer = projekthistorie.Count
 
-                If nrSnapshots > 0 Then
+                    If nrSnapshots > 0 Then
 
-                    With showCharacteristics
+                        With showCharacteristics
 
-                        .Text = "Historie für Projekt " & pName.Trim
-                        .timeSlider.Minimum = 0
-                        .timeSlider.Maximum = nrSnapshots - 1
+                            .Text = "Historie für Projekt " & pName.Trim
+                            .timeSlider.Minimum = 0
+                            .timeSlider.Maximum = nrSnapshots - 1
 
-                        '.ampelErlaeuterung.Text = kvp.Value.ampelErlaeuterung
+                            '.ampelErlaeuterung.Text = kvp.Value.ampelErlaeuterung
 
-                        'If kvp.Value.ampelStatus = 1 Then
-                        '    .ampelPicture.LoadAsync(grueneAmpel)
-                        'ElseIf kvp.Value.ampelStatus = 2 Then
-                        '    .ampelPicture.LoadAsync(gelbeAmpel)
-                        'ElseIf kvp.Value.ampelStatus = 3 Then
-                        '    .ampelPicture.LoadAsync(roteAmpel)
-                        'Else
-                        '    .ampelPicture.LoadAsync(graueAmpel)
-                        'End If
+                            'If kvp.Value.ampelStatus = 1 Then
+                            '    .ampelPicture.LoadAsync(grueneAmpel)
+                            'ElseIf kvp.Value.ampelStatus = 2 Then
+                            '    .ampelPicture.LoadAsync(gelbeAmpel)
+                            'ElseIf kvp.Value.ampelStatus = 3 Then
+                            '    .ampelPicture.LoadAsync(roteAmpel)
+                            'Else
+                            '    .ampelPicture.LoadAsync(graueAmpel)
+                            'End If
 
-                        '.snapshotDate.Text = kvp.Value.timeStamp.ToString
-                        ' das ist ja der aktuelle Stand ..
-                        .snapshotDate.Text = "Aktueller Stand"
-                        ' Designer 
-                        'Dim zE As String = "(" & awinSettings.zeitEinheit & ")"
-                        '.engpass1.Text = "Designer:          " & kvp.Value.getRessourcenBedarf(3).Sum.ToString("###.#") & zE
-                        '.engpass2.Text = "Personalkosten: " & kvp.Value.getAllPersonalKosten.Sum.ToString("###.#") & " (T€)"
-                        '.engpass3.Text = "Sonstige Kosten:   " & kvp.Value.getGesamtAndereKosten.Sum.ToString("###.#") & " (T€)"
-
-
-                    End With
+                            '.snapshotDate.Text = kvp.Value.timeStamp.ToString
+                            ' das ist ja der aktuelle Stand ..
+                            .snapshotDate.Text = "Aktueller Stand"
+                            ' Designer 
+                            'Dim zE As String = "(" & awinSettings.zeitEinheit & ")"
+                            '.engpass1.Text = "Designer:          " & kvp.Value.getRessourcenBedarf(3).Sum.ToString("###.#") & zE
+                            '.engpass2.Text = "Personalkosten: " & kvp.Value.getAllPersonalKosten.Sum.ToString("###.#") & " (T€)"
+                            '.engpass3.Text = "Sonstige Kosten:   " & kvp.Value.getGesamtAndereKosten.Sum.ToString("###.#") & " (T€)"
 
 
-                    ' jetzt wird das Form aufgerufen ... 
+                        End With
 
-                    'returnValue = showCharacteristics.ShowDialog
-                    showCharacteristics.Show()
+
+                        ' jetzt wird das Form aufgerufen ... 
+
+                        'returnValue = showCharacteristics.ShowDialog
+                        showCharacteristics.Show()
+
+                    Else
+                        Call MsgBox("es gibt noch keine Planungs-Historie")
+                    End If
 
                 Else
-                    Call MsgBox("es gibt noch keine Planungs-Historie")
+                    Call MsgBox("bitte nur ein Projekt selektieren")
+                    'For Each singleShp In awinSelection
+                    '    With singleShp
+                    '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                    '            nrSelPshp = nrSelPshp + 1
+                    '            SID = .ID.ToString
+                    '        End If
+                    '    End With
+                    'Next
                 End If
-
             Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
-                'For Each singleShp In awinSelection
-                '    With singleShp
-                '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
-                '            nrSelPshp = nrSelPshp + 1
-                '            SID = .ID.ToString
-                '        End If
-                '    End With
-                'Next
+                Call MsgBox("vorher Projekt selektieren ...")
             End If
-        Else
-            Call MsgBox("vorher Projekt selektieren ...")
-        End If
-
+      
         enableOnUpdate = True
 
 

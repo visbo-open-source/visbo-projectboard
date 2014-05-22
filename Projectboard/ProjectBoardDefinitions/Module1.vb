@@ -1,4 +1,5 @@
-﻿Imports System.Collections.Generic
+﻿Imports ProjectBoardDefinitions
+Imports System.Collections.Generic
 Imports System.Math
 Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Interop
@@ -30,6 +31,8 @@ Public Module Module1
     ' wird immer dann auf false gesetzt , wenn in eigenen Routinen Projekte gesetzt, gelöscht oder ins Show/Noshow gestellt werden 
     Public enableOnUpdate As Boolean = True
 
+    ' MongoDB ist gestartet mongoDBaktiv = true; MongoDB ist unterbrochen mongoDBaktiv=false
+    Public mongoDBaktiv = False
 
     Public Projektvorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte
@@ -1615,119 +1618,11 @@ Public Module Module1
     End Function
 
     Sub awinTestSub()
+
         Call MsgBox("del gedrückt ...")
     End Sub
 
-    ''' <summary>
-    ''' 
-    ''' </summary>
-    ''' <param name="constellationName"></param>
-    ''' <remarks></remarks>
-    Public Sub awinStoreConstellation(ByVal constellationName As String)
-
-
-        ' prüfen, ob diese Constellation bereits existiert ..
-        If projectConstellations.Contains(constellationName) Then
-
-            Try
-                projectConstellations.Remove(constellationName)
-            Catch ex As Exception
-
-            End Try
-
-        End If
-
-        Dim newC As New clsConstellation
-        With newC
-            .constellationName = constellationName
-        End With
-
-        Dim newConstellationItem As clsConstellationItem
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-            newConstellationItem = New clsConstellationItem
-            With newConstellationItem
-                .projectName = kvp.Key
-                .show = True
-                .Start = kvp.Value.startDate
-                .variantName = kvp.Value.variantName
-                .zeile = kvp.Value.tfZeile
-            End With
-            newC.Add(newConstellationItem)
-        Next
-
-
-        Try
-            projectConstellations.Add(newC)
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
-        End Try
-
-    End Sub
-
-
-    Public Sub awinLoadConstellation(ByVal constellationName As String)
-        Dim activeConstellation As New clsConstellation
-        Dim hproj As New clsProjekt
-
-
-        ' prüfen, ob diese Constellation bereits existiert ..
-        Try
-            activeConstellation = projectConstellations.getConstellation(constellationName)
-        Catch ex As Exception
-            Call MsgBox(" Projekt-Konstellation " & constellationName & " existiert nicht ")
-            Exit Sub
-        End Try
-
-        ' die aktuelle Konstellation in "Last" speichern 
-        Call awinStoreConstellation("Last")
-
-        ' jetzt wird die activeConstellation in ShowProjekte bzw. NoShowProjekte umgesetzt 
-        ' dazu werden erst mal alle Projekte in Showprojekte in Noshowprojekte verschoben ...
-
-        'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-        '    NoShowProjekte.Add(kvp.Value)
-        'Next
-        ShowProjekte.Clear()
-        ' jetzt werden die Start-Values entsprechend gesetzt ..
-
-        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
-            Try
-                hproj = AlleProjekte(kvp.Key)
-                With hproj
-                    .startDate = kvp.Value.Start
-                    .StartOffset = 0
-                    .tfZeile = kvp.Value.zeile
-                End With
-
-                If kvp.Value.show Then
-
-                    Try
-                        ShowProjekte.Add(hproj)
-
-                        Dim pname As String
-                        Dim tryzeile As Integer
-                        With hproj
-                            pname = .name
-                            tryzeile = .tfZeile
-                        End With
-                        ' nicht zeichnen - das wird nachher alles auf einen Schlag erledigt ..
-                        'Call ZeichneProjektinPlanTafel(pname, tryzeile)
-
-                        'NoShowProjekte.Remove(hproj.name)
-                    Catch ex1 As Exception
-                        Call MsgBox("Fehler in awinLoadConstellation aufgetreten: " & ex1.Message)
-                    End Try
-
-                End If
-            Catch ex As Exception
-                ' still-to-do:
-                ' hier muss das Projekt aus der Datenbank geholt werden ; 
-                ' dazu muss diese Sub in ein anderes Modul transferiert werden 
-            End Try
-
-        Next
-
-    End Sub
+   
 
 
     ''' <summary>

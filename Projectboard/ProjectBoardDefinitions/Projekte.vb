@@ -6400,6 +6400,8 @@ Public Module Projekte
         Dim heute As Date = Now
         Dim key As String = pname & "#"
 
+
+
         newprojekt = True
 
         '
@@ -6409,14 +6411,8 @@ Public Module Projekte
         hproj = New clsProjekt
 
         Try
-            If endedate = Date.MinValue Then
-                ' dauerUnverändert wurde gewählt
-                Projektvorlagen.getProject(vorlagenName).CopyTo(hproj)
-            Else
-                ' Projektdauer wurde durch Start- und Endedatum im Formular angegeben
-                ' (dauerUnverändert nicht angekreuzt)
-                Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate)
-            End If
+            ' Projektdauer wurde durch Start- und Endedatum im Formular angegeben
+            Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate)
 
         Catch ex As Exception
             Call MsgBox("es gibt keine entsprechende Vorlage ..")
@@ -6440,6 +6436,9 @@ Public Module Projekte
                 plen = .Dauer
                 pcolor = .farbe
             End With
+
+            ' nächste Zeile ist ein work-around für Fehler Der Index liegt außerhalb der Array-Grenzen
+            Dim tmpdata As Integer = hproj.dauerInDays
 
             Call awinCreateBudgetWerte(hproj)
 
@@ -7929,98 +7928,98 @@ Public Module Projekte
 
 
     End Sub
-    ''' <summary>
-    ''' zeichnet die Plantafel mit den Projekten neu; 
-    ''' versucht dabei immer die alte Position der Projekte zu übernehmen 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub awinZeichnePlanTafel()
+    ' ''' <summary>
+    ' ''' zeichnet die Plantafel mit den Projekten neu; 
+    ' ''' versucht dabei immer die alte Position der Projekte zu übernehmen 
+    ' ''' </summary>
+    ' ''' <remarks></remarks>
+    'Public Sub awinZeichnePlanTafel()
 
-        Dim todoListe As New SortedList(Of Double, String)
-        Dim key As Double
-        Dim pname As String
-        Dim zeile As Integer, lastZeile As Integer, curZeile As Integer, max As Integer
-        Dim lastZeileOld As Integer
-        Dim hproj As clsProjekt
-
-
-
-
-        ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-            With kvp.Value
-                key = 10000 * .tfZeile + kvp.Value.Start
-                todoListe.Add(key, .name)
-            End With
-
-        Next
-
-        zeile = 2
-        lastZeile = 0
-
-
-        If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
-            ' dann sollen die Projekte im extended mode gezeichnet werden 
-            ' jetzt erst mal die Konstellation "last" speichern
-            Call awinStoreConstellation("Last")
-
-            ' jetzt die todoListe abarbeiten
-            For i = 1 To todoListe.Count
-                pname = todoListe.ElementAt(i - 1).Value
-                hproj = ShowProjekte.getProject(pname)
-
-                If i = 1 Then
-                    curZeile = hproj.tfZeile
-                    lastZeileOld = hproj.tfZeile
-                    lastZeile = curZeile
-                    max = curZeile
-                Else
-                    If lastZeileOld = hproj.tfZeile Then
-                        curZeile = lastZeile
-                    Else
-                        lastZeile = max
-                        lastZeileOld = hproj.tfZeile
-                    End If
-
-                End If
-
-                hproj.tfZeile = curZeile
-                lastZeile = curZeile
-                'Call ZeichneProjektinPlanTafel2(pname, curZeile)
-                Call ZeichneProjektinPlanTafel(pname, curZeile)
-                curZeile = lastZeile + getNeededSpace(hproj)
-
-
-                If curZeile > max Then
-                    max = curZeile
-                End If
-
-
-            Next
-
-        Else
-
-
-            Dim tryzeile As Integer
-
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-                pname = kvp.Key
-                tryzeile = kvp.Value.tfZeile
-                If tryzeile <= 1 Then
-                    tryzeile = -1
-                End If
-                Call ZeichneProjektinPlanTafel(pname, tryzeile) ' es wird versucht, an der alten Stelle zu zeichnen 
-            Next
-
-
-        End If
+    '    Dim todoListe As New SortedList(Of Double, String)
+    '    Dim key As Double
+    '    Dim pname As String
+    '    Dim zeile As Integer, lastZeile As Integer, curZeile As Integer, max As Integer
+    '    Dim lastZeileOld As Integer
+    '    Dim hproj As clsProjekt
 
 
 
 
+    '    ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
+    '    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-    End Sub
+    '        With kvp.Value
+    '            key = 10000 * .tfZeile + kvp.Value.Start
+    '            todoListe.Add(key, .name)
+    '        End With
+
+    '    Next
+
+    '    zeile = 2
+    '    lastZeile = 0
+
+
+    '    If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
+    '        ' dann sollen die Projekte im extended mode gezeichnet werden 
+    '        ' jetzt erst mal die Konstellation "last" speichern
+    '        Call awinStoreConstellation("Last")
+
+    '        ' jetzt die todoListe abarbeiten
+    '        For i = 1 To todoListe.Count
+    '            pname = todoListe.ElementAt(i - 1).Value
+    '            hproj = ShowProjekte.getProject(pname)
+
+    '            If i = 1 Then
+    '                curZeile = hproj.tfZeile
+    '                lastZeileOld = hproj.tfZeile
+    '                lastZeile = curZeile
+    '                max = curZeile
+    '            Else
+    '                If lastZeileOld = hproj.tfZeile Then
+    '                    curZeile = lastZeile
+    '                Else
+    '                    lastZeile = max
+    '                    lastZeileOld = hproj.tfZeile
+    '                End If
+
+    '            End If
+
+    '            hproj.tfZeile = curZeile
+    '            lastZeile = curZeile
+    '            'Call ZeichneProjektinPlanTafel2(pname, curZeile)
+    '            Call ZeichneProjektinPlanTafel(pname, curZeile)
+    '            curZeile = lastZeile + getNeededSpace(hproj)
+
+
+    '            If curZeile > max Then
+    '                max = curZeile
+    '            End If
+
+
+    '        Next
+
+    '    Else
+
+
+    '        Dim tryzeile As Integer
+
+    '        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+    '            pname = kvp.Key
+    '            tryzeile = kvp.Value.tfZeile
+    '            If tryzeile <= 1 Then
+    '                tryzeile = -1
+    '            End If
+    '            Call ZeichneProjektinPlanTafel(pname, tryzeile) ' es wird versucht, an der alten Stelle zu zeichnen 
+    '        Next
+
+
+    '    End If
+
+
+
+
+
+    'End Sub
     ''' <summary>
     ''' zeichnet die Plantafel mit den Projekten neu; 
     ''' beachtet keine vorherige Position der Projekte
@@ -11235,13 +11234,13 @@ Public Module Projekte
                 .range("BewertgErläuterung").value = hproj.ampelErlaeuterung
 
 
-                ' Blattschutz setzen
-                .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                '' Blattschutz setzen
+                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             End With
         Catch ex As Exception
-            ' Blattschutz setzen
-            appInstance.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            '' Blattschutz setzen
+            'appInstance.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Stammdaten")
@@ -11458,8 +11457,8 @@ Public Module Projekte
                     rowOffset = rowOffset + 1
                 Next p
 
-                ' Blattschutz setzen
-                .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                '' Blattschutz setzen
+                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             End With
         Catch ex As Exception
@@ -11772,8 +11771,8 @@ Public Module Projekte
 
             Next
 
-            ' Blattschutz setzen
-            .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            '' Blattschutz setzen
+            '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
         End With
 
@@ -11838,13 +11837,13 @@ Public Module Projekte
                 End With
 
 
-                ' Blattschutz setzen
-                .Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+                '' Blattschutz setzen
+                '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
 
             End With
         Catch ex As Exception
-            ' Blattschutz setzen
-            appInstance.ActiveWorkbook.Worksheets("Attribute").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+            '' Blattschutz setzen
+            'appInstance.ActiveWorkbook.Worksheets("Attribute").Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Attribute")
         End Try
@@ -13626,7 +13625,61 @@ Public Module Projekte
         End If
 
     End Sub
+    ' ''' <summary>
+    ' ''' 
+    ' ''' </summary>
+    ' ''' <param name="constellationName"></param>
+    ' ''' <remarks></remarks>
+    'Public Sub awinStoreConstellation(ByVal constellationName As String)
 
+    '    '        Dim request As New Request(awinSettings.databaseName)
+    '    ' prüfen, ob diese Constellation bereits existiert ..
+    '    If projectConstellations.Contains(constellationName) Then
+
+    '        Try
+    '            projectConstellations.Remove(constellationName)
+    '        Catch ex As Exception
+
+    '        End Try
+
+    '    End If
+
+    '    Dim newC As New clsConstellation
+    '    With newC
+    '        .constellationName = constellationName
+    '    End With
+
+    '    Dim newConstellationItem As clsConstellationItem
+    '    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+    '        newConstellationItem = New clsConstellationItem
+    '        With newConstellationItem
+    '            .projectName = kvp.Key
+    '            .show = True
+    '            .Start = kvp.Value.startDate
+    '            .variantName = kvp.Value.variantName
+    '            .zeile = kvp.Value.tfZeile
+    '        End With
+    '        newC.Add(newConstellationItem)
+    '    Next
+
+
+    '    Try
+    '        projectConstellations.Add(newC)
+
+    '    Catch ex As Exception
+    '        Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
+    '    End Try
+
+    '    '' Portfolio in die Datenbank speichern
+    '    'If request.pingMongoDb() Then
+    '    '    If Not request.storeConstellationToDB(newC) Then
+    '    '        Call MsgBox("Fehler beim Speichern der projektConstellation '" & newC.constellationName & "' in die Datenbank")
+    '    '    End If
+    '    'Else
+    '    '    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!")
+    '    'End If
+
+    'End Sub
 
 
 
