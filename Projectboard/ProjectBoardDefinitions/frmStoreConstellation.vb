@@ -18,7 +18,7 @@
             cName = ComboBox1.SelectedItem.ToString
         End If
 
-        Call awinStoreConstellation(cName)
+        'Call awinStoreConstellation(cName)
         'Call MsgBox(" jetzt wird die Konstellation " & cName & " geschrieben ...")
 
         DialogResult = System.Windows.Forms.DialogResult.OK

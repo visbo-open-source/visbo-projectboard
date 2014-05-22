@@ -627,24 +627,33 @@ Public Module awinGeneralModules
         appInstance.EnableEvents = True
 
 
-        ' alle Konstellationen laden 
         Dim request As New Request(awinSettings.databaseName)
-        projectConstellations = request.retrieveConstellationsFromDB()
+
+        ' Datenbank ist gestartet
+        If request.pingMongoDb() Then
+
+            ' alle Konstellationen laden 
+            projectConstellations = request.retrieveConstellationsFromDB()
 
 
-        ' hier werden jetzt auch alle Abhängigkeiten geladen 
-        allDependencies = request.retrieveDependenciesFromDB()
-        Dim axt As Integer = 9
+            ' hier werden jetzt auch alle Abhängigkeiten geladen 
+            allDependencies = request.retrieveDependenciesFromDB()
 
-        'hier wird die Start-Konfiguration gespeichert
-        '5.11. ausblenden
-        'Call awinStoreConstellation("Start")
+            Dim axt As Integer = 9
 
-        'hier werden die Projekte in die Plantafel gezeichnet 
-        '5.11. ausblenden
-        'Call awinZeichnePlanTafel() ' an der alten Stelle 
+            'hier wird die Start-Konfiguration gespeichert
+            '5.11. ausblenden
+            'Call awinStoreConstellation("Start")
 
-        'appInstance.ScreenUpdating = True
+            'hier werden die Projekte in die Plantafel gezeichnet 
+            '5.11. ausblenden
+            'Call awinZeichnePlanTafel() ' an der alten Stelle 
+
+            'appInstance.ScreenUpdating = True
+        Else
+            Throw New ArgumentException("Datenbank - Verbindung ist unterbrochen ...")
+        End If
+
 
     End Sub
 
@@ -2045,35 +2054,39 @@ Public Module awinGeneralModules
         Dim lastConstellation As New clsConstellation
         Dim hproj As clsProjekt
 
+        If request.pingMongoDb() Then
 
-        projectConstellations = request.retrieveConstellationsFromDB()
+            projectConstellations = request.retrieveConstellationsFromDB()
 
-        ' Showprojekte leer machen 
-        Try
-            'NoShowProjekte.Clear()
-            ShowProjekte.Clear()
-            lastConstellation = projectConstellations.getConstellation("Last")
-        Catch ex As Exception
-            'Call MsgBox("in awinProjekteInitialLaden Fehler ...")
-        End Try
-
-        ' jetzt Showprojekte aufbauen - und zwar so, dass Konstellation <Last> wiederhergestellt wird
-        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In lastConstellation.Liste
-
+            ' Showprojekte leer machen 
             Try
-                hproj = AlleProjekte(kvp.Key)
-                hproj.startDate = kvp.Value.Start
-                hproj.tfZeile = kvp.Value.zeile
-                If kvp.Value.show Then
-                    ' nur dann 
-                    ShowProjekte.Add(hproj)
-                End If
-
+                'NoShowProjekte.Clear()
+                ShowProjekte.Clear()
+                lastConstellation = projectConstellations.getConstellation("Last")
             Catch ex As Exception
-                Call MsgBox("in ProjekteInitialLaden: " & ex.Message)
+                'Call MsgBox("in awinProjekteInitialLaden Fehler ...")
             End Try
-        Next
 
+            ' jetzt Showprojekte aufbauen - und zwar so, dass Konstellation <Last> wiederhergestellt wird
+            For Each kvp As KeyValuePair(Of String, clsConstellationItem) In lastConstellation.Liste
+
+                Try
+                    hproj = AlleProjekte(kvp.Key)
+                    hproj.startDate = kvp.Value.Start
+                    hproj.tfZeile = kvp.Value.zeile
+                    If kvp.Value.show Then
+                        ' nur dann 
+                        ShowProjekte.Add(hproj)
+                    End If
+
+                Catch ex As Exception
+                    Call MsgBox("in ProjekteInitialLaden: " & ex.Message)
+                End Try
+            Next
+
+        Else
+            Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+        End If
 
     End Sub
 
@@ -2096,7 +2109,12 @@ Public Module awinGeneralModules
         Dim projektHistorie As New clsProjektHistorie
         Dim laengeInTagen As Integer
 
-        projekteImZeitraum = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+        If request.pingMongoDb() Then
+
+            projekteImZeitraum = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+        Else
+            Call MsgBox("Datenbank-Verbindung ist unterbrochen")
+        End If
 
         If AlleProjekte.Count > 0 Then
             ' prüfen, welche bereits geladen sind, welche nicht ...
@@ -2145,6 +2163,146 @@ Public Module awinGeneralModules
 
 
     End Sub
+    ''' <summary>
+    ''' lädt ein bestimmtes Portfolio von der Datenbank und zeigt es  
+    ''' in der Projekttafel an.
+    ''' 
+    ''' </summary>
+    ''' <param name="constellationName">
+    ''' Name, unter dem das Portfolio in der Datenbank gespeichert wurde 
+    ''' </param>
+    ''' <remarks></remarks>
+    ''' 
+    Public Sub awinLoadConstellation(ByVal constellationName As String)
+        Dim activeConstellation As New clsConstellation
+        Dim hproj As New clsProjekt
+        Dim request As New Request(awinSettings.databaseName)
+
+
+        ' prüfen, ob diese Constellation bereits existiert ..
+        Try
+            activeConstellation = projectConstellations.getConstellation(constellationName)
+        Catch ex As Exception
+            Call MsgBox(" Projekt-Konstellation " & constellationName & " existiert nicht ")
+            Exit Sub
+        End Try
+
+        ' die aktuelle Konstellation in "Last" speichern 
+        Call awinStoreConstellation("Last")
+
+        ' jetzt wird die activeConstellation in ShowProjekte bzw. NoShowProjekte umgesetzt 
+        ' dazu werden erst mal alle Projekte in Showprojekte in Noshowprojekte verschoben ...
+
+        'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        '    NoShowProjekte.Add(kvp.Value)
+        'Next
+        ShowProjekte.Clear()
+        ' jetzt werden die Start-Values entsprechend gesetzt ..
+
+        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
+
+            If AlleProjekte.ContainsKey(kvp.Key) Then
+                ' Projekt ist bereits im Hauptspeicher geladen
+                hproj = AlleProjekte(kvp.Key)
+            Else
+                If request.pingMongoDb() Then
+
+                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                    hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName)
+
+                    ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                    AlleProjekte.Add(kvp.Key, hproj)
+
+                Else
+                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+                End If
+            End If
+
+            With hproj
+                .startDate = kvp.Value.Start
+                .StartOffset = 0
+                .tfZeile = kvp.Value.zeile
+            End With
+
+            If kvp.Value.show Then
+
+                Try
+                    ShowProjekte.Add(hproj)
+
+                    Dim pname As String
+                    Dim tryzeile As Integer
+                    With hproj
+                        pname = .name
+                        tryzeile = .tfZeile
+                    End With
+                    ' nicht zeichnen - das wird nachher alles auf einen Schlag erledigt ..
+                    'Call ZeichneProjektinPlanTafel(pname, tryzeile)
+
+                    'NoShowProjekte.Remove(hproj.name)
+                Catch ex1 As Exception
+                    Call MsgBox("Fehler in awinLoadConstellation aufgetreten: " & ex1.Message)
+                End Try
+
+            End If
+
+        Next
+
+    End Sub
+    ' ''' <summary>
+    ' ''' 
+    ' ''' </summary>
+    ' ''' <param name="constellationName"></param>
+    ' ''' <remarks></remarks>
+    'Public Sub awinStoreConstellation(ByVal constellationName As String)
+
+    '    Dim request As New Request(awinSettings.databaseName)
+    '    ' prüfen, ob diese Constellation bereits existiert ..
+    '    If projectConstellations.Contains(constellationName) Then
+
+    '        Try
+    '            projectConstellations.Remove(constellationName)
+    '        Catch ex As Exception
+
+    '        End Try
+
+    '    End If
+
+    '    Dim newC As New clsConstellation
+    '    With newC
+    '        .constellationName = constellationName
+    '    End With
+
+    '    Dim newConstellationItem As clsConstellationItem
+    '    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+    '        newConstellationItem = New clsConstellationItem
+    '        With newConstellationItem
+    '            .projectName = kvp.Key
+    '            .show = True
+    '            .Start = kvp.Value.startDate
+    '            .variantName = kvp.Value.variantName
+    '            .zeile = kvp.Value.tfZeile
+    '        End With
+    '        newC.Add(newConstellationItem)
+    '    Next
+
+
+    '    Try
+    '        projectConstellations.Add(newC)
+
+    '    Catch ex As Exception
+    '        Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
+    '    End Try
+
+    '    ' Portfolio in die Datenbank speichern
+    '    If request.pingMongoDb() Then
+    '        If Not request.storeConstellationToDB(newC) Then
+    '            Call MsgBox("Fehler beim Speichern der projektConstellation '" & newC.constellationName & "' in die Datenbank")
+    '        End If
+    '    Else
+    '        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!")
+    '    End If
+
+    'End Sub
 
 
     
@@ -2763,6 +2921,97 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' zeichnet die Plantafel mit den Projekten neu; 
+    ''' versucht dabei immer die alte Position der Projekte zu übernehmen 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub awinZeichnePlanTafel()
+
+        Dim todoListe As New SortedList(Of Double, String)
+        Dim key As Double
+        Dim pname As String
+        Dim zeile As Integer, lastZeile As Integer, curZeile As Integer, max As Integer
+        Dim lastZeileOld As Integer
+        Dim hproj As clsProjekt
 
 
+
+
+        ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            With kvp.Value
+                key = 10000 * .tfZeile + kvp.Value.Start
+                todoListe.Add(key, .name)
+            End With
+
+        Next
+
+        zeile = 2
+        lastZeile = 0
+
+
+        If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
+            ' dann sollen die Projekte im extended mode gezeichnet werden 
+            ' jetzt erst mal die Konstellation "last" speichern
+            Call awinStoreConstellation("Last")
+
+            ' jetzt die todoListe abarbeiten
+            For i = 1 To todoListe.Count
+                pname = todoListe.ElementAt(i - 1).Value
+                hproj = ShowProjekte.getProject(pname)
+
+                If i = 1 Then
+                    curZeile = hproj.tfZeile
+                    lastZeileOld = hproj.tfZeile
+                    lastZeile = curZeile
+                    max = curZeile
+                Else
+                    If lastZeileOld = hproj.tfZeile Then
+                        curZeile = lastZeile
+                    Else
+                        lastZeile = max
+                        lastZeileOld = hproj.tfZeile
+                    End If
+
+                End If
+
+                hproj.tfZeile = curZeile
+                lastZeile = curZeile
+                'Call ZeichneProjektinPlanTafel2(pname, curZeile)
+                Call ZeichneProjektinPlanTafel(pname, curZeile)
+                curZeile = lastZeile + getNeededSpace(hproj)
+
+
+                If curZeile > max Then
+                    max = curZeile
+                End If
+
+
+            Next
+
+        Else
+
+
+            Dim tryzeile As Integer
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                pname = kvp.Key
+                tryzeile = kvp.Value.tfZeile
+                If tryzeile <= 1 Then
+                    tryzeile = -1
+                End If
+                Call ZeichneProjektinPlanTafel(pname, tryzeile) ' es wird versucht, an der alten Stelle zu zeichnen 
+            Next
+
+
+        End If
+
+
+
+
+
+    End Sub
+ 
 End Module

@@ -50,6 +50,63 @@ namespace MongoDbAccess
             return Database.GetCollection<clsProjektDB>(name).Count() == 0;
         }
 
+        /** prüft ob der Projektname schon vorhanden ist (ggf. inkl. VariantName)
+         *  falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
+         */
+        public bool projectNameAlreadyExists(string projectname, string variantname)
+        {
+            bool result;
+            if (variantname != null && variantname.Length > 0)
+                result = CollectionProjects.AsQueryable<clsProjektDB>()
+                        .Any(c => c.name == projectname && c.variantName == variantname);
+            else
+                result = CollectionProjects.AsQueryable<clsProjektDB>()
+                        .Any(c => c.name == projectname);
+            return result;
+        }
+
+        /** liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName)
+         *  falls Variantname null ist oder leerer String wird nur der Projektname überprüft.
+         */
+        public clsProjekt retrieveOneProjectfromDB(string projectname, string variantname)
+        {
+            var result = new clsProjektDB();
+
+            if (variantname != null && variantname.Length > 0)
+            
+                result = CollectionProjects.AsQueryable<clsProjektDB>()
+                        .Where (c => c.name == projectname && c.variantName == variantname)
+                        .Last();
+            else
+                result = CollectionProjects.AsQueryable<clsProjektDB>()
+                        .Where (c => c.name == projectname)
+                        .Last();
+                       
+
+            //TODO: rückumwandeln
+            var projekt = new clsProjekt();
+            result.copyto(ref projekt);
+            return projekt;
+        }
+
+        /**
+         * prüft die Verfügbarkeit der MongoDB
+         */
+        public bool pingMongoDb()
+        {
+            bool ping;
+            try
+            {
+                Server.Ping();
+                ping = true;
+            }
+            catch (Exception e)
+            {
+                ping = false;
+            }
+            return ping;
+        }
+
         public bool storeProjectToDB(clsProjekt projekt)
         {
             var projektDB = new clsProjektDB();
@@ -161,12 +218,12 @@ namespace MongoDbAccess
             cDB.copyfrom(ref c);
             cDB.Id = cDB.constellationName;
             return CollectionConstellations.Save(cDB).Ok;
+           
         }
 
         public clsConstellations retrieveConstellationsFromDB()
         {
             var result = new clsConstellations();
-
 
             var constellationsDB = CollectionConstellations.AsQueryable<clsConstellationDB>()
                                  .Select(cDB => cDB);

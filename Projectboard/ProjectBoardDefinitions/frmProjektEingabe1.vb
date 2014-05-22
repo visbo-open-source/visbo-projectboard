@@ -128,11 +128,11 @@ Public Class frmProjektEingabe1
         If dauerUnverändert.Checked Then
             calcProjektStart = DateTimeProject.Value
             calcProjektEnde = DateTimeProject.Value.AddDays(vorlagenDauer - 1).AddMonths(1)
-            DialogResult = System.Windows.Forms.DialogResult.Yes
+
         Else
             calcProjektStart = DateTimeProject.Value
             calcProjektEnde = DateTimeEnde.Value
-            DialogResult = System.Windows.Forms.DialogResult.No
+
 
             ''vorlagendauer As Integer = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex).dauerInDays
             'calcProjektStart = DateTimeProject.Value.AddDays(-1 * (vorlagenDauer - 1))
@@ -145,7 +145,7 @@ Public Class frmProjektEingabe1
 
     Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
 
-        DialogResult = System.Windows.Forms.DialogResult.Cancel
+        'DialogResult = System.Windows.Forms.DialogResult.Cancel
         MyBase.Close()
 
     End Sub

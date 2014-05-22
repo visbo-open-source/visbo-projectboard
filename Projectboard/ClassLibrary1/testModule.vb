@@ -58,15 +58,18 @@ Public Module testModule
                     End With
 
                     If vglName.Trim <> pName.Trim Then
-                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                        If request.pingMongoDb() Then
+                            Try
+                                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                                projekthistorie.Add(Date.Now, hproj)
+                            Catch ex As Exception
+                                projekthistorie = Nothing
+                            End Try
+                        Else
+                            Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                        End If
 
-                        Try
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                            projekthistorie.Add(Date.Now, hproj)
-                        Catch ex As Exception
-                            projekthistorie = Nothing
-                        End Try
 
                     Else
                         ' der aktuelle Stand hproj muss hinzugefügt werden 
@@ -75,14 +78,14 @@ Public Module testModule
                         projekthistorie.Add(Date.Now, hproj)
                     End If
 
-                    e.Result = " Report für Projekt '" & hproj.name & "' wird erstellt !"
-                    worker.ReportProgress(0, e)
-                    'frmSelectPPTTempl.statusNotification.Text = " Report für Projekt '" & hproj.name & " wird erstellt !"
+                        e.Result = " Report für Projekt '" & hproj.name & "' wird erstellt !"
+                        worker.ReportProgress(0, e)
+                        'frmSelectPPTTempl.statusNotification.Text = " Report für Projekt '" & hproj.name & " wird erstellt !"
 
-                    createPPTSlidesFromProject(hproj, vorlagenDateiName)
-                    tatsErstellt = tatsErstellt + 1
+                        createPPTSlidesFromProject(hproj, vorlagenDateiName)
+                        tatsErstellt = tatsErstellt + 1
 
-                End If
+                    End If
             End With
         Next
 
@@ -3037,68 +3040,102 @@ Public Module testModule
     Public Sub StoreAllProjectsinDB()
 
         Dim jetzt As Date = Now
+        Dim zeitStempel As Date
         Dim request As New Request(awinSettings.databaseName)
         enableOnUpdate = False
+        
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
         Call awinStoreConstellation("Last")
 
-        ' jetzt werden die gezeigten Projekte in die Datenbank geschrieben 
-
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
+        If request.pingMongoDb() Then
 
             Try
-                ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+                ' jetzt werden die gezeigten Projekte in die Datenbank geschrieben 
 
-                If demoModusHistory Then
-                    kvp.Value.timeStamp = historicDate
-                Else
-                    kvp.Value.timeStamp = jetzt
-                End If
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
 
-                If request.storeProjectToDB(kvp.Value) Then
-                Else
-                    Call MsgBox("Fehler in Schreiben Projekt " & kvp.Key)
-                End If
+                    Try
+                        ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+
+                        If demoModusHistory Then
+                            kvp.Value.timeStamp = historicDate
+                        Else
+                            kvp.Value.timeStamp = jetzt
+                        End If
+
+                        If request.storeProjectToDB(kvp.Value) Then
+                        Else
+                            Call MsgBox("Fehler in Schreiben Projekt " & kvp.Key)
+                        End If
+                    Catch ex As Exception
+
+                        ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
+                        Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                        'Exit Sub
+                    End Try
+
+                Next
+
+                historicDate = historicDate.AddMonths(1)
+
+                ' jetzt werden alle definierten Constellations weggeschrieben
+
+                For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+
+                    Try
+                        If request.storeConstellationToDB(kvp.Value) Then
+                        Else
+                            Call MsgBox("Fehler in Schreiben Constellation " & kvp.Key)
+                        End If
+                    Catch ex As Exception
+                        Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                        'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
+                        'Exit Sub
+                    End Try
+
+                Next
+
+
+                ' jetzt werden alle Abhängigkeiten weggeschreiben 
+
+                For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
+
+                    Try
+                        If request.storeDependencyofPToDB(kvp.Value) Then
+                        Else
+                            Call MsgBox("Fehler in Schreiben Dependency " & kvp.Key)
+                        End If
+                    Catch ex As Exception
+                        Throw New ArgumentException("Fehler beim Speichern der Abhängigkeiten in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                        'Call MsgBox("Fehler beim Speichern der Abhängigkeiten in die Datenbank. Datenbank nicht aktiviert?")
+                        'Exit Sub
+                    End Try
+
+
+                Next
+
+                zeitStempel = AlleProjekte.First.Value.timeStamp
+
+                Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+
+                ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
+                Try
+                    If projekthistorie.Count > 0 Then
+                        projekthistorie.clear()
+                    End If
+                Catch ex As Exception
+
+                End Try
+
             Catch ex As Exception
-                Call MsgBox(ex.Message)
+                Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                'Call MsgBox(" Fehler beim Speichern in die Datenbank")
             End Try
+        Else
 
-        Next
+            Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen")
 
-        historicDate = historicDate.AddMonths(1)
-
-        ' jetzt werden alle definierten Constellations weggeschrieben
-
-        For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
-
-            Try
-                If request.storeConstellationToDB(kvp.Value) Then
-                Else
-                    Call MsgBox("Fehler in Schreiben Constellation " & kvp.Key)
-                End If
-            Catch ex As Exception
-                Call MsgBox(ex.Message)
-            End Try
-
-        Next
-
-
-        ' jetzt werden alle Abhängigkeiten weggeschreiben 
-
-        For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
-
-            Try
-                If request.storeDependencyofPToDB(kvp.Value) Then
-                Else
-                    Call MsgBox("Fehler in Schreiben Dependency " & kvp.Key)
-                End If
-            Catch ex As Exception
-                Call MsgBox(ex.Message)
-            End Try
-
-
-        Next
-
+        End If
 
         enableOnUpdate = True
 
@@ -3233,11 +3270,15 @@ Public Module testModule
 
 
                 If vglName.Trim <> pname.Trim Then
-                    ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-
-                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
-                                                                        storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                    projekthistorie.Add(Date.Now, hproj)
+                    If request.pingMongoDb() Then
+                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
+                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                        projekthistorie.Add(Date.Now, hproj)
+                    Else
+                        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
+                    End If
+                    
                 Else
                     ' es muss nichts gemacht werden - es ist bereits die richtige Historie 
                 End If
@@ -3681,11 +3722,15 @@ Public Module testModule
 
 
         If vglName.Trim <> pname.Trim Then
-            ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+            If request.pingMongoDb() Then
+                ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
+                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                projekthistorie.Add(Date.Now, hproj)
+            Else
+                Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
+            End If
 
-            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
-                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-            projekthistorie.Add(Date.Now, hproj)
         Else
             ' es muss nichts gemacht werden - es ist bereits die richtige Historie 
         End If
@@ -5456,7 +5501,7 @@ Public Module testModule
         Dim anzDiagrams As Integer, i As Integer
         Dim found As Boolean
         Dim pname As String = ""
-        Dim hproj As New clsProjekt, vproj As clsProjekt
+        Dim hproj As New clsProjekt, vproj As clsProjekt = Nothing
         Dim anzBubbles As Integer
         Dim yAchsenValues() As Double
         Dim xAchsenValues() As Double
@@ -5558,13 +5603,19 @@ Public Module testModule
             Try
                 hproj = ShowProjekte.getProject(pname)
                 variantName = hproj.variantName
-                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
+                If request.pingMongoDb() Then
+
+                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
                                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                If compareToLast Then
-                    vproj = projekthistorie.Last
+                    If compareToLast Then
+                        vproj = projekthistorie.Last
+                    Else
+                        vproj = projekthistorie.beauftragung
+                    End If
                 Else
-                    vproj = projekthistorie.beauftragung
+                    Call MsgBox("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekthistorie konnte nicht geladen werden")
                 End If
+                
 
                 If Not IsNothing(vproj) Then
 
@@ -6230,4 +6281,59 @@ Public Module testModule
 
     End Sub  ' Ende Prozedur awinCreatePortfolioChartDiagramm
 
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="constellationName"></param>
+    ''' <remarks></remarks>
+    Public Sub awinStoreConstellation(ByVal constellationName As String)
+
+        Dim request As New Request(awinSettings.databaseName)
+        ' prüfen, ob diese Constellation bereits existiert ..
+        If projectConstellations.Contains(constellationName) Then
+
+            Try
+                projectConstellations.Remove(constellationName)
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
+        Dim newC As New clsConstellation
+        With newC
+            .constellationName = constellationName
+        End With
+
+        Dim newConstellationItem As clsConstellationItem
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+            newConstellationItem = New clsConstellationItem
+            With newConstellationItem
+                .projectName = kvp.Key
+                .show = True
+                .Start = kvp.Value.startDate
+                .variantName = kvp.Value.variantName
+                .zeile = kvp.Value.tfZeile
+            End With
+            newC.Add(newConstellationItem)
+        Next
+
+
+        Try
+            projectConstellations.Add(newC)
+
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
+        End Try
+
+        ' Portfolio in die Datenbank speichern
+        If Request.pingMongoDb() Then
+            If Not Request.storeConstellationToDB(newC) Then
+                Call MsgBox("Fehler beim Speichern der projektConstellation '" & newC.constellationName & "' in die Datenbank")
+            End If
+        Else
+            Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!")
+        End If
+
+    End Sub
 End Module

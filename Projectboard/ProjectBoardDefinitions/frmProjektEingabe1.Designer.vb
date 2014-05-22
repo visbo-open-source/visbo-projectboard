@@ -48,6 +48,7 @@ Partial Class frmProjektEingabe1
         '
         'OKButton
         '
+        Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
         Me.OKButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.OKButton.Location = New System.Drawing.Point(45, 351)
         Me.OKButton.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
@@ -59,6 +60,7 @@ Partial Class frmProjektEingabe1
         '
         'AbbrButton
         '
+        Me.AbbrButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
         Me.AbbrButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.AbbrButton.Location = New System.Drawing.Point(367, 351)
         Me.AbbrButton.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
@@ -226,6 +228,8 @@ Partial Class frmProjektEingabe1
         'dauerUnverändert
         '
         Me.dauerUnverändert.AutoSize = True
+        Me.dauerUnverändert.Checked = True
+        Me.dauerUnverändert.CheckState = System.Windows.Forms.CheckState.Checked
         Me.dauerUnverändert.Location = New System.Drawing.Point(301, 213)
         Me.dauerUnverändert.Name = "dauerUnverändert"
         Me.dauerUnverändert.Size = New System.Drawing.Size(169, 25)
