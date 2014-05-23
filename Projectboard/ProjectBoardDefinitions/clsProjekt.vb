@@ -827,6 +827,10 @@ Public Class clsProjekt
 
             End If
 
+            ' um _Dauer neu zu berechnen ; ergänzt am 12.5.2014
+            If differenzInTagen <> 0 Then
+                Dim anzahlTage As Integer = Me.dauerInDays
+            End If
 
         End Set
     End Property
@@ -938,16 +942,7 @@ Public Class clsProjekt
 
     End Sub
 
-    'Public Sub keepPhase1consistent()
-
-    '    ' im Nebeneffekt wird ausserdem _Dauer aktualisiert  
-    '    Dim projektLaengeInDays As Integer = Me.dauerInDays
-
-    '    If Me.getPhase(1).dauerInDays <> projektLaengeInDays Then
-    '        Me.getPhase(1).changeStartandDauerPhase1(0, projektLaengeInDays)
-    '    End If
-
-    'End Sub
+    
 
     Public Sub keepPhase1consistent(ByVal phasenEnde As Integer)
 
@@ -998,7 +993,7 @@ Public Class clsProjekt
     ''' </summary>
     ''' <param name="newproject"></param>
     ''' <remarks></remarks>
-    Public Overloads Sub copyAttrTo(ByRef newproject As clsProjekt)
+    Public Overrides Sub copyAttrTo(ByRef newproject As clsProjekt)
 
         With newproject
 
