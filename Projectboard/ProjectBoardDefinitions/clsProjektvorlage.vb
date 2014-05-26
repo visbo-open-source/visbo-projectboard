@@ -744,7 +744,10 @@
                                         ReDim tempArray(dimension)
                                         tempArray = .Xwerte
                                         For i = phasenStart To phasenStart + dimension
+
                                             costValues(i) = costValues(i) + tempArray(i - phasenStart)
+                                            
+
                                         Next i
                                     End If
                                 End With ' cost

@@ -59,14 +59,16 @@ Imports Microsoft.Office.Interop.Excel
         Dim loadConstellationFrm As New frmLoadConstellation
         Dim constellationName As String
 
-
+        Dim initMessage As String = "Bei folgenden Projekten konnte das Datum nicht angepasst werden, " & vbLf & _
+                                    "da sie bereits beauftragt wurden"
+        Dim successMessage As String = initMessage
         Dim returnValue As DialogResult
         enableOnUpdate = False
 
         returnValue = loadConstellationFrm.ShowDialog
         If returnValue = DialogResult.OK Then
             constellationName = loadConstellationFrm.ListBox1.Text
-            Call awinLoadConstellation(constellationName)
+            Call awinLoadConstellation(constellationName, successMessage)
 
             appInstance.ScreenUpdating = False
             'Call diagramsVisible(False)
@@ -75,7 +77,13 @@ Imports Microsoft.Office.Interop.Excel
             Call awinNeuZeichnenDiagramme(2)
             'Call diagramsVisible(True)
             appInstance.ScreenUpdating = True
-            Call MsgBox(constellationName & " wurde geladen ...")
+
+            If successMessage.Length > initMessage.Length Then
+                Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
+            Else
+                Call MsgBox(constellationName & " wurde geladen ...")
+            End If
+
 
             ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
             currentConstellation = constellationName

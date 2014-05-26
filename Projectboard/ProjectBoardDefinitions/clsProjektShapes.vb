@@ -281,7 +281,12 @@ Public Class clsProjektShapes
 
 
         Try
-            hproj.startDate = newDate
+
+            If DateDiff(DateInterval.Day, hproj.startDate, newDate) <> 0 Then
+                hproj.startDate = newDate
+                Call hproj.syncXWertePhases()
+            End If
+            
         Catch ex As Exception
 
             ' wenn das passiert, muss das Shape wieder auf die alte Position zurück 
@@ -406,7 +411,7 @@ Public Class clsProjektShapes
         Dim shapeType As Integer
         Dim moveAllowed As Boolean
         Dim phaseName As String, resultNr As Integer
-        Dim hproj As clsProjekt
+        Dim hproj As clsProjekt, newProjekt As clsProjekt
         Dim tmpRange As Excel.ShapeRange
 
         Dim pName As String = ""
@@ -481,9 +486,11 @@ Public Class clsProjektShapes
                     If (shapeType = PTshty.projektE Or shapeType = PTshty.projektN) Then
                         Dim tmpZeile As Integer = calcYCoordToZeile(curCoord(0))
                         shpElement.Top = calcZeileToYCoord(tmpZeile)
+                        curCoord(0) = shpElement.Top
                     Else
                         ' korrigiere die Höhe 
                         shpElement.Top = oldCoord(0)
+                        curCoord(0) = shpElement.Top
                     End If
 
 
@@ -495,17 +502,16 @@ Public Class clsProjektShapes
                     Dim newStartdate As Date
                     Dim newEndDate As Date
                     Dim tmpDauerIndays = hproj.dauerInDays
-
+                    newProjekt = New clsProjekt
 
                     newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
 
                     ' wenn gedehnt bzw. gestaucht wird ...
                     If curCoord(3) <> oldCoord(3) Then
                         ' es wird gestaucht bzw. gedehnt
-                        Dim newProjekt As New clsProjekt
                         newEndDate = newStartdate.AddDays(hproj.dauerInDays - 1 + calcXCoordToTage(curCoord(3) - oldCoord(3)))
 
-                        hproj.copyAttrTo(newProjekt)
+                        'hproj.copyAttrTo(newProjekt)
                         hproj.korrCopyTo(newProjekt, newStartdate, newEndDate)
                         With hproj
                             newProjekt.name = .name
@@ -605,6 +611,7 @@ Public Class clsProjektShapes
                         offsetinTagen = 0
                         If diffDays <> 0 Then
                             hproj.startDate = hproj.startDate.AddDays(diffDays)
+                            Call hproj.syncXWertePhases()
                         End If
 
 
