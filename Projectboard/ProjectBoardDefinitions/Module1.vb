@@ -2077,6 +2077,11 @@ Public Module Module1
         Dim costValues() As Double, budgetValues() As Double
         Dim curBudget As Double, avgbudget As Double
 
+        ' Ergänzung am 26.5.14: wenn hproj in den Längen der Bedarfe Arrays nicht konsistent ist: 
+        ' anpassen 
+        If Not hproj.isConsistent Then
+            Call hproj.syncXWertePhases()
+        End If
 
         costValues = hproj.getGesamtKostenBedarf
         ReDim budgetValues(costValues.Length - 1)
