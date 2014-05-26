@@ -221,6 +221,15 @@ namespace MongoDbAccess
            
         }
 
+        public bool removeConstellationFromDB(clsConstellation c)
+        {
+            //var cDB = new clsConstellationDB();
+            //cDB.copyfrom(ref c);
+            //cDB.Id = cDB.constellationName;
+            var query = Query<clsConstellationDB>.EQ(e => e.Id, c.constellationName);
+            return CollectionConstellations.Remove(query).Ok;
+        }
+
         public clsConstellations retrieveConstellationsFromDB()
         {
             var result = new clsConstellations();

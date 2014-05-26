@@ -2248,6 +2248,57 @@ Public Module awinGeneralModules
         Next
 
     End Sub
+    ''' <summary>
+    ''' löscht ein bestimmtes Portfolio aus der Datenbank und der Liste der Portfolios im Hauptspeicher
+    ''' 
+    ''' </summary>
+    ''' <param name="constellationName">
+    ''' Name, unter dem das Portfolio in der Datenbank gespeichert wurde 
+    ''' </param>
+    ''' <remarks></remarks>
+    ''' 
+    Public Sub awinRemoveConstellation(ByVal constellationName As String)
+
+        Dim activeConstellation As New clsConstellation
+        Dim request As New Request(awinSettings.databaseName)
+
+        ' prüfen, ob diese Constellation überhaupt existiert ..
+        Try
+            activeConstellation = projectConstellations.getConstellation(constellationName)
+        Catch ex As Exception
+            Call MsgBox(" Projekt-Konstellation " & constellationName & " existiert nicht ")
+            Exit Sub
+        End Try
+
+        If request.pingMongoDb() Then
+
+            ' Konstellation muss aus der Datenbank gelöscht werden.
+
+            If request.removeConstellationFromDB(activeConstellation) Then
+
+                Try
+                    ' Konstellation muss aus der Liste aller Portfolios entfernt werden.
+                    projectConstellations.Remove(activeConstellation.constellationName)
+                Catch ex1 As Exception
+                    Call MsgBox("Fehler in awinRemoveConstellation aufgetreten: " & ex1.Message)
+                End Try
+            Else
+                Call MsgBox("Es ist ein Fehler beim Löschen es Portfolios aus der Datenbank aufgetreten ")
+            End If
+
+        Else
+            Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & activeConstellation.constellationName & "'konnte nicht geladen werden")
+        End If
+
+        'Try
+        '    ' Konstellation muss aus der Liste aller Portfolios entfernt werden.
+        '    projectConstellations.Remove(activeConstellation.constellationName)
+        'Catch ex1 As Exception
+        '    Call MsgBox("Fehler in awinRemoveConstellation aufgetreten: " & ex1.Message)
+        'End Try
+
+
+    End Sub
     ' ''' <summary>
     ' ''' 
     ' ''' </summary>

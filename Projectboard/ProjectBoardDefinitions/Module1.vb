@@ -1617,7 +1617,7 @@ Public Module Module1
 
     End Function
 
-    Sub awinTestSub()
+    Sub awinSubtest()
 
         Call MsgBox("del gedrückt ...")
     End Sub

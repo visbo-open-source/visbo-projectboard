@@ -998,7 +998,7 @@ Public Class clsProjekt
     ''' </summary>
     ''' <param name="newproject"></param>
     ''' <remarks></remarks>
-    Public Overloads Sub copyAttrTo(ByRef newproject As clsProjekt)
+    Public Overrides Sub copyAttrTo(ByRef newproject As clsProjekt)
 
         With newproject
 

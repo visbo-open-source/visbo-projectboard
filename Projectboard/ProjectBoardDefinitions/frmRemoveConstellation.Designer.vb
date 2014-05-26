@@ -1,8 +1,8 @@
 ﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
-Partial Class frmLoadConstellation
+Partial Class frmRemoveConstellation
     Inherits System.Windows.Forms.Form
 
-    'Form overrides dispose to clean up the component list.
+    'Das Formular überschreibt den Löschvorgang, um die Komponentenliste zu bereinigen.
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
@@ -14,12 +14,12 @@ Partial Class frmLoadConstellation
         End Try
     End Sub
 
-    'Required by the Windows Form Designer
+    'Wird vom Windows Form-Designer benötigt.
     Private components As System.ComponentModel.IContainer
 
-    'NOTE: The following procedure is required by the Windows Form Designer
-    'It can be modified using the Windows Form Designer.  
-    'Do not modify it using the code editor.
+    'Hinweis: Die folgende Prozedur ist für den Windows Form-Designer erforderlich.
+    'Das Bearbeiten ist mit dem Windows Form-Designer möglich.  
+    'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.ListBox1 = New System.Windows.Forms.ListBox()
@@ -33,45 +33,45 @@ Partial Class frmLoadConstellation
         Me.ListBox1.FormattingEnabled = True
         Me.ListBox1.HorizontalScrollbar = True
         Me.ListBox1.ItemHeight = 19
-        Me.ListBox1.Location = New System.Drawing.Point(16, 15)
-        Me.ListBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ListBox1.Location = New System.Drawing.Point(34, 23)
+        Me.ListBox1.Margin = New System.Windows.Forms.Padding(4)
         Me.ListBox1.Name = "ListBox1"
         Me.ListBox1.Size = New System.Drawing.Size(424, 232)
-        Me.ListBox1.TabIndex = 0
+        Me.ListBox1.Sorted = True
+        Me.ListBox1.TabIndex = 1
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(81, 299)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
+        Me.OKButton.Location = New System.Drawing.Point(88, 277)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(4)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(100, 28)
-        Me.OKButton.TabIndex = 1
+        Me.OKButton.TabIndex = 2
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
         '
         'Abbrechen
         '
-        Me.Abbrechen.Location = New System.Drawing.Point(255, 299)
-        Me.Abbrechen.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Abbrechen.DialogResult = System.Windows.Forms.DialogResult.Cancel
+        Me.Abbrechen.Location = New System.Drawing.Point(273, 277)
+        Me.Abbrechen.Margin = New System.Windows.Forms.Padding(4)
         Me.Abbrechen.Name = "Abbrechen"
         Me.Abbrechen.Size = New System.Drawing.Size(100, 28)
-        Me.Abbrechen.TabIndex = 2
+        Me.Abbrechen.TabIndex = 3
         Me.Abbrechen.Text = "Abbrechen"
         Me.Abbrechen.UseVisualStyleBackColor = True
         '
-        'frmLoadConstellation
+        'frmRemoveConstellation
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.AutoScroll = True
-        Me.ClientSize = New System.Drawing.Size(457, 363)
+        Me.ClientSize = New System.Drawing.Size(492, 328)
         Me.Controls.Add(Me.Abbrechen)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.ListBox1)
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
-        Me.Name = "frmLoadConstellation"
-        Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
-        Me.Text = "Portfolio laden "
+        Me.Name = "frmRemoveConstellation"
+        Me.Text = "Portfolio löschen"
         Me.ResumeLayout(False)
 
     End Sub

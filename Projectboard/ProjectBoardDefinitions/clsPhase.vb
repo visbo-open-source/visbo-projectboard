@@ -1068,6 +1068,9 @@
                     newXwerte(k) = newXwerte(k) - 1
                     Rest = Rest + 1
                 End If
+                If k = 0 Then
+                    k = newXwerte.Length - 1
+                End If
                 result = System.Math.DivRem(k - 1, newXwerte.Length, k) ' modulo - Funktion
             End While
 
