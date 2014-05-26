@@ -24,6 +24,10 @@
 
         Dim projektStartdate As Date
         Dim projektstartColumn As Integer
+        Dim oldDauerinDays As Integer = Me._dauerInDays
+        Dim faktor As Double
+        Dim dimension As Integer
+
 
 
         If dauer < 0 Then
@@ -55,12 +59,19 @@
 
             Else
                 '  
+                If _dauerInDays > 0 And dauer > 0 Then
+                    faktor = dauer / _dauerInDays
+                Else
+                    faktor = 1
+                End If
+
 
                 _startOffsetinDays = startOffset
                 _dauerInDays = dauer
 
+
+
                 Dim oldlaenge As Integer = _relEnde - _relStart + 1
-                Dim newlaenge As Integer
 
 
                 Dim phaseStartdate As Date = Me.getStartDate
@@ -85,39 +96,29 @@
 
                 If awinSettings.autoCorrectBedarfe Then
 
-                    newlaenge = _relEnde - _relStart + 1
 
                     Dim newvalues() As Double
-                    Dim oldvalues() As Double
+                    Dim notYetDone As Boolean = True
 
+                    dimension = _relEnde - _relStart
+                    ReDim newvalues(dimension)
 
-                    Try
+                    If Me.CountRoles > 0 Then
 
-                        For r = 1 To Me.CountRoles
-                            oldvalues = Me.getRole(r).Xwerte
-                            oldlaenge = oldvalues.Length
-                            If newlaenge <> oldlaenge Then
-                                newvalues = adjustArrayLength(newlaenge, oldvalues, False)
-                                Me.getRole(r).Xwerte = newvalues
-                            End If
+                        ' hier müssen jetzt die Xwerte neu gesetzt werden 
+                        Call Me.calcNewXwerte(dimension, faktor)
+                        notYetDone = False
 
-                        Next
+                    End If
 
+                    If Me.CountCosts > 0 And notYetDone Then
 
-                        For k = 1 To Me.CountCosts
-                            oldvalues = Me.getCost(k).Xwerte
-                            oldlaenge = oldvalues.Length
-                            If newlaenge <> oldlaenge Then
-                                newvalues = adjustArrayLength(newlaenge, oldvalues, False)
-                                Me.getCost(k).Xwerte = newvalues
-                            End If
+                        ' hier müssen jetzt die Xwerte neu gesetzt werden 
+                        Call Me.calcNewXwerte(dimension, 1)
 
-                        Next
+                    End If
 
-                    Catch ex As Exception
-                        Throw New Exception("Rollen- bzw. Kosten konnten nicht in der Länge angepasst werden" & ex.Message)
-                    End Try
-
+                   
                 End If
 
 
@@ -165,6 +166,8 @@
 
         Dim projektStartdate As Date
         Dim projektstartColumn As Integer
+        Dim faktor As Double
+        Dim dimension As Integer
 
 
         If dauer < 0 Then
@@ -201,7 +204,6 @@
                 _dauerInDays = dauer
 
                 Dim oldlaenge As Integer = _relEnde - _relStart + 1
-                Dim newlaenge As Integer
 
 
                 Dim phaseStartdate As Date = Me.getStartDate
@@ -214,38 +216,26 @@
 
                 If awinSettings.autoCorrectBedarfe Then
 
-                    newlaenge = _relEnde - _relStart + 1
-
                     Dim newvalues() As Double
-                    Dim oldvalues() As Double
+                    Dim notYetDone As Boolean = True
 
+                    dimension = _relEnde - _relStart
+                    ReDim newvalues(dimension)
 
-                    Try
+                    If Me.CountRoles > 0 Then
 
-                        For r = 1 To Me.CountRoles
-                            oldvalues = Me.getRole(r).Xwerte
-                            oldlaenge = oldvalues.Length
-                            If newlaenge <> oldlaenge Then
-                                newvalues = adjustArrayLength(newlaenge, oldvalues, False)
-                                Me.getRole(r).Xwerte = newvalues
-                            End If
+                        ' hier müssen jetzt die Xwerte neu gesetzt werden 
+                        Call Me.calcNewXwerte(dimension, faktor)
+                        notYetDone = False
 
-                        Next
+                    End If
 
+                    If Me.CountCosts > 0 And notYetDone Then
 
-                        For k = 1 To Me.CountCosts
-                            oldvalues = Me.getCost(k).Xwerte
-                            oldlaenge = oldvalues.Length
-                            If newlaenge <> oldlaenge Then
-                                newvalues = adjustArrayLength(newlaenge, oldvalues, False)
-                                Me.getCost(k).Xwerte = newvalues
-                            End If
+                        ' hier müssen jetzt die Xwerte neu gesetzt werden 
+                        Call Me.calcNewXwerte(dimension, 1)
 
-                        Next
-
-                    Catch ex As Exception
-                        Throw New Exception("Rollen- bzw. Kosten konnten nicht in der Länge angepasst werden" & ex.Message)
-                    End Try
+                    End If
 
                 End If
 
@@ -791,7 +781,7 @@
 
                     Call berechneBedarfe(oldrole.Xwerte, corrFactor, newXwerte)
 
-                   
+
                     With newrole
                         .RollenTyp = oldrole.RollenTyp
                         .Xwerte = newXwerte
@@ -801,9 +791,8 @@
                     End With
                 Catch ex As Exception
 
-                    '
-                    ' handelt es sich um die Kostenart Definition?
-                    '
+                    Call MsgBox("Fehler in clsphase.korrcopyto")
+
                 End Try
 
             Next r
@@ -817,7 +806,13 @@
                     ReDim newXwerte(newphase.relEnde - newphase.relStart)
                     hname = oldcost.name
 
-                    Call berechneBedarfe(oldcost.Xwerte, corrFactor, newXwerte)
+
+                    If awinSettings.propAnpassRess Then
+                        Call berechneBedarfe(oldcost.Xwerte, corrFactor, newXwerte)
+                    Else
+                        Call berechneBedarfe(oldcost.Xwerte, 1.0, newXwerte)
+                    End If
+
 
                     With newcost
                         .KostenTyp = oldcost.KostenTyp
@@ -829,9 +824,8 @@
 
                 Catch ex As Exception
 
-                    '
-                    ' handelt es sich um die Kostenart Definition?
-                    '
+                    Call MsgBox("Fehler in clsphase.korrcopyto")
+
                 End Try
             Next k
 
@@ -852,6 +846,30 @@
             Next
 
         End With
+
+    End Sub
+
+    ''' <summary>
+    ''' passt die Offsets der Meilensteine an, wenn per Drag und Drop die entsprechende Phase 
+    ''' gedehnt oder gestaucht wurde  
+    ''' </summary>
+    ''' <param name="faktor"></param>
+    ''' <remarks></remarks>
+    Public Sub adjustMilestones(ByVal faktor As Double)
+        Dim newOffset As Integer
+        For r = 1 To Me.AllResults.Count
+            
+            ' korrigiert den Offset der Meilensteine 
+            newOffset = System.Math.Round(CLng(Me.getResult(r).offset * faktor))
+
+            If newOffset < 0 Then
+                newOffset = 0
+            ElseIf newOffset > Me.dauerInDays Then
+                newOffset = Me.dauerInDays - 1
+            End If
+
+            Me.getResult(r).offset = newOffset
+        Next
 
     End Sub
 
@@ -999,114 +1017,160 @@
 
     End Sub
 
-    Public Sub berechneBedarfe(ByVal oldXwerte() As Double, ByVal corrFakt As Double, ByRef newValues() As Double)
+    ''' <summary>
+    ''' synchronisiert bzw. berechnet die Xwerte der Rollen und Kosten
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub calcNewXwerte(ByVal dimension As Integer, ByVal faktor As Double)
+        Dim newXwerte() As Double
+        Dim oldXwerte() As Double
+
+        Dim r As Integer, k As Integer
+
+        For r = 1 To Me.CountRoles
+            oldXwerte = Me.getRole(r).Xwerte
+            ReDim newXwerte(dimension)
+            Call berechneBedarfe(oldXwerte, faktor, newXwerte)
+            Me.getRole(r).Xwerte = newXwerte
+        Next
+
+        For k = 1 To Me.CountCosts
+            oldXwerte = Me.getCost(k).Xwerte
+            ReDim newXwerte(dimension)
+            Call berechneBedarfe(oldXwerte, faktor, newXwerte)
+            Me.getCost(k).Xwerte = newXwerte
+        Next
+
+
+    End Sub
+
+    ''' <summary>
+    ''' berechnet für die betreffenden Xwert-Array 
+    ''' </summary>
+    ''' <param name="oldXwerte"></param>
+    ''' <param name="corrFakt"></param>
+    ''' <param name="newValues"></param>
+    ''' <remarks></remarks>
+    Private Sub berechneBedarfe(ByVal oldXwerte() As Double, ByVal corrFakt As Double, ByRef newValues() As Double)
         Dim k As Integer
-        'Dim Durchschn As Double
-        'Dim Min As Double
-        'Dim Max As Double
-        'Dim oldAnteil() As Double
-        'Dim newAnteil() As Double
         Dim newXwerte() As Double
         Dim gesBedarf As Double
-        Dim Rest As Double
+        Dim Rest As Integer
         Dim result As Integer
         Dim hDatum As Date
         Dim anzDaysthisMonth As Double
 
-        ReDim newXwerte(newValues.Length - 1)
+        Try
+            ReDim newXwerte(newValues.Length - 1)
 
-
-        If newValues.Length = oldXwerte.Length Then
-
-            'Bedarfe-Verteilung bleibt wie gehabt
-            newXwerte = oldXwerte
-        Else
             gesBedarf = oldXwerte.Sum
-
-            'ReDim oldAnteil(oldXwerte.Length - 1)
-            'For k = 0 To oldXwerte.Length - 1
-            '    oldAnteil(k) = oldXwerte(k) / gesBedarf
-            'Next k
-
-
             If awinSettings.propAnpassRess Then
                 ' Gesamter Bedarf dieser Rolle/Kosten wird gemäß streckung bzw. stauchung des Projekts korrigiert
                 gesBedarf = System.Math.Round(gesBedarf * corrFakt)
             End If
 
-            For k = 0 To newXwerte.Length - 1
+            If newValues.Length = oldXwerte.Length Then
 
-                If k = 0 Then
-                    hDatum = getStartDate
-                    anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
-                    anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
-
-                ElseIf k = newXwerte.Length - 1 Then
-                    hDatum = getEndDate
-                    anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
-
+                'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
+                ' Änderung THOMAS Start 
+                If Not awinSettings.propAnpassRess Then
+                    newXwerte = oldXwerte
                 Else
-                    hDatum = getStartDate
-                    anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
-                End If
-               
-                newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
+                    For i = 0 To newValues.Length - 1
+                        newXwerte(i) = System.Math.Round(oldXwerte(i) * corrFakt)
+                    Next
 
-                'newXwerte(k) = System.Math.Round(gesBedarf / newXwerte.Length)
-            Next k
+                    ' jetzt ggf die Reste verteilen 
+                    Rest = CInt(System.Math.Round(oldXwerte.Sum * corrFakt - newXwerte.Sum))
 
-            ' Rest wird auf alle newXwerte verteilt
-
-            Rest = gesBedarf - newXwerte.Sum
-
-            k = newXwerte.Length - 1
-            While Rest <> 0
-                If Rest > 0 Then
-                    newXwerte(k) = newXwerte(k) + 1
-                    Rest = Rest - 1
-                Else
-                    newXwerte(k) = newXwerte(k) - 1
-                    Rest = Rest + 1
-                End If
-                If k = 0 Then
                     k = newXwerte.Length - 1
+                    While Rest <> 0
+
+                        If Rest > 0 Then
+                            newXwerte(k) = newXwerte(k) + 1
+                            Rest = Rest - 1
+                        Else
+
+                            If newXwerte(k) - 1 >= 0 Then
+                                newXwerte(k) = newXwerte(k) - 1
+                                Rest = Rest + 1
+                            End If
+
+                        End If
+                        k = k - 1
+                        If k < 0 Then
+                            k = newXwerte.Length - 1
+                        End If
+
+                        'result = System.Math.DivRem(k - 1, newXwerte.Length, k) ' modulo - Funktion
+                    End While
+
                 End If
-                result = System.Math.DivRem(k - 1, newXwerte.Length, k) ' modulo - Funktion
-            End While
 
-            '' oldXwerte auf newXwerte verteilen, berechne
+            Else
 
-            'For k = 0 To newXwerte.Length - 1
-            '    newXwerte(k) = gesBedarf * oldAnteil(k)
-            'Next k
 
-            'Rest = gesBedarf - newXwerte.Sum
-            'If Rest <> 0 Then
-            '    ReDim newAnteil(newValues.Length - 1)
-            '    For k = 0 To newXwerte.Length - 1
-            '        newAnteil(k) = newXwerte(k) / newXwerte.Sum
-            '        newXwerte(k) = newXwerte(k) + Rest * newAnteil(k)
-            '    Next k
-            'End If
-            ' newXwerte auf ganze Zahlen runden
+                For k = 0 To newXwerte.Length - 1
 
-        End If
+                    If k = 0 Then
+                        ' damit ist 00:00 des Startdates gemeint 
+                        hDatum = getStartDate.Date
+                        anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
+                        anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
 
-        newValues = newXwerte
+                    ElseIf k = newXwerte.Length - 1 Then
+                        ' damit hDatum das End-Datum um 23.00 Uhr
+                        hDatum = getEndDate.Date.AddHours(23)
+                        anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
+
+                    Else
+                        hDatum = getStartDate.Date
+                        anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
+                    End If
+
+                    newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
+
+                    'newXwerte(k) = System.Math.Round(gesBedarf / newXwerte.Length)
+                Next k
+
+                ' Rest wird auf alle newXwerte verteilt
+
+                Rest = CInt(gesBedarf - newXwerte.Sum)
+
+                k = newXwerte.Length - 1
+                While Rest <> 0
+                    If Rest > 0 Then
+                        newXwerte(k) = newXwerte(k) + 1
+                        Rest = Rest - 1
+                    Else
+                        If newXwerte(k) - 1 >= 0 Then
+                            newXwerte(k) = newXwerte(k) - 1
+                            Rest = Rest + 1
+                        End If
+                    End If
+                    k = k - 1
+                    If k < 0 Then
+                        k = newXwerte.Length - 1
+                    End If
+                    'If k = 0 Then
+                    '    k = newXwerte.Length - 1
+                    'End If
+                    'result = System.Math.DivRem(k - 1, newXwerte.Length, k) ' modulo - Funktion
+                End While
+
+            End If
+
+            newValues = newXwerte
+
+        Catch ex As Exception
+
+            Call MsgBox("Fehler in berechneBedarfe: " & vbLf & ex.Message)
+
+        End Try
+        
+
+
 
     End Sub
-    'Public Sub New()
-
-    '    AllRoles = New List(Of clsRolle)
-    '    AllCosts = New List(Of clsKostenart)
-    '    AllResults = New List(Of clsResult)
-    '    _minDauer = 1
-    '    _maxDauer = 60
-    '    _Offset = 0
-    '    _earliestStart = -999
-    '    _latestStart = -999
-
-
-    'End Sub
 
 End Class

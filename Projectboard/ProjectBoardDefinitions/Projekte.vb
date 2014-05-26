@@ -6437,6 +6437,7 @@ Public Module Projekte
                 pcolor = .farbe
             End With
 
+
             ' nächste Zeile ist ein work-around für Fehler Der Index liegt außerhalb der Array-Grenzen
             Dim tmpdata As Integer = hproj.dauerInDays
 
@@ -7883,6 +7884,8 @@ Public Module Projekte
 
         Next shp
 
+        projectboardShapes.clear()
+
         ' Änderung 26.7 weil Zahlen stehen blieben beim Neuladen einer neuen Konstellation
         If roentgenBlick.isOn Then
             With appInstance.Worksheets(arrWsNames(3))
@@ -7958,7 +7961,6 @@ Public Module Projekte
     '    zeile = 2
     '    lastZeile = 0
 
-
     '    If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
     '        ' dann sollen die Projekte im extended mode gezeichnet werden 
     '        ' jetzt erst mal die Konstellation "last" speichern
@@ -8020,78 +8022,6 @@ Public Module Projekte
 
 
     'End Sub
-    ''' <summary>
-    ''' zeichnet die Plantafel mit den Projekten neu; 
-    ''' beachtet keine vorherige Position der Projekte
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub awinZeichnePlanTafelFromScratch()
-
-        ' die Projekte werden in folgender Reihenfolge gezeichnet:
-        ' sortiert nach : 
-        ' 1. Länge (absteigend)
-        ' 2. Start Monat (aufsteigend)
-        ' 3. Vorlagen-Typ (aufsteigend)
-        ' 4. Name (aufsteigend) 
-
-
-        Dim letztezeile As Integer, zeile As Integer
-        Dim nrCols As Integer
-        Dim rng As Range
-
-
-
-        '
-        ' wieviele Spalten sind im Vorlagen Sheet relevant 
-        '
-        nrCols = 4
-        zeile = 2
-
-
-
-        With appInstance.Worksheets(arrWsNames(2))
-            ' jetzt werden die Projekte in die Tabelle Vorlage für das nachfolgende Sortieren geschrieben ... 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-                .cells(zeile, 1).value = kvp.Value.name
-                .cells(zeile, 2).value = kvp.Value.VorlagenName
-                .cells(zeile, 3).value = kvp.Value.Start + kvp.Value.StartOffset
-                .cells(zeile, 4).value = kvp.Value.Dauer
-
-                zeile = zeile + 1
-            Next kvp
-
-
-            letztezeile = zeile - 1
-            rng = .Range(.Cells(2, 1), .Cells(letztezeile, nrCols))
-
-
-            ' Sortieren - erst nach Dauer, dann nach Start, dann nach Vorlagen Name, dann nach Name
-            With .Sort
-                ' Bestehende Sortierebenen löschen
-                .SortFields.Clear()
-                ' Neue Sortierebenen hinzufügen
-                .SortFields.Add(Key:=appInstance.Range("D2:D" & letztezeile), Order:=XlSortOrder.xlDescending)
-                .SortFields.Add(Key:=appInstance.Range("C2:C" & letztezeile), Order:=XlSortOrder.xlAscending)
-                .SortFields.Add(Key:=appInstance.Range("B2:B" & letztezeile), Order:=XlSortOrder.xlAscending)
-                .SortFields.Add(Key:=appInstance.Range("A2:A" & letztezeile), Order:=XlSortOrder.xlAscending)
-                .SetRange(rng)
-                .Apply()
-            End With
-
-            zeile = 2
-            Dim pname As String
-            While zeile <= letztezeile
-                pname = .cells(zeile, 1).value
-                Call ZeichneProjektinPlanTafel(pname, -1) ' es muss nicht an der alten Stelle gezeichnet werden ... 
-                zeile = zeile + 1
-            End While
-
-            ' die Werte wieder löschen ...
-            rng.Clear()
-        End With
-
-    End Sub
 
 
 
@@ -8754,6 +8684,7 @@ Public Module Projekte
 
                 ' Gruppieren des Shapes 
                 projectShape = tmpShapeRange.Group
+                projectShape.Name = hproj.name
 
 
 
@@ -8809,11 +8740,13 @@ Public Module Projekte
                     With phaseShape
                         .Name = phaseShapeName
                         .Title = phasenName
-                        .AlternativeText = "Phase"
+                        .AlternativeText = CInt(PTshty.phaseE).ToString
                     End With
 
                     Call defineShapeAppearance(hproj, phaseShape, i)
 
+                    ' jetzt der Liste der ProjectboardShapes hinzufügen
+                    projectboardShapes.add(phaseShape)
 
                     Try
                         projectShapesCollection.Add(phaseShapeName, Key:=phaseShapeName)
@@ -8856,11 +8789,14 @@ Public Module Projekte
                                 With msShape
                                     .Name = msName
                                     .Title = cResult.name
-                                    .AlternativeText = "Meilenstein"
+                                    .AlternativeText = CInt(PTshty.milestoneE).ToString
                                 End With
 
 
                                 Call defineResultAppearance(hproj, 0, msShape, cBewertung)
+
+                                ' jetzt der Liste der ProjectboardShapes hinzufügen
+                                projectboardShapes.add(msShape)
 
                             Else
                                 ' Koordinaten anpassen 
@@ -8925,11 +8861,18 @@ Public Module Projekte
         End If
 
         With projectShape
-            .AlternativeText = "Projekt"
+            If drawphases Then
+                .AlternativeText = CInt(PTshty.projektE).ToString
+            Else
+                .AlternativeText = CInt(PTshty.projektN).ToString
+            End If
+
             hproj.shpUID = .ID.ToString
-            hproj.tfZeile = zeile
+            hproj.tfZeile = calcYCoordToZeile(projectShape.Top)
         End With
 
+        ' jetzt der Liste der ProjectboardShapes hinzufügen
+        projectboardShapes.add(projectShape)
 
         ' jetzt muss das neue Shape in der ShowProjekte.ShapeListe eingetragen werden ..
         ShowProjekte.AddShape(pname, shpUID:=projectShape.ID.ToString)
@@ -9279,7 +9222,7 @@ Public Module Projekte
     Public Function getNeededSpace(ByVal hproj As clsProjekt) As Integer
 
         Dim phasenName As String
-        Dim zeilenOffset As Integer
+        Dim zeilenOffset As Integer = 0
         Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
         Dim tmpValue As Integer
 
@@ -9306,6 +9249,10 @@ Public Module Projekte
 
             If hproj.CountPhases > 1 Then
                 tmpValue = CInt((zeilenOffset + 1) / 2) + 1
+
+                If (zeilenOffset + 1) / 2 > tmpValue Then
+                    tmpValue = tmpValue + 1
+                End If
             Else
                 tmpValue = 1
             End If
@@ -9315,6 +9262,28 @@ Public Module Projekte
             tmpValue = 1
         End If
 
+
+        getNeededSpace = tmpValue
+
+
+    End Function
+
+
+    ''' <summary>
+    ''' gibt die Anzahl Zeilen zurück, die das angegebene Shape benötigt  
+    ''' </summary>
+    ''' <param name="shpElement"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getNeededSpace(ByVal shpElement As Excel.Shape) As Integer
+
+        Dim tmpValue As Integer
+        Dim zeileTop As Integer, zeileBottom As Integer
+
+        zeileTop = calcYCoordToZeile(shpElement.Top)
+        zeileBottom = calcYCoordToZeile(shpElement.Top + shpElement.Height)
+
+        tmpValue = System.Math.Max(zeileTop - zeileBottom + 1, 1)
 
         getNeededSpace = tmpValue
 
@@ -9333,9 +9302,10 @@ Public Module Projekte
         Dim worksheetShapes As Excel.Shapes
         Dim shpElement As Excel.Shape
         Dim formerEOU As Boolean = enableOnUpdate
-
-        Dim obererRand As Double = topOfMagicBoard + (vonZeile - 1) * boxHeight
+        Dim shapeType As Integer
+        Dim obererRand As Double = calcZeileToYCoord(vonZeile)
         Dim differenz As Double = anzahlZeilen * boxHeight
+        Dim hproj As clsProjekt
 
         enableOnUpdate = False
 
@@ -9356,28 +9326,34 @@ Public Module Projekte
 
                 If Not .HasChart Then
 
+                    shapeType = CInt(.AlternativeText)
+
                     If .Top >= obererRand Then
                         .Top = .Top + differenz
+
+                        ' Ergänzung 11.5.2014: Projekte Anpassen und projectboardShapes Einträge korrigieren 
+                        If shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Or _
+                        shapeType = PTshty.milestoneE Or shapeType = PTshty.milestoneN Or _
+                        shapeType = PTshty.status Then
+
+                            projectboardShapes.add(shpElement)
+
+                        ElseIf shapeType = PTshty.projektE Or shapeType = PTshty.projektN Then
+
+                            projectboardShapes.add(shpElement)
+                            hproj = ShowProjekte.getProject(shpElement.Name)
+                            hproj.tfZeile = calcYCoordToZeile(shpElement.Top)
+
+                        End If
+
                     End If
 
-
                 End If
 
             End With
 
         Next
 
-        ' jetzt werden die Projekte angepasst 
-
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-            With kvp.Value
-                If .tfZeile >= vonZeile Then
-                    .tfZeile = .tfZeile + anzahlZeilen
-                End If
-            End With
-
-        Next
 
         enableOnUpdate = formerEOU
 
@@ -9396,9 +9372,10 @@ Public Module Projekte
         Dim formerEOU As Boolean = enableOnUpdate
         Dim zielZeileIsFrei As Boolean = False
         Dim zielZeile As Integer = vonZeile
+        Dim shapeType As Integer
+        Dim hproj As clsProjekt
 
-
-        Dim obererRand As Double = topOfMagicBoard + (vonZeile - 1) * boxHeight
+        Dim obererRand As Double = calcZeileToYCoord(vonZeile)
         Dim differenz As Double = anzahlZeilen * boxHeight
 
         enableOnUpdate = False
@@ -9425,8 +9402,23 @@ Public Module Projekte
 
                         If .Top >= obererRand Then
                             .Top = .Top - differenz
-                        End If
 
+                            ' Ergänzung 11.5.2014: Projekte Anpassen und projectboardShapes Einträge korrigieren 
+                            If shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Or _
+                            shapeType = PTshty.milestoneE Or shapeType = PTshty.milestoneN Or _
+                            shapeType = PTshty.status Then
+
+                                projectboardShapes.add(shpElement)
+
+                            ElseIf shapeType = PTshty.projektE Or shapeType = PTshty.projektN Then
+
+                                projectboardShapes.add(shpElement)
+                                hproj = ShowProjekte.getProject(shpElement.Name)
+                                hproj.tfZeile = calcYCoordToZeile(shpElement.Top)
+
+                            End If
+
+                        End If
 
                     End If
 
@@ -9435,16 +9427,17 @@ Public Module Projekte
             Next
 
             ' jetzt werden die Projekte angepasst 
+            ' das unten folgende ist durch die Ergänzung oben vom 11.5.14 nicht mehr notwendig 
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+            'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                With kvp.Value
-                    If .tfZeile >= vonZeile And .tfZeile - anzahlZeilen >= 2 Then
-                        .tfZeile = .tfZeile - anzahlZeilen
-                    End If
-                End With
+            '    With kvp.Value
+            '        If .tfZeile >= vonZeile And .tfZeile - anzahlZeilen >= 2 Then
+            '            .tfZeile = .tfZeile - anzahlZeilen
+            '        End If
+            '    End With
 
-            Next
+            'Next
 
         End If
 
@@ -9461,12 +9454,13 @@ Public Module Projekte
         Dim resultShape As Excel.Shape
         Dim shpName As String
         Dim heute As Date = Date.Now
+        Dim heuteColumn As Integer = getColumnOfDate(heute)
 
         With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
             worksheetShapes = .Shapes
 
 
-            shpName = hproj.name & "#S" & "Status"
+            shpName = hproj.name & "#Status#" & heuteColumn.ToString
             ' existiert das schon ? 
             Try
                 shpElement = worksheetShapes.Item(shpName)
@@ -9483,10 +9477,14 @@ Public Module Projekte
                 With resultShape
                     .Name = shpName
                     .Title = "Status"
-                    .AlternativeText = ""
+                    .AlternativeText = CInt(PTshty.status).ToString
                 End With
 
                 Call defineStatusAppearance(hproj, number, resultShape)
+
+                ' jetzt der Liste der ProjectboardShapes hinzufügen
+                projectboardShapes.add(resultShape)
+
                 'shapesCollection.Add(resultShape.Name)
 
             End If
@@ -9632,7 +9630,7 @@ Public Module Projekte
                                     With resultShape
                                         .Name = shpName
                                         .Title = cResult.name
-                                        .AlternativeText = cBewertung.description
+                                        .AlternativeText = CInt(PTshty.milestoneN).ToString
                                     End With
 
                                     If numberIt Then
@@ -9642,6 +9640,8 @@ Public Module Projekte
                                         Call defineResultAppearance(hproj, 0, resultShape, cBewertung)
                                     End If
 
+                                    ' jetzt der Liste der ProjectboardShapes hinzufügen
+                                    projectboardShapes.add(resultShape)
 
                                     'shapesCollection.Add(resultShape.Name)
 
@@ -9673,7 +9673,7 @@ Public Module Projekte
                                     With resultShape
                                         .Name = shpName
                                         .Title = cResult.name
-                                        .AlternativeText = cBewertung.description
+                                        .AlternativeText = CInt(PTshty.milestoneN).ToString
                                     End With
 
                                     If numberIt Then
@@ -9682,6 +9682,9 @@ Public Module Projekte
                                     Else
                                         Call defineResultAppearance(hproj, 0, resultShape, cBewertung)
                                     End If
+
+                                    ' jetzt der Liste der ProjectboardShapes hinzufügen
+                                    projectboardShapes.add(resultShape)
 
                                     'shapesCollection.Add(resultShape.Name)
 
@@ -9831,7 +9834,7 @@ Public Module Projekte
                                     .Line.DashStyle = MsoLineDashStyle.msoLineSolid
                                 End If
                                 .Name = newShapeName
-                                .Title = "Dependency"
+                                .AlternativeText = CInt(PTshty.dependency).ToString
                             End With
 
                         End Try
@@ -10017,15 +10020,6 @@ Public Module Projekte
 
                     linienDicke = boxHeight * 0.3
 
-                    ' wieder gültig machen, wenn die Liniendicke in Abhängigkeit sein soll von der Anzahl der gezeigten Phasen ...
-                    'If gesamtZahl > 1 Then
-                    '    If gesamtZahl <= 10 Then
-                    '        linienDicke = linienDicke * (1 - 0.08 * gesamtZahl)
-                    '    Else
-                    '        linienDicke = linienDicke * 0.2
-                    '    End If
-                    'End If
-
 
                     Try
                         cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
@@ -10051,7 +10045,7 @@ Public Module Projekte
                         With phasenShape
                             .Name = shpName
                             .Title = cphase.name
-                            .AlternativeText = ""
+                            .AlternativeText = CInt(PTshty.phaseN).ToString
                         End With
 
                         If numberIt Then
@@ -10061,6 +10055,8 @@ Public Module Projekte
                             Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
                         End If
 
+                        ' jetzt der Liste der ProjectboardShapes hinzufügen
+                        projectboardShapes.add(phasenShape)
 
                     End If
 
@@ -10224,7 +10220,7 @@ Public Module Projekte
                             With phasenShape
                                 .Name = shpName
                                 .Title = cphase.name
-                                .AlternativeText = ""
+                                .AlternativeText = CInt(PTshty.phaseN).ToString
                             End With
 
                             If numberIt Then
@@ -10234,6 +10230,8 @@ Public Module Projekte
                                 Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
                             End If
 
+                            ' jetzt der Liste der ProjectboardShapes hinzufügen
+                            projectboardShapes.add(phasenShape)
 
                         End If
 
@@ -10571,6 +10569,7 @@ Public Module Projekte
 
     Public Sub defineShapeAppearance(ByRef myproject As clsProjekt, ByRef projectShape As Excel.Shape, ByVal phasenIndex As Integer)
         Dim projectColor As Object, phaseColor As Object = RGB(255, 255, 255)
+        Dim whiteColor As Object = RGB(255, 255, 255)
         Dim status As String
         Dim pMarge As Double
         Dim pname As String
@@ -10579,6 +10578,7 @@ Public Module Projekte
         Dim showResults As Boolean = True
         Dim myshape As Excel.Shape
         Dim myphase As clsPhase
+
 
         Try
             myphase = myproject.getPhase(phasenIndex)
@@ -10710,81 +10710,81 @@ Public Module Projekte
 
     End Sub
 
-    ''' <summary>
-    ''' passt die Shape Darstellung dem veränderten Projekt pname an  
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub updateShapeinPlantafel(ByVal pname As String)
-        Dim eeWasTrue As Boolean = False
-        Dim suWasTrue As Boolean = False
-        Dim zeile As Integer, spalte As Integer
-        Dim laenge As Integer
-        Dim status As String
-        Dim top As Double, left As Double, width As Double, height As Double
-        Dim magicBoardShapes As Excel.Shapes = appInstance.Worksheets(arrWsNames(3)).shapes
-        Dim shpelement As Excel.Shape
+    ' ''' <summary>
+    ' ''' passt die Shape Darstellung dem veränderten Projekt pname an  
+    ' ''' </summary>
+    ' ''' <remarks></remarks>
+    'Public Sub updateShapeinPlantafel(ByVal pname As String)
+    '    Dim eeWasTrue As Boolean = False
+    '    Dim suWasTrue As Boolean = False
+    '    Dim zeile As Integer, spalte As Integer
+    '    Dim laenge As Integer
+    '    Dim status As String
+    '    Dim top As Double, left As Double, width As Double, height As Double
+    '    Dim magicBoardShapes As Excel.Shapes = appInstance.Worksheets(arrWsNames(3)).shapes
+    '    Dim shpelement As Excel.Shape
 
 
 
-        Dim hproj As New clsProjekt
+    '    Dim hproj As New clsProjekt
 
 
-        ' bestimmen der X- bzw. Y Position in der Plantafel 
-        Try
-            hproj = ShowProjekte.getProject(pname)
-            With hproj
-                zeile = .tfZeile
-                spalte = .tfspalte
-                laenge = .Dauer
-                status = .Status
-            End With
-        Catch ex As Exception
-            Call MsgBox("Fehler in clearProjektinPlantafel (Auslesen XPos, YPos, Dauer) von " & pname)
-            Exit Sub
-        End Try
+    '    ' bestimmen der X- bzw. Y Position in der Plantafel 
+    '    Try
+    '        hproj = ShowProjekte.getProject(pname)
+    '        With hproj
+    '            zeile = .tfZeile
+    '            spalte = .tfspalte
+    '            laenge = .Dauer
+    '            status = .Status
+    '        End With
+    '    Catch ex As Exception
+    '        Call MsgBox("Fehler in clearProjektinPlantafel (Auslesen XPos, YPos, Dauer) von " & pname)
+    '        Exit Sub
+    '    End Try
 
-        '
-        ' hier wird in Plan Tafel das entsprechende Shape von der Erscheinung angepasst, ggf auch auf eine neue Zeile gesetzt ... 
-        '
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
+    '    '
+    '    ' hier wird in Plan Tafel das entsprechende Shape von der Erscheinung angepasst, ggf auch auf eine neue Zeile gesetzt ... 
+    '    '
+    '    Dim formerEE As Boolean = appInstance.EnableEvents
+    '    Dim formerSU As Boolean = appInstance.ScreenUpdating
+    '    appInstance.EnableEvents = False
+    '    appInstance.ScreenUpdating = False
 
-        With appInstance.Worksheets(arrWsNames(3))
-            Try
-                shpelement = magicBoardShapes.Item(pname)
-                Dim myCollection As New Collection
-                myCollection.Add(pname)
-                zeile = findeMagicBoardPosition(myCollection, pname, zeile, spalte, laenge)
+    '    With appInstance.Worksheets(arrWsNames(3))
+    '        Try
+    '            shpelement = magicBoardShapes.Item(pname)
+    '            Dim myCollection As New Collection
+    '            myCollection.Add(pname)
+    '            zeile = findeMagicBoardPosition(myCollection, pname, zeile, spalte, laenge)
 
-                ' jetzt ist eine passende Position gefunden ... die zugehörigen Shape Koordinaten werden berechnet 
-                With hproj
-                    .tfZeile = zeile
-                    .CalculateShapeCoord(top, left, width, height)
-                End With
+    '            ' jetzt ist eine passende Position gefunden ... die zugehörigen Shape Koordinaten werden berechnet 
+    '            With hproj
+    '                .tfZeile = zeile
+    '                .CalculateShapeCoord(top, left, width, height)
+    '            End With
 
-                With shpelement
-                    .Top = top
-                    .Left = left
-                    .Width = width
-                    .Height = height
-                End With
+    '            With shpelement
+    '                .Top = top
+    '                .Left = left
+    '                .Width = width
+    '                .Height = height
+    '            End With
 
-            Catch ex As Exception
-                appInstance.EnableEvents = formerEE
-                appInstance.ScreenUpdating = formerSU
-                Throw New ArgumentException("updateProjektinPlantafel: kein Shape für Projekt " & pname & " gefunden")
-            End Try
-
-
-        End With
-
-        appInstance.EnableEvents = formerEE
-        appInstance.ScreenUpdating = formerSU
+    '        Catch ex As Exception
+    '            appInstance.EnableEvents = formerEE
+    '            appInstance.ScreenUpdating = formerSU
+    '            Throw New ArgumentException("updateProjektinPlantafel: kein Shape für Projekt " & pname & " gefunden")
+    '        End Try
 
 
-    End Sub
+    '    End With
+
+    '    appInstance.EnableEvents = formerEE
+    '    appInstance.ScreenUpdating = formerSU
+
+
+    'End Sub
 
 
     ''' <summary>
@@ -10804,13 +10804,14 @@ Public Module Projekte
         appInstance.EnableEvents = False
 
 
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        appInstance.ScreenUpdating = False
+        'Dim formerSU As Boolean = appInstance.ScreenUpdating
+        'appInstance.ScreenUpdating = False
 
         ' Lösche das Shape Element
         Try
             shpelement = tmpshapes.Item(pname)
             With shpelement
+                projectboardShapes.remove(.Name)
                 .Delete()
             End With
         Catch ex As Exception
@@ -10834,7 +10835,7 @@ Public Module Projekte
 
 
         appInstance.EnableEvents = formerEE
-        appInstance.ScreenUpdating = formerSU
+        'appInstance.ScreenUpdating = formerSU
 
 
     End Sub
@@ -12922,6 +12923,82 @@ Public Module Projekte
 
     End Sub
 
+    Public Sub updateMilestoneInformation(ByVal hproj As clsProjekt, ByVal phaseName As String, ByVal resultName As String)
+
+
+        Dim cPhase As clsPhase
+        Dim cResult As clsResult
+        Dim bewertung As New clsBewertung
+        Dim ok As Boolean = True
+
+
+
+        If ok Then
+
+            Try
+                cPhase = hproj.getPhase(phaseName)
+                cResult = cPhase.getResult(resultName)
+
+                If IsNothing(cResult) Then
+                Else
+
+                    With formMilestone
+                        .bewertungsListe = cResult.bewertungsListe
+                        .projectName.Text = hproj.name
+                        .phaseName.Text = cPhase.name
+
+                        .resultDate.Text = cResult.getDate.ToShortDateString
+                        .resultName.Text = cResult.name
+
+
+                        If .bewertungsListe.Count > 0 Then
+                            Dim hb As clsBewertung = .bewertungsListe.ElementAt(0).Value
+
+                            Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(hb.color)
+
+                            .bewertungsText.Text = hb.description
+
+
+                        Else
+
+                            Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(awinSettings.AmpelNichtBewertet)
+
+                            .bewertungsText.Text = "es existiert noch keine Bewertung ...."
+
+
+                        End If
+
+                        If .Visible Then
+                        Else
+                            .Visible = True
+                            .Show()
+                        End If
+
+                    End With
+
+
+                End If
+
+
+
+
+            Catch ex As Exception
+                phaseName = ""
+                resultName = ""
+                ok = False
+            End Try
+
+            If Not ok Then
+                'Call MsgBox("keine Information abrufbar ...")
+            End If
+
+        Else
+            'Call MsgBox("keine Information abrufbar ...")
+        End If
+
+
+    End Sub
+
     ''' <summary>
     ''' überprüft, ob sich das Shape in Breite bzw. Position verändert hat
     ''' wenn ja, werden die Phasen Daten entsprechend geändert 
@@ -12936,6 +13013,7 @@ Public Module Projekte
         Dim phaseNr As Integer
         Dim cPhase As clsPhase
         Dim zeilenoffset As Integer
+        Dim oldType As String
 
         Dim ok As Boolean = True
         Dim hproj As New clsProjekt
@@ -12964,6 +13042,7 @@ Public Module Projekte
 
             tmpstr = .Name.Split(New Char() {"#"}, 10)
             projectName = tmpstr(0)
+            oldType = .AlternativeText
 
         End With
 
@@ -13031,7 +13110,7 @@ Public Module Projekte
                     With pShape
 
                         .Name = projectName
-                        .AlternativeText = "Projekt"
+                        .AlternativeText = oldType
                         hproj.shpUID = .ID.ToString
 
                     End With
@@ -13155,9 +13234,16 @@ Public Module Projekte
 
                         .projectName.Text = projectName
                         .phaseName.Text = phaseName
-                        .Height = 360
+                        .Height = 440
+                        .lessonsLearnedControl.Visible = True
                         .erlaeuterung.Visible = True
-                        .erlaeuterung.Text = " ... hier werden die versch. Register zu LeLe abrufbar sein ..."
+                        .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
+                        .explSonderabl.Text = "Sonderabläufe der Phase " & phaseName & _
+                            ", Projekt " & projectName
+                        .explEnabler.Text = "Enabler der Phase " & phaseName & _
+                            ", Projekt " & projectName
+                        .explRisiken.Text = "Zusatzrisiken der Phase " & phaseName & _
+                            ", Projekt " & projectName
 
                         .phaseStart.Text = phaseStartdate.ToShortDateString
                         .phaseStart.TextAlign = HorizontalAlignment.Left
@@ -13217,6 +13303,103 @@ Public Module Projekte
 
 
 
+
+
+
+    End Sub
+
+    Public Sub updatePhaseInformation(ByVal hproj As clsProjekt, phaseName As String)
+
+        Dim projectName As String = hproj.name
+
+        Dim cPhase As clsPhase
+
+        Dim ok As Boolean = True
+
+        Dim phaseStartdate As Date
+        Dim phaseEnddate As Date
+        Dim phaseDauerDays As Integer
+
+
+
+        
+
+        Try
+            cPhase = hproj.getPhase(phaseName)
+            'phaseStartdate = hproj.startDate.AddMonths(cPhase.relStart - 1)
+
+            phaseStartdate = cPhase.getStartDate
+            phaseEnddate = cPhase.getEndDate
+            phaseDauerDays = cPhase.dauerInDays
+
+
+            With formPhase
+
+                If specialListofPhases.Contains(phaseName) Then
+
+                    .projectName.Text = projectName
+                    .phaseName.Text = phaseName
+                    .Height = 440
+                    .lessonsLearnedControl.Visible = True
+                    .erlaeuterung.Visible = True
+                    .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
+                    .explSonderabl.Text = "Sonderabläufe der Phase " & phaseName & _
+                        ", Projekt " & projectName
+                    .explEnabler.Text = "Enabler der Phase " & phaseName & _
+                        ", Projekt " & projectName
+                    .explRisiken.Text = "Zusatzrisiken der Phase " & phaseName & _
+                        ", Projekt " & projectName
+
+                    .phaseStart.Text = phaseStartdate.ToShortDateString
+                    .phaseStart.TextAlign = HorizontalAlignment.Left
+
+                    .phaseEnde.Text = phaseEnddate.ToShortDateString
+                    .phaseEnde.TextAlign = HorizontalAlignment.Right
+
+                    .phaseDauer.Text = phaseDauerDays.ToString & " Tage"
+                    .phaseDauer.TextAlign = HorizontalAlignment.Center
+
+
+                    If .Visible Then
+                    Else
+                        .Visible = True
+                        .Show()
+                    End If
+
+
+                Else
+
+                    .projectName.Text = projectName
+                    .phaseName.Text = phaseName
+                    .Height = 190
+                    .erlaeuterung.Visible = False
+
+                    .phaseStart.Text = phaseStartdate.ToShortDateString
+                    .phaseStart.TextAlign = HorizontalAlignment.Left
+
+                    .phaseEnde.Text = phaseEnddate.ToShortDateString
+                    .phaseEnde.TextAlign = HorizontalAlignment.Right
+
+                    .phaseDauer.Text = phaseDauerDays.ToString & " Tage"
+                    .phaseDauer.TextAlign = HorizontalAlignment.Center
+
+                    If .Visible Then
+                    Else
+                        .Visible = True
+                        .Show()
+                    End If
+
+
+                End If
+
+
+            End With
+
+
+        Catch ex As Exception
+            phaseName = ""
+            ok = False
+        End Try
 
 
 
@@ -13679,9 +13862,68 @@ Public Module Projekte
     '    '    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!")
     '    'End If
 
+
     'End Sub
+    ''' <summary>
+    ''' bestimmt die Art des Shapes, ob es ein Projekt, Phasen, Meilenstein, Status oder
+    ''' Dependency Shape ist 
+    ''' </summary>
+    ''' <param name="shape"></param>
+    ''' <returns>gibt den Wert gemäß Enumeration PTshty zurück</returns>
+    ''' <remarks></remarks>
+    Public Function kindOfShape(ByVal shape As Excel.Shape) As Integer
+
+        Dim tmpValue As Integer = -1
 
 
+        With shape
 
+            If .HasChart Then
+                tmpValue = -999
+            Else
+
+                Try
+                    If .AlternativeText.Length > 0 Then
+                        tmpValue = CInt(.AlternativeText)
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
+
+        End With
+
+        kindOfShape = tmpValue
+
+    End Function
+
+    Public Function extractName(ByVal shapeName As String, ByVal type As Integer) As String
+
+        Dim shpNameParts() As String
+        Dim msNameParts() As String
+        Dim tmpName As String = ""
+
+        shpNameParts = shapeName.Split(New Char() {"#"}, 5)
+
+        If type = PTshty.projektE Or type = PTshty.projektN Then
+
+            tmpName = shpNameParts(0)
+
+        ElseIf type = PTshty.phaseE Or type = PTshty.phaseN Then
+
+            tmpName = shpNameParts(1)
+
+        ElseIf type = PTshty.milestoneE Or type = PTshty.milestoneN Then
+
+            msNameParts = shpNameParts(2).Split(New Char() {"M"}, 2)
+            tmpName = msNameParts(1)
+
+        End If
+
+        extractName = tmpName
+
+    End Function
 
 End Module
