@@ -44,7 +44,7 @@ Imports Microsoft.Office.Interop.Excel
     End Sub
 
 
-    Sub awinNeueKonstellation(control As IRibbonControl)
+    Sub PTNeueKonstellation(control As IRibbonControl)
         Dim storeConstellationFrm As New frmStoreConstellation
         Dim returnValue As DialogResult
 
@@ -55,7 +55,7 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
-    Sub awinLadenKonstellation(control As IRibbonControl)
+    Sub PTLadenKonstellation(control As IRibbonControl)
         Dim loadConstellationFrm As New frmLoadConstellation
         Dim constellationName As String
 
@@ -92,6 +92,37 @@ Imports Microsoft.Office.Interop.Excel
         enableOnUpdate = True
 
     End Sub
+    Sub PTRemoveKonstellation(control As IRibbonControl)
+
+        Dim remConstellationFrm As New frmRemoveConstellation
+        Dim constellationName As String
+
+
+        Dim returnValue As DialogResult
+        enableOnUpdate = False
+
+        returnValue = remConstellationFrm.ShowDialog
+
+        If returnValue = DialogResult.OK Then
+            constellationName = remConstellationFrm.ListBox1.Text
+            Call awinRemoveConstellation(constellationName)
+
+            Call MsgBox(constellationName & " wurde gelöscht ...")
+
+            If constellationName = currentConstellation Then
+
+                ' aktuelle Konstellation unter dem Namen 'Last' speichern
+                Call awinStoreConstellation("Last")
+                currentConstellation = "Last"
+            Else
+                ' aktuelle Konstellation bleibt unverändert
+            End If
+
+
+        End If
+        enableOnUpdate = True
+
+    End Sub
 
 
     Sub awinSetModusHistory(control As IRibbonControl)
@@ -113,6 +144,7 @@ Imports Microsoft.Office.Interop.Excel
             If AlleProjekte.Count > 0 Then
 
                 Call StoreAllProjectsinDB()
+                'Call StoreSelectedProjectsinDB()
 
             Else
                 Call MsgBox("keine Projekte zu speichern ...")

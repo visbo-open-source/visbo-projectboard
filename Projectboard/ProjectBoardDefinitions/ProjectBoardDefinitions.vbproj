@@ -124,6 +124,12 @@
     <Compile Include="frmPhaseInformation.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmRemoveConstellation.Designer.vb">
+      <DependentUpon>frmRemoveConstellation.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmRemoveConstellation.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmStatusInformation.Designer.vb">
       <DependentUpon>frmStatusInformation.vb</DependentUpon>
     </Compile>
@@ -227,6 +233,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmPhaseInformation.resx">
       <DependentUpon>frmPhaseInformation.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmRemoveConstellation.resx">
+      <DependentUpon>frmRemoveConstellation.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmStatusInformation.resx">
       <DependentUpon>frmStatusInformation.vb</DependentUpon>

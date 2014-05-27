@@ -101,10 +101,7 @@ Public Class frmProjektEingabe1
         calcMonth.Text = StartofCalendar.AddMonths(CType(selectedMonth.Value, Integer) - 1).ToString("MMM yy")
 
     End Sub
-
-
-
-    Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
+    Private Sub projectName_LostFocus(sender As Object, e As EventArgs) Handles projectName.LostFocus
 
         With projectName
             If Len(.Text) < 1 Then
@@ -118,12 +115,16 @@ Public Class frmProjektEingabe1
                 .Focus()
                 Exit Sub
             ElseIf inProjektliste(.Text) Then
-                MsgBox("Name bereits vorhanden !")
+                MsgBox("Projekt-Name bereits vorhanden !")
                 .Text = ""
                 .Focus()
                 Exit Sub
             End If
         End With
+
+    End Sub
+
+    Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
         If dauerUnverändert.Checked Then
             calcProjektStart = DateTimeProject.Value
@@ -133,12 +134,8 @@ Public Class frmProjektEingabe1
             calcProjektStart = DateTimeProject.Value
             calcProjektEnde = DateTimeEnde.Value
 
-
-            ''vorlagendauer As Integer = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex).dauerInDays
-            'calcProjektStart = DateTimeProject.Value.AddDays(-1 * (vorlagenDauer - 1))
         End If
 
-        'DialogResult = System.Windows.Forms.DialogResult.OK
         MyBase.Close()
 
     End Sub
@@ -267,7 +264,7 @@ Public Class frmProjektEingabe1
 
 
 
- 
+
     Private Sub DateTimeEnde_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeEnde.ValueChanged
 
 
@@ -340,5 +337,5 @@ Public Class frmProjektEingabe1
         End If
     End Sub
 
- 
+
 End Class
