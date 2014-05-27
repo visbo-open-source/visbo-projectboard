@@ -43,6 +43,7 @@ Public Module Module1
     Public projectConstellations As New clsConstellations
     Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
+    Public projectboardShapes As New clsProjektShapes
 
     ' hier wird die Projekt Historie eines Projektes aufgenommen 
     Public projekthistorie As New clsProjektHistorie
@@ -140,6 +141,19 @@ Public Module Module1
         betterWorseL = 17 ' es wird mit dem letzten Stand verglichen
         betterWorseB = 18 ' es wird mit dem Beauftragunsg-Stand verglichen
         Budget = 19
+    End Enum
+
+    ' 0=projektN; 1= projektE, 2= phase; 3= milestone;  4= status; 5=dependency
+    ' Enumertaion, um in Onupdate, etc. den Typ des Shapes feststellen zu können 
+    Public Enum PTshty
+        projektN = 0
+        projektE = 1
+        phaseN = 2
+        phaseE = 3
+        milestoneN = 4
+        milestoneE = 5
+        status = 6
+        dependency = 7
     End Enum
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
@@ -1552,7 +1566,7 @@ Public Module Module1
 
             If pname <> kvp.Key And Not mycollection.Contains(kvp.Key) And kvp.Value.shpUID <> "" Then
                 With kvp.Value
-                    If .tfZeile >= zeile And .tfZeile <= zeile + anzahlZeilen Then
+                    If .tfZeile >= zeile And .tfZeile <= zeile + anzahlZeilen - 1 Then
                         If spalte <= .tfspalte Then
                             If spalte + laenge - 1 >= .tfspalte Then
                                 istfrei = False
@@ -1577,7 +1591,7 @@ Public Module Module1
 
         
         Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
-        anzahlzeilen = getNeededSpace(hproj) - 1
+        anzahlzeilen = getNeededSpace(hproj)
 
         ' Konsistenzbedingung prüfen ... 
         If zeile < 2 Then
@@ -1617,7 +1631,7 @@ Public Module Module1
 
     End Function
 
-    Sub awinTestSub()
+    Sub awinSubtest()
 
         Call MsgBox("del gedrückt ...")
     End Sub
@@ -1638,6 +1652,8 @@ Public Module Module1
 
         Dim worksheetShapes As Excel.Shapes
         Dim shpElement As Excel.Shape
+        Dim firstTime As Boolean = True
+        Dim shapeType As Integer
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formereO As Boolean = enableOnUpdate
@@ -1648,40 +1664,119 @@ Public Module Module1
             worksheetShapes = appInstance.Worksheets(arrWsNames(3)).shapes
 
             For Each shpElement In worksheetShapes
+
+                shapeType = kindOfShape(shpElement)
+
+                'With shpElement
+
+                '    Select Case auswahl
+                '        Case 0
+                '            If .AutoShapeType = MsoAutoShapeType.msoShapeDiamond Or _
+                '                .AutoShapeType = MsoAutoShapeType.msoShapeOval Or _
+                '                (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue) Or _
+                '                (.Connector = MsoTriState.msoTrue And .Title = "Dependency") Then
+                '                .Delete()
+                '            End If
+
+                '            If firstTime Then
+                '                ' Schließen der Status Anzeige Fenster
+                '                formMilestone.Visible = False
+                '                formStatus.Visible = False
+                '                formPhase.Visible = False
+                '            End If
+
+
+                '        Case 1
+                '            If .AutoShapeType = MsoAutoShapeType.msoShapeDiamond Then
+                '                .Delete()
+                '            End If
+                '            If firstTime Then
+                '                formMilestone.Visible = False
+                '            End If
+
+                '        Case 2
+                '            If .AutoShapeType = MsoAutoShapeType.msoShapeOval Then
+                '                .Delete()
+                '            End If
+                '            If firstTime Then
+                '                formStatus.Visible = False
+                '            End If
+
+                '        Case 3
+                '            If (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue And .Title <> "Dependency") Then
+                '                .Delete()
+                '            End If
+
+                '            If firstTime Then
+                '                formPhase.Visible = False
+                '            End If
+
+
+                '        Case 4
+                '            If (.Connector = MsoTriState.msoTrue And .Title = "Dependency") Then
+                '                .Delete()
+                '            End If
+
+                '        Case Else
+
+                '    End Select
+
+                'End With
+
                 With shpElement
 
                     Select Case auswahl
                         Case 0
-                            If .AutoShapeType = MsoAutoShapeType.msoShapeDiamond Or _
-                                .AutoShapeType = MsoAutoShapeType.msoShapeOval Or _
-                                (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue) Or _
-                                (.Connector = MsoTriState.msoTrue And .Title = "Dependency") Then
+                            If shapeType = PTshty.milestoneN Or _
+                                shapeType = PTshty.status Or _
+                                shapeType = PTshty.phaseN Or _
+                                shapeType = PTshty.dependency Then
+
+                                projectboardShapes.remove(.Name)
                                 .Delete()
+
                             End If
 
-                            ' Schließen der Status Anzeige Fenster
-                            formMilestone.Visible = False
-                            formStatus.Visible = False
-                            formPhase.Visible = False
+                            If firstTime Then
+                                ' Schließen der Status Anzeige Fenster
+                                formMilestone.Visible = False
+                                formStatus.Visible = False
+                                formPhase.Visible = False
+                            End If
+
 
                         Case 1
-                            If .AutoShapeType = MsoAutoShapeType.msoShapeDiamond Then
+                            If shapeType = PTshty.milestoneN Then
+                                projectboardShapes.remove(.Name)
                                 .Delete()
                             End If
-                            formMilestone.Visible = False
+                            If firstTime Then
+                                formMilestone.Visible = False
+                            End If
+
                         Case 2
-                            If .AutoShapeType = MsoAutoShapeType.msoShapeOval Then
+                            If shapeType = PTshty.status Then
+                                projectboardShapes.remove(.Name)
                                 .Delete()
                             End If
-                            formStatus.Visible = False
+                            If firstTime Then
+                                formStatus.Visible = False
+                            End If
+
                         Case 3
-                            If (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue And .Title <> "Dependency") Then
+                            If shapeType = PTshty.phaseN Then
+                                projectboardShapes.remove(.Name)
                                 .Delete()
                             End If
-                            formPhase.Visible = False
+
+                            If firstTime Then
+                                formPhase.Visible = False
+                            End If
+
 
                         Case 4
-                            If (.Connector = MsoTriState.msoTrue And .Title = "Dependency") Then
+                            If shapeType = PTshty.dependency Then
+                                projectboardShapes.remove(.Name)
                                 .Delete()
                             End If
 
@@ -1691,6 +1786,7 @@ Public Module Module1
 
                 End With
 
+                firstTime = False
 
             Next
         Catch ex As Exception
@@ -1703,78 +1799,6 @@ Public Module Module1
     End Sub
 
 
-    ''' <summary>
-    ''' löscht alle MilestoneShapes des Projektes mit Namen pname
-    ''' 
-    ''' </summary>
-    ''' <param name="pname">
-    ''' gibt den Projekt-Namen an </param>
-    ''' <param name="auswahl">
-    ''' 0=alle
-    ''' 1=nur meilensteine
-    ''' 2=nur Status</param>
-    ''' <remarks></remarks>
-    Public Sub awinDeleteMilestoneShapes(ByVal pname As String, ByVal auswahl As Integer)
-
-        Dim worksheetShapes As Excel.Shapes
-        Dim shpElement As Excel.Shape
-        Dim tmpStr(3) As String
-
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        Dim formereO As Boolean = enableOnUpdate
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        Try
-            worksheetShapes = appInstance.Worksheets(arrWsNames(3)).shapes
-
-            For Each shpElement In worksheetShapes
-                With shpElement
-
-                    Try
-                        tmpStr = .Name.Split(New Char() {"#"}, 3)
-                        If tmpStr(0).Trim = pname.Trim Then
-
-                            Select Case auswahl
-                                Case 0
-                                    If .AutoShapeType = MsoAutoShapeType.msoShapeDiamond Or _
-                                        .AutoShapeType = MsoAutoShapeType.msoShapeOval Then
-                                        .Delete()
-                                    End If
-
-
-                                Case 1
-                                    If .AutoShapeType = MsoAutoShapeType.msoShapeDiamond Then
-                                        .Delete()
-                                    End If
-                                    formMilestone.Visible = False
-                                Case 2
-                                    If .AutoShapeType = MsoAutoShapeType.msoShapeOval Then
-                                        .Delete()
-                                    End If
-                                    formStatus.Visible = False
-                                Case Else
-
-                            End Select
-
-                        End If
-                    Catch ex As Exception
-
-                    End Try
-                   
-                    
-                End With
-
-
-            Next
-        Catch ex As Exception
-
-        End Try
-
-        appInstance.EnableEvents = formerEE
-        enableOnUpdate = formereO
-
-    End Sub
 
     ''' <summary>
     ''' Sub berechnet die neuen Werte so, daß die Charakterisitik der Werte möglichst erhalten bleibt 
@@ -2053,6 +2077,11 @@ Public Module Module1
         Dim costValues() As Double, budgetValues() As Double
         Dim curBudget As Double, avgbudget As Double
 
+        ' Ergänzung am 26.5.14: wenn hproj in den Längen der Bedarfe Arrays nicht konsistent ist: 
+        ' anpassen 
+        If Not hproj.isConsistent Then
+            Call hproj.syncXWertePhases()
+        End If
 
         costValues = hproj.getGesamtKostenBedarf
         ReDim budgetValues(costValues.Length - 1)
@@ -2115,5 +2144,106 @@ Public Module Module1
         hproj.budgetWerte = budgetValues
 
     End Sub
+
+    ''' <summary>
+    ''' bereichnet zu einer gegebenen Y-Koordinate (Top) die dazugehörige Zeile in der Projekt-Tafel
+    ''' </summary>
+    ''' <param name="YCoord"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcYCoordToZeile(ByVal YCoord As Double) As Integer
+        Dim tmpValue As Integer
+
+        tmpValue = 1 + CInt((YCoord - topOfMagicBoard) / boxHeight)
+
+        calcYCoordToZeile = tmpValue
+
+    End Function
+
+    ''' <summary>
+    ''' berechnet zu einer gegeb. X-Koordinate (Left) die dazugehörige Spalte in der Projekt-Tafel
+    ''' </summary>
+    ''' <param name="XCoord"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcXCoordToSpalte(ByVal XCoord As Double) As Integer
+        Dim tmpValue As Integer
+
+        tmpValue = CInt(System.Math.Truncate(XCoord / boxWidth) + 1)
+
+        calcXCoordToSpalte = tmpValue
+
+
+    End Function
+
+    Public Function calcZeileToYCoord(ByVal zeile As Integer) As Double
+        Dim tmpvalue As Double
+
+        tmpvalue = topOfMagicBoard + (zeile - 1) * boxHeight
+        calcZeileToYCoord = tmpvalue
+
+    End Function
+
+    ''' <summary>
+    ''' berechnet, wieviel Tage vom startofCalendar bis zur angegebenen Koordinate sind 
+    ''' </summary>
+    ''' <param name="XCoord"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcXCoordToTage(ByVal XCoord As Double) As Integer
+        Dim tmpValue As Integer
+        tmpValue = CInt(365 * XCoord / (12 * boxWidth))
+
+        calcXCoordToTage = tmpValue
+
+    End Function
+
+    ''' <summary>
+    ''' berechnet wieviel Tage es vom Refdatum zu dem durch XCoord angegebenem Datum ist 
+    ''' </summary>
+    ''' <param name="refDate"></param>
+    ''' <param name="XCoord"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcXCoordToTage(ByVal refDate As Date, ByVal XCoord As Double) As Integer
+        Dim tmpValue As Integer
+        tmpValue = CInt(365 * XCoord / (12 * boxWidth)) - DateDiff(DateInterval.Day, StartofCalendar, refDate)
+
+        calcXCoordToTage = tmpValue
+
+    End Function
+
+
+    ''' <summary>
+    ''' berechnet das Datum, das der angegebenen X-Koordinate auf der Projekt-Tafel entspricht 
+    ''' </summary>
+    ''' <param name="XCoord"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcXCoordToDate(ByVal XCoord As Double) As Date
+
+        Dim tmpValue As Integer
+        tmpValue = CInt(365 * XCoord / (12 * boxWidth))
+
+        calcXCoordToDate = StartofCalendar.AddDays(tmpValue)
+
+
+    End Function
+
+    Public Function calcDateToXCoord(ByVal datum As Date) As Double
+
+        Dim tmpValue As Double
+        Dim anzahlTage As Integer
+        anzahlTage = DateDiff(DateInterval.Day, StartofCalendar, datum)
+        If anzahlTage < 0 Then
+            Throw New ArgumentException("Datum kann nicht vor Start des Kalenders liegen")
+        End If
+
+        tmpValue = anzahlTage * 12 * boxWidth / 365
+        
+        calcDateToXCoord = tmpValue
+
+
+    End Function
 
 End Module

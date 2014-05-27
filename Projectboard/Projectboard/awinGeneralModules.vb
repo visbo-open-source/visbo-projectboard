@@ -419,7 +419,7 @@ Public Module awinGeneralModules
                 awinSettings.zeilenhoehe1 = CDbl(.Range("Zeilenhoehe1").Value)
                 awinSettings.zeilenhoehe2 = CDbl(.Range("Zeilenhoehe2").Value)
                 awinSettings.spaltenbreite = CDbl(.Range("Spaltenbreite").Value)
-                awinSettings.autoCorrectBedarfe = False
+                awinSettings.autoCorrectBedarfe = True
                 awinSettings.propAnpassRess = False
             Catch ex As Exception
                 appInstance.ScreenUpdating = formerSU
@@ -2173,10 +2173,12 @@ Public Module awinGeneralModules
     ''' </param>
     ''' <remarks></remarks>
     ''' 
-    Public Sub awinLoadConstellation(ByVal constellationName As String)
+    Public Sub awinLoadConstellation(ByVal constellationName As String, ByRef successMessage As String)
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
         Dim request As New Request(awinSettings.databaseName)
+
+        
 
 
         ' prüfen, ob diese Constellation bereits existiert ..
@@ -2219,7 +2221,16 @@ Public Module awinGeneralModules
             End If
 
             With hproj
-                .startDate = kvp.Value.Start
+
+                ' Änderung THOMAS Start 
+                If .Status = ProjektStatus(0) Then
+                    .startDate = kvp.Value.Start
+                ElseIf .startDate <> kvp.Value.Start Then
+                    ' wenn das Datum nicht angepasst werden kann, weil das Projekt bereits beauftragt wurde  
+                    successMessage = successMessage & vbLf & hproj.name & ": " & kvp.Value.Start.ToShortDateString
+                End If
+                ' Änderung THOMAS Ende 
+
                 .StartOffset = 0
                 .tfZeile = kvp.Value.zeile
             End With
@@ -2246,6 +2257,58 @@ Public Module awinGeneralModules
             End If
 
         Next
+
+        
+    End Sub
+    ''' <summary>
+    ''' löscht ein bestimmtes Portfolio aus der Datenbank und der Liste der Portfolios im Hauptspeicher
+    ''' 
+    ''' </summary>
+    ''' <param name="constellationName">
+    ''' Name, unter dem das Portfolio in der Datenbank gespeichert wurde 
+    ''' </param>
+    ''' <remarks></remarks>
+    ''' 
+    Public Sub awinRemoveConstellation(ByVal constellationName As String)
+
+        Dim activeConstellation As New clsConstellation
+        Dim request As New Request(awinSettings.databaseName)
+
+        ' prüfen, ob diese Constellation überhaupt existiert ..
+        Try
+            activeConstellation = projectConstellations.getConstellation(constellationName)
+        Catch ex As Exception
+            Call MsgBox(" Projekt-Konstellation " & constellationName & " existiert nicht ")
+            Exit Sub
+        End Try
+
+        If request.pingMongoDb() Then
+
+            ' Konstellation muss aus der Datenbank gelöscht werden.
+
+            If request.removeConstellationFromDB(activeConstellation) Then
+
+                Try
+                    ' Konstellation muss aus der Liste aller Portfolios entfernt werden.
+                    projectConstellations.Remove(activeConstellation.constellationName)
+                Catch ex1 As Exception
+                    Call MsgBox("Fehler in awinRemoveConstellation aufgetreten: " & ex1.Message)
+                End Try
+            Else
+                Call MsgBox("Es ist ein Fehler beim Löschen es Portfolios aus der Datenbank aufgetreten ")
+            End If
+
+        Else
+            Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & activeConstellation.constellationName & "'konnte nicht geladen werden")
+        End If
+
+        'Try
+        '    ' Konstellation muss aus der Liste aller Portfolios entfernt werden.
+        '    projectConstellations.Remove(activeConstellation.constellationName)
+        'Catch ex1 As Exception
+        '    Call MsgBox("Fehler in awinRemoveConstellation aufgetreten: " & ex1.Message)
+        'End Try
+
 
     End Sub
     ' ''' <summary>

@@ -128,6 +128,20 @@
             End If
             .Schriftfarbe = Me.Schriftfarbe
             .VorlagenName = Me.VorlagenName
+
+            ' Änderung 18.5.2014: jetzt prüfen, ob diese Vorlage existiert: 
+            ' wenn ja, dann übernehmen Farbe, Schrift und Schriftfarbe
+            Try
+                If Projektvorlagen.Contains(.VorlagenName) Then
+                    Dim pvorlage As clsProjektvorlage = Projektvorlagen.getProject(.VorlagenName)
+                    .Schrift = pvorlage.Schrift
+                    .Schriftfarbe = pvorlage.Schriftfarbe
+                    .farbe = pvorlage.farbe
+                End If
+            Catch ex As Exception
+
+            End Try
+            
             '.Dauer = Me.Dauer
             For i = 1 To Me.AllPhases.Count
                 Dim newPhase As New clsPhase(projekt)

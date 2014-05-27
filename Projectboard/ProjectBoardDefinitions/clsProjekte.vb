@@ -2,7 +2,7 @@
 
     Private AllProjects As SortedList(Of String, clsProjekt)
     Private AllShapes As SortedList(Of String, String)
-
+    Private AllCoord As SortedList(Of String, Double())
 
     Public Sub Add(project As clsProjekt)
 

@@ -53,6 +53,52 @@ Public Class clsProjekt
     Public Property diffToPrev As Boolean
 
     ''' <summary>
+    ''' synchronisiert die Arrays mit der evtl veränderten Array Länge durch eine Verschiebung des Projekts 
+    ''' berechnet und bestimmt die XWerte der Rollen und Kostenarten für die Phasen neu
+    ''' wird aus set Startdate heraus aufgerufen; dadurch kann es sein, daß sich die 
+    ''' Dimension der Arrays für die Rollen und kostenarten verändert 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub syncXWertePhases()
+        Dim tmpValue As Boolean = True
+        Dim cphase As clsPhase
+        Dim dimension As Integer
+        Dim phaseStart As Date, phaseEnd As Date
+        Dim notYetDone As Boolean = True
+
+
+        ' prüfen, ob die Gesamtlänge übereinstimmt  
+        For p = 1 To Me.CountPhases
+            cphase = Me.getPhase(p)
+            phaseEnd = cphase.getEndDate
+            phaseStart = cphase.getStartDate
+
+            dimension = getColumnOfDate(phaseEnd) - getColumnOfDate(phaseStart)
+
+            If cphase.CountRoles > 0 Then
+
+                ' hier müssen jetzt die Xwerte neu gesetzt werden 
+                Call cphase.calcNewXwerte(dimension, 1)
+                notYetDone = False
+
+            End If
+
+            If cphase.CountCosts > 0 And notYetDone Then
+
+                ' hier müssen jetzt die Xwerte neu gesetzt werden 
+                Call cphase.calcNewXwerte(dimension, 1)
+
+            End If
+
+
+        Next
+
+
+
+
+    End Sub
+
+    ''' <summary>
     ''' setzt den Namen des Projektes fest oder gibt ihn zurück
     ''' gleichzeitig wird auch der Name der Phase(1), sofern sie bereits existiert, auf diesen Namen festgesetzt 
     ''' </summary>
@@ -793,16 +839,14 @@ Public Class clsProjekt
             Dim differenzInTagen As Integer = DateDiff(DateInterval.Day, olddate, value)
             Dim updatePhases As Boolean = False
 
-            If DateDiff(DateInterval.Month, _startDate, value) = 0 Then
-                ' dann darf noch verändert werden, auch wenn es schon beauftragt wurde  
+            ' Änderung am 25.5.14: es ist nicht mehr erlaubt, das Startdatum innerhalb des gleichen Monats zu verschieben 
+            ' es muss geprüft werden, ob es noch im Planungs-Stadium ist: nur dann darf noch verschoben werden ...
+            If _Status = ProjektStatus(0) And differenzInTagen <> 0 Then
                 _startDate = value
                 _Start = DateDiff(DateInterval.Month, StartofCalendar, value) + 1
-                updatePhases = True
-                If differenzInTagen <> 0 Then
-                    ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
-                    currentConstellation = ""
-                End If
-
+                ' Änderung 25.5 die Xwerte müssen jetzt synchronisert werden 
+                currentConstellation = ""
+               
             ElseIf _startDate = NullDatum Then
                 _startDate = value
                 _Start = DateDiff(DateInterval.Month, StartofCalendar, value) + 1
@@ -810,23 +854,18 @@ Public Class clsProjekt
                     ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
                     currentConstellation = ""
                 End If
-            Else
-                ' es muss geprüft werden, ob es noch im Planungs-Stadium ist: nur dann darf noch verschoben werden ...
-                If _Status = ProjektStatus(0) Then
-                    _startDate = value
-                    _Start = DateDiff(DateInterval.Month, StartofCalendar, value) + 1
-                    updatePhases = True
-                    If differenzInTagen <> 0 Then
-                        ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
-                        currentConstellation = ""
-                    End If
+            ElseIf _Status <> ProjektStatus(0) Then
+                Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
 
-                Else
-                    Throw New ArgumentException("der Startzeitpunkt kann nicht mehr verändert werden ... ")
-                End If
+            ElseIf DateDiff(DateInterval.Day, StartofCalendar, newValue) < 0 Then
+                Throw New ArgumentException("der Startzeitpunkt liegt vor dem Kalenderstart  ... ")
 
             End If
 
+            ' um _Dauer neu zu berechnen ; ergänzt am 12.5.2014
+            If differenzInTagen <> 0 Then
+                Dim anzahlTage As Integer = Me.dauerInDays
+            End If
 
         End Set
     End Property
@@ -938,16 +977,7 @@ Public Class clsProjekt
 
     End Sub
 
-    'Public Sub keepPhase1consistent()
-
-    '    ' im Nebeneffekt wird ausserdem _Dauer aktualisiert  
-    '    Dim projektLaengeInDays As Integer = Me.dauerInDays
-
-    '    If Me.getPhase(1).dauerInDays <> projektLaengeInDays Then
-    '        Me.getPhase(1).changeStartandDauerPhase1(0, projektLaengeInDays)
-    '    End If
-
-    'End Sub
+    
 
     Public Sub keepPhase1consistent(ByVal phasenEnde As Integer)
 
@@ -998,7 +1028,7 @@ Public Class clsProjekt
     ''' </summary>
     ''' <param name="newproject"></param>
     ''' <remarks></remarks>
-    Public Overloads Sub copyAttrTo(ByRef newproject As clsProjekt)
+    Public Overrides Sub copyAttrTo(ByRef newproject As clsProjekt)
 
         With newproject
 
@@ -1506,6 +1536,7 @@ Public Class clsProjekt
     Public Overrides Sub korrCopyTo(ByRef newproject As clsProjekt, ByVal startdate As Date, ByVal endedate As Date)
         Dim p As Integer
         Dim newphase As clsPhase
+        Dim oldphase As clsPhase
         Dim ProjectDauerInDays As Integer
         Dim CorrectFactor As Double
 
@@ -1520,12 +1551,15 @@ Public Class clsProjekt
             CorrectFactor = ProjectDauerInDays / Me.dauerInDays
 
 
-            For p = 0 To Me.CountPhases - 1
+            For p = 1 To Me.CountPhases
+
+                oldphase = Me.getPhase(p)
                 newphase = New clsPhase(newproject)
 
-                AllPhases.Item(p).korrCopyTo(newphase, CorrectFactor)
+                oldphase.korrCopyTo(newphase, CorrectFactor)
 
                 .AddPhase(newphase)
+
             Next p
 
 

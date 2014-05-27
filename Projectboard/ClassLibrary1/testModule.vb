@@ -5,6 +5,7 @@ Imports Microsoft.Office.Core
 Imports pptNS = Microsoft.Office.Interop.PowerPoint
 Imports xlNS = Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
+Imports Microsoft.Office.Interop
 
 Public Module testModule
     ''' <summary>
@@ -78,14 +79,14 @@ Public Module testModule
                         projekthistorie.Add(Date.Now, hproj)
                     End If
 
-                        e.Result = " Report für Projekt '" & hproj.name & "' wird erstellt !"
-                        worker.ReportProgress(0, e)
-                        'frmSelectPPTTempl.statusNotification.Text = " Report für Projekt '" & hproj.name & " wird erstellt !"
+                    e.Result = " Report für Projekt '" & hproj.name & "' wird erstellt !"
+                    worker.ReportProgress(0, e)
+                    'frmSelectPPTTempl.statusNotification.Text = " Report für Projekt '" & hproj.name & " wird erstellt !"
 
-                        createPPTSlidesFromProject(hproj, vorlagenDateiName)
-                        tatsErstellt = tatsErstellt + 1
+                    createPPTSlidesFromProject(hproj, vorlagenDateiName)
+                    tatsErstellt = tatsErstellt + 1
 
-                    End If
+                End If
             End With
         Next
 
@@ -851,7 +852,7 @@ Public Module testModule
                             Case "Tabelle Vergleich letzter Stand"
 
                                 Try
-                                    Call zeichneProjektTabelleVergleich(pptSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternshape, hproj, lastproj)
+                                    Call zeichneProjektTabelleVergleich(pptSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternShape, hproj, lastproj)
                                 Catch ex As Exception
 
                                 End Try
@@ -859,7 +860,7 @@ Public Module testModule
                             Case "Tabelle Vergleich Beauftragung"
 
                                 Try
-                                    Call zeichneProjektTabelleVergleich(pptSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternshape, hproj, bproj)
+                                    Call zeichneProjektTabelleVergleich(pptSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternShape, hproj, bproj)
                                 Catch ex As Exception
 
                                 End Try
@@ -3043,7 +3044,7 @@ Public Module testModule
         Dim zeitStempel As Date
         Dim request As New Request(awinSettings.databaseName)
         enableOnUpdate = False
-        
+
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
         Call awinStoreConstellation("Last")
 
@@ -3140,6 +3141,137 @@ Public Module testModule
         enableOnUpdate = True
 
     End Sub
+
+    'Public Sub StoreSelectedProjectsinDB()
+
+    '    Dim singleShp1 As Excel.Shape
+    '    Dim hproj As clsProjekt
+    '    Dim jetzt As Date = Now
+
+    '    Dim request As New Request(awinSettings.databaseName)
+
+    '    enableOnUpdate = False
+
+    '    Dim awinSelection As Excel.ShapeRange
+
+    '    enableOnUpdate = False
+
+    '    Try
+    '        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+    '    Catch ex As Exception
+    '        awinSelection = Nothing
+    '    End Try
+
+    '    If request.pingMongoDb() Then
+
+    '        If Not awinSelection Is Nothing Then
+
+    '            For i = 1 To awinSelection.Count
+
+    '                ' jetzt die Aktion durchführen ...
+    '                singleShp1 = awinSelection.Item(i)
+
+    '                Try
+    '                    hproj = ShowProjekte.getProject(singleShp1.Name)
+    '                Catch ex As Exception
+    '                    Call MsgBox("Projekt nicht gefunden ...")
+    '                    enableOnUpdate = True
+    '                    Exit Sub
+    '                End Try
+
+    '                Try
+    '                    ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+
+    '                    If demoModusHistory Then
+    '                        hproj.timeStamp = historicDate
+    '                    Else
+    '                        hproj.timeStamp = jetzt
+    '                    End If
+
+    '                    If request.storeProjectToDB(hproj) Then
+
+
+    '                        Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+
+    '                    Else
+    '                        Call MsgBox("Fehler in Schreiben Projekt " & hproj.name)
+    '                    End If
+    '                Catch ex As Exception
+
+    '                    ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
+    '                    Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+    '                    'Exit Sub
+    '                End Try
+
+    '            Next i
+
+    '        Else
+    '            Call MsgBox("Es wurde kein Projekt selektiert")
+    '        End If
+
+
+
+    '        'historicDate = historicDate.AddMonths(1)
+
+    '        '' jetzt werden alle definierten Constellations weggeschrieben
+
+    '        'For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
+
+    '        '    Try
+    '        '        If request.storeConstellationToDB(kvp.Value) Then
+    '        '        Else
+    '        '            Call MsgBox("Fehler in Schreiben Constellation " & kvp.Key)
+    '        '        End If
+    '        '    Catch ex As Exception
+    '        '        Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+    '        '        'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
+    '        '        'Exit Sub
+    '        '    End Try
+
+    '        'Next
+
+
+    '        '' jetzt werden alle Abhängigkeiten weggeschreiben 
+
+    '        'For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
+
+    '        '    Try
+    '        '        If request.storeDependencyofPToDB(kvp.Value) Then
+    '        '        Else
+    '        '            Call MsgBox("Fehler in Schreiben Dependency " & kvp.Key)
+    '        '        End If
+    '        '    Catch ex As Exception
+    '        '        Throw New ArgumentException("Fehler beim Speichern der Abhängigkeiten in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+    '        '        'Call MsgBox("Fehler beim Speichern der Abhängigkeiten in die Datenbank. Datenbank nicht aktiviert?")
+    '        '        'Exit Sub
+    '        '    End Try
+
+
+    '        'Next
+
+    '        'zeitStempel = AlleProjekte.First.Value.timeStamp
+
+    '        'Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+
+    '        '' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
+    '        'Try
+    '        '    If projekthistorie.Count > 0 Then
+    '        '        projekthistorie.clear()
+    '        '    End If
+    '        'Catch ex As Exception
+
+    '        'End Try
+
+    '    Else
+
+    '        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen")
+
+    '    End If
+
+
+    '    enableOnUpdate = True
+
+    'End Sub
 
 
 
@@ -3278,7 +3410,7 @@ Public Module testModule
                     Else
                         Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
                     End If
-                    
+
                 Else
                     ' es muss nichts gemacht werden - es ist bereits die richtige Historie 
                 End If
@@ -3989,7 +4121,7 @@ Public Module testModule
 
         For Each pname As String In timeFrameProjekte
             hproj = ShowProjekte.getProject(pname)
-            key = 10000 * hproj.tfZeile + hproj.start
+            key = 10000 * hproj.tfZeile + hproj.Start
             todoListe.Add(key, hproj)
         Next
 
@@ -5615,7 +5747,7 @@ Public Module testModule
                 Else
                     Call MsgBox("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekthistorie konnte nicht geladen werden")
                 End If
-                
+
 
                 If Not IsNothing(vproj) Then
 
@@ -6327,8 +6459,8 @@ Public Module testModule
         End Try
 
         ' Portfolio in die Datenbank speichern
-        If Request.pingMongoDb() Then
-            If Not Request.storeConstellationToDB(newC) Then
+        If request.pingMongoDb() Then
+            If Not request.storeConstellationToDB(newC) Then
                 Call MsgBox("Fehler beim Speichern der projektConstellation '" & newC.constellationName & "' in die Datenbank")
             End If
         Else

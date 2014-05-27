@@ -31,17 +31,19 @@ Partial Class frmStoreConstellation
         'ComboBox1
         '
         Me.ComboBox1.FormattingEnabled = True
-        Me.ComboBox1.Location = New System.Drawing.Point(31, 83)
+        Me.ComboBox1.Location = New System.Drawing.Point(24, 81)
+        Me.ComboBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.ComboBox1.Name = "ComboBox1"
-        Me.ComboBox1.Size = New System.Drawing.Size(422, 21)
+        Me.ComboBox1.Size = New System.Drawing.Size(510, 24)
         Me.ComboBox1.TabIndex = 0
         '
         'OKButton
         '
         Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.OKButton.Location = New System.Drawing.Point(92, 149)
+        Me.OKButton.Location = New System.Drawing.Point(71, 130)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(75, 23)
+        Me.OKButton.Size = New System.Drawing.Size(100, 28)
         Me.OKButton.TabIndex = 1
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -49,9 +51,10 @@ Partial Class frmStoreConstellation
         'AbbrButton
         '
         Me.AbbrButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.AbbrButton.Location = New System.Drawing.Point(304, 149)
+        Me.AbbrButton.Location = New System.Drawing.Point(333, 130)
+        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(75, 23)
+        Me.AbbrButton.Size = New System.Drawing.Size(100, 28)
         Me.AbbrButton.TabIndex = 2
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
@@ -59,24 +62,25 @@ Partial Class frmStoreConstellation
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(31, 41)
+        Me.Label1.Location = New System.Drawing.Point(24, 38)
+        Me.Label1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(422, 13)
+        Me.Label1.Size = New System.Drawing.Size(510, 17)
         Me.Label1.TabIndex = 3
-        Me.Label1.Text = "Geben  Sie den Namen an, unter dem die Projekt-Konstellation gespeichert werden s" & _
-    "oll: "
+        Me.Label1.Text = "Geben  Sie den Namen an, unter dem dieses Portfolio gespeichert werden soll: "
         '
         'frmStoreConstellation
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(520, 193)
+        Me.ClientSize = New System.Drawing.Size(558, 182)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.ComboBox1)
+        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmStoreConstellation"
-        Me.Text = "Projekt-Konstellation speichern"
+        Me.Text = "Portfolio speichern"
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

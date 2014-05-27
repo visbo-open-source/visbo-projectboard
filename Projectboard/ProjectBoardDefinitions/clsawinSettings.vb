@@ -92,7 +92,7 @@
         _selectedColumn = 1
         _offsetEinheit = "d"
         _milestoneFreeFloat = False
-        _autoCorrectBedarfe = False
+        _autoCorrectBedarfe = True
 
         ' Settings für Import / Export 
         _EinzelRessExport = 0

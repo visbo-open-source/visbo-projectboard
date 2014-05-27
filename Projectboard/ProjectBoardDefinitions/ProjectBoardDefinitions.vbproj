@@ -71,6 +71,7 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsProjektShapes.vb" />
     <Compile Include="clsDependenciesOfPDB.vb" />
     <Compile Include="clsDependencies.vb" />
     <Compile Include="clsDependenciesOfP.vb" />
@@ -121,6 +122,12 @@
       <DependentUpon>frmPhaseInformation.vb</DependentUpon>
     </Compile>
     <Compile Include="frmPhaseInformation.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmRemoveConstellation.Designer.vb">
+      <DependentUpon>frmRemoveConstellation.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmRemoveConstellation.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmStatusInformation.Designer.vb">
@@ -226,6 +233,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmPhaseInformation.resx">
       <DependentUpon>frmPhaseInformation.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmRemoveConstellation.resx">
+      <DependentUpon>frmRemoveConstellation.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmStatusInformation.resx">
       <DependentUpon>frmStatusInformation.vb</DependentUpon>
