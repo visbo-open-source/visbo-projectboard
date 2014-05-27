@@ -2083,6 +2083,9 @@ Public Class clsProjekt
 
         Dim projektlaenge As Integer = Me.dauerInDays
 
+        If Me.tfZeile <= 1 Then
+            Me.tfZeile = 2
+        End If
 
         If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.Dauer > 0 Then
             top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight

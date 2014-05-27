@@ -1076,7 +1076,7 @@ Public Module Projekte
                     .chart.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                                                                    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
                     .top = top
-                    .height = (anzPhasen - 1) * 20 + 90
+                    .height = (anzPhasen - 1) * 20 + 110
 
                     Dim axCleft As Double, axCwidth As Double
                     If .Chart.HasAxis(Excel.XlAxisType.xlCategory) = True Then
@@ -9283,7 +9283,7 @@ Public Module Projekte
         zeileTop = calcYCoordToZeile(shpElement.Top)
         zeileBottom = calcYCoordToZeile(shpElement.Top + shpElement.Height)
 
-        tmpValue = System.Math.Max(zeileTop - zeileBottom + 1, 1)
+        tmpValue = System.Math.Max(zeileBottom - zeileTop, 1)
 
         getNeededSpace = tmpValue
 
@@ -9342,7 +9342,8 @@ Public Module Projekte
 
                             projectboardShapes.add(shpElement)
                             hproj = ShowProjekte.getProject(shpElement.Name)
-                            hproj.tfZeile = calcYCoordToZeile(shpElement.Top)
+                            'hproj.tfZeile = calcYCoordToZeile(shpElement.Top)
+                            hproj.tfZeile = hproj.tfZeile + anzahlZeilen
 
                         End If
 
@@ -13499,6 +13500,8 @@ Public Module Projekte
         ' jetzt werden alle importierten Projekte bearbeitet 
         For Each pname In myCollection
 
+            ok = True
+
             Try
                 hproj = ImportProjekte.getProject(pname)
                 pname = hproj.name
@@ -13580,7 +13583,7 @@ Public Module Projekte
                             If cproj.Erloes > 0 Then
                                 ' dann soll der alte Wert beibehalten werden 
                                 .Erloes = cproj.Erloes
-                                If .Dauer = cproj.Dauer Then
+                                If .Dauer = cproj.Dauer And Not IsNothing(cproj.budgetWerte) Then
                                     .budgetWerte = cproj.budgetWerte
                                 Else
                                     Call awinCreateBudgetWerte(hproj)
