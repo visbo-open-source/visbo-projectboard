@@ -807,12 +807,13 @@
                     hname = oldcost.name
 
 
-                    If awinSettings.propAnpassRess Then
-                        Call berechneBedarfe(oldcost.Xwerte, corrFactor, newXwerte)
-                    Else
-                        Call berechneBedarfe(oldcost.Xwerte, 1.0, newXwerte)
-                    End If
+                    'If awinSettings.propAnpassRess Then
+                    '    Call berechneBedarfe(oldcost.Xwerte, corrFactor, newXwerte)
+                    'Else
+                    '    Call berechneBedarfe(oldcost.Xwerte, 1.0, newXwerte)
+                    'End If
 
+                    Call berechneBedarfe(oldcost.Xwerte, corrFactor, newXwerte)
 
                     With newcost
                         .KostenTyp = oldcost.KostenTyp
@@ -1056,7 +1057,6 @@
         Dim newXwerte() As Double
         Dim gesBedarf As Double
         Dim Rest As Integer
-        Dim result As Integer
         Dim hDatum As Date
         Dim anzDaysthisMonth As Double
 
@@ -1072,7 +1072,7 @@
             If newValues.Length = oldXwerte.Length Then
 
                 'Bedarfe-Verteilung bleibt wie gehabt, aber die corrfakt ist hier unberücksichtigt ..? 
-                ' Änderung THOMAS Start 
+
                 If Not awinSettings.propAnpassRess Then
                     newXwerte = oldXwerte
                 Else
@@ -1102,6 +1102,9 @@
                             k = newXwerte.Length - 1
                         End If
 
+                        'If k = 0 Then
+                        '    k = newXwerte.Length - 1
+                        'End If
                         'result = System.Math.DivRem(k - 1, newXwerte.Length, k) ' modulo - Funktion
                     End While
 
