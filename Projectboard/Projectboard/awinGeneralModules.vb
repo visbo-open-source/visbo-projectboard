@@ -1824,9 +1824,14 @@ Public Module awinGeneralModules
                                     startDate = Date.MinValue
                                 End Try
 
-                                endeDate = CDate(.Cells(zeile, columnOffset + 4).value)
+                                Try
+                                    endeDate = CDate(.Cells(zeile, columnOffset + 4).value)
+                                Catch ex As Exception
+                                    endeDate = Date.MinValue
+                                End Try
 
-                                If DateDiff(DateInterval.Month, hproj.startDate, startDate) < 0 Then
+
+                                If DateDiff(DateInterval.Day, hproj.startDate, startDate) < 0 Then
                                     ' kein Startdatum angegeben
 
                                     If startDate <> Date.MinValue Then
@@ -1835,6 +1840,11 @@ Public Module awinGeneralModules
                                                      "Bitte korrigieren Sie dies in der Datei'" & hproj.name & ".xlsx'")
                                     Else
                                         ' objectName ist ein Meilenstein
+                                        ' Fehlermeldung entfernt ur: 27.05.2014
+
+                                        'If endeDate = Date.MinValue Then
+                                        '    Throw New Exception("für den Meilenstein '" & objectName & "'" & vbLf & "wurde im Projekt '" & hproj.name & "' kein Datum eingetragen!")
+                                        'End If
                                         cphase = hproj.getPhase(bezug)
                                         If IsNothing(cphase) Then
                                             If hproj.AllPhases.Count > 0 Then
@@ -1888,38 +1898,42 @@ Public Module awinGeneralModules
 
 
                                         If duration < 1 Or offset < 0 Then
-                                            Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
-                                                                offset.ToString & ", " & duration.ToString)
+                                            If startDate = Date.MinValue And endeDate = Date.MinValue Then
+                                                Throw New Exception(" zu '" & objectName & "' wurde kein Datum eingetragen!")
+                                            Else
+                                                Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
+                                                                    offset.ToString & ", " & duration.ToString)
+                                            End If
                                         End If
 
-                                        cphase.changeStartandDauer(offset, duration)
+                                            cphase.changeStartandDauer(offset, duration)
 
-                                        ' jetzt wird auf Inkonsistenz geprüft 
-                                        Dim inkonsistent As Boolean = False
+                                            ' jetzt wird auf Inkonsistenz geprüft 
+                                            Dim inkonsistent As Boolean = False
 
-                                        If cphase.CountRoles > 0 Or cphase.CountCosts > 0 Then
-                                            ' prüfen , ob es Inkonsistenzen gibt ? 
-                                            For r = 1 To cphase.CountRoles
-                                                If cphase.getRole(r).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
-                                                    inkonsistent = True
-                                                End If
-                                            Next
+                                            If cphase.CountRoles > 0 Or cphase.CountCosts > 0 Then
+                                                ' prüfen , ob es Inkonsistenzen gibt ? 
+                                                For r = 1 To cphase.CountRoles
+                                                    If cphase.getRole(r).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
+                                                        inkonsistent = True
+                                                    End If
+                                                Next
 
-                                            For k = 1 To cphase.CountCosts
-                                                If cphase.getCost(k).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
-                                                    inkonsistent = True
-                                                End If
-                                            Next
-                                        End If
+                                                For k = 1 To cphase.CountCosts
+                                                    If cphase.getCost(k).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
+                                                        inkonsistent = True
+                                                    End If
+                                                Next
+                                            End If
 
-                                    If inkonsistent Then
-                                        anzFehler = anzFehler + 1
-                                        Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
-                                                             "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
-                                    End If
-                                    If Not cphaseExisted Then
-                                        hproj.AddPhase(cphase)
-                                    End If
+                                            If inkonsistent Then
+                                                anzFehler = anzFehler + 1
+                                                Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
+                                                                     "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
+                                            End If
+                                            If Not cphaseExisted Then
+                                                hproj.AddPhase(cphase)
+                                            End If
 
 
                                     Catch ex As Exception

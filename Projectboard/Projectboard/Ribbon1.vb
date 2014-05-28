@@ -140,11 +140,21 @@ Imports Microsoft.Office.Interop.Excel
 
     Sub PT5StoreProjects(control As IRibbonControl)
 
+        Dim storedProj As Integer = 0
+
         Try
             If AlleProjekte.Count > 0 Then
 
-                Call StoreAllProjectsinDB()
-                'Call StoreSelectedProjectsinDB()
+                'Call StoreAllProjectsinDB()
+                storedProj = StoreSelectedProjectsinDB()
+                If storedProj = 0 Then
+                    Call MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte speichern?", MsgBoxStyle.OkCancel)
+                    If MsgBoxResult.Ok Then
+                        Call StoreAllProjectsinDB()
+                    End If
+                Else
+                    Call MsgBox("Es wurden " & storedProj & " Projekte gespeichert!")
+                End If
 
             Else
                 Call MsgBox("keine Projekte zu speichern ...")
@@ -153,6 +163,8 @@ Imports Microsoft.Office.Interop.Excel
 
             Call MsgBox(ex.Message)
         End Try
+
+        Call awinDeSelect()
 
     End Sub
 
