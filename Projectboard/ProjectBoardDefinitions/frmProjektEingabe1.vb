@@ -301,7 +301,7 @@ Public Class frmProjektEingabe1
             'StartDatum muss gemäß Vorlagendauer errechnet werden
             If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeProject.Value, DateTimeEnde.Value) < 0 Then
                 Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
-                DateTimeEnde.Value = DateTimeProject.Value.AddDays(-(vorlagenDauer - 1))
+                DateTimeEnde.Value = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
             Else
                 calcProjektEnde = DateTimeEnde.Value
                 DateTimeProject.Value = DateTimeEnde.Value.AddDays(-(vorlagenDauer - 1))
