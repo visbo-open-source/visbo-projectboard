@@ -61,7 +61,7 @@ Public Class frmProjektEingabe1
 
             End Try
 
-            Me.Erloes.Text = hvalue.ToString("N0")
+            .Erloes.Text = hvalue.ToString("N0")
 
             ' Die Dauer des Projekts soll gleich der Dauer der Vorlage sein.
             If dauerUnverändert.Checked Then
@@ -280,6 +280,7 @@ Public Class frmProjektEingabe1
                 calcProjektStart = DateTimeProject.Value
             End If
         Else
+            Dim tstString = DateTimeProject.Value
             If DateDiff(DateInterval.Month, StartofCalendar.AddDays(vorlagenDauer - 1), DateTimeProject.Value) < 0 Then
                 Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
                 DateTimeProject.Value = Date.Now.AddMonths(1)
@@ -332,7 +333,7 @@ Public Class frmProjektEingabe1
         Else
             ' es war vorher auf Datum = Start-Datum
             kennzeichnungDate.Text = "Start"
-            DateTimeEnde.Value = DateTimeEnde.Value
+            'DateTimeEnde.Value = DateTimeEnde.Value
 
         End If
     End Sub
