@@ -206,9 +206,7 @@ Partial Class frmPhaseInformation
         Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.Window
-
-        Me.ClientSize = New System.Drawing.Size(464, 391)
-
+        Me.ClientSize = New System.Drawing.Size(603, 479)
         Me.Controls.Add(Me.lessonsLearnedControl)
         Me.Controls.Add(Me.projectName)
         Me.Controls.Add(Me.phaseDauer)
