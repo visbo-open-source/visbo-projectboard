@@ -61,7 +61,7 @@ Public Class frmProjektEingabe1
 
             End Try
 
-            Me.Erloes.Text = hvalue.ToString("N0")
+            .Erloes.Text = hvalue.ToString("N0")
 
             ' Die Dauer des Projekts soll gleich der Dauer der Vorlage sein.
             If dauerUnverändert.Checked Then

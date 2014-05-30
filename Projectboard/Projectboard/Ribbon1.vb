@@ -318,58 +318,62 @@ Imports Microsoft.Office.Interop.Excel
         If Not tmpshapes Is Nothing Then
 
             ' jetzt die Aktion durchführen ...
+            Try
+                For Each singleShp In tmpshapes
+                    With singleShp
+                        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or
+                            (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
+                             And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
 
-            For Each singleShp In tmpshapes
-                With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                            If .Name <> .TextFrame2.TextRange.Text Then
+                                ' das Shape wurde vom Nutzer umbenannt 
+                                atleastOne = True
+                                erg = erg & .Name & " -> " & .TextFrame2.TextRange.Text & vbLf
 
-                        If .Name <> .TextFrame2.TextRange.Text Then
-                            ' das Shape wurde vom Nutzer umbenannt 
-                            atleastOne = True
-                            erg = erg & .Name & " -> " & .TextFrame2.TextRange.Text & vbLf
+                                Dim oldName As String = .Name
+                                Dim newName As String = .TextFrame2.TextRange.Text
 
-                            Dim oldName As String = .Name
-                            Dim newName As String = .TextFrame2.TextRange.Text
+                                Try
+                                    If ShowProjekte.Liste.ContainsKey(newName) Or Len(newName.Trim) = 0 Or IsNumeric(newName) Then
+                                        ' ungültiger Name - alten Namen wiederherstellen 
+                                        .TextFrame2.TextRange.Text = oldName
+                                        erg = erg & oldName & "bleibt, " & newName & "ungültig" & vbLf
+                                    Else
+                                        ' der neue Name ist gültig 
+                                        .Name = newName
 
-                            Try
-                                If ShowProjekte.Liste.ContainsKey(newName) Or Len(newName.Trim) = 0 Or IsNumeric(newName) Then
-                                    ' ungültiger Name - alten Namen wiederherstellen 
+                                        Dim hproj As clsProjekt = ShowProjekte.getProject(oldName)
+                                        oldKey = hproj.name & "#" & hproj.variantName
+                                        newKey = newName & "#" & hproj.variantName
+                                        With hproj
+                                            .name = newName
+                                        End With
+
+                                        ShowProjekte.Remove(oldName)
+                                        hproj.timeStamp = Date.Now
+                                        ShowProjekte.Add(hproj)
+                                        AlleProjekte.Remove(oldKey)
+                                        AlleProjekte.Add(newKey, hproj)
+
+                                    End If
+                                Catch ex As Exception
+                                    Call MsgBox(ex.Message)
                                     .TextFrame2.TextRange.Text = oldName
                                     erg = erg & oldName & "bleibt, " & newName & "ungültig" & vbLf
-                                Else
-                                    ' der neue Name ist gültig 
-                                    .Name = newName
-
-                                    Dim hproj As clsProjekt = ShowProjekte.getProject(oldName)
-                                    oldKey = hproj.name & "#" & hproj.variantName
-                                    newKey = newName & "#" & hproj.variantName
-                                    With hproj
-                                        .name = newName
-                                    End With
-
-                                    ShowProjekte.Remove(oldName)
-                                    hproj.timeStamp = Date.Now
-                                    ShowProjekte.Add(hproj)
-                                    AlleProjekte.Remove(oldKey)
-                                    AlleProjekte.Add(newKey, hproj)
-
-                                End If
-                            Catch ex As Exception
-                                Call MsgBox(ex.Message)
-                                .TextFrame2.TextRange.Text = oldName
-                                erg = erg & oldName & "bleibt, " & newName & "ungültig" & vbLf
-                            End Try
+                                End Try
 
 
 
+
+                            End If
 
                         End If
-
-                    End If
-                End With
-            Next
+                    End With
+                Next
+            Catch ex As Exception
+                Call MsgBox("Aktion im Extended Mode nicht unterstützt ...")
+            End Try
+           
 
         End If
 
@@ -1448,11 +1452,13 @@ Imports Microsoft.Office.Interop.Excel
     ''' <remarks></remarks>
     Sub Tom2G4M2B2ZuordnungRP(control As IRibbonControl)
 
-        Dim fileName As String, altfileName As String
+        Dim initialeVorlageName As String, kapaFileName As String
         Dim zeile As Integer = 2
         Dim anzRollen As Integer
         Dim i As Integer
-
+        Dim initMessage As String = "bitte die Kapazitäten eintragen zu folgenden Rollen" & vbLf
+        Dim infoMessage As String = initMessage
+        Dim zuordnungsOrdner As String = projektRessOrdner & "\" & "Projekt Zuordnungen"
 
 
         appInstance.EnableEvents = False
@@ -1470,30 +1476,35 @@ Imports Microsoft.Office.Interop.Excel
         For i = 1 To anzRollen
 
             roleName = RoleDefinitions.getRoledef(i).name.Trim
-            fileName = roleName & "-Zuordnung.xlsx"
+            kapaFileName = roleName & " Kapazität.xlsx"
 
             ' öffnen der Excel Datei 
             Try
-                appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & fileName)
+
+                appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & kapaFileName)
                 ok = True
+
             Catch ex As Exception
 
-                altfileName = "Vorlage Zuordnung.xlsx"
+                initialeVorlageName = "template Kapazität.xlsx"
+                ok = False
 
                 Try
-                    appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & altfileName)
+                    appInstance.Workbooks.Open(awinPath & projektRessOrdner & "\" & initialeVorlageName)
                     Try
-                        appInstance.ActiveWorkbook.SaveAs(awinPath & projektRessOrdner & "\" & fileName, _
+                        appInstance.ActiveWorkbook.SaveAs(awinPath & projektRessOrdner & "\" & kapaFileName, _
                                       ConflictResolution:=XlSaveConflictResolution.xlLocalSessionChanges)
-                        ok = True
+
+                        infoMessage = infoMessage & kapaFileName & vbLf
                     Catch ex2 As Exception
-                        ok = False
+
                     End Try
 
 
 
                 Catch ex1 As Exception
-                    Call MsgBox("File " & altfileName & " nicht gefunden ... Abbruch")
+                    Call MsgBox("File " & initialeVorlageName & " nicht gefunden ... Abbruch" & vbLf & vbLf & _
+                                "dieses File muss im Ordner " & awinPath & projektRessOrdner & "abgelegt werden")
                     appInstance.EnableEvents = True
                     appInstance.ScreenUpdating = True
                     enableOnUpdate = True
@@ -1505,29 +1516,40 @@ Imports Microsoft.Office.Interop.Excel
 
             If ok Then
 
-                Call awinExportRessZuordnung(1, roleName)
+                Dim curFilename As String = roleName & " Projekt-Zuordnung" & " " & Date.Now.ToString("MMM yy")
 
 
                 Try
-                    appInstance.ActiveWorkbook.Save()
-                    appInstance.ActiveWorkbook.Close()
+                    Call awinExportRessZuordnung(1, roleName)
+                    'appInstance.ActiveWorkbook.Save()
+
+                    appInstance.ActiveWorkbook.SaveAs(Filename:=awinPath & zuordnungsOrdner & "\" & curFilename, _
+                                                      ConflictResolution:=XlSaveConflictResolution.xlLocalSessionChanges)
+
 
                 Catch ex As Exception
-                    appInstance.ActiveWorkbook.Close()
+
+                    Call MsgBox("Fehler bei Zuordnung " & roleName)
                 End Try
-
-            Else
-
-                Call MsgBox("Fehler bei Save as " & fileName)
 
             End If
 
+
+            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
 
 
 
         Next
 
-        Call MsgBox("ok, Dateien erstellt ...")
+        If infoMessage.Length > initMessage.Length Then
+            ' in diesem Fall wurden  nur die Kapazität-Zuordnungs-Files erstellt 
+            infoMessage = infoMessage & vbLf & vbLf & "es wurden noch keine Zuordnungs-Dateien erstellt!"
+            Call MsgBox(infoMessage)
+        Else
+            Call MsgBox("ok, Dateien erstellt ...")
+        End If
+
+
 
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
@@ -3670,30 +3692,47 @@ Imports Microsoft.Office.Interop.Excel
 
         myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
-        With appInstance.ActiveWindow
-            sichtbarerBereich = .VisibleRange
-            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-            If left < sichtbarerBereich.Left Then
-                left = sichtbarerBereich.Left + 2
+        If myCollection.Count > 0 Then
+
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
+                If left < sichtbarerBereich.Left Then
+                    left = sichtbarerBereich.Left + 2
+                End If
+
+                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+                If top < sichtbarerBereich.Top Then
+                    top = sichtbarerBereich.Top + 2
+                End If
+
+            End With
+
+            width = 600
+            height = 450
+
+            Dim obj As New Object
+
+            Try
+                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
+            Catch ex As Exception
+
+            End Try
+
+        Else
+
+            If ShowProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte angezeigt")
+
+            Else
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                            "gibt es keine Projekte")
             End If
 
-            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-            If top < sichtbarerBereich.Top Then
-                top = sichtbarerBereich.Top + 2
-            End If
 
-        End With
+        End If
 
-        width = 600
-        height = 450
-
-        Dim obj As New Object
-
-        Try
-            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
-        Catch ex As Exception
-
-        End Try
+        
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -3713,31 +3752,46 @@ Imports Microsoft.Office.Interop.Excel
 
         myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
-        With appInstance.ActiveWindow
-            sichtbarerBereich = .VisibleRange
-            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-            If left < sichtbarerBereich.Left Then
-                left = sichtbarerBereich.Left + 2
+        If myCollection.Count > 0 Then
+
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
+                If left < sichtbarerBereich.Left Then
+                    left = sichtbarerBereich.Left + 2
+                End If
+
+                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+                If top < sichtbarerBereich.Top Then
+                    top = sichtbarerBereich.Top + 2
+                End If
+
+            End With
+
+            width = 600
+            height = 450
+
+            Dim obj As New Object
+
+            Try
+                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
+                'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
+            Catch ex As Exception
+
+            End Try
+
+        Else
+
+            If ShowProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte angezeigt")
+
+            Else
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                            "gibt es keine Projekte")
             End If
 
-            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-            If top < sichtbarerBereich.Top Then
-                top = sichtbarerBereich.Top + 2
-            End If
+        End If
 
-        End With
-
-        width = 600
-        height = 450
-
-        Dim obj As New Object
-
-        Try
-            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
-            'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
-        Catch ex As Exception
-
-        End Try
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -3764,63 +3818,75 @@ Imports Microsoft.Office.Interop.Excel
 
         myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
+        If myCollection.Count > 0 Then
+
+            For i = 1 To myCollection.Count
+                pname = myCollection.Item(i)
+                Try
+                    hproj = ShowProjekte.getProject(pname)
+                    activeNumber = allDependencies.activeNumber(pname, PTdpndncyType.inhalt)
+                    passiveNumber = allDependencies.passiveNumber(pname, PTdpndncyType.inhalt)
+                    If activeNumber = 0 And passiveNumber = 0 Then
+                        deleteList.Add(pname)
+                    End If
+                Catch ex As Exception
+
+                End Try
+            Next
+
+            ' jetzt müssen die Projekte rausgenommen werden, die keine Abhängigkeiten haben 
+            For i = 1 To deleteList.Count
+                pname = deleteList.Item(i)
+                Try
+                    myCollection.Remove(pname)
+                Catch ex As Exception
+
+                End Try
+            Next
 
 
-        For i = 1 To myCollection.Count
-            pname = myCollection.Item(i)
-            Try
-                hproj = ShowProjekte.getProject(pname)
-                activeNumber = allDependencies.activeNumber(pname, PTdpndncyType.inhalt)
-                passiveNumber = allDependencies.passiveNumber(pname, PTdpndncyType.inhalt)
-                If activeNumber = 0 And passiveNumber = 0 Then
-                    deleteList.Add(pname)
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
+                If left < sichtbarerBereich.Left Then
+                    left = sichtbarerBereich.Left + 2
                 End If
-            Catch ex As Exception
 
-            End Try
-        Next
+                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+                If top < sichtbarerBereich.Top Then
+                    top = sichtbarerBereich.Top + 2
+                End If
 
-        ' jetzt müssen die Projekte rausgenommen werden, die keine Abhängigkeiten haben 
-        For i = 1 To deleteList.Count
-            pname = deleteList.Item(i)
+            End With
+
+            width = 600
+            height = 450
+
+            Dim obj As New Object
+
             Try
-                myCollection.Remove(pname)
+                If myCollection.Count > 0 Then
+                    Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.Dependencies, 0, False, True, True, top, left, width, height)
+                Else
+                    Call MsgBox(" es gibt in diesem Zeitraum keine Projekte mit Abhängigkeiten")
+                End If
+
+
             Catch ex As Exception
 
             End Try
-        Next
 
+        Else
+            If ShowProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte angezeigt")
 
-        With appInstance.ActiveWindow
-            sichtbarerBereich = .VisibleRange
-            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-            If left < sichtbarerBereich.Left Then
-                left = sichtbarerBereich.Left + 2
-            End If
-
-            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-            If top < sichtbarerBereich.Top Then
-                top = sichtbarerBereich.Top + 2
-            End If
-
-        End With
-
-        width = 600
-        height = 450
-
-        Dim obj As New Object
-
-        Try
-            If myCollection.Count > 0 Then
-                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.Dependencies, 0, False, True, True, top, left, width, height)
             Else
-                Call MsgBox(" es gibt in diesem Zeitraum keine Projekte mit Abhängigkeiten")
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                            "gibt es keine Projekte")
             End If
+        End If
 
-
-        Catch ex As Exception
-
-        End Try
+        
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -3856,45 +3922,60 @@ Imports Microsoft.Office.Interop.Excel
         selectionType = PTpsel.lfundab
         myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
+        If myCollection.Count > 0 Then
 
-        With appInstance.ActiveWindow
-            sichtbarerBereich = .VisibleRange
-            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-            If left < sichtbarerBereich.Left Then
-                left = sichtbarerBereich.Left + 2
-            End If
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
+                If left < sichtbarerBereich.Left Then
+                    left = sichtbarerBereich.Left + 2
+                End If
 
-            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-            If top < sichtbarerBereich.Top Then
-                top = sichtbarerBereich.Top + 2
-            End If
+                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+                If top < sichtbarerBereich.Top Then
+                    top = sichtbarerBereich.Top + 2
+                End If
 
-        End With
+            End With
 
-        width = 600
-        height = 450
+            width = 600
+            height = 450
 
-        Dim obj As New Object
+            Dim obj As New Object
 
-        Try
-            If myCollection.Count > 0 Then
+            Try
+                If myCollection.Count > 0 Then
 
-                Try
-                    Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=True, isTimeTimeVgl:=False, vglTyp:=1, _
-                                                    charttype:=PTpfdk.betterWorseL, bubbleColor:=0, bubbleValueTyp:=PTbubble.strategicFit, showLabels:=True, chartBorderVisible:=True, _
-                                                    top:=top, left:=left, width:=width, height:=height)
-                Catch ex As Exception
-                    Call MsgBox(ex.Message)
-                End Try
+                    Try
+                        Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=True, isTimeTimeVgl:=False, vglTyp:=1, _
+                                                        charttype:=PTpfdk.betterWorseL, bubbleColor:=0, bubbleValueTyp:=PTbubble.strategicFit, showLabels:=True, chartBorderVisible:=True, _
+                                                        top:=top, left:=left, width:=width, height:=height)
+                    Catch ex As Exception
+                        Call MsgBox(ex.Message)
+                    End Try
+
+                Else
+                    Call MsgBox(" es gibt in diesem Zeitraum keine laufenden / abgeschlossenen Projekte")
+                End If
+
+
+            Catch ex As Exception
+
+            End Try
+
+        Else
+
+            If ShowProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte angezeigt")
 
             Else
-                Call MsgBox(" es gibt in diesem Zeitraum keine laufenden / abgeschlossenen Projekte")
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                            "gibt es keine Projekte")
             End If
 
+        End If
 
-        Catch ex As Exception
-
-        End Try
+        
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -3924,45 +4005,59 @@ Imports Microsoft.Office.Interop.Excel
         selectionType = PTpsel.lfundab
         myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
+        If myCollection.Count > 0 Then
 
-        With appInstance.ActiveWindow
-            sichtbarerBereich = .VisibleRange
-            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-            If left < sichtbarerBereich.Left Then
-                left = sichtbarerBereich.Left + 2
-            End If
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
+                If left < sichtbarerBereich.Left Then
+                    left = sichtbarerBereich.Left + 2
+                End If
 
-            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-            If top < sichtbarerBereich.Top Then
-                top = sichtbarerBereich.Top + 2
-            End If
+                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+                If top < sichtbarerBereich.Top Then
+                    top = sichtbarerBereich.Top + 2
+                End If
 
-        End With
+            End With
 
-        width = 600
-        height = 450
+            width = 600
+            height = 450
 
-        Dim obj As New Object
+            Dim obj As New Object
 
-        Try
-            If myCollection.Count > 0 Then
+            Try
+                If myCollection.Count > 0 Then
 
-                Try
-                    Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=True, isTimeTimeVgl:=False, vglTyp:=1, _
-                                                    charttype:=PTpfdk.betterWorseB, bubbleColor:=0, bubbleValueTyp:=PTbubble.strategicFit, showLabels:=True, chartBorderVisible:=True, _
-                                                    top:=top, left:=left, width:=width, height:=height)
-                Catch ex As Exception
-                    Call MsgBox(ex.Message)
-                End Try
+                    Try
+                        Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=True, isTimeTimeVgl:=False, vglTyp:=1, _
+                                                        charttype:=PTpfdk.betterWorseB, bubbleColor:=0, bubbleValueTyp:=PTbubble.strategicFit, showLabels:=True, chartBorderVisible:=True, _
+                                                        top:=top, left:=left, width:=width, height:=height)
+                    Catch ex As Exception
+                        Call MsgBox(ex.Message)
+                    End Try
+
+                Else
+                    Call MsgBox(" es gibt in diesem Zeitraum keine laufenden bzw. abgeschlossenen Projekte")
+                End If
+
+
+            Catch ex As Exception
+
+            End Try
+
+        Else
+
+            If ShowProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte angezeigt")
 
             Else
-                Call MsgBox(" es gibt in diesem Zeitraum keine laufenden bzw. abgeschlossenen Projekte")
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                            "gibt es keine Projekte")
             End If
 
-
-        Catch ex As Exception
-
-        End Try
+        End If
+        
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -3985,31 +4080,47 @@ Imports Microsoft.Office.Interop.Excel
 
         myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
-        With appInstance.ActiveWindow
-            sichtbarerBereich = .VisibleRange
-            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-            If left < sichtbarerBereich.Left Then
-                left = sichtbarerBereich.Left + 2
+
+        If myCollection.Count > 0 Then
+
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
+                If left < sichtbarerBereich.Left Then
+                    left = sichtbarerBereich.Left + 2
+                End If
+
+                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+                If top < sichtbarerBereich.Top Then
+                    top = sichtbarerBereich.Top + 2
+                End If
+
+            End With
+
+            width = 600
+            height = 450
+
+
+            Dim obj As New Object
+
+            Try
+                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
+            Catch ex As Exception
+
+            End Try
+
+        Else
+
+            If ShowProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte angezeigt")
+
+            Else
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                            "gibt es keine Projekte")
             End If
 
-            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-            If top < sichtbarerBereich.Top Then
-                top = sichtbarerBereich.Top + 2
-            End If
-
-        End With
-
-        width = 600
-        height = 450
-
-
-        Dim obj As New Object
-
-        Try
-            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
-        Catch ex As Exception
-
-        End Try
+        End If
+        
 
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
@@ -4032,31 +4143,47 @@ Imports Microsoft.Office.Interop.Excel
 
         myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
-        With appInstance.ActiveWindow
-            sichtbarerBereich = .VisibleRange
-            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-            If left < sichtbarerBereich.Left Then
-                left = sichtbarerBereich.Left + 2
+        If myCollection.Count > 0 Then
+
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
+                If left < sichtbarerBereich.Left Then
+                    left = sichtbarerBereich.Left + 2
+                End If
+
+                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+                If top < sichtbarerBereich.Top Then
+                    top = sichtbarerBereich.Top + 2
+                End If
+
+            End With
+
+            width = 600
+            height = 450
+
+
+            Dim obj As New Object
+
+            Try
+                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ZeitRisiko, 0, False, True, True, top, left, width, height)
+            Catch ex As Exception
+
+            End Try
+
+        Else
+
+            If ShowProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte angezeigt")
+
+            Else
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                            "gibt es keine Projekte")
             End If
 
-            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-            If top < sichtbarerBereich.Top Then
-                top = sichtbarerBereich.Top + 2
-            End If
+        End If
 
-        End With
-
-        width = 600
-        height = 450
-
-
-        Dim obj As New Object
-
-        Try
-            Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ZeitRisiko, 0, False, True, True, top, left, width, height)
-        Catch ex As Exception
-
-        End Try
+        
 
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
@@ -4073,29 +4200,35 @@ Imports Microsoft.Office.Interop.Excel
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        Dim sichtbarerBereich As Excel.Range
+        If ShowProjekte.Count > 0 Then
 
-        height = awinSettings.ChartHoehe2
-        width = 450
+            Dim sichtbarerBereich As Excel.Range
 
-        With appInstance.ActiveWindow
-            sichtbarerBereich = .VisibleRange
-            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - width) / 2
-            If left < sichtbarerBereich.Left Then
-                left = sichtbarerBereich.Left + 2
-            End If
+            height = awinSettings.ChartHoehe2
+            width = 450
 
-            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - height) / 2
-            If top < sichtbarerBereich.Top Then
-                top = sichtbarerBereich.Top + 2
-            End If
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - width) / 2
+                If left < sichtbarerBereich.Left Then
+                    left = sichtbarerBereich.Left + 2
+                End If
 
-        End With
+                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - height) / 2
+                If top < sichtbarerBereich.Top Then
+                    top = sichtbarerBereich.Top + 2
+                End If
 
+            End With
 
+            Dim obj As Object = Nothing
+            Call awinCreateBudgetErgebnisDiagramm(obj, top, left, width, height, False, False)
 
-        Dim obj As Object = Nothing
-        Call awinCreateBudgetErgebnisDiagramm(obj, top, left, width, height, False, False)
+        Else
+
+            Call MsgBox("es sind keine Projekte angezeigt")
+
+        End If
 
 
         appInstance.EnableEvents = True
@@ -4110,30 +4243,41 @@ Imports Microsoft.Office.Interop.Excel
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        Dim sichtbarerBereich As Excel.Range
 
-        height = awinSettings.ChartHoehe2
-        width = 450
+        If ShowProjekte.Count > 0 Then
 
-        With appInstance.ActiveWindow
-            sichtbarerBereich = .VisibleRange
-            left = sichtbarerBereich.Left + (sichtbarerBereich.Width - width) / 2
-            If left < sichtbarerBereich.Left Then
-                left = sichtbarerBereich.Left + 2
-            End If
+            Dim sichtbarerBereich As Excel.Range
 
-            top = sichtbarerBereich.Top + (sichtbarerBereich.Height - height) / 2
-            If top < sichtbarerBereich.Top Then
-                top = sichtbarerBereich.Top + 2
-            End If
+            height = awinSettings.ChartHoehe2
+            width = 450
 
-        End With
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - width) / 2
+                If left < sichtbarerBereich.Left Then
+                    left = sichtbarerBereich.Left + 2
+                End If
+
+                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - height) / 2
+                If top < sichtbarerBereich.Top Then
+                    top = sichtbarerBereich.Top + 2
+                End If
+
+            End With
 
 
 
-        Dim obj As Object = Nothing
-        Call awinCreateErgebnisDiagramm(obj, top, left, width, height, False, False)
+            Dim obj As Object = Nothing
+            Call awinCreateErgebnisDiagramm(obj, top, left, width, height, False, False)
 
+
+        Else
+
+            Call MsgBox("es sind keine Projekte angezeigt")
+
+        End If
+
+        
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -4143,11 +4287,27 @@ Imports Microsoft.Office.Interop.Excel
 
     Sub Tom2G2M5M1B3ShowStatus(control As IRibbonControl)
 
+        Dim selectionType As Integer = -1 ' keine Einschränkung
+        Dim heute As Integer = getColumnOfDate(Date.Now)
+        Dim myCollection As New Collection
+
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        Dim nummerieren As Boolean = False
-        Call awinZeichneStatus(nummerieren)
+        myCollection = ShowProjekte.withinTimeFrame(selectionType, heute, heute)
+
+        If myCollection.Count > 0 Then
+
+            Dim nummerieren As Boolean = False
+            Call awinZeichneStatus(nummerieren)
+
+        Else
+
+            Call MsgBox("es gibt keine aktuell laufenden Projekte")
+
+        End If
+
+        
 
         appInstance.EnableEvents = True
         enableOnUpdate = True

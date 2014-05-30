@@ -760,9 +760,14 @@ Public Class frmShowProjCharacteristics
 
     Private Sub movetoBeauftragung_Click(sender As Object, e As EventArgs) Handles movetoBeauftragung.Click
 
-        timeSlider.Value = valueBeauftragung
-        hproj = projekthistorie.ElementAt(nrSnapshots - timeSlider.Value)
-        snapshotDate.Text = hproj.timeStamp.ToString & " (Beauftragung)"
+        If valueBeauftragung < 0 Then
+            Call MsgBox(" das Projekt wurde noch nicht beauftragt")
+        Else
+            timeSlider.Value = valueBeauftragung
+            hproj = projekthistorie.ElementAt(nrSnapshots - timeSlider.Value)
+            snapshotDate.Text = hproj.timeStamp.ToString & " (Beauftragung)"
+        End If
+        
 
     End Sub
 

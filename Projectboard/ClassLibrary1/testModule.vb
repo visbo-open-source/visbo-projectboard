@@ -3861,8 +3861,11 @@ Public Module testModule
             If request.pingMongoDb() Then
                 ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                 projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
-                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                projekthistorie.Add(Date.Now, hproj)
+                                                                   storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                If projekthistorie.Count > 0 Then
+                    projekthistorie.Add(Date.Now, hproj)
+                End If
+
             Else
                 Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
             End If
@@ -3874,6 +3877,8 @@ Public Module testModule
 
         ' jetzt sind in der Projekt-Historie die richtigen Snapshots 
         ' jetzt muss das Vergleichs-Projekt gesetzt werden 
+
+
 
 
         Try
@@ -3998,7 +4003,9 @@ Public Module testModule
 
             End If
 
-
+        Else
+            statusValue = 1.0
+            statusColor = awinSettings.AmpelGruen
         End If
 
     End Sub
