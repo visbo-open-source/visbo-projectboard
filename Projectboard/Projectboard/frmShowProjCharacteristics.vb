@@ -164,7 +164,7 @@ Public Class frmShowProjCharacteristics
             .typSelection.Visible = False
             .Label3.Visible = False
             .showMore.Text = "more ..."
-            .Height = 160
+            .Height = 190              ' ur: 28.05.2014
         End With
         showAll = False
 
@@ -781,13 +781,13 @@ Public Class frmShowProjCharacteristics
                 .typSelection.Visible = False
                 .Label3.Visible = False
                 .showMore.Text = "more ..."
-                .Height = 160
+                .Height = 190             ' ur: 28.05.2014
             End With
             showAll = Not showAll
         Else
             ' jetzt soll eingeblendet werden 
             With Me
-                .Height = 244
+                .Height = 300           ' ur: 28.05.2014
                 .compareCurrent.Visible = True
                 .compareBeauftragung.Visible = True
                 .movetoBeauftragung.Visible = True

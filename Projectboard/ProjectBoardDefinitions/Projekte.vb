@@ -13340,7 +13340,7 @@ Public Module Projekte
 
                     .projectName.Text = projectName
                     .phaseName.Text = phaseName
-                    .Height = 440
+                    .Height = 530
                     .lessonsLearnedControl.Visible = True
                     .erlaeuterung.Visible = True
                     .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
@@ -13372,7 +13372,7 @@ Public Module Projekte
 
                     .projectName.Text = projectName
                     .phaseName.Text = phaseName
-                    .Height = 190
+                    .Height = 220
                     .erlaeuterung.Visible = False
 
                     .phaseStart.Text = phaseStartdate.ToShortDateString

@@ -64,8 +64,8 @@ Partial Class frmRemoveConstellation
         '
         'frmRemoveConstellation
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.ClientSize = New System.Drawing.Size(492, 328)
         Me.Controls.Add(Me.Abbrechen)
         Me.Controls.Add(Me.OKButton)

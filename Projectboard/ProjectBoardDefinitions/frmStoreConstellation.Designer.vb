@@ -32,7 +32,7 @@ Partial Class frmStoreConstellation
         '
         Me.ComboBox1.FormattingEnabled = True
         Me.ComboBox1.Location = New System.Drawing.Point(24, 81)
-        Me.ComboBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ComboBox1.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox1.Name = "ComboBox1"
         Me.ComboBox1.Size = New System.Drawing.Size(510, 24)
         Me.ComboBox1.TabIndex = 0
@@ -41,7 +41,7 @@ Partial Class frmStoreConstellation
         '
         Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
         Me.OKButton.Location = New System.Drawing.Point(71, 130)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(4)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(100, 28)
         Me.OKButton.TabIndex = 1
@@ -52,7 +52,7 @@ Partial Class frmStoreConstellation
         '
         Me.AbbrButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
         Me.AbbrButton.Location = New System.Drawing.Point(333, 130)
-        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(100, 28)
         Me.AbbrButton.TabIndex = 2
@@ -71,14 +71,14 @@ Partial Class frmStoreConstellation
         '
         'frmStoreConstellation
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.ClientSize = New System.Drawing.Size(558, 182)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.ComboBox1)
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Margin = New System.Windows.Forms.Padding(4)
         Me.Name = "frmStoreConstellation"
         Me.Text = "Portfolio speichern"
         Me.ResumeLayout(False)
