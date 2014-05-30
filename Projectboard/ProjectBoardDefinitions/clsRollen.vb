@@ -32,6 +32,12 @@
         End Get
 
     End Property
+
+    Public ReadOnly Property liste As Collection
+        Get
+            liste = AllRollen
+        End Get
+    End Property
     ''' <summary>
     ''' prüft ob name in der Collection enthalten ist
     ''' </summary>

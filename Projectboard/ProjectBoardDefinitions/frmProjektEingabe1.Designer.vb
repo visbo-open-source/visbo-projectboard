@@ -209,18 +209,20 @@ Partial Class frmProjektEingabe1
         Me.Label5.Size = New System.Drawing.Size(61, 16)
         Me.Label5.TabIndex = 24
         Me.Label5.Text = "Volumen"
+        Me.Label5.Visible = False
         '
         'volume
         '
         Me.volume.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.volume.Location = New System.Drawing.Point(394, 172)
+        Me.volume.Location = New System.Drawing.Point(384, 172)
         Me.volume.Name = "volume"
         Me.volume.Size = New System.Drawing.Size(74, 22)
         Me.volume.TabIndex = 25
+        Me.volume.Visible = False
         '
         'DateTimeProject
         '
-        Me.DateTimeProject.Location = New System.Drawing.Point(209, 248)
+        Me.DateTimeProject.Location = New System.Drawing.Point(199, 248)
         Me.DateTimeProject.Name = "DateTimeProject"
         Me.DateTimeProject.Size = New System.Drawing.Size(259, 23)
         Me.DateTimeProject.TabIndex = 26
@@ -250,7 +252,7 @@ Partial Class frmProjektEingabe1
         '
         'DateTimeEnde
         '
-        Me.DateTimeEnde.Location = New System.Drawing.Point(209, 285)
+        Me.DateTimeEnde.Location = New System.Drawing.Point(199, 285)
         Me.DateTimeEnde.Name = "DateTimeEnde"
         Me.DateTimeEnde.Size = New System.Drawing.Size(259, 23)
         Me.DateTimeEnde.TabIndex = 29
@@ -259,8 +261,9 @@ Partial Class frmProjektEingabe1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoSize = True
         Me.BackColor = System.Drawing.SystemColors.Window
-        Me.ClientSize = New System.Drawing.Size(557, 401)
+        Me.ClientSize = New System.Drawing.Size(530, 401)
         Me.Controls.Add(Me.DateTimeEnde)
         Me.Controls.Add(Me.kennzeichnungEnde)
         Me.Controls.Add(Me.dauerUnverändert)

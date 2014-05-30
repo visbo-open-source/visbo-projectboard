@@ -28,7 +28,9 @@
 
     Public Sub New()
 
-        ReDim kapazitaet(120)
+        ' Änderung 29.5.14 damit man zwanzig Jahre vom Start der Projekt-Tafel betrachten kann 
+        ' Kapazität: die Null Position hat keine Bedeutung; kapazität(1) = der Wert für StartofCalendar
+        ReDim kapazitaet(240)
 
     End Sub
 

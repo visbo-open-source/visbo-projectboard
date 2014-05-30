@@ -632,7 +632,7 @@
 
                 For i = showRangeLeft To showRangeRight
                     tmpValues(i - showRangeLeft) = RoleDefinitions.getRoledef(rname).kapazitaet(i)
-                    If tmpValues(i - showRangeLeft) <= 0 Then
+                    If tmpValues(i - showRangeLeft) < 0 Then
                         tmpValues(i - showRangeLeft) = hkapa
                     End If
                 Next
