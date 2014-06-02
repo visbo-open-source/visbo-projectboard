@@ -477,7 +477,7 @@ Public Module awinGUI
                         .MajorTickMark = XlTickMark.xlTickMarkNone
                         .TickLabelPosition = XlTickLabelPosition.xlTickLabelPositionNone
                     End If
-                    
+
                 End With
 
                 With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
@@ -600,7 +600,7 @@ Public Module awinGUI
                             .HasTitle = True
                             .MinimumScale = 0
                             .MaximumScale = activeMax + 1
-                            
+
                             ' .ReversePlotOrder = True
                             With .AxisTitle
                                 .Characters.Text = "Ausstrahlung"
@@ -634,7 +634,7 @@ Public Module awinGUI
                             End With
                         End With
                 End Select
-                
+
 
                 .HasLegend = False
                 .HasTitle = True

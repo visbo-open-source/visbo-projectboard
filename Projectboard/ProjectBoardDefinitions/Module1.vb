@@ -143,6 +143,16 @@ Public Module Module1
         Budget = 19
     End Enum
 
+    Public Enum PTprdk
+        PersonalBalken = 0
+        PersonalPie = 1
+        KostenBalken = 2
+        KostenPie = 3
+        Phasen = 4
+        StrategieRisiko = 5
+        Ergebnis = 6
+    End Enum
+
     ' 0=projektN; 1= projektE, 2= phase; 3= milestone;  4= status; 5=dependency
     ' Enumertaion, um in Onupdate, etc. den Typ des Shapes feststellen zu können 
     Public Enum PTshty
@@ -1555,7 +1565,7 @@ Public Module Module1
 
 
 
-    Public Function magicBoardIstFrei(ByRef mycollection As Collection, ByVal pname As String, ByVal zeile As Integer, _
+    Public Function magicBoardIstFrei(ByVal mycollection As Collection, ByVal pname As String, ByVal zeile As Integer, _
                                       ByVal spalte As Integer, ByVal laenge As Integer, ByVal anzahlZeilen As Integer) As Boolean
         Dim istfrei = True
         Dim ix As Integer = 1
@@ -1584,12 +1594,12 @@ Public Module Module1
         magicBoardIstFrei = istfrei
     End Function
 
-    Public Function findeMagicBoardPosition(ByRef mycollection As Collection, ByVal pname As String, ByVal zeile As Integer, ByVal spalte As Integer, ByVal laenge As Integer) As Integer
+    Public Function findeMagicBoardPosition(ByVal mycollection As Collection, ByVal pname As String, ByVal zeile As Integer, ByVal spalte As Integer, ByVal laenge As Integer) As Integer
         Dim lookDown As Boolean = True
         Dim tryoben As Integer, tryunten As Integer
         Dim anzahlzeilen As Integer
 
-        
+
         Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
         anzahlzeilen = getNeededSpace(hproj)
 
@@ -1598,9 +1608,9 @@ Public Module Module1
             zeile = 2
         End If
 
-        If mycollection.Count = 0 Then
-            mycollection.Add(pname, pname)
-        End If
+        'If mycollection.Count = 0 Then
+        '    mycollection.Add(pname, pname)
+        'End If
 
         If Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen) Then
             tryoben = zeile - 1

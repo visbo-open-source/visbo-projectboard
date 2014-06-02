@@ -87,7 +87,11 @@ Public Class frmConfirmEditRess
             ' dann muss das Projekt neu gezeichnet werden - muss gemacht werden; es könnte sich ja die Darstellung geändert haben 
 
             ' Änderung 26.7 roentgenblick ison wird jetzt in zeichneProjektinPlantafel behandelt
-            Call ZeichneProjektinPlanTafel(pname, tryzeile)
+
+            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+            Dim tmpCollection As New Collection
+            Call ZeichneProjektinPlanTafel(tmpCollection, pname, tryzeile)
             shpUID = newproj.shpUID
 
             

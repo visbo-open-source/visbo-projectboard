@@ -1713,10 +1713,11 @@ Imports Microsoft.Office.Interop.Excel
 
                 ' bestimme die Anzahl Zeilen, die benötigt wird  
                 Dim anzahlZeilen As Integer = getNeededSpace(hproj)
-
-                Call moveShapesDown(hproj.tfZeile + 1, anzahlZeilen)
+                Dim tmpCollection As New Collection
+                Call moveShapesDown(tmpCollection, hproj.tfZeile + 1, anzahlZeilen, 0)
                 'Call ZeichneProjektinPlanTafel2(pname, hproj.tfZeile)
-                Call ZeichneProjektinPlanTafel(pname, hproj.tfZeile)
+
+                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile)
 
 
                 appInstance.EnableEvents = True
@@ -1787,7 +1788,7 @@ Imports Microsoft.Office.Interop.Excel
 
                 repObj = Nothing
 
-                width = hproj.Dauer * boxWidth + 10
+                width = System.Math.Max(hproj.Dauer * boxWidth + 10, 6 * boxWidth + 10)
 
                 Try
                     Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)

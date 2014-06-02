@@ -3284,6 +3284,7 @@ Public Module Projekte
                 chtobj.Name = pname & "#" & kennung & "#" & "1"
 
 
+
             End If
 
             With chtobj.Chart
@@ -3572,7 +3573,7 @@ Public Module Projekte
         ErgebnisListeK = hproj.getUsedKosten
         anzKostenarten = ErgebnisListeK.Count
 
-        If anzKostenarten = 0 Then
+        If anzKostenarten = 0 And auswahl = 1 Then
             MsgBox("keine Kosten-Bedarfe definiert")
             appInstance.EnableEvents = formerEE
             'appInstance.ScreenUpdating = formerSU
@@ -6499,8 +6500,10 @@ Public Module Projekte
 
         End Try
 
-
-        Call ZeichneProjektinPlanTafel(pname:=pname, tryzeile:=0)
+        ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+        ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+        Dim tmpCollection As New Collection
+        Call ZeichneProjektinPlanTafel(tmpCollection, pname:=pname, tryzeile:=0)
 
 
         '
@@ -6708,7 +6711,10 @@ Public Module Projekte
                     .timeStamp = Date.Now
                 End With
 
-                Call ZeichneProjektinPlanTafel(pname, zeile)
+                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                Dim tmpCollection As New Collection
+                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile)
 
             Catch ex As Exception
                 Call MsgBox(" Fehler in Beauftragung " & pname & " , Modul: awinBeauftragung")
@@ -6740,7 +6746,11 @@ Public Module Projekte
                     .timeStamp = Date.Now
                 End With
 
-                Call ZeichneProjektinPlanTafel(pname, zeile)
+
+                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                Dim tmpCollection As New Collection
+                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile)
 
             Catch ex As Exception
                 Call MsgBox(" Fehler in Zurücknahme Beauftragung " & pname & " , Modul: awinCancelBeauftragung")
@@ -8545,10 +8555,13 @@ Public Module Projekte
     ''' <summary>
     ''' zeichnet das Projekt "pname" in die Plantafel; 
     ''' wenn es bereits vorhanden ist: keine Aktion  
+    ''' noCollection ist eine Collection von Projekt-Namen, die beim Suchen nach einem Platz 
+    ''' auf der Projekt-Tafel nicht berücksichtigt werden soll
+    ''' ist insbesondere wichtig, wenn mehrere PRojekte selektiert wurden und verschoben werden 
     ''' </summary>
     ''' <param name="pname"></param>
     ''' <remarks></remarks>
-    Public Sub ZeichneProjektinPlanTafel(ByVal pname As String, ByVal tryzeile As Integer)
+    Public Sub ZeichneProjektinPlanTafel(ByVal noCollection As Collection, ByVal pname As String, ByVal tryzeile As Integer)
 
 
         Dim drawphases As Boolean = My.Settings.drawPhases
@@ -8623,9 +8636,8 @@ Public Module Projekte
             tryzeile = 2
         End If
 
-        Dim myCollection As New Collection
-        myCollection.Add(pname)
-        zeile = findeMagicBoardPosition(myCollection, pname, tryzeile, start, laenge)
+        
+        zeile = findeMagicBoardPosition(noCollection, pname, tryzeile, start, laenge)
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -9294,20 +9306,29 @@ Public Module Projekte
     ''' <summary>
     ''' verschiebt ab Zeile "von" um "anzahlZeilen" alle Projekt-Shapes nach unten 
     ''' aktualisiert auch die tfzeile in den Projekten entsprechend
+    ''' die Projekte, die in der collection selCollection enthalten sind, werden nicht nach unten verschoben 
+    ''' Projekte, die ab Zeile Stoppzeile stehen, werden nicht nach unten verschoben 
     ''' </summary>
     ''' <param name="anzahlZeilen"></param>
     ''' <remarks></remarks>
-    Public Sub moveShapesDown(ByVal vonZeile As Integer, ByVal anzahlZeilen As Integer)
+    Public Sub moveShapesDown(ByVal selCollection As Collection, _
+                              ByVal vonZeile As Integer, ByVal anzahlZeilen As Integer, ByVal stoppzeile As Integer)
 
         Dim worksheetShapes As Excel.Shapes
         Dim shpElement As Excel.Shape
         Dim formerEOU As Boolean = enableOnUpdate
         Dim shapeType As Integer
         Dim obererRand As Double = calcZeileToYCoord(vonZeile)
+        Dim stoppRand As Double = calcZeileToYCoord(stoppzeile)
         Dim differenz As Double = anzahlZeilen * boxHeight
         Dim hproj As clsProjekt
 
         enableOnUpdate = False
+
+        ' eine maximale Größe, um sicherzugehen, daß in diesem Fall alle Projekte verschoben werden 
+        If stoppzeile = 0 Then
+            stoppRand = calcZeileToYCoord(40000)
+        End If
 
         Try
 
@@ -9328,7 +9349,8 @@ Public Module Projekte
 
                     shapeType = CInt(.AlternativeText)
 
-                    If .Top >= obererRand Then
+                    If .Top >= obererRand And (Not selCollection.Contains(shpElement.Name)) _
+                        And .Top < stoppRand Then
                         .Top = .Top + differenz
 
                         ' Ergänzung 11.5.2014: Projekte Anpassen und projectboardShapes Einträge korrigieren 
@@ -12694,14 +12716,15 @@ Public Module Projekte
     End Function
 
     ''' <summary>
-    ''' errechnet die Kennung, die dem Chart als Namen mitgegeen wird; darf nicht größer als 31 in der Länge sein; 
+    ''' errechnet die Kennung, die dem Chart als Namen mitgegeben wird; darf nicht größer als 31 in der Länge sein; 
     ''' das erlaubt Excel.Chart.name nicht
-    ''' in typ wird mitgegeben , ob es sich um ein Portfolio Chart oder um ein Projekt Chart handelt 
+    ''' Typ ist entweder PF für Portfolio Kennung oder PR für die Projekt Charts  
     ''' 
     ''' </summary>
     ''' <param name="typ">ist Portfolio Chart (pf) oder Projekt-Chart (pr)</param>
-    ''' <param name="index">gibt den Enumeration Wert an</param>
-    ''' <param name="mycollection">enthält die Namen der Phasen/Rollen/Kostenarten</param>
+    ''' <param name="index">gibt den Enumeration Wert an, der den Typ des Diagramms charakterisiert</param>
+    ''' <param name="mycollection">enthält die Namen der Phasen/Rollen/Kostenarten bzw den Namen des Projektes oder 
+    ''' wenn es sich um mehrere Projekte handelt: "x"</param>
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function getKennung(ByVal typ As String, ByVal index As Integer, ByVal mycollection As Collection) As String
@@ -12710,57 +12733,69 @@ Public Module Projekte
 
         IDkennung = typ & "#" & index.ToString
 
+        If typ = "pf" Then
 
-        Try
-            Select Case index
-                Case PTpfdk.Phasen
 
-                    If mycollection.Count = PhaseDefinitions.Count Then
-                        IDkennung = IDkennung & "#Alle"
+            Try
+                Select Case index
+                    Case PTpfdk.Phasen
 
-                    Else
+                        If mycollection.Count = PhaseDefinitions.Count Then
+                            IDkennung = IDkennung & "#Alle"
 
-                        For i = 1 To mycollection.Count
-                            cName = mycollection.Item(i)
-                            IDkennung = IDkennung & "#" & PhaseDefinitions.getPhaseDef(cName).UID.ToString
-                        Next
+                        Else
 
-                    End If
+                            For i = 1 To mycollection.Count
+                                cName = mycollection.Item(i)
+                                IDkennung = IDkennung & "#" & PhaseDefinitions.getPhaseDef(cName).UID.ToString
+                            Next
 
-                Case PTpfdk.Rollen
+                        End If
 
-                    If mycollection.Count = RoleDefinitions.Count Then
-                        IDkennung = IDkennung & "#Alle"
+                    Case PTpfdk.Rollen
 
-                    Else
+                        If mycollection.Count = RoleDefinitions.Count Then
+                            IDkennung = IDkennung & "#Alle"
 
-                        For i = 1 To mycollection.Count
-                            cName = mycollection.Item(i)
-                            IDkennung = IDkennung & "#" & RoleDefinitions.getRoledef(cName).UID.ToString
-                        Next
+                        Else
 
-                    End If
+                            For i = 1 To mycollection.Count
+                                cName = mycollection.Item(i)
+                                IDkennung = IDkennung & "#" & RoleDefinitions.getRoledef(cName).UID.ToString
+                            Next
 
-                Case PTpfdk.Kosten
+                        End If
 
-                    If mycollection.Count = CostDefinitions.Count Then
-                        IDkennung = IDkennung & "#Alle"
+                    Case PTpfdk.Kosten
 
-                    Else
+                        If mycollection.Count = CostDefinitions.Count Then
+                            IDkennung = IDkennung & "#Alle"
 
-                        For i = 1 To mycollection.Count
-                            cName = mycollection.Item(i)
-                            IDkennung = IDkennung & "#" & CostDefinitions.getCostdef(cName).UID.ToString
-                        Next
+                        Else
 
-                    End If
+                            For i = 1 To mycollection.Count
+                                cName = mycollection.Item(i)
+                                IDkennung = IDkennung & "#" & CostDefinitions.getCostdef(cName).UID.ToString
+                            Next
 
-            End Select
-        Catch ex As Exception
-            IDkennung = IDkennung & "#?"
-        End Try
+                        End If
 
-        getKennung = IDkennung
+                End Select
+            Catch ex As Exception
+
+                IDkennung = IDkennung & "#?"
+            End Try
+
+
+
+        ElseIf typ = "pr" Then
+
+            IDkennung = IDkennung & "#" & mycollection.Item(1)
+            
+        End If
+
+
+            getKennung = IDkennung
 
 
     End Function
@@ -13711,7 +13746,10 @@ Public Module Projekte
                         End If
 
                         ' zeichne das neue Shape in der Plan-Tafel 
-                        Call ZeichneProjektinPlanTafel(pname, hproj.tfZeile)
+                        ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                        ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                        Dim tmpCollection As New Collection
+                        Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile)
 
                         ' jetzt müssen die ggf aktuell gezeigten Diagramme neu gezeichnet werden 
                         Call awinNeuZeichnenDiagramme(2)

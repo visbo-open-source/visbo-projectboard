@@ -642,7 +642,6 @@ Public Class clsProjekt
                             phaseStart = phase.getStartDate
                             phaseEnd = phase.getEndDate
 
-                            ReDim phaseValues(phase.relEnde - phase.relStart)
 
                             With phase
                                 For i = 0 To .relEnde - .relStart
@@ -651,17 +650,17 @@ Public Class clsProjekt
 
                                         numberOfDays = Max(0.0, DateDiff(DateInterval.Day, phaseStart, StartofCalendar.AddMonths(Me.Start + .relStart - 1).AddDays(-1)))
                                         anteil = numberOfDays / 365 * 12
-                                        phaseValues(i) = phaseValues(i) + Min(1.0, anteil)
+                                        phaseValues(.relStart - 1 + i) = Min(1.0, anteil)
 
                                     ElseIf i = .relEnde - .relStart Then
 
                                         numberOfDays = Max(0.0, DateDiff(DateInterval.Day, StartofCalendar.AddMonths(Me.Start + .relEnde - 2), phaseEnd))
                                         anteil = numberOfDays / 365 * 12
-                                        phaseValues(i) = phaseValues(i) + Min(1.0, anteil)
+                                        phaseValues(.relStart - 1 + i) = Min(1.0, anteil)
 
                                     Else
 
-                                        phaseValues(i) = phaseValues(i) + 1
+                                        phaseValues(.relStart - 1 + i) = 1
 
                                     End If
 
