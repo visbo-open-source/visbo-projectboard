@@ -174,14 +174,14 @@ Public Class clsCommandBarEvents
                                 ElseIf hproj.Status = ProjektStatus(0) Then
                                     ' nur dann kann verschoben/gedehnt/gestaucht werden - das wird in der Property sync gemacht
                                     ' hier wird das Projekt mit den Shape Werten "synchronisiert" 
-                                    projectboardShapes.sync(shpelement)
+                                    projectboardShapes.sync(shpelement, selCollection)
 
                                     ChartsNeedUpdate = True
 
                                 Else
                                     ' hier werden die verschobenen Shapes wieder zurückgesetzt 
                                     ' Charts müssen nicht aktualisiert werden 
-                                    projectboardShapes.sync(shpelement)
+                                    projectboardShapes.sync(shpelement, selCollection)
 
                                     ChartsNeedUpdate = False
 
@@ -204,7 +204,7 @@ Public Class clsCommandBarEvents
                                     selCollection.Remove(pname)
                                 End If
                             Catch ex As Exception
-
+                                Call MsgBox("kann nicht sein .... selCollection enthält " & pname & " nicht!")
                             End Try
 
 
@@ -234,7 +234,8 @@ Public Class clsCommandBarEvents
                                 ' Änderung 25.3.14 wegen Kopiertes Projekt soll einfach in der nächsten Zeile gezeichnet werden  
                                 anzahlZeilen = getNeededSpace(oldproj)
                                 zeile = oldproj.tfZeile + 1
-                                Call moveShapesDown(zeile, anzahlZeilen)
+                                Dim tmpCollection As New Collection
+                                Call moveShapesDown(tmpCollection, zeile, anzahlZeilen, 0) ' Stoppzeile 0: alle Elemente werden verschoben  
                             Catch ex As Exception
                                 Throw New ArgumentException("Projekt in OnUpdate nicht gefunden: " & shpName)
                                 Exit Sub
@@ -313,7 +314,12 @@ Public Class clsCommandBarEvents
                                 ' stelle nicht nötig 
                                 ' projectboardShapes.remove(shpelement.Name)
                                 shpelement.Delete()
-                                Call ZeichneProjektinPlanTafel(pname, hproj.tfZeile)
+
+                                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                                Dim tmpCollection As New Collection
+                                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile)
+
                                 enableOnUpdate = True
 
 
@@ -342,104 +348,140 @@ Public Class clsCommandBarEvents
                         End If
                     ElseIf shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Then
 
-                        Dim phaseName As String
-                        somethingChanged = projectboardShapes.hasAchanged(shpelement)
 
-                        pname = extractName(shpelement.Name, PTshty.projektN)
-                        phaseName = extractName(shpelement.Name, PTshty.phaseN)
-                        hproj = ShowProjekte.getProject(pname)
+                        ' es darf nur ein Shape von diesem Typ selektiert sein ... 
+                        If awinSelection.Count = 1 Then
 
-                        If somethingChanged Then
+                            Dim phaseName As String
+                            somethingChanged = projectboardShapes.hasAchanged(shpelement)
 
-                            projectboardShapes.sync(shpelement)
+                            pname = extractName(shpelement.Name, PTshty.projektN)
+                            phaseName = extractName(shpelement.Name, PTshty.phaseN)
+                            hproj = ShowProjekte.getProject(pname)
 
-                            If hproj.Status = ProjektStatus(0) Then
-                                ' Charts müssen aktualisiert werden 
+                            If somethingChanged Then
 
-                                ChartsNeedUpdate = True
+                                projectboardShapes.sync(shpelement, selCollection)
 
-                            Else
-                                ' Charts müssen nicht aktualisiert werden, da beauftragte Projekte nicht verändert werden können
+                                If hproj.Status = ProjektStatus(0) Then
+                                    ' Charts müssen aktualisiert werden 
 
-                                ChartsNeedUpdate = False
+                                    ChartsNeedUpdate = True
+
+                                Else
+                                    ' Charts müssen nicht aktualisiert werden, da beauftragte Projekte nicht verändert werden können
+
+                                    ChartsNeedUpdate = False
+
+                                End If
+
 
                             End If
 
 
-                        End If
-
-
-                        If formPhase Is Nothing Then
-                            formPhase = New frmPhaseInformation
-                        End If
-
-                        If Not formPhase.Visible Then
-                            If formPhase.IsDisposed Then
+                            If formPhase Is Nothing Then
                                 formPhase = New frmPhaseInformation
                             End If
-                        End If
 
-                        'Call updatePhaseInformation(shpelement)
-                        Call updatePhaseInformation(hproj, phaseName)
+                            If Not formPhase.Visible Then
+                                If formPhase.IsDisposed Then
+                                    formPhase = New frmPhaseInformation
+                                End If
+                            End If
+
+                            'Call updatePhaseInformation(shpelement)
+                            Call updatePhaseInformation(hproj, phaseName)
+
+                        Else
+                            Call MsgBox("bitte nur ein Element bzw. eine Phase selektieren ...")
+                            Call awinDeSelect()
+                            Exit For
+                        End If
+                        
 
                     ElseIf shapeType = PTshty.milestoneN Or shapeType = PTshty.milestoneE Then
-                        Dim phaseName As String
-                        Dim resultName As String
-                        somethingChanged = projectboardShapes.hasAchanged(shpelement)
 
-                        pname = extractName(shpelement.Name, PTshty.projektN)
-                        phaseName = extractName(shpelement.Name, PTshty.phaseN)
-                        resultName = shpelement.Title
-                        hproj = ShowProjekte.getProject(pname)
+                        ' es darf nur ein Shape von diesem Typ selektiert sein ... 
+                        If awinSelection.Count = 1 Then
 
-                        If somethingChanged Then
+                            Dim phaseName As String
+                            Dim resultName As String
+                            somethingChanged = projectboardShapes.hasAchanged(shpelement)
 
-                            If hproj.Status = ProjektStatus(0) Then
-                                ' nur dann kann verschoben werden - das wird in der Property sync gemacht
-                                ' hier wird das Projekt mit den Shape Werten "synchronisiert" 
-                                projectboardShapes.sync(shpelement)
-                                ChartsNeedUpdate = True
+                            pname = extractName(shpelement.Name, PTshty.projektN)
+                            phaseName = extractName(shpelement.Name, PTshty.phaseN)
+                            resultName = shpelement.Title
+                            hproj = ShowProjekte.getProject(pname)
 
-                            Else
-                                ' hier werden die verschobenen Shapes wieder zurückgesetzt 
-                                ' Charts müssen nicht aktualisiert werden 
-                                projectboardShapes.sync(shpelement)
-                                ChartsNeedUpdate = False
+                            If somethingChanged Then
+
+                                If hproj.Status = ProjektStatus(0) Then
+                                    ' nur dann kann verschoben werden - das wird in der Property sync gemacht
+                                    ' hier wird das Projekt mit den Shape Werten "synchronisiert" 
+                                    projectboardShapes.sync(shpelement, selCollection)
+                                    ChartsNeedUpdate = True
+
+                                Else
+                                    ' hier werden die verschobenen Shapes wieder zurückgesetzt 
+                                    ' Charts müssen nicht aktualisiert werden 
+                                    projectboardShapes.sync(shpelement, selCollection)
+                                    ChartsNeedUpdate = False
+
+                                End If
+
 
                             End If
 
-
-                        End If
-
-                        If formMilestone Is Nothing Then
-                            formMilestone = New frmMilestoneInformation
-                        End If
-
-                        If Not formMilestone.Visible Then
-                            If formMilestone.IsDisposed Then
+                            If formMilestone Is Nothing Then
                                 formMilestone = New frmMilestoneInformation
                             End If
-                        End If
 
-                        'Call updateMilestoneInformation(shpelement)
-                        Call updateMilestoneInformation(hproj, phaseName, resultName)
+                            If Not formMilestone.Visible Then
+                                If formMilestone.IsDisposed Then
+                                    formMilestone = New frmMilestoneInformation
+                                End If
+                            End If
+
+                            'Call updateMilestoneInformation(shpelement)
+                            Call updateMilestoneInformation(hproj, phaseName, resultName)
+
+                        Else
+
+                            Call MsgBox("bitte nur ein Element bzw. einen Meilenstein selektieren ...")
+                            Call awinDeSelect()
+                            Exit For
+
+                        End If
+                        
 
                     ElseIf shapeType = PTshty.status Then
                         ' war vorher: 
                         'ElseIf shpelement.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeOval Then
                         'Print("not recognized" & shpelement.autoType & "," & shpelement.Name)
 
-                        If formStatus Is Nothing Then
-                            formStatus = New frmStatusInformation
-                        End If
+                        ' es darf nur ein Shape von diesem Typ selektiert sein ... 
+                        If awinSelection.Count = 1 Then
 
-                        If Not formStatus.Visible Then
-                            If formStatus.IsDisposed Then
+                            If formStatus Is Nothing Then
                                 formStatus = New frmStatusInformation
                             End If
+
+                            If Not formStatus.Visible Then
+                                If formStatus.IsDisposed Then
+                                    formStatus = New frmStatusInformation
+                                End If
+                            End If
+
+                            Call updateStatusInformation(shpelement)
+
+                        Else
+
+                            Call MsgBox("bitte nur ein Element bzw. einen Status selektieren ...")
+                            Call awinDeSelect()
+                            Exit For
+
                         End If
 
-                        Call updateStatusInformation(shpelement)
 
                     End If
 

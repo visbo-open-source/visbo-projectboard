@@ -836,6 +836,8 @@ Public Module awinDiagrams
 
         If prcTyp = DiagrammTypen(1) Then
             kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection)
+        ElseIf prcTyp = DiagrammTypen(0) Then
+            kdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
         End If
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
@@ -1136,10 +1138,17 @@ Public Module awinDiagrams
                     End If
 
 
-                    If prcTyp = DiagrammTypen(1) Then
+                    If prcTyp = DiagrammTypen(1) Or _
+                        (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Then
                         With .SeriesCollection.NewSeries
                             .HasDataLabels = False
-                            .name = "Gesamt-Kapazität"
+
+                            If prcTyp = DiagrammTypen(0) Then
+                                .name = "Schwellwert"
+                            Else
+                                .name = "Gesamt-Kapazität"
+                            End If
+
                             .Border.color = rollenKapaFarbe
                             .Values = kdatenreihe
                             .XValues = Xdatenreihe
@@ -1444,8 +1453,9 @@ Public Module awinDiagrams
 
         If prcTyp = DiagrammTypen(1) Then
             kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection)
+        ElseIf prcTyp = DiagrammTypen(0) Then
+            kdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
         End If
-
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -1731,10 +1741,17 @@ Public Module awinDiagrams
 
                 End If
 
-                If prcTyp = DiagrammTypen(1) Then
+                If prcTyp = DiagrammTypen(1) Or _
+                       (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Then
                     With .SeriesCollection.NewSeries
                         .HasDataLabels = False
-                        .name = "Gesamt-Kapazität"
+
+                        If prcTyp = DiagrammTypen(0) Then
+                            .name = "Schwellwert"
+                        Else
+                            .name = "Gesamt-Kapazität"
+                        End If
+
                         .Border.color = rollenKapaFarbe
                         .Values = kdatenreihe
                         .XValues = Xdatenreihe
@@ -4442,7 +4459,7 @@ Public Module awinDiagrams
         Dim zeitraumCost As Double
         Dim costValues() As Double
         Dim ertragsWert As Double
-        Dim minColumn As Integer, maxColumn As Integer, heuteColumn As integer, heuteIndex As Integer
+        Dim minColumn As Integer, maxColumn As Integer, heuteColumn As Integer, heuteIndex As Integer
         Dim future As Boolean = False
 
         heuteColumn = getColumnOfDate(Date.Today)
@@ -4541,7 +4558,7 @@ Public Module awinDiagrams
 
         itemValue(0) = budgetSum
         itemColor(0) = ergebnisfarbe1
-       
+
 
         Dim currentWert As Double = itemValue(0)
 
@@ -4568,7 +4585,7 @@ Public Module awinDiagrams
         End If
 
         diagramTitle = portfolioDiagrammtitel(PTpfdk.Budget) & " " & textZeitraum(showRangeLeft, showRangeRight)
-        
+
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -5090,13 +5107,16 @@ Public Module awinDiagrams
         Dim shpelement As Excel.Shape
         Dim tmpshapes As Excel.Shapes = appInstance.ActiveSheet.shapes
 
-
+        
         Try
             hproj = ShowProjekte.getProject(projektname)
         Catch ex As Exception
             Call MsgBox("Projekt nicht gefunden (in ShowNeedsofProject): " & projektname)
             Exit Sub
         End Try
+
+
+        Dim anzahlTage As Integer = hproj.dauerInDays
 
 
 
@@ -5156,7 +5176,13 @@ Public Module awinDiagrams
 
                 For m = 1 To l
                     If tempArray(m - 1) > 0 And istInTimezone(k + m - 1) Then
-                        .Cells(i, k).Offset(0, m - 1).Value = tempArray(m - 1)
+
+                        Try
+                            .Cells(i, k).Offset(0, m - 1).Value = tempArray(m - 1)
+                        Catch ex As Exception
+
+                        End Try
+
                     End If
                 Next m
 
