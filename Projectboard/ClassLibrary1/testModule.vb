@@ -3147,6 +3147,7 @@ Public Module testModule
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt
         Dim jetzt As Date = Now
+        Dim zeitStempel As Date
         Dim anzSelectedProj As Integer = 0
         Dim anzStoredProj As Integer = 0
 
@@ -3207,7 +3208,8 @@ Public Module testModule
 
             Else
                 'Call MsgBox("Es wurde kein Projekt selektiert")
-                ' die Anzahl selektierter Projekte ist damit = 0
+                ' die Anzahl selektierter und auch gespeicherter Projekte ist damit = 0
+                anzStoredProj = anzSelectedProj
                 Return anzSelectedProj
             End If
 
@@ -3273,6 +3275,9 @@ Public Module testModule
 
         enableOnUpdate = True
 
+        zeitStempel = AlleProjekte.First.Value.timeStamp
+
+        Call MsgBox("ok, " & anzStoredProj & " Projekte gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
         Return anzStoredProj
 
     End Function

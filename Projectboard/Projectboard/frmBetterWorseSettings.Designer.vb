@@ -52,9 +52,10 @@ Partial Class frmBetterWorseSettings
         '
         Me.Panel1.Controls.Add(Me.CBnextMS)
         Me.Panel1.Controls.Add(Me.CBendOfP)
-        Me.Panel1.Location = New System.Drawing.Point(41, 21)
+        Me.Panel1.Location = New System.Drawing.Point(55, 26)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(171, 89)
+        Me.Panel1.Size = New System.Drawing.Size(228, 110)
         Me.Panel1.TabIndex = 0
         '
         'CBnextMS
@@ -62,9 +63,10 @@ Partial Class frmBetterWorseSettings
         Me.CBnextMS.AutoSize = True
         Me.CBnextMS.Checked = True
         Me.CBnextMS.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.CBnextMS.Location = New System.Drawing.Point(19, 49)
+        Me.CBnextMS.Location = New System.Drawing.Point(25, 60)
+        Me.CBnextMS.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.CBnextMS.Name = "CBnextMS"
-        Me.CBnextMS.Size = New System.Drawing.Size(123, 17)
+        Me.CBnextMS.Size = New System.Drawing.Size(160, 21)
         Me.CBnextMS.TabIndex = 1
         Me.CBnextMS.Text = "nächster Meilenstein"
         Me.CBnextMS.UseVisualStyleBackColor = True
@@ -72,9 +74,10 @@ Partial Class frmBetterWorseSettings
         'CBendOfP
         '
         Me.CBendOfP.AutoSize = True
-        Me.CBendOfP.Location = New System.Drawing.Point(19, 15)
+        Me.CBendOfP.Location = New System.Drawing.Point(25, 18)
+        Me.CBendOfP.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.CBendOfP.Name = "CBendOfP"
-        Me.CBendOfP.Size = New System.Drawing.Size(87, 17)
+        Me.CBendOfP.Size = New System.Drawing.Size(112, 21)
         Me.CBendOfP.TabIndex = 0
         Me.CBendOfP.Text = "Projekt-Ende"
         Me.CBendOfP.UseVisualStyleBackColor = True
@@ -83,18 +86,20 @@ Partial Class frmBetterWorseSettings
         '
         Me.Panel2.Controls.Add(Me.RBvglAbs)
         Me.Panel2.Controls.Add(Me.RBvglRel)
-        Me.Panel2.Location = New System.Drawing.Point(41, 116)
+        Me.Panel2.Location = New System.Drawing.Point(55, 143)
+        Me.Panel2.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Panel2.Name = "Panel2"
-        Me.Panel2.Size = New System.Drawing.Size(171, 89)
+        Me.Panel2.Size = New System.Drawing.Size(228, 110)
         Me.Panel2.TabIndex = 1
         '
         'RBvglAbs
         '
         Me.RBvglAbs.AutoSize = True
         Me.RBvglAbs.Checked = True
-        Me.RBvglAbs.Location = New System.Drawing.Point(19, 50)
+        Me.RBvglAbs.Location = New System.Drawing.Point(25, 62)
+        Me.RBvglAbs.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.RBvglAbs.Name = "RBvglAbs"
-        Me.RBvglAbs.Size = New System.Drawing.Size(127, 17)
+        Me.RBvglAbs.Size = New System.Drawing.Size(163, 21)
         Me.RBvglAbs.TabIndex = 1
         Me.RBvglAbs.TabStop = True
         Me.RBvglAbs.Text = "absolute Abweichung"
@@ -103,9 +108,10 @@ Partial Class frmBetterWorseSettings
         'RBvglRel
         '
         Me.RBvglRel.AutoSize = True
-        Me.RBvglRel.Location = New System.Drawing.Point(19, 16)
+        Me.RBvglRel.Location = New System.Drawing.Point(25, 20)
+        Me.RBvglRel.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.RBvglRel.Name = "RBvglRel"
-        Me.RBvglRel.Size = New System.Drawing.Size(121, 17)
+        Me.RBvglRel.Size = New System.Drawing.Size(155, 21)
         Me.RBvglRel.TabIndex = 0
         Me.RBvglRel.Text = "relative Abweichung"
         Me.RBvglRel.UseVisualStyleBackColor = True
@@ -113,9 +119,10 @@ Partial Class frmBetterWorseSettings
         'RBvglL
         '
         Me.RBvglL.AutoSize = True
-        Me.RBvglL.Location = New System.Drawing.Point(15, 49)
+        Me.RBvglL.Location = New System.Drawing.Point(20, 60)
+        Me.RBvglL.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.RBvglL.Name = "RBvglL"
-        Me.RBvglL.Size = New System.Drawing.Size(152, 17)
+        Me.RBvglL.Size = New System.Drawing.Size(200, 21)
         Me.RBvglL.TabIndex = 1
         Me.RBvglL.Text = "Vergleich mit letztem Stand"
         Me.RBvglL.UseVisualStyleBackColor = True
@@ -124,9 +131,10 @@ Partial Class frmBetterWorseSettings
         '
         Me.RBvglB.AutoSize = True
         Me.RBvglB.Checked = True
-        Me.RBvglB.Location = New System.Drawing.Point(15, 15)
+        Me.RBvglB.Location = New System.Drawing.Point(20, 18)
+        Me.RBvglB.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.RBvglB.Name = "RBvglB"
-        Me.RBvglB.Size = New System.Drawing.Size(152, 17)
+        Me.RBvglB.Size = New System.Drawing.Size(200, 21)
         Me.RBvglB.TabIndex = 0
         Me.RBvglB.TabStop = True
         Me.RBvglB.Text = "Vergleich mit Beauftragung"
@@ -136,9 +144,10 @@ Partial Class frmBetterWorseSettings
         '
         Me.Panel3.Controls.Add(Me.RBvglL)
         Me.Panel3.Controls.Add(Me.RBvglB)
-        Me.Panel3.Location = New System.Drawing.Point(218, 21)
+        Me.Panel3.Location = New System.Drawing.Point(291, 26)
+        Me.Panel3.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Panel3.Name = "Panel3"
-        Me.Panel3.Size = New System.Drawing.Size(179, 89)
+        Me.Panel3.Size = New System.Drawing.Size(239, 110)
         Me.Panel3.TabIndex = 2
         '
         'Panel4
@@ -147,50 +156,56 @@ Partial Class frmBetterWorseSettings
         Me.Panel4.Controls.Add(Me.timeToleranz)
         Me.Panel4.Controls.Add(Me.costTolerance)
         Me.Panel4.Controls.Add(Me.timeTolerance)
-        Me.Panel4.Location = New System.Drawing.Point(218, 116)
+        Me.Panel4.Location = New System.Drawing.Point(291, 143)
+        Me.Panel4.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Panel4.Name = "Panel4"
-        Me.Panel4.Size = New System.Drawing.Size(179, 89)
+        Me.Panel4.Size = New System.Drawing.Size(239, 110)
         Me.Panel4.TabIndex = 2
         '
         'CostToleranz
         '
         Me.CostToleranz.AutoSize = True
-        Me.CostToleranz.Location = New System.Drawing.Point(12, 51)
+        Me.CostToleranz.Location = New System.Drawing.Point(16, 63)
+        Me.CostToleranz.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.CostToleranz.Name = "CostToleranz"
-        Me.CostToleranz.Size = New System.Drawing.Size(84, 13)
+        Me.CostToleranz.Size = New System.Drawing.Size(113, 17)
         Me.CostToleranz.TabIndex = 3
         Me.CostToleranz.Text = "Kosten-Toleranz"
         '
         'timeToleranz
         '
         Me.timeToleranz.AutoSize = True
-        Me.timeToleranz.Location = New System.Drawing.Point(12, 19)
+        Me.timeToleranz.Location = New System.Drawing.Point(16, 23)
+        Me.timeToleranz.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.timeToleranz.Name = "timeToleranz"
-        Me.timeToleranz.Size = New System.Drawing.Size(69, 13)
+        Me.timeToleranz.Size = New System.Drawing.Size(93, 17)
         Me.timeToleranz.TabIndex = 2
         Me.timeToleranz.Text = "Zeit-Toleranz"
         '
         'costTolerance
         '
-        Me.costTolerance.Location = New System.Drawing.Point(120, 47)
+        Me.costTolerance.Location = New System.Drawing.Point(160, 58)
+        Me.costTolerance.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.costTolerance.Name = "costTolerance"
-        Me.costTolerance.Size = New System.Drawing.Size(47, 20)
+        Me.costTolerance.Size = New System.Drawing.Size(61, 22)
         Me.costTolerance.TabIndex = 1
         '
         'timeTolerance
         '
-        Me.timeTolerance.Location = New System.Drawing.Point(120, 16)
+        Me.timeTolerance.Location = New System.Drawing.Point(160, 20)
+        Me.timeTolerance.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.timeTolerance.Name = "timeTolerance"
-        Me.timeTolerance.Size = New System.Drawing.Size(47, 20)
+        Me.timeTolerance.Size = New System.Drawing.Size(61, 22)
         Me.timeTolerance.TabIndex = 0
         '
         'RadioButton1
         '
         Me.RadioButton1.AutoSize = True
         Me.RadioButton1.Checked = True
-        Me.RadioButton1.Location = New System.Drawing.Point(19, 50)
+        Me.RadioButton1.Location = New System.Drawing.Point(25, 62)
+        Me.RadioButton1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.RadioButton1.Name = "RadioButton1"
-        Me.RadioButton1.Size = New System.Drawing.Size(86, 17)
+        Me.RadioButton1.Size = New System.Drawing.Size(112, 21)
         Me.RadioButton1.TabIndex = 1
         Me.RadioButton1.TabStop = True
         Me.RadioButton1.Text = "Ausstrahlung"
@@ -199,9 +214,10 @@ Partial Class frmBetterWorseSettings
         'RadioButton2
         '
         Me.RadioButton2.AutoSize = True
-        Me.RadioButton2.Location = New System.Drawing.Point(19, 16)
+        Me.RadioButton2.Location = New System.Drawing.Point(25, 20)
+        Me.RadioButton2.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.RadioButton2.Name = "RadioButton2"
-        Me.RadioButton2.Size = New System.Drawing.Size(137, 17)
+        Me.RadioButton2.Size = New System.Drawing.Size(179, 21)
         Me.RadioButton2.TabIndex = 0
         Me.RadioButton2.Text = "strategische Bedeutung"
         Me.RadioButton2.UseVisualStyleBackColor = True
@@ -210,34 +226,37 @@ Partial Class frmBetterWorseSettings
         '
         Me.Panel5.Controls.Add(Me.RadioButton1)
         Me.Panel5.Controls.Add(Me.RadioButton2)
-        Me.Panel5.Location = New System.Drawing.Point(41, 211)
+        Me.Panel5.Location = New System.Drawing.Point(55, 260)
+        Me.Panel5.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Panel5.Name = "Panel5"
-        Me.Panel5.Size = New System.Drawing.Size(171, 89)
+        Me.Panel5.Size = New System.Drawing.Size(228, 110)
         Me.Panel5.TabIndex = 2
         '
         'OkButton
         '
-        Me.OkButton.Location = New System.Drawing.Point(233, 227)
+        Me.OkButton.Location = New System.Drawing.Point(311, 279)
+        Me.OkButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.OkButton.Name = "OkButton"
-        Me.OkButton.Size = New System.Drawing.Size(152, 23)
+        Me.OkButton.Size = New System.Drawing.Size(203, 28)
         Me.OkButton.TabIndex = 3
         Me.OkButton.Text = "OK"
         Me.OkButton.UseVisualStyleBackColor = True
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(233, 261)
+        Me.AbbrButton.Location = New System.Drawing.Point(311, 321)
+        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(152, 23)
+        Me.AbbrButton.Size = New System.Drawing.Size(203, 28)
         Me.AbbrButton.TabIndex = 4
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
         '
         'frmBetterWorseSettings
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(433, 317)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
+        Me.ClientSize = New System.Drawing.Size(577, 390)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OkButton)
         Me.Controls.Add(Me.Panel5)
@@ -245,6 +264,7 @@ Partial Class frmBetterWorseSettings
         Me.Controls.Add(Me.Panel3)
         Me.Controls.Add(Me.Panel2)
         Me.Controls.Add(Me.Panel1)
+        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmBetterWorseSettings"
         Me.Text = "Einstellungen für Besser / Schlechter Diagramme"
         Me.TopMost = True

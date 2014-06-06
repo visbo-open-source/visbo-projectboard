@@ -45,12 +45,29 @@ Imports Microsoft.Office.Interop.Excel
 
 
     Sub PTNeueKonstellation(control As IRibbonControl)
+
         Dim storeConstellationFrm As New frmStoreConstellation
         Dim returnValue As DialogResult
+        Dim constellationName As String
+
 
         enableOnUpdate = False
-        returnValue = storeConstellationFrm.ShowDialog
-        Call awinStoreConstellation(storeConstellationFrm.ComboBox1.Text)
+        If AlleProjekte.Count > 0 Then
+            returnValue = storeConstellationFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Portfolios
+
+            If returnValue = DialogResult.OK Then
+                constellationName = storeConstellationFrm.ComboBox1.Text
+
+                Call awinStoreConstellation(constellationName)
+
+                ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
+                currentConstellation = constellationName
+
+            End If
+        Else
+            Call MsgBox("Es sind keine Projekte in der Projekt-Tafel geladen!")
+        End If
+
         enableOnUpdate = True
 
     End Sub
@@ -66,7 +83,9 @@ Imports Microsoft.Office.Interop.Excel
         enableOnUpdate = False
 
         returnValue = loadConstellationFrm.ShowDialog
+
         If returnValue = DialogResult.OK Then
+
             constellationName = loadConstellationFrm.ListBox1.Text
             Call awinLoadConstellation(constellationName, successMessage)
 
@@ -81,9 +100,8 @@ Imports Microsoft.Office.Interop.Excel
             If successMessage.Length > initMessage.Length Then
                 Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
             Else
-                Call MsgBox(constellationName & " wurde geladen ...")
+                'Call MsgBox(constellationName & " wurde geladen ...")
             End If
-
 
             ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
             currentConstellation = constellationName
@@ -125,16 +143,38 @@ Imports Microsoft.Office.Interop.Excel
     End Sub
 
 
-    Sub awinSetModusHistory(control As IRibbonControl)
+    Sub awinSetModusHistory(control As IRibbonControl,ByRef pressed As Boolean)
 
-        demoModusHistory = Not demoModusHistory
-        historicDate = #2/27/2014#
-        historicDate = historicDate.AddHours(16)
-        If demoModusHistory Then
-            Call MsgBox("Demo Modus History: Ein")
+        Dim demoModusDate As New frmdemoModusDate
+        Dim returnValue As DialogResult
+
+        If pressed Then
+
+            demoModusHistory = True
+
+            returnValue = demoModusDate.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+
+                If demoModusHistory Then
+                    Call MsgBox("Demo Modus History: Ein" & vbLf & "neues Datum: " & historicDate)
+                Else
+                    Call MsgBox("Demo Modus History: Aus")
+                End If
+
+            Else
+                If demoModusHistory Then
+                    Call MsgBox("Demo Modus History: Ein" & vbLf & "altes Datum: " & historicDate)
+                Else
+                    Call MsgBox("Demo Modus History: Aus")
+                End If
+
+            End If
         Else
-            Call MsgBox("Demo Modus History: Aus")
+            demoModusHistory = False
+            'Call MsgBox("Demo Modus History: Aus")
         End If
+
 
     End Sub
 
@@ -146,14 +186,15 @@ Imports Microsoft.Office.Interop.Excel
             If AlleProjekte.Count > 0 Then
 
                 'Call StoreAllProjectsinDB()
-                storedProj = StoreSelectedProjectsinDB()
+                storedProj = StoreSelectedProjectsinDB()    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+
                 If storedProj = 0 Then
                     Call MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte speichern?", MsgBoxStyle.OkCancel)
                     If MsgBoxResult.Ok Then
                         Call StoreAllProjectsinDB()
                     End If
                 Else
-                    Call MsgBox("Es wurden " & storedProj & " Projekte gespeichert!")
+                    'Call MsgBox("Es wurden " & storedProj & " Projekte gespeichert!")
                 End If
 
             Else
@@ -213,8 +254,6 @@ Imports Microsoft.Office.Interop.Excel
 
         enableOnUpdate = False
 
-        
-
         Try
             awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
         Catch ex As Exception
@@ -242,8 +281,6 @@ Imports Microsoft.Office.Interop.Excel
 
 
         End If
-
-
 
         Call awinDeSelect()
         Call MsgBox(ausgabeString)
@@ -335,6 +372,7 @@ Imports Microsoft.Office.Interop.Excel
 
                                 Try
                                     If ShowProjekte.Liste.ContainsKey(newName) Or Len(newName.Trim) = 0 Or IsNumeric(newName) Then
+
                                         ' ungültiger Name - alten Namen wiederherstellen 
                                         .TextFrame2.TextRange.Text = oldName
                                         erg = erg & oldName & "bleibt, " & newName & "ungültig" & vbLf
@@ -373,7 +411,7 @@ Imports Microsoft.Office.Interop.Excel
             Catch ex As Exception
                 Call MsgBox("Aktion im Extended Mode nicht unterstützt ...")
             End Try
-           
+
 
         End If
 
@@ -431,7 +469,7 @@ Imports Microsoft.Office.Interop.Excel
             End With
         End If
 
- 
+
         enableOnUpdate = True
 
     End Sub
@@ -457,10 +495,34 @@ Imports Microsoft.Office.Interop.Excel
 
         Dim defineDependencies As New frmDependencies
         Dim result As DialogResult
+        Dim awinSelection As Excel.ShapeRange
 
         enableOnUpdate = False
 
-        result = defineDependencies.ShowDialog()
+        If ShowProjekte.Count > 0 Then
+
+            Try
+                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+            Catch ex As Exception
+                awinSelection = Nothing
+            End Try
+
+            If Not awinSelection Is Nothing Then
+
+                If awinSelection.Count > 1 Then
+
+                    result = defineDependencies.ShowDialog()
+                Else
+
+                    Call MsgBox("Bitte zunächst  mindestens zwei Projekte selektieren!")
+                End If
+            Else
+                Call MsgBox("Bitte zunächst mindestens zwei Projekte selektieren!")
+            End If
+
+        Else
+            Call MsgBox("Es sind keine Projekte geladen!")
+        End If
 
         enableOnUpdate = True
 
@@ -839,7 +901,18 @@ Imports Microsoft.Office.Interop.Excel
         enableOnUpdate = False
         appInstance.ScreenUpdating = False
 
-        returnValue = getBackToShow.ShowDialog
+        If AlleProjekte.Count > 0 And ShowProjekte.Count <> AlleProjekte.Count Then
+
+            returnValue = getBackToShow.ShowDialog
+        Else
+            If AlleProjekte.Count = 0 Then
+                Call MsgBox("Es sind keine Projekte geladen!  ")
+            Else
+                Call MsgBox("Es gibt keine Projekte in der Warteschlange !")
+            End If
+        End If
+
+
 
         appInstance.ScreenUpdating = True
         enableOnUpdate = True
@@ -1561,6 +1634,13 @@ Imports Microsoft.Office.Interop.Excel
     Public Sub PT5phasenZeichnenInit(control As IRibbonControl, ByRef pressed As Boolean)
 
         pressed = ProjectBoardDefinitions.My.Settings.drawPhases
+
+    End Sub
+    Sub PTDemoModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
+
+        demoModusHistory = Not demoModusHistory
+
+        pressed = demoModusHistory
 
     End Sub
 
@@ -2502,7 +2582,7 @@ Imports Microsoft.Office.Interop.Excel
                         Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
                         projekthistorie.clear()
                     End If
-                   
+
                 Else
                     ' der aktuelle Stand hproj muss hinzugefügt werden 
                     Dim lastElem As Integer = projekthistorie.Count - 1
@@ -2877,30 +2957,37 @@ Imports Microsoft.Office.Interop.Excel
 
 
         Call awinDeSelect()
+        If ShowProjekte.Count > 0 Then
+            If showRangeRight - showRangeLeft > 5 Then
 
-        nameList = ShowProjekte.getMilestoneNames
+                nameList = ShowProjekte.getMilestoneNames
 
-        If nameList.Count > 0 Then
+                If nameList.Count > 0 Then
 
-            For Each kvp As KeyValuePair(Of String, String) In nameList
-                listOfItems.Add(kvp.Key)
-            Next
+                    For Each kvp As KeyValuePair(Of String, String) In nameList
+                        listOfItems.Add(kvp.Key)
+                    Next
 
-            ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
+                    ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
+                    Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
 
 
-            With auswahlFenster
+                    With auswahlFenster
 
-                .chTyp = DiagrammTypen(5)
+                        .chTyp = DiagrammTypen(5)
 
-            End With
-            auswahlFenster.Show()
+                    End With
+                    auswahlFenster.Show()
 
+                Else
+                    Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+                End If
+            Else
+                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+            End If
         Else
-            Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+            Call MsgBox("Es sind keine Projekte geladen!")
         End If
-
 
 
 
@@ -3284,35 +3371,44 @@ Imports Microsoft.Office.Interop.Excel
 
         Call awinDeSelect()
 
-        existingNames = ShowProjekte.getPhaseNames
+        If ShowProjekte.Count > 0 Then
 
-        ' jetzt werden die Namen in der Reihenfolge, wie sie in der Phasen-Definition stehen in der listofItems eingetragen ..
+            If showRangeRight - showRangeLeft > 5 Then
 
-        For i = 1 To PhaseDefinitions.Count
-            phaseName = PhaseDefinitions.getPhaseDef(i).name
 
-            If existingNames.ContainsKey(phaseName) Then
-                listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
+                existingNames = ShowProjekte.getPhaseNames
+
+                ' jetzt werden die Namen in der Reihenfolge, wie sie in der Phasen-Definition stehen in der listofItems eingetragen ..
+
+                For i = 1 To PhaseDefinitions.Count
+                    phaseName = PhaseDefinitions.getPhaseDef(i).name
+
+                    If existingNames.ContainsKey(phaseName) Then
+                        listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
+                    End If
+
+                Next
+
+                ' jetzt stehen in der listOfItems die Namen der Phasen 
+                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
+
+                von = showRangeLeft
+                bis = showRangeRight
+                With auswahlFenster
+                    .chTop = 50.0
+                    .chLeft = (showRangeRight - 1) * boxWidth + 4
+                    .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+                    .chHeight = awinSettings.ChartHoehe1
+                    .chTyp = DiagrammTypen(0)
+
+                End With
+                auswahlFenster.Show()
+            Else
+                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
             End If
-
-        Next
-
-
-        ' jetzt stehen in der listOfItems die Namen der Phasen 
-        Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
-
-        von = showRangeLeft
-        bis = showRangeRight
-        With auswahlFenster
-            .chTop = 50.0
-            .chLeft = (showRangeRight - 1) * boxWidth + 4
-            .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-            .chHeight = awinSettings.ChartHoehe1
-            .chTyp = DiagrammTypen(0)
-
-        End With
-        auswahlFenster.Show()
-
+        Else
+            Call MsgBox("Es sind keine Projekte geladen!")
+        End If
     End Sub
 
 
@@ -3327,34 +3423,39 @@ Imports Microsoft.Office.Interop.Excel
         Dim repObj As Object = Nothing
         Dim phaseName As String
 
+        If ShowProjekte.Count > 0 Then
 
+            If showRangeRight - showRangeLeft > 5 Then
 
-        For i = 1 To PhaseDefinitions.Count
-            phaseName = PhaseDefinitions.getPhaseDef(i).name
-            Try
-                listOfItems.Add(phaseName, phaseName)
-            Catch ex As Exception
+                For i = 1 To PhaseDefinitions.Count
+                    phaseName = PhaseDefinitions.getPhaseDef(i).name
+                    Try
+                        listOfItems.Add(phaseName, phaseName)
+                    Catch ex As Exception
 
-            End Try
+                    End Try
 
-        Next
+                Next
 
-        ' jetzt stehen in der listOfItems die Namen der Rollen 
-        Dim auswahlFenster As New ListSelectionWindow(listOfItems, "Phasen auswählen", "pro Item ein Chart")
+                ' jetzt stehen in der listOfItems die Namen der Rollen 
+                Dim auswahlFenster As New ListSelectionWindow(listOfItems, "Phasen auswählen", "pro Item ein Chart")
 
-        von = showRangeLeft
-        bis = showRangeRight
-        With auswahlFenster
-            .chTop = 50.0 + awinSettings.ChartHoehe1
-            .chLeft = (showRangeRight - 1) * boxWidth + 4
-            .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-            .chHeight = awinSettings.ChartHoehe1
-            .chTyp = DiagrammTypen(0)
-        End With
-        auswahlFenster.Show()
-
-
-
+                von = showRangeLeft
+                bis = showRangeRight
+                With auswahlFenster
+                    .chTop = 50.0 + awinSettings.ChartHoehe1
+                    .chLeft = (showRangeRight - 1) * boxWidth + 4
+                    .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+                    .chHeight = awinSettings.ChartHoehe1
+                    .chTyp = DiagrammTypen(0)
+                End With
+                auswahlFenster.Show()
+            Else
+                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+            End If
+        Else
+            Call MsgBox("Es sind noch keine Projekte geladen!")
+        End If
     End Sub
 
     Sub PTShowMilestoneSummen(control As IRibbonControl)
@@ -3366,73 +3467,99 @@ Imports Microsoft.Office.Interop.Excel
         Dim repObj As Object = Nothing
         Dim nameList As New SortedList(Of String, String)
 
+        If ShowProjekte.Count > 0 Then
+            If showRangeRight - showRangeLeft > 5 Then
 
-        nameList = ShowProjekte.getMilestoneNames
+                nameList = ShowProjekte.getMilestoneNames
 
-        If nameList.Count > 0 Then
+                If nameList.Count > 0 Then
 
-            For Each kvp As KeyValuePair(Of String, String) In nameList
-                listOfItems.Add(kvp.Key)
-            Next
+                    For Each kvp As KeyValuePair(Of String, String) In nameList
+                        listOfItems.Add(kvp.Key)
+                    Next
 
-            ' jetzt stehen in der listOfItems die Namen der Rollen 
-            Dim auswahlFenster As New ListSelectionWindow(listOfItems, "Meilensteine auswählen", "pro Item ein Chart")
+                    ' jetzt stehen in der listOfItems die Namen der Rollen 
+                    Dim auswahlFenster As New ListSelectionWindow(listOfItems, "Meilensteine auswählen", "pro Item ein Chart")
 
-            von = showRangeLeft
-            bis = showRangeRight
-            With auswahlFenster
-                .kennung = "sum"
-                .chTop = 50.0 + awinSettings.ChartHoehe1
-                .chLeft = (showRangeRight - 1) * boxWidth + 4
-                .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-                .chHeight = awinSettings.ChartHoehe1
-                .chTyp = DiagrammTypen(5)
-            End With
-            auswahlFenster.Show()
+                    von = showRangeLeft
+                    bis = showRangeRight
+                    With auswahlFenster
+                        .kennung = "sum"
+                        .chTop = 50.0 + awinSettings.ChartHoehe1
+                        .chLeft = (showRangeRight - 1) * boxWidth + 4
+                        .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+                        .chHeight = awinSettings.ChartHoehe1
+                        .chTyp = DiagrammTypen(5)
+                    End With
+                    auswahlFenster.Show()
 
 
+                Else
+                    Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+                End If
+            Else
+                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+            End If
         Else
-            Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+            Call MsgBox("Es sind keine Projekte geladen!")
         End If
-
 
     End Sub
 
 
     Sub PT0ShowAuslastung(control As IRibbonControl)
 
+        Dim selectionType As Integer = -1 ' Keine Einschränkung
         Dim top As Double, left As Double, width As Double, height As Double
         Dim obj As Object = Nothing
+        Dim myCollection As New Collection
 
         appInstance.ScreenUpdating = False
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
 
+        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
-        top = 180
-        width = 340
-        left = showRangeRight * boxWidth + 4
-        If left < 0 Then
-            left = 4
+        If myCollection.Count > 0 Then
+
+            top = 180
+            width = 340
+            left = showRangeRight * boxWidth + 4
+            If left < 0 Then
+                left = 4
+            End If
+            height = awinSettings.ChartHoehe2
+
+            Try
+                Call awinCreateAuslastungsDiagramm(obj, top, left, width, height, False)
+
+                top = top + height + 10
+                Call createAuslastungsDetailPie(obj, 1, top, left, height, width, False)
+
+                ' jetzt Unterauslastung
+                top = top + height + 10
+                Call createAuslastungsDetailPie(obj, 2, top, left, height, width, False)
+
+            Catch ex As Exception
+                Call MsgBox("keine Information vorhanden")
+            End Try
+
+        Else
+
+            If ShowProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte angezeigt")
+
+            Else
+                If showRangeRight - showRangeLeft < 6 Then
+                    Call MsgBox(" Bitte wählen Sie zuerst einen Zeitraum aus !")
+                Else
+                    Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                                "gibt es keine Projekte ")
+                End If
+            End If
+
         End If
-        height = awinSettings.ChartHoehe2
-
-        Try
-            Call awinCreateAuslastungsDiagramm(obj, top, left, width, height, False)
-
-            top = top + height + 10
-            Call createAuslastungsDetailPie(obj, 1, top, left, height, width, False)
-
-            ' jetzt Unterauslastung
-            top = top + height + 10
-            Call createAuslastungsDetailPie(obj, 2, top, left, height, width, False)
-
-        Catch ex As Exception
-            Call MsgBox("keine Information vorhanden")
-        End Try
-
-
 
 
 
@@ -3461,40 +3588,48 @@ Imports Microsoft.Office.Interop.Excel
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
+        If (showRangeRight - showRangeLeft) >= 6 Then
 
-        For i = 1 To RoleDefinitions.Count
-            roleName = RoleDefinitions.getRoledef(i).name
-            With ShowProjekte
-                curValue = .getAuslastungsValues(roleName, 1).Sum - .getAuslastungsValues(roleName, 2).Sum
-                If curValue > engpassValue Then
-                    engpassValue = curValue
-                    engpass = roleName
+            If ShowProjekte.Count > 0 Then
+
+                For i = 1 To RoleDefinitions.Count
+                    roleName = RoleDefinitions.getRoledef(i).name
+                    With ShowProjekte
+                        curValue = .getAuslastungsValues(roleName, 1).Sum - .getAuslastungsValues(roleName, 2).Sum
+                        If curValue > engpassValue Then
+                            engpassValue = curValue
+                            engpass = roleName
+                        End If
+                    End With
+                Next
+
+                If engpass <> "" Then
+                    myCollection.Add(engpass, engpass)
+                    von = showRangeLeft
+                    bis = showRangeRight
+
+                    height = awinSettings.ChartHoehe1
+                    top = 180
+
+                    If von > 1 Then
+                        left = showRangeRight * boxWidth + 4
+                    Else
+                        left = 0
+                    End If
+
+                    width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+
+                    Call awinCreateprcCollectionDiagram(myCollection, repObj, top, left, width, height, False, DiagrammTypen(1), False)
+
+                Else
+                    Call MsgBox("kein Engpass gefunden")
                 End If
-            End With
-        Next
-
-        If engpass <> "" Then
-            myCollection.Add(engpass, engpass)
-            von = showRangeLeft
-            bis = showRangeRight
-
-            height = awinSettings.ChartHoehe1
-            top = 180
-
-            If von > 1 Then
-                left = showRangeRight * boxWidth + 4
             Else
-                left = 0
+                Call MsgBox("Es sind keine Projekte geladen! ")
             End If
-
-            width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-
-            Call awinCreateprcCollectionDiagram(myCollection, repObj, top, left, width, height, False, DiagrammTypen(1), False)
-
         Else
-            Call MsgBox("kein Engpass gefunden")
+            Call MsgBox("Bitte wählen Sie zuerst einen Zeitraum aus, der mindestens 6 Monate lang ist!")
         End If
-
 
         'appInstance.ScreenUpdating = True
         appInstance.EnableEvents = True
@@ -3518,26 +3653,36 @@ Imports Microsoft.Office.Interop.Excel
         'appInstance.EnableEvents = False
         'enableOnUpdate = False
 
+        If ShowProjekte.Count > 0 Then
 
-        For i = 1 To RoleDefinitions.Count
-            listOfItems.Add(RoleDefinitions.getRoledef(i).name)
-        Next
-
-        ' jetzt stehen in der listOfItems die Namen der Rollen 
-        Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
-
-        von = showRangeLeft
-        bis = showRangeRight
-        With auswahlFenster
-            .chTop = 100.0 + awinSettings.ChartHoehe1
-            .chLeft = ((von - 1) / 3 - 1) * 3 * boxWidth + 32.8 + von * screen_correct
-            .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-            .chHeight = awinSettings.ChartHoehe1
-            .chTyp = DiagrammTypen(1)
-        End With
+            If showRangeRight - showRangeLeft > 5 Then
 
 
-        auswahlFenster.Show()
+                For i = 1 To RoleDefinitions.Count
+                    listOfItems.Add(RoleDefinitions.getRoledef(i).name)
+                Next
+
+                ' jetzt stehen in der listOfItems die Namen der Rollen 
+                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+
+                von = showRangeLeft
+                bis = showRangeRight
+                With auswahlFenster
+                    .chTop = 100.0 + awinSettings.ChartHoehe1
+                    .chLeft = ((von - 1) / 3 - 1) * 3 * boxWidth + 32.8 + von * screen_correct
+                    .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+                    .chHeight = awinSettings.ChartHoehe1
+                    .chTyp = DiagrammTypen(1)
+                End With
+
+
+                auswahlFenster.Show()
+            Else
+                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+            End If
+        Else
+            Call MsgBox("Es sind noch keine Projekte geladen!")
+        End If
 
         'appInstance.ScreenUpdating = True
         'appInstance.EnableEvents = True
@@ -3558,51 +3703,36 @@ Imports Microsoft.Office.Interop.Excel
 
         'appInstance.EnableEvents = False
         'enableOnUpdate = False
+        If ShowProjekte.Count > 0 Then
+
+            If showRangeRight - showRangeLeft > 5 Then
+
+                For i = 1 To CostDefinitions.Count - 1
+                    listOfItems.Add(CostDefinitions.getCostdef(i).name)
+                Next
+
+                ' jetzt stehen in der listOfItems die Namen der Rollen 
+                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
 
 
-        For i = 1 To CostDefinitions.Count - 1
-            listOfItems.Add(CostDefinitions.getCostdef(i).name)
-        Next
+                von = showRangeLeft
+                bis = showRangeRight
+                With auswahlFenster
+                    .chTop = 50.0
+                    .chLeft = (showRangeRight - 1) * boxWidth + 4
+                    .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
+                    .chHeight = awinSettings.ChartHoehe1
+                    .chTyp = DiagrammTypen(2)
 
-        ' jetzt stehen in der listOfItems die Namen der Rollen 
-        Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+                End With
 
-
-        von = showRangeLeft
-        bis = showRangeRight
-        With auswahlFenster
-            .chTop = 50.0
-            .chLeft = (showRangeRight - 1) * boxWidth + 4
-            .chWidth = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-            .chHeight = awinSettings.ChartHoehe1
-            .chTyp = DiagrammTypen(2)
-
-        End With
-
-        auswahlFenster.Show()
-
-        'If auswahlFenster.ShowDialog() Then
-
-        '    myCollection = auswahlFenster.selectedItems
-        '    von = showRangeLeft
-        '    bis = showRangeRight
-
-        '    height = awinSettings.ChartHoehe1
-        '    top = WertfuerTop()
-
-        '    If von > 1 Then
-        '        'left = ((von - 1) / 3 - 1) * 3 * boxWidth + 32.8 + von * screen_correct
-        '        left = (showRangeRight - 1) * boxWidth + 4
-        '    Else
-        '        left = 0
-        '    End If
-
-        '    width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-
-        '    Call awinCreateprcCollectionDiagram(myCollection, repObj, top, left, width, height, False, DiagrammTypen(2), False)
-
-        'End If
-
+                auswahlFenster.Show()
+            Else
+                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+            End If
+        Else
+            Call MsgBox("Es sind noch keine Projekte geladen!")
+        End If
 
         'appInstance.EnableEvents = True
         'enableOnUpdate = True
@@ -3620,58 +3750,67 @@ Imports Microsoft.Office.Interop.Excel
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
+        If ShowProjekte.Count > 0 Then
+            If showRangeRight - showRangeLeft > 5 Then
 
-        ' betrachte sowohl Vergangenheit als auch Gegenwart
-        future = 0
+                ' betrachte sowohl Vergangenheit als auch Gegenwart
+                future = 0
 
-        Dim wpfInput As New Dictionary(Of String, clsWPFPieValues)
-        Dim valueItem As New clsWPFPieValues
+                Dim wpfInput As New Dictionary(Of String, clsWPFPieValues)
+                Dim valueItem As New clsWPFPieValues
 
-        ' Nicht bewertet 
-        With valueItem
-            .value = ShowProjekte.getColorsInMonth(0, future).Sum
-            .name = "nicht bewertet"
-            .color = CType(awinSettings.AmpelNichtBewertet, UInt32)
-        End With
-        wpfInput.Add(valueItem.name, valueItem)
+                ' Nicht bewertet 
+                With valueItem
+                    .value = ShowProjekte.getColorsInMonth(0, future).Sum
+                    .name = "nicht bewertet"
+                    .color = CType(awinSettings.AmpelNichtBewertet, UInt32)
+                End With
+                wpfInput.Add(valueItem.name, valueItem)
 
-        valueItem = New clsWPFPieValues
-        ' Grün bewertet
-        With valueItem
-            .value = ShowProjekte.getColorsInMonth(1, future).Sum
-            .name = "OK"
-            .color = CType(awinSettings.AmpelGruen, UInt32)
-        End With
-        wpfInput.Add(valueItem.name, valueItem)
+                valueItem = New clsWPFPieValues
+                ' Grün bewertet
+                With valueItem
+                    .value = ShowProjekte.getColorsInMonth(1, future).Sum
+                    .name = "OK"
+                    .color = CType(awinSettings.AmpelGruen, UInt32)
+                End With
+                wpfInput.Add(valueItem.name, valueItem)
 
-        valueItem = New clsWPFPieValues
-        ' Gelb bewertet
-        With valueItem
-            .value = ShowProjekte.getColorsInMonth(2, future).Sum
-            .name = "nicht vollständig"
-            .color = awinSettings.AmpelGelb
-        End With
-        wpfInput.Add(valueItem.name, valueItem)
+                valueItem = New clsWPFPieValues
+                ' Gelb bewertet
+                With valueItem
+                    .value = ShowProjekte.getColorsInMonth(2, future).Sum
+                    .name = "nicht vollständig"
+                    .color = awinSettings.AmpelGelb
+                End With
+                wpfInput.Add(valueItem.name, valueItem)
 
-        valueItem = New clsWPFPieValues
-        ' Rot bewertet
-        With valueItem
-            .value = ShowProjekte.getColorsInMonth(3, future).Sum
-            .name = "Zielverfehlung"
-            .color = CType(awinSettings.AmpelRot, UInt32)
-        End With
-        wpfInput.Add(valueItem.name, valueItem)
+                valueItem = New clsWPFPieValues
+                ' Rot bewertet
+                With valueItem
+                    .value = ShowProjekte.getColorsInMonth(3, future).Sum
+                    .name = "Zielverfehlung"
+                    .color = CType(awinSettings.AmpelRot, UInt32)
+                End With
+                wpfInput.Add(valueItem.name, valueItem)
 
 
-        Dim pieChartZieleV As New PieChartWindow(wpfInput)
+                Dim pieChartZieleV As New PieChartWindow(wpfInput)
 
-        With pieChartZieleV
-            .Title = "Ziele-Erreichung " & textZeitraum(showRangeLeft, showRangeRight)
-            '.Top = frmCoord(PTfrm.ziele, PTpinfo.top)
-            '.Left = frmCoord(PTfrm.ziele, PTpinfo.left)
-        End With
+                With pieChartZieleV
+                    .Title = "Ziele-Erreichung " & textZeitraum(showRangeLeft, showRangeRight)
+                    '.Top = frmCoord(PTfrm.ziele, PTpinfo.top)
+                    '.Left = frmCoord(PTfrm.ziele, PTpinfo.left)
+                End With
 
-        pieChartZieleV.Show()
+                pieChartZieleV.Show()
+            Else
+                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+            End If
+
+        Else
+            Call MsgBox("Es sind keine Projekte geladen!")
+        End If
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -3732,7 +3871,7 @@ Imports Microsoft.Office.Interop.Excel
 
         End If
 
-        
+
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -3886,7 +4025,7 @@ Imports Microsoft.Office.Interop.Excel
             End If
         End If
 
-        
+
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -3975,7 +4114,7 @@ Imports Microsoft.Office.Interop.Excel
 
         End If
 
-        
+
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -4057,7 +4196,7 @@ Imports Microsoft.Office.Interop.Excel
             End If
 
         End If
-        
+
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -4120,7 +4259,7 @@ Imports Microsoft.Office.Interop.Excel
             End If
 
         End If
-        
+
 
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
@@ -4183,7 +4322,7 @@ Imports Microsoft.Office.Interop.Excel
 
         End If
 
-        
+
 
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
@@ -4196,11 +4335,14 @@ Imports Microsoft.Office.Interop.Excel
     Sub PT0ShowPortfolioBudgetCost(control As IRibbonControl)
         Dim selectionType As Integer = -1 ' keine Einschränkung
         Dim top As Double, left As Double, width As Double, height As Double
+        Dim myCollection As New Collection
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        If ShowProjekte.Count > 0 Then
+        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+
+        If myCollection.Count > 0 Then
 
             Dim sichtbarerBereich As Excel.Range
 
@@ -4226,7 +4368,17 @@ Imports Microsoft.Office.Interop.Excel
 
         Else
 
-            Call MsgBox("es sind keine Projekte angezeigt")
+            If ShowProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte angezeigt")
+
+            Else
+                If showRangeRight - showRangeLeft < 6 Then
+                    Call MsgBox(" Bitte wählen Sie zuerst einen Zeitraum aus !")
+                Else
+                    Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                                "gibt es keine Projekte ")
+                End If
+            End If
 
         End If
 
@@ -4239,12 +4391,14 @@ Imports Microsoft.Office.Interop.Excel
     Sub PT0ShowPortfolioErgebnis(control As IRibbonControl)
         Dim selectionType As Integer = -1 ' keine Einschränkung
         Dim top As Double, left As Double, width As Double, height As Double
+        Dim myCollection As New Collection
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
+        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
-        If ShowProjekte.Count > 0 Then
+        If myCollection.Count > 0 Then
 
             Dim sichtbarerBereich As Excel.Range
 
@@ -4273,11 +4427,22 @@ Imports Microsoft.Office.Interop.Excel
 
         Else
 
-            Call MsgBox("es sind keine Projekte angezeigt")
+            If ShowProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte angezeigt")
+
+            Else
+                If showRangeRight - showRangeLeft < 6 Then
+                    Call MsgBox(" Bitte wählen Sie zuerst einen Zeitraum aus !")
+                Else
+                    Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                                "gibt es keine Projekte ")
+                End If
+            End If
+
 
         End If
 
-        
+
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -4307,7 +4472,7 @@ Imports Microsoft.Office.Interop.Excel
 
         End If
 
-        
+
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -5131,7 +5296,7 @@ Imports Microsoft.Office.Interop.Excel
                         Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
                         projekthistorie.clear()
                     End If
-                  
+
                 Else
                     ' der aktuelle Stand hproj muss hinzugefügt werden 
                     Dim lastElem As Integer = projekthistorie.Count - 1
@@ -5201,36 +5366,36 @@ Imports Microsoft.Office.Interop.Excel
         appInstance.EnableEvents = True
 
 
-            Try
-                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-            Catch ex As Exception
-                awinSelection = Nothing
-            End Try
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
 
-            If Not awinSelection Is Nothing Then
+        If Not awinSelection Is Nothing Then
 
-                If awinSelection.Count = 1 Then
-                    ' jetzt die Aktion durchführen ...
-                    singleShp = awinSelection.Item(1)
-                    hproj = ShowProjekte.getProject(singleShp.Name)
-                    With hproj
-                        pName = .name
-                        variantName = .variantName
-                        'Try
-                        '    variantName = .variantName.Trim
-                        'Catch ex As Exception
-                        '    variantName = ""
-                        'End Try
+            If awinSelection.Count = 1 Then
+                ' jetzt die Aktion durchführen ...
+                singleShp = awinSelection.Item(1)
+                hproj = ShowProjekte.getProject(singleShp.Name)
+                With hproj
+                    pName = .name
+                    variantName = .variantName
+                    'Try
+                    '    variantName = .variantName.Trim
+                    'Catch ex As Exception
+                    '    variantName = ""
+                    'End Try
 
-                    End With
+                End With
 
-                    If Not projekthistorie Is Nothing Then
-                        If projekthistorie.Count > 0 Then
-                            vglName = projekthistorie.First.name
-                        End If
+                If Not projekthistorie Is Nothing Then
+                    If projekthistorie.Count > 0 Then
+                        vglName = projekthistorie.First.name
                     End If
+                End If
 
-                    If vglName.Trim <> pName.Trim Then
+                If vglName.Trim <> pName.Trim Then
 
                     If request.pingMongoDb() Then
                         ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
@@ -5255,65 +5420,65 @@ Imports Microsoft.Office.Interop.Excel
                 End If
 
 
-                    Dim nrSnapshots As Integer = projekthistorie.Count
+                Dim nrSnapshots As Integer = projekthistorie.Count
 
-                    If nrSnapshots > 0 Then
+                If nrSnapshots > 0 Then
 
-                        With showCharacteristics
+                    With showCharacteristics
 
-                            .Text = "Historie für Projekt " & pName.Trim
-                            .timeSlider.Minimum = 0
-                            .timeSlider.Maximum = nrSnapshots - 1
+                        .Text = "Historie für Projekt " & pName.Trim
+                        .timeSlider.Minimum = 0
+                        .timeSlider.Maximum = nrSnapshots - 1
 
-                            '.ampelErlaeuterung.Text = kvp.Value.ampelErlaeuterung
+                        '.ampelErlaeuterung.Text = kvp.Value.ampelErlaeuterung
 
-                            'If kvp.Value.ampelStatus = 1 Then
-                            '    .ampelPicture.LoadAsync(grueneAmpel)
-                            'ElseIf kvp.Value.ampelStatus = 2 Then
-                            '    .ampelPicture.LoadAsync(gelbeAmpel)
-                            'ElseIf kvp.Value.ampelStatus = 3 Then
-                            '    .ampelPicture.LoadAsync(roteAmpel)
-                            'Else
-                            '    .ampelPicture.LoadAsync(graueAmpel)
-                            'End If
+                        'If kvp.Value.ampelStatus = 1 Then
+                        '    .ampelPicture.LoadAsync(grueneAmpel)
+                        'ElseIf kvp.Value.ampelStatus = 2 Then
+                        '    .ampelPicture.LoadAsync(gelbeAmpel)
+                        'ElseIf kvp.Value.ampelStatus = 3 Then
+                        '    .ampelPicture.LoadAsync(roteAmpel)
+                        'Else
+                        '    .ampelPicture.LoadAsync(graueAmpel)
+                        'End If
 
-                            '.snapshotDate.Text = kvp.Value.timeStamp.ToString
-                            ' das ist ja der aktuelle Stand ..
-                            .snapshotDate.Text = "Aktueller Stand"
-                            ' Designer 
-                            'Dim zE As String = "(" & awinSettings.zeitEinheit & ")"
-                            '.engpass1.Text = "Designer:          " & kvp.Value.getRessourcenBedarf(3).Sum.ToString("###.#") & zE
-                            '.engpass2.Text = "Personalkosten: " & kvp.Value.getAllPersonalKosten.Sum.ToString("###.#") & " (T€)"
-                            '.engpass3.Text = "Sonstige Kosten:   " & kvp.Value.getGesamtAndereKosten.Sum.ToString("###.#") & " (T€)"
-
-
-                        End With
+                        '.snapshotDate.Text = kvp.Value.timeStamp.ToString
+                        ' das ist ja der aktuelle Stand ..
+                        .snapshotDate.Text = "Aktueller Stand"
+                        ' Designer 
+                        'Dim zE As String = "(" & awinSettings.zeitEinheit & ")"
+                        '.engpass1.Text = "Designer:          " & kvp.Value.getRessourcenBedarf(3).Sum.ToString("###.#") & zE
+                        '.engpass2.Text = "Personalkosten: " & kvp.Value.getAllPersonalKosten.Sum.ToString("###.#") & " (T€)"
+                        '.engpass3.Text = "Sonstige Kosten:   " & kvp.Value.getGesamtAndereKosten.Sum.ToString("###.#") & " (T€)"
 
 
-                        ' jetzt wird das Form aufgerufen ... 
+                    End With
 
-                        'returnValue = showCharacteristics.ShowDialog
-                        showCharacteristics.Show()
 
-                    Else
-                        Call MsgBox("es gibt noch keine Planungs-Historie")
-                    End If
+                    ' jetzt wird das Form aufgerufen ... 
+
+                    'returnValue = showCharacteristics.ShowDialog
+                    showCharacteristics.Show()
 
                 Else
-                    Call MsgBox("bitte nur ein Projekt selektieren")
-                    'For Each singleShp In awinSelection
-                    '    With singleShp
-                    '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
-                    '            nrSelPshp = nrSelPshp + 1
-                    '            SID = .ID.ToString
-                    '        End If
-                    '    End With
-                    'Next
+                    Call MsgBox("es gibt noch keine Planungs-Historie")
                 End If
+
             Else
-                Call MsgBox("vorher Projekt selektieren ...")
+                Call MsgBox("bitte nur ein Projekt selektieren")
+                'For Each singleShp In awinSelection
+                '    With singleShp
+                '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                '            nrSelPshp = nrSelPshp + 1
+                '            SID = .ID.ToString
+                '        End If
+                '    End With
+                'Next
             End If
-      
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
         enableOnUpdate = True
 
 
@@ -5338,10 +5503,20 @@ Imports Microsoft.Office.Interop.Excel
 
         enableOnUpdate = False
         appInstance.ScreenUpdating = False
+        If showRangeRight - showRangeLeft > 6 Then
 
-        ' Formular zum Auswählen der Report-Vorlage wird aufgerufen
+            If ShowProjekte.Count > 0 Then
 
-        returnValue = getReportVorlage.ShowDialog
+                ' Formular zum Auswählen der Report-Vorlage wird aufgerufen
+
+                returnValue = getReportVorlage.ShowDialog
+
+            Else
+                Call MsgBox("Es sind keine Projekte geladen!")
+            End If
+        Else
+            Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+        End If
 
         appInstance.ScreenUpdating = True
         enableOnUpdate = True
