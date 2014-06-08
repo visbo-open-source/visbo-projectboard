@@ -1648,7 +1648,7 @@ Imports Microsoft.Office.Interop.Excel
 
                 repObj = Nothing
                 Dim noColorCollection As New Collection
-                Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+                Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, PThis.current)
 
                 appInstance.EnableEvents = True
                 appInstance.ScreenUpdating = True
@@ -4341,7 +4341,7 @@ Imports Microsoft.Office.Interop.Excel
                 Dim hproj As clsProjekt
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name)
-                    Call createProjektErgebnisCharakteristik2(hproj, dummyObj, 2)
+                    Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current)
                 Catch ex As Exception
                     Call MsgBox("Name nicht gefunden : " & singleShp.Name)
                 End Try
@@ -4575,7 +4575,7 @@ Imports Microsoft.Office.Interop.Excel
                 noColorCollection = getPhasenUnterschiede(hproj, cproj)
 
                 repObj = Nothing
-                Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+                Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, PThis.current)
 
                 With repObj
                     top = .Top + .Height + 3
@@ -4583,7 +4583,7 @@ Imports Microsoft.Office.Interop.Excel
 
 
                 repObj = Nothing
-                Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, "Vorlage")
+                Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, PThis.vorlage)
                 appInstance.ScreenUpdating = True
 
             ElseIf awinSelection.Count = 2 Then
@@ -4618,7 +4618,7 @@ Imports Microsoft.Office.Interop.Excel
                 noColorCollection = getPhasenUnterschiede(hproj, cproj)
 
                 repObj = Nothing
-                Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+                Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, PThis.current)
 
                 With repObj
                     top = .Top + .Height + 3
@@ -4626,7 +4626,7 @@ Imports Microsoft.Office.Interop.Excel
 
 
                 repObj = Nothing
-                Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, " ")
+                Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, PThis.current)
                 appInstance.ScreenUpdating = True
                 'Call awinCompareProjectPhases(name1:=singleShp1.Name, _
                 '                              name2:=singleShp2.Name, _
@@ -4743,7 +4743,7 @@ Imports Microsoft.Office.Interop.Excel
                         noColorCollection = getPhasenUnterschiede(hproj, cproj)
 
                         repObj = Nothing
-                        Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+                        Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, PThis.current)
 
                         With repObj
                             top = .Top + .Height + 3
@@ -4751,7 +4751,7 @@ Imports Microsoft.Office.Interop.Excel
 
 
                         repObj = Nothing
-                        Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, "letzter Stand")
+                        Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, PThis.letzterStand)
 
                         appInstance.ScreenUpdating = True
 
@@ -4879,7 +4879,7 @@ Imports Microsoft.Office.Interop.Excel
                             noColorCollection = getPhasenUnterschiede(hproj, cproj)
 
                             repObj = Nothing
-                            Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+                            Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, PThis.current)
 
                             With repObj
                                 top = .Top + .Height + 3
@@ -4887,7 +4887,7 @@ Imports Microsoft.Office.Interop.Excel
 
 
                             repObj = Nothing
-                            Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, "Beauftragung")
+                            Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, PThis.beauftragung)
 
                         Catch ex As Exception
 
@@ -4903,7 +4903,7 @@ Imports Microsoft.Office.Interop.Excel
 
                 End If
             Else
-                Call MsgBox("ein Projekt selektieren, um es mit seinem letzten Stand zu vergleichen")
+                Call MsgBox("ein Projekt selektieren, um es mit seiner Beauftragung zu vergleichen")
             End If
 
         Else

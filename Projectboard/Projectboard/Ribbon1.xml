@@ -58,7 +58,7 @@
           </menu>
           <separator id="PT0G1s4"/>
           <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
-          <button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />
+          <!--<button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />-->
           <button id="PT0G1B5" label="Abhängigkeiten" onAction="Tom2G2M1B6Abhaengigkeit" />
           <!--<button id="PT0G1B4" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />-->
           <separator id="PT0G1s5"/>
