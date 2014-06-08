@@ -492,17 +492,19 @@
                             phEnde = prAnfang + .relEnde - 1
                         End With
 
+                        Dim ixKorrektur As Integer = hphase.relStart - 1
+
                         Call awinIntersectZeitraum(phAnfang, phEnde, ixZeitraum, ix, anzLoops)
 
                         If anzLoops > 0 Then
 
-                            ReDim tempArray(phEnde - phAnfang)
+                            'ReDim tempArray(phEnde - phAnfang)
                             tempArray = hproj.getPhasenBedarf(phaseName)
 
                             For i = 0 To anzLoops - 1
                                 ' das awinintersect ermittelt die Werte für Projekt-Anfang, Projekt-Ende 
-                                ' in temparray stehen dagegen 
-                                phasevalues(ixZeitraum + i) = phasevalues(ixZeitraum + i) + tempArray(ix + i)
+                                ' in temparray stehen dagegen , deswegen muss um .relstart-1 erhöht werden 
+                                phasevalues(ixZeitraum + i) = phasevalues(ixZeitraum + i) + tempArray(ix + i + ixKorrektur)
                             Next i
 
                         End If

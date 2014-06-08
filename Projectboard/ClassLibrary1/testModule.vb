@@ -480,13 +480,13 @@ Public Module testModule
 
                                 Dim cproj As clsProjekt = Nothing
                                 Dim vproj As clsProjektvorlage
-
+                                auswahl = 0
 
                                 scale = hproj.dauerInDays
 
                                 If qualifier.Length > 0 Then
                                     If qualifier = "Vorlage" Then
-
+                                        auswahl = 1
                                         vproj = Projektvorlagen.getProject(hproj.VorlagenName)
                                         vproj.CopyTo(cproj)
                                         cproj.startDate = hproj.startDate
@@ -494,13 +494,16 @@ Public Module testModule
 
                                     ElseIf qualifier = "Beauftragung" Then
                                         cproj = bproj
+                                        auswahl = 2
 
                                     Else
                                         cproj = hproj
+                                        auswahl = 0
 
                                     End If
                                 Else
                                     cproj = hproj
+                                    auswahl = 0
                                 End If
 
                                 htop = 150
@@ -513,7 +516,7 @@ Public Module testModule
 
                                 Dim noColorCollection As New Collection
                                 reportObj = Nothing
-                                Call createPhasesBalken(noColorCollection, cproj, reportObj, scale, htop, hleft, hheight, hwidth, qualifier)
+                                Call createPhasesBalken(noColorCollection, cproj, reportObj, scale, htop, hleft, hheight, hwidth, auswahl)
 
 
                                 notYetDone = True
@@ -557,7 +560,7 @@ Public Module testModule
                                 noColorCollection = getPhasenUnterschiede(hproj, cproj)
 
                                 repObj1 = Nothing
-                                Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, " ")
+                                Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, PThis.current)
 
                                 With repObj1
                                     htop = .Top + .Height + 3
@@ -565,7 +568,7 @@ Public Module testModule
 
 
                                 repObj2 = Nothing
-                                Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, "Vorlage")
+                                Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, PThis.vorlage)
 
                                 ' jetzt wird das Shape in der Powerpoint entsprechend entsprechend aufgebaut 
                                 Try
@@ -667,14 +670,14 @@ Public Module testModule
                                 noColorCollection = getPhasenUnterschiede(hproj, cproj)
 
                                 repObj1 = Nothing
-                                Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, " ")
+                                Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, PThis.current)
 
                                 With repObj1
                                     htop = .Top + .Height + 3
                                 End With
 
                                 repObj2 = Nothing
-                                Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, "Beauftragung")
+                                Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, PThis.beauftragung)
 
                                 Try
                                     pptSize = .TextFrame2.TextRange.Font.Size
@@ -768,14 +771,14 @@ Public Module testModule
                                 noColorCollection = getPhasenUnterschiede(hproj, cproj)
 
                                 repObj1 = Nothing
-                                Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, " ")
+                                Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, PThis.current)
 
                                 With repObj1
                                     htop = .Top + .Height + 3
                                 End With
 
                                 repObj2 = Nothing
-                                Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, "letzter Stand")
+                                Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, PThis.letzterStand)
 
                                 Try
                                     pptSize = .TextFrame2.TextRange.Font.Size
@@ -909,14 +912,14 @@ Public Module testModule
 
 
                                 If qualifier = "letzter Stand" Then
+                                    Call createProjektErgebnisCharakteristik2(lproj, obj, PThis.letzterStand)
 
-                                    Call createProjektErgebnisCharakteristik2(lproj, obj, 1)
                                 ElseIf qualifier = "Beauftragung" Then
+                                    Call createProjektErgebnisCharakteristik2(bproj, obj, PThis.beauftragung)
 
-                                    Call createProjektErgebnisCharakteristik2(bproj, obj, 0)
                                 Else
+                                    Call createProjektErgebnisCharakteristik2(hproj, obj, PThis.current)
 
-                                    Call createProjektErgebnisCharakteristik2(hproj, obj, 2)
                                 End If
 
 
@@ -944,7 +947,7 @@ Public Module testModule
                                 'hwidth = 12 * boxWidth
                                 'hheight = 8 * boxHeight
 
-                                Call awinCreatePortfolioDiagramms(mycollection, obj, PTpfdk.FitRisiko, 0, True, False, True, False, htop, hleft, hwidth, hheight)
+                                Call awinCreatePortfolioDiagramms(mycollection, obj, True, PTpfdk.FitRisiko, 0, True, False, True, htop, hleft, hwidth, hheight)
                                 reportObj = obj
 
                                 notYetDone = True

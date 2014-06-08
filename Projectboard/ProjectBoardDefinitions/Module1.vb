@@ -143,6 +143,7 @@ Public Module Module1
         Budget = 19
     End Enum
 
+    ' immer darauf achten daß die identischen Begriffe PTpfdk und PTprdk auch die gleichen Nummern haben 
     Public Enum PTprdk
         PersonalBalken = 0
         PersonalPie = 1
@@ -151,6 +152,10 @@ Public Module Module1
         Phasen = 4
         StrategieRisiko = 5
         Ergebnis = 6
+        ComplexRisiko = 10
+        ZeitRisiko = 11
+        FitRisikoVol = 15
+        Dependencies = 16
     End Enum
 
     ' 0=projektN; 1= projektE, 2= phase; 3= milestone;  4= status; 5=dependency
@@ -185,6 +190,13 @@ Public Module Module1
         resultampel = 8
         phasen = 9
         startdatum = 10
+    End Enum
+
+    Public Enum PThis
+        current = 0
+        vorlage = 1
+        beauftragung = 2
+        letzterStand = 3
     End Enum
 
     ' Enumeration für die Farbe 
