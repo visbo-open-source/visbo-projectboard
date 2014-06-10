@@ -175,7 +175,7 @@ Public Module awinGeneralModules
         arrWsNames(15) = "Portfolio Vorlage"
 
 
-        ProjectBoardDefinitions.My.Settings.loadProjectsOnChange = False
+        awinSettings.loadProjectsOnChange = False
 
         showRangeLeft = 0
         showRangeRight = 0
@@ -738,7 +738,7 @@ Public Module awinGeneralModules
 
             ' jetzt werden - falls nötig die Projekte nachgeladen ... 
             Try
-                If ProjectBoardDefinitions.My.Settings.loadProjectsOnChange Then
+                If awinSettings.loadProjectsOnChange Then
 
                     Call awinProjekteImZeitraumLaden(awinSettings.databaseName)
 

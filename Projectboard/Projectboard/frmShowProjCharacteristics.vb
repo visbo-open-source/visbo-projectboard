@@ -18,7 +18,7 @@ Public Class frmShowProjCharacteristics
         'Dim formerSU As Boolean = appInstance.ScreenUpdating
         'appInstance.ScreenUpdating = False
 
-        Call aktualisiereCharts()
+        Call aktualisiereCharts(hproj, False)
 
         'With appInstance.Worksheets(arrWsNames(3))
         '    Dim tmpArray() As String
@@ -140,7 +140,7 @@ Public Class frmShowProjCharacteristics
         Dim vglName As String = projekthistorie.Last.name.Trim
         hproj = ShowProjekte.getProject(vglName)
 
-        Call aktualisiereCharts()
+        Call aktualisiereCharts(hproj, False)
         timeMachineIsOn = False
 
     End Sub
@@ -494,89 +494,7 @@ Public Class frmShowProjCharacteristics
     End Sub
 
    
-
-    Private Sub aktualisiereCharts()
-        Dim chtobj As Excel.ChartObject
-        Dim vglName As String = hproj.name.Trim
-
-        With appInstance.Worksheets(arrWsNames(3))
-            Dim tmpArray() As String
-            Dim anzDiagrams As Integer
-            anzDiagrams = CType(.Chartobjects, Excel.ChartObjects).Count
-
-            If anzDiagrams > 0 Then
-                For i = 1 To anzDiagrams
-                    chtobj = CType(.ChartObjects(i), Excel.ChartObject)
-                    If chtobj.Name <> "" Then
-                        tmpArray = chtobj.Name.Split(New Char() {CType("#", Char)}, 5)
-                        ' chtoj name ist aufgebaut: pr#PTprdk.kennung#pName#Auswahl
-                        If tmpArray(0) = "pr" Then
-
-                            If tmpArray(2).Trim = vglName Then
-                                Select Case tmpArray(1)
-
-                                    Case PTprdk.Phasen
-                                        ' Update Phasen Diagramm
-
-                                        If CInt(tmpArray(3)) = PThis.current Then
-                                            ' nur dann muss aktualisiert werden ...
-                                            Call updatePhasesBalken(hproj, chtobj, minmaxScales(0, 0), minmaxScales(1, 0), CInt(tmpArray(3)))
-                                        End If
-
-
-                                    Case PTprdk.PersonalBalken
-                                        
-                                            Call updateRessBalkenOfProject(hproj, chtobj, CInt(tmpArray(3)), minmaxScales(0, 2), minmaxScales(1, 2))
-                                        
-
-                                    Case PTprdk.PersonalPie
-
-                                        
-                                            ' Update Pie-Diagramm
-                                        Call updateRessPieOfProject(hproj, chtobj, CInt(tmpArray(3)))
-
-
-                                    Case PTprdk.KostenBalken
-
-                                        
-                                            Call updateCostBalkenOfProject(hproj, chtobj, CInt(tmpArray(3)), minmaxScales(0, 3), minmaxScales(1, 3))
-                                        
-
-                                    Case PTprdk.KostenPie
-
-
-                                        Call updateCostPieOfProject(hproj, chtobj, CInt(tmpArray(3)))
-                                        
-
-                                    Case PTprdk.StrategieRisiko
-
-                                        Call updateProjectPfDiagram(hproj, chtobj, _
-                                                                     minmaxScales(0, 5), minmaxScales(1, 5), _
-                                                                     CInt(tmpArray(3)))
-
-
-                                    Case PTprdk.Ergebnis
-                                        ' Update Ergebnis Diagramm
-                                        Call updateProjektErgebnisCharakteristik2(hproj, chtobj, CInt(tmpArray(3)))
-
-                                    Case Else
-
-
-
-                                End Select
-
-                            End If
-
-                        End If
-
-
-                    End If
-
-                Next
-            End If
-
-        End With
-    End Sub
+    
 
     Private Sub compareCurrent_Click(sender As Object, e As EventArgs) Handles compareCurrent.Click
         ' in ProjektHistorie sind die Projekt-Snapshots in aufsteigender Reihenfolge sortiert 
@@ -626,7 +544,7 @@ Public Class frmShowProjCharacteristics
             
         End With
 
-        Call aktualisiereCharts()
+        Call aktualisiereCharts(hproj, False)
 
     End Sub
 
