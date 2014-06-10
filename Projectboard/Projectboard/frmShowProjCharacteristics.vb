@@ -18,7 +18,7 @@ Public Class frmShowProjCharacteristics
         'Dim formerSU As Boolean = appInstance.ScreenUpdating
         'appInstance.ScreenUpdating = False
 
-        Call aktualisiereCharts()
+        Call aktualisiereCharts(hproj, False)
 
         'With appInstance.Worksheets(arrWsNames(3))
         '    Dim tmpArray() As String
@@ -140,7 +140,7 @@ Public Class frmShowProjCharacteristics
         Dim vglName As String = projekthistorie.Last.name.Trim
         hproj = ShowProjekte.getProject(vglName)
 
-        Call aktualisiereCharts()
+        Call aktualisiereCharts(hproj, False)
         timeMachineIsOn = False
 
     End Sub
@@ -229,26 +229,35 @@ Public Class frmShowProjCharacteristics
                 For i = 1 To anzDiagrams
                     chtobj = CType(.ChartObjects(i), Excel.ChartObject)
                     If chtobj.Name <> "" Then
+
                         tmpArray = chtobj.Name.Split(New Char() {CType("#", Char)}, 5)
+                        ' chtoj name ist aufgebaut: pr#PTprdk.kennung#pNAme#Auswahl
+                        If tmpArray(0).Trim = "pr" Then
 
-                        If tmpArray(0).Trim = vglName Then
-                            If tmpArray(1) = "Phasen" Then
-                                necessary(0) = True
-                            ElseIf tmpArray(1) = "Personalbedarf" And tmpArray(2) = "1" Then
-                                necessary(1) = True
-                            ElseIf tmpArray(1) = "Personalkosten" And tmpArray(2) = "1" Then
-                                necessary(2) = True
-                            ElseIf tmpArray(1) = "Sonstige Kosten" And tmpArray(2) = "1" Then
-                                necessary(3) = True
-                            ElseIf tmpArray(1) = "Gesamtkosten" And tmpArray(2) = "1" Then
-                                necessary(4) = True
-                            ElseIf tmpArray(1) = "Strategie" Then
-                                necessary(5) = True
-                            ElseIf tmpArray(1) = "Ergebnis" Then
-                                necessary(6) = True
+                            If tmpArray(2).Trim = vglName Then
+                                If tmpArray(1) = PTprdk.Phasen Then
+                                    necessary(0) = True
+                                ElseIf tmpArray(1) = PTprdk.PersonalBalken And tmpArray(3) = "1" Then
+                                    ' Personalbedarf
+                                    necessary(1) = True
+                                ElseIf tmpArray(1) = PTprdk.PersonalBalken And tmpArray(3) = "2" Then
+                                    ' Personalkosten
+                                    necessary(2) = True
+                                ElseIf tmpArray(1) = PTprdk.KostenBalken And tmpArray(3) = "1" Then
+                                    ' Sonstige Kosten
+                                    necessary(3) = True
+                                ElseIf tmpArray(1) = PTprdk.KostenBalken And tmpArray(3) = "2" Then
+                                    ' Gesamtkosten
+                                    necessary(4) = True
+                                ElseIf tmpArray(1) = PTprdk.StrategieRisiko Then
+                                    necessary(5) = False
+                                ElseIf tmpArray(1) = PTprdk.Ergebnis Then
+                                    necessary(6) = True
+                                End If
                             End If
-                        End If
 
+
+                        End If
 
 
                     End If
@@ -355,13 +364,16 @@ Public Class frmShowProjCharacteristics
             End If
 
 
-            ' Strategie Risiko : ist nicht relevant 
+            ' Strategie Risiko : ist dann zu unterscheiden, wenn die anderen auch unterstützt werden 
+            ' wie z.Bsp FitRisikoVol oder ComplexRisk oder Zeit Risk  
             minmaxScales(0, 5) = 0.0
-            minmaxScales(1, 5) = 0.0
+            minmaxScales(1, 5) = 11.0
 
             ' Ergebnis 
             If necessary(6) Then
                 erloes = kvp.Value.Erloes
+                tmpValues = kvp.Value.getGesamtKostenBedarf
+                gesamtKosten = tmpValues.Sum
                 currentvalue = erloes
                 If currentvalue > minmaxScales(1, 6) Then
                     If currentvalue < 80 Then
@@ -398,62 +410,75 @@ Public Class frmShowProjCharacteristics
                 For i = 1 To anzDiagrams
                     chtobj = CType(.ChartObjects(i), Excel.ChartObject)
                     If chtobj.Name <> "" Then
-                        tmpArray = chtobj.Name.Split(New Char() {CType("#", Char)}, 5)
 
-                        If tmpArray(0).Trim = vglName Then
-                            Select Case tmpArray(1)
-                                Case "Phasen"
+                        tmpArray = chtobj.Name.Split(New Char() {CType("#", Char)}, 5)
+                        ' chtoj name ist aufgebaut: pr#PTprdk.kennung#pNAme#Auswahl
+
+                        If tmpArray(0).Trim = "pr" Then
+
+                            If tmpArray(2).Trim = vglName Then
+
+                                If tmpArray(1) = PTprdk.Phasen Then
                                     If necessary(0) Then
                                         With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
                                             .MinimumScale = minmaxScales(0, 0)
                                             .MaximumScale = CInt(minmaxScales(1, 0) / 365 * 12) + 3
                                         End With
                                     End If
-                                Case "Personalbedarf"
-                                    If necessary(1) And tmpArray(2) = "1" Then
+
+                                ElseIf tmpArray(1) = PTprdk.PersonalBalken Then
+
+                                    If necessary(1) And tmpArray(3) = "1" Then
 
                                         With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
                                             .MinimumScale = minmaxScales(0, 1)
                                             .MaximumScale = minmaxScales(1, 1)
                                         End With
-                                    End If
 
-                                Case "Personalkosten"
-                                    If necessary(2) And tmpArray(2) = "1" Then
+                                    ElseIf necessary(2) And tmpArray(3) = "2" Then
 
                                         With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
                                             .MinimumScale = minmaxScales(0, 2)
                                             .MaximumScale = minmaxScales(1, 2)
                                         End With
-                                    End If
-                                Case "Sonstige Kosten"
-                                    If necessary(3) And tmpArray(2) = "1" Then
 
+                                    End If
+
+                                ElseIf tmpArray(1) = PTprdk.KostenBalken Then
+
+
+                                    If necessary(3) And tmpArray(3) = "1" Then
+                                        ' Sonstige Kosten
                                         With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
                                             .MinimumScale = minmaxScales(0, 3)
                                             .MaximumScale = minmaxScales(1, 3)
                                         End With
-                                    End If
-                                Case "Gesamtkosten"
-                                    If necessary(4) And tmpArray(2) = "1" Then
-
+                                    ElseIf necessary(4) And tmpArray(3) = "2" Then
+                                        ' Gesamtkosten
                                         With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
                                             .MinimumScale = minmaxScales(0, 4)
                                             .MaximumScale = minmaxScales(1, 4)
                                         End With
                                     End If
-                                Case "Strategie"
 
-                                Case "Ergebnis"
+
+                                ElseIf tmpArray(1) = PTprdk.StrategieRisiko Then
+                                    ' noch zu programmieren 
+                                    ' momentan ist nichts zu tun, da nur StrategieRisiko unterstützt wird mit immer fester Skalierung
+
+
+                                ElseIf tmpArray(1) = PTprdk.Ergebnis Then
+
                                     If necessary(6) Then
                                         With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
                                             .MinimumScale = minmaxScales(0, 6)
                                             .MaximumScale = minmaxScales(1, 6)
                                         End With
                                     End If
-                                Case Else
 
-                            End Select
+                                End If
+
+                            End If
 
                         End If
 
@@ -469,90 +494,7 @@ Public Class frmShowProjCharacteristics
     End Sub
 
    
-
-    Private Sub aktualisiereCharts()
-        Dim chtobj As Excel.ChartObject
-        Dim vglName As String = hproj.name.Trim
-
-        With appInstance.Worksheets(arrWsNames(3))
-            Dim tmpArray() As String
-            Dim anzDiagrams As Integer
-            anzDiagrams = CType(.Chartobjects, Excel.ChartObjects).Count
-
-            If anzDiagrams > 0 Then
-                For i = 1 To anzDiagrams
-                    chtobj = CType(.ChartObjects(i), Excel.ChartObject)
-                    If chtobj.Name <> "" Then
-                        tmpArray = chtobj.Name.Split(New Char() {CType("#", Char)}, 5)
-
-                        If tmpArray(0).Trim = vglName Then
-                            Select Case tmpArray(1)
-                                Case "Phasen"
-                                    ' Update Phasen Diagramm
-                                    Call updatePhasesBalken(hproj, chtobj, minmaxScales(0, 0), minmaxScales(1, 0))
-
-                                Case "Personalbedarf"
-                                    If tmpArray(2) = "1" Then
-                                        ' Update Balken-Diagramm
-                                        Call updateRessBalkenOfProject(hproj, chtobj, 1, minmaxScales(0, 2), minmaxScales(1, 2))
-                                    ElseIf tmpArray(2) = "2" Then
-                                        ' Update Pie-Diagramm
-                                        Call updateRessPieOfProject(hproj, chtobj, 1)
-                                    End If
-
-                                Case "Personalkosten"
-
-                                    If tmpArray(2) = "1" Then
-                                        ' Update Balken-Diagramm
-                                        Call updateRessBalkenOfProject(hproj, chtobj, 2, minmaxScales(0, 2), minmaxScales(1, 2))
-                                    ElseIf tmpArray(2) = "2" Then
-                                        ' Update Pie-Diagramm
-                                        Call updateRessPieOfProject(hproj, chtobj, 2)
-                                    End If
-
-                                Case "Sonstige Kosten"
-
-                                    If tmpArray(2) = "1" Then
-                                        ' Update Balken-Diagramm
-                                        Call updateCostBalkenOfProject(hproj, chtobj, 1, minmaxScales(0, 3), minmaxScales(1, 3))
-                                    ElseIf tmpArray(2) = "2" Then
-                                        ' Update Pie-Diagramm
-                                        Call updateCostPieOfProject(hproj, chtobj, 1)
-                                    End If
-
-                                Case "Gesamtkosten"
-
-                                    If tmpArray(2) = "1" Then
-                                        ' Update Balken-Diagramm
-                                        Call updateCostBalkenOfProject(hproj, chtobj, 2, minmaxScales(0, 3), minmaxScales(1, 3))
-                                    ElseIf tmpArray(2) = "2" Then
-                                        ' Update Pie-Diagramm
-                                        Call updateCostPieOfProject(hproj, chtobj, 2)
-                                    End If
-
-
-                                Case "Strategie"
-
-
-                                Case "Ergebnis"
-                                    ' Update Ergebnis Diagramm
-                                    Call updateProjektErgebnisCharakteristik2(hproj, chtobj)
-
-                                Case Else
-
-
-
-                            End Select
-
-                        End If
-
-                    End If
-
-                Next
-            End If
-
-        End With
-    End Sub
+    
 
     Private Sub compareCurrent_Click(sender As Object, e As EventArgs) Handles compareCurrent.Click
         ' in ProjektHistorie sind die Projekt-Snapshots in aufsteigender Reihenfolge sortiert 
@@ -602,7 +544,7 @@ Public Class frmShowProjCharacteristics
             
         End With
 
-        Call aktualisiereCharts()
+        Call aktualisiereCharts(hproj, False)
 
     End Sub
 

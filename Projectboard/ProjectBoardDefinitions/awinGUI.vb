@@ -55,6 +55,8 @@ Public Module awinGUI
     ''' Portfolio - Diagramme erstellen gemäß dem angegebenen charttype
     ''' derzeit möglich: PTpfdk.FitRisiko; PTpfdk.ZeitRisiko; PTpfdk.ComplexRisiko; PTpfdk.FitRisikoVol
     ''' bubbleColor kann derzeit PTpfdk.ProjektFarbe oder PTpfdk.AmpelFarbe sein.
+    ''' wird auch aufgerufen aus Visualisieren-Projekt. wenn also projektliste nur ein Element enthält , dann bekommt 
+    ''' das Chart eine kennung pr#type#auswahl ansonsten pf#type#auswahl
     ''' </summary>
     ''' <param name="ProjektListe"></param>
     ''' <param name="repChart"></param>
@@ -94,6 +96,12 @@ Public Module awinGUI
         Dim singleProject As Boolean
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim kennung As String
+        Dim tmpCollection As New Collection
+        Dim titelTeile(1) As String
+        Dim titelTeilLaengen(1) As Integer
+
+
 
         appInstance.ScreenUpdating = False
 
@@ -115,51 +123,107 @@ Public Module awinGUI
             smallfontsize = 8
         End If
 
+
+        If isProjektCharakteristik And ProjektListe.Count = 1 Then
+            pname = ProjektListe.Item(1)
+            tmpCollection.Add(pname & "#0")
+            kennung = getKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
+        Else
+            kennung = getKennung("pf", charttype, ProjektListe)
+        End If
+
         Select Case charttype
             Case PTpfdk.FitRisiko
 
                 If isProjektCharakteristik Then
-                    diagramTitle = "Charakteristik " & summentitel2
+                    If ProjektListe.Count = 1 Then
+                        titelTeile(0) = summentitel2 & " " & pname & vbLf
+                        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+
+                    Else
+                        titelTeile(0) = summentitel2 & vbLf
+                        titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
+                    End If
+
                 Else
-                    diagramTitle = summentitel2 & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+                    titelTeile(0) = summentitel2 & vbLf
+                    titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
                 End If
 
             Case PTpfdk.ZeitRisiko
 
                 If isProjektCharakteristik Then
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.ZeitRisiko)
-                    diagramTitle = "Charakteristik " & diagramTitle
+                    If ProjektListe.Count = 1 Then
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & " " & pname & vbLf
+                        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+
+                    Else
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & vbLf
+                        titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
+                    End If
+                    
                 Else
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+                    titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & vbLf
+                    titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
                 End If
 
             Case PTpfdk.ComplexRisiko
 
                 If isProjektCharakteristik Then
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.ComplexRisiko)
-                    diagramTitle = "Charakteristik " & diagramTitle
+                    If ProjektListe.Count = 1 Then
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & " " & pname & vbLf
+                        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+
+                    Else
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & vbLf
+                        titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
+                    End If
+                    
                 Else
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+                    titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & vbLf
+                    titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
                 End If
 
             Case PTpfdk.FitRisikoVol
                 If isProjektCharakteristik Then
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisikoVol)
-                    diagramTitle = "Charakteristik " & diagramTitle
+                    If ProjektListe.Count = 1 Then
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & " " & pname & vbLf
+                        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+
+                    Else
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & vbLf
+                        titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
+                    End If
+                    
                 Else
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+                    titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & vbLf
+                    titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
                 End If
 
             Case PTpfdk.Dependencies
                 ' neuer Typ: 8.3.14 Abhängigkeiten
                 If isProjektCharakteristik Then
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.Dependencies)
-                    diagramTitle = "Charakteristik " & diagramTitle
+                    If ProjektListe.Count = 1 Then
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Dependencies) & " " & pname & vbLf
+                        titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
+
+                    Else
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Dependencies) & vbLf
+                        titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
+                    End If
+                    
                 Else
-                    diagramTitle = portfolioDiagrammtitel(PTpfdk.Dependencies) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+                    titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Dependencies) & vbLf
+                    titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
                 End If
 
         End Select
+
+        titelTeilLaengen(0) = titelTeile(0).Length
+        titelTeilLaengen(1) = titelTeile(1).Length
+
+        diagramTitle = titelTeile(0) & titelTeile(1)
+
 
         ' hier werden die Werte bestimmt ...
         Try
@@ -295,7 +359,7 @@ Public Module awinGUI
         Next
 
 
-        chtobjName = getKennung("pf", charttype, ProjektListe)
+        chtobjName = kennung
 
 
 
@@ -331,35 +395,6 @@ Public Module awinGUI
                     i = i + 1
                 End If
 
-                'Select Case charttype
-                '    Case PTpfdk.FitRisiko
-
-                '        Try
-                '            chtTitle = .ChartObjects(i).Chart.ChartTitle.text
-                '        Catch ex As Exception
-                '            chtTitle = " "
-                '        End Try
-                '        If chtTitle Like ("*" & diagramTitle & "*") Then
-                '            found = True
-                '            repChart = .ChartObjects(i)
-                '            Exit Sub
-                '        Else
-                '            i = i + 1
-                '        End If
-
-                '    Case Else
-                '        ' für Zeit/Risiko und 
-                '        ' für Complex/Risiko und 
-                '        ' für Strategie/FitRisikoVolume
-                '        hilfsstring = .chartObjects(i).name
-                '        If chtobjName = .chartObjects(i).name Then
-                '            found = True
-                '            repChart = .ChartObjects(i)
-                '            Exit Sub
-                '        Else
-                '            i = i + 1
-                '        End If
-                'End Select
             End While
 
 
@@ -477,7 +512,7 @@ Public Module awinGUI
                         .MajorTickMark = XlTickMark.xlTickMarkNone
                         .TickLabelPosition = XlTickLabelPosition.xlTickLabelPositionNone
                     End If
-                    
+
                 End With
 
                 With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
@@ -600,7 +635,7 @@ Public Module awinGUI
                             .HasTitle = True
                             .MinimumScale = 0
                             .MaximumScale = activeMax + 1
-                            
+
                             ' .ReversePlotOrder = True
                             With .AxisTitle
                                 .Characters.Text = "Ausstrahlung"
@@ -634,12 +669,16 @@ Public Module awinGUI
                             End With
                         End With
                 End Select
-                
+
 
                 .HasLegend = False
                 .HasTitle = True
-                .ChartTitle.text = diagramTitle
-                .ChartTitle.Characters.Font.Size = awinSettings.fontsizeTitle
+
+                .ChartTitle.Text = diagramTitle
+                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+
 
                 ' Events disablen, wegen Report erstellen
                 appInstance.EnableEvents = False
@@ -672,24 +711,31 @@ Public Module awinGUI
                 End Try
             End With
 
-            pfDiagram = New clsDiagramm
 
-            pfChart = New clsEventsPfCharts
-            pfChart.PfChartEvents = .ChartObjects(anzDiagrams + 1).Chart
+            If isProjektCharakteristik And ProjektListe.Count = 1 Then
+                ' nichts tun
+            Else
 
-            pfDiagram.setDiagramEvent = pfChart
+                pfDiagram = New clsDiagramm
 
-            With pfDiagram
+                pfChart = New clsEventsPfCharts
+                pfChart.PfChartEvents = .ChartObjects(anzDiagrams + 1).Chart
 
-                .kennung = getKennung("pf", charttype, ProjektListe)
-                .DiagrammTitel = diagramTitle
-                .diagrammTyp = DiagrammTypen(3)                     ' Portfolio
-                .gsCollection = ProjektListe
-                .isCockpitChart = False
+                pfDiagram.setDiagramEvent = pfChart
 
-            End With
+                With pfDiagram
 
-            DiagramList.Add(pfDiagram)
+                    .kennung = getKennung("pf", charttype, ProjektListe)
+                    .DiagrammTitel = diagramTitle
+                    .diagrammTyp = DiagrammTypen(3)                     ' Portfolio
+                    .gsCollection = ProjektListe
+                    .isCockpitChart = False
+
+                End With
+
+                DiagramList.Add(pfDiagram)
+            End If
+            
             repChart = .ChartObjects(anzDiagrams + 1)
 
         End With
@@ -703,7 +749,7 @@ Public Module awinGUI
     '
     ' Prozedur für den Update des Portfolio Diagramms
     '
-    Sub awinUpdatePortfolioDiagrams(ByVal chtobj As ChartObject, bubbleColor As Integer)
+    Sub awinUpdatePortfolioDiagrams(ByRef chtobj As ChartObject, bubbleColor As Integer)
 
         Dim i As Integer
         Dim pname As String
@@ -717,11 +763,11 @@ Public Module awinGUI
         Dim diagramTitle As String
         Dim showLabels As Boolean
         Dim showNegativeValues As Boolean = False
-        Dim projektListe As Collection
+        Dim projektListe As New Collection
         Dim charttype As Integer
-        Dim chartkennung As String
-        Dim tmpstr(3) As String
-
+        Dim tmpstr(5) As String
+        Dim isSingleProject As Boolean = False
+        
         'Dim pfDiagram As clsDiagramm
         'Dim pfChart As clsEventsPfCharts
         'Dim TypeCollection As Collection
@@ -730,8 +776,15 @@ Public Module awinGUI
         ' hier wird in der Objektkennung nachgesehen, von welchem Typ dieses Portfolio-Diagramm ist
         ' PTpfdk.FitRisiko oder PTpfdk.ZeitRisiko oder PTpfdk.ComplexRisiko
 
-        chartkennung = chtobj.Name
-        tmpstr = chartkennung.Trim.Split(New Char() {"#"}, 3)
+        tmpstr = chtobj.Name.Trim.Split(New Char() {"#"}, 4)
+        If tmpstr(0) = "pr" Then
+            isSingleProject = True
+            projektListe.Add(tmpstr(2))
+        Else
+            isSingleProject = False
+            Dim selectionType As Integer = -1 ' keine Einschränkung
+            projektListe = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+        End If
         charttype = tmpstr(1)
 
         'foundDiagramm = DiagramList.getDiagramm(chtobj.Name)
@@ -760,8 +813,7 @@ Public Module awinGUI
 
         anzBubbles = 0
 
-        Dim selectionType As Integer = -1 ' keine Einschränkung
-        projektListe = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+
 
         ' Änderung 8.3 : hier muss die Unterscheidung gemacht werden, welche Projekte im Zeitraum denn überhaupt Abhängigkeiten haben  
 
@@ -791,10 +843,10 @@ Public Module awinGUI
                 End Try
             Next
         End If
-        
 
 
-        
+
+
 
 
         For i = 1 To projektListe.Count
@@ -914,7 +966,7 @@ Public Module awinGUI
 
             Case PTpfdk.Dependencies
                 ' neuer Typ: 8.3.14 Abhängigkeiten
-                
+
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Dependencies) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
 
             Case Else
@@ -946,7 +998,7 @@ Public Module awinGUI
 
 
         With chtobj.Chart
-          
+
             showLabels = True
 
             ' remove old series
@@ -1055,7 +1107,7 @@ Public Module awinGUI
 
             End If
 
-            
+
 
             .ChartTitle.Text = diagramTitle
         End With

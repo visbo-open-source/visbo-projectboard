@@ -492,17 +492,19 @@
                             phEnde = prAnfang + .relEnde - 1
                         End With
 
+                        Dim ixKorrektur As Integer = hphase.relStart - 1
+
                         Call awinIntersectZeitraum(phAnfang, phEnde, ixZeitraum, ix, anzLoops)
 
                         If anzLoops > 0 Then
 
-                            ReDim tempArray(phEnde - phAnfang)
+                            'ReDim tempArray(phEnde - phAnfang)
                             tempArray = hproj.getPhasenBedarf(phaseName)
 
                             For i = 0 To anzLoops - 1
                                 ' das awinintersect ermittelt die Werte für Projekt-Anfang, Projekt-Ende 
-                                ' in temparray stehen dagegen 
-                                phasevalues(ixZeitraum + i) = phasevalues(ixZeitraum + i) + tempArray(ix + i)
+                                ' in temparray stehen dagegen , deswegen muss um .relstart-1 erhöht werden 
+                                phasevalues(ixZeitraum + i) = phasevalues(ixZeitraum + i) + tempArray(ix + i + ixKorrektur)
                             Next i
 
                         End If
@@ -596,6 +598,40 @@
         End Get
 
     End Property
+
+    Public ReadOnly Property getPhaseSchwellWerteInMonth(myCollection As Collection) As Double()
+        Get
+
+            Dim schwellWerte() As Double
+
+            Dim hkapa As Double
+            Dim rname As String
+            Dim zeitraum As Integer
+            Dim r As Integer, m As Integer
+
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim schwellWerte(zeitraum)
+
+            For r = 1 To myCollection.Count
+
+                rname = myCollection.Item(r)
+                hkapa = PhaseDefinitions.getPhaseDef(rname).schwellWert
+
+                For m = 0 To zeitraum
+                    ' Änderung 31.5 Holen der Schwellwerte einer Phase 
+                    schwellWerte(m) = schwellWerte(m) + hkapa
+                Next m
+
+
+            Next r
+
+            getPhaseSchwellWerteInMonth = schwellWerte
+
+        End Get
+    End Property
+
     '
     '
     '
