@@ -504,57 +504,74 @@ Public Class clsProjektShapes
                     Dim tmpDauerIndays = hproj.dauerInDays
                     newProjekt = New clsProjekt
 
-                    newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
+
 
                     ' wenn gedehnt bzw. gestaucht wird ...
                     If curCoord(3) <> oldCoord(3) Then
                         ' es wird gestaucht bzw. gedehnt
+                        newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
                         newEndDate = newStartdate.AddDays(hproj.dauerInDays - 1 + calcXCoordToTage(curCoord(3) - oldCoord(3)))
-
-                        'hproj.copyAttrTo(newProjekt)
-                        hproj.korrCopyTo(newProjekt, newStartdate, newEndDate)
-                        With hproj
-                            newProjekt.name = .name
-                            newProjekt.variantName = .variantName
-                            newProjekt.ampelStatus = .ampelStatus
-                            newProjekt.ampelErlaeuterung = .ampelErlaeuterung
-                            newProjekt.Status = .Status
-                            newProjekt.shpUID = .shpUID
-                            newProjekt.tfZeile = .tfZeile
-                        End With
-
-                        newProjekt.timeStamp = Date.Now
-                        Call awinCreateBudgetWerte(newProjekt)
-
-                        ' jetzt muss das Projekt aus der Showprojekte und der AlleProjekte herausgenommen werden 
-                        ' und in der kopierten Form wieder aufgenommen werden 
-                        Dim key As String = pName
-                        ShowProjekte.Remove(pName)
-                        key = hproj.name & "#" & hproj.variantName
-                        AlleProjekte.Remove(key)
-
-                        AlleProjekte.Add(key, newProjekt)
-                        ShowProjekte.Add(newProjekt)
-
-                        ' falls es sich um ProjektE handelt, muss das Shape gelöscht und neu aufgebaut werden 
-                        Dim zeile As Integer = calcYCoordToZeile(shpElement.Top)
-
-                        Call clearProjektinPlantafel(pName)
-                        Call ZeichneProjektinPlanTafel(pname:=newProjekt.name, tryzeile:=zeile)
-                        ' Shape wurde gelöscht , damit die aufrufende Routine das shpelement wieder hat 
-
-
-                        tmpRange = appInstance.Worksheets(arrWsNames(3)).shapes.Range(pName)
-                        shpElement = tmpRange.Item(1)
-
                     Else
 
-                        ' das Shape muss jetzt eingerüttelt werden 
+                        ' es wurde nur verschoben 
+                        newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
+                        newEndDate = newStartdate.AddDays(hproj.dauerInDays - 1)
+                        Dim myCollection = New Collection
+                        Dim newZeile As Integer = calcYCoordToZeile(shpElement.Top)
+                        Dim anzahlZeilen As Integer = getNeededSpace(shpElement)
 
-                        Me.movetoCoords(shpElement, shpElement.Left, shpElement.Top)
+                        ' Platz schaffen auf der Projekt-Tafel
+                        myCollection.Add(hproj.name)
+                        If Not magicBoardIstFrei(mycollection:=myCollection, pname:=hproj.name, zeile:=newZeile, _
+                                            spalte:=hproj.Start, laenge:=hproj.Dauer, _
+                                            anzahlZeilen:=anzahlZeilen) Then
+
+                            Call moveShapesDown(newZeile, anzahlZeilen)
+
+                        End If
+
+                        ' tfzeile setzen
+                        hproj.tfZeile = newZeile
 
 
-                    End If
+                        End If
+
+                    'hproj.copyAttrTo(newProjekt)
+                    hproj.korrCopyTo(newProjekt, newStartdate, newEndDate)
+                    With hproj
+                        newProjekt.name = .name
+                        newProjekt.variantName = .variantName
+                        newProjekt.ampelStatus = .ampelStatus
+                        newProjekt.ampelErlaeuterung = .ampelErlaeuterung
+                        newProjekt.Status = .Status
+                        newProjekt.shpUID = .shpUID
+                        newProjekt.tfZeile = .tfZeile
+                    End With
+
+                    newProjekt.timeStamp = Date.Now
+                    Call awinCreateBudgetWerte(newProjekt)
+
+                    ' jetzt muss das Projekt aus der Showprojekte und der AlleProjekte herausgenommen werden 
+                    ' und in der kopierten Form wieder aufgenommen werden 
+                    Dim key As String = pName
+                    ShowProjekte.Remove(pName)
+                    key = hproj.name & "#" & hproj.variantName
+                    AlleProjekte.Remove(key)
+
+                    AlleProjekte.Add(key, newProjekt)
+                    ShowProjekte.Add(newProjekt)
+
+                    ' falls es sich um ProjektE handelt, muss das Shape gelöscht und neu aufgebaut werden 
+                    Dim zeile As Integer = calcYCoordToZeile(shpElement.Top)
+
+                    Call clearProjektinPlantafel(pName)
+                    Call ZeichneProjektinPlanTafel(pname:=newProjekt.name, tryzeile:=hproj.tfZeile)
+                    ' Shape wurde gelöscht , damit die aufrufende Routine das shpelement wieder hat 
+
+
+                    tmpRange = appInstance.Worksheets(arrWsNames(3)).shapes.Range(pName)
+                    shpElement = tmpRange.Item(1)
+
 
                     tmpDauerIndays = hproj.dauerInDays
                     Call awinCreateBudgetWerte(hproj)
@@ -576,7 +593,7 @@ Public Class clsProjektShapes
 
                     If cphase.name = hproj.name Then
                         ' hier muss die Sonderbehandlung der Phase 1 rein' sicherstellen, 
-                        ' daß die Phase 1 in curCoord die richtgen Koordinaten hat 
+                        ' daß die Phase 1 in curCoord die richtigen Koordinaten hat 
                         ' und dass die notwendigen Anpassungen der anderen Phasen gemacht wurde 
                         Dim phBorderLinks As Double = phasesBorderLinks(hproj)
                         Dim phBorderRechts As Double = phasesBorderRechts(hproj)

@@ -61,7 +61,7 @@ Public Class frmProjektEingabe1
 
             End Try
 
-            Me.Erloes.Text = hvalue.ToString("N0")
+            .Erloes.Text = hvalue.ToString("N0")
 
             ' Die Dauer des Projekts soll gleich der Dauer der Vorlage sein.
             If dauerUnverändert.Checked Then
@@ -71,7 +71,7 @@ Public Class frmProjektEingabe1
             Else
                 .kennzeichnungDate.Text = "Start"
                 .DateTimeProject.Value = Date.Now.AddMonths(1)
-                .DateTimeEnde.Value = Date.Now.AddMonths(1)
+                .DateTimeEnde.Value = Date.Now.AddMonths(2)
 
             End If
 
@@ -101,42 +101,70 @@ Public Class frmProjektEingabe1
         calcMonth.Text = StartofCalendar.AddMonths(CType(selectedMonth.Value, Integer) - 1).ToString("MMM yy")
 
     End Sub
-    Private Sub projectName_LostFocus(sender As Object, e As EventArgs) Handles projectName.LostFocus
+    Private Sub projectName_TextChanged(sender As Object, e As EventArgs) Handles projectName.TextChanged
 
-        With projectName
-            If Len(.Text) < 1 Then
-                'MsgBox("Name muss mindestens 1 Zeichen lang sein")
-                .Text = ""
-                .Focus()
-                Exit Sub
-            ElseIf IsNumeric(.Text) Then
-                MsgBox("Zahlen sind nicht zugelassen")
-                .Text = ""
-                .Focus()
-                Exit Sub
-            ElseIf inProjektliste(.Text) Then
-                MsgBox("Projekt-Name bereits vorhanden !")
-                .Text = ""
-                .Focus()
-                Exit Sub
-            End If
-        End With
+        'With projectName
+        '    If Len(.Text) >= 1 Then
+
+        '        If IsNumeric(.Text) Then
+        '            MsgBox("Zahlen sind nicht zugelassen")
+        '            .Text = ""
+        '            .Focus()
+        '            Exit Sub
+        '        ElseIf inProjektliste(.Text) Then
+        '            MsgBox("Projekt-Name bereits vorhanden !")
+        '            .Text = ""
+        '            .Focus()
+        '            Exit Sub
+        '        End If
+        '    Else
+        '        MsgBox("ProjektName muss mindestens 1 Zeichen sein!")
+        '        Focus()
+        '    End If
+        'End With
 
     End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
-        If dauerUnverändert.Checked Then
-            calcProjektStart = DateTimeProject.Value
-            calcProjektEnde = DateTimeProject.Value.AddDays(vorlagenDauer - 1).AddMonths(1)
+        With projectName
+            If Len(.Text) < 1 Then
 
-        Else
-            calcProjektStart = DateTimeProject.Value
-            calcProjektEnde = DateTimeEnde.Value
+                MsgBox("Projektname muss mindestens ein Zeichen haben!")
+                .Text = ""
+                .Undo()
+                DialogResult = System.Windows.Forms.DialogResult.None
 
-        End If
+            Else
+                If IsNumeric(.Text) Then
+                    MsgBox("Zahlen sind nicht zugelassen")
+                    .Text = ""
+                    .Undo()
+                    DialogResult = System.Windows.Forms.DialogResult.None
 
-        MyBase.Close()
+                ElseIf inProjektliste(.Text) Then
+                    MsgBox("Projekt-Name bereits vorhanden !")
+                    .Text = ""
+                    .Undo()
+                    DialogResult = System.Windows.Forms.DialogResult.None
+                Else
+
+
+                    If dauerUnverändert.Checked Then
+                        calcProjektStart = DateTimeProject.Value
+                        calcProjektEnde = DateTimeProject.Value.AddDays(vorlagenDauer - 1).AddMonths(1)
+
+                    Else
+                        calcProjektStart = DateTimeProject.Value
+                        calcProjektEnde = DateTimeEnde.Value
+
+                    End If
+
+                    DialogResult = System.Windows.Forms.DialogResult.OK
+                    MyBase.Close()
+                End If
+            End If
+        End With
 
     End Sub
 
@@ -271,19 +299,20 @@ Public Class frmProjektEingabe1
 
         If dauerUnverändert.Checked Then
             'StartDatum muss gemäß Vorlagendauer errechnet werden
-            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeProject.Value) < 0 Then
-                Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
-                DateTimeProject.Value = Date.Now.AddMonths(1)
+            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeProject.Value, DateTimeEnde.Value) < 0 Then
+                Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
+                DateTimeEnde.Value = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
             Else
                 calcProjektEnde = DateTimeEnde.Value
                 DateTimeProject.Value = DateTimeEnde.Value.AddDays(-(vorlagenDauer - 1))
                 calcProjektStart = DateTimeProject.Value
             End If
         Else
-            If DateDiff(DateInterval.Month, StartofCalendar.AddDays(vorlagenDauer - 1), DateTimeProject.Value) < 0 Then
-                Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
-                DateTimeProject.Value = Date.Now.AddMonths(1)
-                'DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
+            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeProject.Value, DateTimeEnde.Value) < 0 Then
+
+                Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
+                DateTimeEnde.Value = DateTimeProject.Value.AddMonths(1)
+
             Else
                 calcProjektStart = DateTimeProject.Value
                 calcProjektEnde = DateTimeEnde.Value
@@ -309,7 +338,7 @@ Public Class frmProjektEingabe1
 
             End If
         Else
-            If DateDiff(DateInterval.Month, StartofCalendar.AddDays(vorlagenDauer - 1), DateTimeProject.Value) < 0 Then
+            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeProject.Value) < 0 Then
                 Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
                 DateTimeProject.Value = Date.Now.AddMonths(1)
                 'DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
@@ -326,13 +355,13 @@ Public Class frmProjektEingabe1
 
         If dauerUnverändert.Checked Then
             ' es war vorher auf Datum = End-Datum
-            kennzeichnungDate.Text = "Start"
-            DateTimeProject.Value = DateTimeProject.Value
+            'kennzeichnungDate.Text = "Start"
+            'DateTimeProject.Value = DateTimeProject.Value
             DateTimeEnde.Value = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
         Else
             ' es war vorher auf Datum = Start-Datum
-            kennzeichnungDate.Text = "Start"
-            DateTimeEnde.Value = DateTimeEnde.Value
+            'kennzeichnungDate.Text = "Start"
+            'DateTimeEnde.Value = DateTimeEnde.Value
 
         End If
     End Sub

@@ -312,23 +312,38 @@ Public Module awinGeneralModules
                         .name = tmpStr.Trim
                         .Startkapa = CDbl(c.Offset(0, 1).Value)
                         .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
-                        If CDbl(c.Offset(0, 3).Value) = 0.0 Then
-                            .tagessatzExtern = CDbl(c.Offset(0, 2).Value) * 1.35
-                        Else
-                            .tagessatzExtern = CDbl(c.Offset(0, 3).Value)
-                        End If
-                        ' Auslesen der zukünftigen Kapazität
-                        For cp = 1 To 120
-                            .kapazitaet(cp) = CType(c.Offset(0, 3 + cp).Value, Double)
-                            If .kapazitaet(cp) <= 0 Then
-                                ' Kapa kann nicht negative sein
-                                ' wenn nichts angegeben wird, soll die Startkapa verwendet werden 
-                                .kapazitaet(cp) = .Startkapa
+
+                        Try
+                            If CDbl(c.Offset(0, 3).Value) = 0.0 Then
+                                .tagessatzExtern = .tagessatzIntern * 1.35
+                            Else
+                                .tagessatzExtern = CDbl(c.Offset(0, 3).Value)
                             End If
+                        Catch ex As Exception
+                            .tagessatzExtern = .tagessatzIntern * 1.35
+                        End Try
+                        
+                        ' Auslesen der zukünftigen Kapazität
+                        ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
+                        For cp = 1 To 240
+                            .kapazitaet(cp) = .Startkapa
+
+                            ' Änderung 29.5.14 Wurde ersetzt durch das Auslesen der Rollen-Kapa Files
+                            ' siehe weiter unten 
+                            '.kapazitaet(cp) = CType(c.Offset(0, 3 + cp).Value, Double)
+                            'If .kapazitaet(cp) < 0 Then
+                            '    ' Kapa kann nicht negative sein
+                            '    ' wenn nichts angegeben wird, soll die Startkapa verwendet werden 
+                            '    .kapazitaet(cp) = .Startkapa
+                            'End If
                         Next
                         .farbe = c.Interior.Color
                         .UID = i
                     End With
+
+                    ' später, wenn die Customization File bereits geschlossen ist, werden die 
+                    ' evtl vorhandenen Rolle Kapazität Files ausgelesen 
+
                     RoleDefinitions.Add(hrole)
                     'hrole = Nothing
 
@@ -440,6 +455,22 @@ Public Module awinGeneralModules
         appInstance.EnableEvents = True
 
         showtimezone = True
+
+        ' jetzt werden  für die einzelnen Rollen in dem Directory Ressource Manager Dateien 
+        ' die evtl vorhandenen Dateien für die genaue Bestimmung der Kapazität ausgelesen  
+        Dim tmpRole As clsRollenDefinition
+        Dim tmpRoleDefinitions As New clsRollen
+        For ix = 1 To RoleDefinitions.Count
+            tmpRole = RoleDefinitions.getRoledef(ix)
+            ' hier werden die betreffenden Dateien geöffnet und auch wieder geschlossen
+            ' wenn es zu Problemen kommen sollte, bleiben die Kapa Werte unverändert ...
+            Call readKapaOfRole(tmpRole)
+            tmpRoleDefinitions.Add(tmpRole)
+        Next
+
+        RoleDefinitions = New clsRollen
+        RoleDefinitions = tmpRoleDefinitions
+
 
         ' jetzt werden die Projekt-Vorlagen ausgelesen 
         Dim dirName As String = awinPath & projektVorlagenOrdner
@@ -1824,9 +1855,14 @@ Public Module awinGeneralModules
                                     startDate = Date.MinValue
                                 End Try
 
-                                endeDate = CDate(.Cells(zeile, columnOffset + 4).value)
+                                Try
+                                    endeDate = CDate(.Cells(zeile, columnOffset + 4).value)
+                                Catch ex As Exception
+                                    endeDate = Date.MinValue
+                                End Try
 
-                                If DateDiff(DateInterval.Month, hproj.startDate, startDate) < 0 Then
+
+                                If DateDiff(DateInterval.Day, hproj.startDate, startDate) < 0 Then
                                     ' kein Startdatum angegeben
 
                                     If startDate <> Date.MinValue Then
@@ -1835,6 +1871,11 @@ Public Module awinGeneralModules
                                                      "Bitte korrigieren Sie dies in der Datei'" & hproj.name & ".xlsx'")
                                     Else
                                         ' objectName ist ein Meilenstein
+                                        ' Fehlermeldung entfernt ur: 27.05.2014
+
+                                        'If endeDate = Date.MinValue Then
+                                        '    Throw New Exception("für den Meilenstein '" & objectName & "'" & vbLf & "wurde im Projekt '" & hproj.name & "' kein Datum eingetragen!")
+                                        'End If
                                         cphase = hproj.getPhase(bezug)
                                         If IsNothing(cphase) Then
                                             If hproj.AllPhases.Count > 0 Then
@@ -1888,38 +1929,42 @@ Public Module awinGeneralModules
 
 
                                         If duration < 1 Or offset < 0 Then
-                                            Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
-                                                                offset.ToString & ", " & duration.ToString)
+                                            If startDate = Date.MinValue And endeDate = Date.MinValue Then
+                                                Throw New Exception(" zu '" & objectName & "' wurde kein Datum eingetragen!")
+                                            Else
+                                                Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
+                                                                    offset.ToString & ", " & duration.ToString)
+                                            End If
                                         End If
 
-                                        cphase.changeStartandDauer(offset, duration)
+                                            cphase.changeStartandDauer(offset, duration)
 
-                                        ' jetzt wird auf Inkonsistenz geprüft 
-                                        Dim inkonsistent As Boolean = False
+                                            ' jetzt wird auf Inkonsistenz geprüft 
+                                            Dim inkonsistent As Boolean = False
 
-                                        If cphase.CountRoles > 0 Or cphase.CountCosts > 0 Then
-                                            ' prüfen , ob es Inkonsistenzen gibt ? 
-                                            For r = 1 To cphase.CountRoles
-                                                If cphase.getRole(r).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
-                                                    inkonsistent = True
-                                                End If
-                                            Next
+                                            If cphase.CountRoles > 0 Or cphase.CountCosts > 0 Then
+                                                ' prüfen , ob es Inkonsistenzen gibt ? 
+                                                For r = 1 To cphase.CountRoles
+                                                    If cphase.getRole(r).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
+                                                        inkonsistent = True
+                                                    End If
+                                                Next
 
-                                            For k = 1 To cphase.CountCosts
-                                                If cphase.getCost(k).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
-                                                    inkonsistent = True
-                                                End If
-                                            Next
-                                        End If
+                                                For k = 1 To cphase.CountCosts
+                                                    If cphase.getCost(k).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
+                                                        inkonsistent = True
+                                                    End If
+                                                Next
+                                            End If
 
-                                    If inkonsistent Then
-                                        anzFehler = anzFehler + 1
-                                        Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
-                                                             "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
-                                    End If
-                                    If Not cphaseExisted Then
-                                        hproj.AddPhase(cphase)
-                                    End If
+                                            If inkonsistent Then
+                                                anzFehler = anzFehler + 1
+                                                Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
+                                                                     "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
+                                            End If
+                                            If Not cphaseExisted Then
+                                                hproj.AddPhase(cphase)
+                                            End If
 
 
                                     Catch ex As Exception
@@ -2654,8 +2699,6 @@ Public Module awinGeneralModules
         Dim bewertungszeile As Integer = 4
         mycollection.Add(currentRole)
 
-        Dim oldName As String
-        Dim oldWS As Excel.Worksheet
         Dim currentWS As Excel.Worksheet
 
         For loopi = 1 To vorausschau
@@ -2664,52 +2707,56 @@ Public Module awinGeneralModules
             Try
 
 
+                ' suchen nach dem Register Blattname, wenn es bereits existiert wird es überschrieben
+                ' wenn es noch nicht existiert, wird es angelegt
                 currentWS = CType(appInstance.Worksheets(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                ' kopieren unter Name blattname & old before:=blattname
-                oldName = blattName & " (old)"
-
-                Try
-                    oldWS = CType(appInstance.Worksheets(oldName), Global.Microsoft.Office.Interop.Excel.Worksheet)
-                    oldWS.Delete()
-                    currentWS.Copy(Before:=currentWS)
-                    With CType(appInstance.ActiveSheet, Global.Microsoft.Office.Interop.Excel.Worksheet)
-                        .Name = oldName
-                    End With
 
 
-                Catch ex1 As Exception
-                    ' oldWS existiert nicht - also erzeugen durch Kopie 
-                    currentWS.Copy(Before:=currentWS)
-                    With CType(appInstance.ActiveSheet, Global.Microsoft.Office.Interop.Excel.Worksheet)
-                        .Name = oldName
-                    End With
-                End Try
+                ' wenn das schon existiert, wird es einfach überschrieben 
+                'Try
+                '    currentWS.Name = blattName & " " & Date.Now.ToLongDateString
+                '    'currentWS.Delete()
+
+                'Catch ex1 As Exception
+
+                '    Call MsgBox("Tabelle " & blattName & " kann nicht umbenannt werden ")
+                '    Exit Sub
+
+                'End Try
 
 
 
             Catch ex As Exception
 
                 Try
+
                     With CType(appInstance.Worksheets.Add(Before:=appInstance.Worksheets(xlsBlattname(0))), _
                                     Global.Microsoft.Office.Interop.Excel.Worksheet)
                         .Name = blattName
+
                     End With
+
                 Catch ex2 As Exception
+
                     Call MsgBox("Tabelle Summary nicht vorhanden ... " & vbLf & ex2.Message)
                     Exit Sub
+
                 End Try
 
 
             End Try
 
-            Dim wsBlattname As Excel.Worksheet = CType(appInstance.Worksheets(blattName), _
-                                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
+            ' jetzt muss es auf alle Fälle existieren 
+            currentWS = CType(appInstance.Worksheets(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
+            
 
 
             Try
-                ' jetzt zurücksetzen der Planungs-Unterstütung, Register Zuordnung 
+                ' jetzt zurücksetzen der Planungs-Unterstützung, Register Zuordnung 
 
-                With wsBlattname
+                With currentWS
+
+                    .Unprotect()
 
                     ' -------------------------------------------------------
                     ' Inhalt leeren ...
@@ -2769,11 +2816,6 @@ Public Module awinGeneralModules
                     ' 4. Zeile schreiben: Projekt-Bewertung  
                     ' -------------------------------------------------------
 
-                    'With .cells(4, 2)
-                    '    .value = "Projekt-Bewertung"
-                    '    .font.size = 12
-                    '    .font.bold = True
-                    'End With
                     With .Range(.Cells(bewertungszeile, 3), .Cells(bewertungszeile, 100))
                         .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                         .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
@@ -2803,8 +2845,8 @@ Public Module awinGeneralModules
                     personalrange = .Range("Personenliste")
                     startZeile = personalrange.Row
                     rcol = personalrange.Column
-                    ' die letzte Zeile ist die Summenzeile , deshalb ...  
-                    endZeile = startZeile + personalrange.Rows.Count - 2
+                    ' die letzte Zeile ist letzte Person   
+                    endZeile = startZeile + personalrange.Rows.Count - 1
                     anzPeople = endZeile - startZeile + 1
                     rngSource = .Range(.Cells(startZeile, rcol), .Cells(endZeile, rcol))
                     rngTarget = CType(CType(appInstance.Worksheets(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet).Cells(6, 1), _
@@ -2824,7 +2866,7 @@ Public Module awinGeneralModules
                         found = False
                     End If
 
-                    Do While Not found And rcol < 200
+                    Do While Not found And rcol < 240
                         rcol = rcol + 1
                         tmpDate = CDate(CType(.Cells(1, rcol), Global.Microsoft.Office.Interop.Excel.Range).Value)
                         If DateDiff(DateInterval.Month, heute, tmpDate) > loopi - 1 Then
@@ -2840,15 +2882,13 @@ Public Module awinGeneralModules
 
                         For k = startZeile To endZeile
                             cellFormula = "=" & xlsBlattname(2).Trim & "!R[-4]C[" & rcol - 2 & "]"
-                            CType(wsBlattname.Cells(k - startZeile + 6, 2), _
+                            CType(currentWS.Cells(k - startZeile + 6, 2), _
                                     Global.Microsoft.Office.Interop.Excel.Range).FormulaR1C1 = cellFormula
                         Next
 
-                        CType(wsBlattname.Cells(endZeile - startZeile + 7, 1), _
+                        CType(currentWS.Cells(endZeile - startZeile + 7, 1), _
                                 Global.Microsoft.Office.Interop.Excel.Range).Value = "Extern"
-                        'rngSource = .range(.cells(startZeile, rcol), .cells(endZeile, rcol))
-                        'rngTarget = appInstance.Worksheets(blattName).cells(5, 2)
-                        'rngSource.Copy(rngTarget)
+                        
                     Else
                         Call MsgBox("keine Werte für Folge-Monate von " & heute.ToShortDateString & " gefunden ...")
                         Exit Sub
@@ -2865,7 +2905,7 @@ Public Module awinGeneralModules
             'currentColumn = currentColumn + 3
             ' jetzt wird der Rest der Zuordnungs-Datei geschrieben : die Projekt-Daten
 
-            With wsBlattname
+            With currentWS
 
                 Dim anzProjekte As Integer = 0
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
@@ -2912,63 +2952,73 @@ Public Module awinGeneralModules
                     End If
 
                 Next
-                ' Schreiben der Zeilen-Summen: Summe Zuordnung pro MA
-                cellFormula = "=SUM(RC[1]:RC[" & anzProjekte & "])"
 
-                For k = 6 To 6 + anzPeople
-                    CType(.Cells(k, 3), Global.Microsoft.Office.Interop.Excel.Range).FormulaR1C1 = cellFormula
-                Next
+                If anzProjekte > 0 Then
 
-                CType(.Cells(7 + anzPeople, 5 + anzProjekte), Global.Microsoft.Office.Interop.Excel.Range).Value = ""
-                CType(.Cells(8 + anzPeople, 4 + anzProjekte), Global.Microsoft.Office.Interop.Excel.Range).Value = "Projekt-Bedarf"
-                CType(.Columns(3 + anzProjekte + 1), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = 25
+                    ' Schreiben der Zeilen-Summen: Summe Zuordnung pro MA
+                    cellFormula = "=SUM(RC[1]:RC[" & anzProjekte & "])"
 
-                ' Schreiben des Prozentsatzes wieviel des Projektbedarfes wird durch interne abgedeckt 
-                cellFormula = "=SUM(R[-" & anzPeople + 2 & "]C:R[-3]C)/SUM(RC[2]:RC[" & anzProjekte + 1 & "])"
+                    For k = 6 To 6 + anzPeople
+                        CType(.Cells(k, 3), Global.Microsoft.Office.Interop.Excel.Range).FormulaR1C1 = cellFormula
+                    Next
 
-                With CType(.Cells(8 + anzPeople, 2), Global.Microsoft.Office.Interop.Excel.Range)
-                    .FormulaR1C1 = cellFormula
-                    .NumberFormat = "0%"
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                End With
+                    CType(.Cells(7 + anzPeople, 5 + anzProjekte), Global.Microsoft.Office.Interop.Excel.Range).Value = ""
+                    CType(.Cells(8 + anzPeople, 4 + anzProjekte), Global.Microsoft.Office.Interop.Excel.Range).Value = "Projekt-Bedarf"
+                    CType(.Columns(3 + anzProjekte + 1), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = 25
 
-                ' die Eingabe Felder farblos machen  
-                .Range(.Cells(6, 4), .Cells(6 + anzPeople, 4 + anzProjekte - 1)).Interior.ColorIndex = Excel.Constants.xlNone
+                    ' Schreiben des Prozentsatzes wieviel des Projektbedarfes wird durch interne abgedeckt 
+                    cellFormula = "=SUM(R[-" & anzPeople + 2 & "]C:R[-3]C)/SUM(RC[2]:RC[" & anzProjekte + 1 & "])"
 
+                    With CType(.Cells(8 + anzPeople, 2), Global.Microsoft.Office.Interop.Excel.Range)
+                        .FormulaR1C1 = cellFormula
+                        .NumberFormat = "0%"
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    End With
 
-
-
-                With .Range(.Cells(6, 1), .Cells(6 + anzPeople, 1))
-                    .Interior.Color = awinSettings.AmpelNichtBewertet
-                End With
-
-                With .Range(.Cells(6, 2), .Cells(6 + anzPeople, 2))
-                    .Font.Size = 12
-                    .Font.Bold = True
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                    .AddIndent = True
-                    .IndentLevel = 2
-                End With
-
-                ' die vertikalen Summen-Felder etwas einrücken ..
-                With .Range(.Cells(6, 3), .Cells(6 + anzPeople, 3))
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
-                    .AddIndent = True
-                    .IndentLevel = 2
-                End With
+                    ' die Eingabe Felder farblos machen  
+                    .Range(.Cells(6, 4), .Cells(6 + anzPeople, 4 + anzProjekte - 1)).Interior.ColorIndex = Excel.Constants.xlNone
 
 
-                With .Range(.Cells(8 + anzPeople, 4), .Cells(8 + anzPeople, 4 + anzProjekte))
-                    .Font.Size = 12
-                    .Font.Bold = True
-                End With
+
+
+                    With .Range(.Cells(6, 1), .Cells(6 + anzPeople, 1))
+                        .Interior.Color = awinSettings.AmpelNichtBewertet
+                    End With
+
+                    With .Range(.Cells(6, 2), .Cells(6 + anzPeople, 2))
+                        .Font.Size = 12
+                        .Font.Bold = True
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        .AddIndent = True
+                        .IndentLevel = 2
+                    End With
+
+                    ' die vertikalen Summen-Felder etwas einrücken ..
+                    With .Range(.Cells(6, 3), .Cells(6 + anzPeople, 3))
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
+                        .AddIndent = True
+                        .IndentLevel = 2
+                    End With
+
+
+                    With .Range(.Cells(8 + anzPeople, 4), .Cells(8 + anzPeople, 4 + anzProjekte))
+                        .Font.Size = 12
+                        .Font.Bold = True
+                    End With
+
+                Else
+                    'CType(.Cells(6, 6), Global.Microsoft.Office.Interop.Excel.Range).value = "kein Projekt-Bedarf für diese Rolle"
+                    CType(.Cells(8 + anzPeople, 4 + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "kein Projekt-Bedarf für diese Rolle"
+                End If
 
 
                 ' jetzt wird das Zuordnungs-Blatt geschützt 
                 .Range(.Cells(1, 1), .Cells(1 + 8, 1 + 4 + anzProjekte)).Locked = True
                 ' Freigeben des Eingabe Bereiches 
                 .Range(.Cells(6, 4), .Cells(6 + anzPeople, 4 + anzProjekte - 1)).Locked = False
-                CType(.Cells(6, 4), Global.Microsoft.Office.Interop.Excel.Range).Activate()
+                ' Auskommentiert, weil es zu Fehlern führt; ausserdem ist nicht mehr klar, wozu das überhaupt benötigt wird 
+                'CType(.Cells(6, 4), Global.Microsoft.Office.Interop.Excel.Range).Activate()
+
                 .Protect()
 
             End With
@@ -3015,65 +3065,148 @@ Public Module awinGeneralModules
         lastZeile = 0
 
 
-        If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
-            ' dann sollen die Projekte im extended mode gezeichnet werden 
-            ' jetzt erst mal die Konstellation "last" speichern
-            Call awinStoreConstellation("Last")
+        'If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
+        ' dann sollen die Projekte im extended mode gezeichnet werden 
+        ' jetzt erst mal die Konstellation "last" speichern
+        Call awinStoreConstellation("Last")
 
-            ' jetzt die todoListe abarbeiten
-            For i = 1 To todoListe.Count
-                pname = todoListe.ElementAt(i - 1).Value
-                hproj = ShowProjekte.getProject(pname)
+        ' jetzt die todoListe abarbeiten
+        For i = 1 To todoListe.Count
+            pname = todoListe.ElementAt(i - 1).Value
+            hproj = ShowProjekte.getProject(pname)
 
-                If i = 1 Then
-                    curZeile = hproj.tfZeile
-                    lastZeileOld = hproj.tfZeile
-                    lastZeile = curZeile
-                    max = curZeile
-                Else
-                    If lastZeileOld = hproj.tfZeile Then
-                        curZeile = lastZeile
-                    Else
-                        lastZeile = max
-                        lastZeileOld = hproj.tfZeile
-                    End If
-
-                End If
-
-                hproj.tfZeile = curZeile
+            If i = 1 Then
+                curZeile = hproj.tfZeile
+                lastZeileOld = hproj.tfZeile
                 lastZeile = curZeile
-                'Call ZeichneProjektinPlanTafel2(pname, curZeile)
-                Call ZeichneProjektinPlanTafel(pname, curZeile)
-                curZeile = lastZeile + getNeededSpace(hproj)
-
-
-                If curZeile > max Then
-                    max = curZeile
+                max = curZeile
+            Else
+                If lastZeileOld = hproj.tfZeile Then
+                    curZeile = lastZeile
+                Else
+                    lastZeile = max
+                    lastZeileOld = hproj.tfZeile
                 End If
 
+            End If
 
-            Next
+            hproj.tfZeile = curZeile
+            lastZeile = curZeile
+            'Call ZeichneProjektinPlanTafel2(pname, curZeile)
+            Call ZeichneProjektinPlanTafel(pname, curZeile)
+            curZeile = lastZeile + getNeededSpace(hproj)
 
-        Else
+
+            If curZeile > max Then
+                max = curZeile
+            End If
 
 
-            Dim tryzeile As Integer
+        Next
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-                pname = kvp.Key
-                tryzeile = kvp.Value.tfZeile
-                If tryzeile <= 1 Then
-                    tryzeile = -1
-                End If
-                Call ZeichneProjektinPlanTafel(pname, tryzeile) ' es wird versucht, an der alten Stelle zu zeichnen 
-            Next
+        'Else
 
+
+        '    Dim tryzeile As Integer
+
+        '    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        '        pname = kvp.Key
+        '        tryzeile = kvp.Value.tfZeile
+        '        If tryzeile <= 1 Then
+        '            tryzeile = -1
+        '        End If
+        '        Call ZeichneProjektinPlanTafel(pname, tryzeile) ' es wird versucht, an der alten Stelle zu zeichnen 
+        '    Next
+
+
+        'End If
+
+
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' liest die im Diretory ../ressource manager liegenden detaillierten Kapa files zu den Rollen aus
+    ''' und hinterlegt es an entsprechender Stelle im hrole.kapazitaet
+    ''' </summary>
+    ''' <param name="hrole"></param>
+    ''' <remarks></remarks>
+    Friend Sub readKapaOfRole(ByRef hrole As clsRollenDefinition)
+        Dim kapaFileName As String
+        Dim ok As Boolean = True
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim summenZeile As Integer
+        Dim spalte As Integer = 2
+        Dim blattname As String = "Kapazität"
+        Dim currentWS As Excel.Worksheet
+        Dim index As Integer
+        Dim tmpDate As Date
+        Dim tmpKapa As Double
+
+        If formerEE Then
+            appInstance.EnableEvents = False
+        End If
+
+        If formerSU Then
+            appInstance.ScreenUpdating = False
+        End If
+
+        enableOnUpdate = False
+
+        kapaFileName = awinPath & projektRessOrdner & "\" & hrole.name & " Kapazität.xlsx"
+
+
+        ' öffnen des Files 
+        If My.Computer.FileSystem.FileExists(kapaFileName) Then
+
+            Try
+                appInstance.Workbooks.Open(kapaFileName)
+                ok = True
+
+                Try
+
+                    currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
+                    summenZeile = currentWS.Range("intern_sum").Row
+
+                    tmpDate = CDate(currentWS.Cells(1, spalte).value)
+
+                    Do While DateDiff(DateInterval.Month, StartofCalendar, tmpDate) > 0 And _
+                            spalte < 241
+                        index = getColumnOfDate(tmpDate)
+                        tmpKapa = CDbl(currentWS.Cells(summenZeile, spalte).value)
+
+                        If index <= 240 And index > 0 And tmpKapa >= 0 Then
+                            hrole.kapazitaet(index) = tmpKapa
+                        End If
+
+                        spalte = spalte + 1
+                        tmpDate = CDate(currentWS.Cells(1, spalte).value)
+                    Loop
+
+                Catch ex2 As Exception
+
+                End Try
+
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+            Catch ex As Exception
+
+            End Try
 
         End If
 
 
+        If formerEE Then
+            appInstance.EnableEvents = True
+        End If
 
+        If formerSU Then
+            appInstance.ScreenUpdating = True
+        End If
 
+        enableOnUpdate = True
 
     End Sub
  

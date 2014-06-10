@@ -33,66 +33,73 @@ Partial Class frmshowBedarfe
         'lblTyp
         '
         Me.lblTyp.AutoSize = True
-        Me.lblTyp.Location = New System.Drawing.Point(37, 31)
+        Me.lblTyp.Location = New System.Drawing.Point(49, 38)
+        Me.lblTyp.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.lblTyp.Name = "lblTyp"
-        Me.lblTyp.Size = New System.Drawing.Size(25, 13)
+        Me.lblTyp.Size = New System.Drawing.Size(32, 17)
         Me.lblTyp.TabIndex = 0
         Me.lblTyp.Text = "Typ"
         '
         'ComboBox1
         '
         Me.ComboBox1.FormattingEnabled = True
-        Me.ComboBox1.Location = New System.Drawing.Point(125, 28)
+        Me.ComboBox1.Location = New System.Drawing.Point(167, 34)
+        Me.ComboBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.ComboBox1.Name = "ComboBox1"
-        Me.ComboBox1.Size = New System.Drawing.Size(210, 21)
+        Me.ComboBox1.Size = New System.Drawing.Size(279, 24)
         Me.ComboBox1.TabIndex = 1
         '
         'lblName
         '
         Me.lblName.AutoSize = True
-        Me.lblName.Location = New System.Drawing.Point(40, 73)
+        Me.lblName.Location = New System.Drawing.Point(53, 90)
+        Me.lblName.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.lblName.Name = "lblName"
-        Me.lblName.Size = New System.Drawing.Size(35, 13)
+        Me.lblName.Size = New System.Drawing.Size(45, 17)
         Me.lblName.TabIndex = 2
         Me.lblName.Text = "Name"
         '
         'ComboBox2
         '
         Me.ComboBox2.FormattingEnabled = True
-        Me.ComboBox2.Location = New System.Drawing.Point(125, 70)
+        Me.ComboBox2.Location = New System.Drawing.Point(167, 86)
+        Me.ComboBox2.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.ComboBox2.Name = "ComboBox2"
-        Me.ComboBox2.Size = New System.Drawing.Size(210, 21)
+        Me.ComboBox2.Size = New System.Drawing.Size(279, 24)
         Me.ComboBox2.TabIndex = 3
         '
         'AnzeigenButton
         '
-        Me.AnzeigenButton.Location = New System.Drawing.Point(86, 129)
+        Me.AnzeigenButton.Location = New System.Drawing.Point(115, 159)
+        Me.AnzeigenButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.AnzeigenButton.Name = "AnzeigenButton"
-        Me.AnzeigenButton.Size = New System.Drawing.Size(75, 23)
+        Me.AnzeigenButton.Size = New System.Drawing.Size(100, 28)
         Me.AnzeigenButton.TabIndex = 4
         Me.AnzeigenButton.Text = "Anzeigen"
         Me.AnzeigenButton.UseVisualStyleBackColor = True
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(215, 129)
+        Me.AbbrButton.Location = New System.Drawing.Point(287, 159)
+        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(75, 23)
+        Me.AbbrButton.Size = New System.Drawing.Size(100, 28)
         Me.AbbrButton.TabIndex = 5
         Me.AbbrButton.Text = "Schließen"
         Me.AbbrButton.UseVisualStyleBackColor = True
         '
         'frmshowBedarfe
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(379, 172)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
+        Me.ClientSize = New System.Drawing.Size(505, 212)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.AnzeigenButton)
         Me.Controls.Add(Me.ComboBox2)
         Me.Controls.Add(Me.lblName)
         Me.Controls.Add(Me.ComboBox1)
         Me.Controls.Add(Me.lblTyp)
+        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmshowBedarfe"
         Me.Text = "detaillierte Bedarfe"
         Me.ResumeLayout(False)

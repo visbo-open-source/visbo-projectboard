@@ -781,7 +781,6 @@
 
                     Call berechneBedarfe(oldrole.Xwerte, corrFactor, newXwerte)
 
-
                     With newrole
                         .RollenTyp = oldrole.RollenTyp
                         .Xwerte = newXwerte
@@ -805,13 +804,6 @@
 
                     ReDim newXwerte(newphase.relEnde - newphase.relStart)
                     hname = oldcost.name
-
-
-                    'If awinSettings.propAnpassRess Then
-                    '    Call berechneBedarfe(oldcost.Xwerte, corrFactor, newXwerte)
-                    'Else
-                    '    Call berechneBedarfe(oldcost.Xwerte, 1.0, newXwerte)
-                    'End If
 
                     Call berechneBedarfe(oldcost.Xwerte, corrFactor, newXwerte)
 

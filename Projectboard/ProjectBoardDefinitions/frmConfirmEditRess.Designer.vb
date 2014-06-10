@@ -28,30 +28,33 @@ Partial Class frmConfirmEditRess
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(21, 38)
+        Me.OKButton.Location = New System.Drawing.Point(28, 47)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(75, 23)
+        Me.OKButton.Size = New System.Drawing.Size(100, 28)
         Me.OKButton.TabIndex = 0
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(185, 38)
+        Me.AbbrButton.Location = New System.Drawing.Point(247, 47)
+        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(75, 23)
+        Me.AbbrButton.Size = New System.Drawing.Size(100, 28)
         Me.AbbrButton.TabIndex = 1
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
         '
         'frmConfirmEditRess
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(284, 95)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
+        Me.ClientSize = New System.Drawing.Size(379, 117)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Location = New System.Drawing.Point(500, 150)
+        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmConfirmEditRess"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
         Me.Text = "Ressourcen Bedarfe ändern"

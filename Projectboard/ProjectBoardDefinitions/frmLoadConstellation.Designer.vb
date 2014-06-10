@@ -34,7 +34,7 @@ Partial Class frmLoadConstellation
         Me.ListBox1.HorizontalScrollbar = True
         Me.ListBox1.ItemHeight = 19
         Me.ListBox1.Location = New System.Drawing.Point(16, 15)
-        Me.ListBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.ListBox1.Margin = New System.Windows.Forms.Padding(4)
         Me.ListBox1.Name = "ListBox1"
         Me.ListBox1.Size = New System.Drawing.Size(424, 232)
         Me.ListBox1.TabIndex = 0
@@ -42,7 +42,7 @@ Partial Class frmLoadConstellation
         'OKButton
         '
         Me.OKButton.Location = New System.Drawing.Point(81, 299)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(4)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(100, 28)
         Me.OKButton.TabIndex = 1
@@ -52,7 +52,7 @@ Partial Class frmLoadConstellation
         'Abbrechen
         '
         Me.Abbrechen.Location = New System.Drawing.Point(255, 299)
-        Me.Abbrechen.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Abbrechen.Margin = New System.Windows.Forms.Padding(4)
         Me.Abbrechen.Name = "Abbrechen"
         Me.Abbrechen.Size = New System.Drawing.Size(100, 28)
         Me.Abbrechen.TabIndex = 2
@@ -61,14 +61,14 @@ Partial Class frmLoadConstellation
         '
         'frmLoadConstellation
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoScroll = True
         Me.ClientSize = New System.Drawing.Size(457, 363)
         Me.Controls.Add(Me.Abbrechen)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.ListBox1)
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.Margin = New System.Windows.Forms.Padding(4)
         Me.Name = "frmLoadConstellation"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
         Me.Text = "Portfolio laden "

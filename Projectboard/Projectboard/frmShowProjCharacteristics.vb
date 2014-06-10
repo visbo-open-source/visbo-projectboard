@@ -164,7 +164,7 @@ Public Class frmShowProjCharacteristics
             .typSelection.Visible = False
             .Label3.Visible = False
             .showMore.Text = "more ..."
-            .Height = 160
+            .Height = 190              ' ur: 28.05.2014
         End With
         showAll = False
 
@@ -760,9 +760,14 @@ Public Class frmShowProjCharacteristics
 
     Private Sub movetoBeauftragung_Click(sender As Object, e As EventArgs) Handles movetoBeauftragung.Click
 
-        timeSlider.Value = valueBeauftragung
-        hproj = projekthistorie.ElementAt(nrSnapshots - timeSlider.Value)
-        snapshotDate.Text = hproj.timeStamp.ToString & " (Beauftragung)"
+        If valueBeauftragung < 0 Then
+            Call MsgBox(" das Projekt wurde noch nicht beauftragt")
+        Else
+            timeSlider.Value = valueBeauftragung
+            hproj = projekthistorie.ElementAt(nrSnapshots - timeSlider.Value)
+            snapshotDate.Text = hproj.timeStamp.ToString & " (Beauftragung)"
+        End If
+        
 
     End Sub
 
@@ -781,13 +786,13 @@ Public Class frmShowProjCharacteristics
                 .typSelection.Visible = False
                 .Label3.Visible = False
                 .showMore.Text = "more ..."
-                .Height = 160
+                .Height = 190             ' ur: 28.05.2014
             End With
             showAll = Not showAll
         Else
             ' jetzt soll eingeblendet werden 
             With Me
-                .Height = 244
+                .Height = 300           ' ur: 28.05.2014
                 .compareCurrent.Visible = True
                 .compareBeauftragung.Visible = True
                 .movetoBeauftragung.Visible = True

@@ -1076,7 +1076,7 @@ Public Module Projekte
                     .chart.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                                                                    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
                     .top = top
-                    .height = (anzPhasen - 1) * 20 + 90
+                    .height = (anzPhasen - 1) * 20 + 110
 
                     Dim axCleft As Double, axCwidth As Double
                     If .Chart.HasAxis(Excel.XlAxisType.xlCategory) = True Then
@@ -8506,29 +8506,36 @@ Public Module Projekte
             Next
 
         Else
-            ' tue es für alle Projekte in Showprojekte 
+
+            If showRangeRight - showRangeLeft > 0 Then
+                If ShowProjekte.Count > 0 Then
+
+                    ' tue es für alle Projekte in Showprojekte 
 
 
-            Dim todoListe As New SortedList(Of Long, clsProjekt)
-            Dim key As Long
+                    Dim todoListe As New SortedList(Of Long, clsProjekt)
+                    Dim key As Long
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
-                todoListe.Add(key, kvp.Value)
+                        key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+                        todoListe.Add(key, kvp.Value)
 
-            Next
-            Dim msNumber As Integer = 1
+                    Next
+                    Dim msNumber As Integer = 1
 
-            For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
+                    For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
 
-                Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, True, numberIt, msNumber, False)
+                        Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, True, numberIt, msNumber, False)
 
-            Next
+                    Next
 
-
-
-
+                Else
+                    Call MsgBox("Es sind keine Projekte geladen!")
+                End If
+            Else
+                Call MsgBox("Bitte wählen zunächst einen Zeitraum aus !")
+            End If
 
         End If
 
@@ -9283,7 +9290,7 @@ Public Module Projekte
         zeileTop = calcYCoordToZeile(shpElement.Top)
         zeileBottom = calcYCoordToZeile(shpElement.Top + shpElement.Height)
 
-        tmpValue = System.Math.Max(zeileTop - zeileBottom + 1, 1)
+        tmpValue = System.Math.Max(zeileBottom - zeileTop, 1)
 
         getNeededSpace = tmpValue
 
@@ -9342,7 +9349,8 @@ Public Module Projekte
 
                             projectboardShapes.add(shpElement)
                             hproj = ShowProjekte.getProject(shpElement.Name)
-                            hproj.tfZeile = calcYCoordToZeile(shpElement.Top)
+                            'hproj.tfZeile = calcYCoordToZeile(shpElement.Top)
+                            hproj.tfZeile = hproj.tfZeile + anzahlZeilen
 
                         End If
 
@@ -13339,7 +13347,7 @@ Public Module Projekte
 
                     .projectName.Text = projectName
                     .phaseName.Text = phaseName
-                    .Height = 440
+                    .Height = 530
                     .lessonsLearnedControl.Visible = True
                     .erlaeuterung.Visible = True
                     .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
@@ -13371,7 +13379,7 @@ Public Module Projekte
 
                     .projectName.Text = projectName
                     .phaseName.Text = phaseName
-                    .Height = 190
+                    .Height = 220
                     .erlaeuterung.Visible = False
 
                     .phaseStart.Text = phaseStartdate.ToShortDateString
@@ -13499,6 +13507,8 @@ Public Module Projekte
         ' jetzt werden alle importierten Projekte bearbeitet 
         For Each pname In myCollection
 
+            ok = True
+
             Try
                 hproj = ImportProjekte.getProject(pname)
                 pname = hproj.name
@@ -13580,7 +13590,7 @@ Public Module Projekte
                             If cproj.Erloes > 0 Then
                                 ' dann soll der alte Wert beibehalten werden 
                                 .Erloes = cproj.Erloes
-                                If .Dauer = cproj.Dauer Then
+                                If .Dauer = cproj.Dauer And Not IsNothing(cproj.budgetWerte) Then
                                     .budgetWerte = cproj.budgetWerte
                                 Else
                                     Call awinCreateBudgetWerte(hproj)
