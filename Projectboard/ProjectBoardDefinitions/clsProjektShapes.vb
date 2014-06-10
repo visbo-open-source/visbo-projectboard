@@ -172,227 +172,7 @@ Public Class clsProjektShapes
 
     End Function
 
-    ''' <summary>
-    ''' wird nur für Projekte aufgerufen ...
-    ''' verschiebt das Projekt in die angegebene Zeile
-    ''' wenn diese Zeile bereits besetzt ist, wird Platz geschaffen 
-    ''' </summary>
-    ''' <param name="shpElement"></param>
-    ''' <param name="newZeile"></param>
-    ''' <remarks></remarks>
-    ''' movetoCoords(shpElement, shpElement.Left, zeile)
-    Private Sub moveToZeile(ByRef shpElement As Excel.Shape, ByVal newZeile As Integer)
-        Dim hproj As clsProjekt
-        Dim pName As String
 
-        Dim anzahlZeilen As Integer
-        Dim oldZeile As Integer
-        Dim myCollection As New Collection
-        Dim key As String = shpElement.Name
-        Dim oldCoord() As Double
-        Dim shapetype As Integer = kindOfShape(shpElement)
-
-        If shapetype <> PTshty.projektE And shapetype <> PTshty.projektN Then
-            Throw New ArgumentException("movetoZeile kann nur für Shapes durchgeführt werden")
-            Exit Sub
-        End If
-
-        pName = extractName(shpElement.Name, PTshty.projektE)
-
-        hproj = ShowProjekte.getProject(pName) ' der shpName ist identisch mit dem Projekt-Namen aus dem kopiert wurde
-        anzahlZeilen = getNeededSpace(shpElement)
-
-        oldZeile = hproj.tfZeile
-        myCollection.Add(hproj.name)
-
-        While Not magicBoardIstFrei(mycollection:=myCollection, pname:=hproj.name, zeile:=newZeile, _
-                            spalte:=hproj.Start, laenge:=hproj.Dauer, anzahlZeilen:=anzahlZeilen)
-
-            Call moveShapesDown(newZeile, 1)
-
-        End While
-
-
-        hproj.tfZeile = newZeile
-        ' Änderung 25.3.14 wegen Kopiertes Projekt soll einfach in der nächsten Zeile gezeichnet werden  
-
-        ' jetzt muss das Shape eingerüttelt werden : Einrasten auf Top , andere Werte aus der ehemaligen übernehmen 
-
-        shpElement.Top = calcZeileToYCoord(newZeile)
-
-        Try
-            oldCoord = AllShapes.Item(key)
-            With shpElement
-                .Left = oldCoord(1)
-                .Height = oldCoord(2)
-                .Width = oldCoord(3)
-                ' jetzt Änderung vornehmen
-                oldCoord(0) = .Top
-            End With
-            AllShapes.Item(key) = oldCoord
-
-        Catch ex As Exception
-
-        End Try
-
-    End Sub
-
-
-    ''' <summary>
-    ''' verschiebt das Projekt in die angebene Zeile und an die angegebene Position (Datum)
-    ''' aktualisiert projectboardshapes Eintrag
-    ''' </summary>
-    ''' <param name="shpElement"></param>
-    ''' <param name="XCoord"></param>
-    ''' <param name="YCoord"></param>
-    ''' <remarks></remarks>
-    Private Sub movetoCoords(ByRef shpElement As Excel.Shape, ByVal XCoord As Double, ByVal YCoord As Double)
-        Dim hproj As clsProjekt
-
-        Dim anzahlZeilen As Integer
-        'Dim oldZeile As Integer
-        Dim myCollection As New Collection
-        Dim key As String = shpElement.Name
-        Dim oldCoord() As Double
-        Dim newDate As Date = calcXCoordToDate(XCoord)
-        Dim zeile As Integer = calcYCoordToZeile(YCoord)
-
-        Dim shapetype As Integer = kindOfShape(shpElement)
-        Dim pName As String = ""
-        Dim shapeSammlung As Excel.ShapeRange = Nothing
-
-
-        pName = extractName(shpElement.Name, PTshty.projektE)
-
-        If shapetype = PTshty.phaseE Or shapetype = PTshty.milestoneE Then
-
-            ' hier muss erst mal das übergeordnete Projektshape gesucht und ungruppiert werden  
-            Call UnGroupShape(pName, shapeSammlung)
-
-        End If
-
-        hproj = ShowProjekte.getProject(pName) ' der shpName ist identisch mit dem Projekt-Namen aus dem kopiert wurde
-
-        Try
-            oldCoord = AllShapes.Item(key)
-        Catch ex As Exception
-            Exit Sub
-        End Try
-
-
-        Try
-
-            If DateDiff(DateInterval.Day, hproj.startDate, newDate) <> 0 Then
-                hproj.startDate = newDate
-                Call hproj.syncXWertePhases()
-            End If
-            
-        Catch ex As Exception
-
-            ' wenn das passiert, muss das Shape wieder auf die alte Position zurück 
-
-            With shpElement
-                .Top = oldCoord(0)
-                .Left = oldCoord(1)
-                .Height = oldCoord(2)
-                .Width = oldCoord(3)
-            End With
-
-            If shapetype = PTshty.phaseE Or shapetype = PTshty.milestoneE Then
-                ' jetzt wird wieder regruppiert
-
-                Call reGroupShape(shapeSammlung, pName)
-
-            End If
-            Exit Sub
-
-        End Try
-
-
-        anzahlZeilen = getNeededSpace(shpElement)
-        myCollection.Add(hproj.name)
-
-        While Not magicBoardIstFrei(mycollection:=myCollection, pname:=hproj.name, zeile:=zeile, _
-                            spalte:=hproj.Start, laenge:=hproj.Dauer, anzahlZeilen:=anzahlZeilen)
-
-            Call moveShapesDown(zeile, 1)
-
-        End While
-
-
-        hproj.tfZeile = zeile
-        ' Änderung 25.3.14 wegen Kopiertes Projekt soll einfach in der nächsten Zeile gezeichnet werden  
-
-        ' jetzt muss das Shape eingerüttelt werden : Einrasten auf Top , andere Werte aus der ehemaligen übernehmen 
-
-        Try
-            With shpElement
-                .Top = calcZeileToYCoord(zeile)
-                .Left = XCoord
-                .Height = oldCoord(2)
-                .Width = oldCoord(3)
-                ' jetzt Änderung vornehmen
-                oldCoord(0) = .Top
-                oldCoord(1) = .Left
-            End With
-
-            AllShapes.Item(key) = oldCoord
-
-        Catch ex As Exception
-
-        End Try
-
-        If shapetype = PTshty.phaseE Or shapetype = PTshty.milestoneE Then
-            ' jetzt wird wieder regruppiert
-
-            Call reGroupShape(shapeSammlung, pName)
-
-        End If
-
-    End Sub
-
-    ''' <summary>
-    ''' setzt das angebene Shape wieder auf seine alten Werte zurück 
-    ''' </summary>
-    ''' <param name="shpElement"></param>
-    ''' <remarks></remarks>
-    Private Sub reset(ByRef shpElement As Excel.Shape)
-
-        Dim key As String = shpElement.Name
-        Dim oldCoord() As Double
-        Dim shapeType As Integer = kindOfShape(shpElement)
-        Dim pName As String = ""
-        Dim shapeSammlung As Excel.ShapeRange = Nothing
-
-        If shapeType = PTshty.phaseE Or shapeType = PTshty.milestoneE Then
-
-            ' hier muss erst mal das übergeordnete Projektshape gesucht und ungruppiert werden  
-            pName = extractName(shpElement.Name, PTshty.projektE)
-            Call UnGroupShape(pName, shapeSammlung)
-
-            ' erst ungroup des ganzen machen ...
-        End If
-
-        Try
-            oldCoord = AllShapes.Item(key)
-            With shpElement
-                .Top = oldCoord(0)
-                .Left = oldCoord(1)
-                .Height = oldCoord(2)
-                .Width = oldCoord(3)
-            End With
-        Catch ex As Exception
-
-        End Try
-
-        If shapeType = PTshty.phaseE Or shapeType = PTshty.milestoneE Then
-            ' jetzt wird wieder regruppiert
-
-            Call reGroupShape(shapeSammlung, pName)
-
-        End If
-
-    End Sub
 
     Public Sub clear()
         AllShapes.Clear()
@@ -406,7 +186,7 @@ Public Class clsProjektShapes
     ''' <param name="shpElement">ShapeELement</param>
     ''' <remarks></remarks>
 
-    Public Sub sync(ByRef shpElement As Excel.Shape)
+    Public Sub sync(ByRef shpElement As Excel.Shape, ByVal selCollection As Collection)
         Dim curCoord(3) As Double, oldCoord() As Double
         Dim shapeType As Integer
         Dim moveAllowed As Boolean
@@ -488,7 +268,7 @@ Public Class clsProjektShapes
                         shpElement.Top = calcZeileToYCoord(tmpZeile)
                         curCoord(0) = shpElement.Top
                     Else
-                        ' korrigiere die Höhe 
+                        ' korrigiere die Position 
                         shpElement.Top = oldCoord(0)
                         curCoord(0) = shpElement.Top
                     End If
@@ -516,17 +296,23 @@ Public Class clsProjektShapes
                         ' es wurde nur verschoben 
                         newStartdate = hproj.startDate.AddDays(calcXCoordToTage(curCoord(1) - oldCoord(1)))
                         newEndDate = newStartdate.AddDays(hproj.dauerInDays - 1)
-                        Dim myCollection = New Collection
+
                         Dim newZeile As Integer = calcYCoordToZeile(shpElement.Top)
                         Dim anzahlZeilen As Integer = getNeededSpace(shpElement)
 
                         ' Platz schaffen auf der Projekt-Tafel
-                        myCollection.Add(hproj.name)
-                        If Not magicBoardIstFrei(mycollection:=myCollection, pname:=hproj.name, zeile:=newZeile, _
+                        If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
                                             spalte:=hproj.Start, laenge:=hproj.Dauer, _
                                             anzahlZeilen:=anzahlZeilen) Then
 
-                            Call moveShapesDown(newZeile, anzahlZeilen)
+                            If curCoord(0) < oldCoord(0) Then
+                                ' es wurde nach oben verschoben - der unten frei werdende Platz kann gnutzt werden 
+                                ' alle darunter ligenden Shapes müssen nicht weiter nach unten verschoben werden 
+                                Dim stoppzeile As Integer = calcYCoordToZeile(oldCoord(0))
+                                Call moveShapesDown(selCollection, newZeile, anzahlZeilen, stoppzeile)
+                            Else
+                                Call moveShapesDown(selCollection, newZeile, anzahlZeilen, 0)
+                            End If
 
                         End If
 
@@ -534,7 +320,7 @@ Public Class clsProjektShapes
                         hproj.tfZeile = newZeile
 
 
-                        End If
+                    End If
 
                     'hproj.copyAttrTo(newProjekt)
                     hproj.korrCopyTo(newProjekt, newStartdate, newEndDate)
@@ -565,10 +351,12 @@ Public Class clsProjektShapes
                     Dim zeile As Integer = calcYCoordToZeile(shpElement.Top)
 
                     Call clearProjektinPlantafel(pName)
-                    Call ZeichneProjektinPlanTafel(pname:=newProjekt.name, tryzeile:=hproj.tfZeile)
-                    ' Shape wurde gelöscht , damit die aufrufende Routine das shpelement wieder hat 
+                    ' in selCollection sind die Namen der Projekte, die beim Neuzeichnen nicht berücksichtigt werden sollen, weil 
+                    ' sie noch in der Select Collection sind und danach noch behandelt werden 
+                    Call ZeichneProjektinPlanTafel(selCollection, pname:=newProjekt.name, tryzeile:=hproj.tfZeile)
 
-
+                    ' Shape wurde gelöscht , der Variable shpElement muss das neue Shape wieder zugewiesen werden 
+                    ' damit die aufrufende Routine das shpelement wieder hat 
                     tmpRange = appInstance.Worksheets(arrWsNames(3)).shapes.Range(pName)
                     shpElement = tmpRange.Item(1)
 
@@ -692,7 +480,10 @@ Public Class clsProjektShapes
                         Call reGroupShape(shapeSammlung, pName)
 
                         Call clearProjektinPlantafel(pName)
-                        Call ZeichneProjektinPlanTafel(pname:=pName, tryzeile:=hproj.tfZeile)
+                        ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                        ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                        Dim tmpCollection As New Collection
+                        Call ZeichneProjektinPlanTafel(tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile)
                         notRegroupedAgain = False
 
                         ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
@@ -760,7 +551,11 @@ Public Class clsProjektShapes
                         Call reGroupShape(shapeSammlung, pName)
 
                         Call clearProjektinPlantafel(pName)
-                        Call ZeichneProjektinPlanTafel(pname:=pName, tryzeile:=hproj.tfZeile)
+
+                        ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                        ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                        Dim tmpCollection As New Collection
+                        Call ZeichneProjektinPlanTafel(tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile)
                         notRegroupedAgain = False
 
                         ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
@@ -780,15 +575,38 @@ Public Class clsProjektShapes
                 ' es gab Änderungen , zugelassen oder nicht: deshalb muss das Shape neu gezeichnet werden 
                 Dim newZeile As Integer = hproj.tfZeile
 
-                If notRegroupedAgain And Not (shapeType = PTshty.projektE Or shapeType = PTshty.projektN) Then
+                If notRegroupedAgain And Not (shapeType = PTshty.projektE Or shapeType = PTshty.projektN Or _
+                                              shapeType = PTshty.phaseN Or shapeType = PTshty.milestoneN) Then
                     Call reGroupShape(shapeSammlung, pName)
                 End If
+
 
                 ' top darf nur bei ProjektE oder ProjektN verändert werden 
                 If curCoord(0) <> oldCoord(0) Then
 
                     If (shapeType = PTshty.projektE Or shapeType = PTshty.projektN) Then
                         newZeile = calcYCoordToZeile(curCoord(0))
+
+                        ' Platz schaffen auf der Projekt-Tafel
+
+                        Dim anzahlZeilen As Integer = getNeededSpace(hproj)
+                        If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
+                                            spalte:=hproj.Start, laenge:=hproj.Dauer, _
+                                            anzahlZeilen:=anzahlZeilen) Then
+
+                            If curCoord(0) < oldCoord(0) Then
+                                ' es wurde nach oben verschoben - der unten frei werdende Platz kann gnutzt werden 
+                                ' alle darunter ligenden Shapes müssen nicht weiter nach unten verschoben werden 
+                                Dim stoppzeile As Integer = calcYCoordToZeile(oldCoord(0))
+                                Call moveShapesDown(selCollection, newZeile, anzahlZeilen, stoppzeile)
+                            Else
+                                Call moveShapesDown(selCollection, newZeile, anzahlZeilen, 0)
+                            End If
+
+
+                        End If
+
+
                     Else
                         ' korrigiere die Höhe 
                         newZeile = hproj.tfZeile
@@ -798,7 +616,9 @@ Public Class clsProjektShapes
                 End If
 
                 Call clearProjektinPlantafel(pName)
-                Call ZeichneProjektinPlanTafel(pname:=pName, tryzeile:=newZeile)
+                ' in selCollection sind die Namen der Projekte, die beim Neuzeichnen nicht berücksichtigt werden sollen, weil 
+                ' sie noch in der Select Collection sind und danach noch behandelt werden  
+                Call ZeichneProjektinPlanTafel(selCollection, pname:=pName, tryzeile:=newZeile)
                 notRegroupedAgain = False
 
                 ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 

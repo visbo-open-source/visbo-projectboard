@@ -45,7 +45,11 @@
                         
                         toDoListe.Add(pname)
                         Dim shortName As String = hproj.name
-                        Call ZeichneProjektinPlanTafel(shortName, tfz)
+
+                        ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                        ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                        Dim tmpCollection As New Collection
+                        Call ZeichneProjektinPlanTafel(tmpCollection, shortName, tfz)
                     Catch ex As Exception
 
                     End Try

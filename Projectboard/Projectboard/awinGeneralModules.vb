@@ -175,7 +175,7 @@ Public Module awinGeneralModules
         arrWsNames(15) = "Portfolio Vorlage"
 
 
-        ProjectBoardDefinitions.My.Settings.loadProjectsOnChange = False
+        awinSettings.loadProjectsOnChange = False
 
         showRangeLeft = 0
         showRangeRight = 0
@@ -738,7 +738,7 @@ Public Module awinGeneralModules
 
             ' jetzt werden - falls nötig die Projekte nachgeladen ... 
             Try
-                If ProjectBoardDefinitions.My.Settings.loadProjectsOnChange Then
+                If awinSettings.loadProjectsOnChange Then
 
                     Call awinProjekteImZeitraumLaden(awinSettings.databaseName)
 
@@ -2174,7 +2174,11 @@ Public Module awinGeneralModules
                     ShowProjekte.Add(kvp.Value)
 
                     Call awinCreateBudgetWerte(kvp.Value)
-                    Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile)
+
+                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, kvp.Value.name, kvp.Value.tfZeile)
 
                 Catch ex As Exception
                     ' nichts tun - das Projekt ist einfach nur schon da .... 
@@ -2196,7 +2200,10 @@ Public Module awinGeneralModules
 
                     Call awinCreateBudgetWerte(kvp.Value)
 
-                    Call ZeichneProjektinPlanTafel(kvp.Value.name, kvp.Value.tfZeile)
+                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, kvp.Value.name, kvp.Value.tfZeile)
 
                 Catch ex As Exception
                     Call MsgBox(ex.Message)
@@ -3093,7 +3100,10 @@ Public Module awinGeneralModules
             hproj.tfZeile = curZeile
             lastZeile = curZeile
             'Call ZeichneProjektinPlanTafel2(pname, curZeile)
-            Call ZeichneProjektinPlanTafel(pname, curZeile)
+            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+            Dim tmpCollection As New Collection
+            Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile)
             curZeile = lastZeile + getNeededSpace(hproj)
 
 

@@ -1633,7 +1633,7 @@ Imports Microsoft.Office.Interop.Excel
 
     Public Sub PT5phasenZeichnenInit(control As IRibbonControl, ByRef pressed As Boolean)
 
-        pressed = ProjectBoardDefinitions.My.Settings.drawPhases
+        pressed = awinSettings.drawphases
 
     End Sub
     Sub PTDemoModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
@@ -1648,12 +1648,12 @@ Imports Microsoft.Office.Interop.Excel
 
         If pressed Then
             ' jetzt werden die Projekt-Symbole inkl Phasen Darstellung gezeichnet
-            ProjectBoardDefinitions.My.Settings.drawPhases = True
+            awinSettings.drawphases = True
             Call awinClearPlanTafel()
             Call awinZeichnePlanTafel()
         Else
             ' jetzt werden die Projekt-Symbole ohne Phasen Darstellung gezeichnet 
-            ProjectBoardDefinitions.My.Settings.drawPhases = False
+            awinSettings.drawphases = False
             'Call awinLoadConstellation("Last")
             Call awinClearPlanTafel()
             Call awinZeichnePlanTafel()
@@ -1663,7 +1663,8 @@ Imports Microsoft.Office.Interop.Excel
 
     Public Sub PT5loadprojectsInit(control As IRibbonControl, ByRef pressed As Boolean)
 
-        pressed = ProjectBoardDefinitions.My.Settings.loadProjectsOnChange
+        pressed = awinSettings.loadProjectsOnChange
+
 
     End Sub
 
@@ -1671,13 +1672,13 @@ Imports Microsoft.Office.Interop.Excel
 
         If pressed Then
             ' jetzt sollen die Projekte gemäß Time Span geladen werden - auch bei Veränderung des TimeSpan 
-            ProjectBoardDefinitions.My.Settings.loadProjectsOnChange = True
+            awinSettings.loadProjectsOnChange = True
             ' noch zu tun 
             ' Call awinloadProjectsFromDB()
         Else
 
             ' jetzt werden bei TimeSpan Änderung keine Projekte nachgeladen 
-            ProjectBoardDefinitions.My.Settings.loadProjectsOnChange = False
+            awinSettings.loadProjectsOnChange = False
 
 
         End If
@@ -1740,7 +1741,7 @@ Imports Microsoft.Office.Interop.Excel
 
                 repObj = Nothing
                 Dim noColorCollection As New Collection
-                Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+                Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, PThis.current)
 
                 appInstance.EnableEvents = True
                 appInstance.ScreenUpdating = True
@@ -1805,10 +1806,11 @@ Imports Microsoft.Office.Interop.Excel
 
                 ' bestimme die Anzahl Zeilen, die benötigt wird  
                 Dim anzahlZeilen As Integer = getNeededSpace(hproj)
-
-                Call moveShapesDown(hproj.tfZeile + 1, anzahlZeilen)
+                Dim tmpCollection As New Collection
+                Call moveShapesDown(tmpCollection, hproj.tfZeile + 1, anzahlZeilen, 0)
                 'Call ZeichneProjektinPlanTafel2(pname, hproj.tfZeile)
-                Call ZeichneProjektinPlanTafel(pname, hproj.tfZeile)
+
+                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile)
 
 
                 appInstance.EnableEvents = True
@@ -1879,7 +1881,7 @@ Imports Microsoft.Office.Interop.Excel
 
                 repObj = Nothing
 
-                width = hproj.Dauer * boxWidth + 10
+                width = System.Math.Max(hproj.Dauer * boxWidth + 10, 6 * boxWidth + 10)
 
                 Try
                     Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)
@@ -4517,7 +4519,7 @@ Imports Microsoft.Office.Interop.Excel
                 Dim hproj As clsProjekt
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name)
-                    Call createProjektErgebnisCharakteristik2(hproj, dummyObj, 2)
+                    Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current)
                 Catch ex As Exception
                     Call MsgBox("Name nicht gefunden : " & singleShp.Name)
                 End Try
@@ -4751,7 +4753,7 @@ Imports Microsoft.Office.Interop.Excel
                 noColorCollection = getPhasenUnterschiede(hproj, cproj)
 
                 repObj = Nothing
-                Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+                Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, PThis.current)
 
                 With repObj
                     top = .Top + .Height + 3
@@ -4759,7 +4761,7 @@ Imports Microsoft.Office.Interop.Excel
 
 
                 repObj = Nothing
-                Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, "Vorlage")
+                Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, PThis.vorlage)
                 appInstance.ScreenUpdating = True
 
             ElseIf awinSelection.Count = 2 Then
@@ -4794,7 +4796,7 @@ Imports Microsoft.Office.Interop.Excel
                 noColorCollection = getPhasenUnterschiede(hproj, cproj)
 
                 repObj = Nothing
-                Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+                Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, PThis.current)
 
                 With repObj
                     top = .Top + .Height + 3
@@ -4802,7 +4804,7 @@ Imports Microsoft.Office.Interop.Excel
 
 
                 repObj = Nothing
-                Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, " ")
+                Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, PThis.current)
                 appInstance.ScreenUpdating = True
                 'Call awinCompareProjectPhases(name1:=singleShp1.Name, _
                 '                              name2:=singleShp2.Name, _
@@ -4919,7 +4921,7 @@ Imports Microsoft.Office.Interop.Excel
                         noColorCollection = getPhasenUnterschiede(hproj, cproj)
 
                         repObj = Nothing
-                        Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+                        Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, PThis.current)
 
                         With repObj
                             top = .Top + .Height + 3
@@ -4927,7 +4929,7 @@ Imports Microsoft.Office.Interop.Excel
 
 
                         repObj = Nothing
-                        Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, "letzter Stand")
+                        Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, PThis.letzterStand)
 
                         appInstance.ScreenUpdating = True
 
@@ -5055,7 +5057,7 @@ Imports Microsoft.Office.Interop.Excel
                             noColorCollection = getPhasenUnterschiede(hproj, cproj)
 
                             repObj = Nothing
-                            Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, " ")
+                            Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, PThis.current)
 
                             With repObj
                                 top = .Top + .Height + 3
@@ -5063,7 +5065,7 @@ Imports Microsoft.Office.Interop.Excel
 
 
                             repObj = Nothing
-                            Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, "Beauftragung")
+                            Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, PThis.beauftragung)
 
                         Catch ex As Exception
 
@@ -5079,7 +5081,7 @@ Imports Microsoft.Office.Interop.Excel
 
                 End If
             Else
-                Call MsgBox("ein Projekt selektieren, um es mit seinem letzten Stand zu vergleichen")
+                Call MsgBox("ein Projekt selektieren, um es mit seiner Beauftragung zu vergleichen")
             End If
 
         Else

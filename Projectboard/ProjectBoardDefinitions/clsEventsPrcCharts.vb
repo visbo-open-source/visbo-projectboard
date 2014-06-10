@@ -258,7 +258,12 @@ Public Class clsEventsPrcCharts
             Case "Bedarf anzeigen"
                 ' wenn der gleiche bereits gezeigt wird: wieder ausschalten 
 
-                If name <> "" Then
+                If diagrammTyp = DiagrammTypen(0) Then
+
+                    Call MsgBox("für diesen Diagramm-Typ nutzen Sie bitte die Funktion " & vbLf & _
+                                 "Visualisieren - Phasen")
+
+                ElseIf name <> "" Then
                     Dim screenUpdateFormerState As Boolean = appInstance.ScreenUpdating
                     appInstance.ScreenUpdating = False
 
@@ -325,7 +330,11 @@ Public Class clsEventsPrcCharts
 
                                         ' jetzt wird das Shape in der Plantafel gelöscht 
                                         Call clearProjektinPlantafel(.name)
-                                        Call ZeichneProjektinPlanTafel(.name, .tfZeile)
+
+                                        ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                                        ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                                        Dim tmpCollection As New Collection
+                                        Call ZeichneProjektinPlanTafel(tmpCollection, .name, .tfZeile)
                                     End If
 
                                 End With
