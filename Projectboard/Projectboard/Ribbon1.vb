@@ -1548,7 +1548,7 @@ Imports Microsoft.Office.Interop.Excel
 
     Public Sub PT5phasenZeichnenInit(control As IRibbonControl, ByRef pressed As Boolean)
 
-        pressed = ProjectBoardDefinitions.My.Settings.drawPhases
+        pressed = awinSettings.drawphases
 
     End Sub
 
@@ -1556,12 +1556,12 @@ Imports Microsoft.Office.Interop.Excel
 
         If pressed Then
             ' jetzt werden die Projekt-Symbole inkl Phasen Darstellung gezeichnet
-            ProjectBoardDefinitions.My.Settings.drawPhases = True
+            awinSettings.drawphases = True
             Call awinClearPlanTafel()
             Call awinZeichnePlanTafel()
         Else
             ' jetzt werden die Projekt-Symbole ohne Phasen Darstellung gezeichnet 
-            ProjectBoardDefinitions.My.Settings.drawPhases = False
+            awinSettings.drawphases = False
             'Call awinLoadConstellation("Last")
             Call awinClearPlanTafel()
             Call awinZeichnePlanTafel()
@@ -1571,7 +1571,8 @@ Imports Microsoft.Office.Interop.Excel
 
     Public Sub PT5loadprojectsInit(control As IRibbonControl, ByRef pressed As Boolean)
 
-        pressed = ProjectBoardDefinitions.My.Settings.loadProjectsOnChange
+        pressed = awinSettings.loadProjectsOnChange
+
 
     End Sub
 
@@ -1579,13 +1580,13 @@ Imports Microsoft.Office.Interop.Excel
 
         If pressed Then
             ' jetzt sollen die Projekte gemäß Time Span geladen werden - auch bei Veränderung des TimeSpan 
-            ProjectBoardDefinitions.My.Settings.loadProjectsOnChange = True
+            awinSettings.loadProjectsOnChange = True
             ' noch zu tun 
             ' Call awinloadProjectsFromDB()
         Else
 
             ' jetzt werden bei TimeSpan Änderung keine Projekte nachgeladen 
-            ProjectBoardDefinitions.My.Settings.loadProjectsOnChange = False
+            awinSettings.loadProjectsOnChange = False
 
 
         End If

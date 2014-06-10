@@ -196,7 +196,7 @@ Public Class clsCommandBarEvents
 
                                 End If
 
-
+                                
                             End If
 
                             Try
@@ -204,7 +204,7 @@ Public Class clsCommandBarEvents
                                     selCollection.Remove(pname)
                                 End If
                             Catch ex As Exception
-                                Call MsgBox("kann nicht sein .... selCollection enthält " & pname & " nicht!")
+                                Call MsgBox("interner Fehler .... (selCollection) " & pname)
                             End Try
 
 
@@ -346,6 +346,14 @@ Public Class clsCommandBarEvents
 
 
                         End If
+
+                        ' Änderung 8.6.14 hier werden jetzt die Projekt Charts aktualisiert, sofern welche da sind und die Time Machine nicht aktiv ist
+                        If Not timeMachineIsOn Then
+                            Call aktualisiereCharts(hproj, True)
+                        End If
+
+
+
                     ElseIf shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Then
 
 
@@ -397,7 +405,10 @@ Public Class clsCommandBarEvents
                             Call awinDeSelect()
                             Exit For
                         End If
-                        
+
+
+
+
 
                     ElseIf shapeType = PTshty.milestoneN Or shapeType = PTshty.milestoneE Then
 
