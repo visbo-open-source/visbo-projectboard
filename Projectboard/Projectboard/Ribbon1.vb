@@ -49,9 +49,19 @@ Imports Microsoft.Office.Interop.Excel
         Dim storeConstellationFrm As New frmStoreConstellation
         Dim returnValue As DialogResult
         Dim constellationName As String
+        Dim speichernDatenbank As String = "Pt5G2B1"
+        Dim request As New Request(awinSettings.databaseName)
 
+        If control.Id = speichernDatenbank Then
+            ' Wenn das Speichern eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
 
-        enableOnUpdate = False
+            If request.pingMongoDb() Then
+                projectConstellations = request.retrieveConstellationsFromDB()
+            Else
+                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+            End If
+        End If
+
         If AlleProjekte.Count > 0 Then
             returnValue = storeConstellationFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Portfolios
 
@@ -73,13 +83,27 @@ Imports Microsoft.Office.Interop.Excel
     End Sub
 
     Sub PTLadenKonstellation(control As IRibbonControl)
+
+        Dim loadFromDatenbank As String = "PT5G1B1"
         Dim loadConstellationFrm As New frmLoadConstellation
         Dim constellationName As String
+        Dim request As New Request(awinSettings.databaseName)
 
         Dim initMessage As String = "Bei folgenden Projekten konnte das Datum nicht angepasst werden, " & vbLf & _
                                     "da sie bereits beauftragt wurden"
         Dim successMessage As String = initMessage
         Dim returnValue As DialogResult
+
+        ' Wenn das Laden eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
+
+        If control.Id = loadFromDatenbank Then
+            If request.pingMongoDb() Then
+                projectConstellations = request.retrieveConstellationsFromDB()
+            Else
+                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+            End If
+        End If
+
         enableOnUpdate = False
 
         returnValue = loadConstellationFrm.ShowDialog
@@ -114,16 +138,24 @@ Imports Microsoft.Office.Interop.Excel
 
         Dim remConstellationFrm As New frmRemoveConstellation
         Dim constellationName As String
-
+        Dim deleteDatenbank As String = "Pt5G3B1"
 
         Dim returnValue As DialogResult
+        Dim removeFromDB As Boolean
+
+        If control.Id = deleteDatenbank Then
+            removeFromDB = True
+        Else
+            removeFromDB = False
+        End If
+
         enableOnUpdate = False
 
         returnValue = remConstellationFrm.ShowDialog
 
         If returnValue = DialogResult.OK Then
             constellationName = remConstellationFrm.ListBox1.Text
-            Call awinRemoveConstellation(constellationName)
+            Call awinRemoveConstellation(constellationName, removeFromDB)
 
             Call MsgBox(constellationName & " wurde gelöscht ...")
 
