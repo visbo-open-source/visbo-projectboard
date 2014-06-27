@@ -41,7 +41,7 @@ Public Class clsProjekt
     Public Property tfZeile As Integer
     Public Property variantName As String
     Public Property Id As String
-    Public Property timeStamp As DateTime
+    Public Property timeStamp As Date
 
     ' ergänzt am 26.10.13 - nicht in Vorlage aufgenommen, da es für jedes Projekt individuell ist 
     Public Property description As String

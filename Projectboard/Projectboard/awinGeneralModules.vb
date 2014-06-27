@@ -442,7 +442,7 @@ Public Module awinGeneralModules
                 Throw New ArgumentException("korrupte Einstellungen ... Abbruch " & ex.Message)
             End Try
 
-            StartofCalendar = awinSettings.kalenderStart.ToLocalTime()
+            StartofCalendar = awinSettings.kalenderStart
             StartofCalendar = StartofCalendar.ToLocalTime()
 
             '
