@@ -434,7 +434,7 @@ Public Module awinGeneralModules
                 awinSettings.zeilenhoehe1 = CDbl(.Range("Zeilenhoehe1").Value)
                 awinSettings.zeilenhoehe2 = CDbl(.Range("Zeilenhoehe2").Value)
                 awinSettings.spaltenbreite = CDbl(.Range("Spaltenbreite").Value)
-                awinSettings.autoCorrectBedarfe = True
+                awinSettings.autoCorrectBedarfe = False
                 awinSettings.propAnpassRess = False
             Catch ex As Exception
                 appInstance.ScreenUpdating = formerSU
