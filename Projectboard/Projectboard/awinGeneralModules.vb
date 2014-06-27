@@ -5,6 +5,7 @@ Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
 Imports System.Windows
+Imports Excel = Microsoft.Office.Interop.Excel
 
 
 Public Module awinGeneralModules
@@ -441,7 +442,9 @@ Public Module awinGeneralModules
                 Throw New ArgumentException("korrupte Einstellungen ... Abbruch " & ex.Message)
             End Try
 
-            StartofCalendar = awinSettings.kalenderStart
+            StartofCalendar = awinSettings.kalenderStart.ToLocalTime()
+            StartofCalendar = StartofCalendar.ToLocalTime()
+
             '
             ' ende Auslesen Einstellungen in Sheet "Einstellungen"
             '
@@ -1375,10 +1378,10 @@ Public Module awinGeneralModules
                         hproj.variantName = CType(.Range("Variant_Name").Value, String)
                         hproj.variantName = hproj.variantName.Trim
                         If hproj.variantName.Length = 0 Then
-                            hproj.variantName = Nothing
+                            hproj.variantName = ""
                         End If
                     Catch ex1 As Exception
-                        hproj.variantName = Nothing
+                        hproj.variantName = ""
                     End Try
 
 
@@ -2226,12 +2229,14 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     ''' 
     Public Sub awinLoadConstellation(ByVal constellationName As String, ByRef successMessage As String)
+
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
         Dim request As New Request(awinSettings.databaseName)
-
-        
-
+        Dim anzErrDB As Integer = 0
+        Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
+        Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
+                                        "   Das Projekt wurde bereits beauftragt."
 
         ' prüfen, ob diese Constellation bereits existiert ..
         Try
@@ -2261,50 +2266,69 @@ Public Module awinGeneralModules
             Else
                 If request.pingMongoDb() Then
 
-                    ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
-                    hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName)
+                    If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName) Then
 
-                    ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
-                    AlleProjekte.Add(kvp.Key, hproj)
+                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                        hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName)
 
+                        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                        AlleProjekte.Add(kvp.Key, hproj)
+                    Else
+                        anzErrDB = anzErrDB + 1
+                        If anzErrDB = 1 Then
+                            successMessage = successMessage & loadErrorMessage & vbLf & _
+                                                   "        " & kvp.Value.projectName
+                        Else
+                            successMessage = successMessage & vbLf & _
+                                                   "        " & kvp.Value.projectName
+                        End If
+                       
+                        'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+                        'Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+                    End If
                 Else
                     Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                 End If
             End If
+            If hproj.name = kvp.Value.projectName Then
 
-            With hproj
+                With hproj
 
-                ' Änderung THOMAS Start 
-                If .Status = ProjektStatus(0) Then
-                    .startDate = kvp.Value.Start
-                ElseIf .startDate <> kvp.Value.Start Then
-                    ' wenn das Datum nicht angepasst werden kann, weil das Projekt bereits beauftragt wurde  
-                    successMessage = successMessage & vbLf & hproj.name & ": " & kvp.Value.Start.ToShortDateString
+                    ' Änderung THOMAS Start 
+                    If .Status = ProjektStatus(0) Then
+                        .startDate = kvp.Value.Start
+                    ElseIf .startDate <> kvp.Value.Start Then
+                        ' wenn das Datum nicht angepasst werden kann, weil das Projekt bereits beauftragt wurde  
+                        successMessage = successMessage & vbLf & vbLf & _
+                                            loadDateMessage & vbLf & _
+                                            "        " & hproj.name & ": " & kvp.Value.Start.ToShortDateString
+                    End If
+                    ' Änderung THOMAS Ende 
+
+                    .StartOffset = 0
+                    .tfZeile = kvp.Value.zeile
+                End With
+
+                If kvp.Value.show Then
+
+                    Try
+                        ShowProjekte.Add(hproj)
+
+                        Dim pname As String
+                        Dim tryzeile As Integer
+                        With hproj
+                            pname = .name
+                            tryzeile = .tfZeile
+                        End With
+                        ' nicht zeichnen - das wird nachher alles auf einen Schlag erledigt ..
+                        'Call ZeichneProjektinPlanTafel(pname, tryzeile)
+
+                        'NoShowProjekte.Remove(hproj.name)
+                    Catch ex1 As Exception
+                        Call MsgBox("Fehler in awinLoadConstellation aufgetreten: " & ex1.Message)
+                    End Try
+
                 End If
-                ' Änderung THOMAS Ende 
-
-                .StartOffset = 0
-                .tfZeile = kvp.Value.zeile
-            End With
-
-            If kvp.Value.show Then
-
-                Try
-                    ShowProjekte.Add(hproj)
-
-                    Dim pname As String
-                    Dim tryzeile As Integer
-                    With hproj
-                        pname = .name
-                        tryzeile = .tfZeile
-                    End With
-                    ' nicht zeichnen - das wird nachher alles auf einen Schlag erledigt ..
-                    'Call ZeichneProjektinPlanTafel(pname, tryzeile)
-
-                    'NoShowProjekte.Remove(hproj.name)
-                Catch ex1 As Exception
-                    Call MsgBox("Fehler in awinLoadConstellation aufgetreten: " & ex1.Message)
-                End Try
 
             End If
 

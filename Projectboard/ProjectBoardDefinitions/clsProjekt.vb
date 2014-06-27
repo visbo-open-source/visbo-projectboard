@@ -41,7 +41,7 @@ Public Class clsProjekt
     Public Property tfZeile As Integer
     Public Property variantName As String
     Public Property Id As String
-    Public Property timeStamp As Date
+    Public Property timeStamp As DateTime
 
     ' ergänzt am 26.10.13 - nicht in Vorlage aufgenommen, da es für jedes Projekt individuell ist 
     Public Property description As String
@@ -2402,6 +2402,7 @@ Public Class clsProjekt
         _latestStart = 0
         _Status = ProjektStatus(0)
         _shpUID = ""
+        _variantName = ""   ' ur:25.6.2014: hinzugefügt, da sonst in der DB variantName mal "" und mal Nothing ist
         _timeStamp = Date.Now
 
 

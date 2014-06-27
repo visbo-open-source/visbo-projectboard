@@ -6912,9 +6912,10 @@ Public Module Projekte
         'Dim top As Double, left As Double, width As Double, height As Double
         'Dim shpElement As Excel.Shape
         Dim pcolor As Object
-        Dim heute As Date = Now
+        Dim heute As Date = Date.Now
+        Dim heute1 As Date = Now
         Dim key As String = pname & "#"
-
+        Dim ms As Long = heute.Millisecond
 
 
         newprojekt = True
