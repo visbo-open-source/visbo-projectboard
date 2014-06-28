@@ -31,9 +31,10 @@ Partial Class frmconfirmOptimierung
         'ButtonJA
         '
         Me.ButtonJA.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.ButtonJA.Location = New System.Drawing.Point(37, 66)
+        Me.ButtonJA.Location = New System.Drawing.Point(49, 81)
+        Me.ButtonJA.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.ButtonJA.Name = "ButtonJA"
-        Me.ButtonJA.Size = New System.Drawing.Size(75, 23)
+        Me.ButtonJA.Size = New System.Drawing.Size(100, 28)
         Me.ButtonJA.TabIndex = 0
         Me.ButtonJA.Text = "Ja"
         Me.ButtonJA.UseVisualStyleBackColor = True
@@ -41,9 +42,10 @@ Partial Class frmconfirmOptimierung
         'ButtonNEIN
         '
         Me.ButtonNEIN.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.ButtonNEIN.Location = New System.Drawing.Point(222, 66)
+        Me.ButtonNEIN.Location = New System.Drawing.Point(296, 81)
+        Me.ButtonNEIN.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.ButtonNEIN.Name = "ButtonNEIN"
-        Me.ButtonNEIN.Size = New System.Drawing.Size(75, 23)
+        Me.ButtonNEIN.Size = New System.Drawing.Size(100, 28)
         Me.ButtonNEIN.TabIndex = 1
         Me.ButtonNEIN.Text = "Nein"
         Me.ButtonNEIN.UseVisualStyleBackColor = True
@@ -51,29 +53,32 @@ Partial Class frmconfirmOptimierung
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(37, 30)
+        Me.Label1.Location = New System.Drawing.Point(49, 37)
+        Me.Label1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(263, 13)
+        Me.Label1.Size = New System.Drawing.Size(354, 17)
         Me.Label1.TabIndex = 2
         Me.Label1.Text = "Möchten Sie das Optimierungs-Ergebnis übernehmen?"
         '
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(34, 108)
+        Me.Label2.Location = New System.Drawing.Point(45, 133)
+        Me.Label2.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(0, 13)
+        Me.Label2.Size = New System.Drawing.Size(0, 17)
         Me.Label2.TabIndex = 3
         '
         'frmconfirmOptimierung
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(347, 118)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
+        Me.ClientSize = New System.Drawing.Size(463, 145)
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.ButtonNEIN)
         Me.Controls.Add(Me.ButtonJA)
+        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmconfirmOptimierung"
         Me.Text = "Optimierungs-Ergebnis"
         Me.ResumeLayout(False)

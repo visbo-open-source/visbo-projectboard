@@ -29,18 +29,20 @@ Partial Class frmCompareConstellation
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(30, 293)
+        Me.OKButton.Location = New System.Drawing.Point(40, 361)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(75, 23)
+        Me.OKButton.Size = New System.Drawing.Size(100, 28)
         Me.OKButton.TabIndex = 1
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(273, 293)
+        Me.AbbrButton.Location = New System.Drawing.Point(364, 361)
+        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(75, 23)
+        Me.AbbrButton.Size = New System.Drawing.Size(100, 28)
         Me.AbbrButton.TabIndex = 2
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
@@ -48,21 +50,23 @@ Partial Class frmCompareConstellation
         'CheckedListBox1
         '
         Me.CheckedListBox1.FormattingEnabled = True
-        Me.CheckedListBox1.Location = New System.Drawing.Point(30, 38)
+        Me.CheckedListBox1.Location = New System.Drawing.Point(40, 47)
+        Me.CheckedListBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.CheckedListBox1.Name = "CheckedListBox1"
-        Me.CheckedListBox1.Size = New System.Drawing.Size(318, 229)
+        Me.CheckedListBox1.Size = New System.Drawing.Size(423, 276)
         Me.CheckedListBox1.TabIndex = 3
         '
         'frmCompareConstellation
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoScroll = True
-        Me.ClientSize = New System.Drawing.Size(380, 350)
+        Me.ClientSize = New System.Drawing.Size(507, 431)
         Me.Controls.Add(Me.CheckedListBox1)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Location = New System.Drawing.Point(290, 0)
+        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmCompareConstellation"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
         Me.Text = "Vergleich von zwei Projekt-Konstellationen"

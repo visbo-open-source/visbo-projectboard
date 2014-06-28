@@ -31,14 +31,15 @@ Partial Class frmStatusInformation
         Me.bewertungsText.BackColor = System.Drawing.SystemColors.Window
         Me.bewertungsText.Enabled = False
         Me.bewertungsText.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.bewertungsText.Location = New System.Drawing.Point(22, 68)
-        Me.bewertungsText.MaximumSize = New System.Drawing.Size(420, 140)
-        Me.bewertungsText.MinimumSize = New System.Drawing.Size(300, 80)
+        Me.bewertungsText.Location = New System.Drawing.Point(29, 84)
+        Me.bewertungsText.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.bewertungsText.MaximumSize = New System.Drawing.Size(559, 171)
+        Me.bewertungsText.MinimumSize = New System.Drawing.Size(399, 98)
         Me.bewertungsText.Multiline = True
         Me.bewertungsText.Name = "bewertungsText"
         Me.bewertungsText.ReadOnly = True
         Me.bewertungsText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.bewertungsText.Size = New System.Drawing.Size(420, 140)
+        Me.bewertungsText.Size = New System.Drawing.Size(559, 171)
         Me.bewertungsText.TabIndex = 30
         '
         'projectName
@@ -46,21 +47,23 @@ Partial Class frmStatusInformation
         Me.projectName.BackColor = System.Drawing.SystemColors.Window
         Me.projectName.Enabled = False
         Me.projectName.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.projectName.Location = New System.Drawing.Point(23, 22)
+        Me.projectName.Location = New System.Drawing.Point(31, 27)
+        Me.projectName.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.projectName.Name = "projectName"
         Me.projectName.ReadOnly = True
         Me.projectName.ShortcutsEnabled = False
-        Me.projectName.Size = New System.Drawing.Size(419, 29)
+        Me.projectName.Size = New System.Drawing.Size(557, 34)
         Me.projectName.TabIndex = 34
         '
         'frmStatusInformation
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.Window
-        Me.ClientSize = New System.Drawing.Size(463, 238)
+        Me.ClientSize = New System.Drawing.Size(617, 293)
         Me.Controls.Add(Me.projectName)
         Me.Controls.Add(Me.bewertungsText)
+        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmStatusInformation"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
         Me.Text = "Status Information"

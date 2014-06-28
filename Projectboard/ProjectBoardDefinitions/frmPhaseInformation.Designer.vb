@@ -47,41 +47,46 @@ Partial Class frmPhaseInformation
         'phaseName
         '
         Me.phaseName.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.phaseName.Location = New System.Drawing.Point(18, 65)
+        Me.phaseName.Location = New System.Drawing.Point(24, 80)
+        Me.phaseName.Margin = New System.Windows.Forms.Padding(4)
         Me.phaseName.Name = "phaseName"
-        Me.phaseName.Size = New System.Drawing.Size(421, 29)
+        Me.phaseName.Size = New System.Drawing.Size(560, 34)
         Me.phaseName.TabIndex = 1
         '
         'phaseStart
         '
         Me.phaseStart.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.phaseStart.Location = New System.Drawing.Point(18, 111)
+        Me.phaseStart.Location = New System.Drawing.Point(24, 137)
+        Me.phaseStart.Margin = New System.Windows.Forms.Padding(4)
         Me.phaseStart.Name = "phaseStart"
-        Me.phaseStart.Size = New System.Drawing.Size(132, 22)
+        Me.phaseStart.Size = New System.Drawing.Size(175, 26)
         Me.phaseStart.TabIndex = 2
         '
         'phaseEnde
         '
         Me.phaseEnde.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.phaseEnde.Location = New System.Drawing.Point(306, 111)
+        Me.phaseEnde.Location = New System.Drawing.Point(408, 137)
+        Me.phaseEnde.Margin = New System.Windows.Forms.Padding(4)
         Me.phaseEnde.Name = "phaseEnde"
-        Me.phaseEnde.Size = New System.Drawing.Size(132, 22)
+        Me.phaseEnde.Size = New System.Drawing.Size(175, 26)
         Me.phaseEnde.TabIndex = 4
         '
         'phaseDauer
         '
         Me.phaseDauer.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.phaseDauer.Location = New System.Drawing.Point(164, 111)
+        Me.phaseDauer.Location = New System.Drawing.Point(219, 137)
+        Me.phaseDauer.Margin = New System.Windows.Forms.Padding(4)
         Me.phaseDauer.Name = "phaseDauer"
-        Me.phaseDauer.Size = New System.Drawing.Size(128, 22)
+        Me.phaseDauer.Size = New System.Drawing.Size(169, 26)
         Me.phaseDauer.TabIndex = 3
         '
         'projectName
         '
         Me.projectName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.projectName.Location = New System.Drawing.Point(18, 26)
+        Me.projectName.Location = New System.Drawing.Point(24, 32)
+        Me.projectName.Margin = New System.Windows.Forms.Padding(4)
         Me.projectName.Name = "projectName"
-        Me.projectName.Size = New System.Drawing.Size(420, 22)
+        Me.projectName.Size = New System.Drawing.Size(559, 26)
         Me.projectName.TabIndex = 21
         '
         'lessonsLearnedControl
@@ -91,19 +96,21 @@ Partial Class frmPhaseInformation
         Me.lessonsLearnedControl.Controls.Add(Me.enabler)
         Me.lessonsLearnedControl.Controls.Add(Me.zusatzRisiken)
         Me.lessonsLearnedControl.Controls.Add(Me.teilnehmer)
-        Me.lessonsLearnedControl.Location = New System.Drawing.Point(18, 163)
+        Me.lessonsLearnedControl.Location = New System.Drawing.Point(24, 201)
+        Me.lessonsLearnedControl.Margin = New System.Windows.Forms.Padding(4)
         Me.lessonsLearnedControl.Name = "lessonsLearnedControl"
         Me.lessonsLearnedControl.SelectedIndex = 0
-        Me.lessonsLearnedControl.Size = New System.Drawing.Size(420, 220)
+        Me.lessonsLearnedControl.Size = New System.Drawing.Size(560, 271)
         Me.lessonsLearnedControl.TabIndex = 22
         '
         'praemissen
         '
         Me.praemissen.Controls.Add(Me.erlaeuterung)
-        Me.praemissen.Location = New System.Drawing.Point(4, 22)
+        Me.praemissen.Location = New System.Drawing.Point(4, 25)
+        Me.praemissen.Margin = New System.Windows.Forms.Padding(4)
         Me.praemissen.Name = "praemissen"
-        Me.praemissen.Padding = New System.Windows.Forms.Padding(3)
-        Me.praemissen.Size = New System.Drawing.Size(412, 194)
+        Me.praemissen.Padding = New System.Windows.Forms.Padding(4)
+        Me.praemissen.Size = New System.Drawing.Size(552, 242)
         Me.praemissen.TabIndex = 0
         Me.praemissen.Text = "Prämissen"
         Me.praemissen.ToolTipText = "Anzeige der 26 Prämissen "
@@ -111,20 +118,22 @@ Partial Class frmPhaseInformation
         '
         'erlaeuterung
         '
-        Me.erlaeuterung.Location = New System.Drawing.Point(6, 6)
+        Me.erlaeuterung.Location = New System.Drawing.Point(8, 7)
+        Me.erlaeuterung.Margin = New System.Windows.Forms.Padding(4)
         Me.erlaeuterung.Multiline = True
         Me.erlaeuterung.Name = "erlaeuterung"
         Me.erlaeuterung.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.erlaeuterung.Size = New System.Drawing.Size(400, 182)
+        Me.erlaeuterung.Size = New System.Drawing.Size(532, 223)
         Me.erlaeuterung.TabIndex = 0
         '
         'sonderAblaeufe
         '
         Me.sonderAblaeufe.Controls.Add(Me.explSonderabl)
-        Me.sonderAblaeufe.Location = New System.Drawing.Point(4, 22)
+        Me.sonderAblaeufe.Location = New System.Drawing.Point(4, 25)
+        Me.sonderAblaeufe.Margin = New System.Windows.Forms.Padding(4)
         Me.sonderAblaeufe.Name = "sonderAblaeufe"
-        Me.sonderAblaeufe.Padding = New System.Windows.Forms.Padding(3)
-        Me.sonderAblaeufe.Size = New System.Drawing.Size(412, 194)
+        Me.sonderAblaeufe.Padding = New System.Windows.Forms.Padding(4)
+        Me.sonderAblaeufe.Size = New System.Drawing.Size(552, 242)
         Me.sonderAblaeufe.TabIndex = 1
         Me.sonderAblaeufe.Text = "Sonderabläufe"
         Me.sonderAblaeufe.ToolTipText = "Anzeige der Sonderabläufe"
@@ -132,19 +141,21 @@ Partial Class frmPhaseInformation
         '
         'explSonderabl
         '
-        Me.explSonderabl.Location = New System.Drawing.Point(6, 6)
+        Me.explSonderabl.Location = New System.Drawing.Point(8, 7)
+        Me.explSonderabl.Margin = New System.Windows.Forms.Padding(4)
         Me.explSonderabl.Multiline = True
         Me.explSonderabl.Name = "explSonderabl"
         Me.explSonderabl.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.explSonderabl.Size = New System.Drawing.Size(400, 182)
+        Me.explSonderabl.Size = New System.Drawing.Size(532, 223)
         Me.explSonderabl.TabIndex = 0
         '
         'enabler
         '
         Me.enabler.Controls.Add(Me.explEnabler)
-        Me.enabler.Location = New System.Drawing.Point(4, 22)
+        Me.enabler.Location = New System.Drawing.Point(4, 25)
+        Me.enabler.Margin = New System.Windows.Forms.Padding(4)
         Me.enabler.Name = "enabler"
-        Me.enabler.Size = New System.Drawing.Size(412, 194)
+        Me.enabler.Size = New System.Drawing.Size(552, 242)
         Me.enabler.TabIndex = 2
         Me.enabler.Text = "Enabler"
         Me.enabler.ToolTipText = "Anzeige der Enabler"
@@ -152,18 +163,20 @@ Partial Class frmPhaseInformation
         '
         'explEnabler
         '
-        Me.explEnabler.Location = New System.Drawing.Point(6, 6)
+        Me.explEnabler.Location = New System.Drawing.Point(8, 7)
+        Me.explEnabler.Margin = New System.Windows.Forms.Padding(4)
         Me.explEnabler.Multiline = True
         Me.explEnabler.Name = "explEnabler"
-        Me.explEnabler.Size = New System.Drawing.Size(400, 182)
+        Me.explEnabler.Size = New System.Drawing.Size(532, 223)
         Me.explEnabler.TabIndex = 0
         '
         'zusatzRisiken
         '
         Me.zusatzRisiken.Controls.Add(Me.explRisiken)
-        Me.zusatzRisiken.Location = New System.Drawing.Point(4, 22)
+        Me.zusatzRisiken.Location = New System.Drawing.Point(4, 25)
+        Me.zusatzRisiken.Margin = New System.Windows.Forms.Padding(4)
         Me.zusatzRisiken.Name = "zusatzRisiken"
-        Me.zusatzRisiken.Size = New System.Drawing.Size(412, 194)
+        Me.zusatzRisiken.Size = New System.Drawing.Size(552, 242)
         Me.zusatzRisiken.TabIndex = 3
         Me.zusatzRisiken.Text = "Zusatzrisiken"
         Me.zusatzRisiken.ToolTipText = "Anzeige der Zusatzrisiken"
@@ -171,33 +184,36 @@ Partial Class frmPhaseInformation
         '
         'explRisiken
         '
-        Me.explRisiken.Location = New System.Drawing.Point(6, 6)
+        Me.explRisiken.Location = New System.Drawing.Point(8, 7)
+        Me.explRisiken.Margin = New System.Windows.Forms.Padding(4)
         Me.explRisiken.Multiline = True
         Me.explRisiken.Name = "explRisiken"
-        Me.explRisiken.Size = New System.Drawing.Size(400, 182)
+        Me.explRisiken.Size = New System.Drawing.Size(532, 223)
         Me.explRisiken.TabIndex = 0
         '
         'teilnehmer
         '
-        Me.teilnehmer.Location = New System.Drawing.Point(4, 22)
+        Me.teilnehmer.Location = New System.Drawing.Point(4, 25)
+        Me.teilnehmer.Margin = New System.Windows.Forms.Padding(4)
         Me.teilnehmer.Name = "teilnehmer"
-        Me.teilnehmer.Size = New System.Drawing.Size(412, 194)
+        Me.teilnehmer.Size = New System.Drawing.Size(552, 242)
         Me.teilnehmer.TabIndex = 4
         Me.teilnehmer.Text = "Teilnehmer"
         Me.teilnehmer.UseVisualStyleBackColor = True
         '
         'frmPhaseInformation
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.Window
-        Me.ClientSize = New System.Drawing.Size(464, 391)
+        Me.ClientSize = New System.Drawing.Size(603, 479)
         Me.Controls.Add(Me.lessonsLearnedControl)
         Me.Controls.Add(Me.projectName)
         Me.Controls.Add(Me.phaseDauer)
         Me.Controls.Add(Me.phaseEnde)
         Me.Controls.Add(Me.phaseStart)
         Me.Controls.Add(Me.phaseName)
+        Me.Margin = New System.Windows.Forms.Padding(4)
         Me.Name = "frmPhaseInformation"
         Me.Text = "Phasen Information"
         Me.TopMost = True

@@ -9097,29 +9097,36 @@ Public Module Projekte
             Next
 
         Else
-            ' tue es für alle Projekte in Showprojekte 
+
+            If showRangeRight - showRangeLeft > 0 Then
+                If ShowProjekte.Count > 0 Then
+
+                    ' tue es für alle Projekte in Showprojekte 
 
 
-            Dim todoListe As New SortedList(Of Long, clsProjekt)
-            Dim key As Long
+                    Dim todoListe As New SortedList(Of Long, clsProjekt)
+                    Dim key As Long
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
-                todoListe.Add(key, kvp.Value)
+                        key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+                        todoListe.Add(key, kvp.Value)
 
-            Next
-            Dim msNumber As Integer = 1
+                    Next
+                    Dim msNumber As Integer = 1
 
-            For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
+                    For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
 
-                Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, True, numberIt, msNumber, False)
+                        Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, True, numberIt, msNumber, False)
 
-            Next
+                    Next
 
-
-
-
+                Else
+                    Call MsgBox("Es sind keine Projekte geladen!")
+                End If
+            Else
+                Call MsgBox("Bitte wählen zunächst einen Zeitraum aus !")
+            End If
 
         End If
 
@@ -14149,7 +14156,7 @@ Public Module Projekte
 
                     .projectName.Text = projectName
                     .phaseName.Text = phaseName
-                    .Height = 440
+                    .Height = 530
                     .lessonsLearnedControl.Visible = True
                     .erlaeuterung.Visible = True
                     .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
@@ -14181,7 +14188,7 @@ Public Module Projekte
 
                     .projectName.Text = projectName
                     .phaseName.Text = phaseName
-                    .Height = 190
+                    .Height = 220
                     .erlaeuterung.Visible = False
 
                     .phaseStart.Text = phaseStartdate.ToShortDateString
