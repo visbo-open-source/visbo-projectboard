@@ -534,7 +534,7 @@ Public Class clsCommandBarEvents
                     ' anschließendes sofortiges Eintragen eines neuen Projektes hat dann zu einem Fehler geführt 
                     Try
                         hproj = ShowProjekte.getProject(pname)
-                        key = hproj.name & "#" & hproj.variantName
+                        key = calcProjektKey(hproj)
                         Try
                             ShowProjekte.Remove(pname)
                             AlleProjekte.Remove(key)

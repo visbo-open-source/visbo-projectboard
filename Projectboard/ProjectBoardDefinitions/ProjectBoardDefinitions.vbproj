@@ -75,6 +75,7 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsProjektDBInfos.vb" />
     <Compile Include="clsProjektShapes.vb" />
     <Compile Include="clsDependenciesOfPDB.vb" />
     <Compile Include="clsDependencies.vb" />
