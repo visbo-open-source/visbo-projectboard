@@ -159,8 +159,8 @@ Partial Class frmProjektAendern
         '
         'frmProjektAendern
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 19.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.ClientSize = New System.Drawing.Size(490, 358)
         Me.Controls.Add(Me.vorlagenName)
         Me.Controls.Add(Me.risiko)

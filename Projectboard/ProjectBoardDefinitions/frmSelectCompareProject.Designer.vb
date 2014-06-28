@@ -32,18 +32,21 @@ Partial Class frmSelectCompareProject
         'ListBox1
         '
         Me.ListBox1.FormattingEnabled = True
-        Me.ListBox1.Location = New System.Drawing.Point(20, 22)
+        Me.ListBox1.ItemHeight = 16
+        Me.ListBox1.Location = New System.Drawing.Point(27, 27)
+        Me.ListBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.Size = New System.Drawing.Size(370, 225)
+        Me.ListBox1.Size = New System.Drawing.Size(492, 276)
         Me.ListBox1.TabIndex = 0
         '
         'compPhases
         '
         Me.compPhases.AutoSize = True
         Me.compPhases.Checked = True
-        Me.compPhases.Location = New System.Drawing.Point(20, 257)
+        Me.compPhases.Location = New System.Drawing.Point(27, 316)
+        Me.compPhases.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.compPhases.Name = "compPhases"
-        Me.compPhases.Size = New System.Drawing.Size(128, 17)
+        Me.compPhases.Size = New System.Drawing.Size(167, 21)
         Me.compPhases.TabIndex = 1
         Me.compPhases.TabStop = True
         Me.compPhases.Text = "Phasen Charakteristik"
@@ -52,41 +55,45 @@ Partial Class frmSelectCompareProject
         'compResources
         '
         Me.compResources.AutoSize = True
-        Me.compResources.Location = New System.Drawing.Point(20, 278)
+        Me.compResources.Location = New System.Drawing.Point(27, 342)
+        Me.compResources.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.compResources.Name = "compResources"
-        Me.compResources.Size = New System.Drawing.Size(122, 17)
+        Me.compResources.Size = New System.Drawing.Size(159, 21)
         Me.compResources.TabIndex = 2
         Me.compResources.Text = "Ressourcen Bedarfe"
         Me.compResources.UseVisualStyleBackColor = True
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(106, 306)
+        Me.OKButton.Location = New System.Drawing.Point(141, 377)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(75, 23)
+        Me.OKButton.Size = New System.Drawing.Size(100, 28)
         Me.OKButton.TabIndex = 3
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(208, 306)
+        Me.AbbrButton.Location = New System.Drawing.Point(277, 377)
+        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(75, 23)
+        Me.AbbrButton.Size = New System.Drawing.Size(100, 28)
         Me.AbbrButton.TabIndex = 4
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
         '
         'frmSelectCompareProject
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(402, 347)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
+        Me.ClientSize = New System.Drawing.Size(536, 427)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.compResources)
         Me.Controls.Add(Me.compPhases)
         Me.Controls.Add(Me.ListBox1)
+        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmSelectCompareProject"
         Me.Text = "zu vergleichendes Projekt wählen"
         Me.TopMost = True

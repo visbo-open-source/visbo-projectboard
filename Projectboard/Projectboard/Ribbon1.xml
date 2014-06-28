@@ -144,7 +144,7 @@
         <group id="PT2G3" label="Projekt Abhängigkeiten">
           <button id="PT2G3B1" label="Definieren" onAction="PTDefineDependencies" />
           <separator id="PT2G3s1"/>
-          <button id="PT2G3B2" label="Löschen" onAction="PTDeleteDependencies" />
+          <button id="PT2G3B2" label="Löschen" onAction="PTDeleteDependencies" enabled="false"/>
         </group>
       </tab>
       <!--
@@ -174,7 +174,7 @@
         </group>
         <!---->
         <group id="PT3G2" label="Portfolio">
-          <button id="PT3G2B1" label="Vergleichen" onAction="awinSetModusHistory" />
+          <button id="PT3G2B1" label="Vergleichen" onAction="awinSetModusHistory" enabled="false" />
         </group>
       </tab>
       <!--
@@ -196,13 +196,13 @@
       </tab>
       <tab id ="PT5" label ="Datenbank">
         <group id ="PT5G1" label ="Laden">
-          <button id="PT5G1B1" label="Portfolios" onAction="PT5DatenbankLoadPortfolios" />
-          <button id="PT5G1B2" label="Programme" onAction="PT5DatenbankLoadPrograms" />
-          <button id="PT5G1B3" label="Projekte d.Zeitraums" onAction="PT5DatenbankLoadZeitraum" />
+          <button id="PT5G1B1" label="Portfolios" onAction="PTLadenKonstellation" />
+          <button id="PT5G1B2" label="Programme" onAction="PT5DatenbankLoadPrograms" enabled="false"/>
+          <button id="PT5G1B3" label="Projekte d.Zeitraums" onAction="PT5DatenbankLoadZeitraum" enabled="false"/>
         </group>
         <group id ="PT5G2" label ="Speichern">
-          <button id="Pt5G2B1" label="Portfolio " onAction="PT5StorePortfolios" />
-          <button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" />
+          <button id="Pt5G2B1" label="Portfolio " onAction="PTNeueKonstellation" />
+          <button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" enabled="false"/>
           <button id="Pt5G2B3" label="Projekte " onAction="PT5StoreProjects" />
           
          
@@ -212,6 +212,7 @@
         <group id ="PT6G1" label ="Projekt-Form">
           <!--<toggleButton id="PT5G1B1" label="Phasen zeichnen" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen"/>-->
           <checkBox id="PT6G1B1" label="Extended Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen"/>
+          <checkBox id="PT6G1B2" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>
         </group>
         <group id ="PT6G2" label ="Zeitraum">
           <!--<toggleButton id="PT5G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>-->

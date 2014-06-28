@@ -29,18 +29,20 @@ Partial Class frmconfirmDeletePrj
         '
         'OK_Button
         '
-        Me.OK_Button.Location = New System.Drawing.Point(52, 83)
+        Me.OK_Button.Location = New System.Drawing.Point(69, 102)
+        Me.OK_Button.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.OK_Button.Name = "OK_Button"
-        Me.OK_Button.Size = New System.Drawing.Size(75, 23)
+        Me.OK_Button.Size = New System.Drawing.Size(100, 28)
         Me.OK_Button.TabIndex = 0
         Me.OK_Button.Text = "OK"
         Me.OK_Button.UseVisualStyleBackColor = True
         '
         'Cancel_Button
         '
-        Me.Cancel_Button.Location = New System.Drawing.Point(251, 83)
+        Me.Cancel_Button.Location = New System.Drawing.Point(335, 102)
+        Me.Cancel_Button.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Cancel_Button.Name = "Cancel_Button"
-        Me.Cancel_Button.Size = New System.Drawing.Size(75, 23)
+        Me.Cancel_Button.Size = New System.Drawing.Size(100, 28)
         Me.Cancel_Button.TabIndex = 1
         Me.Cancel_Button.Text = "Abbrechen"
         Me.Cancel_Button.UseVisualStyleBackColor = True
@@ -48,20 +50,22 @@ Partial Class frmconfirmDeletePrj
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(49, 34)
+        Me.Label1.Location = New System.Drawing.Point(65, 42)
+        Me.Label1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(185, 13)
+        Me.Label1.Size = New System.Drawing.Size(245, 17)
         Me.Label1.TabIndex = 2
         Me.Label1.Text = "bitte bestätigen Sie das Löschen von:"
         '
         'frmconfirmDeletePrj
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(391, 151)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
+        Me.ClientSize = New System.Drawing.Size(521, 186)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.Cancel_Button)
         Me.Controls.Add(Me.OK_Button)
+        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmconfirmDeletePrj"
         Me.Text = "Löschen bestätigen"
         Me.ResumeLayout(False)

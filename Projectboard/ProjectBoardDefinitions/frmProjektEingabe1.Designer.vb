@@ -77,7 +77,7 @@ Partial Class frmProjektEingabe1
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label1.Location = New System.Drawing.Point(41, 143)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(78, 16)
+        Me.Label1.Size = New System.Drawing.Size(98, 20)
         Me.Label1.TabIndex = 5
         Me.Label1.Text = "Budget (T€)"
         '
@@ -88,7 +88,7 @@ Partial Class frmProjektEingabe1
         Me.Label2.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label2.Location = New System.Drawing.Point(41, 178)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(104, 16)
+        Me.Label2.Size = New System.Drawing.Size(133, 20)
         Me.Label2.TabIndex = 6
         Me.Label2.Text = "Strategischer Fit"
         '
@@ -99,7 +99,7 @@ Partial Class frmProjektEingabe1
         Me.Label3.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label3.Location = New System.Drawing.Point(41, 213)
         Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(124, 16)
+        Me.Label3.Size = New System.Drawing.Size(155, 20)
         Me.Label3.TabIndex = 7
         Me.Label3.Text = "Umsetzungs-Risiko"
         '
@@ -110,7 +110,7 @@ Partial Class frmProjektEingabe1
         Me.kennzeichnungDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.kennzeichnungDate.Location = New System.Drawing.Point(41, 248)
         Me.kennzeichnungDate.Name = "kennzeichnungDate"
-        Me.kennzeichnungDate.Size = New System.Drawing.Size(38, 16)
+        Me.kennzeichnungDate.Size = New System.Drawing.Size(50, 20)
         Me.kennzeichnungDate.TabIndex = 9
         Me.kennzeichnungDate.Text = "Start "
         '
@@ -121,7 +121,7 @@ Partial Class frmProjektEingabe1
         Me.Label4.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label4.Location = New System.Drawing.Point(41, 71)
         Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(78, 16)
+        Me.Label4.Size = New System.Drawing.Size(94, 20)
         Me.Label4.TabIndex = 14
         Me.Label4.Text = "Projekt-Typ"
         '
@@ -130,7 +130,7 @@ Partial Class frmProjektEingabe1
         Me.projectName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.projectName.Location = New System.Drawing.Point(167, 33)
         Me.projectName.Name = "projectName"
-        Me.projectName.Size = New System.Drawing.Size(259, 22)
+        Me.projectName.Size = New System.Drawing.Size(259, 26)
         Me.projectName.TabIndex = 0
         '
         'pName
@@ -140,7 +140,7 @@ Partial Class frmProjektEingabe1
         Me.pName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.pName.Location = New System.Drawing.Point(41, 36)
         Me.pName.Name = "pName"
-        Me.pName.Size = New System.Drawing.Size(91, 16)
+        Me.pName.Size = New System.Drawing.Size(111, 20)
         Me.pName.TabIndex = 16
         Me.pName.Text = "Projekt-Name"
         '
@@ -149,7 +149,7 @@ Partial Class frmProjektEingabe1
         Me.selectedMonth.Location = New System.Drawing.Point(256, 353)
         Me.selectedMonth.Maximum = New Decimal(New Integer() {120, 0, 0, 0})
         Me.selectedMonth.Name = "selectedMonth"
-        Me.selectedMonth.Size = New System.Drawing.Size(17, 23)
+        Me.selectedMonth.Size = New System.Drawing.Size(17, 24)
         Me.selectedMonth.TabIndex = 6
         Me.selectedMonth.Visible = False
         '
@@ -160,7 +160,7 @@ Partial Class frmProjektEingabe1
         Me.calcMonth.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.calcMonth.Location = New System.Drawing.Point(184, 355)
         Me.calcMonth.Name = "calcMonth"
-        Me.calcMonth.Size = New System.Drawing.Size(55, 16)
+        Me.calcMonth.Size = New System.Drawing.Size(66, 20)
         Me.calcMonth.TabIndex = 19
         Me.calcMonth.Text = "Mon YY"
         Me.calcMonth.Visible = False
@@ -170,7 +170,7 @@ Partial Class frmProjektEingabe1
         Me.Erloes.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Erloes.Location = New System.Drawing.Point(199, 143)
         Me.Erloes.Name = "Erloes"
-        Me.Erloes.Size = New System.Drawing.Size(74, 22)
+        Me.Erloes.Size = New System.Drawing.Size(74, 26)
         Me.Erloes.TabIndex = 20
         '
         'sFit
@@ -178,7 +178,7 @@ Partial Class frmProjektEingabe1
         Me.sFit.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.sFit.Location = New System.Drawing.Point(199, 175)
         Me.sFit.Name = "sFit"
-        Me.sFit.Size = New System.Drawing.Size(74, 22)
+        Me.sFit.Size = New System.Drawing.Size(74, 26)
         Me.sFit.TabIndex = 21
         '
         'risiko
@@ -186,7 +186,7 @@ Partial Class frmProjektEingabe1
         Me.risiko.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.risiko.Location = New System.Drawing.Point(199, 214)
         Me.risiko.Name = "risiko"
-        Me.risiko.Size = New System.Drawing.Size(74, 22)
+        Me.risiko.Size = New System.Drawing.Size(74, 26)
         Me.risiko.TabIndex = 22
         '
         'vorlagenDropbox
@@ -195,7 +195,7 @@ Partial Class frmProjektEingabe1
         Me.vorlagenDropbox.FormattingEnabled = True
         Me.vorlagenDropbox.Location = New System.Drawing.Point(167, 65)
         Me.vorlagenDropbox.Name = "vorlagenDropbox"
-        Me.vorlagenDropbox.Size = New System.Drawing.Size(259, 24)
+        Me.vorlagenDropbox.Size = New System.Drawing.Size(259, 28)
         Me.vorlagenDropbox.TabIndex = 23
         '
         'Label5
@@ -206,7 +206,7 @@ Partial Class frmProjektEingabe1
         Me.Label5.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label5.Location = New System.Drawing.Point(297, 178)
         Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(61, 16)
+        Me.Label5.Size = New System.Drawing.Size(74, 20)
         Me.Label5.TabIndex = 24
         Me.Label5.Text = "Volumen"
         Me.Label5.Visible = False
@@ -216,7 +216,7 @@ Partial Class frmProjektEingabe1
         Me.volume.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.volume.Location = New System.Drawing.Point(384, 172)
         Me.volume.Name = "volume"
-        Me.volume.Size = New System.Drawing.Size(74, 22)
+        Me.volume.Size = New System.Drawing.Size(74, 26)
         Me.volume.TabIndex = 25
         Me.volume.Visible = False
         '
@@ -224,7 +224,7 @@ Partial Class frmProjektEingabe1
         '
         Me.DateTimeProject.Location = New System.Drawing.Point(199, 248)
         Me.DateTimeProject.Name = "DateTimeProject"
-        Me.DateTimeProject.Size = New System.Drawing.Size(259, 23)
+        Me.DateTimeProject.Size = New System.Drawing.Size(259, 24)
         Me.DateTimeProject.TabIndex = 26
         '
         'dauerUnverändert
@@ -234,7 +234,7 @@ Partial Class frmProjektEingabe1
         Me.dauerUnverändert.CheckState = System.Windows.Forms.CheckState.Checked
         Me.dauerUnverändert.Location = New System.Drawing.Point(301, 213)
         Me.dauerUnverändert.Name = "dauerUnverändert"
-        Me.dauerUnverändert.Size = New System.Drawing.Size(133, 20)
+        Me.dauerUnverändert.Size = New System.Drawing.Size(150, 22)
         Me.dauerUnverändert.TabIndex = 27
         Me.dauerUnverändert.Text = "Dauer wie Vorlage"
         Me.dauerUnverändert.UseVisualStyleBackColor = True
@@ -246,7 +246,7 @@ Partial Class frmProjektEingabe1
         Me.kennzeichnungEnde.ForeColor = System.Drawing.SystemColors.ControlText
         Me.kennzeichnungEnde.Location = New System.Drawing.Point(42, 285)
         Me.kennzeichnungEnde.Name = "kennzeichnungEnde"
-        Me.kennzeichnungEnde.Size = New System.Drawing.Size(40, 16)
+        Me.kennzeichnungEnde.Size = New System.Drawing.Size(47, 20)
         Me.kennzeichnungEnde.TabIndex = 28
         Me.kennzeichnungEnde.Text = "Ende"
         '
@@ -254,14 +254,13 @@ Partial Class frmProjektEingabe1
         '
         Me.DateTimeEnde.Location = New System.Drawing.Point(199, 285)
         Me.DateTimeEnde.Name = "DateTimeEnde"
-        Me.DateTimeEnde.Size = New System.Drawing.Size(259, 23)
+        Me.DateTimeEnde.Size = New System.Drawing.Size(259, 24)
         Me.DateTimeEnde.TabIndex = 29
         '
         'frmProjektEingabe1
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 16.0!)
-        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.AutoSize = True
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.Window
         Me.ClientSize = New System.Drawing.Size(530, 401)
         Me.Controls.Add(Me.DateTimeEnde)
@@ -285,7 +284,7 @@ Partial Class frmProjektEingabe1
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
-        Me.Font = New System.Drawing.Font("Tahoma", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.Name = "frmProjektEingabe1"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
