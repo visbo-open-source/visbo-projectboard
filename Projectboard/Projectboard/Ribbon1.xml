@@ -223,6 +223,10 @@
           <button id="Pt6G3B0" label="Meilensteine, Phasen, Stati"  onAction="Tom2G2M5B3NoShowSymbols" />
           <button id="Pt6G3B1" label="Charts"  onAction="PT6DeleteCharts" />
         </group>
+        <group id ="PT6G4" label ="Testfunktionen">
+          <button id="Pt6G4B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
+          <button id="Pt6G4B1" label="Aufbau Histories"  onAction="PTTestFunktion2" />
+        </group>
       </tab>
      </tabs>
   </ribbon>

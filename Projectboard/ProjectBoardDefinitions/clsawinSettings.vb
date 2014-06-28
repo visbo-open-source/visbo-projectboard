@@ -11,6 +11,8 @@
     Property SollIstFarbeL As Long
     Property SollIstFarbeC As Long
     Property SollIstFarbeArea As Long
+    Property timeSpanColor As Long
+    Property showTimeSpanInPT As Boolean
 
     Property AmpelGruen As Long
     Property AmpelGelb As Long
@@ -76,6 +78,8 @@
         _SollIstFarbeL = RGB(80, 160, 80)
         _SollIstFarbeC = RGB(80, 240, 80)
         _SollIstFarbeArea = RGB(200, 200, 200)
+        _timeSpanColor = RGB(242, 242, 242)
+        _showTimeSpanInPT = True
 
 
         ' Projekteingabe Settings

@@ -341,7 +341,7 @@ Public Class clsProjektShapes
                     ' und in der kopierten Form wieder aufgenommen werden 
                     Dim key As String = pName
                     ShowProjekte.Remove(pName)
-                    key = hproj.name & "#" & hproj.variantName
+                    key = calcProjektKey(hproj)
                     AlleProjekte.Remove(key)
 
                     AlleProjekte.Add(key, newProjekt)

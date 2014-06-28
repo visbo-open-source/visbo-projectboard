@@ -99,27 +99,28 @@ Public Class clsRolle
 
     End Property
 
-    Public ReadOnly Property kapazitaet(von As Integer, bis As Integer) As Double()
+    ' Änderung 26.6: wird nicht als Methode in clsRolle benötigt 
+    'Public ReadOnly Property kapazitaet(von As Integer, bis As Integer) As Double()
 
-        Get
-            Dim tmpArray() As Double
-            Dim i As Integer
-            Dim size As Integer = RoleDefinitions.getRoledef(typus).kapazitaet.Length
+    '    Get
+    '        Dim tmpArray() As Double
+    '        Dim i As Integer
+    '        Dim size As Integer = RoleDefinitions.getRoledef(typus).kapazitaet.Length
 
 
-            If von < 1 Or von > size Or bis > size Or bis < von Then
-                Throw New ArgumentException("unzulässige Grenzen " & von.ToString & ", " & bis.ToString)
-            Else
-                ReDim tmpArray(bis - von)
-                For i = von To bis
-                    tmpArray(i - von) = RoleDefinitions.getRoledef(typus).kapazitaet(i)
-                Next
-            End If
+    '        If von < 1 Or von > size Or bis > size Or bis < von Then
+    '            Throw New ArgumentException("unzulässige Grenzen " & von.ToString & ", " & bis.ToString)
+    '        Else
+    '            ReDim tmpArray(bis - von)
+    '            For i = von To bis
+    '                tmpArray(i - von) = RoleDefinitions.getRoledef(typus).kapazitaet(i)
+    '            Next
+    '        End If
 
-            kapazitaet = tmpArray
-        End Get
+    '        kapazitaet = tmpArray
+    '    End Get
 
-    End Property
+    'End Property
     '
     '
     '

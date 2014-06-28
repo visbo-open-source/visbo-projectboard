@@ -10,7 +10,7 @@
         </Grid.ColumnDefinitions>
         <ListBox ItemsSource="{Binding allItems, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" x:Name="listbox" HorizontalAlignment="Stretch" SelectionMode="Multiple" Margin="10,66,20,80" VerticalAlignment="Stretch" UseLayoutRounding="False" Grid.ColumnSpan="2">
         </ListBox>
-        <Button x:Name="btn" VerticalAlignment="Bottom" Height="30"  Margin="0,0,127,32" Click="submit" Content="Fertig" IsDefault="True" Grid.ColumnSpan="2" HorizontalAlignment="Right" Width="100"/>
+        <Button x:Name="btn" VerticalAlignment="Bottom" Height="30"  Margin="0,0,127,32" Click="submit" Content="Anzeigen" IsDefault="True" Grid.ColumnSpan="2" HorizontalAlignment="Right" Width="100"/>
         <Label x:Name="title_label" Content="Personal-Bedarf anzeigen" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="35" Width="397" FontFamily="Segoe UI Semibold" FontSize="18" Grid.ColumnSpan="2"/>
         <Label x:Name="desc_label" Content="Bitte wählen Sie aus, was angezeigt werden soll." HorizontalAlignment="Left" Height="32" Margin="10,34,0,0" VerticalAlignment="Top" Width="495" Grid.ColumnSpan="2"/>
         <CheckBox x:Name="checkbox1" Content="pro Item ein Chart" HorizontalAlignment="Left" Margin="22,0,0,46" Height="16" VerticalAlignment="Bottom" IsChecked="True" Visibility="Hidden"/>

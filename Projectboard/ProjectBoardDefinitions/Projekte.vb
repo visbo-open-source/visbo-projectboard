@@ -1135,7 +1135,8 @@ Public Module Projekte
     ''' <param name="hproj"></param>
     ''' <param name="chtobj"></param>
     ''' <remarks></remarks>
-    Public Sub updatePhasesBalken(ByVal hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, ByVal auswahl As Integer)
+    Public Sub updatePhasesBalken(ByVal hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
+                                  ByVal auswahl As Integer, ByVal changeScale As Boolean)
         Dim diagramTitle As String
 
         Dim anzPhasen As Integer
@@ -1149,6 +1150,7 @@ Public Module Projekte
         Dim titelTeilLaengen(1) As Integer
         Dim tmpcollection As New Collection
         Dim kennung As String = " "
+        Dim maxscale As Double
 
 
 
@@ -1208,7 +1210,7 @@ Public Module Projekte
         End If
 
 
-        
+
 
 
         'ReDim hsum(anzPhasen - 1)
@@ -1287,6 +1289,12 @@ Public Module Projekte
 
                 For i = 0 To anzPhasen - 1
                     mdatenreihe(i) = tdatenreihe2(i) / 365 * 12
+
+                    If maxscale < (tdatenreihe1(i) + tdatenreihe2(i)) / 365 * 12 Then
+                        maxscale = (tdatenreihe1(i) + tdatenreihe2(i)) / 365 * 12
+                    End If
+
+
                 Next
                 .name = "Phasen Zeitraum"
                 .Values = mdatenreihe
@@ -1339,20 +1347,24 @@ Public Module Projekte
 
             End With
 
-            ' Änderung: die Anpassung der Min-/Max Sclaes wird ja in frmCharakteristik Load selber vorgenommen 
-            'With .Axes(Excel.XlAxisType.xlValue)
-
-            '    .MinimumScale = minscale / 365 * 12
-            '    .MaximumScale = CInt(maxscale / 365 * 12) + 3
-
-            'End With
-
 
             If .HasAxis(Excel.XlAxisType.xlValue) Then
 
                 With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                     ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
                     ' hinausgehende Werte hat 
+
+                    If changeScale Then
+                        .MinimumScale = 0
+                        If Not (.MaximumScaleIsAuto) Then
+
+                            If maxscale > Math.Round(.MaximumScale + 5) Then
+                                .MaximumScale = Math.Round(maxscale + 6)
+                            End If
+                            .MaximumScaleIsAuto = True
+                        End If
+                    End If
+
                     If mdatenreihe.Max > .MaximumScale - 3 Then
                         .MaximumScale = mdatenreihe.Max + 3
                     End If
@@ -3587,7 +3599,7 @@ Public Module Projekte
         kennung = getKennung("pr", PTprdk.PersonalBalken, tmpcollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Ressourcen-Bedarf " & zE & vbLf & pname & vbLf
+            titelTeile(0) = "Personalbedarf " & zE & vbLf & pname & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -3792,24 +3804,30 @@ Public Module Projekte
 
     End Sub
 
-    '
-    ' Prozedur updated die Ressourcen Struktur des Projektes im Chart chtobj 
-    '
-    ' Auswahl = 1 : Diagramm zeigt Mann-Monate 
-    ' Auswahl = 2 : Diagramm zeigt Personal-Kosten  
-    ' Kennung Phasen, Personalbedarf, Personalkosten, Sonstige Kosten, Gesamtkosten, Strategie, Ergebnis
 
-    Public Sub updateRessBalkenOfProject(ByRef hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, ByVal auswahl As Integer)
+    ''' <summary>
+    ''' aktualisiert das Info Chart "Ressourcen Bedarf eines Projektes
+    ''' übergeben wird das Projekt sowie das Chart 
+    ''' </summary>
+    ''' <param name="hproj">selektiertes Projekt</param>
+    ''' <param name="chtobj">Chart, das ein Projekt-Info Chart darstellt</param>
+    ''' <param name="auswahl">
+    ''' 1: Diagramm zeigt Mann-Monate 
+    ''' 2: Diagramm zeigt Personal-Kosten</param>
+    ''' <param name="changeScale">gibt an, ob der Scale ggf an neue Werte angepasst werden muss</param>
+    ''' <remarks>wenn es aus der Time Machine aus aufgerufen wird, darf der Scale gerade nicht angepasst werden </remarks>
+    Public Sub updateRessBalkenOfProject(ByRef hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
+                                         ByVal auswahl As Integer, ByVal changeScale As Boolean)
 
 
         Dim kennung As String = " "
         Dim diagramTitle As String = " "
-
         Dim plen As Integer
         Dim i As Integer
         Dim Xdatenreihe() As String
         Dim tdatenreihe() As Double
-        Dim hsum() As Double, gesamt_summe As Double
+        Dim sumdatenreihe() As Double
+        'Dim hsum() As Double, gesamt_summe As Double
         Dim anzRollen As Integer
         Dim pkIndex As Integer = CostDefinitions.Count
         Dim pstart As Integer
@@ -3829,7 +3847,7 @@ Public Module Projekte
         kennung = getKennung("pr", PTprdk.PersonalBalken, tmpCollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Ressourcen-Bedarf " & zE & vbLf & pname & vbLf
+            titelTeile(0) = "Personalbedarf " & zE & vbLf & pname & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -3865,25 +3883,26 @@ Public Module Projekte
         ErgebnisListeR = hproj.getUsedRollen
         anzRollen = ErgebnisListeR.Count
 
-        
+
 
 
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
+        ReDim sumdatenreihe(plen - 1)
 
         ' sonst kommt der in eine Endlos Schleife, wenn keine Rollen definiert sind 
-        If anzRollen > 0 Then
-            ReDim hsum(anzRollen - 1)
-        Else
-            ReDim hsum(0)
-        End If
+        'If anzRollen > 0 Then
+        '    ReDim hsum(anzRollen - 1)
+        'Else
+        '    ReDim hsum(0)
+        'End If
 
 
         For i = 1 To plen
             Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy")
         Next i
 
-        gesamt_summe = 0
+        'gesamt_summe = 0
 
 
         With chtobj.Chart
@@ -3900,11 +3919,15 @@ Public Module Projekte
                 Else
                     tdatenreihe = hproj.getPersonalKosten(roleName)
                 End If
-                hsum(r - 1) = 0
+
                 For i = 0 To plen - 1
-                    hsum(r - 1) = hsum(r - 1) + tdatenreihe(i)
-                Next i
-                gesamt_summe = gesamt_summe + hsum(r - 1)
+                    sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
+                Next
+                'hsum(r - 1) = 0
+                'For i = 0 To plen - 1
+                '    hsum(r - 1) = hsum(r - 1) + tdatenreihe(i)
+                'Next i
+                'gesamt_summe = gesamt_summe + hsum(r - 1)
 
                 'series
                 With .SeriesCollection.NewSeries
@@ -3922,11 +3945,19 @@ Public Module Projekte
                 With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                     ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
                     ' hinausgehende Werte hat 
-                    'If Not (.MaximumScaleIsAuto) Then
-                    If tdatenreihe.Max > .MaximumScale - 3 Then
-                        .MaximumScale = tdatenreihe.Max + 3
+
+                    If changeScale Then
+                        .MinimumScale = 0
+                        If Not (.MaximumScaleIsAuto) Then
+                            Dim tstValue As Double = .MaximumScale
+
+                            If sumdatenreihe.Max > .MaximumScale - 3 Then
+                                .MaximumScale = sumdatenreihe.Max + 3
+                            End If
+                            .MaximumScaleIsAuto = True
+                        End If
                     End If
-                    'End If
+                   
                 End With
 
             End If
@@ -4030,12 +4061,13 @@ Public Module Projekte
         ErgebnisListeK = hproj.getUsedKosten
         anzKostenarten = ErgebnisListeK.Count
 
-        If anzKostenarten = 0 And auswahl = 1 Then
-            MsgBox("keine Kosten-Bedarfe definiert")
-            appInstance.EnableEvents = formerEE
-            'appInstance.ScreenUpdating = formerSU
-            Exit Sub
-        End If
+        ' es wird die Null angezeigt 
+        'If anzKostenarten = 0 And auswahl = 1 Then
+        '    MsgBox("keine Kosten-Bedarfe definiert")
+        '    appInstance.EnableEvents = formerEE
+        '    'appInstance.ScreenUpdating = formerSU
+        '    Exit Sub
+        'End If
 
 
         ReDim Xdatenreihe(plen - 1)
@@ -4043,7 +4075,13 @@ Public Module Projekte
 
 
         If auswahl = 1 Then
-            ReDim hsum(anzKostenarten - 1)
+
+            If anzKostenarten = 0 Then
+                ReDim hsum(0)
+            Else
+                ReDim hsum(anzKostenarten - 1)
+            End If
+
         Else
             ReDim hsum(anzKostenarten) ' weil jetzt die berechneten Personalkosten dazu kommen
         End If
@@ -4366,7 +4404,8 @@ Public Module Projekte
     '''            = 5 : Strategie / Risiko 
     '''            = 6 : Ergebnis
     ''' </remarks>
-    Public Sub updateCostBalkenOfProject(ByRef hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, ByVal auswahl As Integer)
+    Public Sub updateCostBalkenOfProject(ByRef hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
+                                         ByVal auswahl As Integer, ByVal changeScale As Boolean)
 
 
         Dim kennziffer As Integer = 3
@@ -4374,7 +4413,7 @@ Public Module Projekte
         Dim i As Integer
         Dim Xdatenreihe() As String
         Dim tdatenreihe() As Double
-        Dim hsum() As Double, gesamt_summe As Double
+        Dim sumdatenreihe() As Double
         Dim anzKostenarten As Integer
         Dim costname As String
         Dim pkIndex As Integer = CostDefinitions.Count
@@ -4434,19 +4473,8 @@ Public Module Projekte
 
         ReDim Xdatenreihe(plen - 1)
         ReDim tdatenreihe(plen - 1)
+        ReDim sumdatenreihe(plen - 1)
 
-
-        ' wenn keine Kostenarten definiert sind und keine PErsonalkosten gezeigt werden sollen  
-        If auswahl = 1 Then
-            If anzKostenarten > 0 Then
-                ReDim hsum(anzKostenarten - 1)
-            Else
-                ReDim hsum(0)
-            End If
-
-        Else
-            ReDim hsum(anzKostenarten) ' weil jetzt die berechneten Personalkosten dazu kommen
-        End If
 
 
         For i = 1 To plen
@@ -4455,7 +4483,6 @@ Public Module Projekte
 
 
         Dim ik As Integer = 1 ' wird für die Unterscheidung benötigt, ob mit Personal-Kosten oder ohne 
-        gesamt_summe = 0
 
 
         With chtobj.Chart
@@ -4467,15 +4494,11 @@ Public Module Projekte
 
             If auswahl = 2 Then
                 ik = 0
-                costname = "Personal-Kosten"
+                costname = "Personalkosten"
                 tdatenreihe = hproj.getAllPersonalKosten
-                hsum(ik) = 0
                 For i = 0 To plen - 1
-                    hsum(ik) = hsum(ik) + tdatenreihe(i)
-                Next i
-
-                gesamt_summe = gesamt_summe + hsum(ik)
-
+                    sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
+                Next
 
                 With .SeriesCollection.NewSeries
                     .name = costname
@@ -4489,12 +4512,10 @@ Public Module Projekte
             For k = 1 To anzKostenarten
                 costname = ErgebnisListeK.Item(k)
                 tdatenreihe = hproj.getKostenBedarf(costname)
-                hsum(k - ik) = 0
-                For i = 0 To plen - 1
-                    hsum(k - ik) = hsum(k - ik) + tdatenreihe(i)
-                Next i
 
-                gesamt_summe = gesamt_summe + hsum(k - ik)
+                For i = 0 To plen - 1
+                    sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
+                Next
 
                 With .SeriesCollection.NewSeries
                     .name = costname
@@ -4511,11 +4532,19 @@ Public Module Projekte
                 With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                     ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
                     ' hinausgehende Werte hat 
-                    'If Not (.MaximumScaleIsAuto) Then
-                    If tdatenreihe.Max > .MaximumScale - 3 Then
-                        .MaximumScale = tdatenreihe.Max + 3
+
+                    If changeScale Then
+                        .MinimumScale = 0
+                        If Not (.MaximumScaleIsAuto) Then
+
+                            If sumdatenreihe.Max > .MaximumScale - 3 Then
+                                .MaximumScale = sumdatenreihe.Max + 3
+                            End If
+                            .MaximumScaleIsAuto = True
+                        End If
                     End If
-                    'End If
+
+
                 End With
 
             End If
@@ -5198,18 +5227,25 @@ Public Module Projekte
         ErgebnisListeK = hproj.getUsedKosten
         anzKostenarten = ErgebnisListeK.Count
 
-        If anzKostenarten = 0 Then
-            appInstance.EnableEvents = formerEE
-            Throw New Exception("keine Kosten-Bedarfe definiert")
-        End If
+        ' Änderung: es wird die Null gezeigt
+        'If anzKostenarten = 0 And auswahl = 1 Then
+        '    appInstance.EnableEvents = formerEE
+        '    Throw New Exception("keine Kosten-Bedarfe definiert")
+        'End If
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
         kennung = getKennung("pr", PTprdk.KostenPie, tmpcollection)
 
         If auswahl = 1 Then
             ' Alle Sonstigen Kostenarten 
-            ReDim tdatenreihe(anzKostenarten - 1)
-            ReDim Xdatenreihe(anzKostenarten - 1)
+            If anzKostenarten = 0 Then
+                ReDim tdatenreihe(0)
+                ReDim Xdatenreihe(0)
+            Else
+                ReDim tdatenreihe(anzKostenarten - 1)
+                ReDim Xdatenreihe(anzKostenarten - 1)
+            End If
+            
         Else
             ' alle Kostenarten - inkl Personalkosten 
             ReDim tdatenreihe(anzKostenarten)
@@ -6625,7 +6661,8 @@ Public Module Projekte
 
     End Sub
 
-    Public Sub updateProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, ByVal auswahl As Integer)
+    Public Sub updateProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef chtobj As Excel.ChartObject, _
+                                                    ByVal auswahl As Integer, ByVal changeScale As Boolean)
 
 
         Dim diagramTitle As String
@@ -6711,12 +6748,25 @@ Public Module Projekte
         diagramTitle = titelTeile(0) & titelTeile(1)
         'kennung = pname & "#Ergebnis#1"
 
-        If projektErgebnis < 0 Then
-            minscale = System.Math.Round(projektErgebnis, mode:=MidpointRounding.ToEven)
-        Else
-            minscale = 0
-        End If
 
+        If changeScale Then
+            If projektErgebnis < 0 Then
+                minscale = System.Math.Round(projektErgebnis - 5, mode:=MidpointRounding.ToEven)
+
+                If projektErgebnis < -300 Then
+                    minscale = Math.Round(projektErgebnis / 50 - 0.6) * 50
+                ElseIf projektErgebnis < -80 Then
+                    minscale = Math.Round(projektErgebnis / 10 - 0.6) * 10
+                Else
+                    minscale = Math.Round(projektErgebnis / 5 - 0.6) * 5
+                End If
+
+
+            Else
+                minscale = 0
+            End If
+        End If
+        
 
 
         Dim currentWert As Double
@@ -6835,34 +6885,51 @@ Public Module Projekte
                     .HasTitle = False
                     .HasMajorGridlines = False
                     .hasminorgridlines = False
-                    If minscale < 0 Then
-                        .MinimumScale = System.Math.Round((minscale - 1), mode:=MidpointRounding.ToEven)
-                    Else
-                        .MinimumScale = 0
-                    End If
                 End With
             Catch ex As Exception
 
             End Try
 
-            If .HasAxis(Excel.XlAxisType.xlValue) Then
 
-                With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
-                    ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
-                    ' hinausgehende Werte hat 
-                    'If Not (.MaximumScaleIsAuto) Then
-                    If itemValue(0) > .MaximumScale - 3 Then
-                        .MaximumScale = itemValue(0) + 3
+            With CType(.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
+                ' das ist dann relevant, wenn ein anderes Projekt selektiert wird, das über die aktuelle Skalierung 
+                ' hinausgehende Werte hat 
+                'If Not (.MaximumScaleIsAuto) Then
+
+
+                If changeScale Then
+
+                    If Not (.MinimumScaleIsAuto) Then
+                        If (minscale < .MinimumScale) And (minscale < 0) Then
+                            .MinimumScale = minscale
+                        End If
+                        .MinimumScaleIsAuto = True
                     End If
-                    'End If
 
-                    If itemValue(4) < .MinimumScale Then
-                        .MinimumScale = itemValue(4)
+
+                    If Not (.MaximumScaleIsAuto) Then
+
+                        'If itemValue(0) > .MaximumScale - 3 Then
+                        '    .MaximumScale = itemValue(0) + 3
+                        'End If
+
+                        If itemValue(0) > .MaximumScale Then
+                            If itemValue(0) < 80 Then
+                                .MaximumScale = Math.Round(itemValue(0) / 5 + 0.6) * 5
+                            ElseIf itemValue(0) < 300 Then
+                                .MaximumScale = Math.Round(itemValue(0) / 10 + 0.6) * 10
+                            Else
+                                .MaximumScale = Math.Round(itemValue(0) / 50 + 0.6) * 50
+                            End If
+                        End If
+
+
+                        .MaximumScaleIsAuto = True
                     End If
+                End If
 
-                End With
+            End With
 
-            End If
 
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
@@ -6870,7 +6937,7 @@ Public Module Projekte
                 .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                     titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End If
-            
+
 
         End With
 
@@ -10665,18 +10732,23 @@ Public Module Projekte
                                 If replaceProj Or (tmpArray(2).Trim = vglName) Then
                                     Select Case tmpArray(1)
 
+
+                                        ' replaceProj sorgt in den nachfolgenden Sequenzen dafür, daß das Chart im Falle eines Aufrufes aus der 
+                                        ' Time-Machine (replaceProj = false) nicht in der Skalierung angepasst wird; das geschieht initial beim Laden der Time-Machine
+                                        ' wenn es aus dem Selektieren von Projekten aus aufgerufen wird, dann wird die optimal passende Skalierung schon jedesmal berechnet 
+
                                         Case PTprdk.Phasen
                                             ' Update Phasen Diagramm
 
                                             If CInt(tmpArray(3)) = PThis.current Then
                                                 ' nur dann muss aktualisiert werden ...
-                                                Call updatePhasesBalken(hproj, chtobj, CInt(tmpArray(3)))
+                                                Call updatePhasesBalken(hproj, chtobj, CInt(tmpArray(3)), replaceProj)
                                             End If
 
 
                                         Case PTprdk.PersonalBalken
 
-                                            Call updateRessBalkenOfProject(hproj, chtobj, CInt(tmpArray(3)))
+                                            Call updateRessBalkenOfProject(hproj, chtobj, CInt(tmpArray(3)), replaceProj)
 
 
                                         Case PTprdk.PersonalPie
@@ -10689,7 +10761,7 @@ Public Module Projekte
                                         Case PTprdk.KostenBalken
 
 
-                                            Call updateCostBalkenOfProject(hproj, chtobj, CInt(tmpArray(3)))
+                                            Call updateCostBalkenOfProject(hproj, chtobj, CInt(tmpArray(3)), replaceProj)
 
 
                                         Case PTprdk.KostenPie
@@ -10705,7 +10777,7 @@ Public Module Projekte
 
                                         Case PTprdk.Ergebnis
                                             ' Update Ergebnis Diagramm
-                                            Call updateProjektErgebnisCharakteristik2(hproj, chtobj, CInt(tmpArray(3)))
+                                            Call updateProjektErgebnisCharakteristik2(hproj, chtobj, CInt(tmpArray(3)), replaceProj)
 
                                         Case Else
 
@@ -13398,15 +13470,110 @@ Public Module Projekte
         ElseIf typ = "pr" Then
 
             IDkennung = IDkennung & "#" & mycollection.Item(1)
-            
+
         End If
 
 
-            getKennung = IDkennung
+        getKennung = IDkennung
+
+
+    End Function
+    ''' <summary>
+    ''' errechnet den für Showprojekte und AlleProjekte benötigten Schlüssel
+    ''' setzt sich zusammen aus pName und variantName
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="variantName"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcProjektKey(ByVal pName As String, ByVal variantName As String) As String
+
+        Dim trennzeichen As String = "#"
+
+        ' Konsistenzbedingungen gewährleisten
+        If IsNothing(pName) Then
+            Throw New ArgumentException("Projekt-Name kann nicht Nothing sein")
+        ElseIf pName.Length < 2 Then
+            Throw New ArgumentException("Projekt-Name muss mindestens zwei Zeichen lang sein: " & pName)
+        ElseIf IsNothing(variantName) Then
+            variantName = ""
+        End If
+
+        calcProjektKey = pName & trennzeichen & variantName
 
 
     End Function
 
+    ''' <summary>
+    ''' errechnet den für Showprojekte und AlleProjekte benötigten Schlüssel
+    ''' verwendet dazu die in hproj vorhandenen Attribute Name und variantName
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcProjektKey(ByVal hproj As clsProjekt) As String
+
+        Dim trennzeichen As String = "#"
+        With hproj
+
+            ' Konsistenzbedingungen gewährleisten
+            If IsNothing(.name) Then
+                Throw New ArgumentException("Projekt-Name kann nicht Nothing sein")
+            ElseIf .name.Length < 2 Then
+                Throw New ArgumentException("Projekt-Name muss mindestens zwei Zeichen lang sein: " & .name)
+            ElseIf IsNothing(.variantName) Then
+                .variantName = ""
+            End If
+
+            calcProjektKey = .name & trennzeichen & .variantName
+
+        End With
+
+
+    End Function
+
+    ''' <summary>
+    ''' gibt den Projekt-Namen zurück, der in dem Projekt-Key steckt 
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getPnameFromKey(ByVal key As String) As String
+        Dim tmpStr(5) As String
+        Dim trennzeichen As String = "#"
+
+        tmpStr = key.Split(New Char() {trennzeichen}, 4)
+        getPnameFromKey = tmpStr(0)
+
+    End Function
+
+    ''' <summary>
+    ''' gibt den Variant-Namen zurück, der in dem Projekt-Key steckt 
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getVariantnameFromKey(ByVal key As String) As String
+        Dim tmpStr(5) As String
+        Dim trennzeichen As String = "#"
+        Dim tmpValue As String
+
+        tmpStr = key.Split(New Char() {trennzeichen}, 4)
+        tmpValue = tmpStr(1)
+
+        If IsNothing(tmpValue) Then
+            tmpValue = ""
+        End If
+
+        getVariantnameFromKey = tmpValue
+
+    End Function
+
+    ''' <summary>
+    ''' aktualisiert bzw. zeigt das Status Fenster zur Ampel-Erläuterung eines Projektes 
+    ''' </summary>
+    ''' <param name="resultShape">übergeben wird das Result-Shape des Projektes </param>
+    ''' <remarks></remarks>
     Public Sub updateStatusInformation(ByVal resultShape As Excel.Shape)
 
         Dim tmpstr() As String
@@ -13965,7 +14132,7 @@ Public Module Projekte
 
 
 
-        
+
 
         Try
             cPhase = hproj.getPhase(phaseName)
@@ -14159,7 +14326,7 @@ Public Module Projekte
                 ' wenn ja, muss es um die entsprechenden Werte dieses Projektes (Status, etc)  ergänzt werden
                 ' wenn nein, wird es im Show-Modus ergänzt 
 
-                vglName = hproj.name & "#" & hproj.variantName
+                vglName = calcProjektKey(hproj)
                 Try
                     cproj = AlleProjekte.Item(vglName)
                     anzAktualisierungen = anzAktualisierungen + 1

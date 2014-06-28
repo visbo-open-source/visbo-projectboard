@@ -25,7 +25,7 @@ Public Class frmConfirmEditRess
         Try
             pname = selectedProject
             hproj = ShowProjekte.getProject(pname)
-            key = hproj.name & "#" & hproj.variantName
+            key = calcProjektKey(hproj)
             tryzeile = hproj.tfZeile
         Catch ex As Exception
             Call MsgBox(ex.Message & " in frmConfirmEditRess! - Abbruch")

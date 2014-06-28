@@ -140,6 +140,7 @@ Public Class frmShowProjCharacteristics
         Dim vglName As String = projekthistorie.Last.name.Trim
         hproj = ShowProjekte.getProject(vglName)
 
+
         Call aktualisiereCharts(hproj, False)
         timeMachineIsOn = False
 
