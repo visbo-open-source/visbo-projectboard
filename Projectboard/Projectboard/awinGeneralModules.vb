@@ -434,7 +434,7 @@ Public Module awinGeneralModules
                 awinSettings.zeilenhoehe1 = CDbl(.Range("Zeilenhoehe1").Value)
                 awinSettings.zeilenhoehe2 = CDbl(.Range("Zeilenhoehe2").Value)
                 awinSettings.spaltenbreite = CDbl(.Range("Spaltenbreite").Value)
-                awinSettings.autoCorrectBedarfe = True
+                awinSettings.autoCorrectBedarfe = False
                 awinSettings.propAnpassRess = False
             Catch ex As Exception
                 appInstance.ScreenUpdating = formerSU
@@ -2321,8 +2321,9 @@ Public Module awinGeneralModules
     ''' </param>
     ''' <remarks></remarks>
     ''' 
-    Public Sub awinRemoveConstellation(ByVal constellationName As String)
+    Public Sub awinRemoveConstellation(ByVal constellationName As String, ByVal deleteDB As Boolean)
 
+        Dim returnValue As Boolean = True
         Dim activeConstellation As New clsConstellation
         Dim request As New Request(awinSettings.databaseName)
 
@@ -2334,33 +2335,28 @@ Public Module awinGeneralModules
             Exit Sub
         End Try
 
-        If request.pingMongoDb() Then
+        If deleteDB Then
+            If request.pingMongoDb() Then
 
-            ' Konstellation muss aus der Datenbank gelöscht werden.
+                ' Konstellation muss aus der Datenbank gelöscht werden.
 
-            If request.removeConstellationFromDB(activeConstellation) Then
-
-                Try
-                    ' Konstellation muss aus der Liste aller Portfolios entfernt werden.
-                    projectConstellations.Remove(activeConstellation.constellationName)
-                Catch ex1 As Exception
-                    Call MsgBox("Fehler in awinRemoveConstellation aufgetreten: " & ex1.Message)
-                End Try
+                returnValue = request.removeConstellationFromDB(activeConstellation)
             Else
-                Call MsgBox("Es ist ein Fehler beim Löschen es Portfolios aus der Datenbank aufgetreten ")
+                Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & activeConstellation.constellationName & "'konnte nicht gelöscht werden")
+                returnValue = False
             End If
-
-        Else
-            Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & activeConstellation.constellationName & "'konnte nicht geladen werden")
         End If
 
-        'Try
-        '    ' Konstellation muss aus der Liste aller Portfolios entfernt werden.
-        '    projectConstellations.Remove(activeConstellation.constellationName)
-        'Catch ex1 As Exception
-        '    Call MsgBox("Fehler in awinRemoveConstellation aufgetreten: " & ex1.Message)
-        'End Try
-
+        If returnValue Then
+            Try
+                ' Konstellation muss aus der Liste aller Portfolios entfernt werden.
+                projectConstellations.Remove(activeConstellation.constellationName)
+            Catch ex1 As Exception
+                Call MsgBox("Fehler in awinRemoveConstellation aufgetreten: " & ex1.Message)
+            End Try
+        Else
+            Call MsgBox("Es ist ein Fehler beim Löschen es Portfolios aus der Datenbank aufgetreten ")
+        End If
 
     End Sub
     ' ''' <summary>

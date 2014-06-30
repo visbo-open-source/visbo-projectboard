@@ -779,7 +779,7 @@
                     ReDim newXwerte(dimension)
                     hname = oldrole.name
 
-                    Call berechneBedarfe(oldrole.Xwerte, corrFactor, newXwerte)
+                    Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldrole.Xwerte, corrFactor, newXwerte)
 
                     With newrole
                         .RollenTyp = oldrole.RollenTyp
@@ -805,7 +805,7 @@
                     ReDim newXwerte(newphase.relEnde - newphase.relStart)
                     hname = oldcost.name
 
-                    Call berechneBedarfe(oldcost.Xwerte, corrFactor, newXwerte)
+                    Call berechneBedarfe(newphase.getStartDate.Date, newphase.getEndDate.Date, oldcost.Xwerte, corrFactor, newXwerte)
 
                     With newcost
                         .KostenTyp = oldcost.KostenTyp
@@ -1023,14 +1023,14 @@
         For r = 1 To Me.CountRoles
             oldXwerte = Me.getRole(r).Xwerte
             ReDim newXwerte(dimension)
-            Call berechneBedarfe(oldXwerte, faktor, newXwerte)
+            Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
             Me.getRole(r).Xwerte = newXwerte
         Next
 
         For k = 1 To Me.CountCosts
             oldXwerte = Me.getCost(k).Xwerte
             ReDim newXwerte(dimension)
-            Call berechneBedarfe(oldXwerte, faktor, newXwerte)
+            Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
             Me.getCost(k).Xwerte = newXwerte
         Next
 
@@ -1044,7 +1044,7 @@
     ''' <param name="corrFakt"></param>
     ''' <param name="newValues"></param>
     ''' <remarks></remarks>
-    Private Sub berechneBedarfe(ByVal oldXwerte() As Double, ByVal corrFakt As Double, ByRef newValues() As Double)
+    Private Sub berechneBedarfe(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, ByVal corrFakt As Double, ByRef newValues() As Double)
         Dim k As Integer
         Dim newXwerte() As Double
         Dim gesBedarf As Double
@@ -1109,17 +1109,17 @@
 
                     If k = 0 Then
                         ' damit ist 00:00 des Startdates gemeint 
-                        hDatum = getStartDate.Date
+                        hDatum = startdate
                         anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
                         anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
 
                     ElseIf k = newXwerte.Length - 1 Then
                         ' damit hDatum das End-Datum um 23.00 Uhr
-                        hDatum = getEndDate.Date.AddHours(23)
+                        hDatum = endedate.AddHours(23)
                         anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
 
                     Else
-                        hDatum = getStartDate.Date
+                        hDatum = startdate
                         anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
                     End If
 
@@ -1162,7 +1162,7 @@
             Call MsgBox("Fehler in berechneBedarfe: " & vbLf & ex.Message)
 
         End Try
-        
+
 
 
 
