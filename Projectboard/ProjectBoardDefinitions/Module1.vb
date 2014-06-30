@@ -441,7 +441,7 @@ Public Module Module1
 
             Try
                 hproj = ShowProjekte.getProject(pname)
-                key = hproj.name & "#" & hproj.variantName
+                key = calcProjektKey(hproj)
                 Try
                     DeletedProjekte.Add(hproj)
                 Catch ex As Exception

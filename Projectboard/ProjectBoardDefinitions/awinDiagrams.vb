@@ -1,6 +1,7 @@
 ﻿Imports System.Math
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
+Imports Microsoft.Office.Core
 
 Public Module awinDiagrams
 
@@ -23,12 +24,18 @@ Public Module awinDiagrams
                     ' die erste Zeile im Bereich einfärben
                     '
                     .Range(.Cells(1, von), .Cells(1, von).Offset(0, laenge)).Interior.color = showtimezone_color
+                    If awinSettings.showTimeSpanInPT Then
+                        .Range(.Cells(2, von), .Cells(5000, von).Offset(0, laenge)).Interior.color = awinSettings.timeSpanColor
+                    End If
                    
                 Else
                     '
                     ' die erste Zeile im Bereich einfärben
                     '
                     .Range(.Cells(1, von), .Cells(1, von).Offset(0, laenge)).Interior.color = noshowtimezone_color
+                    If awinSettings.showTimeSpanInPT Then
+                        .Range(.Cells(2, von), .Cells(5000, von).Offset(0, laenge)).Interior.colorindex = Microsoft.Office.Interop.Excel.XlColorIndex.xlColorIndexNone
+                    End If
                     
                 End If
 
@@ -229,7 +236,7 @@ Public Module awinDiagrams
 
 
         If prcTyp = DiagrammTypen(1) Then
-            kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection)
+            kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection, False)
         End If
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
@@ -691,6 +698,7 @@ Public Module awinDiagrams
         Dim Xdatenreihe() As String
         Dim datenreihe() As Double, edatenreihe() As Double, seriesSumDatenreihe() As Double
         Dim kdatenreihe() As Double ' nimmt die Kapa-Werte für das Diagramm auf
+        Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
         Dim msdatenreihe(,) As Double
         Dim prcName As String
         Dim startdate As Date
@@ -730,6 +738,7 @@ Public Module awinDiagrams
         ReDim datenreihe(bis - von)
         ReDim edatenreihe(bis - von)
         ReDim kdatenreihe(bis - von)
+        ReDim kdatenreihePlus(bis - von)
         ReDim seriesSumDatenreihe(bis - von)
         ReDim VarValues(bis - von)
         ReDim msdatenreihe(3, bis - von)
@@ -835,7 +844,8 @@ Public Module awinDiagrams
 
 
         If prcTyp = DiagrammTypen(1) Then
-            kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection)
+            kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection, False)
+            kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)
         ElseIf prcTyp = DiagrammTypen(0) Then
             kdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
         End If
@@ -1137,6 +1147,28 @@ Public Module awinDiagrams
 
                     End If
 
+                    ' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
+                    ' ansonsten werden nur die internen Kapazitäten angezeigt 
+                    If prcTyp = DiagrammTypen(1) Then
+                        If kdatenreihe.Sum < kdatenreihePlus.Sum Then
+                            ' es gibt geplante externe Ressourcen ... 
+                            With .SeriesCollection.NewSeries
+                                .HasDataLabels = False
+                                .name = "Kapazität incl. Externe"
+
+                                .Values = kdatenreihePlus
+                                .XValues = Xdatenreihe
+                                .ChartType = Excel.XlChartType.xlLine
+                                With .Format.Line
+                                    .DashStyle = MsoLineDashStyle.msoLineSysDot
+                                    .ForeColor.RGB = XlRgbColor.rgbFuchsia
+                                    .Weight = 3
+                                End With
+                                nr_pts = .Points.Count
+                            End With
+                        End If
+                    End If
+
 
                     If prcTyp = DiagrammTypen(1) Or _
                         (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Then
@@ -1146,7 +1178,7 @@ Public Module awinDiagrams
                             If prcTyp = DiagrammTypen(0) Then
                                 .name = "Schwellwert"
                             Else
-                                .name = "Gesamt-Kapazität"
+                                .name = "Interne Kapazität"
                             End If
 
                             .Border.color = rollenKapaFarbe
@@ -1162,6 +1194,14 @@ Public Module awinDiagrams
                             End With
 
                         End With
+
+                        'Dim series1 As Excel.Series = CType(.SeriesCollection(1), Excel.Series)
+                        'With series1
+                        '    .Format.Line.ForeColor
+                        'End With
+
+                        
+
                     End If
                     .HasTitle = True
 
@@ -1315,6 +1355,7 @@ Public Module awinDiagrams
         ' nimmt die Daten der selektierten Werte auf 
         Dim seldatenreihe() As Double, tmpdatenreihe() As Double
         Dim kdatenreihe() As Double
+        Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
         Dim prcName As String
         Dim startdate As Date
         Dim diff As Object
@@ -1384,6 +1425,7 @@ Public Module awinDiagrams
         ReDim datenreihe(bis - von)
         ReDim edatenreihe(bis - von)
         ReDim kdatenreihe(bis - von)
+        ReDim kdatenreihePlus(bis - von)
         ReDim seldatenreihe(bis - von)
         ReDim tmpdatenreihe(bis - von)
         ReDim seriesSumDatenreihe(bis - von)
@@ -1452,7 +1494,8 @@ Public Module awinDiagrams
         End If
 
         If prcTyp = DiagrammTypen(1) Then
-            kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection)
+            kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection, False)
+            kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)
         ElseIf prcTyp = DiagrammTypen(0) Then
             kdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
         End If
@@ -1492,6 +1535,13 @@ Public Module awinDiagrams
                         objektFarbe = RoleDefinitions.getRoledef(prcName).farbe
                         datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
 
+                        ' Ergänzung wegen Anzeige der selektierten Objekte ... 
+                        tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(prcName)
+                        For ix = 0 To bis - von
+                            datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
+                            seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
+                        Next
+
 
                     ElseIf prcTyp = DiagrammTypen(2) Then
                         einheit = " T€"
@@ -1510,6 +1560,13 @@ Public Module awinDiagrams
                             isPersCost = False
                             objektFarbe = CostDefinitions.getCostdef(prcName).farbe
                             datenreihe = ShowProjekte.getCostValuesInMonth(prcName)
+
+                            ' Ergänzung wegen Anzeige der selektierten Objekte ... 
+                            tmpdatenreihe = selectedProjekte.getCostValuesInMonth(prcName)
+                            For ix = 0 To bis - von
+                                datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
+                                seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
+                            Next
                         End If
 
                     ElseIf prcTyp = DiagrammTypen(4) Then
@@ -1741,6 +1798,30 @@ Public Module awinDiagrams
 
                 End If
 
+
+                ' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
+                ' ansonsten werden nur die internen Kapazitäten angezeigt 
+                If prcTyp = DiagrammTypen(1) Then
+                    If kdatenreihe.Sum < kdatenreihePlus.Sum Then
+                        ' es gibt geplante externe Ressourcen ... 
+                        With .SeriesCollection.NewSeries
+                            .HasDataLabels = False
+                            .name = "Kapazität incl. Externe"
+
+                            .Values = kdatenreihePlus
+                            .XValues = Xdatenreihe
+                            .ChartType = Excel.XlChartType.xlLine
+                            With .Format.Line
+                                .DashStyle = MsoLineDashStyle.msoLineSysDot
+                                .ForeColor.RGB = XlRgbColor.rgbFuchsia
+                                .Weight = 3
+                            End With
+                            nr_pts = .Points.Count
+                        End With
+                    End If
+                End If
+
+
                 If prcTyp = DiagrammTypen(1) Or _
                        (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Then
                     With .SeriesCollection.NewSeries
@@ -1749,7 +1830,7 @@ Public Module awinDiagrams
                         If prcTyp = DiagrammTypen(0) Then
                             .name = "Schwellwert"
                         Else
-                            .name = "Gesamt-Kapazität"
+                            .name = "Interne Kapazität"
                         End If
 
                         .Border.color = rollenKapaFarbe
@@ -1765,6 +1846,7 @@ Public Module awinDiagrams
                         End With
 
                     End With
+
                 End If
 
                 .HasTitle = True
