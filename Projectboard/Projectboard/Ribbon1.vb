@@ -52,6 +52,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim returnValue As DialogResult
         Dim constellationName As String
 
+        Call projektTafelInit()
 
         enableOnUpdate = False
         If AlleProjekte.Count > 0 Then
@@ -82,6 +83,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
                                     "da sie bereits beauftragt wurden"
         Dim successMessage As String = initMessage
         Dim returnValue As DialogResult
+
+        Call projektTafelInit()
+
         enableOnUpdate = False
 
         returnValue = loadConstellationFrm.ShowDialog
@@ -116,9 +120,10 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim remConstellationFrm As New frmRemoveConstellation
         Dim constellationName As String
-
-
         Dim returnValue As DialogResult
+
+        Call projektTafelInit()
+
         enableOnUpdate = False
 
         returnValue = remConstellationFrm.ShowDialog
@@ -149,6 +154,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim demoModusDate As New frmdemoModusDate
         Dim returnValue As DialogResult
+
+        Call projektTafelInit()
 
         If pressed Then
 
@@ -184,6 +191,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim storedProj As Integer = 0
 
+        Call projektTafelInit()
+
         Try
             If AlleProjekte.Count > 0 Then
 
@@ -216,6 +225,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim anzDiagrams As Integer
         Dim chtobj As Excel.ChartObject
         Dim i As Integer = 0
+
+        Call projektTafelInit()
 
         With appInstance.Worksheets(arrWsNames(3))
 
@@ -252,6 +263,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim vglWert As Integer
         Dim curCoord() As Double
         Dim key As String
+
+        Call projektTafelInit()
 
 
         enableOnUpdate = False
@@ -340,11 +353,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim tmpshapes As Excel.Shapes
         Dim oldKey As String, newKey As String
+        Dim erg As String = ""
+        Dim atleastOne As Boolean = False
+
+        Call projektTafelInit()
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
-        Dim erg As String = ""
-        Dim atleastOne As Boolean = False
+        
 
         enableOnUpdate = False
 
@@ -434,8 +450,10 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim zeile As Integer = 0
         Dim request As New Request(awinSettings.databaseName)
 
+        Call projektTafelInit()
+
         enableOnUpdate = False
-        appInstance.EnableEvents = True
+
 
         returnValue = ProjektEingabe.ShowDialog
 
@@ -481,6 +499,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim mvTimeSpan As New frmMoveTimeSpan
         'Dim returnValue As DialogResult
 
+        Call projektTafelInit()
+
         appInstance.EnableEvents = False
 
         'returnValue = mvTimeSpan.Showdialog
@@ -498,6 +518,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim defineDependencies As New frmDependencies
         Dim result As DialogResult
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
 
@@ -540,15 +562,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim singleShp As Excel.Shape
         Dim pname As String
         Dim awinSelection As Excel.ShapeRange
-        'Dim shpElement As Excel.Shape
-        'Dim tmpShapes As Excel.Shapes
         Dim hproj As clsProjekt
+
+        Call projektTafelInit()
+
+
 
         ' es wird vbeim Betreten der Tabelle2 nochmal auf False gesetzt ... und insbesondere bei Activate Tabelle1 (!) auf true gesetzt, nicht vorher wieder
         enableOnUpdate = False
-
-        ' damit man was sieht
-        'appInstance.ActiveSheet.screenupdating = True
 
 
 
@@ -628,6 +649,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim awinSelection As Excel.ShapeRange
         Dim hproj As clsProjekt
         Dim databaseName As String = awinSettings.databaseName
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
 
@@ -722,19 +745,17 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim setStartEnd As New frmEarliestLatestStart
 
         Dim returnValue As DialogResult
-        enableOnUpdate = False
         Dim awinSelection As Excel.ShapeRange
         Dim i As Integer
         Dim hproj As clsProjekt
         Dim singleShp As Excel.Shape
         Dim pname As String
 
+        Call projektTafelInit()
 
         ' es wird vbeim Betreten der Tabelle2 nochmal auf False gesetzt ... und insbesondere bei Activate Tabelle1 (!) auf true gesetzt, nicht vorher wieder
         enableOnUpdate = False
 
-        ' damit man was sieht
-        'appInstance.ActiveSheet.screenupdating = True
 
         Try
             'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
@@ -854,6 +875,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim awinSelection As Excel.ShapeRange
 
+        Call projektTafelInit()
+
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
@@ -900,6 +923,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim getBackToShow As New frmGetProjectbackFromNoshow
 
         Dim returnValue As DialogResult
+
+        Call projektTafelInit()
+
         enableOnUpdate = False
         appInstance.ScreenUpdating = False
 
@@ -930,6 +956,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
 
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -976,9 +1004,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
     Sub Tom2G1Beauftragen(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
-
-
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -1023,9 +1051,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
     Sub Tom2GXBeauftragen(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
-
-
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -1073,9 +1101,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim bestaetigeLoeschen As New frmconfirmDeletePrj
         Dim singleShp As Excel.Shape
-
-
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -1138,6 +1166,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim returnValue As DialogResult
         Dim getReportVorlage As New frmSelectPPTTempl
 
+        Call projektTafelInit()
+
         Try
             'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
             awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
@@ -1166,12 +1196,13 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
 
-        'Dim projektInventurFile As String = "Projekt-Inventur.xlsx"
+
         Dim projektInventurFile As String = requirementsOrdner & "Projekt-Inventur.xlsx"
-        'Dim projektInventurFile As String = requirementsOrdner & "RPLAN Projekte.xlsx"
         Dim dateiName As String
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
+
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -1218,6 +1249,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
         Dim getRPLANImport As New frmSelectRPlanImport
+
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -1272,7 +1305,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
         Dim projektInventurFile As String = "ProjektInventur.xlsm"
 
-
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -1374,6 +1407,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim awinSelection As Excel.ShapeRange
 
+        Call projektTafelInit()
+
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
 
@@ -1466,8 +1501,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim zeile As Integer = 2
         Dim ok As Boolean
 
-
-
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -1535,6 +1569,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim infoMessage As String = initMessage
         Dim zuordnungsOrdner As String = projektRessOrdner & "\" & "Projekt Zuordnungen"
 
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -1641,12 +1676,13 @@ Imports Excel = Microsoft.Office.Interop.Excel
     Sub PTDemoModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
 
         demoModusHistory = Not demoModusHistory
-
         pressed = demoModusHistory
 
     End Sub
 
     Public Sub PT5phasenZeichnen(control As IRibbonControl, pressed As Boolean)
+
+        Call projektTafelInit()
 
         If pressed Then
             ' jetzt werden die Projekt-Symbole inkl Phasen Darstellung gezeichnet
@@ -1671,6 +1707,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
     End Sub
 
     Public Sub PT5loadProjectsOnChange(control As IRibbonControl, ByRef pressed As Boolean)
+
+        Call projektTafelInit()
 
         If pressed Then
             ' jetzt sollen die Projekte gemäß Time Span geladen werden - auch bei Veränderung des TimeSpan 
@@ -1700,7 +1738,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim scale As Double
         'Dim SID As String
 
-
+        Call projektTafelInit()
 
         enableOnUpdate = False
 
@@ -1777,6 +1815,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim hproj As clsProjekt
         Dim pname As String
 
+        Call projektTafelInit()
 
         enableOnUpdate = False
 
@@ -1849,6 +1888,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim awinSelection As Excel.ShapeRange
         Dim auswahl As Integer = 1
         Dim top As Double, left As Double, width As Double, height As Double
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
 
@@ -1928,6 +1969,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim awinSelection As Excel.ShapeRange
         Dim auswahl As Integer = 2 ' steuert die Auswahl als Personalkosten
         Dim top As Double, left As Double, width As Double, height As Double
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
 
@@ -2009,6 +2052,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim auswahl As Integer = 1
         Dim top As Double, left As Double, width As Double, height As Double
 
+        Call projektTafelInit()
+
         enableOnUpdate = False
 
         Try
@@ -2084,6 +2129,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim awinSelection As Excel.ShapeRange
         Dim auswahl As Integer = 2 ' das steuert , dass die Gesamtkosten angezeigt werden 
         Dim top As Double, left As Double, width As Double, height As Double
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
 
@@ -2161,9 +2208,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim top As Double, left As Double, width As Double, height As Double
         Dim singleShp As Excel.Shape
         Dim myCollection As New Collection
-
-
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -2199,7 +2246,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 End With
             Next
             Dim obj As New Object
-            Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
         End If
@@ -2216,9 +2263,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim top As Double, left As Double, width As Double, height As Double
         Dim singleShp As Excel.Shape
         Dim myCollection As New Collection
-
-
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -2254,7 +2301,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             Next
             Dim obj As New Object
 
-            Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
             'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
@@ -2278,11 +2325,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim activeNumber As Integer             ' Kennzahl: auf wieviele Projekte strahlt es aus ?
         Dim passiveNumber As Integer            ' Kennzahl: von wievielen Projekten abhängig 
-
-
-
-
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -2343,7 +2388,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             If myCollection.Count > 0 Then
                 Dim obj As New Object
-                Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.Dependencies, 0, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.Dependencies, 0, False, True, True, top, left, width, height)
             Else
                 Call MsgBox("diese Projekte haben keine Abhängigkeiten")
             End If
@@ -2366,9 +2411,10 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim top As Double, left As Double, width As Double, height As Double
         Dim singleShp As Excel.Shape
         Dim myCollection As New Collection
-
         Dim sichtbarerBereich As Excel.Range
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -2419,7 +2465,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             Dim obj As New Object
 
             Try
-                Call awinCreatePortfolioDiagramms(myCollection, obj, True, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
             Catch ex As Exception
 
             End Try
@@ -2449,7 +2495,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
     ''' <remarks></remarks>
     Sub Tom2G2M2M1B2SollIstPKosten(control As IRibbonControl)
 
-
+        Call projektTafelInit()
         ' auswahl steuert , dass die Personal-Kosten angezeigt werden 
         Dim auswahl As Integer = 1
 
@@ -2469,12 +2515,13 @@ Imports Excel = Microsoft.Office.Interop.Excel
     ''' <param name="control"></param>
     ''' <remarks></remarks>
     Sub Tom2G2M2M2B2SollIstAKosten(control As IRibbonControl)
-
         ' auswahl steuert , welche Kosten angezeigt werden
         Dim auswahl As Integer = 2
         Dim vglBaseline As Boolean = True
         ' typ steuert, ob Summenbetrachtung oder Curve angezeigt wird
         Dim typ As String = " "
+
+        Call projektTafelInit()
 
         Call awinSollIstVergleich(auswahl, typ, vglBaseline)
 
@@ -2490,6 +2537,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         ' typ steuert, ob Summenbetrachtung oder Curve angezeigt wird
         Dim typ As String = " "
 
+        Call projektTafelInit()
+
         Call awinSollIstVergleich(auswahl, typ, vglBaseline)
 
     End Sub
@@ -2500,6 +2549,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
     ''' <param name="control"></param>
     ''' <remarks></remarks>
     Sub Tom2G2M4Fortschritt1(control As IRibbonControl)
+
+        Call projektTafelInit()
 
         Call awinStatusAnzeige(1, 1, " ")
 
@@ -2512,6 +2563,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
     ''' <remarks></remarks>
     Sub Tom2G2M4Fortschritt2(control As IRibbonControl)
 
+        Call projektTafelInit()
         Call awinStatusAnzeige(2, 1, " ")
 
     End Sub
@@ -2535,6 +2587,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim vglName As String = " "
         Dim pName As String = ";"
         Dim variantName As String = ""
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
 
@@ -2663,6 +2717,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim projektliste As New Collection
         Dim first As Boolean = True
 
+        Call projektTafelInit()
+
         enableOnUpdate = False
 
 
@@ -2761,6 +2817,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim numberIt As Boolean = False
         Dim namelist As New SortedList(Of String, String)
 
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         'appInstance.ScreenUpdating = False
@@ -2781,6 +2838,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim farbTyp As Integer = 2
         Dim numberIt As Boolean = False
         Dim namelist As New SortedList(Of String, String)
+
+        Call projektTafelInit()
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -2804,6 +2863,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim numberIt As Boolean = False
         Dim namelist As New SortedList(Of String, String)
 
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
@@ -2825,7 +2885,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim numberIt As Boolean = False
         Dim namelist As New SortedList(Of String, String)
 
-
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
@@ -2846,6 +2906,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim numberIt As Boolean = False
         Dim namelist As New SortedList(Of String, String)
 
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
@@ -2883,7 +2944,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim awinSelection As Excel.ShapeRange
         Dim selektierteProjekte As New clsProjekte
 
-
+        Call projektTafelInit()
 
         Try
             awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
@@ -2959,8 +3020,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim repObj As Object = Nothing
 
-
+        Call projektTafelInit()
         Call awinDeSelect()
+
         If ShowProjekte.Count > 0 Then
             If showRangeRight - showRangeLeft > 5 Then
 
@@ -3020,6 +3082,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim pName As String, vglName As String = " "
         Dim variantName As String
 
+        Call projektTafelInit()
 
         Try
             awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
@@ -3153,6 +3216,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
 
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
@@ -3207,6 +3271,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim awinSelection As Excel.ShapeRange
         Dim atleastOne As Boolean = False
 
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
@@ -3254,6 +3319,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
     End Sub
 
     Sub Tom2G2M5B3NoShowSymbols(control As IRibbonControl)
+        Call projektTafelInit()
         Call awinDeleteMilestoneShapes(0)
     End Sub
 
@@ -3265,6 +3331,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
     ''' <remarks></remarks>
     Sub Tom2G2M5B3NoShowMilestones(control As IRibbonControl)
 
+        Call projektTafelInit()
         Call awinDeleteMilestoneShapes(1)
 
     End Sub
@@ -3285,6 +3352,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim awinSelection As Excel.ShapeRange
         Dim selektierteProjekte As New clsProjekte
+
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
@@ -3373,6 +3442,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim title As String = "Phasen visualisieren"
         Dim phaseName As String
 
+        Call projektTafelInit()
         Call awinDeSelect()
 
         If ShowProjekte.Count > 0 Then
@@ -3427,6 +3497,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim repObj As Object = Nothing
         Dim phaseName As String
 
+        Call projektTafelInit()
+
         If ShowProjekte.Count > 0 Then
 
             If showRangeRight - showRangeLeft > 5 Then
@@ -3470,6 +3542,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim repObj As Object = Nothing
         Dim nameList As New SortedList(Of String, String)
+
+        Call projektTafelInit()
 
         If ShowProjekte.Count > 0 Then
             If showRangeRight - showRangeLeft > 5 Then
@@ -3517,6 +3591,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim top As Double, left As Double, width As Double, height As Double
         Dim obj As Object = Nothing
         Dim myCollection As New Collection
+
+        Call projektTafelInit()
 
         appInstance.ScreenUpdating = False
         appInstance.EnableEvents = False
@@ -3587,6 +3663,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim repObj As Object = Nothing
 
+        Call projektTafelInit()
 
         'appInstance.ScreenUpdating = False
         appInstance.EnableEvents = False
@@ -3652,6 +3729,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim repObj As Object = Nothing
         Dim title As String = "Rollen auswählen"
 
+        Call projektTafelInit()
 
         'appInstance.ScreenUpdating = False
         'appInstance.EnableEvents = False
@@ -3703,6 +3781,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim repObj As Object = Nothing
         Dim title As String = "Kostenarten auswählen"
 
+        Call projektTafelInit()
 
         'appInstance.EnableEvents = False
         'enableOnUpdate = False
@@ -3753,6 +3832,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim myCollection As New Collection
         myCollection.Add("Ziele")
+
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
@@ -3832,6 +3913,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim top As Double, left As Double, width As Double, height As Double
         Dim sichtbarerBereich As Excel.Range
 
+        Call projektTafelInit()
+
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
@@ -3859,7 +3942,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             Dim obj As New Object
 
             Try
-                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
             Catch ex As Exception
 
             End Try
@@ -3891,6 +3974,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim top As Double, left As Double, width As Double, height As Double
         Dim sichtbarerBereich As Excel.Range
 
+        Call projektTafelInit()
+
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
@@ -3919,7 +4004,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             Dim obj As New Object
 
             Try
-                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
                 'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
             Catch ex As Exception
 
@@ -3956,6 +4041,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim activeNumber As Integer             ' Kennzahl: auf wieviele Projekte strahlt es aus ?
         Dim passiveNumber As Integer            ' Kennzahl: von wievielen Projekten abhängig 
+
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -4011,7 +4098,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             Try
                 If myCollection.Count > 0 Then
-                    Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.Dependencies, 0, False, True, True, top, left, width, height)
+                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.Dependencies, 0, False, True, True, top, left, width, height)
                 Else
                     Call MsgBox(" es gibt in diesem Zeitraum keine Projekte mit Abhängigkeiten")
                 End If
@@ -4054,7 +4141,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim sichtbarerBereich As Excel.Range
         Dim deleteList As New Collection
 
-
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -4137,7 +4224,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim sichtbarerBereich As Excel.Range
         Dim deleteList As New Collection
 
-
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
@@ -4219,6 +4306,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim top As Double, left As Double, width As Double, height As Double
         Dim sichtbarerBereich As Excel.Range
 
+        Call projektTafelInit()
+
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
@@ -4249,7 +4338,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             Dim obj As New Object
 
             Try
-                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
             Catch ex As Exception
 
             End Try
@@ -4282,6 +4371,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim top As Double, left As Double, width As Double, height As Double
         Dim sichtbarerBereich As Excel.Range
 
+        Call projektTafelInit()
+
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
@@ -4311,7 +4402,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             Dim obj As New Object
 
             Try
-                Call awinCreatePortfolioDiagramms(myCollection, obj, False, PTpfdk.ZeitRisiko, 0, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ZeitRisiko, 0, False, True, True, top, left, width, height)
             Catch ex As Exception
 
             End Try
@@ -4342,6 +4433,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim selectionType As Integer = -1 ' keine Einschränkung
         Dim top As Double, left As Double, width As Double, height As Double
         Dim myCollection As New Collection
+
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
@@ -4398,6 +4491,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim selectionType As Integer = -1 ' keine Einschränkung
         Dim top As Double, left As Double, width As Double, height As Double
         Dim myCollection As New Collection
+
+        Call projektTafelInit()
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
@@ -4462,6 +4557,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim heute As Integer = getColumnOfDate(Date.Now)
         Dim myCollection As New Collection
 
+        Call projektTafelInit()
+
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
@@ -4497,6 +4594,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         'Dim SID As String
 
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
         appInstance.EnableEvents = False
@@ -4564,6 +4663,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim awinSelection As Excel.ShapeRange
 
+        Call projektTafelInit()
+
         enableOnUpdate = False
         appInstance.EnableEvents = False
 
@@ -4622,6 +4723,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim scale As Double
 
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
 
@@ -4707,6 +4810,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim noColorCollection As New Collection
 
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
 
@@ -4837,8 +4942,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim noColorCollection As New Collection
         Dim vglName As String = " "
         Dim pName As String, variantName As String
-
         Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
 
@@ -4977,6 +5083,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim awinSelection As Excel.ShapeRange
 
+        Call projektTafelInit()
+
         enableOnUpdate = False
 
         Try
@@ -5104,6 +5212,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim awinSelection As Excel.ShapeRange
 
+        Call projektTafelInit()
+
         enableOnUpdate = False
         appInstance.EnableEvents = False
 
@@ -5159,6 +5269,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim awinSelection As Excel.ShapeRange
         Dim top As Double, left As Double, height As Double, width As Double
         Dim vglName As String = " "
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
         appInstance.ScreenUpdating = False
@@ -5262,6 +5374,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim awinSelection As Excel.ShapeRange
         Dim top As Double, left As Double, height As Double, width As Double
         Dim vglName As String = " "
+
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
         appInstance.ScreenUpdating = False
@@ -5367,6 +5482,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
             Call MsgBox("bitte erst Time Machine beenden ...")
             Exit Sub
         End If
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
         appInstance.EnableEvents = True
@@ -5508,6 +5625,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         getReportVorlage.calledfrom = "Portfolio"
 
+        Call projektTafelInit()
+
         enableOnUpdate = False
         appInstance.ScreenUpdating = False
         If showRangeRight - showRangeLeft > 6 Then
@@ -5571,6 +5690,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
 
         Dim schluessel As String = ""
+
+        Call projektTafelInit()
 
         enableOnUpdate = False
         appInstance.EnableEvents = True

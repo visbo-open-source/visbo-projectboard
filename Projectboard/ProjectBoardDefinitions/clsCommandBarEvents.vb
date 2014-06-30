@@ -169,13 +169,14 @@ Public Class clsCommandBarEvents
                                     Call awinShowNoShowProject(pname:=hproj.name)
                                     enableOnUpdate = True
 
+                                    updateKennung = 3
                                     ChartsNeedUpdate = True
 
                                 ElseIf hproj.Status = ProjektStatus(0) Then
                                     ' nur dann kann verschoben/gedehnt/gestaucht werden - das wird in der Property sync gemacht
                                     ' hier wird das Projekt mit den Shape Werten "synchronisiert" 
                                     projectboardShapes.sync(shpelement, selCollection)
-
+                                    updateKennung = 1
                                     ChartsNeedUpdate = True
 
                                 Else
@@ -373,7 +374,7 @@ Public Class clsCommandBarEvents
 
                                 If hproj.Status = ProjektStatus(0) Then
                                     ' Charts müssen aktualisiert werden 
-
+                                    updateKennung = 2
                                     ChartsNeedUpdate = True
 
                                 Else
@@ -519,7 +520,7 @@ Public Class clsCommandBarEvents
             If tmpDelListe.Count > 0 Then
 
                 ChartsNeedUpdate = True
-                updateKennung = 2
+                updateKennung = 3
 
                 For i = 1 To tmpDelListe.Count
                     pname = tmpDelListe.Item(i)

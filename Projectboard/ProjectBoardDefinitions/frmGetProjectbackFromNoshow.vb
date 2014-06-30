@@ -67,7 +67,7 @@
         Next
 
         If atleastOne Then
-            Call awinNeuZeichnenDiagramme("2")
+            Call awinNeuZeichnenDiagramme(2)
             MyBase.Close()
         Else
             Call MsgBox(" bitte selektieren Sie mindestens ein Projekt")
