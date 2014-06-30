@@ -91,8 +91,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim constellationName As String
         Dim request As New Request(awinSettings.databaseName)
 
-        Dim initMessage As String = "Bei folgenden Projekten konnte das Datum nicht angepasst werden, " & vbLf & _
-                                    "da sie bereits beauftragt wurden"
+        Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
+
         Dim successMessage As String = initMessage
         Dim returnValue As DialogResult
 
@@ -138,6 +138,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
     End Sub
     Sub PTRemoveKonstellation(control As IRibbonControl)
 
+        Dim ButtonId As String = control.Id
+
         Dim remConstellationFrm As New frmRemoveConstellation
         Dim constellationName As String
         Dim deleteDatenbank As String = "Pt5G3B1"
@@ -157,8 +159,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         If returnValue = DialogResult.OK Then
             constellationName = remConstellationFrm.ListBox1.Text
-            Call awinRemoveConstellation(constellationName, removeFromDB)
 
+            Call awinRemoveConstellation(constellationName, removeFromDB)
             Call MsgBox(constellationName & " wurde gelöscht ...")
 
             If constellationName = currentConstellation Then
@@ -219,7 +221,6 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Try
             If AlleProjekte.Count > 0 Then
 
-                'Call StoreAllProjectsinDB()
                 storedProj = StoreSelectedProjectsinDB()    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
                 If storedProj = 0 Then
@@ -240,6 +241,52 @@ Imports Excel = Microsoft.Office.Interop.Excel
         End Try
 
         Call awinDeSelect()
+
+    End Sub
+    Sub PT5DeleteProjects(control As IRibbonControl)
+
+        Dim deletedProj As Integer = 0
+        Dim returnValue As DialogResult
+   
+        Dim DeleteProjects As New frmDeleteProjects
+
+        Try
+     
+
+            returnValue = DeleteProjects.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                deletedProj = RemoveSelectedProjectsfromDB()    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+
+                If selectedToDelete.Count = 0 Then
+                    Call MsgBox("Es wurde kein Projekt/TimeStamp zum Löschen ausgewählt " & vbLf & "Alle Projekte löschen?", MsgBoxStyle.OkCancel)
+                    If MsgBoxResult.Ok Then
+                        'Call removeAllProjectsfromDB()
+                    End If
+                Else
+                    'Call MsgBox("Es wurden " & deletedProj & " Projekte gelöscht!")
+                End If
+            Else
+                ' returnValue = DialogResult.Cancel
+
+            End If
+          
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
+        Call awinDeSelect()
+        selectedToDelete.Liste.Clear()
+
+
+        appInstance.ScreenUpdating = False
+        'Call diagramsVisible(False)
+        Call awinClearPlanTafel()
+        Call awinZeichnePlanTafel()
+        Call awinNeuZeichnenDiagramme(2)
+        'Call diagramsVisible(True)
+        appInstance.ScreenUpdating = True
 
     End Sub
 
