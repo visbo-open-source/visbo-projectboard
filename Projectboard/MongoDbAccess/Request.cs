@@ -122,7 +122,24 @@ namespace MongoDbAccess
             //projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString("yyyy-MM-dd");
                            
         }
+        /*************************************/
+        public bool deleteProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
+        {
+            storedLatest = storedLatest.ToUniversalTime();
+            storedEarliest = storedEarliest.ToUniversalTime();
 
+            var query = Query < clsProjektDB >
+                .Where(p => (p.name == projectname && p.variantName == variantName && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
+
+            var query2 = Query.And(
+                    Query<clsProjektDB>.EQ(p => p.name, projectname),
+                    Query<clsProjektDB>.EQ(p => p.variantName, variantName),
+                    Query<clsProjektDB>.GTE(p => p.timestamp, storedEarliest),
+                    Query<clsProjektDB>.LTE(p => p.timestamp, storedLatest)
+                );
+            return CollectionProjects.Remove(query).Ok;
+        }
+     
 
         public SortedList<string, clsProjekt> retrieveProjectsFromDB(string projectname, string variantName, DateTime zeitraumStart, DateTime zeitraumEnde, DateTime storedEarliest, DateTime storedLatest, bool onlyLatest)
         {
@@ -189,7 +206,9 @@ namespace MongoDbAccess
         {
             var result = new SortedList<DateTime, clsProjekt>();
 
-           
+            storedLatest = storedLatest.ToUniversalTime();
+            storedEarliest = storedEarliest.ToUniversalTime();
+
                 //gegeben: Projektname, Backupzeitraum (also storedEarliest, storedLatest)
                 var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
                                where e.name == projectname
@@ -203,7 +222,7 @@ namespace MongoDbAccess
                     var projekt = new clsProjekt();
                     p.copyto(ref projekt);
                     //string schluessel = p.timestamp.ToString();
-                    DateTime schluessel = p.timestamp;
+                    DateTime schluessel = projekt.timeStamp;
                     //result.Add(projekt.Id, projekt);
                     result.Add(schluessel, projekt);
                 }

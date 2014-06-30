@@ -1,4 +1,5 @@
-﻿Imports System.Collections.Generic
+
+Imports System.Collections.Generic
 
 
 ''' <summary>
@@ -17,6 +18,52 @@ Public Class clsProjektDBInfos
 
     Private _pliste As SortedList(Of String, SortedList(Of Date, String))
 
+    ''' <summary>
+    ''' löscht die ProjektListe
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub clear()
+
+        _pliste.Clear()
+
+    End Sub
+
+    Public Property Liste() As SortedList(Of String, SortedList(Of Date, String))
+        Get
+            Liste = _pliste
+        End Get
+        Set(value As SortedList(Of String, SortedList(Of Date, String)))
+            _pliste = value
+        End Set
+    End Property
+    ''' <summary>
+    ''' gibt die Anzahl der Liste-Elemente (Projekte)
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property Count() As Integer
+        Get
+            Count = _pliste.Count
+        End Get
+    End Property
+    ''' <summary>
+    ''' gibt die Anzahl der Listen-Elemente (TimeStamps)
+    ''' </summary>
+    ''' <param name="projektKey">Projektname#variantName</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property Count(ByVal projektKey As String) As Integer
+        Get
+            If _pliste.ContainsKey(projektKey) Then
+
+                Count = _pliste.Item(projektKey).Count
+            Else
+                Count = 0
+            End If
+        End Get
+    End Property
     ''' <summary>
     ''' gibt für einen gegebenen Projekt-Namen eine sortierte Liste of Timestamps, Projektschlüssel zurück  
     ''' </summary>
@@ -48,6 +95,7 @@ Public Class clsProjektDBInfos
         End If
 
         hproj = pHistorie.First
+
         suchString = calcProjektKey(hproj)
 
         If _pliste.ContainsKey(suchString) Then
@@ -59,6 +107,7 @@ Public Class clsProjektDBInfos
         End If
 
         For Each kvp As KeyValuePair(Of Date, clsProjekt) In pHistorie.liste
+
             suchString = calcProjektKey(kvp.Value)
             tmpHistListe.Add(kvp.Key, suchString)
         Next
