@@ -204,7 +204,11 @@
           <button id="Pt5G2B1" label="Portfolio " onAction="PTNeueKonstellation" />
           <button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" enabled="false"/>
           <button id="Pt5G2B3" label="Projekte " onAction="PT5StoreProjects" />
-          
+        </group>
+        <group id ="PT5G3" label ="Löschen">
+          <button id="Pt5G3B1" label="Portfolio " onAction="PTRemoveKonstellation" />
+          <button id="Pt5G3B2" label="Programm " onAction="PT5DeleteProgramme" enabled="false"/>
+          <button id="Pt5G3B3" label="Projekte " onAction="PT5DeleteProjects" />  
          
         </group>
       </tab>

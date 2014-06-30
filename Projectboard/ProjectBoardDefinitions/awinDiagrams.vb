@@ -5587,13 +5587,15 @@ Public Module awinDiagrams
 
 
 
-    '
-    ' zeichnet alle dargestellten Diagramme neu
-    '
+    ''' <summary>
+    ''' zeichnet alle dargestellten Portfolio ("Pf") Diagramme neu
+    ''' </summary>
+    ''' <param name="typus"></param>
+    ''' <remarks></remarks>
     Sub awinNeuZeichnenDiagramme(ByVal typus As Integer)
         Dim anz_diagrams As Integer
         Dim chtobj As ChartObject
-        Dim i As Integer, p As Integer, e As Integer
+        Dim i As Integer, p As Integer
 
 
         ' typus:
@@ -5622,7 +5624,7 @@ Public Module awinDiagrams
                             istPhasenDiagramm(chtobj) Then
 
                             Call awinUpdateprcCollectionDiagram(chtobj)
-                            
+
                         End If
 
                     Case Else
