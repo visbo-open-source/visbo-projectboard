@@ -47,7 +47,7 @@ Public Module Module1
 
     ' hier wird die Projekt Historie eines Projektes aufgenommen 
     Public projekthistorie As New clsProjektHistorie
-
+    Public selectedToDelete As New clsProjektDBInfos
     Public specialListofPhases As New Collection
 
     Public feierTage As New SortedSet(Of Date)

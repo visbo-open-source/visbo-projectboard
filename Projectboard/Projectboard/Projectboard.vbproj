@@ -147,6 +147,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
+    <Compile Include="frmDeleteProjects.Designer.vb">
+      <DependentUpon>frmDeleteProjects.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmDeleteProjects.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmdemoModusDate.Designer.vb">
       <DependentUpon>frmdemoModusDate.vb</DependentUpon>
     </Compile>
@@ -233,6 +239,9 @@
     <Compile Include="ThisWorkbook.vb">
       <DependentUpon>Projectboard.xlsx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="frmDeleteProjects.resx">
+      <DependentUpon>frmDeleteProjects.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmdemoModusDate.resx">
       <DependentUpon>frmdemoModusDate.vb</DependentUpon>
     </EmbeddedResource>
