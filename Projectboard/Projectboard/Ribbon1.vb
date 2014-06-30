@@ -143,12 +143,19 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim remConstellationFrm As New frmRemoveConstellation
         Dim constellationName As String
         Dim deleteDatenbank As String = "Pt5G3B1"
+        Dim request As New Request(awinSettings.databaseName)
 
         Dim returnValue As DialogResult
         Dim removeFromDB As Boolean
 
         If control.Id = deleteDatenbank Then
             removeFromDB = True
+            If request.pingMongoDb() Then
+                projectConstellations = request.retrieveConstellationsFromDB()
+            Else
+                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+                removeFromDB = False
+            End If
         Else
             removeFromDB = False
         End If
