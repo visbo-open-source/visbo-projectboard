@@ -356,68 +356,21 @@ Public Module Module1
 
     End Function
 
+
     ''' <summary>
-    ''' prüft ob in der Plantafel in Zeile "zeile" ab Spalte "spalte" Platz für ein Projekt der Länge "laenge" ist
+    ''' setzt enableEvents, enableOnUpdate auf true
     ''' </summary>
-    ''' <param name="zeile"></param>
-    ''' <param name="spalte"></param>
-    ''' <param name="laenge"></param>
-    ''' <returns>true, wenn Platz ist; false, wenn kein ausreichender Platz ist</returns>
     ''' <remarks></remarks>
-    Function istFrei(zeile As Integer, spalte As Integer, laenge As Integer) As Boolean
-        Dim i As Integer
-        Dim b As Boolean
+    Sub projektTafelInit()
 
-        b = True
-
-        With appInstance.Worksheets(arrWsNames(3))
-
-            i = 0
-            While i < laenge And b
-                If .Cells(zeile, spalte).Offset(0, i).Interior.ColorIndex <> -4142 Then
-                    b = False
-                End If
-                i = i + 1
-            End While
+        With appInstance
+            .EnableEvents = True
+            .EnableEvents = True
         End With
 
-        istFrei = b
+    End Sub
 
-    End Function
 
-    Function istStartOfProject(ByVal wsname As String, ByVal zeile As Integer, ByVal spalte As Integer, ByRef pname As String) As Boolean
-        Dim found As Boolean
-        Dim inputstr As String, commentstr As String
-
-        commentstr = ""
-        inputstr = ""
-
-        With appInstance.Worksheets(wsname)
-
-            If Not IsNumeric(.Cells(zeile, spalte).Value) And Len(.Cells(zeile, spalte).Value) > 2 Then
-                inputstr = .Cells(zeile, spalte).Value
-            End If
-
-            If Not .Cells(zeile, spalte).Comment Is Nothing Then
-                commentstr = .Cells(zeile, spalte).Comment.text
-            End If
-
-            If inProjektliste(inputstr) Then
-                found = True
-                pname = inputstr
-            ElseIf inProjektliste(commentstr) Then
-                found = True
-                pname = commentstr
-            Else
-                found = False
-                pname = " "
-            End If
-
-        End With
-
-        istStartOfProject = found
-
-    End Function
 
     Sub awinLoescheProjekt(pname As String)
         '
@@ -469,7 +422,7 @@ Public Module Module1
             Call awinClkReset(abstand)
 
             ' ein Projekt wurde gelöscht bzw aus Showprojekte entfernt  - typus = 3
-            Call awinNeuZeichnenDiagramme("3")
+            Call awinNeuZeichnenDiagramme(3)
 
 
 
@@ -589,62 +542,17 @@ Public Module Module1
     ' prüft , ob übergebenes Diagramm ein Summen Diagramm ist - in rwert steht 1, wenn Rollen Summe, 2, wenn Kosten-Summe
     '
     Function istSummenDiagramm(ByRef chtobj As Excel.ChartObject, ByRef rwert As Integer) As Boolean
-        Dim r As Integer
+
         Dim found As Boolean
-        Dim chtTitle As String
+        Dim chtobjName As String
+        Dim tmpStr(20) As String
+        Dim vglValue As Integer
 
 
-        Try
-            chtTitle = chtobj.Chart.ChartTitle.Text
-        Catch ex As Exception
-            chtTitle = " "
-        End Try
-
-        r = 1
         rwert = 0
         found = False
 
-        With chtobj
-            If chtTitle Like (summentitel1 & "*") Then
-                found = True
-                rwert = 1
-            ElseIf chtTitle Like (summentitel2 & "*") Then
-                found = True
-                rwert = 2
-                ' summentitel3, summentitel4 nicht mehr relevant
-            ElseIf chtTitle Like (summentitel3 & "*") Then
-                found = True
-                rwert = 3
-            ElseIf chtTitle Like (summentitel4 & "*") Then
-                found = True
-                rwert = 4
-            ElseIf chtTitle Like (ergebnisChartName(0) & " / " & ergebnisChartName(1) & "*") Then
-                found = True
-                rwert = 5
-            ElseIf chtTitle Like (summentitel6 & "*") Then
-                found = True
-                rwert = 6
-            ElseIf chtTitle Like (summentitel7 & "*") Then
-                found = True
-                rwert = 7
-            ElseIf chtTitle Like (summentitel8 & "*") Then
-                found = True
-                rwert = 8
-            ElseIf chtTitle Like (summentitel9 & "*") Then
-                found = True
-                rwert = 9
-            ElseIf chtTitle Like (summentitel10 & "*") Then
-                found = True
-                rwert = 10
-            ElseIf chtTitle Like (summentitel11 & "*") Then
-                found = True
-                rwert = 11
-            End If
-        End With
 
-        ' das folgende soll das zukünftige Schema werden 
-        Dim chtobjName As String
-        Dim tmpStr(20) As String
         chtobjName = chtobj.Name
 
         Try
@@ -652,18 +560,19 @@ Public Module Module1
             tmpStr = chtobjName.Split(New Char() {"#"}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
-                If CInt(tmpStr(1)) = PTpfdk.Budget Then
 
+                vglValue = CInt(tmpStr(1))
+                If (vglValue >= 3 And vglValue <= 11) Or _
+                    (vglValue >= 15 And vglValue <= 19) Then
                     found = True
-                    rwert = PTpfdk.Budget
-
+                    rwert = vglValue
                 End If
+
 
             End If
 
         Catch ex As Exception
         End Try
-
 
         istSummenDiagramm = found
 

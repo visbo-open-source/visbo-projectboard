@@ -191,13 +191,20 @@ Public Class clsEventsPrcCharts
                 isCC = .isCockpitChart
             End With
 
-            If myCollection.Count < 1 Then
-                name = ""
-            ElseIf myCollection.Count = 1 Then
-                name = myCollection.Item(1)
-            ElseIf myCollection.Count > 1 Then
-                name = "Collection"
+
+            If IsNothing(myCollection) Then
+                myCollection = New Collection
+                myCollection.Add("Ergebniskennzahl")
+            Else
+                If myCollection.Count < 1 Then
+                    name = ""
+                ElseIf myCollection.Count = 1 Then
+                    name = myCollection.Item(1)
+                ElseIf myCollection.Count > 1 Then
+                    name = "Collection"
+                End If
             End If
+            
 
 
         Catch ex As Exception
