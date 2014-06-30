@@ -327,6 +327,7 @@ Public Module awinGeneralModules
                         ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
                         For cp = 1 To 240
                             .kapazitaet(cp) = .Startkapa
+                            .externeKapazitaet(cp) = 0.0
 
                             ' Änderung 29.5.14 Wurde ersetzt durch das Auslesen der Rollen-Kapa Files
                             ' siehe weiter unten 
@@ -415,6 +416,14 @@ Public Module awinGeneralModules
                     awinSettings.AmpelRot = CLng(.Range("AmpelRot").Interior.Color)
                     awinSettings.AmpelNichtBewertet = CLng(.Range("AmpelNichtBewertet").Interior.Color)
                     awinSettings.glowColor = CLng(.Range("GlowColor").Interior.Color)
+
+                    Try
+                        awinSettings.timeSpanColor = CLng(.Range("FarbeZeitraum").Interior.Color)
+                        awinSettings.showTimeSpanInPT = CBool(.Range("FarbeZeitraum").Value)
+                    Catch ex2 As Exception
+                        ' ansonsten wird die Voreinstellung verwendet 
+                    End Try
+                    
 
                 Catch ex As Exception
                     appInstance.ScreenUpdating = formerSU
@@ -706,8 +715,8 @@ Public Module awinGeneralModules
             von = 1
         End If
 
-        If bis < von + 6 Then
-            bis = von + 6
+        If bis < von + 5 Then
+            bis = von + 5
         End If
 
 
@@ -1375,10 +1384,10 @@ Public Module awinGeneralModules
                         hproj.variantName = CType(.Range("Variant_Name").Value, String)
                         hproj.variantName = hproj.variantName.Trim
                         If hproj.variantName.Length = 0 Then
-                            hproj.variantName = Nothing
+                            hproj.variantName = ""
                         End If
                     Catch ex1 As Exception
-                        hproj.variantName = Nothing
+                        hproj.variantName = ""
                     End Try
 
 
@@ -2168,7 +2177,8 @@ Public Module awinGeneralModules
 
                 Try
                     laengeInTagen = kvp.Value.dauerInDays
-                    Dim keyStr As String = kvp.Value.name & "#" & kvp.Value.variantName
+                    'Dim keyStr As String = kvp.Value.name & "#" & kvp.Value.variantName
+                    Dim keyStr As String = calcProjektKey(kvp.Value)
                     AlleProjekte.Add(keyStr, kvp.Value)
 
                     ShowProjekte.Add(kvp.Value)
@@ -2560,7 +2570,8 @@ Public Module awinGeneralModules
                         With RoleDefinitions.getRoledef(i)
                             currentRole = .name
                             For m = 0 To zeitSpanne - 1
-                                kapaValues(m) = .kapazitaet(m + heuteColumn)
+                                kapaValues(m) = .kapazitaet(m + heuteColumn) + _
+                                                .externeKapazitaet(m + heuteColumn)
                             Next
                             currentColor = CLng(.farbe)
                         End With
@@ -2569,7 +2580,8 @@ Public Module awinGeneralModules
                             With RoleDefinitions.getRoledef(qualifier)
                                 currentRole = .name
                                 For m = 0 To zeitSpanne - 1
-                                    kapaValues(m) = .kapazitaet(m + heuteColumn)
+                                    kapaValues(m) = .kapazitaet(m + heuteColumn) + _
+                                                    .externeKapazitaet(m + heuteColumn)
                                 Next
                                 currentColor = CLng(.farbe)
                             End With
@@ -3144,13 +3156,14 @@ Public Module awinGeneralModules
         Dim ok As Boolean = True
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
-        Dim summenZeile As Integer
+        Dim summenZeile As Integer, extSummenZeile As Integer
         Dim spalte As Integer = 2
         Dim blattname As String = "Kapazität"
         Dim currentWS As Excel.Worksheet
         Dim index As Integer
         Dim tmpDate As Date
         Dim tmpKapa As Double
+        Dim extTmpKapa As Double
 
         If formerEE Then
             appInstance.EnableEvents = False
@@ -3176,6 +3189,11 @@ Public Module awinGeneralModules
 
                     currentWS = CType(appInstance.Worksheets(blattname), Global.Microsoft.Office.Interop.Excel.Worksheet)
                     summenZeile = currentWS.Range("intern_sum").Row
+                    Try
+                        extSummenZeile = currentWS.Range("extern_sum").Row
+                    Catch ex As Exception
+                        extSummenZeile = 0
+                    End Try
 
                     tmpDate = CDate(currentWS.Cells(1, spalte).value)
 
@@ -3183,9 +3201,15 @@ Public Module awinGeneralModules
                             spalte < 241
                         index = getColumnOfDate(tmpDate)
                         tmpKapa = CDbl(currentWS.Cells(summenZeile, spalte).value)
+                        If extSummenZeile > 0 Then
+                            extTmpKapa = CDbl(currentWS.Cells(extSummenZeile, spalte).value)
+                        Else
+                            extTmpKapa = 0.0
+                        End If
 
                         If index <= 240 And index > 0 And tmpKapa >= 0 Then
                             hrole.kapazitaet(index) = tmpKapa
+                            hrole.externeKapazitaet(index) = extTmpKapa
                         End If
 
                         spalte = spalte + 1

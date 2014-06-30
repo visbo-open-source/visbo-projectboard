@@ -5,6 +5,8 @@ Imports WpfWindow
 Imports WPFPieChart
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
+Imports Excel = Microsoft.Office.Interop.Excel
+
 
 
 'TODO: Führen Sie diese Schritte aus, um das Element auf dem Menüband (XML) zu aktivieren:
@@ -413,8 +415,8 @@ Imports Microsoft.Office.Interop.Excel
                                         .Name = newName
 
                                         Dim hproj As clsProjekt = ShowProjekte.getProject(oldName)
-                                        oldKey = hproj.name & "#" & hproj.variantName
-                                        newKey = newName & "#" & hproj.variantName
+                                        oldKey = calcProjektKey(hproj)
+                                        newKey = calcProjektKey(newName, hproj.variantName)
                                         With hproj
                                             .name = newName
                                         End With
@@ -3697,7 +3699,7 @@ Imports Microsoft.Office.Interop.Excel
                 Next
 
                 ' jetzt stehen in der listOfItems die Namen der Rollen 
-                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "pro Item ein Chart")
 
                 von = showRangeLeft
                 bis = showRangeRight
@@ -3708,7 +3710,6 @@ Imports Microsoft.Office.Interop.Excel
                     .chHeight = awinSettings.ChartHoehe1
                     .chTyp = DiagrammTypen(1)
                 End With
-
 
                 auswahlFenster.Show()
             Else
@@ -3741,12 +3742,13 @@ Imports Microsoft.Office.Interop.Excel
 
             If showRangeRight - showRangeLeft > 5 Then
 
-                For i = 1 To CostDefinitions.Count - 1
+                For i = 1 To CostDefinitions.Count
                     listOfItems.Add(CostDefinitions.getCostdef(i).name)
                 Next
 
                 ' jetzt stehen in der listOfItems die Namen der Rollen 
-                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+                'Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "pro Item ein Chart")
 
 
                 von = showRangeLeft
@@ -3761,8 +3763,10 @@ Imports Microsoft.Office.Interop.Excel
                 End With
 
                 auswahlFenster.Show()
+
+
             Else
-                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+                Call MsgBox("Bitte wählen Sie einen Zeitraum von mindestens 6 Monaten aus!")
             End If
         Else
             Call MsgBox("Es sind noch keine Projekte geladen!")
@@ -5408,6 +5412,7 @@ Imports Microsoft.Office.Interop.Excel
 
         If Not awinSelection Is Nothing Then
 
+
             If awinSelection.Count = 1 Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
@@ -5575,8 +5580,91 @@ Imports Microsoft.Office.Interop.Excel
 
     End Sub
 
+    Sub PTTestFunktion1(control As IRibbonControl)
+
+        Call MsgBox("Enable Events ist " & appInstance.EnableEvents.ToString)
+        appInstance.EnableEvents = True
 
 
+    End Sub
+
+    Sub PTTestFunktion2(control As IRibbonControl)
+
+        Dim hproj As clsProjekt
+        Dim request As New Request(awinSettings.databaseName)
+        Dim singleShp As Excel.Shape
+        Dim tstCollection As SortedList(Of Date, String)
+        Dim anzElements As Integer
+
+        Dim awinSelection As Excel.ShapeRange
+        Dim projektHistorien As New clsProjektDBInfos
+        Dim todoListe As New clsProjektDBInfos
+        
+
+
+        Dim schluessel As String = ""
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+
+
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            If awinSelection.Count > 1 Then
+                anzElements = awinSelection.Count
+                For i = 1 To anzElements
+
+                    singleShp = awinSelection.Item(i)
+                    hproj = ShowProjekte.getProject(singleShp.Name)
+
+                    If i = 1 Then
+                        schluessel = calcProjektKey(hproj)
+                    End If
+
+                    If request.pingMongoDb() Then
+                        ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+                                                                           storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                    Else
+                        Call MsgBox("Datenbank-Verbindung ist unterbrochen")
+                        projekthistorie.clear()
+                    End If
+
+                    If projekthistorie.Count > 0 Then
+                        ' Aufbau der Listen 
+                        projektHistorien.Add(projekthistorie)
+
+
+                    End If
+
+                Next
+            End If
+        End If
+
+        Dim ts As Date
+
+
+        tstCollection = projektHistorien.getTimeStamps(schluessel)
+        anzElements = tstCollection.Count
+
+        For i = 1 To anzElements
+            ts = tstCollection.ElementAt(0).Key
+            projektHistorien.Remove(schluessel, ts)
+            todoListe.Add(schluessel, ts)
+        Next
+
+
+        enableOnUpdate = True
+
+
+    End Sub
 
 #End Region
 

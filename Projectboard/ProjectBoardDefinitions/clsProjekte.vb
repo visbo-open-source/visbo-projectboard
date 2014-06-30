@@ -4,6 +4,13 @@
     Private AllShapes As SortedList(Of String, String)
     Private AllCoord As SortedList(Of String, Double())
 
+    ''' <summary>
+    ''' trägt ein Projekt mit dem Schlüssel Projekt-NAme in die Liste ein 
+    ''' trägt die Shape ID (shpUID) in die Shape Liste ein 
+    ''' wenn der Projekt-Name bereits existiert, wird eine Exception geworfen 
+    ''' </summary>
+    ''' <param name="project"></param>
+    ''' <remarks></remarks>
     Public Sub Add(project As clsProjekt)
 
         Try
@@ -57,6 +64,12 @@
     End Sub
 
 
+    ''' <summary>
+    ''' nimmt das Projekt mit dem übergebenen Namen aus der Liste heraus  
+    ''' wirft eine Exception, wenn Projekt nicht ind er Liste oder ShpUID nicht ind er zugehörigen Shape-Liste
+    ''' </summary>
+    ''' <param name="projectname"></param>
+    ''' <remarks></remarks>
     Public Sub Remove(projectname As String)
 
         Try
@@ -73,10 +86,16 @@
             Throw New ArgumentException(ex.Message)
         End Try
 
-        
+
 
     End Sub
 
+    ''' <summary>
+    ''' nimmt das Projekt mit der übergebenen Shape UID aus der Liste der Projekte und der Liste der Shapes heraus
+    ''' wirft Exception, wenn Fehler 
+    ''' </summary>
+    ''' <param name="SID"></param>
+    ''' <remarks></remarks>
     Public Sub RemoveS(SID As String)
 
         Try
@@ -92,6 +111,10 @@
 
     End Sub
 
+    ''' <summary>
+    ''' setzt die Liste der Projekte und die Liste der Shapes zurück 
+    ''' </summary>
+    ''' <remarks></remarks>
     Public Sub Clear()
 
         AllProjects.Clear()
@@ -187,6 +210,12 @@
     End Property
 
 
+    ''' <summary>
+    ''' gibt die nach Namen sortierte Liste von Projekten zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property Liste() As SortedList(Of String, clsProjekt)
         Get
             Liste = AllProjects
@@ -196,6 +225,12 @@
         End Set
     End Property
 
+    ''' <summary>
+    ''' gibt die Anzahl der Projekte in der Liste an 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property Count() As Integer
 
         Get
@@ -222,6 +257,13 @@
     End Property
 
 
+    ''' <summary>
+    ''' gibt das vollständige Projekt aus der Liste zurück, das den angegebenen Namen hat 
+    ''' </summary>
+    ''' <param name="projectname"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getProject(projectname As String) As clsProjekt
 
         Get
@@ -235,6 +277,12 @@
 
     End Property
 
+    ''' <summary>
+    ''' gibt die maximale Zeile auf der Projekt-Tafel zurück, die von allen angezeigten Projekten beansprucht wird  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property maxZeile() As Integer
 
         Get
@@ -250,6 +298,13 @@
 
     End Property
 
+    ''' <summary>
+    ''' gibt das Projekt zurück, das die angegebene shpID hat. 
+    ''' </summary>
+    ''' <param name="shpID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getProjectS(shpID As String) As clsProjekt
 
         Get
@@ -267,6 +322,12 @@
 
     End Property
 
+    ''' <summary>
+    ''' gibt die Shape-Liste zurück: ShpID, Projekt-Name  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property shpListe() As SortedList(Of String, String)
         Get
             shpListe = AllShapes
@@ -599,6 +660,13 @@
 
     End Property
 
+    ''' <summary>
+    ''' gibt für den aktuellen Zeitraum und die übergebene Collection mit Phasen-Namen die Schwellwerte an  
+    ''' </summary>
+    ''' <param name="myCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getPhaseSchwellWerteInMonth(myCollection As Collection) As Double()
         Get
 
@@ -637,12 +705,16 @@
     '
     ''' <summary>
     ''' gibt für die in myCollection übergebenen Rollen die Kapazitäten zurück 
+    ''' wenn includingExterns = true, dann inkl der bereits beauftragten externen Ressourcen
+    ''' die Aufschlüsselung ist den Ressource Rollen Dateien zu finden 
     ''' </summary>
     ''' <param name="myCollection">enthält die Liste der zu betrachtenden Rollen-Namen</param>
+    ''' <param name="includingExterns">gibt an, ob die Werte inkl. der Externen zurückgegeben werden soll</param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getRoleKapasInMonth(myCollection As Collection) As Double()
+    Public ReadOnly Property getRoleKapasInMonth(ByVal myCollection As Collection, _
+                                                 ByVal includingExterns As Boolean) As Double()
 
         Get
             Dim kapaValues() As Double
@@ -667,7 +739,13 @@
                 hkapa = RoleDefinitions.getRoledef(rname).Startkapa
 
                 For i = showRangeLeft To showRangeRight
-                    tmpValues(i - showRangeLeft) = RoleDefinitions.getRoledef(rname).kapazitaet(i)
+                    If includingExterns Then
+                        tmpValues(i - showRangeLeft) = RoleDefinitions.getRoledef(rname).kapazitaet(i) + _
+                                                        RoleDefinitions.getRoledef(rname).externeKapazitaet(i)
+                    Else
+                        tmpValues(i - showRangeLeft) = RoleDefinitions.getRoledef(rname).kapazitaet(i)
+                    End If
+
                     If tmpValues(i - showRangeLeft) < 0 Then
                         tmpValues(i - showRangeLeft) = hkapa
                     End If
@@ -1200,7 +1278,7 @@
                 roleName = RoleDefinitions.getRoledef(i).name
                 myCollection.Add(roleName)
                 roleValues = Me.getRoleValuesInMonth(roleName)
-                kapaValues = Me.getRoleKapasInMonth(myCollection)
+                kapaValues = Me.getRoleKapasInMonth(myCollection, False)
                 myCollection.Clear()
 
                 Select Case typus
@@ -1283,7 +1361,7 @@
 
             myCollection.Add(roleName)
             roleValues = Me.getRoleValuesInMonth(roleName)
-            kapaValues = Me.getRoleKapasInMonth(myCollection)
+            kapaValues = Me.getRoleKapasInMonth(myCollection, False)
             myCollection.Clear()
 
             Select Case typus
@@ -1373,7 +1451,7 @@
                 roleName = RoleDefinitions.getRoledef(i).name
                 myCollection.Add(roleName)
                 roleValues = Me.getRoleValuesInMonth(roleName)
-                kapaValues = Me.getRoleKapasInMonth(myCollection)
+                kapaValues = Me.getRoleKapasInMonth(myCollection, False)
                 myCollection.Clear()
 
                 For ix = 0 To zeitraum
@@ -1438,7 +1516,7 @@
                 roleName = RoleDefinitions.getRoledef(i).name
                 myCollection.Add(roleName)
                 roleValues = Me.getRoleValuesInMonth(roleName)
-                kapaValues = Me.getRoleKapasInMonth(myCollection)
+                kapaValues = Me.getRoleKapasInMonth(myCollection, False)
                 myCollection.Clear()
 
                 For ix = 0 To zeitraum
@@ -1500,7 +1578,7 @@
                 roleName = RoleDefinitions.getRoledef(i).name
                 myCollection.Add(roleName)
                 roleValues = Me.getRoleValuesInMonth(roleName)
-                kapaValues = Me.getRoleKapasInMonth(myCollection)
+                kapaValues = Me.getRoleKapasInMonth(myCollection, False)
                 myCollection.Clear()
 
                 With RoleDefinitions.getRoledef(roleName)
@@ -1573,7 +1651,7 @@
                     diff = tagessatzExtern - tagessatzIntern
                     myCollection.Add(roleName)
                     roleValues = Me.getRoleValuesInMonth(roleName)
-                    kapaValues = Me.getRoleKapasInMonth(myCollection)
+                    kapaValues = Me.getRoleKapasInMonth(myCollection, False)
                     myCollection.Clear()
 
                     For ix = 0 To zeitraum
@@ -1597,6 +1675,15 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt für die übergebenen Phasen/Rollen/Kostenarten im betrachteten Zeitraum den Durchschnittswert an 
+    ''' </summary>
+    ''' <param name="myCollection">enthält die zu betrachtenden Phasen/Rollen/Kostenarten</param>
+    ''' <param name="diagrammtyp">gibt an, worum es sich handelt: Phase, Rolle, Kostenart; 
+    ''' andere Werte werden aktuell nicht unterstützt </param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getAverage(ByVal myCollection As Collection, ByVal diagrammtyp As String) As Double
         Get
 
@@ -1629,7 +1716,7 @@
 
 
                 tmpSum = tmpSum + tmpValues.Sum
-                
+
             Next i
 
             getAverage = tmpSum / (zeitraum + 1)
@@ -1637,6 +1724,15 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt für den betrachteten Zeitraum showrangeleft und showrangeright die Abweichung vom Durchschnitt an  
+    ''' </summary>
+    ''' <param name="myCollection"></param>
+    ''' <param name="avgValue"></param>
+    ''' <param name="diagrammTyp"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getDeviationfromAverage(ByVal myCollection As Collection, ByVal avgValue As Double, ByVal diagrammTyp As String) As Double
 
         Get
@@ -1676,7 +1772,7 @@
             sumAboveAvg = 0.0
 
             For ix = 0 To zeitraum
-                
+
                 sumAboveAvg = sumAboveAvg + (rcValues(ix) - avgValue) * (rcValues(ix) - avgValue)
 
             Next ix
@@ -1686,9 +1782,13 @@
 
         End Get
     End Property
-    '
-    ' property gibt die Personalkosten zurück, die durch die internen Rollen entstehen, die in keinen Projekten gebunden sind - ohne Projekte
-    '
+    
+    ''' <summary>
+    ''' gibt die Personalkosten zurück, die durch die internen Rollen entstehen, die in keinen Projekten gebunden sind 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getCostoValuesInMonth() As Double()
 
         Get
@@ -1720,7 +1820,7 @@
                 roleName = RoleDefinitions.getRoledef(i).name
                 myCollection.Add(roleName)
                 roleValues = Me.getRoleValuesInMonth(roleName)
-                kapaValues = Me.getRoleKapasInMonth(myCollection)
+                kapaValues = Me.getRoleKapasInMonth(myCollection, False)
                 myCollection.Clear()
 
                 For ix = 0 To zeitraum
@@ -1744,6 +1844,10 @@
 
     End Property
 
+    ''' <summary>
+    ''' Konstruktor: intilaisert die sortierte Liste der Projekte und Shapes   
+    ''' </summary>
+    ''' <remarks></remarks>
     Public Sub New()
 
         AllProjects = New SortedList(Of String, clsProjekt)

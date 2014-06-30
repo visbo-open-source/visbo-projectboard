@@ -24,6 +24,7 @@ Public Class clsProjekt
     Private _ampelStatus As Integer
     Private _ampelErlaeuterung As String
     Private _name As String
+    Private _variantName As String
 
     ' geändert 07.04.2014: Damit jedes Projekt auf der Projekttafel angezeigt werden kann.
     Private NullDatum As Date = StartofCalendar
@@ -39,7 +40,7 @@ Public Class clsProjekt
     Public Property leadPerson As String
     'Public Property tfSpalte As Integer
     Public Property tfZeile As Integer
-    Public Property variantName As String
+
     Public Property Id As String
     Public Property timeStamp As Date
 
@@ -97,6 +98,29 @@ Public Class clsProjekt
 
 
     End Sub
+
+    ''' <summary>
+    ''' stellt sicher, daß variantName niemals Nothing sein kann
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property variantName As String
+        Get
+            If IsNothing(_variantName) Then
+                _variantName = ""
+            End If
+            variantName = _variantName
+        End Get
+
+        Set(value As String)
+            If IsNothing(value) Then
+                _variantName = ""
+            Else
+                _variantName = value
+            End If
+        End Set
+    End Property
 
     ''' <summary>
     ''' setzt den Namen des Projektes fest oder gibt ihn zurück
@@ -2403,7 +2427,7 @@ Public Class clsProjekt
         _Status = ProjektStatus(0)
         _shpUID = ""
         _timeStamp = Date.Now
-
+        _variantName = ""
 
     End Sub
 
