@@ -431,6 +431,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
     End Sub
 
+   
 
 
     ''' <summary>
@@ -441,7 +442,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
     Sub Tom2G1Rename(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
-        'Dim SID As String
+        Dim request As New Request(awinSettings.databaseName)
 
         Dim tmpshapes As Excel.Shapes
         Dim oldKey As String, newKey As String
@@ -475,43 +476,51 @@ Imports Excel = Microsoft.Office.Interop.Excel
                             If .Name <> .TextFrame2.TextRange.Text Then
                                 ' das Shape wurde vom Nutzer umbenannt 
                                 atleastOne = True
-                                erg = erg & .Name & " -> " & .TextFrame2.TextRange.Text & vbLf
+
 
                                 Dim oldName As String = .Name
                                 Dim newName As String = .TextFrame2.TextRange.Text
 
                                 Try
-                                    If ShowProjekte.Liste.ContainsKey(newName) Or Len(newName.Trim) = 0 Or IsNumeric(newName) Then
+                                    Dim hproj As clsProjekt = ShowProjekte.getProject(oldName)
 
-                                        ' ungültiger Name - alten Namen wiederherstellen 
-                                        .TextFrame2.TextRange.Text = oldName
-                                        erg = erg & oldName & "bleibt, " & newName & "ungültig" & vbLf
+                                    If request.pingMongoDb() Then
+
+                                        If ShowProjekte.Liste.ContainsKey(newName) Or request.projectNameAlreadyExists(newName, hproj.variantName) Or Len(newName.Trim) = 0 Or IsNumeric(newName) Then
+
+                                            ' ungültiger Name - alten Namen wiederherstellen 
+                                            .TextFrame2.TextRange.Text = oldName
+                                            erg = erg & oldName & " bleibt, " & newName & " ungültig oder existiert bereits in DB" & vbLf
+                                        Else
+                                            ' der neue Name ist gültig 
+                                            .Name = newName
+
+                                            oldKey = calcProjektKey(hproj)
+                                            newKey = calcProjektKey(newName, hproj.variantName)
+                                            With hproj
+                                                .name = newName
+                                            End With
+
+                                            ShowProjekte.Remove(oldName)
+                                            hproj.timeStamp = Date.Now
+                                            ShowProjekte.Add(hproj)
+                                            AlleProjekte.Remove(oldKey)
+                                            AlleProjekte.Add(newKey, hproj)
+
+                                            erg = erg & oldName & " -> " & newName & vbLf
+
+                                        End If
                                     Else
-                                        ' der neue Name ist gültig 
-                                        .Name = newName
-
-                                        Dim hproj As clsProjekt = ShowProjekte.getProject(oldName)
-                                        oldKey = calcProjektKey(hproj)
-                                        newKey = calcProjektKey(newName, hproj.variantName)
-                                        With hproj
-                                            .name = newName
-                                        End With
-
-                                        ShowProjekte.Remove(oldName)
-                                        hproj.timeStamp = Date.Now
-                                        ShowProjekte.Add(hproj)
-                                        AlleProjekte.Remove(oldKey)
-                                        AlleProjekte.Add(newKey, hproj)
-
+                                        'Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+                                        .TextFrame2.TextRange.Text = oldName
+                                        erg = erg & oldName & " bleibt, " & newName & " ungültig, DB ist nicht aktiv" & vbLf
                                     End If
+
                                 Catch ex As Exception
                                     Call MsgBox(ex.Message)
                                     .TextFrame2.TextRange.Text = oldName
-                                    erg = erg & oldName & "bleibt, " & newName & "ungültig" & vbLf
+                                    erg = erg & oldName & " bleibt, " & newName & " ungültig" & vbLf
                                 End Try
-
-
-
 
                             End If
 
