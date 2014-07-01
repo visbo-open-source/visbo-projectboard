@@ -10186,7 +10186,6 @@ Public Module Projekte
 
             worksheetShapes = .shapes
 
-
             For p = 1 To hproj.CountPhases
 
                 Dim cphase As clsPhase = hproj.getPhase(p)

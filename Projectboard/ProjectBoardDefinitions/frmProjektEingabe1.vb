@@ -3,7 +3,7 @@
 Public Class frmProjektEingabe1
 
     'Private dateIsStart As Boolean = False
-    Private vorlagenDauer As Integer
+    Private vorlagenDauer As Integer = 200
     Public calcProjektStart As Date
     Public calcProjektEnde As Date
 
@@ -128,9 +128,9 @@ Public Class frmProjektEingabe1
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
         With projectName
-            If Len(.Text) < 1 Then
+            If Len(.Text) < 2 Then
 
-                MsgBox("Projektname muss mindestens ein Zeichen haben!")
+                MsgBox("Projektname muss mindestens zwei Zeichen haben!")
                 .Text = ""
                 .Undo()
                 DialogResult = System.Windows.Forms.DialogResult.None
@@ -364,6 +364,22 @@ Public Class frmProjektEingabe1
             'DateTimeEnde.Value = DateTimeEnde.Value
 
         End If
+
+    
+    End Sub
+
+    Public Sub New()
+
+        ' This call is required by the designer.
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        InitializeComponent()
+
+        appInstance.EnableEvents = formerEE
+
+        ' Add any initialization after the InitializeComponent() call.
+
     End Sub
 
 

@@ -87,7 +87,6 @@ Public Class Tabelle1
         Dim shpArray() As String
         Dim tmpArray() As String
         Dim anzahlSel As Integer = 0
-        Dim ProjektEingabe As New frmProjektEingabe1
 
         Dim von As Integer, bis As Integer
 
