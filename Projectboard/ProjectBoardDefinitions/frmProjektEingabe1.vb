@@ -2,8 +2,8 @@
 
 Public Class frmProjektEingabe1
 
-    'Private dateIsStart As Boolean = False
-    Private vorlagenDauer As Integer
+    ' notwendig, weil sonst eine Fehlermeldung kommt bezgl ValueChanged und zugelassenen Werten 
+    Private vorlagenDauer As Integer = 200
     Public calcProjektStart As Date
     Public calcProjektEnde As Date
 
@@ -127,10 +127,21 @@ Public Class frmProjektEingabe1
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
-        With projectName
-            If Len(.Text) < 1 Then
 
-                MsgBox("Projektname muss mindestens ein Zeichen haben!")
+
+        With projectName
+
+            ' Änderung tk 1.7.14: andernfalls kann ein Blank am Ende angehängt sein - dann kommt es im Nachgang zu einem Fehler 
+            Try
+                .Text = .Text.Trim
+            Catch ex As Exception
+                .Text = ""
+            End Try
+
+
+            If Len(.Text) < 2 Then
+
+                MsgBox("Projektname muss mindestens zwei Zeichen haben!")
                 .Text = ""
                 .Undo()
                 DialogResult = System.Windows.Forms.DialogResult.None

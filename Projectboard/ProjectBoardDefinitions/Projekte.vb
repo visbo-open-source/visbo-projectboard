@@ -4263,7 +4263,7 @@ Public Module Projekte
     End Sub
 
     ''' <summary>
-    ''' aktualisiert das Auslastungs Chart 
+    ''' aktualisiert das Auslastungs Chart mit den Über- bzw Unterauslastungs-Details
     ''' </summary>
     ''' <param name="chtobj">Verweis auf Excel Chart Objekt</param>
     ''' <param name="auswahl">
@@ -4282,7 +4282,6 @@ Public Module Projekte
         Dim roleName As String
 
 
-        Dim kennung As String
         Dim zE As String = awinSettings.kapaEinheit
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
@@ -4315,16 +4314,16 @@ Public Module Projekte
 
 
         If auswahl = 1 Then
-            titelTeile(0) = summentitel10
+            titelTeile(0) = portfolioDiagrammtitel(PTpfdk.UeberAuslastung) & " (" & awinSettings.kapaEinheit & ")"
         Else
-            titelTeile(0) = summentitel11
+            titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Unterauslastung) & " (" & awinSettings.kapaEinheit & ")"
         End If
+
 
         titelTeilLaengen(0) = titelTeile(0).Length + 1
         titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
         titelTeilLaengen(1) = titelTeile(1).Length
         diagramTitle = titelTeile(0) & vbLf & titelTeile(1)
-        kennung = titelTeile(0)
 
 
 
@@ -4663,9 +4662,9 @@ Public Module Projekte
 
 
         If auswahl = 1 Then
-            titelTeile(0) = summentitel10 & " (" & awinSettings.kapaEinheit & ")"
+            titelTeile(0) = portfolioDiagrammtitel(PTpfdk.UeberAuslastung) & " (" & awinSettings.kapaEinheit & ")"
         Else
-            titelTeile(0) = summentitel11 & " (" & awinSettings.kapaEinheit & ")"
+            titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Unterauslastung) & " (" & awinSettings.kapaEinheit & ")"
         End If
 
         titelTeilLaengen(0) = titelTeile(0).Length + 1
@@ -4683,18 +4682,11 @@ Public Module Projekte
             '
             Dim i As Integer = 1
             Dim found As Boolean = False
-            Dim chtTitle As String
+
             While i <= anzDiagrams And Not found
-                Try
-                    'chtTitle = .ChartObjects(i).Chart.ChartTitle.text
-                    chtTitle = .ChartObjects(i).name
-                Catch ex As Exception
-                    chtTitle = " "
-                End Try
-
-                If chtTitle = chtobjname Then
+                
+                If .ChartObjects(i).name = chtobjname Then
                     found = True
-
                 Else
                     i = i + 1
                 End If
@@ -7215,7 +7207,7 @@ Public Module Projekte
                 Call awinClkReset(abstand)
 
                 ' ein Projekt wurde gelöscht  - typus = 3
-                Call awinNeuZeichnenDiagramme("3")
+                Call awinNeuZeichnenDiagramme(3)
 
                 Call moveShapesUp(zeile, anzahlZeilen)
             Else
@@ -7228,7 +7220,7 @@ Public Module Projekte
             Call awinClkReset(abstand)
 
             ' ein Projekt wurde gelöscht  - typus = 3
-            Call awinNeuZeichnenDiagramme("3")
+            Call awinNeuZeichnenDiagramme(3)
             Call moveShapesUp(zeile, anzahlZeilen)
         End If
 
@@ -7379,7 +7371,7 @@ Public Module Projekte
             Call awinClkReset(abstand)
 
             ' ein Projekt wurde gelöscht bzw aus Showprojekte entfernt  - typus = 3
-            Call awinNeuZeichnenDiagramme("3")
+            Call awinNeuZeichnenDiagramme(3)
 
 
 
@@ -8882,11 +8874,15 @@ Public Module Projekte
         Dim value As Double
         Dim avgValue As Double
 
-        If DiagrammTyp = DiagrammTypen(1) Or DiagrammTyp = DiagrammTypen(4) Then
+        If DiagrammTyp = DiagrammTypen(1) Then
             value = ShowProjekte.getbadCostOfRole(myCollection)
         ElseIf DiagrammTyp = DiagrammTypen(0) Or DiagrammTyp = DiagrammTypen(2) Then
             avgValue = ShowProjekte.getAverage(myCollection, DiagrammTyp)
             value = ShowProjekte.getDeviationfromAverage(myCollection, avgValue, DiagrammTyp)
+        ElseIf DiagrammTyp = DiagrammTypen(4) Then
+            ' da der Optimierungs-Algorithmus die kleinste Zahl sucht , muss mit -1 multipliziert werden, 
+            ' damit tatsächlich der größte Ertrag heraus kommt 
+            value = ShowProjekte.getErgebniskennzahl * (-1)
         Else
             Throw New ArgumentException("Optimierung ist für diesen Diagramm-Typ nicht implementiert")
         End If
@@ -13465,6 +13461,20 @@ Public Module Projekte
                                 IDkennung = IDkennung & "#" & CostDefinitions.getCostdef(cName).UID.ToString
                             Next
 
+                        End If
+
+                    Case PTpfdk.ErgebnisWasserfall
+
+                        If mycollection.Count > 0 Then
+                            cName = mycollection.Item(1)
+                            IDkennung = IDkennung & "#" & cName
+                        End If
+
+                    Case PTpfdk.Budget
+
+                        If mycollection.Count > 0 Then
+                            cName = mycollection.Item(1)
+                            IDkennung = IDkennung & "#" & cName
                         End If
 
                 End Select

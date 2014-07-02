@@ -71,7 +71,7 @@ Public Module awinGUI
     ''' <param name="width"></param>
     ''' <param name="height"></param>
     ''' <remarks></remarks>
-    Sub awinCreatePortfolioDiagramms(ByRef ProjektListe As Collection, ByRef repChart As Object, isProjektCharakteristik As Boolean, _
+    Sub awinCreatePortfolioDiagrams(ByRef ProjektListe As Collection, ByRef repChart As Object, isProjektCharakteristik As Boolean, _
                                          charttype As Integer, bubbleColor As Integer, showNegativeValues As Boolean, showLabels As Boolean, chartBorderVisible As Boolean, _
                                          top As Double, left As Double, width As Double, height As Double)
 
@@ -137,16 +137,16 @@ Public Module awinGUI
 
                 If isProjektCharakteristik Then
                     If ProjektListe.Count = 1 Then
-                        titelTeile(0) = summentitel2 & " " & pname & vbLf
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisiko) & " " & pname & vbLf
                         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
                     Else
-                        titelTeile(0) = summentitel2 & vbLf
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisiko) & vbLf
                         titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
                     End If
 
                 Else
-                    titelTeile(0) = summentitel2 & vbLf
+                    titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisiko) & vbLf
                     titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
                 End If
 
@@ -161,7 +161,7 @@ Public Module awinGUI
                         titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & vbLf
                         titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
                     End If
-                    
+
                 Else
                     titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & vbLf
                     titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
@@ -178,7 +178,7 @@ Public Module awinGUI
                         titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & vbLf
                         titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
                     End If
-                    
+
                 Else
                     titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & vbLf
                     titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
@@ -194,7 +194,7 @@ Public Module awinGUI
                         titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & vbLf
                         titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
                     End If
-                    
+
                 Else
                     titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & vbLf
                     titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
@@ -211,7 +211,7 @@ Public Module awinGUI
                         titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Dependencies) & vbLf
                         titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
                     End If
-                    
+
                 Else
                     titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Dependencies) & vbLf
                     titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
@@ -735,7 +735,7 @@ Public Module awinGUI
 
                 DiagramList.Add(pfDiagram)
             End If
-            
+
             repChart = .ChartObjects(anzDiagrams + 1)
 
         End With
@@ -746,9 +746,14 @@ Public Module awinGUI
 
 
 
-    '
-    ' Prozedur für den Update des Portfolio Diagramms
-    '
+    
+    ''' <summary>
+    ''' aktualisiert die Portfolio Charts 
+    ''' Strategie, Risiko, Marge oder oder andere, ähnliche 
+    ''' </summary>
+    ''' <param name="chtobj"></param>
+    ''' <param name="bubbleColor">gibt an, ob di eAMpelfarbe des Projekts gezeigt werden soll</param>
+    ''' <remarks></remarks>
     Sub awinUpdatePortfolioDiagrams(ByRef chtobj As ChartObject, bubbleColor As Integer)
 
         Dim i As Integer
@@ -767,7 +772,7 @@ Public Module awinGUI
         Dim charttype As Integer
         Dim tmpstr(5) As String
         Dim isSingleProject As Boolean = False
-        
+
         'Dim pfDiagram As clsDiagramm
         'Dim pfChart As clsEventsPfCharts
         'Dim TypeCollection As Collection
@@ -950,7 +955,7 @@ Public Module awinGUI
         Select Case charttype
             Case PTpfdk.FitRisiko
 
-                diagramTitle = summentitel2 & vbLf & textZeitraum(showRangeLeft, showRangeRight)
+                diagramTitle = portfolioDiagrammtitel(PTpfdk.FitRisiko) & vbLf & textZeitraum(showRangeLeft, showRangeRight)
 
             Case PTpfdk.FitRisikoVol
 
