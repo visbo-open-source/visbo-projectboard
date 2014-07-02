@@ -445,7 +445,7 @@ Public Module awinGeneralModules
                 awinSettings.zeilenhoehe2 = CDbl(.Range("Zeilenhoehe2").Value)
                 awinSettings.spaltenbreite = CDbl(.Range("Spaltenbreite").Value)
                 awinSettings.autoCorrectBedarfe = True
-                awinSettings.propAnpassRess = False
+                awinSettings.propAnpassRess = True
             Catch ex As Exception
                 appInstance.ScreenUpdating = formerSU
                 Throw New ArgumentException("korrupte Einstellungen ... Abbruch " & ex.Message)
