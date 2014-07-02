@@ -116,7 +116,8 @@ Public Class ThisWorkbook
 
         
         ' hier wird die Projekt Tafel so dargestellt, daß Zeitraum zu sehen ist ... und ein späteres Diagramm 
-        Call awinScrollintoView()
+        ' Änderung 29.06.14 hier nicht mehr notwendig 
+        ' Call awinScrollintoView()
 
 
     End Sub

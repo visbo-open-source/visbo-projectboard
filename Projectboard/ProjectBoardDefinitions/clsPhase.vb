@@ -762,12 +762,6 @@
 
             .name = _name
 
-            'h1wert = System.Math.Round(Me._startOffsetinDays * corrFactor)
-            'h2wert = CInt(Me._startOffsetinDays * corrFactor)
-
-            'h1wert = System.Math.Round(Me._dauerInDays * corrFactor)
-            'h2wert = CInt(Me._dauerInDays * corrFactor)
-
             .changeStartandDauer(CInt(Me._startOffsetinDays * corrFactor), CInt(Me._dauerInDays * corrFactor))
 
             For r = 1 To Me.CountRoles
@@ -1094,10 +1088,6 @@
                             k = newXwerte.Length - 1
                         End If
 
-                        'If k = 0 Then
-                        '    k = newXwerte.Length - 1
-                        'End If
-                        'result = System.Math.DivRem(k - 1, newXwerte.Length, k) ' modulo - Funktion
                     End While
 
                 End If
@@ -1125,7 +1115,6 @@
 
                     newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
 
-                    'newXwerte(k) = System.Math.Round(gesBedarf / newXwerte.Length)
                 Next k
 
                 ' Rest wird auf alle newXwerte verteilt
@@ -1147,10 +1136,7 @@
                     If k < 0 Then
                         k = newXwerte.Length - 1
                     End If
-                    'If k = 0 Then
-                    '    k = newXwerte.Length - 1
-                    'End If
-                    'result = System.Math.DivRem(k - 1, newXwerte.Length, k) ' modulo - Funktion
+
                 End While
 
             End If

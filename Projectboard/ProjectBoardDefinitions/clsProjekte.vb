@@ -1604,6 +1604,53 @@
         End Get
 
     End Property
+
+    ''' <summary>
+    ''' gibt für den betrachteten Zeotraum die Ergebnisskennzahl zurück 
+    ''' ergebniskennzahl = (zeitraumbudget - (zeitraumCost + zeitraumRisiko))-(Überlast-Kosten + Opp.-Kosten))
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getErgebniskennzahl() As Double
+        Get
+
+            Dim zeitraumBudget As Double
+            Dim zeitraumCost As Double
+            Dim zeitraumRisiko As Double
+            Dim earnedValue As Double
+            Dim additionalCostExt As Double
+            Dim internwithoutProject As Double
+            Dim ertragsWert As Double
+
+
+            ' Ausrechnen amteiliges Budget, das im Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
+            zeitraumBudget = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+            zeitraumCost = System.Math.Round(ShowProjekte.getTotalCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+            ' das ist der Risiko Abschlag  
+            zeitraumRisiko = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+
+            ' das ist der Earned Value 
+            earnedValue = zeitraumBudget - (zeitraumCost + zeitraumRisiko)
+
+
+            ' das sind die Zusatzkosten, die durch Externe (wg Überauslastung) verursacht werden
+            additionalCostExt = System.Math.Round(ShowProjekte.getadditionalECostinMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+            ' das sind die durch Unterauslastung verursachten Kosten , also Personal-Kosten von Leuten, die in keinem Projekt sind
+            internwithoutProject = System.Math.Round(ShowProjekte.getCostoValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+            ' das ist der Ertrag 
+            ertragsWert = earnedValue - (additionalCostExt + internwithoutProject)
+
+            getErgebniskennzahl = ertragsWert
+
+        End Get
+    End Property
+
+
     ''' <summary>
     ''' gibt die Summe an "bad cost" an, das sind die durch Einsatz externer Kräfte verursachten zusätzlichen Kosten und die 
     ''' durch untätige Ressourcen verursachten Kosten der übergebenen Rolle(n im betrachteten Zeitraum 

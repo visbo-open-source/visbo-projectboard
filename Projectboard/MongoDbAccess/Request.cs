@@ -122,7 +122,7 @@ namespace MongoDbAccess
             //projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString("yyyy-MM-dd");
                            
         }
-        /*************************************/
+        //************************************/
         public bool deleteProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
         {
             storedLatest = storedLatest.ToUniversalTime();
