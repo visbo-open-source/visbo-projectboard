@@ -3,7 +3,7 @@
 Public Class frmProjektEingabe1
 
     ' notwendig, weil sonst eine Fehlermeldung kommt bezgl ValueChanged und zugelassenen Werten 
-    Private vorlagenDauer As Integer = 200
+    Private vorlagenDauer As Integer = 365
     Public calcProjektStart As Date
     Public calcProjektEnde As Date
 
@@ -18,7 +18,7 @@ Public Class frmProjektEingabe1
 
     Private Sub frmProjektEingabe1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Dim randomValue As Double
-        
+
         With Me
 
 
@@ -96,11 +96,11 @@ Public Class frmProjektEingabe1
         End With
     End Sub
 
-    Private Sub selectedMonth_ValueChanged(sender As Object, e As EventArgs) Handles selectedMonth.ValueChanged
+    'Private Sub selectedMonth_ValueChanged(sender As Object, e As EventArgs) Handles selectedMonth.ValueChanged
 
-        calcMonth.Text = StartofCalendar.AddMonths(CType(selectedMonth.Value, Integer) - 1).ToString("MMM yy")
+    '    calcMonth.Text = StartofCalendar.AddMonths(CType(selectedMonth.Value, Integer) - 1).ToString("MMM yy")
 
-    End Sub
+    'End Sub
     Private Sub projectName_TextChanged(sender As Object, e As EventArgs) Handles projectName.TextChanged
 
         'With projectName
