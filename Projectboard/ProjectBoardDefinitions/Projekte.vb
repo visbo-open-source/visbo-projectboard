@@ -1998,9 +1998,9 @@ Public Module Projekte
         Dim pastAndFuture As Boolean = False
         Dim future As Boolean = True
 
-        Dim werteB(beauftragung.Dauer - 1) As Double
-        Dim werteL(lastPlan.Dauer - 1) As Double
-        Dim werteC(hproj.Dauer - 1) As Double
+        Dim werteB(beauftragung.anzahlRasterElemente - 1) As Double
+        Dim werteL(lastPlan.anzahlRasterElemente - 1) As Double
+        Dim werteC(hproj.anzahlRasterElemente - 1) As Double
 
         Dim Xdatenreihe() As String
         Dim tdatenreiheB() As Double
@@ -2118,18 +2118,18 @@ Public Module Projekte
 
 
         With hproj
-            maxColumn = .Start + .Dauer - 1
+            maxColumn = .Start + .anzahlRasterElemente - 1
         End With
 
         With beauftragung
-            If maxColumn < .Start + .Dauer - 1 Then
-                maxColumn = .Start + .Dauer - 1
+            If maxColumn < .Start + .anzahlRasterElemente - 1 Then
+                maxColumn = .Start + .anzahlRasterElemente - 1
             End If
         End With
 
         With lastPlan
-            If maxColumn < .Start + .Dauer - 1 Then
-                maxColumn = .Start + .Dauer - 1
+            If maxColumn < .Start + .anzahlRasterElemente - 1 Then
+                maxColumn = .Start + .anzahlRasterElemente - 1
             End If
         End With
 
@@ -2172,7 +2172,7 @@ Public Module Projekte
             kontrollWert = Math.Round(werteB.Sum)
             'End If
 
-            endeIX = System.Math.Min(heuteColumn - 1, .Start + .Dauer - 1)
+            endeIX = System.Math.Min(heuteColumn - 1, .Start + .anzahlRasterElemente - 1)
             For i = .Start To endeIX
                 hsum = hsum + werteB(ix)
                 ix = ix + 1
@@ -2198,7 +2198,7 @@ Public Module Projekte
 
 
             hsum = 0.0
-            endeIX = System.Math.Min(heuteColumn - 1, .Start + .Dauer - 1)
+            endeIX = System.Math.Min(heuteColumn - 1, .Start + .anzahlRasterElemente - 1)
             For i = .Start To endeIX
                 hsum = hsum + werteL(ix)
                 ix = ix + 1
@@ -2224,7 +2224,7 @@ Public Module Projekte
             'End If
 
             hsum = 0.0
-            endeIX = System.Math.Min(heuteColumn - 1, .Start + .Dauer - 1)
+            endeIX = System.Math.Min(heuteColumn - 1, .Start + .anzahlRasterElemente - 1)
             For i = .Start To endeIX
                 hsum = hsum + werteC(ix)
                 ix = ix + 1
@@ -2706,9 +2706,9 @@ Public Module Projekte
         Dim minColumn As Integer, maxColumn As Integer, gesternColumn As Integer = getColumnOfDate(heute) - 1
         Dim pastAndFuture As Boolean = False
 
-        Dim werteB(beauftragung.Dauer - 1) As Double
-        Dim werteL(lastPlan.Dauer - 1) As Double
-        Dim werteC(hproj.Dauer - 1) As Double
+        Dim werteB(beauftragung.anzahlRasterElemente - 1) As Double
+        Dim werteL(lastPlan.anzahlRasterElemente - 1) As Double
+        Dim werteC(hproj.anzahlRasterElemente - 1) As Double
 
         Dim Xdatenreihe() As String
         Dim tdatenreiheB() As Double
@@ -2821,18 +2821,18 @@ Public Module Projekte
 
 
         With hproj
-            maxColumn = .Start + .Dauer - 1
+            maxColumn = .Start + .anzahlRasterElemente - 1
         End With
 
         With beauftragung
-            If maxColumn < .Start + .Dauer - 1 Then
-                maxColumn = .Start + .Dauer - 1
+            If maxColumn < .Start + .anzahlRasterElemente - 1 Then
+                maxColumn = .Start + .anzahlRasterElemente - 1
             End If
         End With
 
         With lastPlan
-            If maxColumn < .Start + .Dauer - 1 Then
-                maxColumn = .Start + .Dauer - 1
+            If maxColumn < .Start + .anzahlRasterElemente - 1 Then
+                maxColumn = .Start + .anzahlRasterElemente - 1
             End If
         End With
 
@@ -2848,7 +2848,7 @@ Public Module Projekte
         For i = minColumn To maxColumn
             Xdatenreihe(i - minColumn) = StartofCalendar.AddMonths(i - 1).ToString("MMM yy")
             With beauftragung
-                If i >= .Start And i <= .Start + .Dauer - 1 Then
+                If i >= .Start And i <= .Start + .anzahlRasterElemente - 1 Then
                     tdatenreiheB(i - minColumn) = sumB + werteB(i - .Start)
                     sumB = tdatenreiheB(i - minColumn)
                 Else
@@ -2857,7 +2857,7 @@ Public Module Projekte
             End With
 
             With lastPlan
-                If i >= .Start And i <= .Start + .Dauer - 1 Then
+                If i >= .Start And i <= .Start + .anzahlRasterElemente - 1 Then
                     tdatenreiheL(i - minColumn) = sumL + werteL(i - .Start)
                     sumL = tdatenreiheL(i - minColumn)
                 Else
@@ -2866,7 +2866,7 @@ Public Module Projekte
             End With
 
             With hproj
-                If i >= .Start And i <= .Start + .Dauer - 1 Then
+                If i >= .Start And i <= .Start + .anzahlRasterElemente - 1 Then
                     tdatenreiheC(i - minColumn) = sumC + werteC(i - .Start)
                     sumC = tdatenreiheC(i - minColumn)
                 Else
@@ -3624,7 +3624,7 @@ Public Module Projekte
         ' hole die Projektdauer
         '
         With hproj
-            plen = .Dauer
+            plen = .anzahlRasterElemente
             pstart = .Start
         End With
         '
@@ -3871,7 +3871,7 @@ Public Module Projekte
         ' hole die Projektdauer
         '
         With hproj
-            plen = .Dauer
+            plen = .anzahlRasterElemente
             pstart = .Start
         End With
         '
@@ -4052,7 +4052,7 @@ Public Module Projekte
         ' hole die Projektdauer
         '
         With hproj
-            plen = .Dauer
+            plen = .anzahlRasterElemente
             pstart = .Start
         End With
         '
@@ -4455,7 +4455,7 @@ Public Module Projekte
         ' hole die Projektdauer
         '
         With hproj
-            plen = .Dauer
+            plen = .anzahlRasterElemente
             pstart = .Start
         End With
         '
@@ -4875,7 +4875,7 @@ Public Module Projekte
         ' hole die Projektdauer
         '
         With hproj
-            plen = .Dauer
+            plen = .anzahlRasterElemente
             pstart = .Start
         End With
         '
@@ -5064,7 +5064,7 @@ Public Module Projekte
         ' hole die Projektdauer
         '
         With hproj
-            plen = .Dauer
+            plen = .anzahlRasterElemente
             pstart = .Start
         End With
         '
@@ -5210,7 +5210,7 @@ Public Module Projekte
         ' hole die Projektdauer
         '
         With hproj
-            plen = .Dauer
+            plen = .anzahlRasterElemente
             pstart = .Start
         End With
         '
@@ -5440,7 +5440,7 @@ Public Module Projekte
         ' hole die Projektdauer
         '
         With hproj
-            plen = .Dauer
+            plen = .anzahlRasterElemente
             pstart = .Start
         End With
         '
@@ -6113,7 +6113,7 @@ Public Module Projekte
         '
         ' hole die Projektdauer
         '
-        plen = hproj.Dauer
+        plen = hproj.anzahlRasterElemente
         pstart = hproj.Start
 
 
@@ -6379,7 +6379,7 @@ Public Module Projekte
         ' hole die Projektdauer
         '
         With hproj
-            plen = .Dauer
+            plen = .anzahlRasterElemente
             pstart = .Start
         End With
 
@@ -6691,7 +6691,7 @@ Public Module Projekte
         ' hole die Projektdauer
         '
         With hproj
-            plen = .Dauer
+            plen = .anzahlRasterElemente
             pstart = .Start
         End With
 
@@ -7008,14 +7008,14 @@ Public Module Projekte
                 .volume = volume
                 .StrategicFit = sfit
                 .Risiko = risk
-                plen = .Dauer
+                plen = .anzahlRasterElemente
                 pcolor = .farbe
             End With
 
 
             ' nächste Zeile ist ein work-around für Fehler Der Index liegt außerhalb der Array-Grenzen
+            ' workaround
             Dim tmpdata As Integer = hproj.dauerInDays
-
             Call awinCreateBudgetWerte(hproj)
 
         Catch ex As Exception
@@ -7462,7 +7462,7 @@ Public Module Projekte
 
 
         height = 180
-        width = hproj.Dauer * boxWidth + 10
+        width = hproj.anzahlRasterElemente * boxWidth + 10
 
 
         Dim hname As String, mEinheit As String = awinSettings.kapaEinheit
@@ -8128,7 +8128,7 @@ Public Module Projekte
         ' hole die Projektdauer
         '
         With hproj
-            plen = .Dauer
+            plen = .anzahlRasterElemente
             pstart = .Start
         End With
 
@@ -8903,7 +8903,7 @@ Public Module Projekte
                 ' nur dann darf das Projekt noch verschoben werden ...
 
                 bereichsAnfang = .Start + .earliestStart
-                bereichsEnde = .Start + .Dauer - 1 + .latestStart
+                bereichsEnde = .Start + .anzahlRasterElemente - 1 + .latestStart
 
                 If project.StartOffset = 0 And (project.earliestStart < 0 Or project.latestStart > 0) _
                                                And istBereichInTimezone(bereichsAnfang, bereichsEnde) Then
@@ -9185,7 +9185,7 @@ Public Module Projekte
         Try
             hproj = ShowProjekte.getProject(pname)
             With hproj
-                laenge = .Dauer
+                laenge = .anzahlRasterElemente
                 shpUID = .shpUID
                 start = .Start + .StartOffset
                 pcolor = .farbe
@@ -11569,7 +11569,7 @@ Public Module Projekte
 
         hproj = ShowProjekte.getProject(pname)
         With hproj
-            laenge = .Dauer
+            laenge = .anzahlRasterElemente
             start = .Start + .StartOffset
             moveLength = .StartOffset
             pcolor = .farbe
@@ -12037,7 +12037,7 @@ Public Module Projekte
 
                     .range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).value = hproj.name
                     .range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).Interior.Color = hproj.farbe
-                    rng = .Range("Zeitmatrix")(.Cells(rowOffset, columnOffset), .Cells(rowOffset, columnOffset + hproj.Dauer - 1))
+                    rng = .Range("Zeitmatrix")(.Cells(rowOffset, columnOffset), .Cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1))
                     rng.Interior.Color = hproj.farbe
                     .cells(rowOffset, columnOffset).AddComment()
                     With .cells(rowOffset, columnOffset).Comment
@@ -12045,8 +12045,8 @@ Public Module Projekte
                         .Text(Text:="Start:" & Chr(10) & hproj.startDate)
                         .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
                     End With
-                    .cells(rowOffset, columnOffset + hproj.Dauer - 1).AddComment()
-                    With .cells(rowOffset, columnOffset + hproj.Dauer - 1).Comment
+                    .cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).AddComment()
+                    With .cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).Comment
                         .Visible = False
                         .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
                         .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
@@ -12070,7 +12070,7 @@ Public Module Projekte
                         ' Projekt-Name eintragen, Dauer einfärben
                         .range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).value = hproj.name
                         .range("Phasen_des_Projekts").Cells(rowOffset, columnOffset).Interior.Color = hproj.farbe
-                        For d = 1 To hproj.Dauer
+                        For d = 1 To hproj.anzahlRasterElemente
                             .Range("Zeitmatrix").Cells(rowOffset, columnOffset + d - 1).Interior.Color = hproj.farbe
                         Next d
                         ' Startdatum in Kommentar eintragen
@@ -12080,8 +12080,8 @@ Public Module Projekte
                             .Text(Text:="Start:" & Chr(10) & hproj.startDate)
                             .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
                         End With
-                        .Range("Zeitmatrix").cells(rowOffset, columnOffset + hproj.Dauer - 1).AddComment()
-                        With .Range("Zeitmatrix").cells(rowOffset, columnOffset + hproj.Dauer - 1).Comment
+                        .Range("Zeitmatrix").cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).AddComment()
+                        With .Range("Zeitmatrix").cells(rowOffset, columnOffset + hproj.anzahlRasterElemente - 1).Comment
                             .Visible = False
                             .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
                             .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
@@ -12583,57 +12583,175 @@ Public Module Projekte
         Dim rng As Excel.Range
         Dim zeile As Integer, spalte As Integer
         Dim delimiter As String = "."
-
+        Dim tmpStart As Date
+        Dim pwd As String = "projekttafel"
+        Dim laenge As Integer = hproj.anzahlRasterElemente
+        Dim summenspalte As Integer
+        Dim leadingColumns As Integer = 2
 
         Dim pstart As Integer = hproj.Start
 
-        ''separates Excelfile öffnen aus Testzwecken
-        'appInstance.Workbooks.Open(awinPath & "Testfile.xlsx")
 
-        With appInstance.Worksheets(arrWsNames(5))
+        spalte = 1
+
+        With CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
+            ' Blattschutz aufheben 
+            .Unprotect(Password:=pwd)
+
+            ' Änderung 3.7.14 Bereich von Zelle(1,1) bis Zelle(2000,2000) schützen
+            rng = .Range(.Cells(1, 1), .Cells(2000, 2000))
+            rng.Clear()
+            rng.Locked = True
+
+            ' hier wird die Headerzeile beschrieben und sonstiges für Layout wichtiges Struktur 
+            If laenge > 1 Then
+                .Cells(1, 1).offset(0, leadingColumns).value = hproj.startDate
+                .Cells(1, 1).offset(0, leadingColumns + 1).value = hproj.startDate.AddMonths(1)
+            End If
+
+            'For i = 1 To laenge
+            '    '.cells(1, i + 2).value = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy")
+            '    .Cells(1, i + 2).value = StartofCalendar.AddMonths(pstart + i - 2)
+            'Next i
+
+            rng = .Range(.Cells(1, 1).offset(0, leadingColumns), .Cells(1, 1).offset(0, leadingColumns + 1))
+
+            If awinSettings.zeitEinheit = "PM" Then
+
+                '.Cells(1, 1).value = "Monate"
+
+
+                rng.NumberFormat = "mmm-yy"
+
+                Dim destinationRange As Excel.Range
+
+                destinationRange = .Range(.Cells(1, 1).offset(0, leadingColumns), _
+                                          .Cells(1, 1).offset(0, leadingColumns + laenge - 1))
+                summenspalte = spalte + 2 + laenge
+
+                With destinationRange
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+                    .NumberFormat = "mmm-yy"
+                    .WrapText = False
+                    .Orientation = 90
+                    .AddIndent = False
+                    .IndentLevel = 0
+                    .ShrinkToFit = False
+                    .ReadingOrder = Excel.Constants.xlContext
+                    .MergeCells = False
+                    .Interior.Color = noshowtimezone_color
+                End With
+
+                rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
+
+
+            ElseIf awinSettings.zeitEinheit = "PW" Then
+                .Cells(1, 1).value = "Wochen"
+                For i = 1 To 210
+                    CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddDays((i - 1) * 7)
+                Next
+
+            ElseIf awinSettings.zeitEinheit = "PT" Then
+                .Cells(1, 1).value = "Tage"
+                Dim workOnSat As Boolean = False
+                Dim workOnSun As Boolean = False
+
+
+                If Weekday(StartofCalendar, FirstDayOfWeek.Monday) > 3 Then
+                    tmpStart = StartofCalendar.AddDays(8 - Weekday(StartofCalendar, FirstDayOfWeek.Monday))
+                Else
+                    tmpStart = StartofCalendar.AddDays(Weekday(StartofCalendar, FirstDayOfWeek.Monday) - 8)
+                End If
+                '
+                ' jetzt ist tmpstart auf Montag ... 
+                Dim tmpDay As Date
+                Dim i As Integer, w As Integer
+                i = 1
+                For w = 1 To 30
+                    For d = 0 To 4
+                        ' das sind Montag bis Freitag
+                        tmpDay = tmpStart.AddDays(d)
+                        If Not feierTage.Contains(tmpDay) Then
+                            CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
+                            i = i + 1
+                        End If
+                    Next
+                    tmpDay = tmpStart.AddDays(5)
+                    If workOnSat Then
+                        CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
+                        i = i + 1
+                    End If
+                    tmpDay = tmpStart.AddDays(6)
+                    If workOnSun Then
+                        CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
+                        i = i + 1
+                    End If
+                    tmpStart = tmpStart.AddDays(7)
+                Next
+
+
+            End If
+
+
+            ' hier werden jetzt die Spaltenbreiten und Zeilenhöhen gesetzt 
+
+            Dim maxRows As Integer = .Rows.Count
+            Dim maxColumns As Integer = .Columns.Count
+
+
+            CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
+            CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2 * 0.5
+            CType(.Range(.Cells(1, 3), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = awinSettings.spaltenbreite
+
+
+            ' Ende einfügen aus Tabelle2 Activate Event, 3.7.2014
+
             ' hier wird die erste Zeile beschrieben 
 
-            For i = 1 To maxProjektdauer
-                '.cells(1, i + 2).value = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy")
-                .cells(1, i + 2).value = StartofCalendar.AddMonths(pstart + i - 2)
-            Next i
+            'For i = 1 To laenge
+            '    '.cells(1, i + 2).value = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy")
+            '    .Cells(1, i + 2).value = StartofCalendar.AddMonths(pstart + i - 2)
+            'Next i
 
-            rng = .range(.cells(1, 3), .cells(1, maxProjektdauer + 2))
+            'rng = .Range(.Cells(1, 3), .Cells(1, maxProjektdauer + 2))
 
-            Try
-                rng.Columns.AutoFit()
-            Catch ex As Exception
+            'Try
+            '    rng.Columns.AutoFit()
+            'Catch ex As Exception
 
-            End Try
+            'End Try
 
 
             zeile = 2
-            spalte = 1
-            rng = .Range(.Cells(zeile, spalte), .Cells(zeile + 2000, spalte + 120))
-            rng.Clear()
+
 
             Dim k As Integer
             k = 0
             ' wenn es noch keine Phasen gibt: Projekt-Name eintragen, Dauer einfärben
             If hproj.CountPhases = 0 Then
                 ' Projekt-Name eintragen, Dauer einfärben
-                .cells(zeile, spalte).value = hproj.name
-                rng = .Range(.Cells(zeile, spalte + 2), .Cells(zeile, spalte + 1 + hproj.Dauer))
+                .Cells(zeile, spalte).value = hproj.name
+                rng = .Range(.Cells(zeile, spalte + 2), .Cells(zeile, spalte + 1 + hproj.anzahlRasterElemente))
                 rng.Interior.Color = hproj.farbe
                 ' Kommentar am Anfang und am Ende der Phase mit Datum
-                .cells(zeile, spalte + 2).AddComment()
-                With .cells(zeile, spalte + 2).Comment
+                .Cells(zeile, spalte + 2).AddComment()
+                With .Cells(zeile, spalte + 2).Comment
                     .Visible = False
                     .Text(Text:="Start:" & Chr(10) & hproj.startDate)
                     .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
                 End With
 
-                .cells(zeile, spalte + 1 + hproj.Dauer).AddComment()
-                With .cells(zeile, spalte + 1 + hproj.Dauer).Comment
+                .Cells(zeile, spalte + 1 + hproj.anzahlRasterElemente).AddComment()
+                With .Cells(zeile, spalte + 1 + hproj.anzahlRasterElemente).Comment
                     .Visible = False
                     .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
                     .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
                 End With
+
+                ' Änderung 3.7.14 Zellen sollen gesperrt sein für Änderungen
+                rng.Locked = True
+
                 zeile = zeile + 1
             End If
 
@@ -12664,42 +12782,45 @@ Public Module Projekte
 
                 If itemName = hproj.name Or itemName = hproj.VorlagenName Then
                     ' Projekt-Name eintragen, Dauer einfärben
-                    .cells(zeile, spalte).value = hproj.name
-                    rng = .Range(.Cells(zeile, spalte + 2), .Cells(zeile, spalte + 1 + hproj.Dauer))
+                    .Cells(zeile, spalte).value = hproj.name
+                    rng = .Range(.Cells(zeile, spalte + 2), .Cells(zeile, spalte + 1 + hproj.anzahlRasterElemente))
                     rng.Interior.Color = hproj.farbe
-                    .cells(zeile, spalte + 2).AddComment()
-                    With .cells(zeile, spalte + 2).Comment
+
+                    .Cells(zeile, spalte + 2).AddComment()
+                    With .Cells(zeile, spalte + 2).Comment
                         .Visible = False
                         .Text(Text:="Start:" & Chr(10) & hproj.startDate)
                         .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
                     End With
 
-                    .cells(zeile, spalte + 1 + hproj.Dauer).AddComment()
-                    With .cells(zeile, spalte + 1 + hproj.Dauer).Comment
+                    .Cells(zeile, spalte + 1 + hproj.anzahlRasterElemente).AddComment()
+                    With .Cells(zeile, spalte + 1 + hproj.anzahlRasterElemente).Comment
                         .Visible = False
                         .Text(Text:="Ende:" & Chr(10) & hproj.endeDate)
                         .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
                     End With
+
                     zeile = zeile + 1
                 Else
                     ' Phasen Name eintragen, Dauer der Phase einfärben
-                    .cells(zeile, spalte).value = itemName
+                    .Cells(zeile, spalte).value = itemName
                     rng = .Range(.Cells(zeile, spalte + 1 + cphase.relStart), .Cells(zeile, spalte + 1 + cphase.relEnde))
                     rng.Interior.Color = phasenFarbe
-                    .cells(zeile, spalte + 1 + cphase.relStart).AddComment()
+
+                    .Cells(zeile, spalte + 1 + cphase.relStart).AddComment()
                     If cphase.relStart = cphase.relEnde Then
-                        With .cells(zeile, spalte + 1 + cphase.relStart).Comment
+                        With .Cells(zeile, spalte + 1 + cphase.relStart).Comment
                             .Visible = False
                             .Text(Text:="Start:" & Chr(10) & cphase.getStartDate & Chr(10) & "Ende:" & Chr(10) & cphase.getEndDate)
                         End With
                     Else
-                        With .cells(zeile, spalte + 1 + cphase.relStart).Comment
+                        With .Cells(zeile, spalte + 1 + cphase.relStart).Comment
                             .Visible = False
                             .Text(Text:="Start:" & Chr(10) & cphase.getStartDate)
                             .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
                         End With
-                        .cells(zeile, spalte + 1 + cphase.relEnde).AddComment()
-                        With .cells(zeile, spalte + 1 + cphase.relEnde).Comment
+                        .Cells(zeile, spalte + 1 + cphase.relEnde).AddComment()
+                        With .Cells(zeile, spalte + 1 + cphase.relEnde).Comment
                             .Visible = False
                             .Text(Text:="Ende:" & Chr(10) & cphase.getEndDate)
                             .Shape.ScaleHeight(0.45, Microsoft.Office.Core.MsoTriState.msoFalse)
@@ -12714,12 +12835,16 @@ Public Module Projekte
                 anzahlItems = cphase.CountRoles
 
 
+                Dim startEingabebereich As Integer = zeile
+                Dim endeEingabebereich As Integer
+                Dim eingabeBereich As Excel.Range
+
                 For r = 1 To anzahlItems
                     itemName = cphase.getRole(r).name
                     dimension = cphase.getRole(r).getDimension
                     ReDim values(dimension)
                     values = cphase.getRole(r).Xwerte
-                    .cells(zeile, spalte + 1).value = itemName
+                    .Cells(zeile, spalte + 1).value = itemName
                     rng = .Range(.Cells(zeile, spalte + 1 + cphase.relStart), .Cells(zeile, spalte + 1 + cphase.relStart + dimension))
                     rng.Value = values
                     zeile = zeile + 1
@@ -12735,23 +12860,47 @@ Public Module Projekte
                     dimension = cphase.getCost(k).getDimension
                     ReDim values(dimension)
                     values = cphase.getCost(k).Xwerte
-                    .cells(zeile, spalte + 1).value = itemName
+                    .Cells(zeile, spalte + 1).value = itemName
                     rng = .Range(.Cells(zeile, spalte + 1 + cphase.relStart), .Cells(zeile, spalte + 1 + cphase.relStart + dimension))
                     rng.Value = values
                     zeile = zeile + 1
                 Next k
+
+
+                ' Änderung 3.7 diese Zeilen sollen änderbar sein 
+                ' hier werden nun die Validation Kriterien für den Eingabebereich festgelegt 
+                endeEingabebereich = zeile - 1
+
+                If endeEingabebereich >= startEingabebereich Then
+                    eingabeBereich = .Range(.Cells(startEingabebereich, spalte + 1 + cphase.relStart), _
+                                        .Cells(endeEingabebereich, spalte + 1 + cphase.relStart + dimension))
+                    eingabeBereich.Locked = False
+                    eingabeBereich.Interior.Color = iProjektFarbe
+                    Call InputZahlValidationforRange(eingabeBereich)
+                End If
+                
                 zeile = zeile + 1
             Next p
 
 
+
+            ' Phasen und Rollen sollen ja gar nicht mehr eingegeben werden können, deshalb ist das hier nicht mehr notwendig 
+
             ' hier werden nun die Phasen in einer Dropbox fixiert
-            rng = .Range(.Cells(2, 1), .cells(200, 1))
-            InputValidationforRange(rng, 2, True)
+            'rng = .Range(.Cells(2, 1), .Cells(200, 1))
+            'InputValidationforRange(rng, 2, True)
 
-            ' hier werden nun die Rollen und Kosten in Dropbox (2.Spalte) eingetragen
-            rng = .Range(.Cells(2, 2), .cells(200, 2))
-            InputValidationforRange(rng, 1, True)
+            '' hier werden nun die Rollen und Kosten in Dropbox (2.Spalte) eingetragen
+            'rng = .Range(.Cells(2, 2), .Cells(200, 2))
+            'InputValidationforRange(rng, 1, True)
 
+
+            ' Blattschutz aktivieren 
+            .Protect(Password:=pwd, UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
+            ' jetzt noch die ersten beiden Spalten so dimensionieren, daß die Texte zu lesen sind
+            CType(.Columns(1), Global.Microsoft.Office.Interop.Excel.Range).AutoFit()
+            CType(.Columns(2), Global.Microsoft.Office.Interop.Excel.Range).AutoFit()
 
         End With
 
@@ -12928,6 +13077,178 @@ Public Module Projekte
 
                 End Select
                 'zeile = zeile + 1
+            Next zelle
+
+
+
+        End With
+
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' ändert die Ressourcen Zuweisungen entsprechend den Eingaben in Editieren Ressourcen
+    ''' Phase existiert und hat die gleiche Anzahl Monate: Behalten Start und Ende Datum
+    ''' etwas anderes ist erst mal gar nicht erlaubt ; das wird schon durch die Protect Massnahme im Vorfeld erreicht 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <remarks></remarks>
+    Public Sub awinChangeProjFromEditRess(ByRef hproj As clsProjekt)
+        Dim lastRow As Integer
+        Dim rng As Excel.Range
+        Dim zelle As Excel.Range
+        Dim chkPhase As Boolean = True
+        Dim Xwerte As Double()
+        Dim crole As clsRolle
+        Dim cphase As New clsPhase(hproj)
+        Dim ccost As clsKostenart
+        Dim phaseName As String
+        Dim anfang As Integer, ende As Integer
+        Dim newProj As New clsProjekt
+        Dim roleNr As Integer = 0, costNr As Integer = 0
+
+
+        With appInstance.ActiveSheet
+
+            
+            lastRow = System.Math.Max(.cells(2000, 1).End(XlDirection.xlUp).row, .cells(2000, 2).End(XlDirection.xlUp).row) + 1
+            rng = .range(.cells(2, 1), .cells(lastRow, 1))
+            
+            For Each zelle In rng
+                Select Case chkPhase
+                    Case True
+                        ' hier wird die Phasen Information ausgelesen
+
+                        If Len(CType(zelle.Value, String)) > 1 Then
+                            phaseName = CType(zelle.Value, String).Trim
+
+                            If Len(phaseName) > 0 Then
+
+                                Try
+                                    cphase = hproj.getPhase(phaseName)
+                                Catch ex As Exception
+
+                                End Try
+
+                                ' Auslesen der Phasen Dauer
+                                anfang = cphase.relStart
+                                ende = cphase.relEnde
+
+                                'anfang = 1
+                                'While zelle.Offset(0, anfang + 1).Interior.ColorIndex = -4142
+                                '    anfang = anfang + 1
+                                'End While
+
+                                'ende = anfang + 1
+                                'farbeAktuell = zelle.Offset(0, ende).Interior.Color
+                                'While zelle.Offset(0, ende + 1).Interior.Color = farbeAktuell
+                                '    ende = ende + 1
+                                'End While
+                                'ende = ende - 1
+
+                                chkPhase = False
+
+
+
+                            End If
+
+                        End If
+
+
+
+                    Case False ' auslesen Rollen- bzw. Kosten-Information
+                        ' durch EditStoreProjfor Ress wird sichergestellt, daß die 
+                        ' rollen und Phasen in Ihrer Reihenfolge im Datenmodell ausgelesen werden 
+
+                        ' hier wird die Rollen bzw Kosten Information ausgelesen
+                        Dim hname As String
+                        Try
+                            hname = CType(zelle.Offset(0, 1).Value, String).Trim
+                        Catch ex1 As Exception
+                            hname = ""
+                        End Try
+
+
+                        If Len(hname) > 0 Then
+
+                            '
+                            ' handelt es sich um die Ressourcen Definition?
+                            '
+                            If RoleDefinitions.Contains(hname) Then
+
+                                roleNr = roleNr + 1
+
+                                Try
+                                    crole = cphase.getRole(roleNr)
+
+                                    ReDim Xwerte(ende - anfang)
+
+                                    For m = anfang To ende
+
+                                        Try
+                                            Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+                                        Catch ex As Exception
+                                            Xwerte(m - anfang) = 0.0
+                                        End Try
+
+                                    Next m
+
+                                    With crole
+                                        .Xwerte = Xwerte
+                                    End With
+
+                                Catch ex As Exception
+                                    '
+                                    ' handelt es sich um die Kostenart Definition?
+                                    ' 
+
+
+                                End Try
+
+                            ElseIf CostDefinitions.Contains(hname) Then
+
+                                costNr = costNr + 1
+
+                                Try
+                                    ccost = cphase.getCost(costNr)
+
+                                    ReDim Xwerte(ende - anfang)
+
+                                    For m = anfang To ende
+
+                                        Try
+                                            Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
+                                        Catch ex As Exception
+                                            Xwerte(m - anfang) = 0.0
+                                        End Try
+
+                                    Next m
+
+                                    With ccost
+                                        .Xwerte = Xwerte
+                                    End With
+
+
+                                Catch ex As Exception
+
+                                End Try
+
+                            End If
+
+
+                        Else
+
+                            chkPhase = True
+                            roleNr = 0
+                            costNr = 0
+
+                        End If
+
+
+                End Select
+
             Next zelle
 
 
@@ -13384,7 +13705,7 @@ Public Module Projekte
         Try
             With hproj
                 If .Start <= getColumnOfDate(Date.Now) And
-                    .Start + .Dauer - 1 >= getColumnOfDate(Date.Now) And _
+                    .Start + .anzahlRasterElemente - 1 >= getColumnOfDate(Date.Now) And _
                     .Status <> ProjektStatus(3) And _
                     .Status <> ProjektStatus(4) Then
                     erg = True
@@ -14410,9 +14731,11 @@ Public Module Projekte
                             If cproj.Erloes > 0 Then
                                 ' dann soll der alte Wert beibehalten werden 
                                 .Erloes = cproj.Erloes
-                                If .Dauer = cproj.Dauer And Not IsNothing(cproj.budgetWerte) Then
+                                If .anzahlRasterElemente = cproj.anzahlRasterElemente And Not IsNothing(cproj.budgetWerte) Then
                                     .budgetWerte = cproj.budgetWerte
                                 Else
+                                    ' Workaround: 
+                                    Dim tmpValue As Integer = hproj.dauerInDays
                                     Call awinCreateBudgetWerte(hproj)
                                 End If
                             End If
@@ -14510,6 +14833,8 @@ Public Module Projekte
 
                         End With
 
+                        ' Workaround: 
+                        Dim tmpValue As Integer = hproj.dauerInDays
                         Call awinCreateBudgetWerte(hproj)
                         tafelZeile = tafelZeile + 1
                     Catch ex1 As Exception
@@ -14569,6 +14894,30 @@ Public Module Projekte
         ImportProjekte.Clear()
 
     End Sub
+
+    ''' <summary>
+    ''' überprüft, ob die Eingabe eine Dezimal Zahl > 0 ist 
+    ''' </summary>
+    ''' <param name="selrange"></param>
+    ''' <remarks></remarks>
+    Private Sub InputZahlValidationforRange(ByRef selrange As Range)
+
+        With selrange.Validation
+            .Delete()
+            .Add(Type:=XlDVType.xlValidateDecimal, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                 Operator:=XlFormatConditionOperator.xlGreaterEqual, Formula1:="0")
+            .IgnoreBlank = True
+            .InCellDropdown = True
+            .InputTitle = ""
+            .ErrorTitle = ""
+            .InputMessage = ""
+            .ErrorMessage = "bitte nur Zahlen >= 0 eingeben"
+            .ShowInput = True
+            .ShowError = True
+        End With
+
+    End Sub
+    
 
     '
     Private Sub InputValidationforRange(ByRef selrange As Range, ByVal stage As Integer, showvalidation As Boolean)

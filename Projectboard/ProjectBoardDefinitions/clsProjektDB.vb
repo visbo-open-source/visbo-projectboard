@@ -72,7 +72,7 @@
             Me.Schrift = .Schrift
             Me.Schriftfarbe = .Schriftfarbe
             Me.VorlagenName = .VorlagenName
-            Me.Dauer = .Dauer
+            Me.Dauer = .anzahlRasterElemente
             ' ergänzt am 16.11.13
             Me.volumen = .volume
             Me.complexity = .complexity

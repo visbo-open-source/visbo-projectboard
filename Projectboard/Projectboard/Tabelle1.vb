@@ -153,7 +153,7 @@ Public Class Tabelle1
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
                     With kvp.Value
-                        If (.tfspalte >= selectLeft) And (.tfspalte + .Dauer <= selectLeft + selectWidth) _
+                        If (.tfspalte >= selectLeft) And (.tfspalte + .anzahlRasterElemente <= selectLeft + selectWidth) _
                             And (.tfZeile >= selectTop) And (.tfZeile <= selectTop + selectHeight - 1) Then
 
                             ' ist in der Range - also selektieren

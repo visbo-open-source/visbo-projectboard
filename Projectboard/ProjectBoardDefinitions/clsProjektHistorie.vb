@@ -155,7 +155,7 @@
                 Dim tmpDate As Date
                 For i = 0 To laenge
                     ' StartofCalendar ist 00:00 Uhr, deswegen kommt man zum Vortag , 23:55 , indem man 5 Min abzieht 
-                    tmpDate = StartofCalendar.AddMonths(von + i).AddMinutes(-5)
+                    tmpDate = StartofCalendar.Date.AddMonths(von + i).AddMinutes(-5)
 
                     Try
                         currentproj = Me.ElementAtorBefore(tmpDate)

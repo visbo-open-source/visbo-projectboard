@@ -882,6 +882,7 @@ Public Module awinDiagrams
 
                 With CType(appInstance.Charts.Add, Excel.Chart)
 
+
                     If Not isCockpitChart Then
                         With .Axes(Excel.XlAxisType.xlValue)
                             .MinorUnit = 1
@@ -1209,6 +1210,14 @@ Public Module awinDiagrams
                         prcTyp = DiagrammTypen(5) Or _
                         awinSettings.kapaEinheit = "ST" Then
                         titleSumme = ""
+                    ElseIf prcTyp = DiagrammTypen(1) Then
+                        einheit = awinSettings.kapaEinheit
+                        titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
+                                            Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
+
+                    ElseIf prcTyp = DiagrammTypen(2) Then
+                        einheit = "T€"
+                        titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " " & einheit & ")"
                     Else
                         titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
                     End If
@@ -1236,6 +1245,7 @@ Public Module awinDiagrams
                     .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
 
                 End With
+
 
 
                 With .ChartObjects(anzDiagrams + 1)
@@ -1523,25 +1533,30 @@ Public Module awinDiagrams
                         objektFarbe = PhaseDefinitions.getPhaseDef(prcName).farbe
                         datenreihe = ShowProjekte.getCountPhasesInMonth(prcName)
 
-                        ' Ergänzung wegen Anzeige der selektierten Objekte ... 
-                        tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName)
-                        For ix = 0 To bis - von
-                            datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
-                            seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
-                        Next
+
+                        If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
+                            ' Ergänzung wegen Anzeige der selektierten Objekte ... 
+                            tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName)
+                            For ix = 0 To bis - von
+                                datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
+                                seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
+                            Next
+                        End If
+                        
 
                     ElseIf prcTyp = DiagrammTypen(1) Then
                         einheit = " " & awinSettings.kapaEinheit
                         objektFarbe = RoleDefinitions.getRoledef(prcName).farbe
                         datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
 
-                        ' Ergänzung wegen Anzeige der selektierten Objekte ... 
-                        tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(prcName)
-                        For ix = 0 To bis - von
-                            datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
-                            seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
-                        Next
-
+                        If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
+                            ' Ergänzung wegen Anzeige der selektierten Objekte ... 
+                            tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(prcName)
+                            For ix = 0 To bis - von
+                                datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
+                                seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
+                            Next
+                        End If
 
                     ElseIf prcTyp = DiagrammTypen(2) Then
                         einheit = " T€"
@@ -1561,12 +1576,15 @@ Public Module awinDiagrams
                             objektFarbe = CostDefinitions.getCostdef(prcName).farbe
                             datenreihe = ShowProjekte.getCostValuesInMonth(prcName)
 
-                            ' Ergänzung wegen Anzeige der selektierten Objekte ... 
-                            tmpdatenreihe = selectedProjekte.getCostValuesInMonth(prcName)
-                            For ix = 0 To bis - von
-                                datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
-                                seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
-                            Next
+                            If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
+                                ' Ergänzung wegen Anzeige der selektierten Objekte ... 
+                                tmpdatenreihe = selectedProjekte.getCostValuesInMonth(prcName)
+                                For ix = 0 To bis - von
+                                    datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
+                                    seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
+                                Next
+                            End If
+                            
                         End If
 
                     ElseIf prcTyp = DiagrammTypen(4) Then
@@ -1699,7 +1717,7 @@ Public Module awinDiagrams
 
                 ' Ergänzung wegen Anzeige selektierter Objekte 
                 ' wenn der Wert größer ist als Null, dann Anzeigen ... 
-                If seldatenreihe.Sum > 0 Then
+                If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
                     With .SeriesCollection.NewSeries
                         .HasDataLabels = False
                         .name = "Selected Projects"
@@ -1851,13 +1869,40 @@ Public Module awinDiagrams
 
                 .HasTitle = True
 
+
                 If prcTyp = DiagrammTypen(0) Or _
                         prcTyp = DiagrammTypen(5) Or _
                         awinSettings.kapaEinheit = "ST" Then
                     titleSumme = ""
+
+                ElseIf prcTyp = DiagrammTypen(1) Then
+
+                    einheit = awinSettings.kapaEinheit
+                    If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
+                        titleSumme = " (" & Format(seldatenreihe.Sum, "##,##0") & " / " & _
+                                            Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
+                                            Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
+                    Else
+                        titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
+                                        Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
+                    End If
+                    
+
+                ElseIf prcTyp = DiagrammTypen(2) Then
+
+                    einheit = "T€"
+                    If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
+                        titleSumme = " (" & Format(seldatenreihe.Sum, "##,##0") & " / " & _
+                                            Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
+                    Else
+                        titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " " & einheit & ")"
+                    End If
+
+
                 Else
                     titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
                 End If
+
 
                 .ChartTitle.Text = diagramTitle & titleSumme
 
@@ -5226,7 +5271,7 @@ Public Module awinDiagrams
                 sfarbe = RGB(0, 0, 0) '.Schriftfarbe
                 sgroesse = .Schrift
                 ' in L steht jetzt die Lä nge
-                l = .Dauer
+                l = .anzahlRasterElemente
                 i = .tfZeile + 1
                 k = .tfspalte
             End With
@@ -5471,7 +5516,7 @@ Public Module awinDiagrams
 
                 End Try
 
-                
+
                 '.Shadow.Transparency = 0.0
             End With
 
@@ -5486,7 +5531,7 @@ Public Module awinDiagrams
                 sfarbe = RGB(0, 0, 0) '.Schriftfarbe
                 sgroesse = .Schrift
                 ' in L steht jetzt die Länge
-                l = .Dauer
+                l = .anzahlRasterElemente
                 i = .tfZeile + 1
                 k = .tfspalte
             End With
