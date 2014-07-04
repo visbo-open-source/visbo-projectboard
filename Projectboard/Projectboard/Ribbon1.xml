@@ -31,21 +31,26 @@
       -->
       <tab id="PT0" label="Visualisieren">
         <group id="PT0G1" label="Projekt">
-          <button id="PT0G1B0" label="Status" onAction="PT0ShowProjektStatus" />
+          <menu id="PT0G1M3" label="Chart-Cockpit">
+            <button id="PT0G1M3B1" label="Cockpit visualisieren" onAction="PT0ShowCockpit" />
+            <button id="PT0G1M3B2" label="Cockpit speichern" onAction="PT0SaveCockpit" />
+          </menu>
           <separator id="PT0G1s0"/>
-          <button id="PT0G1B1" label="Abhängigkeiten" onAction="PT0ShowDependencies" />
+            <button id="PT0G1B0" label="Status" onAction="PT0ShowProjektStatus" />
           <separator id="PT0G1s1"/>
+          <button id="PT0G1B1" label="Abhängigkeiten" onAction="PT0ShowDependencies" />
+          <separator id="PT0G1s2"/>
           <menu id="PT0G1M0" label="Phasen">
             <button id="PT0G1M0B1" label="Namen wählen" onAction="PT0VisualizePhases" />
             <button id="PT0G1M0B2" label="Phasen Übersicht" onAction="Tom2G2M1B1Phasen" />
             <!--<button id="PT0G1M0B3" label="Phasen Darstellung" onAction="Tom2G2M1B1Phasen2" />-->
           </menu>
-          <separator id="PT0G1s2"/>
+          <separator id="PT0G1s3"/>
           <menu id="PT0G1M1" label="Ressourcen">
             <button id="PT0G1M1B1" label="Personal Bedarfe" onAction="Tom2G2M1B2Resources" />
             <button id="PT0G1M1B2" label="Kosten Bedarfe" onAction="Tom2G2M1B5GKosten" />
           </menu>
-          <separator id="PT0G1s3"/>
+          <separator id="PT0G1s4"/>
           <menu id="PT0G1M2" label="Meilensteine">
             <!--<button id="PT0G1M2B1" label="Grün" onAction="Tom2G2M5M2B1ShowMilestones" />
             <button id="PT0G1M2B2" label="Gelb" onAction="Tom2G2M5M2B2ShowMilestones" />
@@ -56,12 +61,12 @@
             <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="PTShowMilestoneTrend" />
             <button id="PT0G1M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
           </menu>
-          <separator id="PT0G1s4"/>
+          <separator id="PT0G1s5"/>
           <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
           <!--<button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />-->
           <button id="PT0G1B5" label="Abhängigkeiten" onAction="Tom2G2M1B6Abhaengigkeit" />
           <!--<button id="PT0G1B4" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />-->
-          <separator id="PT0G1s5"/>
+          <separator id="PT0G1s6"/>
           <button id="PT0G1B6" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
         </group>
         <!---->

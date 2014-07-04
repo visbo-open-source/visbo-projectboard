@@ -2,6 +2,8 @@
 Imports Microsoft.Office.Interop.Excel
 Imports System.Windows.Forms
 Imports Microsoft.Office.Core
+Imports xlNS = Microsoft.Office.Interop.Excel
+Imports System.ComponentModel
 Imports Microsoft.VisualBasic.Constants
 
 
@@ -7252,6 +7254,110 @@ Public Module Projekte
         End Try
 
         chtobj.Delete()
+
+
+    End Sub
+    Public Sub awinSaveChart(ByRef chtobj As ChartObject, ByVal cockpitname As String)
+        Dim kennung As String
+
+        Dim currentDirectoryName As String = My.Computer.FileSystem.CurrentDirectory & "\"
+        Dim fileName As String
+        Dim found As Boolean
+        Dim anzCharts As Integer
+        Dim i As Integer
+        Dim logMessage As String = " "
+        Dim newchtobj As Excel.ChartObject
+        Dim hchtobj As Excel.ChartObject
+        Dim xlsCockpits As xlNS.Workbook = Nothing
+        Dim wsSheet As xlNS.Worksheet = Nothing
+
+        newchtobj = chtobj
+
+        chtobj.Copy()
+
+        fileName = awinPath & cockpitsFile
+        If My.Computer.FileSystem.FileExists(fileName) Then
+
+            Try
+                xlsCockpits = appInstance.Workbooks.Open(fileName)
+
+            Catch ex As Exception
+                found = False
+                i = 1
+                While i <= appInstance.Workbooks.Count And Not found
+                    If appInstance.Workbooks(i).Name = fileName Then
+                        xlsCockpits = appInstance.Workbooks(i)
+                        found = True
+                    Else
+                        i = i + 1
+                    End If
+                End While
+
+                If Not found Then
+                    logMessage = "Öffnen von " & fileName & " fehlgeschlagen" & vbLf & _
+                                                "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
+
+                    Throw New ArgumentException(logMessage)
+                End If
+
+            End Try
+        Else
+            ' Cockpits-File neu anlegen 
+            xlsCockpits = appInstance.Workbooks.Add(fileName)
+          
+        End If
+
+
+        ' in der DiagramList wird die letzte Position gespeichert , deshlab ist es kontra produktiv , das zu löschen 
+
+        'Try
+        '    kennung = chtobj.Name
+        'Catch ex As Exception
+        '    kennung = "?"
+        'End Try
+
+        'Try
+        '    With DiagramList.getDiagramm(kennung)
+        '        .top = chtobj.Top
+        '        .left = chtobj.Left
+        '    End With
+        'Catch ex As Exception
+
+        'End Try
+
+
+        ' richtige Tabellenblatt finden
+        found = False
+        i = 1
+        While i <= xlsCockpits.Worksheets.Count And Not found
+            wsSheet = xlsCockpits.Worksheets.Item(i)
+            If wsSheet.Name = cockpitname Then
+                wsSheet.Delete()
+                found = True
+            Else
+                i = i + 1
+            End If
+
+        End While
+        ' Tabellenblatt nicht gefunden, es muss neu hinzugefügt werden
+        If Not found Then
+            wsSheet = xlsCockpits.Worksheets.Add()
+            wsSheet.Name = cockpitname
+        End If
+
+        ' richtige Chartobj ersetzen
+        While i <= wsSheet.ChartObjects.count And Not found
+            hchtobj = wsSheet.ChartObjects(i)
+            If hchtobj.Name = newchtobj.Name Then
+                hchtobj.Delete()
+                found = True
+            Else
+                i = i + 1
+            End If
+        End While
+
+        wsSheet.Paste() ' chart aus dem Buffer nun in das Tabellenblatt einfügen
+        anzCharts = wsSheet.ChartObjects.Count
 
 
     End Sub

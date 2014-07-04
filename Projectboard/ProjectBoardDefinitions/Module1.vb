@@ -309,6 +309,7 @@ Public Module Module1
     Public awinPath As String
     Public requirementsOrdner As String = "requirements\"
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
+    Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
     Public projektFilesOrdner As String = "ProjectFiles"
     Public deletedFilesOrdner As String = "DeletedFiles"
     Public rplanimportFilesOrdner As String = "RPLANImport"
@@ -333,28 +334,7 @@ Public Module Module1
 
 
 
-    '
-    ' Funktion prüft, ob der angegebene Name bereits Element der Projektliste ist
-    '
-    Function inProjektliste(strName As String) As Boolean
-
-        Dim found As Boolean
-        Dim foundinDatabase As Boolean = False
-
-        If Len(strName) < 2 Then
-            found = False
-        ElseIf AlleProjekte.ContainsKey(strName & "#") Then
-            found = True
-        ElseIf foundinDatabase Then
-            ' hier muss noch geprüft werden, ob das File in der Datenbank vorkommt 
-            found = True
-        Else
-            found = False
-        End If
-
-        inProjektliste = found
-
-    End Function
+ 
 
 
     ''' <summary>
@@ -2176,5 +2156,29 @@ Public Module Module1
 
 
     End Function
+    '
+    ' Funktion prüft, ob der angegebene Name bereits Element der Projektliste ist
+    '
+    Function inProjektliste(strName As String) As Boolean
 
+        Dim found As Boolean = False
+        Dim foundinDatabase As Boolean = False
+        'Dim request As New Request(awinSettings.databaseName)
+
+        If Len(strName) < 2 Then
+            ' ProjektName soll mehr als 1 Zeichen haben
+            found = True
+        ElseIf AlleProjekte.ContainsKey(strName & "#") Then
+            found = True
+            'ElseIf request.pingMongoDb() Then
+
+            '    found = request.projectNameAlreadyExists(strName, "")
+            'Else
+            '    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+            '    found = False
+        End If
+
+        inProjektliste = found
+
+    End Function
 End Module

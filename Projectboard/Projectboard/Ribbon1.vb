@@ -326,7 +326,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             While i < anzDiagrams
 
-                chtobj = .ChartObjects(1)
+                chtobj = .ChartObjects(i)
                 Call awinDeleteChart(chtobj)
                 i = i + 1
 
@@ -337,6 +337,32 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
 
     End Sub
+    Sub PT0SaveCockpit(control As IRibbonControl)
+
+        Dim anzDiagrams As Integer
+        Dim chtobj As Excel.ChartObject
+        Dim i As Integer = 1
+
+        Call projektTafelInit()
+
+        With appInstance.Worksheets(arrWsNames(3))
+
+            anzDiagrams = .ChartObjects.Count
+
+            While i <= anzDiagrams
+
+                chtobj = .ChartObjects(i)
+                Call awinSaveChart(chtobj, "cockpit1")
+                i = i + 1
+
+            End While
+
+
+        End With
+
+
+    End Sub
+
 
     ''' <summary>
     ''' wird aktuell verwendet , um eine Stelle für Testen bestimmter Funktionalitäten zu haben
