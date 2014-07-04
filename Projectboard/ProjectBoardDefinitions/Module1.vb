@@ -368,6 +368,17 @@ Public Module Module1
             .EnableEvents = True
         End With
 
+        ' Konsistenzchecks durchführen
+
+        'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+        '    If Not kvp.Value.isConsistent Then
+        '        Call MsgBox("nicht konsistent: " & kvp.Value.name)
+        '    End If
+
+        'Next
+
+
     End Sub
 
 
@@ -1503,7 +1514,7 @@ Public Module Module1
                                 istfrei = False
                                 Exit For
                             End If
-                        ElseIf spalte <= .tfspalte + .Dauer - 1 Then
+                        ElseIf spalte <= .tfspalte + .anzahlRasterElemente - 1 Then
                             istfrei = False
                             Exit For
                         End If

@@ -49,6 +49,9 @@
     ' sollen Bedarfe proportional zur Streckung oder Stauchung eines Projekt angepasst werden
     Property propAnpassRess As Boolean
 
+    ' sollen die Werte der selektierten Projekte in PRC Summencharts angezeigt werden ? 
+    Property showValuesOfSelected As Boolean
+
     ' Settings für die letzte User Selektion in der Tafel 
     Property selectedColumn As Integer
     Property selectedRow As Integer
@@ -99,11 +102,15 @@
         _offsetEinheit = "d"
         _milestoneFreeFloat = False
         _autoCorrectBedarfe = True
+        _propAnpassRess = False
         _drawphases = False
+        _showValuesOfSelected = False
         _loadProjectsOnChange = False
 
         ' Settings für Import / Export 
         _EinzelRessExport = 0
+
+
 
         ' Settings für Besser/Schlechter Diagramm 
         _timeToleranzRel = 0.02

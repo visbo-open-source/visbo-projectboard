@@ -688,8 +688,8 @@ Public Module awinGUI
             End With
 
 
-            appInstance.ShowChartTipNames = False
-            appInstance.ShowChartTipValues = False
+            'appInstance.ShowChartTipNames = False
+            'appInstance.ShowChartTipValues = False
 
             With .ChartObjects(anzDiagrams + 1)
                 .top = top
@@ -1212,8 +1212,8 @@ Public Module awinGUI
                     lastrow = .tfZeile
                 End If
 
-                If .tfspalte + .Dauer - 1 > lastcolumn Then
-                    lastcolumn = .tfspalte + .Dauer - 1
+                If .tfspalte + .anzahlRasterElemente - 1 > lastcolumn Then
+                    lastcolumn = .tfspalte + .anzahlRasterElemente - 1
                 End If
 
             End With

@@ -196,8 +196,28 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
     End Sub
 
+    Sub awinSetPropAnpass(control As IRibbonControl, ByRef pressed As Boolean)
 
-    Sub awinSetModusHistory(control As IRibbonControl,ByRef pressed As Boolean)
+        If pressed Then
+            awinSettings.propAnpassRess = True
+        Else
+            awinSettings.propAnpassRess = False
+        End If
+
+    End Sub
+
+
+    Sub awinSetShowSelObj(control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.showValuesOfSelected = True
+        Else
+            awinSettings.showValuesOfSelected = False
+        End If
+
+    End Sub
+
+    Sub awinSetModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
 
         Dim demoModusDate As New frmdemoModusDate
         Dim returnValue As DialogResult
@@ -269,11 +289,11 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim deletedProj As Integer = 0
         Dim returnValue As DialogResult
-   
+
         Dim DeleteProjects As New frmDeleteProjects
 
         Try
-     
+
 
             returnValue = DeleteProjects.ShowDialog
 
@@ -292,7 +312,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 ' returnValue = DialogResult.Cancel
 
             End If
-          
+
         Catch ex As Exception
 
             Call MsgBox(ex.Message)
@@ -383,7 +403,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                                  calcXCoordToDate(singleShp.Left).ToShortDateString & " vs. " & hproj.startDate.ToShortDateString & _
                                  " vs. " & calcXCoordToDate(curCoord(1)).ToShortDateString & singleShp.Left.ToString & vbLf
 
-                
+
             Next i
 
 
@@ -431,7 +451,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
     End Sub
 
-   
+
 
 
     ''' <summary>
@@ -453,7 +473,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
-        
+
 
         enableOnUpdate = False
 
@@ -697,6 +717,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 End Try
 
                 ' jetzt werden die Daten aus hproj in Edit Ressourcen worksheet geschrieben ... 
+                appInstance.ScreenUpdating = False
                 Call awinStoreProjForEditRess(hproj)
                 Dim oldShpID As Integer = CInt(hproj.shpUID)
 
@@ -789,6 +810,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
                             If .Erloes <> CType(ProjektAendern.Erloes.Text, Double) Then
                                 If .Erloes = 0 Then
                                     .Erloes = CType(ProjektAendern.Erloes.Text, Double)
+
+                                    ' Workaround: 
+                                    Dim tmpValue As Integer = hproj.dauerInDays
                                     Call awinCreateBudgetWerte(hproj)
                                 Else
                                     Try
@@ -796,6 +820,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
                                         .Erloes = CType(ProjektAendern.Erloes.Text, Double)
                                     Catch ex As Exception
                                         .Erloes = CType(ProjektAendern.Erloes.Text, Double)
+                                        ' Workaround: 
+                                        Dim tmpValue As Integer = hproj.dauerInDays
                                         Call awinCreateBudgetWerte(hproj)
                                     End Try
 
@@ -851,13 +877,18 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim hproj As clsProjekt
         Dim singleShp As Excel.Shape
         Dim pname As String
+        Dim todoListe As New Collection
+        Dim errMessage As String = ""
+        Dim initMsg As String = "für folgende Projekte nicht zulässig, da sie nicht mehr Status=geplant haben: "
 
         Call projektTafelInit()
 
         ' es wird vbeim Betreten der Tabelle2 nochmal auf False gesetzt ... und insbesondere bei Activate Tabelle1 (!) auf true gesetzt, nicht vorher wieder
         enableOnUpdate = False
 
-
+        ' Änderung 2.7.14 tk : Vorbedingung sicherstellen: nur Projekte, die noch nicht beauftragt sind, können noch verschoben und 
+        ' werden
+        '
         Try
             'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
             awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
@@ -872,29 +903,34 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 singleShp = awinSelection.Item(i)
 
-                If i = 1 Then
+                Try
+                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    pname = hproj.name
+                Catch ex As Exception
+                    Call MsgBox(" Fehler! Projekt " & singleShp.Name & " nicht im Hauptspeicher")
+                    enableOnUpdate = True
+                    Exit Sub
+                End Try
 
-                    ' jetzt die Aktion durchführen ...
-                    Try
-                        hproj = ShowProjekte.getProject(singleShp.Name)
-                        pname = hproj.name
+                If hproj.Status = ProjektStatus(0) Then
+                    ' nur dann macht das Setzen von earliest / latest Sinn ...
+
+                    todoListe.Add(hproj.name)
+
+                    If i = 1 Then
+
+                        ' jetzt die Aktion durchführen ...
+
                         With setStartEnd
 
                             .EarliestStart.Value = hproj.earliestStart
                             .LatestStart.Value = hproj.latestStart
 
-
                         End With
-                    Catch ex As Exception
-                        Call MsgBox(" Fehler in Zeitspanne Projektstart " & singleShp.Name & " , Modul: Tom2G1EarliestLatestStart")
-                        enableOnUpdate = True
-                        Exit Sub
-                    End Try
-                Else
 
-                    Try
-                        hproj = ShowProjekte.getProject(singleShp.Name)
-                        pname = hproj.name
+
+                    Else
+
                         With setStartEnd
 
                             If .EarliestStart.Value <> hproj.earliestStart Or .LatestStart.Value <> hproj.latestStart Then
@@ -905,50 +941,57 @@ Imports Excel = Microsoft.Office.Interop.Excel
                             End If
 
                         End With
-                    Catch ex As Exception
-                        Call MsgBox(" Fehler in Zeitspanne ProjektStart " & singleShp.Name & " , Modul: Tom2G1EarliestLatestStart")
-                        enableOnUpdate = True
-                        Exit Sub
-                    End Try
 
+
+                    End If
+                Else
+                    errMessage = errMessage & vbLf & hproj.name
                 End If
+
             Next i
 
+            If todoListe.Count > 0 Then
 
-            returnValue = setStartEnd.ShowDialog
+                returnValue = setStartEnd.ShowDialog
 
-            If returnValue = DialogResult.OK Then
+                If returnValue = DialogResult.OK Then
 
-                For i = 1 To awinSelection.Count
+                    For i = 1 To todoListe.Count
 
-                    singleShp = awinSelection.Item(i)
+                        pname = todoListe.Item(i)
 
-                    ' jetzt die Aktion durchführen ...
-                    Try
-                        hproj = ShowProjekte.getProject(singleShp.Name)
-                        pname = hproj.name
-                        With setStartEnd
+                        ' jetzt die Aktion durchführen ...
+                        Try
+                            hproj = ShowProjekte.getProject(pname)
+                            With setStartEnd
 
-                            hproj.earliestStart = .EarliestStart.Value
-                            hproj.latestStart = .LatestStart.Value
-                            hproj.earliestStartDate = hproj.startDate.AddMonths(.EarliestStart.Value)
-                            hproj.latestStartDate = hproj.startDate.AddMonths(.LatestStart.Value)
+                                hproj.earliestStart = .EarliestStart.Value
+                                hproj.latestStart = .LatestStart.Value
+                                hproj.earliestStartDate = hproj.startDate.AddMonths(.EarliestStart.Value)
+                                hproj.latestStartDate = hproj.startDate.AddMonths(.LatestStart.Value)
 
-                        End With
-                    Catch ex As Exception
-                        Call MsgBox(" Fehler in Zeitspanne Projektstart " & singleShp.Name & " , Modul: Tom2G1EarliestLatestStart")
-                        enableOnUpdate = True
-                        Exit Sub
-                    End Try
+                            End With
+                        Catch ex As Exception
+                            Call MsgBox(" Fehler! Projekt " & pname & " earliest/latest kann nicht gesetzt werden")
+                            enableOnUpdate = True
+                            Exit Sub
+                        End Try
 
-                Next i
+                    Next i
 
-                'Call MsgBox(" earliestStart und LatestEnd aus Formular für alle selektierten Projekte übernehmen")
+                    Call MsgBox("ok, frühester und spätester Start gesetzt")
 
-            ElseIf returnValue = DialogResult.Cancel Then
-                'Call MsgBox("Default soll gelten")
+                ElseIf returnValue = DialogResult.Cancel Then
+                    'Call MsgBox("Default soll gelten")
+
+                End If
 
             End If
+
+            If errMessage.Length > 0 Then
+                Call MsgBox(initMsg & vbLf & errMessage)
+            End If
+
         Else
 
             Call MsgBox("Es muss mindestens ein Projekt selektiert sein")
@@ -1781,6 +1824,20 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
     End Sub
 
+    Sub PTPropAnpassen(control As IRibbonControl, ByRef pressed As Boolean)
+
+        awinSettings.propAnpassRess = Not awinSettings.propAnpassRess
+        pressed = awinSettings.showValuesOfSelected
+
+    End Sub
+
+    Sub PTShowSelectedObjects(control As IRibbonControl, ByRef pressed As Boolean)
+
+        awinSettings.showValuesOfSelected = Not awinSettings.showValuesOfSelected
+        pressed = awinSettings.showValuesOfSelected
+
+    End Sub
+
     Public Sub PT5phasenZeichnen(control As IRibbonControl, pressed As Boolean)
 
         Call projektTafelInit()
@@ -2025,7 +2082,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 repObj = Nothing
 
-                width = System.Math.Max(hproj.Dauer * boxWidth + 10, 6 * boxWidth + 10)
+                width = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 6 * boxWidth + 10)
 
                 Try
                     Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)
@@ -2102,7 +2159,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
 
 
-                width = hproj.Dauer * boxWidth + 10
+                width = hproj.anzahlRasterElemente * boxWidth + 10
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
@@ -2182,7 +2239,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     Exit Sub
                 End Try
 
-                width = hproj.Dauer * boxWidth + 10
+                width = hproj.anzahlRasterElemente * boxWidth + 10
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
                 Dim repObj As Object = Nothing
@@ -2260,7 +2317,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     Exit Sub
                 End Try
 
-                width = hproj.Dauer * boxWidth + 10
+                width = hproj.anzahlRasterElemente * boxWidth + 10
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
@@ -3252,7 +3309,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                             End With
 
                             height = 2 * ((nameList.Count - 1) * 20 + 110)
-                            width = System.Math.Max(hproj.Dauer * boxWidth + 10, 24 * boxWidth + 10)
+                            width = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 24 * boxWidth + 10)
 
                             'Try
 
@@ -4860,7 +4917,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 height = 380
 
-                width = System.Math.Max(hproj.Dauer * boxWidth + 7, cproj.Dauer * boxWidth + 7)
+                width = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 7, cproj.anzahlRasterElemente * boxWidth + 7)
                 scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
                 'width = hproj1.Dauer * boxWidth + 7
                 'scale = hproj1.Dauer
@@ -5042,7 +5099,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim scale As Double
         Dim noColorCollection As New Collection
         Dim vglName As String = " "
-        Dim pName As String, variantName As String
+        Dim pName As String = "", variantName As String
         Dim awinSelection As Excel.ShapeRange
 
         Call projektTafelInit()
@@ -5060,93 +5117,96 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             If Not awinSelection Is Nothing Then
 
-
                 If awinSelection.Count = 1 Then
 
-                    Dim lastElem As Integer
-
-                    ' jetzt die Aktion durchführen ...
-                    singleShp1 = awinSelection.Item(1)
-
-
                     Try
-                        hproj = ShowProjekte.getProject(singleShp1.Name)
-                    Catch ex As Exception
-                        Call MsgBox("Projekt nicht gefunden ...")
-                        enableOnUpdate = True
-                        Exit Sub
-                    End Try
+                        Dim lastElem As Integer
 
-                    ' jetzt ggf die Projekt-Historie aufbauen
-
-                    If Not projekthistorie Is Nothing Then
-                        If projekthistorie.Count > 0 Then
-                            vglName = projekthistorie.First.name
-                        End If
-                    End If
-
-                    With hproj
-                        pName = .name
-                        variantName = .variantName
-                    End With
-
-                    If vglName.Trim <> pName.Trim Then
-
-                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                        projekthistorie.Add(Date.Now, hproj)
-                        lastElem = projekthistorie.Count - 1
+                        ' jetzt die Aktion durchführen ...
+                        singleShp1 = awinSelection.Item(1)
 
 
-                    Else
-                        ' der aktuelle Stand hproj muss hinzugefügt werden 
-                        lastElem = projekthistorie.Count - 1
-                        projekthistorie.RemoveAt(lastElem)
-                        projekthistorie.Add(Date.Now, hproj)
-                    End If
+                        Try
+                            hproj = ShowProjekte.getProject(singleShp1.Name)
+                        Catch ex As Exception
+                            Call MsgBox("Projekt nicht gefunden ...")
+                            enableOnUpdate = True
+                            Exit Sub
+                        End Try
 
+                        ' jetzt ggf die Projekt-Historie aufbauen
 
-                    If projekthistorie.Count <= 1 Then
-
-                        Call MsgBox(" es gibt zu diesem Projekt noch keine Historie")
-
-                    Else
-
-                        cproj = projekthistorie.ElementAt(lastElem - 1)
-
-                        top = singleShp1.Top + boxHeight + 2
-                        left = singleShp1.Left - 5
-                        If left <= 0 Then
-                            left = 5
+                        If Not projekthistorie Is Nothing Then
+                            If projekthistorie.Count > 0 Then
+                                vglName = projekthistorie.First.name
+                            End If
                         End If
 
-                        height = 380
-                        width = System.Math.Max(hproj.dauerInDays / 365 * 12 * boxWidth + 7, cproj.dauerInDays / 365 * 12 * boxWidth + 7)
-                        scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
-
-                        Dim repObj As Excel.ChartObject
-                        appInstance.EnableEvents = False
-                        appInstance.ScreenUpdating = False
-
-                        noColorCollection = getPhasenUnterschiede(hproj, cproj)
-
-                        repObj = Nothing
-                        Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, PThis.current)
-
-                        With repObj
-                            top = .Top + .Height + 3
+                        With hproj
+                            pName = .name
+                            variantName = .variantName
                         End With
 
+                        If vglName.Trim <> pName.Trim Then
 
-                        repObj = Nothing
-                        Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, PThis.letzterStand)
+                            ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                            projekthistorie.Add(Date.Now, hproj)
+                            lastElem = projekthistorie.Count - 1
 
-                        appInstance.ScreenUpdating = True
 
-                    End If
+                        Else
+                            ' der aktuelle Stand hproj muss hinzugefügt werden 
+                            lastElem = projekthistorie.Count - 1
+                            projekthistorie.RemoveAt(lastElem)
+                            projekthistorie.Add(Date.Now, hproj)
+                        End If
 
 
+                        If projekthistorie.Count <= 1 Then
+
+                            Call MsgBox(" es gibt zu diesem Projekt noch keine Historie")
+
+                        Else
+
+                            cproj = projekthistorie.ElementAt(lastElem - 1)
+
+                            top = singleShp1.Top + boxHeight + 2
+                            left = singleShp1.Left - 5
+                            If left <= 0 Then
+                                left = 5
+                            End If
+
+                            height = 380
+                            width = System.Math.Max(hproj.dauerInDays / 365 * 12 * boxWidth + 7, cproj.dauerInDays / 365 * 12 * boxWidth + 7)
+                            scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
+
+                            Dim repObj As Excel.ChartObject
+                            appInstance.EnableEvents = False
+                            appInstance.ScreenUpdating = False
+
+                            noColorCollection = getPhasenUnterschiede(hproj, cproj)
+
+                            repObj = Nothing
+                            Call createPhasesBalken(noColorCollection, hproj, repObj, scale, top, left, height, width, PThis.current)
+
+                            With repObj
+                                top = .Top + .Height + 3
+                            End With
+
+
+                            repObj = Nothing
+                            Call createPhasesBalken(noColorCollection, cproj, repObj, scale, top, left, height, width, PThis.letzterStand)
+
+                            appInstance.ScreenUpdating = True
+
+                        End If
+                    Catch ex As Exception
+
+                        Call MsgBox("es gibt keine Historie zu " & pName)
+
+                    End Try
 
 
                 Else
@@ -5787,7 +5847,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim awinSelection As Excel.ShapeRange
         Dim projektHistorien As New clsProjektDBInfos
         Dim todoListe As New clsProjektDBInfos
-        
+
 
 
         Dim schluessel As String = ""

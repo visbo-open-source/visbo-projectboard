@@ -302,7 +302,7 @@ Public Class clsProjektShapes
 
                         ' Platz schaffen auf der Projekt-Tafel
                         If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
-                                            spalte:=hproj.Start, laenge:=hproj.Dauer, _
+                                            spalte:=hproj.Start, laenge:=hproj.anzahlRasterElemente, _
                                             anzahlZeilen:=anzahlZeilen) Then
 
                             If curCoord(0) < oldCoord(0) Then
@@ -335,6 +335,8 @@ Public Class clsProjektShapes
                     End With
 
                     newProjekt.timeStamp = Date.Now
+                    ' Workaround: 
+                    Dim tmpValue As Integer = newProjekt.dauerInDays
                     Call awinCreateBudgetWerte(newProjekt)
 
                     ' jetzt muss das Projekt aus der Showprojekte und der AlleProjekte herausgenommen werden 
@@ -360,7 +362,7 @@ Public Class clsProjektShapes
                     tmpRange = appInstance.Worksheets(arrWsNames(3)).shapes.Range(pName)
                     shpElement = tmpRange.Item(1)
 
-
+                    ' workaround: 
                     tmpDauerIndays = hproj.dauerInDays
                     Call awinCreateBudgetWerte(hproj)
 
@@ -492,6 +494,8 @@ Public Class clsProjektShapes
                         shpElement = tmpRange.Item(1)
 
                         ' jetzt noch die Budget Werte neu berechnen 
+                        ' Workaround: 
+                        Dim tmpValue As Integer = hproj.dauerInDays
                         Call awinCreateBudgetWerte(hproj)
 
                     End If
@@ -591,7 +595,7 @@ Public Class clsProjektShapes
 
                         Dim anzahlZeilen As Integer = getNeededSpace(hproj)
                         If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
-                                            spalte:=hproj.Start, laenge:=hproj.Dauer, _
+                                            spalte:=hproj.Start, laenge:=hproj.anzahlRasterElemente, _
                                             anzahlZeilen:=anzahlZeilen) Then
 
                             If curCoord(0) < oldCoord(0) Then

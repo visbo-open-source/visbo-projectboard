@@ -157,40 +157,33 @@ Public Class clsProjekt
     End Property
 
 
+    ''' <summary>
+    ''' prüft , ob das Projekt in seinen Werten konsistent ist
+    ''' es ist nicht konsistent, wenn 
+    ''' Dauer nicht gleich Monat(Ende)-Monat(Start +1 
+    ''' die Dimensionen der Rollen/Kosten Xwerte nicht gleich Dauer der Phase in Monaten ist 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property isConsistent As Boolean
 
         Get
+
             Dim tmpValue As Boolean = True
-            Dim cphase As clsPhase
-            Dim dimension As Integer
-            Dim phaseStart As Date, phaseEnd As Date
+            Dim p As Integer = 1
 
-
-            If Me.Dauer <> getColumnOfDate(Me.endeDate) - getColumnOfDate(Me.startDate) + 1 Then
+            ' prüfen, ob die Gesamtlänge übereinstimmt  
+            If Me.anzahlRasterElemente <> getColumnOfDate(Me.endeDate) - getColumnOfDate(Me.startDate) + 1 Then
                 tmpValue = False
             End If
 
-            ' prüfen, ob die Gesamtlänge übereinstimmt  
-            For p = 1 To Me.CountPhases
-                cphase = Me.getPhase(p)
-                phaseEnd = cphase.getEndDate
-                phaseStart = cphase.getStartDate
+            ' prüfen, ob die Xwerte der Kosten und Rollen zu der Phasenlänge passt   
 
-                dimension = getColumnOfDate(phaseEnd) - getColumnOfDate(phaseStart)
-
-                For r = 1 To cphase.CountRoles
-                    If dimension <> cphase.getRole(r).Xwerte.Length - 1 Then
-                        tmpValue = False
-                    End If
-                Next
-
-                For k = 1 To cphase.CountCosts
-                    If dimension <> cphase.getCost(k).Xwerte.Length - 1 Then
-                        tmpValue = False
-                    End If
-                Next
-
-            Next
+            While tmpValue And p <= Me.CountPhases
+                tmpValue = Me.getPhase(p).isConsistent
+                p = p + 1
+            End While
 
             isConsistent = tmpValue
 
@@ -379,7 +372,7 @@ Public Class clsProjekt
 
                     For Each role In hUsedRoles
 
-                        
+
                         hValues = Me.getRessourcenBedarf(role)
                         If cUsedRoles.Contains(role) Then
 
@@ -401,7 +394,7 @@ Public Class clsProjekt
                             End If
 
                         End If
-                        
+
                     Next
 
                     ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
@@ -562,7 +555,7 @@ Public Class clsProjekt
         End Get
     End Property
 
-    
+
 
     ''' <summary>
     ''' liefert zu einem gegebenen Meilenstein das definierte Datum zurück
@@ -592,7 +585,7 @@ Public Class clsProjekt
                 cresult = cphase.getResult(milestoneName)
 
                 If Not IsNothing(cresult) Then
-                    
+
                     colorIndex = cresult.getBewertung(1).colorIndex
                     tmpDate = cresult.getDate.Date
 
@@ -739,10 +732,16 @@ Public Class clsProjekt
             Next i
 
             ' jetzt aus Konsistenzgründen die Dauer in Monaten setzen 
-            _Dauer = getColumnOfDate(StartofCalendar.AddDays(offsetProjStart + max - 1)) - getColumnOfDate(StartofCalendar.AddDays(offsetProjStart)) + 1
+            '_Dauer = getColumnOfDate(StartofCalendar.AddDays(offsetProjStart + max - 1)) - getColumnOfDate(StartofCalendar.AddDays(offsetProjStart)) + 1
+
+            If Me.CountPhases > 0 Then
+
+                _Dauer = Me.anzahlRasterElemente
+                
+            End If
 
             dauerInDays = CInt(max)
-            
+
 
         End Get
     End Property
@@ -867,9 +866,9 @@ Public Class clsProjekt
             If _Status = ProjektStatus(0) And differenzInTagen <> 0 Then
                 _startDate = value
                 _Start = DateDiff(DateInterval.Month, StartofCalendar, value) + 1
-                ' Änderung 25.5 die Xwerte müssen jetzt synchronisert werden 
+                ' Änderung 25.5 die Xwerte müssen jetzt synchronisiert werden 
                 currentConstellation = ""
-               
+
             ElseIf _startDate = NullDatum Then
                 _startDate = value
                 _Start = DateDiff(DateInterval.Month, StartofCalendar, value) + 1
@@ -1000,7 +999,7 @@ Public Class clsProjekt
 
     End Sub
 
-    
+
 
     Public Sub keepPhase1consistent(ByVal phasenEnde As Integer)
 
@@ -1091,7 +1090,7 @@ Public Class clsProjekt
     ''' <remarks></remarks>
     Public ReadOnly Property getBedarfeInMonths(mycollection As Collection, type As String) As Double()
         Get
-            Dim i As Integer, k As Integer, projektDauer As Integer = Me.Dauer
+            Dim i As Integer, k As Integer, projektDauer As Integer = Me.anzahlRasterElemente
             Dim valueArray() As Double
             Dim tempArray() As Double
             Dim riskarray() As Double
@@ -1219,9 +1218,9 @@ Public Class clsProjekt
             Dim monatsIndex As Integer
 
 
-            If Me.Dauer > 0 Then
+            If Me.anzahlRasterElemente > 0 Then
 
-                ReDim resultValues(Me.Dauer - 1)
+                ReDim resultValues(Me.anzahlRasterElemente - 1)
 
 
                 'anzPhasen = Me.AllPhases.Count
@@ -1246,8 +1245,8 @@ Public Class clsProjekt
 
                                 If monatsIndex < 0 Then
                                     monatsIndex = 0
-                                ElseIf monatsIndex > Me.Dauer - 1 Then
-                                    monatsIndex = Me.Dauer - 1
+                                ElseIf monatsIndex > Me.anzahlRasterElemente - 1 Then
+                                    monatsIndex = Me.anzahlRasterElemente - 1
                                 End If
 
                                 ' hier muss noch unterschieden werden, ob der ColorIndex = 0 ist: dann muss auch mitgezählt werden, wenn ein Result ohne Bewertung da ist ...
@@ -1310,10 +1309,10 @@ Public Class clsProjekt
             Dim monatsIndex As Integer
 
 
-            If Me.Dauer > 0 Then
+            If Me.anzahlRasterElemente > 0 Then
 
-                ReDim ResultValues(Me.Dauer - 1)
-                For i = 0 To Me.Dauer - 1
+                ReDim ResultValues(Me.anzahlRasterElemente - 1)
+                For i = 0 To Me.anzahlRasterElemente - 1
                     ResultValues(i) = ""
                 Next
 
@@ -1332,7 +1331,7 @@ Public Class clsProjekt
                             monatsIndex = DateDiff(DateInterval.Month, Me.startDate, result.getDate)
                             ' Sicherstellen, daß Ergebnisse, die vor oder auch nach dem Projekt erreicht werden sollen, richtig behandelt werden 
 
-                            If monatsIndex >= 0 And monatsIndex <= Me.Dauer - 1 Then
+                            If monatsIndex >= 0 And monatsIndex <= Me.anzahlRasterElemente - 1 Then
 
                                 ResultValues(monatsIndex) = ResultValues(monatsIndex) & vbLf & result.name & _
                                                         " (" & result.getDate.ToShortDateString & ")"
@@ -1381,7 +1380,7 @@ Public Class clsProjekt
         Get
             Dim valueArray() As Double
             Dim tmpValue As Double
-            Dim projektDauer As Integer = Me.Dauer
+            Dim projektDauer As Integer = Me.anzahlRasterElemente
             Dim start As Integer = Me.Start
 
             If mycollection.Count = 0 Then
@@ -2110,7 +2109,7 @@ Public Class clsProjekt
             Me.tfZeile = 2
         End If
 
-        If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.Dauer > 0 Then
+        If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
             top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight
 
             ' neue Positionierung: Tagesgenau 
@@ -2308,7 +2307,7 @@ Public Class clsProjekt
         'Dim tagebisResult As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(Me.Start - 1), resultDate)
         'Dim ratio As Double = tagebisResult / anzahlTage
 
-        If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.Dauer > 0 Then
+        If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
             top = topOfMagicBoard + (Me.tfZeile - 1.0) * boxHeight - boxWidth / 2
             left = (msStart / 365) * boxWidth * 12 - boxWidth * 0.5 * faktor
             width = boxWidth
@@ -2331,7 +2330,7 @@ Public Class clsProjekt
 
         Dim faktor As Double = 0.66
 
-        If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.Dauer > 0 Then
+        If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
 
             ' Änderung 18.3.14 Zeilenoffset gibt an, in die wievielte Zeile das geschrieben werden soll 
             If zeilenOffset = 0 Then
@@ -2398,7 +2397,7 @@ Public Class clsProjekt
         'Dim tagebisResult As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(Me.Start - 1), resultDate)
         'Dim ratio As Double = tagebisResult / anzahlTage
 
-        If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.Dauer > 0 Then
+        If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
             top = topOfMagicBoard + (Me.tfZeile - 1.0) * boxHeight
             left = diffMonths * boxWidth + dayOfResult * (boxWidth / 30) - 0.5 * boxWidth
 
