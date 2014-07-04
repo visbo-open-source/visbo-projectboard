@@ -276,7 +276,7 @@ Public Class frmShowProjCharacteristics
         For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
             ' Phasen Skalierung min, max 
             Dim tmpValues() As Double
-            ReDim tmpValues(kvp.Value.Dauer - 1)
+            ReDim tmpValues(kvp.Value.anzahlRasterElemente - 1)
 
             
             ' Phasen Darstellung

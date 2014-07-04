@@ -163,7 +163,7 @@ Public Class frmProjektEingabe1
 
                     If dauerUnverändert.Checked Then
                         calcProjektStart = DateTimeProject.Value
-                        calcProjektEnde = DateTimeProject.Value.AddDays(vorlagenDauer - 1).AddMonths(1)
+                        calcProjektEnde = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
 
                     Else
                         calcProjektStart = DateTimeProject.Value

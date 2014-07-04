@@ -334,6 +334,9 @@ Public Class clsEventsPrcCharts
                                         End If
                                         .StartOffset = 0
 
+                                        If Not .isConsistent Then
+                                            Call .syncXWertePhases()
+                                        End If
 
                                         ' jetzt wird das Shape in der Plantafel gelöscht 
                                         Call clearProjektinPlantafel(.name)

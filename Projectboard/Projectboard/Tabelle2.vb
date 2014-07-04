@@ -1,13 +1,13 @@
 ﻿
 Imports ProjectBoardDefinitions
+Imports Microsoft.Office.Interop.Excel
 
 Public Class Tabelle2
 
     Private Sub Tabelle2_ActivateEvent() Handles Me.ActivateEvent
 
-        Dim rng As Excel.Range
-        Dim tmpstart As Date
-        Application.DisplayFormulaBar = True
+        
+        Application.DisplayFormulaBar = False
 
         Dim formerEE As Boolean = Application.EnableEvents
         Application.EnableEvents = False
@@ -20,99 +20,101 @@ Public Class Tabelle2
         enableOnUpdate = False
 
 
-        With Application.ActiveSheet
+        CType(appInstance.ActiveSheet, Excel.Worksheet).EnableSelection = XlEnableSelection.xlUnlockedCells
 
-            If awinSettings.zeitEinheit = "PM" Then
+        'With Application.ActiveSheet
 
-                .cells(1, 1).value = "Monate"
+        '    If awinSettings.zeitEinheit = "PM" Then
 
-                rng = .Range(.cells(1, 3), .cells(1, 4))
-                rng.NumberFormat = "mmm-yy"
+        '        .cells(1, 1).value = "Monate"
 
-                Dim destinationRange As Excel.Range = .Range(.Cells(1, 3), .Cells(1, 62))
-                With destinationRange
-                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                    .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
-                    .NumberFormat = "mmm-yy"
-                    .WrapText = False
-                    .Orientation = 90
-                    .AddIndent = False
-                    .IndentLevel = 0
-                    .ShrinkToFit = False
-                    .ReadingOrder = Excel.Constants.xlContext
-                    .MergeCells = False
-                    .Interior.color = noshowtimezone_color
-                End With
+        '        rng = .Range(.cells(1, 3), .cells(1, 4))
+        '        rng.NumberFormat = "mmm-yy"
 
-                rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
+        '        Dim destinationRange As Excel.Range = .Range(.Cells(1, 3), .Cells(1, 62))
+        '        With destinationRange
+        '            .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+        '            .VerticalAlignment = Excel.XlVAlign.xlVAlignBottom
+        '            .NumberFormat = "mmm-yy"
+        '            .WrapText = False
+        '            .Orientation = 90
+        '            .AddIndent = False
+        '            .IndentLevel = 0
+        '            .ShrinkToFit = False
+        '            .ReadingOrder = Excel.Constants.xlContext
+        '            .MergeCells = False
+        '            .Interior.color = noshowtimezone_color
+        '        End With
 
-            ElseIf awinSettings.zeitEinheit = "PW" Then
-                .cells(1, 1).value = "Wochen"
-                For i = 1 To 210
-                    CType(.cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddDays((i - 1) * 7)
-                Next
+        '        rng.AutoFill(Destination:=destinationRange, Type:=Excel.XlAutoFillType.xlFillMonths)
 
-            ElseIf awinSettings.zeitEinheit = "PT" Then
-                .cells(1, 1).value = "Tage"
-                Dim workOnSat As Boolean = False
-                Dim workOnSun As Boolean = False
+        '    ElseIf awinSettings.zeitEinheit = "PW" Then
+        '        .cells(1, 1).value = "Wochen"
+        '        For i = 1 To 210
+        '            CType(.cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = StartofCalendar.AddDays((i - 1) * 7)
+        '        Next
 
-
-                If Weekday(StartofCalendar, FirstDayOfWeek.Monday) > 3 Then
-                    tmpstart = StartofCalendar.AddDays(8 - Weekday(StartofCalendar, FirstDayOfWeek.Monday))
-                Else
-                    tmpstart = StartofCalendar.AddDays(Weekday(StartofCalendar, FirstDayOfWeek.Monday) - 8)
-                End If
-                '
-                ' jetzt ist tmpstart auf Montag ... 
-                Dim tmpDay As Date
-                Dim i As Integer, w As Integer
-                i = 1
-                For w = 1 To 30
-                    For d = 0 To 4
-                        ' das sind Montag bis Freitag
-                        tmpDay = tmpstart.AddDays(d)
-                        If Not feierTage.Contains(tmpDay) Then
-                            CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
-                            i = i + 1
-                        End If
-                    Next
-                    tmpDay = tmpstart.AddDays(5)
-                    If workOnSat Then
-                        CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
-                        i = i + 1
-                    End If
-                    tmpDay = tmpstart.AddDays(6)
-                    If workOnSun Then
-                        CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
-                        i = i + 1
-                    End If
-                    tmpstart = tmpstart.AddDays(7)
-                Next
+        '    ElseIf awinSettings.zeitEinheit = "PT" Then
+        '        .cells(1, 1).value = "Tage"
+        '        Dim workOnSat As Boolean = False
+        '        Dim workOnSun As Boolean = False
 
 
-            End If
+        '        If Weekday(StartofCalendar, FirstDayOfWeek.Monday) > 3 Then
+        '            tmpstart = StartofCalendar.AddDays(8 - Weekday(StartofCalendar, FirstDayOfWeek.Monday))
+        '        Else
+        '            tmpstart = StartofCalendar.AddDays(Weekday(StartofCalendar, FirstDayOfWeek.Monday) - 8)
+        '        End If
+        '        '
+        '        ' jetzt ist tmpstart auf Montag ... 
+        '        Dim tmpDay As Date
+        '        Dim i As Integer, w As Integer
+        '        i = 1
+        '        For w = 1 To 30
+        '            For d = 0 To 4
+        '                ' das sind Montag bis Freitag
+        '                tmpDay = tmpstart.AddDays(d)
+        '                If Not feierTage.Contains(tmpDay) Then
+        '                    CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
+        '                    i = i + 1
+        '                End If
+        '            Next
+        '            tmpDay = tmpstart.AddDays(5)
+        '            If workOnSat Then
+        '                CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
+        '                i = i + 1
+        '            End If
+        '            tmpDay = tmpstart.AddDays(6)
+        '            If workOnSun Then
+        '                CType(.Cells(1, i), Global.Microsoft.Office.Interop.Excel.Range).Value = tmpDay.ToString("d")
+        '                i = i + 1
+        '            End If
+        '            tmpstart = tmpstart.AddDays(7)
+        '        Next
 
 
-            ' hier werden jetzt die Spaltenbreiten und Zeilenhöhen gesetzt 
-
-            Dim maxRows As Integer = .Rows.Count
-            Dim maxColumns As Integer = .Columns.Count
+        '    End If
 
 
-            CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
-            CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2 * 0.5
+        '    ' hier werden jetzt die Spaltenbreiten und Zeilenhöhen gesetzt 
 
-            CType(.Columns(1), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = 20.0
-            CType(.Columns(2), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = 20.0
-            CType(.Range(.Cells(1, 3), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = awinSettings.spaltenbreite
+        '    Dim maxRows As Integer = .Rows.Count
+        '    Dim maxColumns As Integer = .Columns.Count
 
 
-            '.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-            '.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+        '    CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
+        '    CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2 * 0.5
+
+        '    CType(.Columns(1), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = 20.0
+        '    CType(.Columns(2), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = 20.0
+        '    CType(.Range(.Cells(1, 3), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = awinSettings.spaltenbreite
 
 
-        End With
+        '    '.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+        '    '.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+
+
+        'End With
 
 
         With Application.ActiveWindow
@@ -121,7 +123,8 @@ Public Class Tabelle2
             .DisplayWorkbookTabs = False
             .GridlineColor = RGB(220, 220, 220)
             .FreezePanes = True
-            .DisplayHeadings = True
+            '.DisplayHeadings = True
+            .DisplayHeadings = False
         End With
 
 
@@ -138,11 +141,7 @@ Public Class Tabelle2
 
     End Sub
 
-    Private Sub Tabelle2_Change(Target As Microsoft.Office.Interop.Excel.Range) Handles Me.Change
-
-        'was_changed = True
-
-    End Sub
+    
 
     Private Sub Tabelle2_Deactivate() Handles Me.Deactivate
 

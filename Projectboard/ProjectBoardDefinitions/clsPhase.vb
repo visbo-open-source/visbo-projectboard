@@ -20,6 +20,50 @@
     Private _vorlagenParent As clsProjektvorlage
 
 
+    ''' <summary>
+    ''' prüft ob die Phase in ihren Werten Dauer in Monaten konsistent zu den Xwert-Dimensionen der Rollen und Kosten ist 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isConsistent As Boolean
+
+        Get
+            Dim tmpValue As Boolean = True
+            Dim dimension As Integer
+            Dim phaseStart As Date, phaseEnd As Date
+            Dim r As Integer = 1, k As Integer = 1
+
+            ' prüfen, ob die Gesamtlänge übereinstimmt  
+
+
+            phaseEnd = Me.getEndDate
+            phaseStart = Me.getStartDate
+
+            dimension = getColumnOfDate(phaseEnd) - getColumnOfDate(phaseStart)
+
+            While tmpValue And r <= Me.CountRoles
+                If dimension <> Me.getRole(r).Xwerte.Length - 1 Then
+                    tmpValue = False
+                End If
+                r = r + 1
+            End While
+
+            While tmpValue And k <= Me.CountCosts
+                If dimension <> Me.getCost(k).Xwerte.Length - 1 Then
+                    tmpValue = False
+                End If
+                k = k + 1
+            End While
+
+
+            isConsistent = tmpValue
+
+        End Get
+
+    End Property
+
+
     Public Sub changeStartandDauer(ByVal startOffset As Integer, ByVal dauer As Integer)
 
         Dim projektStartdate As Date
@@ -48,8 +92,6 @@
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
                 _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
-                '_dauerInDays = DateDiff(DateInterval.Day, projektStartdate.AddMonths(_relStart - 1), _
-                '                        projektStartdate.AddMonths(_relEnde).AddDays(-1)) + 1
                 _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
 
 
@@ -188,8 +230,6 @@
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
                 _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
-                '_dauerInDays = DateDiff(DateInterval.Day, projektStartdate.AddMonths(_relStart - 1), _
-                '                        projektStartdate.AddMonths(_relEnde).AddDays(-1)) + 1
                 _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
 
 

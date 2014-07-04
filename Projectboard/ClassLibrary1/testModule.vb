@@ -460,7 +460,7 @@ Public Module testModule
                                         htop = 100
                                         hleft = 50
                                         hheight = 2 * ((listOfItems.Count - 1) * 20 + 110)
-                                        hwidth = System.Math.Max(hproj.Dauer * boxWidth + 10, 24 * boxWidth + 10)
+                                        hwidth = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 24 * boxWidth + 10)
 
                                         Call createMsTrendAnalysisOfProject(hproj, obj, listOfItems, htop, hleft, hheight, hwidth)
 
@@ -1482,7 +1482,7 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToShortDateString
 
                             Case "Laufzeit:"
-                                .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(hproj.Start, hproj.Start + hproj.Dauer - 1)
+                                .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(hproj.Start, hproj.Start + hproj.anzahlRasterElemente - 1)
 
                             Case "Verantwortlich:"
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.leadPerson
@@ -3622,8 +3622,8 @@ Public Module testModule
 
                     End Select
 
-                    ReDim werteH(hproj.Dauer - 1)
-                    ReDim werteV(vglProj.Dauer - 1)
+                    ReDim werteH(hproj.anzahlRasterElemente - 1)
+                    ReDim werteV(vglProj.anzahlRasterElemente - 1)
                     Dim hsum As Double = 0.0
                     Dim vsum As Double = 0.0
 
@@ -4003,7 +4003,7 @@ Public Module testModule
         vglName = " "
 
         Try
-            ReDim currentValues(hproj.Dauer - 1)
+            ReDim currentValues(hproj.anzahlRasterElemente - 1)
 
         Catch ex As Exception
 
@@ -4085,7 +4085,7 @@ Public Module testModule
             End Select
 
 
-            ReDim formerValues(vglProj.Dauer - 1)
+            ReDim formerValues(vglProj.anzahlRasterElemente - 1)
             Dim hsum As Double = 0.0
             Dim vsum As Double = 0.0
 
@@ -4392,7 +4392,7 @@ Public Module testModule
             minColumn = 1
         End If
 
-        maxColumn = hproj.Start + hproj.Dauer + 3
+        maxColumn = hproj.Start + hproj.anzahlRasterElemente + 3
 
         ' set Gridlines to white 
         With appInstance.ActiveWindow
@@ -5738,8 +5738,8 @@ Public Module testModule
                         minColumn = .Start
                     End If
 
-                    If .Start + .Dauer - 1 > maxColumn Then
-                        maxColumn = .Start + .Dauer - 1
+                    If .Start + .anzahlRasterElemente - 1 > maxColumn Then
+                        maxColumn = .Start + .anzahlRasterElemente - 1
                     End If
 
                     If .tfZeile > maxZeile Then

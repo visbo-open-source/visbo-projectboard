@@ -270,8 +270,13 @@ Public Class clsCommandBarEvents
                                 ' das Budget wird auf Null gesetzt , ebenso die monatlichen Budget-Werte
                                 .Erloes = 0
                                 Dim budgetvalues() As Double
-                                ReDim budgetvalues(.Dauer - 1)
+                                ReDim budgetvalues(.anzahlRasterElemente - 1)
                                 .budgetWerte = budgetvalues
+
+                                ' ggf müssen die Xwerte hier noch korrigiert werden 
+                                If Not .isConsistent Then
+                                    Call .syncXWertePhases()
+                                End If
 
                             End With
 

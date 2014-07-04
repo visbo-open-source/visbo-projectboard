@@ -104,7 +104,7 @@ Public Module awinGeneralModules
 
 
         awinPath = appInstance.ActiveWorkbook.Path & "\"
-
+        StartofCalendar = StartofCalendar.Date
 
         ProjektStatus(0) = "geplant"
         ProjektStatus(1) = "beauftragt"
@@ -445,10 +445,11 @@ Public Module awinGeneralModules
                 awinSettings.zeilenhoehe2 = CDbl(.Range("Zeilenhoehe2").Value)
                 awinSettings.spaltenbreite = CDbl(.Range("Spaltenbreite").Value)
                 awinSettings.autoCorrectBedarfe = True
-                awinSettings.propAnpassRess = True
+                awinSettings.propAnpassRess = False
+                awinSettings.showValuesOfSelected = False
             Catch ex As Exception
                 appInstance.ScreenUpdating = formerSU
-                Throw New ArgumentException("korrupte Einstellungen ... Abbruch " & ex.Message)
+                Throw New ArgumentException("fehlende Einstellung im Customization-File ... Abbruch " & vbLf & ex.Message)
             End Try
 
             StartofCalendar = awinSettings.kalenderStart
@@ -1793,6 +1794,7 @@ Public Module awinGeneralModules
                             Dim objectName As String
                             Dim startDate As Date, endeDate As Date
                             Dim bezug As String
+                            Dim errMessage As String = ""
 
 
                             Dim isPhase As Boolean = False
@@ -1986,67 +1988,68 @@ Public Module awinGeneralModules
                                 Else
 
 
-                                    Try
-                                        ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
-                                        If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
-                                            resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays - 1)
+                                    phaseName = cphase.name
+                                    cResult = New clsResult(parent:=cphase)
+                                    cBewertung = New clsBewertung
+
+                                    resultName = objectName.Trim
+                                    resultDate = endeDate
+
+                                    ' wenn der freefloat nicht zugelassen ist und der Meilenstein ausserhalb der Phasen-Grenzen liegt 
+                                    ' muss abgebrochen werden 
+
+                                    If Not awinSettings.milestoneFreeFloat And _
+                                        (DateDiff(DateInterval.Day, cphase.getStartDate, resultDate) < 0 Or _
+                                         DateDiff(DateInterval.Day, cphase.getEndDate, resultDate) > 0) Then
+                                        Throw New Exception("Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
+                                                            resultName & " nicht innerhalb " & cphase.name & vbLf & _
+                                                                 "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
+                                    End If
+
+
+                                    ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
+                                    If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
+                                        resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
+                                    Else
+                                        If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
+                                            Call MsgBox("der Meilenstein '" & resultName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
+                                                        "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '" & hproj.name & ".xlsx")
                                         End If
-                                        'xxxxxx
-                                        phaseName = cphase.name
-                                        cResult = New clsResult(parent:=cphase)
-                                        cBewertung = New clsBewertung
 
-                                        resultName = objectName.Trim
-                                        resultDate = endeDate
+                                    End If
 
-                                        ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
-                                        If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
-                                            resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
-                                        Else
-                                            If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
-                                                Call MsgBox("der Meilenstein '" & resultName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
-                                                            "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '" & hproj.name & ".xlsx")
-                                            End If
+                                    ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
+                                    bewertungsAmpel = CType(.Cells(zeile, columnOffset + 5).value, Integer)
+                                    explanation = CType(.Cells(zeile, columnOffset + 6).value, String)
 
+
+                                    If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                        ' es gibt keine Bewertung
+                                        bewertungsAmpel = 0
+                                    End If
+                                    ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                    With cBewertung
+                                        '.bewerterName = resultVerantwortlich
+                                        .colorIndex = bewertungsAmpel
+                                        .datum = importDatum
+                                        .description = explanation
+                                    End With
+
+
+
+                                    With cResult
+                                        .setDate = resultDate
+                                        '.verantwortlich = resultVerantwortlich
+                                        .name = resultName
+                                        If Not cBewertung Is Nothing Then
+                                            .addBewertung(cBewertung)
                                         End If
+                                    End With
 
-                                        ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
-                                        bewertungsAmpel = CType(.Cells(zeile, columnOffset + 5).value, Integer)
-                                        explanation = CType(.Cells(zeile, columnOffset + 6).value, String)
+                                    With hproj.getPhase(phaseName)
+                                        .addresult(cResult)
+                                    End With
 
-
-                                        If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
-                                            ' es gibt keine Bewertung
-                                            bewertungsAmpel = 0
-                                        End If
-                                        ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
-                                        With cBewertung
-                                            '.bewerterName = resultVerantwortlich
-                                            .colorIndex = bewertungsAmpel
-                                            .datum = importDatum
-                                            .description = explanation
-                                        End With
-
-
-
-                                        With cResult
-                                            .setDate = resultDate
-                                            '.verantwortlich = resultVerantwortlich
-                                            .name = resultName
-                                            If Not cBewertung Is Nothing Then
-                                                .addBewertung(cBewertung)
-                                            End If
-                                        End With
-
-                                        With hproj.getPhase(phaseName)
-                                            .addresult(cResult)
-                                        End With
-
-
-                                    Catch ex As Exception
-                                        ' Schreiben des Fehlers in das Fehlerprotokoll - muss noch ergänzt werden 
-                                        anzFehler = anzFehler + 1
-                                    End Try
 
                                 End If
 
@@ -2180,12 +2183,15 @@ Public Module awinGeneralModules
 
                 Try
                     laengeInTagen = kvp.Value.dauerInDays
+
                     'Dim keyStr As String = kvp.Value.name & "#" & kvp.Value.variantName
                     Dim keyStr As String = calcProjektKey(kvp.Value)
                     AlleProjekte.Add(keyStr, kvp.Value)
 
                     ShowProjekte.Add(kvp.Value)
 
+                    ' Workaround: 
+                    Dim tmpValue As Integer = kvp.Value.dauerInDays
                     Call awinCreateBudgetWerte(kvp.Value)
 
                     ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
@@ -2208,9 +2214,10 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
 
                 Try
-                    laengeInTagen = kvp.Value.dauerInDays
-                    ShowProjekte.Add(kvp.Value)
 
+                    ShowProjekte.Add(kvp.Value)
+                    ' Workaround: 
+                    laengeInTagen = kvp.Value.dauerInDays
                     Call awinCreateBudgetWerte(kvp.Value)
 
                     ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
@@ -2633,14 +2640,14 @@ Public Module awinGeneralModules
 
 
                         If kvp.Value.Start <= getColumnOfDate(Date.Now) + zeitSpanne And _
-                            kvp.Value.Start + kvp.Value.Dauer - 1 >= getColumnOfDate(Date.Now) + 1 And _
+                            kvp.Value.Start + kvp.Value.anzahlRasterElemente - 1 >= getColumnOfDate(Date.Now) + 1 And _
                             kvp.Value.Status <> ProjektStatus(3) And _
                             kvp.Value.Status <> ProjektStatus(4) Then
 
                             With kvp.Value
                                 'statusValue = 
                                 ReDim bedarfsWerte(zeitSpanne - 1)
-                                ReDim projWerte(.Dauer - 1)
+                                ReDim projWerte(.anzahlRasterElemente - 1)
                                 projWerte = .getBedarfeInMonths(mycollection, DiagrammTypen(1))
 
                                 Dim aix As Integer
@@ -2648,7 +2655,7 @@ Public Module awinGeneralModules
 
                                 If aix >= 0 Then
                                     For m = 0 To zeitSpanne - 1
-                                        If m + aix <= .Dauer - 1 Then
+                                        If m + aix <= .anzahlRasterElemente - 1 Then
                                             bedarfsWerte(m) = projWerte(m + aix)
                                         End If
                                     Next
