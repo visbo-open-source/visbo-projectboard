@@ -296,9 +296,10 @@ Public Class frmDependencies
         End If
 
         Dim anzahlDP As Integer = 0
+        Dim p As Integer
         For p = 1 To ProjectList.SelectedItems.Count
             pName = ProjectList.SelectedItems.Item(p - 1)
-
+            Dim d As Integer
             For d = 1 To dependentProjectList.SelectedItems.Count
                 dpName = dependentProjectList.SelectedItems.Item(d - 1)
 

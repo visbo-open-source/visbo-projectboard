@@ -31,6 +31,7 @@ Public Class frmSelectPPTTempl
 
         Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
         Try
+            Dim i As Integer
             For i = 1 To listOfVorlagen.Count
                 dateiName = Dir(listOfVorlagen.Item(i - 1))
                 RepVorlagenDropbox.Items.Add(dateiName)

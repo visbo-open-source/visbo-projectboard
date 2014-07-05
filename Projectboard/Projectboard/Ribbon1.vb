@@ -1468,6 +1468,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
 
         ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+        Dim i As Integer
         For i = 1 To listOfVorlagen.Count
             dateiName = listOfVorlagen.Item(i - 1)
 
@@ -1587,7 +1588,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
                                     Call awinExportProject(hproj)
                                     outputString = outputString & hproj.name & " erfolgreich .." & vbLf
                                 Catch ex As Exception
-                                    outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf
+                                    outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf & _
+                                                    ex.Message & vbLf & vbLf
                                 End Try
 
 
@@ -2520,6 +2522,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 End With
             Next
 
+            Dim i As Integer
             For i = 1 To myCollection.Count
                 pname = myCollection.Item(i)
                 Try
@@ -3510,6 +3513,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim awinSelection As Excel.ShapeRange
         Dim selektierteProjekte As New clsProjekte
+        Dim singleshp As Excel.Shape
 
         Call projektTafelInit()
 
@@ -4210,6 +4214,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         If myCollection.Count > 0 Then
 
+
+            Dim i As Integer
             For i = 1 To myCollection.Count
                 pname = myCollection.Item(i)
                 Try
@@ -5847,7 +5853,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim awinSelection As Excel.ShapeRange
         Dim projektHistorien As New clsProjektDBInfos
         Dim todoListe As New clsProjektDBInfos
-
+        Dim i As Integer
 
 
         Dim schluessel As String = ""
@@ -5869,6 +5875,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             If awinSelection.Count > 1 Then
                 anzElements = awinSelection.Count
+
                 For i = 1 To anzElements
 
                     singleShp = awinSelection.Item(i)

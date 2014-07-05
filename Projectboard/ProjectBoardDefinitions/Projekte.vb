@@ -12569,7 +12569,7 @@ Public Module Projekte
                                           )
         Catch ex As Exception
             appInstance.EnableEvents = formerEE
-            Throw New ArgumentException("Fehler beim Schreiben")
+            Throw New ArgumentException("Fehler beim Datei-Schreiben")
         End Try
 
 

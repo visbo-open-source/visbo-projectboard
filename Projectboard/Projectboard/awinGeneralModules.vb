@@ -49,6 +49,7 @@ Public Module awinGeneralModules
 
         ' jetzt muss getestet werden, ob jede Phase in PhaseDefinitions bereits in der Customization vorkommt 
 
+        Dim i As Integer
         For i = 1 To PhaseDefinitions.Count
             phName = PhaseDefinitions.getPhaseDef(i).name
             phColor = CLng(PhaseDefinitions.getPhaseDef(i).farbe)
@@ -100,6 +101,7 @@ Public Module awinGeneralModules
         Dim dateiListe As New Collection
         Dim dateiName As String
         Dim tmpStr As String
+        Dim d As Integer
 
 
 
@@ -473,6 +475,7 @@ Public Module awinGeneralModules
         ' die evtl vorhandenen Dateien für die genaue Bestimmung der Kapazität ausgelesen  
         Dim tmpRole As clsRollenDefinition
         Dim tmpRoleDefinitions As New clsRollen
+        Dim ix As Integer
         For ix = 1 To RoleDefinitions.Count
             tmpRole = RoleDefinitions.getRoledef(ix)
             ' hier werden die betreffenden Dateien geöffnet und auch wieder geschlossen
@@ -603,6 +606,7 @@ Public Module awinGeneralModules
                     ' jetzt ist tmpstart auf Montag ... 
                     Dim tmpDay As Date
                     i = 1
+                    Dim w As Integer
                     For w = 1 To 30
                         For d = 0 To 4
                             ' das sind Montag bis Freitag
@@ -1034,6 +1038,7 @@ Public Module awinGeneralModules
                     Dim ok As Boolean = True
                     Dim lastPhaseName As String = cphase.name
 
+                    Dim i As Integer
                     For i = anfang To ende
 
                         Try
@@ -1126,17 +1131,17 @@ Public Module awinGeneralModules
 
                                 End Try
 
-                                
 
-                                
+
+
                             End If
-                            
 
-                           
+
+
 
                             ' handelt es sich um eine Phase oder um einen Meilenstein ? 
 
-                           
+
                         End If
 
 
@@ -1646,6 +1651,7 @@ Public Module awinGeneralModules
                                                 ReDim Xwerte(ende - anfang)
 
 
+                                                Dim m As Integer
                                                 For m = anfang To ende
 
                                                     Try
@@ -1679,6 +1685,7 @@ Public Module awinGeneralModules
 
                                                 ReDim Xwerte(ende - anfang)
 
+                                                Dim m As Integer
                                                 For m = anfang To ende
                                                     Try
                                                         Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + 1).Value)
@@ -1958,17 +1965,19 @@ Public Module awinGeneralModules
 
                                             If cphase.CountRoles > 0 Or cphase.CountCosts > 0 Then
                                                 ' prüfen , ob es Inkonsistenzen gibt ? 
-                                                For r = 1 To cphase.CountRoles
-                                                    If cphase.getRole(r).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
-                                                        inkonsistent = True
-                                                    End If
-                                                Next
+                                            Dim r As Integer
+                                            For r = 1 To cphase.CountRoles
+                                                If cphase.getRole(r).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
+                                                    inkonsistent = True
+                                                End If
+                                            Next
 
-                                                For k = 1 To cphase.CountCosts
-                                                    If cphase.getCost(k).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
-                                                        inkonsistent = True
-                                                    End If
-                                                Next
+                                            Dim k As Integer
+                                            For k = 1 To cphase.CountCosts
+                                                If cphase.getCost(k).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
+                                                    inkonsistent = True
+                                                End If
+                                            Next
                                             End If
 
                                             If inkonsistent Then
@@ -2926,6 +2935,7 @@ Public Module awinGeneralModules
                         ' jetzt müssen die Werte referenziert werden 
 
 
+                        Dim k As Integer
                         For k = startZeile To endZeile
                             cellFormula = "=" & xlsBlattname(2).Trim & "!R[-4]C[" & rcol - 2 & "]"
                             CType(currentWS.Cells(k - startZeile + 6, 2), _
@@ -3004,6 +3014,7 @@ Public Module awinGeneralModules
                     ' Schreiben der Zeilen-Summen: Summe Zuordnung pro MA
                     cellFormula = "=SUM(RC[1]:RC[" & anzProjekte & "])"
 
+                    Dim k As Integer
                     For k = 6 To 6 + anzPeople
                         CType(.Cells(k, 3), Global.Microsoft.Office.Interop.Excel.Range).FormulaR1C1 = cellFormula
                     Next
@@ -3117,6 +3128,7 @@ Public Module awinGeneralModules
         Call awinStoreConstellation("Last")
 
         ' jetzt die todoListe abarbeiten
+        Dim i As Integer
         For i = 1 To todoListe.Count
             pname = todoListe.ElementAt(i - 1).Value
             hproj = ShowProjekte.getProject(pname)
