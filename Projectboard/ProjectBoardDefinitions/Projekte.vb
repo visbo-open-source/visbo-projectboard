@@ -7257,108 +7257,159 @@ Public Module Projekte
 
 
     End Sub
-    Public Sub awinSaveChart(ByRef chtobj As ChartObject, ByVal cockpitname As String)
-        Dim kennung As String
+
+    Public Sub awinStoreCockpit(ByVal cockpitname As String)
+        'Dim kennung As String
 
         Dim currentDirectoryName As String = My.Computer.FileSystem.CurrentDirectory & "\"
         Dim fileName As String
-        Dim found As Boolean
-        Dim anzCharts As Integer
+        Dim found As Boolean = False
+        Dim wsfound As Boolean = False
+        Dim fileIsOpen As Boolean = False
+        Dim anzChartsInCockpit As Integer
+        Dim anzDiagrams As Integer
         Dim i As Integer
+        Dim k As Integer = 1
+        Dim maxRows As Integer
+        Dim maxColumns As Integer
         Dim logMessage As String = " "
         Dim newchtobj As Excel.ChartObject
+        Dim chtobj As Excel.ChartObject
         Dim hchtobj As Excel.ChartObject
         Dim xlsCockpits As xlNS.Workbook = Nothing
         Dim wsSheet As xlNS.Worksheet = Nothing
 
-        newchtobj = chtobj
+        Try
 
-        chtobj.Copy()
+            With appInstance.Worksheets(arrWsNames(3))
+                ' benötigt um die Spaltenbreite und Zeilenhöhe  zu setzen für die Tabelle in "Project Board Cockpit.xlsx", in die das neue Cockpit gespeichert wird.
+                maxRows = .Rows.Count
+                maxColumns = .Columns.Count
+                ' Anzahl Diagramme, die gespeichert werden zu diesem Cockpit
+                anzDiagrams = .ChartObjects.Count
 
-        fileName = awinPath & cockpitsFile
-        If My.Computer.FileSystem.FileExists(fileName) Then
 
-            Try
-                xlsCockpits = appInstance.Workbooks.Open(fileName)
+                If anzDiagrams > 0 Then
 
-            Catch ex As Exception
-                found = False
-                i = 1
-                While i <= appInstance.Workbooks.Count And Not found
-                    If appInstance.Workbooks(i).Name = fileName Then
-                        xlsCockpits = appInstance.Workbooks(i)
-                        found = True
+                    fileName = awinPath & cockpitsFile
+
+                    If My.Computer.FileSystem.FileExists(fileName) Then
+
+                        Try
+                            If Not fileIsOpen Then
+                                xlsCockpits = appInstance.Workbooks.Open(fileName)
+                                fileIsOpen = True
+                            End If
+                        Catch ex As Exception
+
+                            i = 1
+                            While i <= appInstance.Workbooks.Count And Not fileIsOpen
+                                If appInstance.Workbooks(i).Name = fileName Then
+                                    xlsCockpits = appInstance.Workbooks(i)
+                                    fileIsOpen = True
+                                Else
+                                    i = i + 1
+                                End If
+                            End While
+
+                            If Not fileIsOpen Then
+                                logMessage = "Öffnen von " & fileName & " fehlgeschlagen" & vbLf & _
+                                                            "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
+
+                                Throw New ArgumentException(logMessage)
+                            End If
+
+                        End Try
                     Else
-                        i = i + 1
+                        ' Cockpits-File neu anlegen 
+                        xlsCockpits = appInstance.Workbooks.Add(fileName)
+
                     End If
-                End While
 
-                If Not found Then
-                    logMessage = "Öffnen von " & fileName & " fehlgeschlagen" & vbLf & _
-                                                "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
 
-                    Throw New ArgumentException(logMessage)
+                    ' richtige Tabellenblatt finden in Datei "Project Board Cockpits.xlsx" finden
+
+                    i = 1
+                    While i <= xlsCockpits.Worksheets.Count And Not wsfound
+                        wsSheet = xlsCockpits.Worksheets.Item(i)
+                        If wsSheet.Name = cockpitname Then
+                            ' Tabellenblatt existiert bereits, es muss gelöscht werden und neu angelegt
+                            wsSheet.Delete()
+                            wsfound = True
+                        Else
+                            i = i + 1
+                        End If
+
+                    End While
+
+                    ' Tabellenblatt muss neu hinzugefügt werden
+
+                    wsSheet = xlsCockpits.Worksheets.Add()
+                    wsSheet.Name = cockpitname
+                    ' hier werden jetzt die Spaltenbreiten und Zeilenhöhen gesetzt 
+
+                    With wsSheet
+
+                        'tmpRange = CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range)
+                        ' CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
+                        CType(.Range(.Cells(1, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2
+                        CType(.Columns, Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = awinSettings.spaltenbreite
+
+
+                        .Range(.Cells(2, 1), .Cells(maxRows, maxColumns)).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                        .Range(.Cells(2, 1), .Cells(maxRows, maxColumns)).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+
+                    End With
+
+
+                    ' Tabellenblatt existiert jetzt sicher
+
+                    ' alle Charts durchgehen und in "Project Board Cockpits.xlsx" Tabelle "cockpitname" speichern
+
+                    While k <= anzDiagrams
+
+                        chtobj = .ChartObjects(k)
+
+                        chtobj.Copy()
+
+
+                        ' wenn Chart vorhanden, dann ersetzen, sonst hinzufügen
+
+                        found = False
+                        i = 1
+                        While i <= wsSheet.ChartObjects.count And Not found
+                            hchtobj = wsSheet.ChartObjects(i)
+                            If hchtobj.Name = chtobj.Name Then
+                                hchtobj.Delete()
+                                found = True
+                            Else
+                                i = i + 1
+                            End If
+                        End While
+
+                        ' Chart aus dem Buffer nun in das Tabellenblatt einfügen
+                        wsSheet.Paste()
+                        anzChartsInCockpit = wsSheet.ChartObjects.Count
+
+                        ' dem neu eingefügten Chart die richtige Position eintragen
+                        newchtobj = wsSheet.ChartObjects(anzChartsInCockpit)
+                        newchtobj.Top = chtobj.Top
+                        newchtobj.Left = chtobj.Left
+                        k = k + 1
+
+                    End While
+                    Call MsgBox("Es wurden zu Cockpit '" & cockpitname & "' " & anzDiagrams & " Charts gespeichert")
+                Else
+                    Call MsgBox("Es sind keine Charts vorhanden")
                 End If
+            End With
 
-            End Try
-        Else
-            ' Cockpits-File neu anlegen 
-            xlsCockpits = appInstance.Workbooks.Add(fileName)
-          
-        End If
+            xlsCockpits.Close(SaveChanges:=True)
 
 
-        ' in der DiagramList wird die letzte Position gespeichert , deshlab ist es kontra produktiv , das zu löschen 
-
-        'Try
-        '    kennung = chtobj.Name
-        'Catch ex As Exception
-        '    kennung = "?"
-        'End Try
-
-        'Try
-        '    With DiagramList.getDiagramm(kennung)
-        '        .top = chtobj.Top
-        '        .left = chtobj.Left
-        '    End With
-        'Catch ex As Exception
-
-        'End Try
-
-
-        ' richtige Tabellenblatt finden
-        found = False
-        i = 1
-        While i <= xlsCockpits.Worksheets.Count And Not found
-            wsSheet = xlsCockpits.Worksheets.Item(i)
-            If wsSheet.Name = cockpitname Then
-                wsSheet.Delete()
-                found = True
-            Else
-                i = i + 1
-            End If
-
-        End While
-        ' Tabellenblatt nicht gefunden, es muss neu hinzugefügt werden
-        If Not found Then
-            wsSheet = xlsCockpits.Worksheets.Add()
-            wsSheet.Name = cockpitname
-        End If
-
-        ' richtige Chartobj ersetzen
-        While i <= wsSheet.ChartObjects.count And Not found
-            hchtobj = wsSheet.ChartObjects(i)
-            If hchtobj.Name = newchtobj.Name Then
-                hchtobj.Delete()
-                found = True
-            Else
-                i = i + 1
-            End If
-        End While
-
-        wsSheet.Paste() ' chart aus dem Buffer nun in das Tabellenblatt einfügen
-        anzCharts = wsSheet.ChartObjects.Count
-
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler beim Speichern des Cockpits '" & cockpitname & vbLf, ex.Message)
+        End Try
 
     End Sub
 

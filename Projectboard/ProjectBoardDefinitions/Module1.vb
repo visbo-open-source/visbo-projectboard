@@ -31,8 +31,8 @@ Public Module Module1
     ' wird immer dann auf false gesetzt , wenn in eigenen Routinen Projekte gesetzt, gelöscht oder ins Show/Noshow gestellt werden 
     Public enableOnUpdate As Boolean = True
 
-    ' MongoDB ist gestartet mongoDBaktiv = true; MongoDB ist unterbrochen mongoDBaktiv=false
-    Public mongoDBaktiv = False
+    '' MongoDB ist gestartet mongoDBaktiv = true; MongoDB ist unterbrochen mongoDBaktiv=false
+    'Public mongoDBaktiv = False
 
     Public Projektvorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte

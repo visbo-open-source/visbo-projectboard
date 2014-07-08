@@ -91,6 +91,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim loadFromDatenbank As String = "PT5G1B1"
         Dim loadConstellationFrm As New frmLoadConstellation
+
         Dim constellationName As String
         Dim request As New Request(awinSettings.databaseName)
 
@@ -339,27 +340,28 @@ Imports Excel = Microsoft.Office.Interop.Excel
     End Sub
     Sub PT0SaveCockpit(control As IRibbonControl)
 
-        Dim anzDiagrams As Integer
-        Dim chtobj As Excel.ChartObject
+
         Dim i As Integer = 1
+        Dim storeCockpitFrm As New frmStoreCockpit
+        Dim returnValue As DialogResult
+        Dim cockpitName As String
 
         Call projektTafelInit()
 
-        With appInstance.Worksheets(arrWsNames(3))
+        ' hier muss die Auswahl des Names für das Cockpit erfolgen
 
-            anzDiagrams = .ChartObjects.Count
+        returnValue = storeCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
 
-            While i <= anzDiagrams
+        If returnValue = DialogResult.OK Then
 
-                chtobj = .ChartObjects(i)
-                Call awinSaveChart(chtobj, "cockpit1")
-                i = i + 1
+            cockpitName = storeCockpitFrm.ComboBox1.Text
 
-            End While
+            Call awinStoreCockpit(cockpitName)
+        Else
 
 
-        End With
-
+        End If
+        ' hier muss eventuell ein Neuzeichnen erfolgen
 
     End Sub
 
@@ -602,7 +604,6 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 Else
 
-                    mongoDBaktiv = False
                     Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
                     appInstance.ScreenUpdating = True
 
