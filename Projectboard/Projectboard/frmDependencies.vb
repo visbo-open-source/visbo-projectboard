@@ -28,12 +28,12 @@ Public Class frmDependencies
         Dim i As Integer
 
         For i = 1 To dependentProjectList.SelectedItems.Count
-            pName = dependentProjectList.SelectedItems.Item(i - 1)
+            pName = CStr(dependentProjectList.SelectedItems.Item(i - 1))
             tmpCollection.Add(pName)
         Next
 
         For i = 1 To tmpCollection.Count
-            pName = tmpCollection.Item(i)
+            pName = CStr(tmpCollection.Item(i))
 
             Try
                 If Not ProjectList.Items.Contains(pName) Then
@@ -56,12 +56,12 @@ Public Class frmDependencies
         Dim i As Integer
 
         For i = 1 To dependentProjectList.SelectedItems.Count
-            pName = dependentProjectList.SelectedItems.Item(i - 1)
+            pName = CStr(dependentProjectList.SelectedItems.Item(i - 1))
             tmpCollection.Add(pName)
         Next
 
         For i = 1 To tmpCollection.Count
-            pName = tmpCollection.Item(i)
+            pName = CStr(tmpCollection.Item(i))
 
             Try
                 If Not ProjectList.Items.Contains(pName) Then
@@ -83,12 +83,12 @@ Public Class frmDependencies
         Dim i As Integer
 
         For i = 1 To dependentProjectList.SelectedItems.Count
-            pName = dependentProjectList.SelectedItems.Item(i - 1)
+            pName = CStr(dependentProjectList.SelectedItems.Item(i - 1))
             tmpCollection.Add(pName)
         Next
 
         For i = 1 To tmpCollection.Count
-            pName = tmpCollection.Item(i)
+            pName = CStr(tmpCollection.Item(i))
 
             Try
                 dependentProjectList.Items.Remove(pName)
@@ -108,12 +108,12 @@ Public Class frmDependencies
         Dim i As Integer
 
         For i = 1 To ProjectList.SelectedItems.Count
-            pName = ProjectList.SelectedItems.Item(i - 1)
+            pName = CStr(ProjectList.SelectedItems.Item(i - 1))
             tmpCollection.Add(pName)
         Next
 
         For i = 1 To tmpCollection.Count
-            pName = tmpCollection.Item(i)
+            pName = CStr(tmpCollection.Item(i))
 
             Try
                 If Not dependentProjectList.Items.Contains(pName) Then
@@ -136,12 +136,12 @@ Public Class frmDependencies
         Dim i As Integer
 
         For i = 1 To ProjectList.SelectedItems.Count
-            pName = ProjectList.SelectedItems.Item(i - 1)
+            pName = CStr(ProjectList.SelectedItems.Item(i - 1))
             tmpCollection.Add(pName)
         Next
 
         For i = 1 To tmpCollection.Count
-            pName = tmpCollection.Item(i)
+            pName = CStr(tmpCollection.Item(i))
 
             Try
                 If Not dependentProjectList.Items.Contains(pName) Then
@@ -162,12 +162,12 @@ Public Class frmDependencies
         Dim i As Integer
 
         For i = 1 To ProjectList.SelectedItems.Count
-            pName = ProjectList.SelectedItems.Item(i - 1)
+            pName = CStr(ProjectList.SelectedItems.Item(i - 1))
             tmpCollection.Add(pName)
         Next
 
         For i = 1 To tmpCollection.Count
-            pName = tmpCollection.Item(i)
+            pName = CStr(tmpCollection.Item(i))
 
             Try
                 ProjectList.Items.Remove(pName)
@@ -220,11 +220,11 @@ Public Class frmDependencies
             Dim p As Integer = 1
             While p <= ProjectList.SelectedItems.Count And Not abbruch
 
-                pName = ProjectList.SelectedItems.Item(p - 1)
+                pName = CStr(ProjectList.SelectedItems.Item(p - 1))
 
                 Dim d As Integer = 1
                 While d <= dependentProjectList.SelectedItems.Count And Not abbruch
-                    dpName = dependentProjectList.SelectedItems(d - 1)
+                    dpName = CStr(dependentProjectList.SelectedItems(d - 1))
                     currentdpndncy = allDependencies.getDependency(PTdpndncyType.inhalt, pName, dpName)
 
                     If IsNothing(currentdpndncy) Then
@@ -298,10 +298,10 @@ Public Class frmDependencies
         Dim anzahlDP As Integer = 0
         Dim p As Integer
         For p = 1 To ProjectList.SelectedItems.Count
-            pName = ProjectList.SelectedItems.Item(p - 1)
+            pName = CStr(ProjectList.SelectedItems.Item(p - 1))
             Dim d As Integer
             For d = 1 To dependentProjectList.SelectedItems.Count
-                dpName = dependentProjectList.SelectedItems.Item(d - 1)
+                dpName = CStr(dependentProjectList.SelectedItems.Item(d - 1))
 
                 If pName <> dpName Then
                     ' jetzt die dependency erstellen

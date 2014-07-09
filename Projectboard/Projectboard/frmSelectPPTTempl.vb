@@ -115,8 +115,21 @@ Public Class frmSelectPPTTempl
         Me.BackgroundWorker1.CancelAsync()
         Me.BackgroundWorker2.CancelAsync()
 
+
+        With appInstance
+            If Not .EnableEvents Then
+                .EnableEvents = True
+            End If
+
+            If Not .ScreenUpdating Then
+                .ScreenUpdating = True
+            End If
+        End With
+       
+
         Call MsgBox("Berichterstellung wurde beendet")
         MyBase.Close()
+
     End Sub
 
 

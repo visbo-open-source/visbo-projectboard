@@ -265,7 +265,7 @@ Public Class frmDeleteProjects
     End Sub
     Private Sub TreeViewProjekte_AfterCheck(sender As Object, e As Windows.Forms.TreeViewEventArgs) Handles TreeViewProjekte.AfterCheck
         Dim node As TreeNode
-        Dim schluessel = ""
+        Dim schluessel As String = ""
         Dim selCollection As SortedList(Of Date, String)
         Dim timeStamp As Date
 

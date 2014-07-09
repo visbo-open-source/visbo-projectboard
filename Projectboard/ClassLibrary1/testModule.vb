@@ -83,7 +83,7 @@ Public Module testModule
                     worker.ReportProgress(0, e)
                     'frmSelectPPTTempl.statusNotification.Text = " Report für Projekt '" & hproj.name & " wird erstellt !"
 
-                    createPPTSlidesFromProject(hproj, vorlagenDateiName)
+                    Call createPPTSlidesFromProject(hproj, vorlagenDateiName)
                     tatsErstellt = tatsErstellt + 1
 
                 End If
@@ -3175,7 +3175,7 @@ Public Module testModule
 
     End Sub
 
-    Public Function StoreSelectedProjectsinDB()
+    Public Function StoreSelectedProjectsinDB() As Integer
 
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt
@@ -3316,7 +3316,7 @@ Public Module testModule
     End Function
 
 
-    Public Function RemoveSelectedProjectsfromDB()
+    Public Function RemoveSelectedProjectsfromDB() As Integer
 
 
         Dim hproj As New clsProjekt

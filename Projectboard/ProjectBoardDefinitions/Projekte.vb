@@ -4580,7 +4580,7 @@ Public Module Projekte
     ''' <param name="height">Diagramm-Höhe</param>
     ''' <param name="width">Diagramm-Breite</param>
     ''' <remarks></remarks>
-    Public Sub createAuslastungsDetailPie(ByRef repObj As Object, ByVal auswahl As Integer, _
+    Public Sub createAuslastungsDetailPie(ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
                                                 ByVal top As Double, left As Double, height As Double, width As Double, _
                                                 ByVal calledfromReporting As Boolean)
 
@@ -4684,7 +4684,7 @@ Public Module Projekte
             Dim found As Boolean = False
 
             While i <= anzDiagrams And Not found
-                
+
                 If .ChartObjects(i).name = chtobjname Then
                     found = True
                 Else

@@ -267,7 +267,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 If storedProj = 0 Then
                     Call MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte speichern?", MsgBoxStyle.OkCancel)
-                    If MsgBoxResult.Ok Then
+
+                    If CBool(MsgBoxResult.Ok) Then
                         Call StoreAllProjectsinDB()
                     End If
                 Else
@@ -302,7 +303,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 If selectedToDelete.Count = 0 Then
                     Call MsgBox("Es wurde kein Projekt/TimeStamp zum Löschen ausgewählt " & vbLf & "Alle Projekte löschen?", MsgBoxStyle.OkCancel)
-                    If MsgBoxResult.Ok Then
+                    If CBool(MsgBoxResult.Ok) Then
                         'Call removeAllProjectsfromDB()
                     End If
                 Else
@@ -340,13 +341,13 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Call projektTafelInit()
 
-        With appInstance.Worksheets(arrWsNames(3))
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
 
-            anzDiagrams = .ChartObjects.Count
+            anzDiagrams = CInt(CType(.ChartObjects, Excel.ChartObjects).Count)
 
             While i < anzDiagrams
 
-                chtobj = .ChartObjects(1)
+                chtobj = CType(.ChartObjects(1), Excel.ChartObject)
                 Call awinDeleteChart(chtobj)
                 i = i + 1
 
@@ -381,8 +382,11 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         enableOnUpdate = False
 
+        
+
         Try
             awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+
         Catch ex As Exception
             awinSelection = Nothing
         End Try
@@ -478,7 +482,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         enableOnUpdate = False
 
         Try
-            tmpshapes = CType(appInstance.ActiveSheet.shapes, Excel.Shapes)
+            tmpshapes = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes, Excel.Shapes)
         Catch ex As Exception
             tmpshapes = Nothing
         End Try
@@ -488,10 +492,13 @@ Imports Excel = Microsoft.Office.Interop.Excel
             ' jetzt die Aktion durchführen ...
             Try
                 For Each singleShp In tmpshapes
+
+                    Dim shapeArt As Integer
+                    shapeArt = kindOfShape(singleShp)
+
                     With singleShp
-                        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or
-                            (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                             And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+
+                        If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
 
                             If .Name <> .TextFrame2.TextRange.Text Then
                                 ' das Shape wurde vom Nutzer umbenannt 
@@ -544,7 +551,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                             End If
 
-                        End If
+                            End If
                     End With
                 Next
             Catch ex As Exception
@@ -640,6 +647,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim result As DialogResult
         Dim awinSelection As Excel.ShapeRange
 
+
+
         Call projektTafelInit()
 
         enableOnUpdate = False
@@ -691,7 +700,6 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         ' es wird vbeim Betreten der Tabelle2 nochmal auf False gesetzt ... und insbesondere bei Activate Tabelle1 (!) auf true gesetzt, nicht vorher wieder
         enableOnUpdate = False
-
 
 
         Try
@@ -958,7 +966,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                     For i = 1 To todoListe.Count
 
-                        pname = todoListe.Item(i)
+                        pname = CStr(todoListe.Item(i))
 
                         ' jetzt die Aktion durchführen ...
                         Try
@@ -1038,10 +1046,12 @@ Imports Excel = Microsoft.Office.Interop.Excel
             ' jetzt die Aktion durchführen ...
 
             For Each singleShp In awinSelection
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
                 With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
 
                         Call awinShowNoShowProject(pname:=.Name)
 
@@ -1120,10 +1130,12 @@ Imports Excel = Microsoft.Office.Interop.Excel
             ' jetzt die Aktion durchführen ...
 
             For Each singleShp In awinSelection
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
                 With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
                         Call awinBeauftragung(pname:=.Name, type:=0)
                     End If
                 End With
@@ -1169,10 +1181,12 @@ Imports Excel = Microsoft.Office.Interop.Excel
             ' jetzt die Aktion durchführen ...
 
             For Each singleShp In awinSelection
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
                 With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
                         Call awinBeauftragung(pname:=.Name, type:=1)
                     End If
                 End With
@@ -1216,10 +1230,11 @@ Imports Excel = Microsoft.Office.Interop.Excel
             ' jetzt die Aktion durchführen ...
 
             For Each singleShp In awinSelection
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
                 With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
                         Call awinCancelBeauftragung(pname:=.Name)
                     End If
                 End With
@@ -1268,10 +1283,11 @@ Imports Excel = Microsoft.Office.Interop.Excel
             For Each singleShp In awinSelection
 
 
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
                 With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
 
                         Try
                             Call awinDeleteChartorProject(vprojektname:=.Name, firstCall:=firstCall)
@@ -1575,10 +1591,11 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     ' hier muss jetzt das File Projekt Detail aufgemacht werden ...
                     appInstance.Workbooks.Open(awinPath & projektAustausch)
 
+                    Dim shapeArt As Integer
+                    shapeArt = kindOfShape(singleShp)
+
                     With singleShp
-                        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                        If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
 
                             Try
                                 hproj = ShowProjekte.getProject(singleShp.Name)
@@ -2391,10 +2408,11 @@ Imports Excel = Microsoft.Office.Interop.Excel
             ' jetzt die Aktion durchführen ...
 
             For Each singleShp In awinSelection
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
                 With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
 
                         myCollection.Add(.Name)
                         top = .Top + boxHeight + 2
@@ -2445,10 +2463,11 @@ Imports Excel = Microsoft.Office.Interop.Excel
             ' jetzt die Aktion durchführen ...
 
             For Each singleShp In awinSelection
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
                 With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
 
                         myCollection.Add(.Name)
                         top = .Top + boxHeight + 2
@@ -2507,10 +2526,11 @@ Imports Excel = Microsoft.Office.Interop.Excel
             ' jetzt die Aktion durchführen ...
 
             For Each singleShp In awinSelection
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
                 With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
 
                         myCollection.Add(.Name, .Name)
                         top = .Top + boxHeight + 2
@@ -2524,7 +2544,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             Dim i As Integer
             For i = 1 To myCollection.Count
-                pname = myCollection.Item(i)
+                pname = CStr(myCollection.Item(i))
                 Try
                     hproj = ShowProjekte.getProject(pname)
                     activeNumber = allDependencies.activeNumber(pname, PTdpndncyType.inhalt)
@@ -2539,7 +2559,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             ' jetzt müssen die Projekte rausgenommen werden, die keine Abhängigkeiten haben 
             For i = 1 To deleteList.Count
-                pname = deleteList.Item(i)
+                pname = CStr(deleteList.Item(i))
                 Try
                     myCollection.Remove(pname)
                 Catch ex As Exception
@@ -2596,10 +2616,11 @@ Imports Excel = Microsoft.Office.Interop.Excel
             ' jetzt die Aktion durchführen ...
 
             For Each singleShp In awinSelection
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
                 With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
 
                         myCollection.Add(.Name)
                         top = .Top + boxHeight + 2
@@ -2615,8 +2636,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 With appInstance.ActiveWindow
                     sichtbarerBereich = .VisibleRange
-                    left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 500) / 2
-                    top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
+                    left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 500) / 2
+                    top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
                 End With
 
                 width = 500
@@ -2899,10 +2920,11 @@ Imports Excel = Microsoft.Office.Interop.Excel
             ' jetzt die Aktion durchführen ...
 
             For Each singleShp In awinSelection
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
                 With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                        (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                         And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
 
                         Try
                             hproj = ShowProjekte.getProject(.Name)
@@ -3751,7 +3773,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim selectionType As Integer = -1 ' Keine Einschränkung
         Dim top As Double, left As Double, width As Double, height As Double
-        Dim obj As Object = Nothing
+        Dim obj As Excel.ChartObject = Nothing
         Dim myCollection As New Collection
 
         Call projektTafelInit()
@@ -4030,7 +4052,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 With valueItem
                     .value = ShowProjekte.getColorsInMonth(2, future).Sum
                     .name = "nicht vollständig"
-                    .color = awinSettings.AmpelGelb
+                    .color = CType(awinSettings.AmpelGelb, UInt32)
                 End With
                 wpfInput.Add(valueItem.name, valueItem)
 
@@ -4086,14 +4108,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             With appInstance.ActiveWindow
                 sichtbarerBereich = .VisibleRange
-                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-                If left < sichtbarerBereich.Left Then
-                    left = sichtbarerBereich.Left + 2
+                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
+                If left < CDbl(sichtbarerBereich.Left) Then
+                    left = CDbl(sichtbarerBereich.Left) + 2
                 End If
 
-                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-                If top < sichtbarerBereich.Top Then
-                    top = sichtbarerBereich.Top + 2
+                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
+                If top < CDbl(sichtbarerBereich.Top) Then
+                    top = CDbl(sichtbarerBereich.Top) + 2
                 End If
 
             End With
@@ -4148,14 +4170,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             With appInstance.ActiveWindow
                 sichtbarerBereich = .VisibleRange
-                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-                If left < sichtbarerBereich.Left Then
-                    left = sichtbarerBereich.Left + 2
+                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
+                If left < CDbl(sichtbarerBereich.Left) Then
+                    left = CDbl(sichtbarerBereich.Left) + 2
                 End If
 
-                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-                If top < sichtbarerBereich.Top Then
-                    top = sichtbarerBereich.Top + 2
+                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
+                If top < CDbl(sichtbarerBereich.Top) Then
+                    top = CDbl(sichtbarerBereich.Top) + 2
                 End If
 
             End With
@@ -4217,7 +4239,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             Dim i As Integer
             For i = 1 To myCollection.Count
-                pname = myCollection.Item(i)
+                pname = CStr(myCollection.Item(i))
                 Try
                     hproj = ShowProjekte.getProject(pname)
                     activeNumber = allDependencies.activeNumber(pname, PTdpndncyType.inhalt)
@@ -4232,7 +4254,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             ' jetzt müssen die Projekte rausgenommen werden, die keine Abhängigkeiten haben 
             For i = 1 To deleteList.Count
-                pname = deleteList.Item(i)
+                pname = CStr(deleteList.Item(i))
                 Try
                     myCollection.Remove(pname)
                 Catch ex As Exception
@@ -4243,14 +4265,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             With appInstance.ActiveWindow
                 sichtbarerBereich = .VisibleRange
-                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-                If left < sichtbarerBereich.Left Then
-                    left = sichtbarerBereich.Left + 2
+                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
+                If left < CDbl(sichtbarerBereich.Left) Then
+                    left = CDbl(sichtbarerBereich.Left) + 2
                 End If
 
-                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-                If top < sichtbarerBereich.Top Then
-                    top = sichtbarerBereich.Top + 2
+                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
+                If top < CDbl(sichtbarerBereich.Top) Then
+                    top = CDbl(sichtbarerBereich.Top) + 2
                 End If
 
             End With
@@ -4322,14 +4344,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             With appInstance.ActiveWindow
                 sichtbarerBereich = .VisibleRange
-                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-                If left < sichtbarerBereich.Left Then
-                    left = sichtbarerBereich.Left + 2
+                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
+                If left < CDbl(sichtbarerBereich.Left) Then
+                    left = CDbl(sichtbarerBereich.Left) + 2
                 End If
 
-                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-                If top < sichtbarerBereich.Top Then
-                    top = sichtbarerBereich.Top + 2
+                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
+                If top < CDbl(sichtbarerBereich.Top) Then
+                    top = CDbl(sichtbarerBereich.Top) + 2
                 End If
 
             End With
@@ -4405,14 +4427,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             With appInstance.ActiveWindow
                 sichtbarerBereich = .VisibleRange
-                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-                If left < sichtbarerBereich.Left Then
-                    left = sichtbarerBereich.Left + 2
+                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
+                If left < CDbl(sichtbarerBereich.Left) Then
+                    left = CDbl(sichtbarerBereich.Left) + 2
                 End If
 
-                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-                If top < sichtbarerBereich.Top Then
-                    top = sichtbarerBereich.Top + 2
+                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
+                If top < CDbl(sichtbarerBereich.Top) Then
+                    top = CDbl(sichtbarerBereich.Top) + 2
                 End If
 
             End With
@@ -4483,14 +4505,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             With appInstance.ActiveWindow
                 sichtbarerBereich = .VisibleRange
-                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-                If left < sichtbarerBereich.Left Then
-                    left = sichtbarerBereich.Left + 2
+                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
+                If left < CDbl(sichtbarerBereich.Left) Then
+                    left = CDbl(sichtbarerBereich.Left) + 2
                 End If
 
-                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-                If top < sichtbarerBereich.Top Then
-                    top = sichtbarerBereich.Top + 2
+                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
+                If top < CDbl(sichtbarerBereich.Top) Then
+                    top = CDbl(sichtbarerBereich.Top) + 2
                 End If
 
             End With
@@ -4547,14 +4569,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             With appInstance.ActiveWindow
                 sichtbarerBereich = .VisibleRange
-                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
-                If left < sichtbarerBereich.Left Then
-                    left = sichtbarerBereich.Left + 2
+                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
+                If left < CDbl(sichtbarerBereich.Left) Then
+                    left = CDbl(sichtbarerBereich.Left) + 2
                 End If
 
-                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - 450) / 2
-                If top < sichtbarerBereich.Top Then
-                    top = sichtbarerBereich.Top + 2
+                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
+                If top < CDbl(sichtbarerBereich.Top) Then
+                    top = CDbl(sichtbarerBereich.Top) + 2
                 End If
 
             End With
@@ -4614,14 +4636,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             With appInstance.ActiveWindow
                 sichtbarerBereich = .VisibleRange
-                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - width) / 2
-                If left < sichtbarerBereich.Left Then
-                    left = sichtbarerBereich.Left + 2
+                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - width) / 2
+                If left < CDbl(sichtbarerBereich.Left) Then
+                    left = CDbl(sichtbarerBereich.Left) + 2
                 End If
 
-                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - height) / 2
-                If top < sichtbarerBereich.Top Then
-                    top = sichtbarerBereich.Top + 2
+                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - height) / 2
+                If top < CDbl(sichtbarerBereich.Top) Then
+                    top = CDbl(sichtbarerBereich.Top) + 2
                 End If
 
             End With
@@ -4672,14 +4694,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             With appInstance.ActiveWindow
                 sichtbarerBereich = .VisibleRange
-                left = sichtbarerBereich.Left + (sichtbarerBereich.Width - width) / 2
-                If left < sichtbarerBereich.Left Then
-                    left = sichtbarerBereich.Left + 2
+                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - width) / 2
+                If left < CDbl(sichtbarerBereich.Left) Then
+                    left = CDbl(sichtbarerBereich.Left) + 2
                 End If
 
-                top = sichtbarerBereich.Top + (sichtbarerBereich.Height - height) / 2
-                If top < sichtbarerBereich.Top Then
-                    top = sichtbarerBereich.Top + 2
+                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - height) / 2
+                If top < CDbl(sichtbarerBereich.Top) Then
+                    top = CDbl(sichtbarerBereich.Top) + 2
                 End If
 
             End With
@@ -4928,7 +4950,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 'width = hproj1.Dauer * boxWidth + 7
                 'scale = hproj1.Dauer
 
-                Dim repObj As Object
+                Dim repObj As Excel.ChartObject
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
 

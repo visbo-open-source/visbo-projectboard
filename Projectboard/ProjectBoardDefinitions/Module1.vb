@@ -365,7 +365,6 @@ Public Module Module1
 
         With appInstance
             .EnableEvents = True
-            .EnableEvents = True
         End With
 
         ' Konsistenzchecks durchführen
