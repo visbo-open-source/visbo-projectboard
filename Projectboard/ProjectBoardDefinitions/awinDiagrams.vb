@@ -882,6 +882,7 @@ Public Module awinDiagrams
 
                 With CType(appInstance.Charts.Add, Excel.Chart)
 
+
                     If Not isCockpitChart Then
                         With .Axes(Excel.XlAxisType.xlValue)
                             .MinorUnit = 1
@@ -1209,6 +1210,14 @@ Public Module awinDiagrams
                         prcTyp = DiagrammTypen(5) Or _
                         awinSettings.kapaEinheit = "ST" Then
                         titleSumme = ""
+                    ElseIf prcTyp = DiagrammTypen(1) Then
+                        einheit = awinSettings.kapaEinheit
+                        titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
+                                            Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
+
+                    ElseIf prcTyp = DiagrammTypen(2) Then
+                        einheit = "T€"
+                        titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " " & einheit & ")"
                     Else
                         titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
                     End If
@@ -1236,6 +1245,7 @@ Public Module awinDiagrams
                     .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
 
                 End With
+
 
 
                 With .ChartObjects(anzDiagrams + 1)
@@ -1523,25 +1533,30 @@ Public Module awinDiagrams
                         objektFarbe = PhaseDefinitions.getPhaseDef(prcName).farbe
                         datenreihe = ShowProjekte.getCountPhasesInMonth(prcName)
 
-                        ' Ergänzung wegen Anzeige der selektierten Objekte ... 
-                        tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName)
-                        For ix = 0 To bis - von
-                            datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
-                            seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
-                        Next
+
+                        If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
+                            ' Ergänzung wegen Anzeige der selektierten Objekte ... 
+                            tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName)
+                            For ix = 0 To bis - von
+                                datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
+                                seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
+                            Next
+                        End If
+                        
 
                     ElseIf prcTyp = DiagrammTypen(1) Then
                         einheit = " " & awinSettings.kapaEinheit
                         objektFarbe = RoleDefinitions.getRoledef(prcName).farbe
                         datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
 
-                        ' Ergänzung wegen Anzeige der selektierten Objekte ... 
-                        tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(prcName)
-                        For ix = 0 To bis - von
-                            datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
-                            seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
-                        Next
-
+                        If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
+                            ' Ergänzung wegen Anzeige der selektierten Objekte ... 
+                            tmpdatenreihe = selectedProjekte.getRoleValuesInMonth(prcName)
+                            For ix = 0 To bis - von
+                                datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
+                                seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
+                            Next
+                        End If
 
                     ElseIf prcTyp = DiagrammTypen(2) Then
                         einheit = " T€"
@@ -1561,12 +1576,15 @@ Public Module awinDiagrams
                             objektFarbe = CostDefinitions.getCostdef(prcName).farbe
                             datenreihe = ShowProjekte.getCostValuesInMonth(prcName)
 
-                            ' Ergänzung wegen Anzeige der selektierten Objekte ... 
-                            tmpdatenreihe = selectedProjekte.getCostValuesInMonth(prcName)
-                            For ix = 0 To bis - von
-                                datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
-                                seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
-                            Next
+                            If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
+                                ' Ergänzung wegen Anzeige der selektierten Objekte ... 
+                                tmpdatenreihe = selectedProjekte.getCostValuesInMonth(prcName)
+                                For ix = 0 To bis - von
+                                    datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
+                                    seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
+                                Next
+                            End If
+                            
                         End If
 
                     ElseIf prcTyp = DiagrammTypen(4) Then
@@ -1699,7 +1717,7 @@ Public Module awinDiagrams
 
                 ' Ergänzung wegen Anzeige selektierter Objekte 
                 ' wenn der Wert größer ist als Null, dann Anzeigen ... 
-                If seldatenreihe.Sum > 0 Then
+                If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
                     With .SeriesCollection.NewSeries
                         .HasDataLabels = False
                         .name = "Selected Projects"
@@ -1851,13 +1869,40 @@ Public Module awinDiagrams
 
                 .HasTitle = True
 
+
                 If prcTyp = DiagrammTypen(0) Or _
                         prcTyp = DiagrammTypen(5) Or _
                         awinSettings.kapaEinheit = "ST" Then
                     titleSumme = ""
+
+                ElseIf prcTyp = DiagrammTypen(1) Then
+
+                    einheit = awinSettings.kapaEinheit
+                    If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
+                        titleSumme = " (" & Format(seldatenreihe.Sum, "##,##0") & " / " & _
+                                            Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
+                                            Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
+                    Else
+                        titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
+                                        Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
+                    End If
+                    
+
+                ElseIf prcTyp = DiagrammTypen(2) Then
+
+                    einheit = "T€"
+                    If awinSettings.showValuesOfSelected And seldatenreihe.Sum > 0 Then
+                        titleSumme = " (" & Format(seldatenreihe.Sum, "##,##0") & " / " & _
+                                            Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
+                    Else
+                        titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " " & einheit & ")"
+                    End If
+
+
                 Else
                     titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & einheit & ")"
                 End If
+
 
                 .ChartTitle.Text = diagramTitle & titleSumme
 
@@ -2186,12 +2231,21 @@ Public Module awinDiagrams
     End Sub
 
 
-    '
-    '
-    '
+    
+    ''' <summary>
+    ''' zeigt für den betrachteten Zeitraum das Auslastungsdiagramm an
+    ''' Rolle ist beauftragt, ist ohne Arbeit, ist überlastet 
+    ''' </summary>
+    ''' <param name="repObj"></param>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="width"></param>
+    ''' <param name="height"></param>
+    ''' <param name="calledfromReporting"></param>
+    ''' <remarks></remarks>
     Sub awinCreateAuslastungsDiagramm(ByRef repObj As Excel.ChartObject, _
-                                      ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
-                                      ByVal calledfromReporting As Boolean)
+                                          ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
+                                          ByVal calledfromReporting As Boolean)
 
         Dim anzDiagrams As Integer, i As Integer
         Dim found As Boolean
@@ -2199,7 +2253,6 @@ Public Module awinDiagrams
         Dim datenreihe() As Double
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         Dim formerEE As Boolean = appInstance.EnableEvents
-        Dim chtTitle As String
 
         Dim von As Integer, bis As Integer
         Dim diagramTitle As String
@@ -2239,7 +2292,7 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        titelTeile(0) = summentitel9 & " (" & awinSettings.kapaEinheit & ")"
+        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Auslastung) & " (" & awinSettings.kapaEinheit & ")"
 
 
         titelTeilLaengen(0) = titelTeile(0).Length + 1
@@ -2277,15 +2330,7 @@ Public Module awinDiagrams
             found = False
             While i <= anzDiagrams And Not found
 
-                Try
-                    'chtTitle = .ChartObjects(i).Chart.ChartTitle.text
-                    chtTitle = .ChartObjects(i).Name
-                Catch ex As Exception
-                    chtTitle = " "
-                End Try
-
-
-                If chtTitle = chtobjName Then
+                If .ChartObjects(i).Name = chtobjName Then
                     found = True
                     repObj = .chartobjects(i)
                 Else
@@ -2776,8 +2821,7 @@ Public Module awinDiagrams
         appInstance.EnableEvents = False
 
 
-        titelTeile(0) = summentitel9 & " (" & awinSettings.kapaEinheit & ")"
-
+        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Auslastung) & " (" & awinSettings.kapaEinheit & ")"
 
         titelTeilLaengen(0) = titelTeile(0).Length + 1
         titelTeile(1) = textZeitraum(showRangeLeft, showRangeRight)
@@ -3552,6 +3596,12 @@ Public Module awinDiagrams
 
     End Sub
 
+    ''' <summary>
+    ''' aktualisiert das Portfolio diagramm Ergebnis-Kennzahl mit Übersicht 
+    ''' Projekt-Ergebnis, Kosten der Überauslastung, Unterauslastung, Ergbnis-Kennzahl  
+    ''' </summary>
+    ''' <param name="chtobj">Chart, das aktualisiert werden soll</param>
+    ''' <remarks></remarks>
     Sub awinUpdateErgebnisDiagramm(ByRef chtobj As ChartObject)
 
 
@@ -3625,7 +3675,8 @@ Public Module awinDiagrams
         End If
 
 
-        diagramTitle = summentitel1 & " " & textZeitraum(showRangeLeft, showRangeRight)
+        diagramTitle = portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) & " " & _
+                                       textZeitraum(showRangeLeft, showRangeRight)
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
@@ -4188,8 +4239,8 @@ Public Module awinDiagrams
         'Dim hproj As clsProjekt
         Dim ErgebnisListeR As New Collection
 
-        mycollection.Add("Ergebnis")
-        chtobjName = getKennung("pf", PTpfdk.Auslastung, mycollection)
+        mycollection.Add("Ergebniskennzahl")
+        chtobjName = getKennung("pf", PTpfdk.ErgebnisWasserfall, mycollection)
         mycollection.Clear()
 
         If Not calledfromReporting Then
@@ -4267,7 +4318,8 @@ Public Module awinDiagrams
             itemColor(3) = farbeExterne
         End If
 
-        diagramTitle = summentitel1 & " " & textZeitraum(showRangeLeft, showRangeRight)
+        diagramTitle = portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) & " " & _
+                                        textZeitraum(showRangeLeft, showRangeRight)
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -4556,7 +4608,7 @@ Public Module awinDiagrams
         'Dim hproj As clsProjekt
         Dim ErgebnisListeR As New Collection
 
-        mycollection.Add("Ergebnis")
+        mycollection.Add("Projektergebnisse")
         chtobjName = getKennung("pf", PTpfdk.Budget, mycollection)
         mycollection.Clear()
 
@@ -5219,7 +5271,7 @@ Public Module awinDiagrams
                 sfarbe = RGB(0, 0, 0) '.Schriftfarbe
                 sgroesse = .Schrift
                 ' in L steht jetzt die Lä nge
-                l = .Dauer
+                l = .anzahlRasterElemente
                 i = .tfZeile + 1
                 k = .tfspalte
             End With
@@ -5464,7 +5516,7 @@ Public Module awinDiagrams
 
                 End Try
 
-                
+
                 '.Shadow.Transparency = 0.0
             End With
 
@@ -5479,7 +5531,7 @@ Public Module awinDiagrams
                 sfarbe = RGB(0, 0, 0) '.Schriftfarbe
                 sgroesse = .Schrift
                 ' in L steht jetzt die Länge
-                l = .Dauer
+                l = .anzahlRasterElemente
                 i = .tfZeile + 1
                 k = .tfspalte
             End With
@@ -5580,13 +5632,15 @@ Public Module awinDiagrams
 
 
 
-    '
-    ' zeichnet alle dargestellten Diagramme neu
-    '
+    ''' <summary>
+    ''' zeichnet alle dargestellten Portfolio ("Pf") Diagramme neu
+    ''' </summary>
+    ''' <param name="typus"></param>
+    ''' <remarks></remarks>
     Sub awinNeuZeichnenDiagramme(ByVal typus As Integer)
         Dim anz_diagrams As Integer
         Dim chtobj As ChartObject
-        Dim i As Integer, p As Integer, e As Integer
+        Dim i As Integer, p As Integer
 
 
         ' typus:
@@ -5609,441 +5663,421 @@ Public Module awinDiagrams
                 Select Case typus
                     '
                     '
-                    Case 1 ' Projekt wurde verschoben
-                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
-
-                            Call awinUpdateprcCollectionDiagram(chtobj)
-
-
-                        ElseIf istSummenDiagramm(chtobj, p) Then
-
-                            If p = 1 Then
-                                Call awinUpdateErgebnisDiagramm(chtobj)
-                            ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                            ElseIf p = 4 Then
-                                Call awinUpdatePersCostStructureDiagramm(chtobj)
-                            ElseIf p = 5 Then
-                                Call awinUpdateEffizienzDiagramm2(chtobj)
-                            ElseIf p = 6 Or p = 7 Or p = 8 Then
-                                Try
-                                    Call awinUpdateColorDistributionDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            ElseIf p = 9 Then
-                                Try
-                                    Call awinUpdateAuslastungsDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = 10 Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 1)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = 11 Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 2)
-                                Catch ex As Exception
-
-                                End Try
-
-                                ' p = 19 
-                            ElseIf p = PTpfdk.Budget Then
-                                Try
-                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            End If
-
-
-
-
-                        ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-                        Else ' ist Projekt-Charakteristik Diagramm
-
-                        End If
-                        '
-                        '
-                    Case 2 ' Projekt wurde eingefügt
-                        '
-                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
-
-                            Call awinUpdateprcCollectionDiagram(chtobj)
-
-
-                        ElseIf istSummenDiagramm(chtobj, p) Then
-
-                            If p = 1 Then
-                                Call awinUpdateErgebnisDiagramm(chtobj)
-                            ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                            ElseIf p = 4 Then
-                                Call awinUpdatePersCostStructureDiagramm(chtobj)
-                            ElseIf p = 5 Then
-                                Call awinUpdateEffizienzDiagramm2(chtobj)
-                            ElseIf p = 6 Or p = 7 Or p = 8 Then
-                                Try
-                                    Call awinUpdateColorDistributionDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            ElseIf p = 9 Then
-                                Try
-                                    Call awinUpdateAuslastungsDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = 10 Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 1)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = 11 Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 2)
-                                Catch ex As Exception
-
-                                End Try
-
-                                ' p = 19 
-                            ElseIf p = PTpfdk.Budget Then
-                                Try
-                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            End If
-
-
-
-                        ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-
-                        Else ' ist Projekt-Charakteristik Diagramm
-                        End If
-
-                    Case 3 ' Projekt wurde gelöscht
-                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
-
-                            Call awinUpdateprcCollectionDiagram(chtobj)
-
-
-                        ElseIf istSummenDiagramm(chtobj, p) Then
-
-                            If p = 1 Then
-                                Call awinUpdateErgebnisDiagramm(chtobj)
-                            ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                            ElseIf p = 4 Then
-                                Call awinUpdatePersCostStructureDiagramm(chtobj)
-                            ElseIf p = 5 Then
-                                Call awinUpdateEffizienzDiagramm2(chtobj)
-                            ElseIf p = 6 Or p = 7 Or p = 8 Then
-                                Try
-                                    Call awinUpdateColorDistributionDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            ElseIf p = 9 Then
-                                Try
-                                    Call awinUpdateAuslastungsDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = 10 Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 1)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = 11 Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 2)
-                                Catch ex As Exception
-
-                                End Try
-
-                                ' p = 19 
-                            ElseIf p = PTpfdk.Budget Then
-                                Try
-                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            End If
-
-
-
-                        ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-
-                        Else ' ist Projekt-Charakteristik Diagramm
-                        End If
-
-                    Case 4 ' betrachteter Zeitraum wurde geändert
-                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
-
-                            Call awinUpdateprcCollectionDiagram(chtobj)
-
-
-                        ElseIf istSummenDiagramm(chtobj, p) Then
-
-                            If p = 1 Then
-                                Call awinUpdateErgebnisDiagramm(chtobj)
-                            ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                            ElseIf p = 4 Then
-                                Call awinUpdatePersCostStructureDiagramm(chtobj)
-                            ElseIf p = 5 Then
-                                Call awinUpdateEffizienzDiagramm2(chtobj)
-                            ElseIf p = 6 Or p = 7 Or p = 8 Then
-                                Try
-                                    Call awinUpdateColorDistributionDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            ElseIf p = 9 Then
-                                Try
-                                    Call awinUpdateAuslastungsDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = 10 Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 1)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = 11 Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 2)
-                                Catch ex As Exception
-
-                                End Try
-
-                                ' p = 19 
-                            ElseIf p = PTpfdk.Budget Then
-                                Try
-                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            End If
-
-
-                        ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-                        Else ' ist Projekt-Charakteristik Diagramm
-                        End If
-
-                    Case 5 ' Stammdaten wurden geändert
-
-                        If istSummenDiagramm(chtobj, p) Then
-
-                            If p = 1 Then
-                                Call awinUpdateErgebnisDiagramm(chtobj)
-                            ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                            ElseIf p = 4 Then
-                                Call awinUpdatePersCostStructureDiagramm(chtobj)
-                            ElseIf p = 5 Then
-                                Call awinUpdateEffizienzDiagramm2(chtobj)
-                            ElseIf p = 6 Or p = 7 Or p = 8 Then
-                                Try
-                                    Call awinUpdateColorDistributionDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            ElseIf p = 9 Then
-                                Try
-                                    Call awinUpdateAuslastungsDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = 10 Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 1)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = 11 Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 2)
-                                Catch ex As Exception
-
-                                End Try
-
-                                ' p = 19 
-                            ElseIf p = PTpfdk.Budget Then
-                                Try
-                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            End If
-
-
-
-
-                        ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-                        ElseIf istErgebnisDiagramm(chtobj, e) Then
-
-                            Call awinUpdateprcCollectionDiagram(chtobj)
-
-                        Else ' ist Projekt-Charakteristik Diagramm
-                        End If
-
-                    Case 6 ' Ressourcen Bedarf eines existierenden Projektes wurde geändert
-
-                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
-
-                            Call awinUpdateprcCollectionDiagram(chtobj)
-
-                        ElseIf istSummenDiagramm(chtobj, p) Then
-
-                            If p = 1 Then
-                                Call awinUpdateErgebnisDiagramm(chtobj)
-                            ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                            ElseIf p = 4 Then
-                                Call awinUpdatePersCostStructureDiagramm(chtobj)
-                            ElseIf p = 5 Then
-                                Call awinUpdateEffizienzDiagramm2(chtobj)
-                            ElseIf p = 6 Or p = 7 Or p = 8 Then
-                                Try
-                                    Call awinUpdateColorDistributionDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            ElseIf p = 9 Then
-                                Try
-                                    Call awinUpdateAuslastungsDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = 10 Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 1)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = 11 Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 2)
-                                Catch ex As Exception
-
-                                End Try
-
-                                ' p = 19 
-                            ElseIf p = PTpfdk.Budget Then
-                                Try
-                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            End If
-
-
-
-
-                        ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-
-                        Else ' ist Projekt-Charakteristik Diagramm
-                        End If
-
-                    Case 7 ' Kosten Bedarf eines existierenden Projektes wurde geändert
-
-                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
-
-                            Call awinUpdateprcCollectionDiagram(chtobj)
-
-                        ElseIf istSummenDiagramm(chtobj, p) Then
-
-                            If p = 1 Then
-                                Call awinUpdateErgebnisDiagramm(chtobj)
-                            ElseIf p = 2 Then
-                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                            ElseIf p = 4 Then
-                                Call awinUpdatePersCostStructureDiagramm(chtobj)
-                            ElseIf p = 5 Then
-                                Call awinUpdateEffizienzDiagramm2(chtobj)
-                            ElseIf p = PTpfdk.Budget Then
-                                Try
-                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-                            End If
-
-
-
-                        ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-
-                        Else ' ist Projekt-Charakteristik Diagramm oder Phasen Diagramm
-                        End If
-
                     Case 8 ' Selection hat sich geändert 
 
                         If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
+                            istPhasenDiagramm(chtobj) Then
 
                             Call awinUpdateprcCollectionDiagram(chtobj)
-                            ' später ergänzen, wenn die Selektion sich auf alle oder mehrere Charts auswirken soll 
-                            'ElseIf istSummenDiagramm(chtobj, p) Then
 
-                            '    If p = 1 Then
-                            '        Call awinUpdateErgebnisDiagramm(chtobj)
-                            '    ElseIf p = 2 Then
-                            '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                            '    ElseIf p = 4 Then
-                            '        Call awinUpdatePersCostStructureDiagramm(chtobj)
-                            '    ElseIf p = 5 Then
-                            '        Call awinUpdateEffizienzDiagramm2(chtobj)
-                            '    End If
-
-
-                            'ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                            '    Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-
-                        Else ' ist Projekt-Charakteristik Diagramm oder Phasen Diagramm
                         End If
+
+                    Case Else
+                        ' 1: Projekt wurde verschoben
+                        ' 2: Projekt wurde eingefügt
+                        ' 3: Projekt wurde gelöscht
+                        ' 4: betrachteter Zeitraum wurde geändert
+                        ' 5: Stammdaten wurden geändert
+                        ' 6: Ressourcen Bedarf eines existierenden Projektes wurde geändert
+                        ' 7: Kosten Bedarf eines existierenden Projektes wurde geändert
+
+                        If (typus <> 5) And (istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj)) Then
+
+                            Call awinUpdateprcCollectionDiagram(chtobj)
+
+
+                        ElseIf istSummenDiagramm(chtobj, p) Then
+
+                            If p = PTpfdk.ErgebnisWasserfall Then
+                                Call awinUpdateErgebnisDiagramm(chtobj)
+
+                            ElseIf p = PTpfdk.Dependencies Or _
+                                   p = PTpfdk.FitRisiko Or _
+                                   p = PTpfdk.FitRisikoVol Or _
+                                   p = PTpfdk.ZeitRisiko Or _
+                                   p = PTpfdk.ComplexRisiko Then
+
+                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
+
+                            ElseIf p = PTpfdk.Auslastung Then
+                                Try
+                                    Call awinUpdateAuslastungsDiagramm(chtobj)
+                                Catch ex As Exception
+
+                                End Try
+
+                            ElseIf p = PTpfdk.UeberAuslastung Then
+                                Try
+                                    Call updateAuslastungsDetailPie(chtobj, 1)
+                                Catch ex As Exception
+
+                                End Try
+                            ElseIf p = PTpfdk.Unterauslastung Then
+                                Try
+                                    Call updateAuslastungsDetailPie(chtobj, 2)
+                                Catch ex As Exception
+
+                                End Try
+
+                                ' p = 19 
+                            ElseIf p = PTpfdk.Budget Then
+                                Try
+                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                                Catch ex As Exception
+
+                                End Try
+                            End If
+
+
+                        End If
+                        '
+                        '
+                        'Case 2 ' Projekt wurde eingefügt
+                        '    '
+                        '    If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                        '        istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
+
+                        '        Call awinUpdateprcCollectionDiagram(chtobj)
+
+
+                        '    ElseIf istSummenDiagramm(chtobj, p) Then
+
+                        '        If p = 1 Then
+                        '            Call awinUpdateErgebnisDiagramm(chtobj)
+                        '        ElseIf p = 2 Then
+                        '            Call awinUpdatePortfolioDiagrams(chtobj, 0)
+                        '        ElseIf p = 4 Then
+                        '            Call awinUpdatePersCostStructureDiagramm(chtobj)
+                        '        ElseIf p = 5 Then
+                        '            Call awinUpdateEffizienzDiagramm2(chtobj)
+                        '        ElseIf p = 6 Or p = 7 Or p = 8 Then
+                        '            Try
+                        '                Call awinUpdateColorDistributionDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+
+                        '        ElseIf p = 9 Then
+                        '            Try
+                        '                Call awinUpdateAuslastungsDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        ElseIf p = 10 Then
+                        '            Try
+                        '                Call updateAuslastungsDetailPie(chtobj, 1)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        ElseIf p = 11 Then
+                        '            Try
+                        '                Call updateAuslastungsDetailPie(chtobj, 2)
+                        '            Catch ex As Exception
+
+                        '            End Try
+
+                        '            ' p = 19 
+                        '        ElseIf p = PTpfdk.Budget Then
+                        '            Try
+                        '                Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        End If
+
+
+
+                        '    ElseIf istPortfolioDiagramm(chtobj, p) Then
+
+                        '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
+
+
+                        '    Else ' ist Projekt-Charakteristik Diagramm
+                        '    End If
+
+                        'Case 3 ' Projekt wurde gelöscht
+                        '    If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                        '        istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
+
+                        '        Call awinUpdateprcCollectionDiagram(chtobj)
+
+
+                        '    ElseIf istSummenDiagramm(chtobj, p) Then
+
+                        '        If p = 1 Then
+                        '            Call awinUpdateErgebnisDiagramm(chtobj)
+                        '        ElseIf p = 2 Then
+                        '            Call awinUpdatePortfolioDiagrams(chtobj, 0)
+                        '        ElseIf p = 4 Then
+                        '            Call awinUpdatePersCostStructureDiagramm(chtobj)
+                        '        ElseIf p = 5 Then
+                        '            Call awinUpdateEffizienzDiagramm2(chtobj)
+                        '        ElseIf p = 6 Or p = 7 Or p = 8 Then
+                        '            Try
+                        '                Call awinUpdateColorDistributionDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+
+                        '        ElseIf p = 9 Then
+                        '            Try
+                        '                Call awinUpdateAuslastungsDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        ElseIf p = 10 Then
+                        '            Try
+                        '                Call updateAuslastungsDetailPie(chtobj, 1)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        ElseIf p = 11 Then
+                        '            Try
+                        '                Call updateAuslastungsDetailPie(chtobj, 2)
+                        '            Catch ex As Exception
+
+                        '            End Try
+
+                        '            ' p = 19 
+                        '        ElseIf p = PTpfdk.Budget Then
+                        '            Try
+                        '                Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        End If
+
+
+
+                        '    ElseIf istPortfolioDiagramm(chtobj, p) Then
+
+                        '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
+
+
+                        '    Else ' ist Projekt-Charakteristik Diagramm
+                        '    End If
+
+                        'Case 4 ' betrachteter Zeitraum wurde geändert
+                        '    If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                        '        istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
+
+                        '        Call awinUpdateprcCollectionDiagram(chtobj)
+
+
+                        '    ElseIf istSummenDiagramm(chtobj, p) Then
+
+                        '        If p = 1 Then
+                        '            Call awinUpdateErgebnisDiagramm(chtobj)
+                        '        ElseIf p = 2 Then
+                        '            Call awinUpdatePortfolioDiagrams(chtobj, 0)
+                        '        ElseIf p = 4 Then
+                        '            Call awinUpdatePersCostStructureDiagramm(chtobj)
+                        '        ElseIf p = 5 Then
+                        '            Call awinUpdateEffizienzDiagramm2(chtobj)
+                        '        ElseIf p = 6 Or p = 7 Or p = 8 Then
+                        '            Try
+                        '                Call awinUpdateColorDistributionDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+
+                        '        ElseIf p = 9 Then
+                        '            Try
+                        '                Call awinUpdateAuslastungsDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        ElseIf p = 10 Then
+                        '            Try
+                        '                Call updateAuslastungsDetailPie(chtobj, 1)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        ElseIf p = 11 Then
+                        '            Try
+                        '                Call updateAuslastungsDetailPie(chtobj, 2)
+                        '            Catch ex As Exception
+
+                        '            End Try
+
+                        '            ' p = 19 
+                        '        ElseIf p = PTpfdk.Budget Then
+                        '            Try
+                        '                Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        End If
+
+
+                        '    ElseIf istPortfolioDiagramm(chtobj, p) Then
+
+                        '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
+
+                        '    Else ' ist Projekt-Charakteristik Diagramm
+                        '    End If
+
+                        'Case 5 ' Stammdaten wurden geändert
+
+                        '    If istSummenDiagramm(chtobj, p) Then
+
+                        '        If p = 1 Then
+                        '            Call awinUpdateErgebnisDiagramm(chtobj)
+                        '        ElseIf p = 2 Then
+                        '            Call awinUpdatePortfolioDiagrams(chtobj, 0)
+                        '        ElseIf p = 4 Then
+                        '            Call awinUpdatePersCostStructureDiagramm(chtobj)
+                        '        ElseIf p = 5 Then
+                        '            Call awinUpdateEffizienzDiagramm2(chtobj)
+                        '        ElseIf p = 6 Or p = 7 Or p = 8 Then
+                        '            Try
+                        '                Call awinUpdateColorDistributionDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+
+                        '        ElseIf p = 9 Then
+                        '            Try
+                        '                Call awinUpdateAuslastungsDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        ElseIf p = 10 Then
+                        '            Try
+                        '                Call updateAuslastungsDetailPie(chtobj, 1)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        ElseIf p = 11 Then
+                        '            Try
+                        '                Call updateAuslastungsDetailPie(chtobj, 2)
+                        '            Catch ex As Exception
+
+                        '            End Try
+
+                        '            ' p = 19 
+                        '        ElseIf p = PTpfdk.Budget Then
+                        '            Try
+                        '                Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        End If
+
+
+
+
+                        '    ElseIf istPortfolioDiagramm(chtobj, p) Then
+
+                        '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
+
+                        '    ElseIf istErgebnisDiagramm(chtobj, e) Then
+
+                        '        Call awinUpdateprcCollectionDiagram(chtobj)
+
+                        '    Else ' ist Projekt-Charakteristik Diagramm
+                        '    End If
+
+                        'Case 6 ' Ressourcen Bedarf eines existierenden Projektes wurde geändert
+
+                        '    If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                        '        istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
+
+                        '        Call awinUpdateprcCollectionDiagram(chtobj)
+
+                        '    ElseIf istSummenDiagramm(chtobj, p) Then
+
+                        '        If p = 1 Then
+                        '            Call awinUpdateErgebnisDiagramm(chtobj)
+                        '        ElseIf p = 2 Then
+                        '            Call awinUpdatePortfolioDiagrams(chtobj, 0)
+                        '        ElseIf p = 4 Then
+                        '            Call awinUpdatePersCostStructureDiagramm(chtobj)
+                        '        ElseIf p = 5 Then
+                        '            Call awinUpdateEffizienzDiagramm2(chtobj)
+                        '        ElseIf p = 6 Or p = 7 Or p = 8 Then
+                        '            Try
+                        '                Call awinUpdateColorDistributionDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+
+                        '        ElseIf p = 9 Then
+                        '            Try
+                        '                Call awinUpdateAuslastungsDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        ElseIf p = 10 Then
+                        '            Try
+                        '                Call updateAuslastungsDetailPie(chtobj, 1)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        ElseIf p = 11 Then
+                        '            Try
+                        '                Call updateAuslastungsDetailPie(chtobj, 2)
+                        '            Catch ex As Exception
+
+                        '            End Try
+
+                        '            ' p = 19 
+                        '        ElseIf p = PTpfdk.Budget Then
+                        '            Try
+                        '                Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        End If
+
+
+
+
+                        '    ElseIf istPortfolioDiagramm(chtobj, p) Then
+
+                        '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
+
+
+                        '    Else ' ist Projekt-Charakteristik Diagramm
+                        '    End If
+
+                        'Case 7 ' Kosten Bedarf eines existierenden Projektes wurde geändert
+
+                        '    If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                        '        istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
+
+                        '        Call awinUpdateprcCollectionDiagram(chtobj)
+
+                        '    ElseIf istSummenDiagramm(chtobj, p) Then
+
+                        '        If p = 1 Then
+                        '            Call awinUpdateErgebnisDiagramm(chtobj)
+                        '        ElseIf p = 2 Then
+                        '            Call awinUpdatePortfolioDiagrams(chtobj, 0)
+                        '        ElseIf p = 4 Then
+                        '            Call awinUpdatePersCostStructureDiagramm(chtobj)
+                        '        ElseIf p = 5 Then
+                        '            Call awinUpdateEffizienzDiagramm2(chtobj)
+                        '        ElseIf p = PTpfdk.Budget Then
+                        '            Try
+                        '                Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                        '            Catch ex As Exception
+
+                        '            End Try
+                        '        End If
+
+
+
+                        '    ElseIf istPortfolioDiagramm(chtobj, p) Then
+
+                        '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
+
+
+                        '    Else ' ist Projekt-Charakteristik Diagramm oder Phasen Diagramm
+                        '    End If
+
+
 
                 End Select
 

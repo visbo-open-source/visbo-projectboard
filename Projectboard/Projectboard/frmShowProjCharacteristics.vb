@@ -151,8 +151,8 @@ Public Class frmShowProjCharacteristics
     Private Sub frmShowProjCharacteristics_Load(sender As Object, e As EventArgs) Handles Me.Load
 
 
-        Me.Top = frmCoord(PTfrm.timeMachine, PTpinfo.top)
-        Me.Left = frmCoord(PTfrm.timeMachine, PTpinfo.left)
+        Me.Top = CInt(frmCoord(PTfrm.timeMachine, PTpinfo.top))
+        Me.Left = CInt(frmCoord(PTfrm.timeMachine, PTpinfo.left))
 
 
         ' erst mal nur wenig von der Time-Machine anzeigen ...
@@ -223,9 +223,9 @@ Public Class frmShowProjCharacteristics
         '
         ' hier wird bestimmt, welche Skalierungsfaktoren überhaupt bereücksicht werden müssen 
         '
-        With appInstance.Worksheets(arrWsNames(3))
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
             Dim tmpArray() As String
-            anzDiagrams = CType(.Chartobjects, Excel.ChartObjects).Count
+            anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             If anzDiagrams > 0 Then
                 For i = 1 To anzDiagrams
                     chtobj = CType(.ChartObjects(i), Excel.ChartObject)
@@ -236,23 +236,23 @@ Public Class frmShowProjCharacteristics
                         If tmpArray(0).Trim = "pr" Then
 
                             If tmpArray(2).Trim = vglName Then
-                                If tmpArray(1) = PTprdk.Phasen Then
+                                If tmpArray(1) = CStr(PTprdk.Phasen) Then
                                     necessary(0) = True
-                                ElseIf tmpArray(1) = PTprdk.PersonalBalken And tmpArray(3) = "1" Then
+                                ElseIf tmpArray(1) = CStr(PTprdk.PersonalBalken) And tmpArray(3) = "1" Then
                                     ' Personalbedarf
                                     necessary(1) = True
-                                ElseIf tmpArray(1) = PTprdk.PersonalBalken And tmpArray(3) = "2" Then
+                                ElseIf tmpArray(1) = CStr(PTprdk.PersonalBalken) And tmpArray(3) = "2" Then
                                     ' Personalkosten
                                     necessary(2) = True
-                                ElseIf tmpArray(1) = PTprdk.KostenBalken And tmpArray(3) = "1" Then
+                                ElseIf tmpArray(1) = CStr(PTprdk.KostenBalken) And tmpArray(3) = "1" Then
                                     ' Sonstige Kosten
                                     necessary(3) = True
-                                ElseIf tmpArray(1) = PTprdk.KostenBalken And tmpArray(3) = "2" Then
+                                ElseIf tmpArray(1) = CStr(PTprdk.KostenBalken) And tmpArray(3) = "2" Then
                                     ' Gesamtkosten
                                     necessary(4) = True
-                                ElseIf tmpArray(1) = PTprdk.StrategieRisiko Then
+                                ElseIf tmpArray(1) = CStr(PTprdk.StrategieRisiko) Then
                                     necessary(5) = False
-                                ElseIf tmpArray(1) = PTprdk.Ergebnis Then
+                                ElseIf tmpArray(1) = CStr(PTprdk.Ergebnis) Then
                                     necessary(6) = True
                                 End If
                             End If
@@ -276,7 +276,7 @@ Public Class frmShowProjCharacteristics
         For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
             ' Phasen Skalierung min, max 
             Dim tmpValues() As Double
-            ReDim tmpValues(kvp.Value.Dauer - 1)
+            ReDim tmpValues(kvp.Value.anzahlRasterElemente - 1)
 
             
             ' Phasen Darstellung
@@ -404,9 +404,9 @@ Public Class frmShowProjCharacteristics
         '
         ' jetzt werden wieder alle relevanten Diagramme durchgegangen, um sie auf die entsprechende Skalierung zu setzen ...
         '
-        With appInstance.Worksheets(arrWsNames(3))
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
             Dim tmpArray() As String
-            anzDiagrams = CType(.Chartobjects, Excel.ChartObjects).Count
+            anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             If anzDiagrams > 0 Then
                 For i = 1 To anzDiagrams
                     chtobj = CType(.ChartObjects(i), Excel.ChartObject)
@@ -419,59 +419,59 @@ Public Class frmShowProjCharacteristics
 
                             If tmpArray(2).Trim = vglName Then
 
-                                If tmpArray(1) = PTprdk.Phasen Then
+                                If tmpArray(1) = CStr(PTprdk.Phasen) Then
                                     If necessary(0) Then
-                                        With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
+                                        With CType(chtobj.Chart.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                                             .MinimumScale = minmaxScales(0, 0)
                                             .MaximumScale = CInt(minmaxScales(1, 0) / 365 * 12) + 3
                                         End With
                                     End If
 
-                                ElseIf tmpArray(1) = PTprdk.PersonalBalken Then
+                                ElseIf tmpArray(1) = CStr(PTprdk.PersonalBalken) Then
 
                                     If necessary(1) And tmpArray(3) = "1" Then
 
-                                        With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
+                                        With CType(chtobj.Chart.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                                             .MinimumScale = minmaxScales(0, 1)
                                             .MaximumScale = minmaxScales(1, 1)
                                         End With
 
                                     ElseIf necessary(2) And tmpArray(3) = "2" Then
 
-                                        With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
+                                        With CType(chtobj.Chart.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                                             .MinimumScale = minmaxScales(0, 2)
                                             .MaximumScale = minmaxScales(1, 2)
                                         End With
 
                                     End If
 
-                                ElseIf tmpArray(1) = PTprdk.KostenBalken Then
+                                ElseIf tmpArray(1) = CStr(PTprdk.KostenBalken) Then
 
 
                                     If necessary(3) And tmpArray(3) = "1" Then
                                         ' Sonstige Kosten
-                                        With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
+                                        With CType(chtobj.Chart.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                                             .MinimumScale = minmaxScales(0, 3)
                                             .MaximumScale = minmaxScales(1, 3)
                                         End With
                                     ElseIf necessary(4) And tmpArray(3) = "2" Then
                                         ' Gesamtkosten
-                                        With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
+                                        With CType(chtobj.Chart.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                                             .MinimumScale = minmaxScales(0, 4)
                                             .MaximumScale = minmaxScales(1, 4)
                                         End With
                                     End If
 
 
-                                ElseIf tmpArray(1) = PTprdk.StrategieRisiko Then
+                                ElseIf tmpArray(1) = CStr(PTprdk.StrategieRisiko) Then
                                     ' noch zu programmieren 
                                     ' momentan ist nichts zu tun, da nur StrategieRisiko unterstützt wird mit immer fester Skalierung
 
 
-                                ElseIf tmpArray(1) = PTprdk.Ergebnis Then
+                                ElseIf tmpArray(1) = CStr(PTprdk.Ergebnis) Then
 
                                     If necessary(6) Then
-                                        With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
+                                        With CType(chtobj.Chart.Axes(Excel.XlAxisType.xlValue), Excel.Axis)
                                             .MinimumScale = minmaxScales(0, 6)
                                             .MaximumScale = minmaxScales(1, 6)
                                         End With

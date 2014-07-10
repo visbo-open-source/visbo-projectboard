@@ -357,7 +357,7 @@
 
                 With kvp.Value
 
-                    If (.Start + .StartOffset > bis) Or (.Start + .StartOffset + .Dauer - 1 < von) Then
+                    If (.Start + .StartOffset > bis) Or (.Start + .StartOffset + .anzahlRasterElemente - 1 < von) Then
                         ' dann liegt das Projekt ausserhalb des Zeitraums und muss überhaupt nicht berücksichtig werden 
                     Else
 
@@ -539,7 +539,7 @@
 
                     With hproj
                         prAnfang = .Start + .StartOffset
-                        prEnde = .Start + .Dauer - 1 + .StartOffset
+                        prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
                     End With
 
 
@@ -621,13 +621,13 @@
 
                 hproj = kvp.Value
 
-                Dauer = hproj.Dauer
+                Dauer = hproj.anzahlRasterElemente
 
                 ReDim tempArray(Dauer - 1)
 
                 With hproj
                     prAnfang = .Start + .StartOffset
-                    prEnde = .Start + .Dauer - 1 + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
                 End With
 
                 anzLoops = 0
@@ -803,13 +803,13 @@
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
                 hproj = kvp.Value
 
-                Dauer = hproj.Dauer
+                Dauer = hproj.anzahlRasterElemente
 
                 ReDim tempArray(Dauer - 1)
 
                 With hproj
                     prAnfang = .Start + .StartOffset
-                    prEnde = .Start + .Dauer - 1 + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
                 End With
 
                 anzLoops = 0
@@ -871,10 +871,10 @@
             Dim i As Integer
             Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
             Dim hproj As clsProjekt
-            
+
             Dim tempArray() As Double
             Dim prAnfang As Integer, prEnde As Integer
-            
+
 
             Dim avgBudget As Double
 
@@ -887,9 +887,9 @@
 
                 hproj = kvp.Value
 
-                Dauer = hproj.Dauer
+                Dauer = hproj.anzahlRasterElemente
                 projektBudget = hproj.Erloes
-                avgBudget = projektBudget / hproj.Dauer
+                avgBudget = projektBudget / hproj.anzahlRasterElemente
 
 
                 'ReDim tempArray(Dauer - 1)
@@ -908,12 +908,12 @@
                         Next
                     End If
                 End If
-                
+
 
                 With hproj
 
                     prAnfang = .Start + .StartOffset
-                    prEnde = .Start + .Dauer - 1 + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
 
                 End With
 
@@ -970,13 +970,13 @@
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
                 hproj = kvp.Value
 
-                Dauer = hproj.Dauer
+                Dauer = hproj.anzahlRasterElemente
 
                 ReDim tempArray(Dauer - 1)
 
                 With hproj
                     prAnfang = .Start + .StartOffset
-                    prEnde = .Start + .Dauer - 1 + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
                     projektMarge = .ProjectMarge
 
                     'If projektMarge < 0 Then
@@ -1059,13 +1059,13 @@
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
                 hproj = kvp.Value
 
-                Dauer = hproj.Dauer
+                Dauer = hproj.anzahlRasterElemente
 
                 ReDim tempArray(Dauer - 1)
 
                 With hproj
                     prAnfang = .Start + .StartOffset
-                    prEnde = .Start + .Dauer - 1 + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
 
                 End With
 
@@ -1125,7 +1125,7 @@
 
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
 
-           
+
 
             zeitraum = showRangeRight - showRangeLeft
             ReDim costValues(zeitraum)
@@ -1134,13 +1134,13 @@
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
                 hproj = kvp.Value
 
-                Dauer = hproj.Dauer
+                Dauer = hproj.anzahlRasterElemente
 
                 ReDim tempArray(Dauer - 1)
 
                 With hproj
                     prAnfang = .Start + .StartOffset
-                    prEnde = .Start + .Dauer - 1 + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
                 End With
 
                 anzLoops = 0
@@ -1211,13 +1211,13 @@
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
                 hproj = kvp.Value
 
-                Dauer = hproj.Dauer
+                Dauer = hproj.anzahlRasterElemente
 
                 ReDim tempArray(Dauer - 1)
 
                 With hproj
                     prAnfang = .Start + .StartOffset
-                    prEnde = .Start + .Dauer - 1 + .StartOffset
+                    prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
                 End With
 
                 anzLoops = 0
@@ -1604,6 +1604,53 @@
         End Get
 
     End Property
+
+    ''' <summary>
+    ''' gibt für den betrachteten Zeotraum die Ergebnisskennzahl zurück 
+    ''' ergebniskennzahl = (zeitraumbudget - (zeitraumCost + zeitraumRisiko))-(Überlast-Kosten + Opp.-Kosten))
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getErgebniskennzahl() As Double
+        Get
+
+            Dim zeitraumBudget As Double
+            Dim zeitraumCost As Double
+            Dim zeitraumRisiko As Double
+            Dim earnedValue As Double
+            Dim additionalCostExt As Double
+            Dim internwithoutProject As Double
+            Dim ertragsWert As Double
+
+
+            ' Ausrechnen amteiliges Budget, das im Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
+            zeitraumBudget = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+            zeitraumCost = System.Math.Round(ShowProjekte.getTotalCostValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+            ' das ist der Risiko Abschlag  
+            zeitraumRisiko = System.Math.Round(ShowProjekte.getWeightedRiskValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+
+            ' das ist der Earned Value 
+            earnedValue = zeitraumBudget - (zeitraumCost + zeitraumRisiko)
+
+
+            ' das sind die Zusatzkosten, die durch Externe (wg Überauslastung) verursacht werden
+            additionalCostExt = System.Math.Round(ShowProjekte.getadditionalECostinMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+            ' das sind die durch Unterauslastung verursachten Kosten , also Personal-Kosten von Leuten, die in keinem Projekt sind
+            internwithoutProject = System.Math.Round(ShowProjekte.getCostoValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
+
+            ' das ist der Ertrag 
+            ertragsWert = earnedValue - (additionalCostExt + internwithoutProject)
+
+            getErgebniskennzahl = ertragsWert
+
+        End Get
+    End Property
+
+
     ''' <summary>
     ''' gibt die Summe an "bad cost" an, das sind die durch Einsatz externer Kräfte verursachten zusätzlichen Kosten und die 
     ''' durch untätige Ressourcen verursachten Kosten der übergebenen Rolle(n im betrachteten Zeitraum 

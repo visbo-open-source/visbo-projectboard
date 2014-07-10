@@ -2,8 +2,10 @@
 
 Public Class frmProjektEingabe1
 
-    'Private dateIsStart As Boolean = False
-    Private vorlagenDauer As Integer = 200
+
+    ' notwendig, weil sonst eine Fehlermeldung kommt bezgl ValueChanged und zugelassenen Werten 
+    Private vorlagenDauer As Integer = 365
+
     Public calcProjektStart As Date
     Public calcProjektEnde As Date
 
@@ -18,7 +20,7 @@ Public Class frmProjektEingabe1
 
     Private Sub frmProjektEingabe1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Dim randomValue As Double
-        
+
         With Me
 
 
@@ -96,11 +98,11 @@ Public Class frmProjektEingabe1
         End With
     End Sub
 
-    Private Sub selectedMonth_ValueChanged(sender As Object, e As EventArgs) Handles selectedMonth.ValueChanged
+    'Private Sub selectedMonth_ValueChanged(sender As Object, e As EventArgs) Handles selectedMonth.ValueChanged
 
-        calcMonth.Text = StartofCalendar.AddMonths(CType(selectedMonth.Value, Integer) - 1).ToString("MMM yy")
+    '    calcMonth.Text = StartofCalendar.AddMonths(CType(selectedMonth.Value, Integer) - 1).ToString("MMM yy")
 
-    End Sub
+    'End Sub
     Private Sub projectName_TextChanged(sender As Object, e As EventArgs) Handles projectName.TextChanged
 
         'With projectName
@@ -127,8 +129,21 @@ Public Class frmProjektEingabe1
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
+
+
         With projectName
+
+
+            ' Änderung tk 1.7.14: andernfalls kann ein Blank am Ende angehängt sein - dann kommt es im Nachgang zu einem Fehler 
+            Try
+                .Text = .Text.Trim
+            Catch ex As Exception
+                .Text = ""
+            End Try
+
+
             If Len(.Text) < 2 Then
+
 
                 MsgBox("Projektname muss mindestens zwei Zeichen haben!")
                 .Text = ""
@@ -152,7 +167,7 @@ Public Class frmProjektEingabe1
 
                     If dauerUnverändert.Checked Then
                         calcProjektStart = DateTimeProject.Value
-                        calcProjektEnde = DateTimeProject.Value.AddDays(vorlagenDauer - 1).AddMonths(1)
+                        calcProjektEnde = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
 
                     Else
                         calcProjektStart = DateTimeProject.Value

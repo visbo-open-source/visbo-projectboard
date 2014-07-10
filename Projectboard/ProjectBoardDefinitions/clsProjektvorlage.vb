@@ -182,47 +182,20 @@
     End Property
 
 
-    Public ReadOnly Property Dauer() As Integer
+    Public ReadOnly Property anzahlRasterElemente() As Integer
 
 
         Get
-            'Dim i As Integer
-            'Dim max As Double = 0
-            'Dim maxM As Integer
 
-            '' neue Bestimmung der Dauer 
+            Dim tmpValue As Integer = 0
 
-            'For i = 1 To Me.CountPhases
+            If Me.CountPhases > 0 Then
+                With Me.getPhase(1)
+                    tmpValue = .relEnde - .relStart + 1
+                End With
+            End If
 
-            '    With Me.getPhase(i)
-
-            '        If max < .startOffsetinDays + .dauerInDays - 1 Then
-            '            max = .startOffsetinDays + .dauerInDays - 1
-            '        End If
-
-            '        ' Änderung 16.1.2014: Meilensteine wirken nicht Dauer-Verlängernd ! 
-            '        ' ausserdem wird in phase.add(result) sichergestellt , dass kein Meilenstein vor Projektstart 
-            '        ' bzw. nach Projektende ist 
-            '        'For m = 1 To .CountResults
-            '        '    If max < .startOffsetinDays + .getResult(m).offset Then
-            '        '        max = .startOffsetinDays + .getResult(m).offset
-            '        '    End If
-            '        'Next
-
-            '    End With
-
-            'Next i
-
-            'maxM = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(max)) + 1
-
-
-            'If maxM <> _Dauer Then
-            '    _Dauer = maxM
-            '    ' hier muss jetzt die Dauer der Allgemeinen Phase angepasst werden ... 
-            'End If
-
-
-            Dauer = _Dauer
+            anzahlRasterElemente = tmpValue
 
 
         End Get

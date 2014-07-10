@@ -20,7 +20,51 @@
     Private _vorlagenParent As clsProjektvorlage
 
 
-    Public Sub changeStartandDauer(ByVal startOffset As Integer, ByVal dauer As Integer)
+    ''' <summary>
+    ''' prüft ob die Phase in ihren Werten Dauer in Monaten konsistent zu den Xwert-Dimensionen der Rollen und Kosten ist 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isConsistent As Boolean
+
+        Get
+            Dim tmpValue As Boolean = True
+            Dim dimension As Integer
+            Dim phaseStart As Date, phaseEnd As Date
+            Dim r As Integer = 1, k As Integer = 1
+
+            ' prüfen, ob die Gesamtlänge übereinstimmt  
+
+
+            phaseEnd = Me.getEndDate
+            phaseStart = Me.getStartDate
+
+            dimension = getColumnOfDate(phaseEnd) - getColumnOfDate(phaseStart)
+
+            While tmpValue And r <= Me.CountRoles
+                If dimension <> Me.getRole(r).Xwerte.Length - 1 Then
+                    tmpValue = False
+                End If
+                r = r + 1
+            End While
+
+            While tmpValue And k <= Me.CountCosts
+                If dimension <> Me.getCost(k).Xwerte.Length - 1 Then
+                    tmpValue = False
+                End If
+                k = k + 1
+            End While
+
+
+            isConsistent = tmpValue
+
+        End Get
+
+    End Property
+
+
+    Public Sub changeStartandDauer(ByVal startOffset As Long, ByVal dauer As Long)
 
         Dim projektStartdate As Date
         Dim projektstartColumn As Integer
@@ -48,8 +92,6 @@
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
                 _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
-                '_dauerInDays = DateDiff(DateInterval.Day, projektStartdate.AddMonths(_relStart - 1), _
-                '                        projektStartdate.AddMonths(_relEnde).AddDays(-1)) + 1
                 _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
 
 
@@ -92,7 +134,7 @@
                 Catch ex As Exception
 
                 End Try
-                
+
 
                 If awinSettings.autoCorrectBedarfe Then
 
@@ -118,7 +160,7 @@
 
                     End If
 
-                   
+
                 End If
 
 
@@ -188,8 +230,6 @@
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
                 _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
-                '_dauerInDays = DateDiff(DateInterval.Day, projektStartdate.AddMonths(_relStart - 1), _
-                '                        projektStartdate.AddMonths(_relEnde).AddDays(-1)) + 1
                 _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
 
 
@@ -762,12 +802,6 @@
 
             .name = _name
 
-            'h1wert = System.Math.Round(Me._startOffsetinDays * corrFactor)
-            'h2wert = CInt(Me._startOffsetinDays * corrFactor)
-
-            'h1wert = System.Math.Round(Me._dauerInDays * corrFactor)
-            'h2wert = CInt(Me._dauerInDays * corrFactor)
-
             .changeStartandDauer(CInt(Me._startOffsetinDays * corrFactor), CInt(Me._dauerInDays * corrFactor))
 
             For r = 1 To Me.CountRoles
@@ -1094,10 +1128,6 @@
                             k = newXwerte.Length - 1
                         End If
 
-                        'If k = 0 Then
-                        '    k = newXwerte.Length - 1
-                        'End If
-                        'result = System.Math.DivRem(k - 1, newXwerte.Length, k) ' modulo - Funktion
                     End While
 
                 End If
@@ -1125,7 +1155,6 @@
 
                     newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
 
-                    'newXwerte(k) = System.Math.Round(gesBedarf / newXwerte.Length)
                 Next k
 
                 ' Rest wird auf alle newXwerte verteilt
@@ -1147,10 +1176,7 @@
                     If k < 0 Then
                         k = newXwerte.Length - 1
                     End If
-                    'If k = 0 Then
-                    '    k = newXwerte.Length - 1
-                    'End If
-                    'result = System.Math.DivRem(k - 1, newXwerte.Length, k) ' modulo - Funktion
+
                 End While
 
             End If

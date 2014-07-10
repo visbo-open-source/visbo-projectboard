@@ -91,8 +91,9 @@ Public Class Tabelle1
         Dim von As Integer, bis As Integer
 
         Dim c1 As Range, c2 As Range
-        Dim maxRows As Integer = Application.ActiveSheet.Rows.Count
-        Dim maxColumns As Integer = Application.ActiveSheet.Columns.Count
+        Dim maxRows As Integer = CType(Application.ActiveSheet, Excel.Worksheet).Rows.Count
+        Dim maxColumns As Integer = CType(Application.ActiveSheet, Excel.Worksheet).Columns.Count
+
 
         Dim eingabebereich As Excel.Range
         Dim kalenderbereich As Excel.Range
@@ -115,7 +116,8 @@ Public Class Tabelle1
             Call awinNeuZeichnenDiagramme(8)
         End If
 
-        tmpShapes = CType(appInstance.ActiveSheet.shapes, Excel.Shapes)
+        tmpShapes = CType(CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes, Excel.Shapes)
+
 
 
         If Not c2 Is Nothing Then
@@ -153,7 +155,7 @@ Public Class Tabelle1
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
                     With kvp.Value
-                        If (.tfspalte >= selectLeft) And (.tfspalte + .Dauer <= selectLeft + selectWidth) _
+                        If (.tfspalte >= selectLeft) And (.tfspalte + .anzahlRasterElemente <= selectLeft + selectWidth) _
                             And (.tfZeile >= selectTop) And (.tfZeile <= selectTop + selectHeight - 1) Then
 
                             ' ist in der Range - also selektieren

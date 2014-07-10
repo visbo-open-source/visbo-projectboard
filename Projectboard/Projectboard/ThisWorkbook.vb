@@ -16,6 +16,31 @@ Public Class ThisWorkbook
         Return New Ribbon1()
     End Function
 
+    Private Sub ThisWorkbook_ActivateEvent() Handles Me.ActivateEvent
+
+        'Application.Worksheets(arrWsNames(3)).Activate()
+
+    End Sub
+
+    ''' <summary>
+    ''' stellt sicher, daß die Excel Settings in anderen Workbooks wieder gelten
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub ThisWorkbook_Deactivate() Handles Me.Deactivate
+
+        Application.DisplayFormulaBar = True
+
+        With Application.ActiveWindow
+            .SplitColumn = 0
+            .SplitRow = 0
+            .DisplayWorkbookTabs = True
+            .GridlineColor = RGB(220, 220, 220)
+            .FreezePanes = True
+            .DisplayHeadings = True
+        End With
+
+    End Sub
+
     Private Sub ThisWorkbook_Startup() Handles Me.Startup
 
         'Dim cbar As CommandBar
@@ -47,6 +72,8 @@ Public Class ThisWorkbook
 
         Finally
             appInstance.ScreenUpdating = True
+            appInstance.ShowChartTipNames = True
+            appInstance.ShowChartTipValues = True
         End Try
 
         anzahlCalls = 0
@@ -75,6 +102,20 @@ Public Class ThisWorkbook
 
         appInstance.EnableEvents = True
 
+        Application.DisplayFormulaBar = True
+
+        With Application.ActiveWindow
+            .SplitColumn = 0
+            .SplitRow = 0
+            .DisplayWorkbookTabs = True
+            .GridlineColor = RGB(220, 220, 220)
+            .FreezePanes = True
+            .DisplayHeadings = True
+        End With
+
+        appInstance.ShowChartTipNames = True
+        appInstance.ShowChartTipValues = True
+
         'Application.Quit()
 
     End Sub
@@ -89,7 +130,7 @@ Public Class ThisWorkbook
         'Call MsgBox(" in Open")
 
 
-        Application.Worksheets(arrWsNames(3)).Activate()
+        CType(Application.Worksheets(arrWsNames(3)), Excel.Worksheet).Activate()
         
         plantafel = Application.ActiveWindow
         
@@ -116,7 +157,8 @@ Public Class ThisWorkbook
 
         
         ' hier wird die Projekt Tafel so dargestellt, daß Zeitraum zu sehen ist ... und ein späteres Diagramm 
-        Call awinScrollintoView()
+        ' Änderung 29.06.14 hier nicht mehr notwendig 
+        ' Call awinScrollintoView()
 
 
     End Sub
