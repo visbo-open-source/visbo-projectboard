@@ -27,17 +27,15 @@ Public Module testModule
         Dim tatsErstellt As Integer = 0
 
         Try
-            awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
             awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, xlNS.ShapeRange)
         Catch ex As Exception
             awinSelection = Nothing
         End Try
 
+
         For Each singleShp In awinSelection
             With singleShp
-                If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                    (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And Not .HasChart _
-                     And Not .Connector = Microsoft.Office.Core.MsoTriState.msoTrue) Then
+                If isProjectType(CInt(.AlternativeText)) Then
 
                     Try
                         hproj = ShowProjekte.getProject(singleShp.Name)
@@ -119,7 +117,7 @@ Public Module testModule
         Dim pname As String = hproj.name
         Dim top As Double, left As Double, width As Double, height As Double
         Dim htop As Double, hleft As Double, hwidth As Double, hheight As Double
-        Dim pptSize As Integer = 18
+        Dim pptSize As Single = 18
         Dim auswahl As Integer
         Dim compareToID As Integer
         Dim qualifier As String = " ", qualifier2 As String = " "
@@ -186,10 +184,10 @@ Public Module testModule
 
         Try
             ' prüft, ob bereits Powerpoint geöffnet ist 
-            pptApp = GetObject(, "PowerPoint.Application")
+            pptApp = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
         Catch ex As Exception
             Try
-                pptApp = CreateObject("PowerPoint.Application")
+                pptApp = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
             Catch ex1 As Exception
                 Call MsgBox("Powerpoint konnte nicht gestartet werden ..." & ex1.Message)
                 Exit Sub
@@ -214,7 +212,7 @@ Public Module testModule
         Dim anzahlSlides As Integer = pptPresentation.Slides.Count
         Dim AnzAdded As Integer = pptPresentation.Slides.InsertFromFile(pptTemplate, anzahlSlides)
         Dim reportObj As xlNS.ChartObject
-        Dim obj As New Object
+        Dim obj As xlNS.ChartObject
         Dim kennzeichnung As String
         Dim anzShapes As Integer
 
@@ -240,7 +238,7 @@ Public Module testModule
                         If .Title <> "" Then
                             kennzeichnung = .Title
                         Else
-                            tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {"(", ")"}, 3)
+                            tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                             kennzeichnung = tmpStr(0).Trim
                         End If
 
@@ -350,7 +348,7 @@ Public Module testModule
                             Dim tmpStr(10) As String
                             Try
 
-                                tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {"(", ")"}, 10)
+                                tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 10)
                                 kennzeichnung = tmpStr(0).Trim
 
                             Catch ex As Exception
@@ -443,7 +441,7 @@ Public Module testModule
                                         Dim tmpStr(20) As String
                                         Try
 
-                                            tmpStr = qualifier.Trim.Split(New Char() {"#"}, 20)
+                                            tmpStr = qualifier.Trim.Split(New Char() {CChar("#")}, 20)
                                             kennzeichnung = tmpStr(0).Trim
 
                                         Catch ex As Exception
@@ -573,7 +571,7 @@ Public Module testModule
 
                                 ' jetzt wird das Shape in der Powerpoint entsprechend entsprechend aufgebaut 
                                 Try
-                                    pptSize = .TextFrame2.TextRange.Font.Size
+                                    pptSize = CInt(.TextFrame2.TextRange.Font.Size)
                                     .TextFrame2.TextRange.Text = " "
                                 Catch ex As Exception
                                     pptSize = 12
@@ -591,10 +589,10 @@ Public Module testModule
                                         newShapeRange = pptSlide.Shapes.Paste
 
                                         With newShapeRange(1)
-                                            .Top = top + 0.02 * height
-                                            .Left = left + 0.02 * width
-                                            .Width = width * 0.96
-                                            topNext = top + 0.04 * height + .Height
+                                            .Top = CSng(top + 0.02 * height)
+                                            .Left = CSng(left + 0.02 * width)
+                                            .Width = CSng(width * 0.96)
+                                            topNext = CSng(top + 0.04 * height + .Height)
                                             '.Height = height * 0.46
                                         End With
 
@@ -606,9 +604,9 @@ Public Module testModule
                                                 newShapeRange2 = pptSlide.Shapes.Paste
 
                                                 With newShapeRange2(1)
-                                                    .Top = topNext
-                                                    .Left = left + 0.02 * width
-                                                    .Width = width * 0.96
+                                                    .Top = CSng(topNext)
+                                                    .Left = CSng(left + 0.02 * width)
+                                                    .Width = CSng(width * 0.96)
                                                     ' Height wird nicht gesetzt - bei Bildern wird das proportional automatisch gesetzt 
                                                 End With
 
@@ -616,9 +614,9 @@ Public Module testModule
                                                 Try
                                                     If newShapeRange(1).Height + newShapeRange2(1).Height > 0.96 * height Then
                                                         widthFaktor = 0.96 * height / (newShapeRange(1).Height + newShapeRange2(1).Height)
-                                                        newShapeRange(1).Width = widthFaktor * newShapeRange(1).Width
-                                                        newShapeRange2(1).Width = widthFaktor * newShapeRange2(1).Width
-                                                        newShapeRange2(1).Top = newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height
+                                                        newShapeRange(1).Width = CSng(widthFaktor * newShapeRange(1).Width)
+                                                        newShapeRange2(1).Width = CSng(widthFaktor * newShapeRange2(1).Width)
+                                                        newShapeRange2(1).Top = CSng(newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height)
                                                     End If
                                                 Catch ex As Exception
 
@@ -681,7 +679,7 @@ Public Module testModule
                                 Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, PThis.beauftragung)
 
                                 Try
-                                    pptSize = .TextFrame2.TextRange.Font.Size
+                                    pptSize = CInt(.TextFrame2.TextRange.Font.Size)
                                     .TextFrame2.TextRange.Text = " "
                                 Catch ex As Exception
                                     pptSize = 12
@@ -699,10 +697,10 @@ Public Module testModule
                                         newShapeRange = pptSlide.Shapes.Paste
 
                                         With newShapeRange(1)
-                                            .Top = top + 0.02 * height
-                                            .Left = left + 0.02 * width
-                                            .Width = width * 0.96
-                                            topNext = top + 0.04 * height + .Height
+                                            .Top = CSng(top + 0.02 * height)
+                                            .Left = CSng(left + 0.02 * width)
+                                            .Width = CSng(width * 0.96)
+                                            topNext = CSng(top + 0.04 * height + .Height)
                                             '.Height = height * 0.46
                                         End With
 
@@ -714,9 +712,9 @@ Public Module testModule
                                                 newShapeRange2 = pptSlide.Shapes.Paste
 
                                                 With newShapeRange2(1)
-                                                    .Top = topNext
-                                                    .Left = left + 0.02 * width
-                                                    .Width = width * 0.96
+                                                    .Top = CSng(topNext)
+                                                    .Left = CSng(left + 0.02 * width)
+                                                    .Width = CSng(width * 0.96)
                                                     '.Height = height * 0.46
                                                 End With
 
@@ -725,9 +723,9 @@ Public Module testModule
                                                 ' jetzt muss noch geschaut werden, ob die Shapes zu viele Höhe beanspruchen 
                                                 If newShapeRange(1).Height + newShapeRange2(1).Height > 0.96 * height Then
                                                     widthFaktor = 0.96 * height / (newShapeRange(1).Height + newShapeRange2(1).Height)
-                                                    newShapeRange(1).Width = widthFaktor * newShapeRange(1).Width
-                                                    newShapeRange2(1).Width = widthFaktor * newShapeRange2(1).Width
-                                                    newShapeRange2(1).Top = newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height
+                                                    newShapeRange(1).Width = CSng(widthFaktor * newShapeRange(1).Width)
+                                                    newShapeRange2(1).Width = CSng(widthFaktor * newShapeRange2(1).Width)
+                                                    newShapeRange2(1).Top = CSng(newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height)
                                                 End If
                                             Catch ex As Exception
 
@@ -800,10 +798,10 @@ Public Module testModule
                                         newShapeRange = pptSlide.Shapes.Paste
 
                                         With newShapeRange(1)
-                                            .Top = top + 0.02 * height
-                                            .Left = left + 0.02 * width
-                                            .Width = width * 0.96
-                                            topNext = top + 0.04 * height + .Height
+                                            .Top = CSng(top + 0.02 * height)
+                                            .Left = CSng(left + 0.02 * width)
+                                            .Width = CSng(width * 0.96)
+                                            topNext = CSng(top + 0.04 * height + .Height)
                                             '.Height = height * 0.46
                                         End With
 
@@ -815,9 +813,9 @@ Public Module testModule
                                                 newShapeRange2 = pptSlide.Shapes.Paste
 
                                                 With newShapeRange2(1)
-                                                    .Top = topNext
-                                                    .Left = left + 0.02 * width
-                                                    .Width = width * 0.96
+                                                    .Top = CSng(topNext)
+                                                    .Left = CSng(left + 0.02 * width)
+                                                    .Width = CSng(width * 0.96)
                                                     '.Height = height * 0.46
                                                 End With
 
@@ -826,9 +824,9 @@ Public Module testModule
                                                 ' jetzt muss noch geschaut werden, ob die Shapes zu viele Höhe beanspruchen 
                                                 If newShapeRange(1).Height + newShapeRange2(1).Height > 0.96 * height Then
                                                     widthFaktor = 0.96 * height / (newShapeRange(1).Height + newShapeRange2(1).Height)
-                                                    newShapeRange(1).Width = widthFaktor * newShapeRange(1).Width
-                                                    newShapeRange2(1).Width = widthFaktor * newShapeRange2(1).Width
-                                                    newShapeRange2(1).Top = newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height
+                                                    newShapeRange(1).Width = CSng(widthFaktor * newShapeRange(1).Width)
+                                                    newShapeRange2(1).Width = CSng(widthFaktor * newShapeRange2(1).Width)
+                                                    newShapeRange2(1).Top = CSng(newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height)
                                                 End If
                                             Catch ex As Exception
 
@@ -927,7 +925,7 @@ Public Module testModule
 
                                 reportObj = obj
 
-                                Dim ax As xlNS.Axis = reportObj.Chart.Axes(xlNS.XlAxisType.xlCategory)
+                                Dim ax As xlNS.Axis = CType(reportObj.Chart.Axes(xlNS.XlAxisType.xlCategory), Excel.Axis)
                                 With ax
                                     .TickLabels.Font.Size = 12
                                 End With
@@ -948,8 +946,7 @@ Public Module testModule
                                 'hwidth = 12 * boxWidth
                                 'hheight = 8 * boxHeight
 
-                                Call awinCreatePortfolioDiagrams(mycollection, obj, True, PTpfdk.FitRisiko, 0, True, False, True, htop, hleft, hwidth, hheight)
-                                reportObj = obj
+                                Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisiko, 0, True, False, True, htop, hleft, hwidth, hheight)
 
                                 notYetDone = True
 
@@ -1466,13 +1463,13 @@ Public Module testModule
 
                                 Select Case hproj.ampelStatus
                                     Case 0
-                                        .Fill.ForeColor.RGB = awinSettings.AmpelNichtBewertet
+                                        .Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
                                     Case 1
-                                        .Fill.ForeColor.RGB = awinSettings.AmpelGruen
+                                        .Fill.ForeColor.RGB = CInt(awinSettings.AmpelGruen)
                                     Case 2
-                                        .Fill.ForeColor.RGB = awinSettings.AmpelGelb
+                                        .Fill.ForeColor.RGB = CInt(awinSettings.AmpelGelb)
                                     Case 3
-                                        .Fill.ForeColor.RGB = awinSettings.AmpelRot
+                                        .Fill.ForeColor.RGB = CInt(awinSettings.AmpelRot)
                                     Case Else
                                 End Select
 
@@ -1511,10 +1508,10 @@ Public Module testModule
                                     newShape = newShapeRange.Item(1)
 
                                     With newShape
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
+                                        .Top = CSng(top + 0.02 * height)
+                                        .Left = CSng(left + 0.02 * width)
+                                        .Width = CSng(width * 0.96)
+                                        .Height = CSng(height * 0.96)
                                     End With
 
                                     reportObj.Delete()
@@ -1591,7 +1588,7 @@ Public Module testModule
         Dim portfolioName As String = currentConstellation
         Dim top As Double, left As Double, width As Double, height As Double
         Dim htop As Double, hleft As Double, hwidth As Double, hheight As Double
-        Dim pptSize As Integer = 18
+        Dim pptSize As Single = 18
         'Dim hproj As clsProjekt
         'Dim pName As String
         'Dim auswahl As Integer
@@ -1604,9 +1601,9 @@ Public Module testModule
 
         Try
             ' prüft, ob bereits Powerpoint geöffnet ist 
-            pptApp = GetObject(, "PowerPoint.Application")
+            pptApp = CType(GetObject(, "PowerPoint.Application"), pptNS.Application)
         Catch ex As Exception
-            pptApp = CreateObject("PowerPoint.Application")
+            pptApp = CType(CreateObject("PowerPoint.Application"), pptNS.Application)
         End Try
 
 
@@ -1641,7 +1638,7 @@ Public Module testModule
 
 
         Dim reportObj As xlNS.ChartObject = Nothing
-        Dim obj As New Object
+        Dim obj As xlNS.ChartObject = Nothing
         Dim kennzeichnung As String = ""
         Dim qualifier As String = ""
         Dim anzShapes As Integer
@@ -1679,7 +1676,7 @@ Public Module testModule
                             If .Title <> "" Then
                                 kennzeichnung = .Title
                             Else
-                                tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {"(", ")"}, 3)
+                                tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                                 kennzeichnung = tmpStr(0).Trim
                             End If
 
@@ -1747,7 +1744,7 @@ Public Module testModule
                                 qualifier = .AlternativeText
                                 boxName = kennzeichnung
                             Else
-                                tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {"(", ")"}, 3)
+                                tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                                 kennzeichnung = tmpStr(0).Trim
                                 boxName = .TextFrame2.TextRange.Text
                                 If tmpStr.Count > 1 Then
@@ -1777,7 +1774,7 @@ Public Module testModule
                         height = .Height
                         width = .Width
 
-                        Dim nameList As New SortedList(Of String, String)
+                        Dim nameList As New Collection
 
                         Select Case kennzeichnung
                             Case "Portfolio-Name"
@@ -1814,13 +1811,13 @@ Public Module testModule
                                         .GridlineColor = RGB(255, 255, 255)
                                     End With
 
-                                    With appInstance.Worksheets(arrWsNames(3))
+                                    With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
 
-                                        
 
-                                        rng = .range(.cells(1, minColumn), .cells(maxzeile, maxColumn))
-                                        colorrng = .range(.cells(2, showRangeLeft), .cells(maxzeile, showRangeRight))
-                                        
+
+                                        rng = CType(.Range(.Cells(1, minColumn), .Cells(maxzeile, maxColumn)), xlNS.Range)
+                                        colorrng = CType(.Range(.Cells(2, showRangeLeft), .Cells(maxzeile, showRangeRight)), xlNS.Range)
+
                                         If Not awinSettings.showTimeSpanInPT Then
 
                                             Try
@@ -1899,18 +1896,18 @@ Public Module testModule
 
                                         If ratio < .Height / .Width Then
                                             ' orientieren an width 
-                                            .Width = width * 0.96
-                                            .Height = ratio * .Width
+                                            .Width = CSng(width * 0.96)
+                                            .Height = CSng(ratio * .Width)
                                             ' left anpassen
-                                            .Top = top + 0.02 * height
-                                            .Left = left + 0.98 * (width - .Width) / 2
+                                            .Top = CSng(top + 0.02 * height)
+                                            .Left = CSng(left + 0.98 * (width - .Width) / 2)
 
                                         Else
-                                            .Height = height * 0.96
-                                            .Width = .Height / ratio
+                                            .Height = CSng(height * 0.96)
+                                            .Width = CSng(.Height / ratio)
                                             ' top anpassen 
-                                            .Left = left + 0.02 * width
-                                            .Top = top + 0.98 * (height - .Height) / 2
+                                            .Left = CSng(left + 0.02 * width)
+                                            .Top = CSng(top + 0.98 * (height - .Height) / 2)
                                         End If
 
                                     End With
@@ -1946,9 +1943,9 @@ Public Module testModule
                                         .GridlineColor = RGB(255, 255, 255)
                                     End With
 
-                                    With appInstance.Worksheets(arrWsNames(3))
-                                        rng = .range(.cells(1, minColumn), .cells(maxzeile, maxColumn))
-                                        colorrng = .range(.cells(2, showRangeLeft), .cells(maxzeile, showRangeRight))
+                                    With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                        rng = CType(.Range(.Cells(1, minColumn), .Cells(maxzeile, maxColumn)), xlNS.Range)
+                                        colorrng = CType(.Range(.Cells(2, showRangeLeft), .Cells(maxzeile, showRangeRight)), xlNS.Range)
 
                                         If Not awinSettings.showTimeSpanInPT Then
 
@@ -1965,7 +1962,7 @@ Public Module testModule
                                         Dim qstr(20) As String
                                         Dim phNameCollection As New Collection
                                         Dim phName As String = " "
-                                        qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+                                        qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
 
                                         ' Aufbau der Collection 
                                         For i = 0 To qstr.Length - 1
@@ -2024,18 +2021,18 @@ Public Module testModule
 
                                             If ratio < .Height / .Width Then
                                                 ' orientieren an width 
-                                                .Width = width * 0.96
-                                                .Height = ratio * .Width
+                                                .Width = CSng(width * 0.96)
+                                                .Height = CSng(ratio * .Width)
                                                 ' left anpassen
-                                                .Top = top + 0.02 * height
-                                                .Left = left + 0.98 * (width - .Width) / 2
+                                                .Top = CSng(top + 0.02 * height)
+                                                .Left = CSng(left + 0.98 * (width - .Width) / 2)
 
                                             Else
-                                                .Height = height * 0.96
-                                                .Width = .Height / ratio
+                                                .Height = CSng(height * 0.96)
+                                                .Width = CSng(.Height / ratio)
                                                 ' top anpassen 
-                                                .Left = left + 0.02 * width
-                                                .Top = top + 0.98 * (height - .Height) / 2
+                                                .Left = CSng(left + 0.02 * width)
+                                                .Top = CSng(top + 0.98 * (height - .Height) / 2)
                                             End If
 
                                         End With
@@ -2146,10 +2143,10 @@ Public Module testModule
                                 newShapeRange = pptSlide.Shapes.Paste
 
                                 With newShapeRange.Item(1)
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
                                 End With
 
                                 Try
@@ -2183,10 +2180,10 @@ Public Module testModule
                                 newShapeRange = pptSlide.Shapes.Paste
 
                                 With newShapeRange.Item(1)
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
                                 End With
 
                                 Try
@@ -2220,10 +2217,10 @@ Public Module testModule
                                 newShapeRange = pptSlide.Shapes.Paste
 
                                 With newShapeRange.Item(1)
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
                                 End With
 
                                 Try
@@ -2264,10 +2261,10 @@ Public Module testModule
                                 newShapeRange = pptSlide.Shapes.Paste
 
                                 With newShapeRange.Item(1)
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
                                 End With
 
                                 'Call awinDeleteChart(reportObj)
@@ -2310,10 +2307,10 @@ Public Module testModule
                                 newShapeRange = pptSlide.Shapes.Paste
 
                                 With newShapeRange.Item(1)
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
                                 End With
 
 
@@ -2356,10 +2353,10 @@ Public Module testModule
                                 newShapeRange = pptSlide.Shapes.Paste
 
                                 With newShapeRange.Item(1)
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
                                 End With
 
                                 'Call awinDeleteChart(reportObj)
@@ -2386,7 +2383,7 @@ Public Module testModule
                                 Dim showLabels As Boolean = True
 
                                 Dim qstr(20) As String
-                                qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+                                qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
 
                                 ' Bestimmen der Parameter  
                                 For i = 0 To qstr.Length - 1
@@ -2466,10 +2463,10 @@ Public Module testModule
                                     newShapeRange = pptSlide.Shapes.Paste
 
                                     With newShapeRange.Item(1)
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
+                                        .Top = CSng(top + 0.02 * height)
+                                        .Left = CSng(left + 0.02 * width)
+                                        .Width = CSng(width * 0.96)
+                                        .Height = CSng(height * 0.96)
                                     End With
 
 
@@ -2512,10 +2509,10 @@ Public Module testModule
                                 newShapeRange = pptSlide.Shapes.Paste
 
                                 With newShapeRange.Item(1)
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
                                 End With
 
 
@@ -2551,10 +2548,10 @@ Public Module testModule
                                 newShapeRange = pptSlide.Shapes.Paste
 
                                 With newShapeRange.Item(1)
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
                                 End With
 
                                 'Call awinDeleteChart(reportObj)
@@ -2591,10 +2588,10 @@ Public Module testModule
                                 newShapeRange = pptSlide.Shapes.Paste
 
                                 With newShapeRange.Item(1)
-                                    .Top = top + 0.02 * height
-                                    .Left = left + 0.02 * width
-                                    .Width = width * 0.96
-                                    .Height = height * 0.96
+                                    .Top = CSng(top + 0.02 * height)
+                                    .Left = CSng(left + 0.02 * width)
+                                    .Width = CSng(width * 0.96)
+                                    .Height = CSng(height * 0.96)
                                 End With
 
                                 'Call awinDeleteChart(reportObj)
@@ -2635,10 +2632,10 @@ Public Module testModule
                                     newShapeRange = pptSlide.Shapes.Paste
 
                                     With newShapeRange.Item(1)
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
+                                        .Top = CSng(top + 0.02 * height)
+                                        .Left = CSng(left + 0.02 * width)
+                                        .Width = CSng(width * 0.96)
+                                        .Height = CSng(height * 0.96)
                                     End With
 
                                     'Call awinDeleteChart(reportObj)
@@ -2685,10 +2682,10 @@ Public Module testModule
                                     newShapeRange = pptSlide.Shapes.Paste
 
                                     With newShapeRange.Item(1)
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
+                                        .Top = CSng(top + 0.02 * height)
+                                        .Left = CSng(left + 0.02 * width)
+                                        .Width = CSng(width * 0.96)
+                                        .Height = CSng(height * 0.96)
                                     End With
 
 
@@ -2714,7 +2711,7 @@ Public Module testModule
 
                                 Dim qstr(20) As String
                                 Dim phName As String = " "
-                                qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+                                qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
 
                                 ' Aufbau der Collection 
                                 For i = 0 To qstr.Length - 1
@@ -2759,10 +2756,10 @@ Public Module testModule
                                     newShapeRange = pptSlide.Shapes.Paste
 
                                     With newShapeRange.Item(1)
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
+                                        .Top = CSng(top + 0.02 * height)
+                                        .Left = CSng(left + 0.02 * width)
+                                        .Width = CSng(width * 0.96)
+                                        .Height = CSng(height * 0.96)
                                     End With
 
                                     'Call awinDeleteChart(reportObj)
@@ -2784,19 +2781,19 @@ Public Module testModule
                             Case "Meilenstein"
 
                                 myCollection.Clear()
-                                Dim MSnameList As SortedList(Of String, String)
+                                Dim MSnameList As New Collection
                                 MSnameList = ShowProjekte.getMilestoneNames
 
                                 Dim qstr(20) As String
                                 Dim msName As String = " "
-                                qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+                                qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
 
                                 ' Aufbau der Collection 
                                 For i = 0 To qstr.Length - 1
 
                                     Try
                                         msName = qstr(i).Trim
-                                        If MSnameList.ContainsKey(msName) Then
+                                        If MSnameList.Contains(msName) Then
                                             myCollection.Add(msName, msName)
                                         End If
                                     Catch ex As Exception
@@ -2834,10 +2831,10 @@ Public Module testModule
                                     newShapeRange = pptSlide.Shapes.Paste
 
                                     With newShapeRange.Item(1)
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
+                                        .Top = CSng(top + 0.02 * height)
+                                        .Left = CSng(left + 0.02 * width)
+                                        .Width = CSng(width * 0.96)
+                                        .Height = CSng(height * 0.96)
                                     End With
 
 
@@ -2860,7 +2857,7 @@ Public Module testModule
 
                                 Dim qstr(20) As String
                                 Dim roleName As String = " "
-                                qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+                                qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
 
                                 ' Aufbau der Collection 
                                 For i = 0 To qstr.Length - 1
@@ -2892,7 +2889,7 @@ Public Module testModule
                                     reportObj = obj
                                     ' jetzt wird die Überschrift neu bestimmt ...
                                     With reportObj
-                                        Dim tmpTitle() As String = .Chart.ChartTitle.Text.Split(New Char() {"(", ")"}, 3)
+                                        Dim tmpTitle() As String = .Chart.ChartTitle.Text.Split(New Char() {CChar("("), CChar(")")}, 3)
                                         Try
                                             .Chart.ChartTitle.Text = qualifier & " (" & tmpTitle(1) & ")"
                                         Catch ex As Exception
@@ -2905,10 +2902,10 @@ Public Module testModule
                                     newShapeRange = pptSlide.Shapes.Paste
 
                                     With newShapeRange.Item(1)
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
+                                        .Top = CSng(top + 0.02 * height)
+                                        .Left = CSng(left + 0.02 * width)
+                                        .Width = CSng(width * 0.96)
+                                        .Height = CSng(height * 0.96)
                                     End With
 
                                     'Call awinDeleteChart(reportObj)
@@ -2932,7 +2929,7 @@ Public Module testModule
                                 myCollection.Clear()
                                 Dim qstr(20) As String
                                 Dim costName As String = " "
-                                qstr = qualifier.Trim.Split(New Char() {"#"}, 18)
+                                qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
 
                                 ' Aufbau der Collection 
                                 For i = 0 To qstr.Length - 1
@@ -2964,7 +2961,7 @@ Public Module testModule
                                     reportObj = obj
 
                                     With reportObj
-                                        Dim tmpTitle() As String = .Chart.ChartTitle.Text.Split(New Char() {"(", ")"}, 3)
+                                        Dim tmpTitle() As String = .Chart.ChartTitle.Text.Split(New Char() {CChar("("), CChar(")")}, 3)
                                         Try
                                             .Chart.ChartTitle.Text = qualifier & " (" & tmpTitle(1) & ")"
                                         Catch ex As Exception
@@ -2977,10 +2974,10 @@ Public Module testModule
                                     newShapeRange = pptSlide.Shapes.Paste
 
                                     With newShapeRange.Item(1)
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
+                                        .Top = CSng(top + 0.02 * height)
+                                        .Left = CSng(left + 0.02 * width)
+                                        .Width = CSng(width * 0.96)
+                                        .Height = CSng(height * 0.96)
                                     End With
 
                                     'Call awinDeleteChart(reportObj)
@@ -3026,10 +3023,10 @@ Public Module testModule
                                     newShapeRange = pptSlide.Shapes.Paste
 
                                     With newShapeRange.Item(1)
-                                        .Top = top + 0.02 * height
-                                        .Left = left + 0.02 * width
-                                        .Width = width * 0.96
-                                        .Height = height * 0.96
+                                        .Top = CSng(top + 0.02 * height)
+                                        .Left = CSng(left + 0.02 * width)
+                                        .Width = CSng(width * 0.96)
+                                        .Height = CSng(height * 0.96)
                                     End With
 
                                     reportObj.Delete()
@@ -3358,7 +3355,7 @@ Public Module testModule
                     End If
 
                     'tmpstr = title.Trim.Split(New Char() {"#"}, 4)
-                    tmpstr = kvpSelToDel.Key.Trim.Split(New Char() {"#"}, 4)   ' Projektnamen aus key separieren
+                    tmpstr = kvpSelToDel.Key.Trim.Split(New Char() {CChar("#")}, 4)   ' Projektnamen aus key separieren
 
                     projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=tmpstr(0), variantName:="", storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
 
@@ -3507,7 +3504,7 @@ Public Module testModule
     ''' <param name="width"></param>
     ''' <param name="height"></param>
     ''' <remarks></remarks>
-    Sub awinCreateStatusDiagram1(ByRef ProjektListe As Collection, ByRef repChart As Object, ByVal compareToID As Integer, _
+    Sub awinCreateStatusDiagram1(ByRef ProjektListe As Collection, ByRef repChart As Excel.ChartObject, ByVal compareToID As Integer, _
                                          ByVal auswahl As Integer, ByVal qualifier As String, _
                                          ByVal showLabels As Boolean, ByVal chartBorderVisible As Boolean, _
                                          ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double)
@@ -3587,7 +3584,7 @@ Public Module testModule
 
         For i = 1 To ProjektListe.Count
 
-            pname = ProjektListe.Item(i)
+            pname = CStr(ProjektListe.Item(i))
             Try
                 hproj = ShowProjekte.getProject(pname)
                 variantName = hproj.variantName
@@ -3767,8 +3764,9 @@ Public Module testModule
 
 
 
-            With appInstance.Worksheets(arrWsNames(3))
-                anzDiagrams = .ChartObjects.Count
+            With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+
+                anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
                 '
                 ' um welches Diagramm handelt es sich ...
                 '
@@ -3777,14 +3775,14 @@ Public Module testModule
                 While i <= anzDiagrams And Not found
 
                     Try
-                        chtTitle = .ChartObjects(i).Chart.ChartTitle.text
+                        chtTitle = CType(.ChartObjects(i), Excel.ChartObject).Chart.ChartTitle.Text
                     Catch ex As Exception
                         chtTitle = " "
                     End Try
 
                     If chtTitle Like ("*" & diagramTitle & "*") Then
                         found = True
-                        repChart = .ChartObjects(i)
+                        repChart = CType(.ChartObjects(i), Excel.ChartObject)
                         Exit Sub
                     Else
                         i = i + 1
@@ -3795,21 +3793,21 @@ Public Module testModule
                 ReDim tempArray(anzBubbles - 1)
 
 
-                With appInstance.Charts.Add
+                With CType(appInstance.Charts.Add, Excel.Chart)
 
-                    .SeriesCollection.NewSeries()
-                    .SeriesCollection(1).name = diagramTitle
-                    .SeriesCollection(1).ChartType = xlNS.XlChartType.xlXYScatter
+                    CType(.SeriesCollection, Excel.SeriesCollection).NewSeries()
+                    CType(.SeriesCollection, Excel.SeriesCollection).Item(1).Name = diagramTitle
+                    CType(.SeriesCollection, Excel.SeriesCollection).Item(1).ChartType = xlNS.XlChartType.xlXYScatter
 
                     For i = 1 To anzBubbles
                         tempArray(i - 1) = formerValues(i - 1)
                     Next i
-                    .SeriesCollection(1).XValues = tempArray ' strategic
+                    CType(.SeriesCollection, Excel.SeriesCollection).Item(1).XValues = tempArray ' strategic
 
                     For i = 1 To anzBubbles
                         tempArray(i - 1) = currentValues(i - 1)
                     Next i
-                    .SeriesCollection(1).Values = tempArray
+                    CType(.SeriesCollection, Excel.SeriesCollection).Item(1).Values = tempArray
 
 
 
@@ -3823,17 +3821,17 @@ Public Module testModule
                     'Dim testName As String
                     For i = 1 To anzBubbles
 
-                        With .SeriesCollection(1).Points(i)
+                        With CType(CType(.SeriesCollection, Excel.SeriesCollection).Item(1).Points(i), Excel.Point)
 
                             If showLabels Then
                                 Try
                                     .HasDataLabel = True
                                     With .DataLabel
-                                        .text = nameValues(i - 1)
+                                        .Text = nameValues(i - 1)
                                         If singleProject Then
-                                            .font.size = awinSettings.CPfontsizeItems + 4
+                                            .Font.Size = awinSettings.CPfontsizeItems + 4
                                         Else
-                                            .font.size = awinSettings.CPfontsizeItems
+                                            .Font.Size = awinSettings.CPfontsizeItems
                                         End If
 
                                         Select Case positionValues(i - 1)
@@ -3856,7 +3854,7 @@ Public Module testModule
                                 .HasDataLabel = False
                             End If
 
-                            .Interior.color = colorValues(i - 1)
+                            .Interior.Color = colorValues(i - 1)
                         End With
                     Next i
 
@@ -3876,7 +3874,7 @@ Public Module testModule
                     .HasAxis(xlNS.XlAxisType.xlCategory) = True
                     .HasAxis(xlNS.XlAxisType.xlValue) = True
 
-                    With .Axes(xlNS.XlAxisType.xlCategory)
+                    With CType(.Axes(xlNS.XlAxisType.xlCategory), Excel.Axis)
                         .HasTitle = True
                         .HasMajorGridlines = False
                         Try
@@ -3889,7 +3887,7 @@ Public Module testModule
                         End Try
 
                         With .AxisTitle
-                            .Characters.text = "geplant"
+                            .Characters.Text = "geplant"
                             .Characters.Font.Size = titlefontsize
                             .Characters.Font.Bold = False
                         End With
@@ -3903,7 +3901,7 @@ Public Module testModule
                     End With
 
 
-                    With .Axes(xlNS.XlAxisType.xlValue)
+                    With CType(.Axes(xlNS.XlAxisType.xlValue), Excel.Axis)
                         .HasTitle = True
                         .HasMajorGridlines = False
 
@@ -3917,43 +3915,44 @@ Public Module testModule
                         End Try
 
                         With .AxisTitle
-                            .Characters.text = "tatsächlich"
+                            .Characters.Text = "tatsächlich"
                             .Characters.Font.Size = titlefontsize
                             .Characters.Font.Bold = False
                         End With
 
                         With .TickLabels.Font
                             .FontStyle = "Normal"
-                            .bold = True
+                            .Bold = True
                             .Size = awinSettings.fontsizeItems
                         End With
                     End With
                     .HasLegend = False
                     .HasTitle = True
-                    .ChartTitle.text = diagramTitle
+                    .ChartTitle.Text = diagramTitle
                     .ChartTitle.Characters.Font.Size = awinSettings.fontsizeTitle
-                    .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                    .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
+                          Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                 End With
 
 
                 'appInstance.ShowChartTipNames = False
                 'appInstance.ShowChartTipValues = False
 
-                With .ChartObjects(anzDiagrams + 1)
-                    .top = top
-                    .left = left
-                    .width = width
-                    .height = height
-                    .name = chtobjName
+                With CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
+                    .Top = top
+                    .Left = left
+                    .Width = width
+                    .Height = height
+                    .Name = chtobjName
                 End With
 
 
 
-                With appInstance.ActiveSheet
+                With CType(appInstance.ActiveSheet, Excel.Worksheet)
                     Try
-                        With appInstance.ActiveSheet
-                            .Shapes(chtobjName).line.visible = chartBorderVisible
-                        End With
+                        Dim obj As Object = chtobjName
+                        CType(.Shapes(chtobjName), Excel.Shape).Line.Visible = CType(chartBorderVisible, Microsoft.Office.Core.MsoTriState)
+
                     Catch ex As Exception
 
                     End Try
@@ -3963,7 +3962,7 @@ Public Module testModule
 
                 'pfChart = New clsAwinEvent
                 pfChart = New clsEventsPfCharts
-                pfChart.PfChartEvents = .ChartObjects(anzDiagrams + 1).Chart
+                pfChart.PfChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
 
                 'pfDiagram.setpfDiagramEvent = pfChart
                 pfDiagram.setDiagramEvent = pfChart
@@ -3978,7 +3977,7 @@ Public Module testModule
                 DiagramList.Add(pfDiagram)
                 'pfDiagram = Nothing
 
-                repChart = .ChartObjects(anzDiagrams + 1)
+                repChart = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
 
             End With
         Else
@@ -4313,9 +4312,9 @@ Public Module testModule
             farbTypenListe.Add(farbtyp)
         ElseIf farbtyp = 12 Then
             Dim tmpfarbe As Integer = 2
-            farbTypenListe.Add(tmpfarbe, tmpfarbe)
+            farbTypenListe.Add(tmpfarbe, tmpfarbe.ToString)
             tmpfarbe = 3
-            farbTypenListe.Add(tmpfarbe, tmpfarbe)
+            farbTypenListe.Add(tmpfarbe, tmpfarbe.ToString)
         End If
 
         Dim todoListe As New SortedList(Of Long, clsProjekt)
@@ -4354,7 +4353,7 @@ Public Module testModule
 
                     resultColumn = getColumnOfDate(cResult.getDate)
 
-                    If farbTypenListe.Contains(cBewertung.colorIndex) Then
+                    If farbTypenListe.Contains(cBewertung.colorIndex.ToString) Then
                         ' dann muss ein Eintrag in der Tabelle gemacht werden 
 
                         If (resultColumn < showRangeLeft Or resultColumn > showRangeRight) Then
@@ -4366,7 +4365,7 @@ Public Module testModule
 
                                 CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = msNumber.ToString
                                 CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-                                CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = cBewertung.color
+                                CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(cBewertung.color)
                                 CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.name
                                 CType(.Cell(tabellenzeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.name
                                 CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.getDate.ToShortDateString
@@ -4409,7 +4408,7 @@ Public Module testModule
 
         Dim rng As xlNS.Range
         Dim selectionType As Integer = -1 ' keine Einschränkung
-        Dim pptSize As Integer
+        Dim pptSize As Single
         Dim newshapeRange As pptNS.ShapeRange
         Dim newShape As pptNS.Shape
 
@@ -4435,7 +4434,7 @@ Public Module testModule
         Dim allShapes As xlNS.Shapes
         Dim ptop As Double, pleft As Double, pwidth As Double, pheight As Double
         Dim number As Integer = 1
-        Dim nameList As New SortedList(Of String, String)
+        Dim nameList As New Collection
 
         Call awinDeleteMilestoneShapes(0)
 
@@ -4450,10 +4449,10 @@ Public Module testModule
 
             hproj.CalculateShapeCoord(ptop, pleft, pwidth, pheight)
             With projektShape
-                .Top = ptop
-                .Left = pleft
-                .Height = pheight
-                .Width = pwidth
+                .Top = CSng(ptop)
+                .Left = CSng(pleft)
+                .Height = CSng(pheight)
+                .Width = CSng(pwidth)
             End With
 
             Call zeichneStatusSymbolInPlantafel(hproj, 0)
@@ -4472,10 +4471,10 @@ Public Module testModule
             hproj.tfZeile = oldposition
             hproj.CalculateShapeCoord(ptop, pleft, pwidth, pheight)
             With projektShape
-                .Top = ptop
-                .Left = pleft
-                .Height = pheight
-                .Width = pwidth
+                .Top = CSng(ptop)
+                .Left = CSng(pleft)
+                .Height = CSng(pheight)
+                .Width = CSng(pwidth)
             End With
 
         End With
@@ -4494,18 +4493,18 @@ Public Module testModule
 
             If ratio < .Height / .Width Then
                 ' orientieren an width 
-                .Width = pptShape.Width * 0.96
-                .Height = ratio * .Width
+                .Width = CSng(pptShape.Width * 0.96)
+                .Height = CSng(ratio * .Width)
                 ' left anpassen
-                .Top = pptShape.Top + 0.02 * pptShape.Height
-                .Left = pptShape.Left + 0.98 * (pptShape.Width - .Width) / 2
+                .Top = CSng(pptShape.Top + 0.02 * pptShape.Height)
+                .Left = CSng(pptShape.Left + 0.98 * (pptShape.Width - .Width) / 2)
 
             Else
-                .Height = pptShape.Height * 0.96
-                .Width = .Height / ratio
+                .Height = CSng(pptShape.Height * 0.96)
+                .Width = CSng(.Height / ratio)
                 ' top anpassen 
-                .Left = pptShape.Left + 0.02 * pptShape.Width
-                .Top = pptShape.Top + 0.98 * (pptShape.Height - .Height) / 2
+                .Left = CSng(pptShape.Left + 0.02 * pptShape.Width)
+                .Top = CSng(pptShape.Top + 0.98 * (pptShape.Height - .Height) / 2)
             End If
 
         End With
@@ -4550,7 +4549,7 @@ Public Module testModule
         ' beauftragt am ... 
         Try
             title = CType(tabelle.Cell(tabellenzeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text
-            tmpstr = title.Trim.Split(New Char() {"#"}, 4)
+            tmpstr = title.Trim.Split(New Char() {CChar("#")}, 4)
             If Not IsNothing(bproj) Then
                 title = tmpstr(0) & bproj.timeStamp.ToShortDateString & tmpstr(1)
             Else
@@ -4567,7 +4566,7 @@ Public Module testModule
         ' letzte Freigabe am ... 
         Try
             title = CType(tabelle.Cell(tabellenzeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text
-            tmpstr = title.Trim.Split(New Char() {"#"}, 4)
+            tmpstr = title.Trim.Split(New Char() {CChar("#")}, 4)
             If Not IsNothing(lproj) Then
                 title = tmpstr(0) & lproj.timeStamp.ToShortDateString & tmpstr(1)
             Else
@@ -4583,7 +4582,7 @@ Public Module testModule
         ' aktueller stand vom  ... 
         Try
             title = CType(tabelle.Cell(tabellenzeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text
-            tmpstr = title.Trim.Split(New Char() {"#"}, 4)
+            tmpstr = title.Trim.Split(New Char() {CChar("#")}, 4)
             If Not IsNothing(cproj) Then
                 title = tmpstr(0) & cproj.timeStamp.ToShortDateString & tmpstr(1)
             Else
@@ -4608,7 +4607,7 @@ Public Module testModule
 
                 Dim bphase As clsPhase
                 Dim lphase As clsPhase
-                Dim bdiff As Integer, ldiff As Integer
+                Dim bdiff As Long, ldiff As Long
                 Dim bphaseStart As Date
                 Dim lphaseStart As Date
 
@@ -4694,7 +4693,7 @@ Public Module testModule
 
                             CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = msNumber.ToString
                             CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-                            CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = cBewertung.color
+                            CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(cBewertung.color)
 
                             Try
                                 CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.name
@@ -4711,9 +4710,9 @@ Public Module testModule
                             End Try
 
                             Try
-                                CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.Fill.ForeColor.RGB = bbewertung.color
+                                CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(bbewertung.color)
                             Catch ex As Exception
-                                CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelNichtBewertet
+                                CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
                             End Try
 
 
@@ -4726,9 +4725,9 @@ Public Module testModule
                             End Try
 
                             Try
-                                CType(.Cell(tabellenzeile, 6), pptNS.Cell).Shape.Fill.ForeColor.RGB = lbewertung.color
+                                CType(.Cell(tabellenzeile, 6), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(lbewertung.color)
                             Catch ex As Exception
-                                CType(.Cell(tabellenzeile, 6), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelNichtBewertet
+                                CType(.Cell(tabellenzeile, 6), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
                             End Try
 
                             ' Datum und Farbe für aktuellen Stand schreiben  
@@ -4739,9 +4738,9 @@ Public Module testModule
                             End Try
 
                             Try
-                                CType(.Cell(tabellenzeile, 8), pptNS.Cell).Shape.Fill.ForeColor.RGB = cBewertung.color
+                                CType(.Cell(tabellenzeile, 8), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(cBewertung.color)
                             Catch ex As Exception
-                                CType(.Cell(tabellenzeile, 8), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelNichtBewertet
+                                CType(.Cell(tabellenzeile, 8), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
                             End Try
 
 
@@ -4835,7 +4834,7 @@ Public Module testModule
 
         End Try
 
-        If pptShape.HasTable Then
+        If CBool(pptShape.HasTable) Then
             tabelle = pptShape.Table
             anzZeilen = tabelle.Rows.Count
             If anzZeilen > 1 Then
@@ -4978,7 +4977,7 @@ Public Module testModule
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
                                 Else
-                                    If unterschiede.Contains(PThcc.phasen) Then
+                                    If unterschiede.Contains(PThcc.phasen.ToString) Then
                                         TimeTimeColor = hproj.getTimeTimeColor(vglproj, True, Date.Now)
 
                                         If TimeTimeColor(0) < 0 Then
@@ -5033,7 +5032,7 @@ Public Module testModule
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
                                 Else
-                                    If unterschiede.Contains(PThcc.resultdates) Or unterschiede.Contains(PThcc.resultampel) Then
+                                    If unterschiede.Contains(PThcc.resultdates.ToString) Or unterschiede.Contains(PThcc.resultampel.ToString) Then
 
                                         TimeTimeColor = hproj.getTimeTimeColor(vglproj, True, Date.Now)
 
@@ -5291,7 +5290,7 @@ Public Module testModule
 
         End Try
 
-        If pptShape.HasTable Then
+        If CBool(pptShape.HasTable) Then
             tabelle = pptShape.Table
             anzZeilen = tabelle.Rows.Count
             If anzZeilen > 1 Then
@@ -5356,7 +5355,7 @@ Public Module testModule
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
                                 Else
-                                    If unterschiede.Contains(PThcc.phasen) Or unterschiede.Contains(PThcc.resultdates) Then
+                                    If unterschiede.Contains(PThcc.phasen.ToString) Or unterschiede.Contains(PThcc.resultdates.ToString) Then
                                         TimeTimeColor = hproj.getTimeTimeColor(vglproj, True, Date.Now)
 
                                         If TimeTimeColor(0) < 0 Then
@@ -5486,8 +5485,8 @@ Public Module testModule
             korrFaktor = korrFaktor * 0.98
 
             With newZeichen(1)
-                .Width = korrFaktor * .Width
-                .Height = korrFaktor * .Height
+                .Width = CSng(korrFaktor * .Width)
+                .Height = CSng(korrFaktor * .Height)
             End With
 
         End If
@@ -5498,7 +5497,7 @@ Public Module testModule
 
             .Top = tabelle.Cell(tbZeile, tbSpalte).Shape.Top + (tabelle.Cell(tbZeile, tbSpalte).Shape.Height - .Height) / 2
             .Left = tabelle.Cell(tbZeile, tbSpalte).Shape.Left + (tabelle.Cell(tbZeile, tbSpalte).Shape.Width - .Width) / 2
-            .Fill.ForeColor.RGB = farbkennung
+            .Fill.ForeColor.RGB = CInt(farbkennung)
 
         End With
 
@@ -5547,8 +5546,8 @@ Public Module testModule
             korrFaktor = korrFaktor * 0.98
 
             With newZeichen(1)
-                .Width = korrFaktor * .Width
-                .Height = korrFaktor * .Height
+                .Width = CSng(korrFaktor * .Width)
+                .Height = CSng(korrFaktor * .Height)
             End With
 
         End If
@@ -5559,8 +5558,8 @@ Public Module testModule
 
             .Top = tabelle.Cell(tbZeile, tbSpalte).Shape.Top + (tabelle.Cell(tbZeile, tbSpalte).Shape.Height - .Height) / 2
             .Left = tabelle.Cell(tbZeile, tbSpalte).Shape.Left + (tabelle.Cell(tbZeile, tbSpalte).Shape.Width - .Width) / 2
-            .Fill.ForeColor.RGB = farbkennung
-            .Line.ForeColor.RGB = lineColor
+            .Fill.ForeColor.RGB = CInt(farbkennung)
+            .Line.ForeColor.RGB = CInt(lineColor)
             .Line.Weight = 2
 
         End With
@@ -5612,7 +5611,7 @@ Public Module testModule
 
                         CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = msNumber.ToString
                         CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-                        CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = cBewertung.color
+                        CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(cBewertung.color)
 
                         CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.name
                         CType(.Cell(tabellenzeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.getDate.ToShortDateString
@@ -5677,15 +5676,15 @@ Public Module testModule
                 CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
 
                 If kvp.Value.ampelStatus = 0 Then
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelNichtBewertet
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
                 ElseIf kvp.Value.ampelStatus = 1 Then
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelGruen
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelGruen)
                 ElseIf kvp.Value.ampelStatus = 2 Then
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelGelb
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelGelb)
                 ElseIf kvp.Value.ampelStatus = 3 Then
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelRot
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelRot)
                 Else
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelNichtBewertet
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
                 End If
 
                 CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = kvp.Value.name
@@ -5728,15 +5727,15 @@ Public Module testModule
             With tabelle
 
                 If hproj.ampelStatus = 0 Then
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelNichtBewertet
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
                 ElseIf hproj.ampelStatus = 1 Then
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelGruen
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelGruen)
                 ElseIf hproj.ampelStatus = 2 Then
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelGelb
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelGelb)
                 ElseIf hproj.ampelStatus = 3 Then
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelRot
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelRot)
                 Else
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = awinSettings.AmpelNichtBewertet
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
                 End If
 
                 CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
@@ -5766,7 +5765,7 @@ Public Module testModule
 
         For Each pName In myCollection
             Try
-                hproj = ShowProjekte.getProject(pName)
+                hproj = ShowProjekte.getProject(pName.ToString)
                 With hproj
                     If .Start < minColumn Then
                         minColumn = .Start
@@ -5833,7 +5832,7 @@ Public Module testModule
     ''' <param name="width"></param>
     ''' <param name="height"></param>
     ''' <remarks></remarks>
-    Sub awinCreateBetterWorsePortfolio(ByRef ProjektListe As Collection, ByRef repChart As Object, ByVal showAbsoluteDiff As Boolean, ByVal isTimeTimeVgl As Boolean, ByVal vglTyp As Integer, _
+    Sub awinCreateBetterWorsePortfolio(ByRef ProjektListe As Collection, ByRef repChart As Excel.ChartObject, ByVal showAbsoluteDiff As Boolean, ByVal isTimeTimeVgl As Boolean, ByVal vglTyp As Integer, _
                                              ByVal charttype As Integer, ByVal bubbleColor As Integer, ByVal bubbleValueTyp As Integer, _
                                              ByVal showLabels As Boolean, ByVal chartBorderVisible As Boolean, _
                                              ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double)
@@ -5939,7 +5938,7 @@ Public Module testModule
 
         Dim anzOK As Integer = 0
         For i = 1 To ProjektListe.Count
-            pname = ProjektListe.Item(i)
+            pname = ProjektListe.Item(i).ToString
 
             Try
                 hproj = ShowProjekte.getProject(pname)
@@ -6216,7 +6215,7 @@ Public Module testModule
         Next
 
 
-        chtobjName = getKennung("pf", charttype, ProjektListe)
+        chtobjName = calcChartKennung("pf", charttype, ProjektListe)
 
 
 
@@ -6236,8 +6235,8 @@ Public Module testModule
 
 
 
-        With appInstance.Worksheets(arrWsNames(3))
-            anzDiagrams = .ChartObjects.Count
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
             '
@@ -6245,9 +6244,9 @@ Public Module testModule
             found = False
 
             While i <= anzDiagrams And Not found
-                If chtobjName = .chartObjects(i).name Then
+                If chtobjName = CType(.ChartObjects(i), Excel.ChartObject).Name Then
                     found = True
-                    repChart = .ChartObjects(i)
+                    repChart = CType(.ChartObjects(i), Excel.ChartObject)
                     Exit Sub
                 Else
                     i = i + 1
@@ -6264,24 +6263,24 @@ Public Module testModule
 
             ReDim tempArray(anzBubbles - 1)
 
-            With appInstance.Charts.Add
+            With CType(appInstance.Charts.Add, Excel.Chart)
 
-                .SeriesCollection.NewSeries()
-                .SeriesCollection(1).name = diagramTitle
+                CType(.SeriesCollection, Excel.SeriesCollection).NewSeries()
+                CType(.SeriesCollection, Excel.SeriesCollection).Item(1).Name = diagramTitle
 
 
-                .SeriesCollection(1).ChartType = xlNS.XlChartType.xlBubble3DEffect
+                CType(.SeriesCollection, Excel.SeriesCollection).Item(1).ChartType = xlNS.XlChartType.xlBubble3DEffect
 
 
                 For i = 1 To anzBubbles
                     tempArray(i - 1) = xAchsenValues(i - 1)
                 Next i
-                .SeriesCollection(1).XValues = tempArray
+                CType(.SeriesCollection, Excel.SeriesCollection).Item(1).XValues = tempArray
 
                 For i = 1 To anzBubbles
                     tempArray(i - 1) = yAchsenValues(i - 1)
                 Next i
-                .SeriesCollection(1).Values = tempArray
+                CType(.SeriesCollection, Excel.SeriesCollection).Item(1).Values = tempArray
 
                 For i = 1 To anzBubbles
                     If bubbleValues(i - 1) < 0.01 And bubbleValues(i - 1) > -0.01 Then
@@ -6295,7 +6294,7 @@ Public Module testModule
                 Next i
 
 
-                .SeriesCollection(1).BubbleSizes = tempArray
+                CType(.SeriesCollection, Excel.SeriesCollection).Item(1).BubbleSizes = tempArray
 
 
 
@@ -6308,7 +6307,7 @@ Public Module testModule
 
                 For i = 1 To anzBubbles
 
-                    With CType(.SeriesCollection(1).Points(i), xlNS.Point)
+                    With CType(CType(.SeriesCollection, Excel.SeriesCollection).Item(1).Points(i), xlNS.Point)
 
                         If showLabels Then
                             Try
@@ -6365,7 +6364,7 @@ Public Module testModule
                 '.ChartGroups(1).BubbleScale = sollte in Abhängigkeit der width gemacht werden 
 
 
-                With .ChartGroups(1)
+                With CType(.ChartGroups(1), Excel.ChartGroup)
 
                     If singleProject Then
                         .BubbleScale = 20
@@ -6374,7 +6373,7 @@ Public Module testModule
                     End If
 
                     .SizeRepresents = xlNS.XlSizeRepresents.xlSizeIsArea
-                    .shownegativeBubbles = True
+                    .ShowNegativeBubbles = True
 
                 End With
 
@@ -6436,8 +6435,8 @@ Public Module testModule
 
                     End If
 
-                    .MajorTickMark = XlTickMark.xlTickMarkCross
-                    .TickLabelPosition = XlTickLabelPosition.xlTickLabelPositionNextToAxis
+                    .MajorTickMark = Excel.XlTickMark.xlTickMarkCross
+                    .TickLabelPosition = Excel.XlTickLabelPosition.xlTickLabelPositionNextToAxis
 
                 End With
 
@@ -6496,8 +6495,8 @@ Public Module testModule
 
                     End If
 
-                    .MajorTickMark = XlTickMark.xlTickMarkCross
-                    .TickLabelPosition = XlTickLabelPosition.xlTickLabelPositionNextToAxis
+                    .MajorTickMark = Excel.XlTickMark.xlTickMarkCross
+                    .TickLabelPosition = Excel.XlTickLabelPosition.xlTickLabelPositionNextToAxis
 
                 End With
 
@@ -6562,12 +6561,13 @@ Public Module testModule
 
                 .HasLegend = False
                 .HasTitle = True
-                .ChartTitle.text = diagramTitle
+                .ChartTitle.Text = diagramTitle
                 .ChartTitle.Characters.Font.Size = awinSettings.fontsizeTitle
 
                 ' Events disablen, wegen Report erstellen
                 appInstance.EnableEvents = False
-                .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                .Location(Where:=xlNS.XlChartLocation.xlLocationAsObject, _
+                          Name:=CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Name)
                 appInstance.EnableEvents = formerEE
                 ' Events sind wieder zurückgesetzt
             End With
@@ -6576,20 +6576,20 @@ Public Module testModule
             'appInstance.ShowChartTipNames = False
             'appInstance.ShowChartTipValues = False
 
-            With .ChartObjects(anzDiagrams + 1)
-                .top = top
-                .left = left
-                .width = width
-                .height = height
-                .name = chtobjName
+            With CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
+                .Top = top
+                .Left = left
+                .Width = width
+                .Height = height
+                .Name = chtobjName
             End With
 
 
 
             With appInstance.ActiveSheet
                 Try
-                    With appInstance.ActiveSheet
-                        .Shapes(chtobjName).line.visible = chartBorderVisible
+                    With CType(appInstance.ActiveSheet, Excel.Worksheet)
+                        CType(.Shapes(chtobjName), Excel.Shape).Line.Visible = CType(chartBorderVisible, Microsoft.Office.Core.MsoTriState)
                     End With
                 Catch ex As Exception
 
@@ -6599,13 +6599,13 @@ Public Module testModule
             pfDiagram = New clsDiagramm
 
             pfChart = New clsEventsPfCharts
-            pfChart.PfChartEvents = .ChartObjects(anzDiagrams + 1).Chart
+            pfChart.PfChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
 
             pfDiagram.setDiagramEvent = pfChart
 
             With pfDiagram
 
-                .kennung = getKennung("pf", charttype, ProjektListe)
+                .kennung = calcChartKennung("pf", charttype, ProjektListe)
                 .DiagrammTitel = diagramTitle
                 .diagrammTyp = DiagrammTypen(3)                     ' Portfolio
                 .gsCollection = ProjektListe
@@ -6614,7 +6614,7 @@ Public Module testModule
             End With
 
             DiagramList.Add(pfDiagram)
-            repChart = .ChartObjects(anzDiagrams + 1)
+            repChart = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
 
         End With
 

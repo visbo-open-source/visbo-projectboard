@@ -13,23 +13,114 @@ Public Class clsProjektShapes
 
     Private AllShapes As SortedList(Of String, Double())
 
-    Private Sub UnGroupShape(ByVal pName As String, ByRef shapeSammlung As Excel.ShapeRange)
+    ''' <summary>
+    ''' gibt ein ShapeRange Objekt zurück, das alle Shapes enthält, die in Shape mit Namen pName enthalten sind 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property ungroupShapes(ByVal pName As String) As Excel.ShapeRange
 
-        Dim projectShapes As Excel.Shapes
-        Dim projectShape As Excel.ShapeRange
+        Get
+            Dim projectShapes As Excel.Shapes
+            Dim projectShape As Excel.ShapeRange
 
-        ' hier sind alle Shapes drin
-        projectShapes = appInstance.Worksheets(arrWsNames(3)).shapes
+            ' hier sind alle Shapes drin
+            projectShapes = appInstance.Worksheets(arrWsNames(3)).shapes
 
-        ' hole das Projekt-Shape 
-        projectShape = projectShapes.Range(pName)
+            ' hole das Projekt-Shape 
+            projectShape = projectShapes.Range(pName)
 
-        shapeSammlung = projectShape.Ungroup()
+            ungroupShapes = projectShape.Ungroup()
+        End Get
 
 
-    End Sub
+    End Property
 
-    Private Sub reGroupShape(ByRef shapeSammlung As Excel.ShapeRange, ByVal pName As String)
+
+    ''' <summary>
+    ''' gruppiert die im Array übergebenen Shapes zu einem Shape mit Namen pName
+    ''' </summary>
+    ''' <param name="listOFNames"></param>
+    ''' <param name="pName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property groupShapes(ByVal listOFNames As Collection, ByVal pName As String) As Excel.Shape
+        Get
+            Dim worksheetShapes As Excel.Shapes
+            Dim arrayOFNames() As String
+            Dim i As Integer
+            Dim anzElements As Integer = listOFNames.Count
+            Dim shapegruppe As Excel.ShapeRange
+            Dim hproj As clsProjekt
+
+
+            hproj = ShowProjekte.getProject(pName)
+
+            With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+                worksheetShapes = .Shapes
+            End With
+
+
+
+            If anzElements = 0 Then
+
+                groupShapes = Nothing
+
+            ElseIf anzElements = 1 Then
+
+                groupShapes = worksheetShapes.Item(listOFNames.Item(1))
+
+            Else
+
+                ReDim arrayOFNames(anzElements - 1)
+
+                For i = 1 To anzElements
+                    arrayOFNames(i - 1) = listOFNames.Item(i)
+                Next
+
+                shapegruppe = worksheetShapes.Range(arrayOFNames)
+                groupShapes = shapegruppe.Group
+
+            End If
+
+            If anzElements > 0 Then
+                With groupShapes
+
+                    .Name = pName
+                    If awinSettings.drawphases Then
+                        .AlternativeText = CInt(PTshty.projektE).ToString
+                    Else
+                        If anzElements = 1 Then
+                            .AlternativeText = CInt(PTshty.projektN).ToString
+                        Else
+                            .AlternativeText = CInt(PTshty.projektC).ToString
+                        End If
+
+                    End If
+
+                    hproj.shpUID = .ID.ToString
+
+                End With
+
+                ' jetzt muss das auch in der Liste Showprojekte eingetragen werden 
+                ShowProjekte.AddShape(pName, hproj.shpUID)
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' macht eine Re-Gruppierung der Shapesammlung
+    ''' kann nur aufgerufen werden, wenn die Shapesammlung unverändert ist 
+    ''' am 12.7 eine Public Property geworden
+    ''' </summary>
+    ''' <param name="shapeSammlung"></param>
+    ''' <param name="pName"></param>
+    ''' <remarks></remarks>
+    Public Sub reGroupShape(ByRef shapeSammlung As Excel.ShapeRange, ByVal pName As String)
         Dim pShape As Excel.Shape
         Dim hproj As clsProjekt
 
@@ -38,7 +129,7 @@ Public Class clsProjektShapes
 
         With pShape
             .Name = pName
-            .AlternativeText = PTshty.projektE
+            .AlternativeText = CInt(PTshty.projektE).ToString
             hproj.shpUID = .ID.ToString
 
         End With
@@ -48,8 +139,85 @@ Public Class clsProjektShapes
 
     End Sub
 
+    ''' <summary>
+    ''' berechnet für das Projekt mit Namen pName den korrespondierenden Projekt-Shape-Namen und gibt ihn zurück  
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property calcProjektShapeName(ByVal pName As String) As String
+        Get
+            calcProjektShapeName = pName
+        End Get
+    End Property
 
 
+    ''' <summary>
+    ''' berechnet für die Phase phaseName des Projekts pName den Shape-Namen und gibt ihn zurück
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="phaseName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property calcPhaseShapeName(ByVal pName As String, ByVal phaseName As String) As String
+        Get
+            calcPhaseShapeName = pName & "#" & phaseName
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' berechnet für den Meilenstein mit laufender Nummer lfdNr in Phase phaseNAme in Projekt pName 
+    ''' den Milestone-Shape Namen und gibt ihn zurück 
+    ''' </summary>
+    ''' <param name="pName">Projekt-Name</param>
+    ''' <param name="phaseName">Phasen-Name</param>
+    ''' <param name="lfdNr">lfd Nummer des Meilensteins in Phase phaseName</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property calcMilestoneShapeName(ByVal pName As String, ByVal phaseName As String, ByVal lfdNr As Integer) As String
+        Get
+            calcMilestoneShapeName = pName & "#" & phaseName & "#M" & lfdNr.ToString
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' berechnet für das Projekt mit Namen pName den korrespondierenden Status-Shape Namen 
+    ''' für den Monat, der in Kalenderspalte dateColumn liegt und gibt ihn zurück  
+    ''' </summary>
+    ''' <param name="dateColumn"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property calcStatusShapeName(ByVal pName As String, ByVal dateColumn As Integer) As String
+        Get
+            calcStatusShapeName = pName & "#Status#" & dateColumn.ToString
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' berechnet für die Projekte pname (project) und dpName (dependent project) den korrespondierenden Shape-Namen
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="dpName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property calcDependencyShapeName(ByVal pName As String, dpName As String) As String
+        Get
+            calcDependencyShapeName = pName.Trim & "#" & dpName.Trim
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt das Shape der Shapeslist hinzu; wenn es schon existiert, wird der alte Eintrag gelöscht und der neue 
+    ''' wird eingetragen
+    ''' </summary>
+    ''' <param name="shpElement"></param>
+    ''' <remarks></remarks>
     Public Sub add(ByVal shpElement As Excel.Shape)
 
         Dim key As String = shpElement.Name
@@ -71,18 +239,249 @@ Public Class clsProjektShapes
 
     End Sub
 
-    Public Sub remove(ByVal key As String)
+    ''' <summary>
+    ''' löscht zu dem angegeben projektshape die Child-Shapes mit den in typCollection angegebenen Typen
+    ''' wenn typCollection Null ist , dann sollen alle Elemente gelöscht werden 
+    ''' </summary>
+    ''' <param name="projektshape"></param>
+    ''' <param name="typCollection"></param>
+    ''' <remarks></remarks>
+    Public Sub removeChildsOfType(ByRef projektshape As Excel.Shape, ByVal typCollection As Collection)
 
+        
+        Dim pName As String
         Dim done As Boolean
+        Dim shapeGruppe As ShapeRange
+        Dim nameCollection As New Collection
+
+        
+
+        ' nur dann kann es aus mehreren bestehen ....
+        If projektshape.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeMixed Then
+
+            pName = projektshape.Name
+
+            shapeGruppe = projektshape.Ungroup
+
+            For Each elem As Excel.Shape In shapeGruppe
+
+                If typCollection.Contains(elem.AlternativeText) Then
+                    done = Me.AllShapes.Remove(elem.Name)
+                    elem.Delete()
+                Else
+                    nameCollection.Add(elem.Name, elem.Name)
+                End If
+
+            Next
+
+            If nameCollection.Count > 0 Then
+
+                projektshape = Me.groupShapes(nameCollection, pName)
+
+            Else
+
+            End If
+
+
+        End If
+
+
+    End Sub
+  
+    ''' <summary>
+    ''' gibt eine Collection der Shape-Namen zurück, die im gruppierten Shape projektshape enthalten sind
+    ''' jedes Item hat folgende Struktur: 
+    ''' PTshty.typ#Name des Shapes
+    ''' </summary>
+    ''' <param name="projektShape"></param>
+    ''' <param name="typCollection">
+    ''' leer: alle
+    ''' sonst die Namen der Phasen bzw. Meilensteine, je nach typ 
+    ''' </param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAllChildswithType(ByVal projektShape As Excel.Shape, ByVal typCollection As Collection) As Collection
+        Get
+            Dim tmpCollection As New Collection
+            Dim i As Integer
+            Dim tmpShape As Excel.Shape
+            Dim anzElements As Integer
+            Dim hproj As clsProjekt = Nothing
+            Dim ok As Boolean
+
+            Try
+                hproj = ShowProjekte.getProject(projektShape.Name)
+                ok = True
+            Catch ex As Exception
+                ok = False
+            End Try
+
+
+            If ok Then
+
+                If projektShape.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeMixed Then
+
+                    Try
+                        anzElements = projektShape.GroupItems.Count
+                    Catch ex As Exception
+                        anzElements = 0
+                    End Try
+
+
+
+                    For i = 1 To anzElements
+
+                        tmpShape = projektShape.GroupItems.Item(i)
+
+
+                        If typCollection.Count = 0 Then
+
+                            If tmpShape.Name <> projektShape.Name And _
+                                Not tmpCollection.Contains(tmpShape.AlternativeText & "#" & tmpShape.Name) Then
+
+                                tmpCollection.Add(tmpShape.AlternativeText & "#" & tmpShape.Name, tmpShape.AlternativeText & "#" & tmpShape.Name)
+
+                            End If
+
+                        Else
+                            Dim elementName As String
+
+                            If tmpShape.Name <> projektShape.Name And typCollection.Contains(tmpShape.AlternativeText) Then
+
+                                If tmpShape.AlternativeText = CInt(PTshty.phaseE).ToString Or _
+                                    tmpShape.AlternativeText = CInt(PTshty.phaseN).ToString Then
+
+                                    elementName = extractName(tmpShape.Name, PTshty.phaseN)
+
+                                    If elementName <> projektShape.Name And Not tmpCollection.Contains(elementName) Then
+                                        tmpCollection.Add(elementName, elementName)
+                                    End If
+
+                                ElseIf tmpShape.AlternativeText = CInt(PTshty.milestoneE).ToString Or _
+                                        tmpShape.AlternativeText = CInt(PTshty.milestoneN).ToString Then
+
+                                    Dim phaseName As String = extractName(tmpShape.Name, PTshty.phaseN)
+                                    Dim msNr As Integer = CInt(extractName(tmpShape.Name, PTshty.milestoneN))
+
+                                    elementName = hproj.getPhase(phaseName).getResult(msNr).name
+
+                                    If Not tmpCollection.Contains(elementName) Then
+                                        tmpCollection.Add(elementName, elementName)
+                                    End If
+
+
+                                End If
+
+                            End If
+
+                        End If
+
+
+                    Next
+
+                End If
+
+            End If
+            
+
+            getAllChildswithType = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine Collection der Shape-Namen zurück, die zu Projekt pName gehören 
+    ''' jedes Item hat folgende Struktur: 
+    ''' Name des Shapes
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAllChilds(pName As String) As Collection
+        Get
+
+            Dim tmpCollection As New Collection
+
+            For Each kvp As KeyValuePair(Of String, Double()) In Me.AllShapes
+                If extractName(kvp.Key, PTshty.projektN) = pName And kvp.Key <> pName Then
+                    tmpCollection.Add(kvp.Key)
+                End If
+            Next
+
+            getAllChilds = tmpCollection
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' entfernt das Shape aus der Shapesliste und löscht es von der Projekttafel
+    ''' wenn es sich um ein projekt-Shape handelt, werden alle abhängigen Shapes wie Phasen, Meilensteine, Stati 
+    ''' mitgelöscht
+    ''' </summary>
+    ''' <param name="shpElement">shpElement </param>
+    ''' <remarks></remarks>
+    Public Sub remove(ByRef shpElement As Excel.Shape)
+
+        Dim shpName As String = shpElement.Name
+        Dim done As Boolean
+        Dim todoListe1 As New Collection
+        Dim todoListe2 As New Collection
+        Dim shapetype As Integer = kindOfShape(shpElement)
+        Dim tmpCollection As New Collection
+
+
+        If isProjectType(shapetype) Then
+            todoListe1 = Me.getAllChildswithType(shpElement, tmpCollection)
+            todoListe2 = Me.getAllChilds(shpElement.Name)
+
+            ' Test-Routine: 
+            If todoListe1.Count <> todoListe2.Count Then
+                Call MsgBox("Fehler in clsprojektShapes.remove)")
+            End If
+        End If
 
         Try
-            done = AllShapes.Remove(key)
+
+            shpElement.Delete()
+            done = Me.AllShapes.Remove(shpName)
+
         Catch ex As Exception
 
         End Try
 
+        Try
+            If todoListe2.Count > 0 Then
+                Dim childName As String
+
+                For Each childName In todoListe2
+
+                    Try
+                        done = Me.AllShapes.Remove(childName)
+                    Catch ex2 As Exception
+
+                    End Try
+
+                Next
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+
     End Sub
 
+    ''' <summary>
+    ''' liefert die Koordinaten des Shapes, wie sie noch in der Shapesliste stehen 
+    ''' </summary>
+    ''' <param name="shpName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getCoord(ByVal shpName As String) As Double()
         Get
             getCoord = AllShapes.Item(shpName)
@@ -109,11 +508,14 @@ Public Class clsProjektShapes
         Dim pName As String = ""
         Dim shapeSammlung As Excel.ShapeRange = Nothing
 
-        If shapeType = PTshty.phaseE Or shapeType = PTshty.milestoneE Then
+        ' Änderung 10.7.14 es gibt jetzt keinen alleinstehenden Meilenstein oder Phasen oder status Shape  
+        'If shapeType = PTshty.phaseE Or shapeType = PTshty.milestoneE Then
+
+        If Not isProjectType(shapeType) Then
 
             ' hier muss erst mal das übergeordnete Projektshape gesucht und ungruppiert werden  
             pName = extractName(shpElement.Name, PTshty.projektE)
-            Call UnGroupShape(pName, shapeSammlung)
+            shapeSammlung = ungroupShapes(pName)
 
         End If
 
@@ -145,12 +547,20 @@ Public Class clsProjektShapes
             ' Höhe darf niemals verändert werden ...
             shpElement.Height = oldCoord(2)
 
-            ' Width überprüfen 
-            If Abs(oldCoord(3) - shpCoord(3)) > tolX * 0.2 Then
-                isdifferent = True
+            ' Width überprüfen: width darf nur bei phaseE, phaseN, projektN, projektC, projektE
+            If shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Or _
+                isProjectType(shapeType) Then
+
+                If Abs(oldCoord(3) - shpCoord(3)) > tolX * 0.2 Then
+                    isdifferent = True
+                Else
+                    shpElement.Width = oldCoord(3)
+                End If
+
             Else
                 shpElement.Width = oldCoord(3)
             End If
+
 
             If Abs(shpElement.Rotation) > 15 Then
                 isdifferent = True
@@ -161,7 +571,8 @@ Public Class clsProjektShapes
         End Try
 
 
-        If shapeType = PTshty.phaseE Or shapeType = PTshty.milestoneE Then
+        'If shapeType = PTshty.phaseE Or shapeType = PTshty.milestoneE Then
+        If Not isProjectType(shapeType) Then
             ' jetzt wird wieder regruppiert
 
             Call reGroupShape(shapeSammlung, pName)
@@ -181,11 +592,10 @@ Public Class clsProjektShapes
     ''' <summary>
     ''' prüft, ob das Shape noch an der alten Stelle steht
     ''' wenn nein: ist das Verschieben / Stauchen / Dehnen zulässig ? 
-    ''' wenn ja:  synchronisieren Shape / Projekt  
+    ''' wenn ja:  das Projekt wird geändert, so dass es mit dem shape übereinstimmt   
     ''' </summary>
     ''' <param name="shpElement">ShapeELement</param>
     ''' <remarks></remarks>
-
     Public Sub sync(ByRef shpElement As Excel.Shape, ByVal selCollection As Collection)
         Dim curCoord(3) As Double, oldCoord() As Double
         Dim shapeType As Integer
@@ -193,6 +603,7 @@ Public Class clsProjektShapes
         Dim phaseName As String, resultNr As Integer
         Dim hproj As clsProjekt, newProjekt As clsProjekt
         Dim tmpRange As Excel.ShapeRange
+        Dim pShape As Excel.Shape
 
         Dim pName As String = ""
         Dim shapeSammlung As Excel.ShapeRange = Nothing
@@ -206,7 +617,9 @@ Public Class clsProjektShapes
             pName = extractName(shpElement.Name, PTshty.projektN)
             hproj = ShowProjekte.getProject(pName)
 
-            If hproj.Status = ProjektStatus(0) And Not shapeType = PTshty.status Then
+            If hproj.Status = ProjektStatus(0) _
+                And Not shapeType = PTshty.status _
+                And Not shapeType = PTshty.dependency Then
                 moveAllowed = True
             Else
                 moveAllowed = False
@@ -220,19 +633,15 @@ Public Class clsProjektShapes
 
 
         ' Exit , wenn es sich um eine Dependency handelt 
-        If shapeType = PTshty.dependency Then
+        If shapeType = PTshty.dependency Or shapeType = PTshty.status Then
             Exit Sub
         End If
 
         ' damit curCoord korrekt bestimmt werden kann, muss im Falle Phase / Meilenstein im Extended Mode
         ' die Gruppierung des Projekt-Shapes erst aufgehoben werden 
+        If Not isProjectType(shapeType) Then
 
-        If shapeType = PTshty.phaseE Or shapeType = PTshty.milestoneE Then
-            ' hier muss erst mal das übergeordnete Projektshape gesucht werden 
-            pName = extractName(shpElement.Name, PTshty.projektE)
-            hproj = ShowProjekte.getProject(pName)
-
-            Call UnGroupShape(pName, shapeSammlung)
+            shapeSammlung = ungroupShapes(pName)
             notRegroupedAgain = True
 
         End If
@@ -263,7 +672,7 @@ Public Class clsProjektShapes
                 ' top darf nur bei ProjektE oder ProjektN verändert werden 
                 If curCoord(0) <> oldCoord(0) Then
 
-                    If (shapeType = PTshty.projektE Or shapeType = PTshty.projektN) Then
+                    If isProjectType(shapeType) Then
                         Dim tmpZeile As Integer = calcYCoordToZeile(curCoord(0))
                         shpElement.Top = calcZeileToYCoord(tmpZeile)
                         curCoord(0) = shpElement.Top
@@ -277,13 +686,12 @@ Public Class clsProjektShapes
                 End If
 
 
-                If shapeType = PTshty.projektN Or shapeType = PTshty.projektE Then
+                If isProjectType(shapeType) Then
                     ' für Projekte: berechne das neue Start-Datum und ggf die neue Dauer
                     Dim newStartdate As Date
                     Dim newEndDate As Date
                     Dim tmpDauerIndays = hproj.dauerInDays
                     newProjekt = New clsProjekt
-
 
 
                     ' wenn gedehnt bzw. gestaucht wird ...
@@ -349,13 +757,28 @@ Public Class clsProjektShapes
                     AlleProjekte.Add(key, newProjekt)
                     ShowProjekte.Add(newProjekt)
 
-                    ' falls es sich um ProjektE handelt, muss das Shape gelöscht und neu aufgebaut werden 
                     Dim zeile As Integer = calcYCoordToZeile(shpElement.Top)
+
+
+                    pShape = shpElement
+                    Dim phaseList As Collection
+                    Dim milestoneList As Collection
+                    Dim typCollection As New Collection
+                    typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                    typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                    phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+
+                    typCollection.Clear()
+                    typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                    typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                    milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
 
                     Call clearProjektinPlantafel(pName)
                     ' in selCollection sind die Namen der Projekte, die beim Neuzeichnen nicht berücksichtigt werden sollen, weil 
                     ' sie noch in der Select Collection sind und danach noch behandelt werden 
-                    Call ZeichneProjektinPlanTafel(selCollection, pname:=newProjekt.name, tryzeile:=hproj.tfZeile)
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=newProjekt.name, tryzeile:=hproj.tfZeile, _
+                                                   drawPhaseList:=phaseList, drawMilestoneList:=milestoneList)
 
                     ' Shape wurde gelöscht , der Variable shpElement muss das neue Shape wieder zugewiesen werden 
                     ' damit die aufrufende Routine das shpelement wieder hat 
@@ -367,7 +790,7 @@ Public Class clsProjektShapes
                     Call awinCreateBudgetWerte(hproj)
 
 
-                ElseIf shapeType = PTshty.phaseE Then
+                ElseIf shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Then
                     ' für Phasen: berechne das neue Start-Datum und ggf. die neue Dauer (muss innerhalb Projekt bleiben !
                     Dim cphase As clsPhase
                     Dim projectBorderLinks As Double = calcDateToXCoord(hproj.startDate)
@@ -380,6 +803,7 @@ Public Class clsProjektShapes
                     phaseName = extractName(shpElement.Name, PTshty.phaseN)
                     cphase = hproj.getPhase(phaseName)
 
+                   
 
                     If cphase.name = hproj.name Then
                         ' hier muss die Sonderbehandlung der Phase 1 rein' sicherstellen, 
@@ -481,11 +905,28 @@ Public Class clsProjektShapes
                         ' es gab Änderungen , zugelassen oder nicht: deshalb muss das Shape neu gezeichnet werden 
                         Call reGroupShape(shapeSammlung, pName)
 
+                        ' pshape ist das übergeordnete Shpelement 
+                        pShape = ShowProjekte.getShape(hproj.name)
+
+                        Dim phaseList As Collection
+                        Dim milestoneList As Collection
+                        Dim typCollection As New Collection
+                        typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                        typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                        phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+
+                        typCollection.Clear()
+                        typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                        typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                        milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+
+
                         Call clearProjektinPlantafel(pName)
                         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                         ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                         Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile)
+                        Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile, _
+                                                       drawPhaseList:=phaseList, drawMilestoneList:=milestoneList)
                         notRegroupedAgain = False
 
                         ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
@@ -499,13 +940,6 @@ Public Class clsProjektShapes
                         Call awinCreateBudgetWerte(hproj)
 
                     End If
-
-
-
-
-
-
-                ElseIf shapeType = PTshty.phaseN Then
 
 
                 ElseIf shapeType = PTshty.milestoneN Or shapeType = PTshty.milestoneE Then
@@ -554,12 +988,28 @@ Public Class clsProjektShapes
                         ' es gab Änderungen , zugelassen oder nicht: deshalb muss das Shape neu gezeichnet werden 
                         Call reGroupShape(shapeSammlung, pName)
 
+                        ' pshape ist das übergeordnete Shpelement 
+                        pShape = ShowProjekte.getShape(hproj.name)
+
+                        Dim phaseList As Collection
+                        Dim milestoneList As Collection
+                        Dim typCollection As New Collection
+                        typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                        typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                        phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+
+                        typCollection.Clear()
+                        typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                        typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                        milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+
                         Call clearProjektinPlantafel(pName)
 
                         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                         ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                         Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile)
+                        Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=pName, tryzeile:=hproj.tfZeile, _
+                                                       drawPhaseList:=phaseList, drawMilestoneList:=milestoneList)
                         notRegroupedAgain = False
 
                         ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
@@ -579,16 +1029,17 @@ Public Class clsProjektShapes
                 ' es gab Änderungen , zugelassen oder nicht: deshalb muss das Shape neu gezeichnet werden 
                 Dim newZeile As Integer = hproj.tfZeile
 
-                If notRegroupedAgain And Not (shapeType = PTshty.projektE Or shapeType = PTshty.projektN Or _
-                                              shapeType = PTshty.phaseN Or shapeType = PTshty.milestoneN) Then
+                ' den Befel braucht man, damit später alle Shapes auf einen Schlag gelöscht 
+                ' und neu gezeichnet werden können 
+                If notRegroupedAgain And Not isProjectType(shapeType) Then
                     Call reGroupShape(shapeSammlung, pName)
                 End If
 
 
-                ' top darf nur bei ProjektE oder ProjektN verändert werden 
+                ' top darf nur bei ProjektE, ProjektC oder ProjektN verändert werden 
                 If curCoord(0) <> oldCoord(0) Then
 
-                    If (shapeType = PTshty.projektE Or shapeType = PTshty.projektN) Then
+                    If isProjectType(shapeType) Then
                         newZeile = calcYCoordToZeile(curCoord(0))
 
                         ' Platz schaffen auf der Projekt-Tafel
@@ -619,10 +1070,29 @@ Public Class clsProjektShapes
 
                 End If
 
+                ' jetzt muss ggf das übergeordnete Projektshape geholt werden 
+                If isProjectType(shapeType) Then
+                    pShape = shpElement
+                Else
+                    pShape = ShowProjekte.getShape(hproj.name)
+                End If
+
+                Dim typCollection As New Collection
+                typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                Dim phaseList As Collection = Me.getAllChildswithType(pShape, typCollection)
+
+                typCollection.Clear()
+                typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                Dim milestoneList As Collection = Me.getAllChildswithType(pShape, typCollection)
+
+
                 Call clearProjektinPlantafel(pName)
                 ' in selCollection sind die Namen der Projekte, die beim Neuzeichnen nicht berücksichtigt werden sollen, weil 
                 ' sie noch in der Select Collection sind und danach noch behandelt werden  
-                Call ZeichneProjektinPlanTafel(selCollection, pname:=pName, tryzeile:=newZeile)
+                Call ZeichneProjektinPlanTafel(noCollection:=selCollection, pname:=pName, tryzeile:=newZeile, _
+                                                drawPhaseList:=phaseList, drawMilestoneList:=milestoneList)
                 notRegroupedAgain = False
 
                 ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
@@ -697,7 +1167,7 @@ Public Class clsProjektShapes
     End Function
 
     ''' <summary>
-    ''' der Phasenoffset wird neu berechnet, da sich die Phase 1 als Repräsentant des PRojekts verschoben hat 
+    ''' der Phasenoffset wird neu berechnet, da sich die Phase 1 als Repräsentant des Projekts verschoben hat 
     ''' </summary>
     ''' <param name="diffDays"></param>
     ''' <remarks></remarks>
@@ -718,7 +1188,7 @@ Public Class clsProjektShapes
             End If
 
             Call cphase.changeStartandDauer(newOffset, oldDauer)
-            
+
         Next
 
     End Sub

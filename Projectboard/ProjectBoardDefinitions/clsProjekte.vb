@@ -1,4 +1,7 @@
-﻿Public Class clsProjekte
+﻿
+Imports xlNS = Microsoft.Office.Interop.Excel
+
+Public Class clsProjekte
 
     Private AllProjects As SortedList(Of String, clsProjekt)
     Private AllShapes As SortedList(Of String, String)
@@ -58,7 +61,7 @@
         Else
             Throw New ArgumentException("Shape kann nicht einem nicht-existierenden Projekt hinzugefügt werden - ")
         End If
-        
+
 
 
     End Sub
@@ -129,13 +132,13 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getPhaseNames() As SortedList(Of String, String)
+    Public ReadOnly Property getPhaseNames() As Collection
 
         Get
 
-            Dim tmpListe As New SortedList(Of String, String)
+            Dim tmpListe As New Collection
             Dim cphase As clsPhase
-            
+
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
 
                 Try
@@ -144,7 +147,7 @@
 
                         cphase = kvp.Value.getPhase(p)
 
-                        If tmpListe.ContainsKey(cphase.name) Then
+                        If tmpListe.Contains(cphase.name) Then
                             ' nichts tun 
                         Else
                             tmpListe.Add(cphase.name, cphase.name)
@@ -171,11 +174,11 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMilestoneNames() As SortedList(Of String, String)
+    Public ReadOnly Property getMilestoneNames() As Collection
 
         Get
 
-            Dim tmpListe As New SortedList(Of String, String)
+            Dim tmpListe As New Collection
             Dim cphase As clsPhase
 
             Dim msName As String
@@ -189,7 +192,7 @@
                         For r = 1 To cphase.CountResults
 
                             msName = cphase.getResult(r).name
-                            If tmpListe.ContainsKey(msName) Then
+                            If tmpListe.Contains(msName) Then
                             Else
                                 tmpListe.Add(msName, msName)
                             End If
@@ -253,6 +256,34 @@
             Catch ex As Exception
                 Throw New ArgumentException("Index nicht vorhanden:" & index.ToString)
             End Try
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt das Shape Element zurück, das zum Projekt gehört
+    ''' </summary>
+    ''' <param name="pName">Name des Projektes 
+    ''' (ist auch gleichzeitig der NAme des Shapes)</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getShape(ByVal pName As String) As xlNS.Shape
+        Get
+            Dim shapes As xlNS.Shapes
+            Dim projectShape As xlNS.ShapeRange
+
+            With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                shapes = .Shapes
+                Try
+                    projectShape = shapes.Range(pName)
+                    getShape = projectShape.Item(1)
+                Catch ex As Exception
+                    getShape = Nothing
+                End Try
+            End With
+
+
         End Get
     End Property
 
@@ -352,7 +383,7 @@
             ' selection type wird aktuell noch ignoriert .... 
 
 
-            
+
             For Each kvp In Me.AllProjects
 
                 With kvp.Value
@@ -1829,7 +1860,7 @@
 
         End Get
     End Property
-    
+
     ''' <summary>
     ''' gibt die Personalkosten zurück, die durch die internen Rollen entstehen, die in keinen Projekten gebunden sind 
     ''' </summary>

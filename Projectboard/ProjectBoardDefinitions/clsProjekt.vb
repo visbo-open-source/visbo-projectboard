@@ -1309,6 +1309,7 @@ Public Class clsProjekt
             Dim monatsIndex As Integer
 
 
+
             If Me.anzahlRasterElemente > 0 Then
 
                 ReDim ResultValues(Me.anzahlRasterElemente - 1)
@@ -1328,7 +1329,7 @@ Public Class clsProjekt
                         For r = 1 To anzResults
 
                             result = .getResult(r)
-                            monatsIndex = DateDiff(DateInterval.Month, Me.startDate, result.getDate)
+                            monatsIndex = CInt(DateDiff(DateInterval.Month, Me.startDate, result.getDate))
                             ' Sicherstellen, daß Ergebnisse, die vor oder auch nach dem Projekt erreicht werden sollen, richtig behandelt werden 
 
                             If monatsIndex >= 0 And monatsIndex <= Me.anzahlRasterElemente - 1 Then
@@ -2111,30 +2112,9 @@ Public Class clsProjekt
 
         If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
             top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight
-
             ' neue Positionierung: Tagesgenau 
             left = (startpunkt / 365) * boxWidth * 12
-
-            ' check it, notfalls korrigieren ... 
-            If System.Math.Truncate(left / boxWidth) + 1 < Me.Start Then
-
-                Do Until System.Math.Truncate(left / boxWidth) + 1 = Me.Start
-                    left = left + 1
-                Loop
-
-            ElseIf System.Math.Truncate(left / boxWidth) + 1 > Me.Start Then
-
-                Do Until System.Math.Truncate(left / boxWidth) + 1 = Me.Start
-                    left = left - 1
-                Loop
-
-            End If
-
             width = ((projektlaenge) / 365) * boxWidth * 12
-
-            ' Alte Positionierung: auf Monat 
-            'left = (Me.tfspalte - 1) * boxWidth + 0.5
-            'width = Me.Dauer * boxWidth - 1
             height = 0.8 * boxHeight
         Else
             Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
@@ -2178,10 +2158,6 @@ Public Class clsProjekt
                     ' Änderung 28.11 jetzt wird tagesgenau positioniert 
                     left = (phasenStart / 365) * boxWidth * 12
                     width = ((phasenDauer) / 365) * boxWidth * 12
-
-                    ' Alte Positionierung, als nur auf den Monat positioniert wurde 
-                    'left = (phasenStart - 1) * boxWidth + 0.5
-                    'width = phasenDauer * boxWidth - 1
                     height = 0.8 * boxHeight
                 Else
                     If top <= 0 Then
@@ -2193,10 +2169,6 @@ Public Class clsProjekt
 
                     left = (phasenStart / 365) * boxWidth * 12
                     width = ((phasenDauer) / 365) * boxWidth * 12
-
-                    ' Alte Positionierung, als nur auf dne Monat positioniert wurde 
-                    'left = (phasenStart - 1) * boxWidth + 0.5
-                    'width = phasenDauer * boxWidth - 1
                     height = 0.6 * boxHeight
                 End If
 
@@ -2308,10 +2280,13 @@ Public Class clsProjekt
         'Dim ratio As Double = tagebisResult / anzahlTage
 
         If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
-            top = topOfMagicBoard + (Me.tfZeile - 1.0) * boxHeight - boxWidth / 2
+            'top = topOfMagicBoard + (Me.tfZeile - 1.0) * boxHeight - boxWidth / 2
+            top = topOfMagicBoard + (Me.tfZeile - 1.0) * boxHeight + boxHeight * 0.05
             left = (msStart / 365) * boxWidth * 12 - boxWidth * 0.5 * faktor
-            width = boxWidth
-            height = boxWidth
+            'width = boxWidth
+            'height = boxWidth
+            width = boxHeight * 0.8
+            height = boxHeight * 0.8
         Else
             Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
         End If

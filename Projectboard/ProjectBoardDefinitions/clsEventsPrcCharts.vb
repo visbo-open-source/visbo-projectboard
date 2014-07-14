@@ -304,6 +304,7 @@ Public Class clsEventsPrcCharts
                 ' hier werden die Werte der Optimierung vermerkt: welche Projekte müssen verschoben werden , um welchen Offset 
 
                 Dim OptimierungsErgebnis As New SortedList(Of String, clsOptimizationObject)
+                Dim shpElement As Microsoft.Office.Interop.Excel.Shape
 
                 enableOnUpdate = False
 
@@ -338,13 +339,27 @@ Public Class clsEventsPrcCharts
                                             Call .syncXWertePhases()
                                         End If
 
+                                        shpElement = ShowProjekte.getShape(.name)
+
+                                        Dim typCollection As New Collection
+                                        typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                                        typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                                        Dim phaseList As Collection = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+
+                                        typCollection.Clear()
+                                        typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                                        typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                                        Dim milestoneList As Collection = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+
+
+
                                         ' jetzt wird das Shape in der Plantafel gelöscht 
                                         Call clearProjektinPlantafel(.name)
 
                                         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                                         ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                                         Dim tmpCollection As New Collection
-                                        Call ZeichneProjektinPlanTafel(tmpCollection, .name, .tfZeile)
+                                        Call ZeichneProjektinPlanTafel(tmpCollection, .name, .tfZeile, phaseList, milestoneList)
                                     End If
 
                                 End With

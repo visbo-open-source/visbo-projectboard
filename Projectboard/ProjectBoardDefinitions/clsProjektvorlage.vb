@@ -888,7 +888,7 @@
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
-                    costname = ErgebnisListe.Item(r)
+                    costname = ErgebnisListe.Item(r).ToString
 
                     ReDim costValues(_Dauer - 1)
                     costValues = Me.getKostenBedarf(costname)

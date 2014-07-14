@@ -13,6 +13,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using VBCollection = Microsoft.VisualBasic.Collection;
 using System.ComponentModel;
 
 using ScottLogic.Shapes;
@@ -215,7 +216,8 @@ namespace ScottLogic.Controls.PieChart
 
                     // Methodenaufruf draw Symbols
                     int farbID = collectionView.CurrentPosition;
-                    SortedList<string, string> nameList = new SortedList<string, string>();
+                    
+                    VBCollection nameList = new VBCollection();
                     Projekte.zeichneMilestones(nameList, farbID, false);
                     parent.Cursor = Cursors.Arrow;
                 }

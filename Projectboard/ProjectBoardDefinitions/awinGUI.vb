@@ -71,7 +71,7 @@ Public Module awinGUI
     ''' <param name="width"></param>
     ''' <param name="height"></param>
     ''' <remarks></remarks>
-    Sub awinCreatePortfolioDiagrams(ByRef ProjektListe As Collection, ByRef repChart As Object, isProjektCharakteristik As Boolean, _
+    Sub awinCreatePortfolioDiagrams(ByRef ProjektListe As Collection, ByRef repChart As Excel.ChartObject, isProjektCharakteristik As Boolean, _
                                          charttype As Integer, bubbleColor As Integer, showNegativeValues As Boolean, showLabels As Boolean, chartBorderVisible As Boolean, _
                                          top As Double, left As Double, width As Double, height As Double)
 
@@ -127,9 +127,9 @@ Public Module awinGUI
         If isProjektCharakteristik And ProjektListe.Count = 1 Then
             pname = ProjektListe.Item(1)
             tmpCollection.Add(pname & "#0")
-            kennung = getKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
+            kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
         Else
-            kennung = getKennung("pf", charttype, ProjektListe)
+            kennung = calcChartKennung("pf", charttype, ProjektListe)
         End If
 
         Select Case charttype
@@ -725,7 +725,7 @@ Public Module awinGUI
 
                 With pfDiagram
 
-                    .kennung = getKennung("pf", charttype, ProjektListe)
+                    .kennung = calcChartKennung("pf", charttype, ProjektListe)
                     .DiagrammTitel = diagramTitle
                     .diagrammTyp = DiagrammTypen(3)                     ' Portfolio
                     .gsCollection = ProjektListe

@@ -103,7 +103,8 @@ namespace WpfWindow
                                 myCollection.Add(name, name);
 
                             }
-                            object repObj = null;
+                            
+                            Microsoft.Office.Interop.Excel.ChartObject repObj = null; 
                             awinDiagrams.awinCreateprcCollectionDiagram(ref myCollection, ref repObj, chTop, chLeft,
                                                                            chWidth, chHeight, false, chTyp, false);
                         }
@@ -116,7 +117,7 @@ namespace WpfWindow
                                 // wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
 
                                 myCollection.Add(name, name);
-                                object repObj = null;
+                                Microsoft.Office.Interop.Excel.ChartObject repObj = null; 
                                 
                                 awinDiagrams.awinCreateprcCollectionDiagram(ref myCollection, ref repObj, chTop, chLeft,
                                                                                chWidth, chHeight, false, chTyp, false);
@@ -146,7 +147,7 @@ namespace WpfWindow
                     else
                     {
                         int farbID = 4;
-                        SortedList<string, string> nameList = new SortedList<string, string>();
+                        VBCollection nameList = new VBCollection();
 
 
                         if (this.checkbox1.IsChecked == true)
@@ -189,7 +190,7 @@ namespace WpfWindow
                     }
 
                     // hier wird die Aktion durchgeführt 
-                    object repObj = null;
+                    Microsoft.Office.Interop.Excel.ChartObject repObj = null; 
                     
                     try
                     {
@@ -251,7 +252,7 @@ namespace WpfWindow
                             myCollection.Add(name, name);                                               
 
                         }
-                        object repObj = null;
+                        Microsoft.Office.Interop.Excel.ChartObject repObj = null; 
                         awinDiagrams.awinCreateprcCollectionDiagram(ref myCollection, ref repObj, chTop, chLeft,
                                                                        chWidth, chHeight, false, chTyp, false);
                     }
@@ -264,7 +265,7 @@ namespace WpfWindow
                             // wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
 
                             myCollection.Add(name, name);
-                            object repObj = null;
+                            Microsoft.Office.Interop.Excel.ChartObject repObj = null; 
                             awinDiagrams.awinCreateprcCollectionDiagram(ref myCollection, ref repObj, chTop, chLeft,
                                                                            chWidth, chHeight, false, chTyp, false);
 

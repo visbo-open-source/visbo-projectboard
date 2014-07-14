@@ -498,7 +498,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                     With singleShp
 
-                        If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                        If isProjectType(shapeArt) Then
 
                             If .Name <> .TextFrame2.TextRange.Text Then
                                 ' das Shape wurde vom Nutzer umbenannt 
@@ -551,7 +551,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                             End If
 
-                            End If
+                        End If
                     End With
                 Next
             Catch ex As Exception
@@ -1051,7 +1051,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         Call awinShowNoShowProject(pname:=.Name)
 
@@ -1135,7 +1135,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
                         Call awinBeauftragung(pname:=.Name, type:=0)
                     End If
                 End With
@@ -1186,7 +1186,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
                         Call awinBeauftragung(pname:=.Name, type:=1)
                     End If
                 End With
@@ -1234,7 +1234,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
                         Call awinCancelBeauftragung(pname:=.Name)
                     End If
                 End With
@@ -1287,7 +1287,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         Try
                             Call awinDeleteChartorProject(vprojektname:=.Name, firstCall:=firstCall)
@@ -1595,7 +1595,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     shapeArt = kindOfShape(singleShp)
 
                     With singleShp
-                        If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                        If isProjectType(shapeArt) Then
 
                             Try
                                 hproj = ShowProjekte.getProject(singleShp.Name)
@@ -2027,8 +2027,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 Dim tmpCollection As New Collection
                 Call moveShapesDown(tmpCollection, hproj.tfZeile + 1, anzahlZeilen, 0)
                 'Call ZeichneProjektinPlanTafel2(pname, hproj.tfZeile)
-
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile)
+                Dim listCollection As New Collection
+                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, listCollection, listCollection)
 
 
                 appInstance.EnableEvents = True
@@ -2095,7 +2095,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     Exit Sub
                 End Try
 
-                Dim repObj As Object
+                Dim repObj As Excel.ChartObject
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
 
@@ -2182,7 +2182,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
-                Dim repObj As Object = Nothing
+                Dim repObj As Excel.ChartObject = Nothing
 
                 Try
                     Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)
@@ -2261,7 +2261,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 width = hproj.anzahlRasterElemente * boxWidth + 10
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
-                Dim repObj As Object = Nothing
+                Dim repObj As Excel.ChartObject = Nothing
 
                 Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)
 
@@ -2340,7 +2340,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
-                Dim repObj As Object = Nothing
+                Dim repObj As Excel.ChartObject = Nothing
 
 
                 Try
@@ -2412,7 +2412,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         myCollection.Add(.Name)
                         top = .Top + boxHeight + 2
@@ -2423,7 +2423,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     End If
                 End With
             Next
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
             Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
@@ -2467,7 +2467,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         myCollection.Add(.Name)
                         top = .Top + boxHeight + 2
@@ -2478,7 +2478,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     End If
                 End With
             Next
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
             'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
@@ -2530,7 +2530,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         myCollection.Add(.Name, .Name)
                         top = .Top + boxHeight + 2
@@ -2568,7 +2568,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             Next
 
             If myCollection.Count > 0 Then
-                Dim obj As New Object
+                Dim obj As Excel.ChartObject = Nothing
                 Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.Dependencies, 0, False, True, True, top, left, width, height)
             Else
                 Call MsgBox("diese Projekte haben keine Abhängigkeiten")
@@ -2620,7 +2620,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         myCollection.Add(.Name)
                         top = .Top + boxHeight + 2
@@ -2644,7 +2644,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 height = 450
             End If
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
@@ -2924,7 +2924,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         Try
                             hproj = ShowProjekte.getProject(.Name)
@@ -2964,7 +2964,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 reportObj = Nothing
 
 
-                Dim tmpObj As Object = Nothing
+                Dim tmpObj As Excel.ChartObject = Nothing
                 Call awinCreateStatusDiagram1(projektliste, tmpObj, compareTyp, auswahl, qualifier, True, True, _
                                                top, left, width, height)
 
@@ -2998,7 +2998,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim farbTyp As Integer = 1
         Dim numberIt As Boolean = False
-        Dim namelist As New SortedList(Of String, String)
+        Dim namelist As New Collection
 
         Call projektTafelInit()
 
@@ -3020,7 +3020,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim farbTyp As Integer = 2
         Dim numberIt As Boolean = False
-        Dim namelist As New SortedList(Of String, String)
+        Dim namelist As New Collection
 
         Call projektTafelInit()
 
@@ -3044,7 +3044,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim farbTyp As Integer = 3
         Dim numberIt As Boolean = False
-        Dim namelist As New SortedList(Of String, String)
+        Dim namelist As New Collection
 
         Call projektTafelInit()
 
@@ -3066,7 +3066,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim farbTyp As Integer = 0
         Dim numberIt As Boolean = False
-        Dim namelist As New SortedList(Of String, String)
+        Dim namelist As New Collection
 
         Call projektTafelInit()
 
@@ -3087,7 +3087,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim farbTyp As Integer = 4
         Dim numberIt As Boolean = False
-        Dim namelist As New SortedList(Of String, String)
+        Dim namelist As New Collection
 
         Call projektTafelInit()
 
@@ -3116,7 +3116,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
 
         Dim listOfItems As New Collection
-        Dim nameList As New SortedList(Of String, String)
+        Dim nameList As New Collection
         Dim title As String = "Meilensteine visualisieren"
 
         Dim repObj As Object = Nothing
@@ -3154,8 +3154,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             If nameList.Count > 0 Then
 
-                For Each kvp As KeyValuePair(Of String, String) In nameList
-                    listOfItems.Add(kvp.Key)
+                For Each tmpName As String In nameList
+                    listOfItems.Add(tmpName)
                 Next
 
                 ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
@@ -3198,7 +3198,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
     Public Sub PTShowAllMilestonesByName(Control As IRibbonControl)
 
         Dim listOfItems As New Collection
-        Dim nameList As New SortedList(Of String, String)
+        Dim nameList As New Collection
         Dim title As String = "Meilensteine visualisieren"
 
         Dim repObj As Object = Nothing
@@ -3213,8 +3213,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 If nameList.Count > 0 Then
 
-                    For Each kvp As KeyValuePair(Of String, String) In nameList
-                        listOfItems.Add(kvp.Key)
+                    For Each tmpName As String In nameList
+                        listOfItems.Add(tmpName)
                     Next
 
                     ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
@@ -3525,9 +3525,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim von As Integer, bis As Integer
 
         Dim listOfItems As New Collection
-        Dim existingNames As New SortedList(Of String, String)
+        Dim existingNames As New Collection
 
-        Dim repObj As Object = Nothing
         Dim title As String = "Phasen visualisieren"
         Dim phaseName As String
         Dim hproj As clsProjekt
@@ -3573,7 +3572,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 For i = 1 To PhaseDefinitions.Count
                     phaseName = PhaseDefinitions.getPhaseDef(i).name
 
-                    If existingNames.ContainsKey(phaseName) Then
+                    If existingNames.Contains(phaseName) Then
                         listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
                     End If
 
@@ -3620,9 +3619,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim von As Integer, bis As Integer
 
         Dim listOfItems As New Collection
-        Dim existingNames As New SortedList(Of String, String)
+        Dim existingNames As New Collection
 
-        Dim repObj As Object = Nothing
         Dim title As String = "Phasen visualisieren"
         Dim phaseName As String
 
@@ -3641,7 +3639,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 For i = 1 To PhaseDefinitions.Count
                     phaseName = PhaseDefinitions.getPhaseDef(i).name
 
-                    If existingNames.ContainsKey(phaseName) Then
+                    If existingNames.Contains(phaseName) Then
                         listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
                     End If
 
@@ -3678,7 +3676,6 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim listOfItems As New Collection
         'Dim left As Double, top As Double, height As Double, width As Double
 
-        Dim repObj As Object = Nothing
         Dim phaseName As String
 
         Call projektTafelInit()
@@ -3724,8 +3721,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim listOfItems As New Collection
 
-        Dim repObj As Object = Nothing
-        Dim nameList As New SortedList(Of String, String)
+        Dim nameList As New Collection
 
         Call projektTafelInit()
 
@@ -3736,8 +3732,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 If nameList.Count > 0 Then
 
-                    For Each kvp As KeyValuePair(Of String, String) In nameList
-                        listOfItems.Add(kvp.Key)
+                    For Each tmpName As String In nameList
+                        listOfItems.Add(tmpName)
                     Next
 
                     ' jetzt stehen in der listOfItems die Namen der Rollen 
@@ -3845,7 +3841,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim engpassValue As Double = -100000.0
         Dim curValue As Double
 
-        Dim repObj As Object = Nothing
+        Dim repObj As Excel.ChartObject = Nothing
 
         Call projektTafelInit()
 
@@ -4123,7 +4119,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             width = 600
             height = 450
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
@@ -4185,7 +4181,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             width = 600
             height = 450
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
@@ -4280,7 +4276,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             width = 600
             height = 450
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 If myCollection.Count > 0 Then
@@ -4359,7 +4355,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             width = 600
             height = 450
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 If myCollection.Count > 0 Then
@@ -4442,7 +4438,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             width = 600
             height = 450
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 If myCollection.Count > 0 Then
@@ -4521,7 +4517,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             height = 450
 
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
@@ -4585,7 +4581,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             height = 450
 
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ZeitRisiko, 0, False, True, True, top, left, width, height)
@@ -4648,7 +4644,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             End With
 
-            Dim obj As Object = Nothing
+            Dim obj As Excel.ChartObject = Nothing
             Call awinCreateBudgetErgebnisDiagramm(obj, top, left, width, height, False, False)
 
         Else
@@ -4708,7 +4704,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
 
 
-            Dim obj As Object = Nothing
+            Dim obj As Excel.ChartObject = Nothing
             Call awinCreateErgebnisDiagramm(obj, top, left, width, height, False, False)
 
 
@@ -4804,7 +4800,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 appInstance.ScreenUpdating = False
                 appInstance.EnableEvents = False
 
-                Dim dummyObj As New Object
+                Dim dummyObj As Excel.ChartObject = Nothing
                 Dim hproj As clsProjekt
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name)
@@ -5516,7 +5512,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                         width = System.Math.Max(nrSnapshots * boxWidth * 0.65, 300)
 
                         height = 16 * boxHeight
-                        Dim repObj As Object = Nothing
+                        Dim repObj As Excel.ChartObject = Nothing
                         Call createTrendSfit(repObj, top, left, height, width)
 
                     Else
@@ -5624,7 +5620,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     width = System.Math.Max(nrSnapshots * boxWidth * 0.65, 300)
 
                     height = 16 * boxHeight
-                    Dim repObj As Object = Nothing
+                    Dim repObj As Excel.ChartObject = Nothing
                     Call createTrendKPI(repObj, top, left, height, width)
 
                 Else

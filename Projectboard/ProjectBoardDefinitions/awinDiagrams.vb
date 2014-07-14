@@ -166,7 +166,7 @@ Public Module awinDiagrams
         If prcTyp = DiagrammTypen(0) Then
 
 
-            chtobjName = getKennung("pf", PTpfdk.Phasen, myCollection)
+            chtobjName = calcChartKennung("pf", PTpfdk.Phasen, myCollection)
 
             If myCollection.Count > 1 Then
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Phasen)
@@ -176,7 +176,7 @@ Public Module awinDiagrams
 
         ElseIf prcTyp = DiagrammTypen(1) Then
 
-            chtobjName = getKennung("pf", PTpfdk.Rollen, myCollection)
+            chtobjName = calcChartKennung("pf", PTpfdk.Rollen, myCollection)
 
             If myCollection.Count > 1 Then
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Rollen)
@@ -185,7 +185,7 @@ Public Module awinDiagrams
             End If
 
         ElseIf prcTyp = DiagrammTypen(2) Then
-            chtobjName = getKennung("pf", PTpfdk.Kosten, myCollection)
+            chtobjName = calcChartKennung("pf", PTpfdk.Kosten, myCollection)
 
             If myCollection.Count > 1 Then
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Kosten)
@@ -682,7 +682,7 @@ Public Module awinDiagrams
     ''' <param name="isCockpitChart"></param>
     ''' <param name="prcTyp"></param>
     ''' <remarks></remarks>
-    Sub awinCreateprcCollectionDiagram(ByRef myCollection As Collection, ByRef repObj As Object, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
+    Sub awinCreateprcCollectionDiagram(ByRef myCollection As Collection, ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
                                        ByVal isCockpitChart As Boolean, ByVal prcTyp As String, ByVal calledfromReporting As Boolean)
 
         Dim von As Integer, bis As Integer
@@ -764,7 +764,7 @@ Public Module awinDiagrams
         If prcTyp = DiagrammTypen(0) Then
 
 
-            chtobjName = getKennung("pf", PTpfdk.Phasen, myCollection)
+            chtobjName = calcChartKennung("pf", PTpfdk.Phasen, myCollection)
 
             If myCollection.Count > 1 Then
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Phasen)
@@ -774,7 +774,7 @@ Public Module awinDiagrams
 
         ElseIf prcTyp = DiagrammTypen(1) Then
 
-            chtobjName = getKennung("pf", PTpfdk.Rollen, myCollection)
+            chtobjName = calcChartKennung("pf", PTpfdk.Rollen, myCollection)
 
             If myCollection.Count > 1 Then
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Rollen)
@@ -783,7 +783,7 @@ Public Module awinDiagrams
             End If
 
         ElseIf prcTyp = DiagrammTypen(2) Then
-            chtobjName = getKennung("pf", PTpfdk.Kosten, myCollection)
+            chtobjName = calcChartKennung("pf", PTpfdk.Kosten, myCollection)
 
             If myCollection.Count > 1 Then
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Kosten)
@@ -797,7 +797,7 @@ Public Module awinDiagrams
             diagramTitle = "Ergebnis-Übersicht"
 
         ElseIf prcTyp = DiagrammTypen(5) Then
-            chtobjName = getKennung("pf", PTpfdk.Meilenstein, myCollection)
+            chtobjName = calcChartKennung("pf", PTpfdk.Meilenstein, myCollection)
 
             If myCollection.Count > 1 Then
                 diagramTitle = portfolioDiagrammtitel(PTpfdk.Meilenstein)
@@ -1201,7 +1201,7 @@ Public Module awinDiagrams
                         '    .Format.Line.ForeColor
                         'End With
 
-                        
+
 
                     End If
                     .HasTitle = True
@@ -1489,7 +1489,7 @@ Public Module awinDiagrams
             ElseIf prcTyp = DiagrammTypen(4) Then
                 diagramTitle = "Ergebnis-Übersicht"
             ElseIf prcTyp = DiagrammTypen(5) Then
-                chtobjName = getKennung("pf", PTpfdk.Meilenstein, myCollection)
+                chtobjName = calcChartKennung("pf", PTpfdk.Meilenstein, myCollection)
 
                 If myCollection.Count > 1 Then
                     diagramTitle = portfolioDiagrammtitel(PTpfdk.Meilenstein)
@@ -1542,7 +1542,7 @@ Public Module awinDiagrams
                                 seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
                             Next
                         End If
-                        
+
 
                     ElseIf prcTyp = DiagrammTypen(1) Then
                         einheit = " " & awinSettings.kapaEinheit
@@ -1584,7 +1584,7 @@ Public Module awinDiagrams
                                     seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
                                 Next
                             End If
-                            
+
                         End If
 
                     ElseIf prcTyp = DiagrammTypen(4) Then
@@ -1886,7 +1886,7 @@ Public Module awinDiagrams
                         titleSumme = " (" & Format(seriesSumDatenreihe.Sum, "##,##0") & " / " & _
                                         Format(kdatenreihe.Sum, "##,##0") & " " & einheit & ")"
                     End If
-                    
+
 
                 ElseIf prcTyp = DiagrammTypen(2) Then
 
@@ -2231,7 +2231,7 @@ Public Module awinDiagrams
     End Sub
 
 
-    
+
     ''' <summary>
     ''' zeigt für den betrachteten Zeitraum das Auslastungsdiagramm an
     ''' Rolle ist beauftragt, ist ohne Arbeit, ist überlastet 
@@ -2264,7 +2264,7 @@ Public Module awinDiagrams
         Dim chtobjName As String
         Dim myCollection As New Collection
         myCollection.Add("Auslastung")
-        chtobjName = getKennung("pf", PTpfdk.Auslastung, myCollection)
+        chtobjName = calcChartKennung("pf", PTpfdk.Auslastung, myCollection)
         myCollection.Clear()
 
         If Not calledfromReporting Then
@@ -2518,7 +2518,7 @@ Public Module awinDiagrams
 
             Dim myCollection As New Collection
             myCollection.Add("ZieleV")
-            chtobjName = getKennung("pf", PTpfdk.ZieleV, myCollection)
+            chtobjName = calcChartKennung("pf", PTpfdk.ZieleV, myCollection)
             If showRangeLeft <= heuteColumn Then
                 titelTeile(0) = summentitel6
                 titelTeile(1) = textZeitraum(showRangeLeft, heuteColumn)
@@ -2534,7 +2534,7 @@ Public Module awinDiagrams
         ElseIf future = 1 Then
             Dim myCollection As New Collection
             myCollection.Add("ZieleF")
-            chtobjName = getKennung("pf", PTpfdk.ZieleF, myCollection)
+            chtobjName = calcChartKennung("pf", PTpfdk.ZieleF, myCollection)
             If heuteColumn + 1 <= showRangeRight Then
                 titelTeile(0) = summentitel7
                 titelTeile(1) = textZeitraum(getColumnOfDate(Date.Now) + 1, showRangeRight)
@@ -4214,7 +4214,7 @@ Public Module awinDiagrams
     ''' <param name="height"></param>
     ''' <param name="isCockpitChart"></param>
     ''' <remarks></remarks>
-    Sub awinCreateErgebnisDiagramm(ByRef repObj As Object, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
+    Sub awinCreateErgebnisDiagramm(ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
                                    ByVal isCockpitChart As Boolean, ByVal calledfromReporting As Boolean)
 
         Dim diagramTitle As String
@@ -4240,7 +4240,7 @@ Public Module awinDiagrams
         Dim ErgebnisListeR As New Collection
 
         mycollection.Add("Ergebniskennzahl")
-        chtobjName = getKennung("pf", PTpfdk.ErgebnisWasserfall, mycollection)
+        chtobjName = calcChartKennung("pf", PTpfdk.ErgebnisWasserfall, mycollection)
         mycollection.Clear()
 
         If Not calledfromReporting Then
@@ -4574,7 +4574,7 @@ Public Module awinDiagrams
     ''' <param name="height"></param>
     ''' <param name="isCockpitChart"></param>
     ''' <remarks></remarks>
-    Sub awinCreateBudgetErgebnisDiagramm(ByRef repObj As Object, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
+    Sub awinCreateBudgetErgebnisDiagramm(ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, _
                                    ByVal isCockpitChart As Boolean, ByVal calledfromReporting As Boolean)
 
         Dim diagramTitle As String
@@ -4609,7 +4609,7 @@ Public Module awinDiagrams
         Dim ErgebnisListeR As New Collection
 
         mycollection.Add("Projektergebnisse")
-        chtobjName = getKennung("pf", PTpfdk.Budget, mycollection)
+        chtobjName = calcChartKennung("pf", PTpfdk.Budget, mycollection)
         mycollection.Clear()
 
         If Not calledfromReporting Then
@@ -4964,7 +4964,7 @@ Public Module awinDiagrams
 
     End Sub
 
-    Sub awinCreateVerbesserungsPotentialDiagramm(ByRef repObj As Object, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, ByVal isCockpitChart As Boolean)
+    Sub awinCreateVerbesserungsPotentialDiagramm(ByRef repObj As Excel.ChartObject, ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double, ByVal isCockpitChart As Boolean)
 
         Dim diagramTitle As String
         Dim anzDiagrams As Integer

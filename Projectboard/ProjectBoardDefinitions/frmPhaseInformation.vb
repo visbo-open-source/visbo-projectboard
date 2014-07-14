@@ -24,7 +24,6 @@
         oldStart = CDate(phaseStart.Text)
         oldEnd = CDate(phaseEnde.Text)
 
-
     End Sub
 
     Private Sub phaseStart_GotFocus(sender As Object, e As EventArgs) Handles phaseStart.GotFocus

@@ -105,8 +105,8 @@ Public Module Projekte
             appInstance.ScreenUpdating = False
         End If
 
-        With appInstance.Worksheets(arrWsNames(3))
-            anzDiagrams = .ChartObjects.Count
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
             '
@@ -114,7 +114,7 @@ Public Module Projekte
             found = False
             While i <= anzDiagrams And Not found
                 Try
-                    chtTitle = .ChartObjects(i).Chart.ChartTitle.text
+                    chtTitle = CType(.ChartObjects(i), Excel.ChartObject).Chart.ChartTitle.Text
                 Catch ex As Exception
                     chtTitle = " "
                 End Try
@@ -797,7 +797,7 @@ Public Module Projekte
         'appInstance.ScreenUpdating = False
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.Phasen, tmpcollection)
+        kennung = calcChartKennung("pr", PTprdk.Phasen, tmpcollection)
 
         Try
             If auswahl = PThis.vorlage Then
@@ -1157,7 +1157,7 @@ Public Module Projekte
 
         Dim pname As String = hproj.name
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.Phasen, tmpcollection)
+        kennung = calcChartKennung("pr", PTprdk.Phasen, tmpcollection)
 
 
 
@@ -1427,7 +1427,7 @@ Public Module Projekte
 
         pName = hproj.name
         tmpcollection.Add(pName & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.StrategieRisiko, tmpcollection)
+        kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpcollection)
         isSingleProject = True
         projektListe.Add(hproj.name)
 
@@ -3073,7 +3073,7 @@ Public Module Projekte
     ''' <param name="height">Höhe des Charts</param>
     ''' <param name="width">Breite des Charts</param>
     ''' <remarks></remarks>
-    Public Sub createMsTrendAnalysisOfProject(ByRef hproj As clsProjekt, ByRef repObj As Object, ByRef myCollection As Collection, _
+    Public Sub createMsTrendAnalysisOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByRef myCollection As Collection, _
                                                  ByVal top As Double, left As Double, height As Double, width As Double)
 
         Dim kennung As String = " "
@@ -3502,7 +3502,7 @@ Public Module Projekte
                     Catch ex As Exception
 
                     End Try
-                    
+
                     .MaximumScale = tmpMaxScale.ToOADate
                     .MinimumScale = tmpMinScale.ToOADate
                     .MajorUnit = 61
@@ -3526,11 +3526,11 @@ Public Module Projekte
                     .HasLegend = False
                 End If
 
-                
+
 
             End With
 
-           
+
 
         End With
 
@@ -3563,7 +3563,7 @@ Public Module Projekte
     ''' <param name="height"></param>
     ''' <param name="width"></param>
     ''' <remarks>Kennung Phasen, Personalbedarf, Personalkosten, Sonstige Kosten, Gesamtkosten, Strategie, Ergebnis</remarks>
-    Public Sub createRessBalkenOfProject(ByRef hproj As clsProjekt, ByRef repObj As Object, ByVal auswahl As Integer, _
+    Public Sub createRessBalkenOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
                                             ByVal top As Double, left As Double, height As Double, width As Double)
 
         Dim kennung As String = " "
@@ -3596,7 +3596,7 @@ Public Module Projekte
         Dim pname As String = hproj.name
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.PersonalBalken, tmpcollection)
+        kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpcollection)
 
         If auswahl = 1 Then
             titelTeile(0) = "Personalbedarf " & zE & vbLf & pname & vbLf
@@ -3844,7 +3844,7 @@ Public Module Projekte
         Dim pname As String = hproj.name
 
         tmpCollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.PersonalBalken, tmpCollection)
+        kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpCollection)
 
         If auswahl = 1 Then
             titelTeile(0) = "Personalbedarf " & zE & vbLf & pname & vbLf
@@ -3996,7 +3996,7 @@ Public Module Projekte
     '            = 5 : Strategie / Risiko 
     '            = 6 : Ergebnis
 
-    Public Sub createCostBalkenOfProject(ByRef hproj As clsProjekt, ByRef repObj As Object, ByVal auswahl As Integer, _
+    Public Sub createCostBalkenOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
                                         ByVal top As Double, left As Double, height As Double, width As Double)
 
         Dim kennung As String
@@ -4028,7 +4028,7 @@ Public Module Projekte
         Dim pname As String = hproj.name
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.KostenBalken, tmpcollection)
+        kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
 
         If auswahl = 1 Then
 
@@ -4427,7 +4427,7 @@ Public Module Projekte
         Dim pname As String = hproj.name
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.KostenBalken, tmpcollection)
+        kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
 
         If auswahl = 1 Then
             titelTeile(0) = "Sonstige Kosten T€" & vbLf & pname & vbLf
@@ -4607,9 +4607,9 @@ Public Module Projekte
         myCollection.Add("Auslastungs-Details")
 
         If auswahl = 1 Then
-            chtobjname = getKennung("pf", PTpfdk.UeberAuslastung, myCollection)
+            chtobjname = calcChartKennung("pf", PTpfdk.UeberAuslastung, myCollection)
         Else
-            chtobjname = getKennung("pf", PTpfdk.Unterauslastung, myCollection)
+            chtobjname = calcChartKennung("pf", PTpfdk.Unterauslastung, myCollection)
         End If
         myCollection.Clear()
 
@@ -4840,7 +4840,7 @@ Public Module Projekte
     '            = 5 : Strategie / Risiko 
     '            = 6 : Ergebnis
 
-    Public Sub createRessPieOfProject(ByRef hproj As clsProjekt, ByRef repObj As Object, ByVal auswahl As Integer, _
+    Public Sub createRessPieOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
                                         ByVal top As Double, left As Double, height As Double, width As Double)
 
         'Dim kennziffer As Integer = 4
@@ -4905,7 +4905,7 @@ Public Module Projekte
         Next r
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.PersonalPie, tmpcollection)
+        kennung = calcChartKennung("pr", PTprdk.PersonalPie, tmpcollection)
 
         If auswahl = 1 Then
             titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("#####.") & zE & ")" & vbLf & pname & vbLf
@@ -5098,7 +5098,7 @@ Public Module Projekte
         Next r
 
         tmpCollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.PersonalPie, tmpCollection)
+        kennung = calcChartKennung("pr", PTprdk.PersonalPie, tmpCollection)
 
         If auswahl = 1 Then
             titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("####.#") & zE & ")" & vbLf & pname & vbLf
@@ -5174,7 +5174,7 @@ Public Module Projekte
     '            = 5 : Strategie / Risiko 
     '            = 6 : Ergebnis
 
-    Public Sub createCostPieOfProject(ByRef hproj As clsProjekt, ByRef repObj As Object, ByVal auswahl As Integer, _
+    Public Sub createCostPieOfProject(ByRef hproj As clsProjekt, ByRef repObj As Excel.ChartObject, ByVal auswahl As Integer, _
                                         ByVal top As Double, left As Double, height As Double, width As Double)
 
         Dim kennziffer As Integer = 4
@@ -5226,7 +5226,7 @@ Public Module Projekte
         'End If
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.KostenPie, tmpcollection)
+        kennung = calcChartKennung("pr", PTprdk.KostenPie, tmpcollection)
 
         If auswahl = 1 Then
             ' Alle Sonstigen Kostenarten 
@@ -5237,7 +5237,7 @@ Public Module Projekte
                 ReDim tdatenreihe(anzKostenarten - 1)
                 ReDim Xdatenreihe(anzKostenarten - 1)
             End If
-            
+
         Else
             ' alle Kostenarten - inkl Personalkosten 
             ReDim tdatenreihe(anzKostenarten)
@@ -5451,7 +5451,7 @@ Public Module Projekte
 
 
         tmpCollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.KostenPie, tmpCollection)
+        kennung = calcChartKennung("pr", PTprdk.KostenPie, tmpCollection)
 
         If auswahl = 1 Then
             ' Alle Sonstigen Kostenarten 
@@ -5564,7 +5564,7 @@ Public Module Projekte
     ''' <param name="height">Diagramm-Höhe</param>
     ''' <param name="width">Diagramm-Breite</param>
     ''' <remarks></remarks>
-    Public Sub createTrendKPI(ByRef repObj As Object, ByVal top As Double, left As Double, height As Double, width As Double)
+    Public Sub createTrendKPI(ByRef repObj As Excel.ChartObject, ByVal top As Double, left As Double, height As Double, width As Double)
 
         Dim diagramTitle As String = " "
         Dim anzDiagrams As Integer
@@ -5849,7 +5849,7 @@ Public Module Projekte
     ''' <param name="height">Diagramm-Höhe</param>
     ''' <param name="width">Diagramm-Breite</param>
     ''' <remarks></remarks>
-    Public Sub createTrendSfit(ByRef repObj As Object, ByVal top As Double, left As Double, height As Double, width As Double)
+    Public Sub createTrendSfit(ByRef repObj As Excel.ChartObject, ByVal top As Double, left As Double, height As Double, width As Double)
 
         Dim diagramTitle As String = " "
         Dim anzDiagrams As Integer
@@ -6344,7 +6344,7 @@ Public Module Projekte
     ''' wird für das Reporting benötigt 
     ''' </param>
     ''' <remarks></remarks>
-    Public Sub createProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef reportObj As Object, ByVal auswahl As Integer)
+    Public Sub createProjektErgebnisCharakteristik2(ByRef hproj As clsProjekt, ByRef reportObj As Excel.ChartObject, ByVal auswahl As Integer)
 
         Dim diagramTitle As String
         Dim anzDiagrams As Integer
@@ -6372,7 +6372,7 @@ Public Module Projekte
 
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.Ergebnis, tmpcollection)
+        kennung = calcChartKennung("pr", PTprdk.Ergebnis, tmpcollection)
 
 
         '
@@ -6684,7 +6684,7 @@ Public Module Projekte
         appInstance.EnableEvents = False
 
         tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
-        kennung = getKennung("pr", PTprdk.Ergebnis, tmpcollection)
+        kennung = calcChartKennung("pr", PTprdk.Ergebnis, tmpcollection)
 
 
         '
@@ -7077,7 +7077,7 @@ Public Module Projekte
         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
         ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
         Dim tmpCollection As New Collection
-        Call ZeichneProjektinPlanTafel(tmpCollection, pname:=pname, tryzeile:=0)
+        Call ZeichneProjektinPlanTafel(tmpCollection, pname, 0, tmpCollection, tmpCollection)
 
 
         '
@@ -7288,7 +7288,7 @@ Public Module Projekte
                 ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                 ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                 Dim tmpCollection As New Collection
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile)
+                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
             Catch ex As Exception
                 Call MsgBox(" Fehler in Beauftragung " & pname & " , Modul: awinBeauftragung")
@@ -7324,7 +7324,7 @@ Public Module Projekte
                 ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                 ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                 Dim tmpCollection As New Collection
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile)
+                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
             Catch ex As Exception
                 Call MsgBox(" Fehler in Zurücknahme Beauftragung " & pname & " , Modul: awinCancelBeauftragung")
@@ -8026,7 +8026,7 @@ Public Module Projekte
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public Function dateListsareDifferent(ByRef liste1 As SortedList(Of Date, String), _
-                                              ByRef liste2 As SortedList(Of Date, String))
+                                              ByRef liste2 As SortedList(Of Date, String)) As Boolean
         Dim isDifferent As Boolean = False
         Dim anzItems As Integer = liste1.Count
 
@@ -9037,7 +9037,7 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="farbTyp">welcher Typus soll gezeichnet werden </param>
     ''' <remarks></remarks>
-    Public Sub awinZeichneMilestones(ByVal nameList As SortedList(Of String, String), ByVal farbTyp As Integer, ByVal numberIt As Boolean)
+    Public Sub awinZeichneMilestones(ByVal nameList As Collection, ByVal farbTyp As Integer, ByVal numberIt As Boolean)
 
         'Dim request As New Request(awinSettings.databaseName)
         Dim singleShp As Excel.Shape
@@ -9146,7 +9146,8 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="pname"></param>
     ''' <remarks></remarks>
-    Public Sub ZeichneProjektinPlanTafel(ByVal noCollection As Collection, ByVal pname As String, ByVal tryzeile As Integer)
+    Public Sub ZeichneProjektinPlanTafel(ByVal noCollection As Collection, ByVal pname As String, ByVal tryzeile As Integer, _
+                                         ByVal drawPhaseList As Collection, ByVal drawMilestoneList As Collection)
 
 
         Dim drawphases As Boolean = awinSettings.drawphases
@@ -9221,7 +9222,7 @@ Public Module Projekte
             tryzeile = 2
         End If
 
-        
+
         zeile = findeMagicBoardPosition(noCollection, pname, tryzeile, start, laenge)
 
 
@@ -9247,7 +9248,8 @@ Public Module Projekte
                 For i = 1 To hproj.CountPhases
                     cphase = hproj.getPhase(i)
                     phasenName = cphase.name
-                    phaseShapeName = pname & "#" & phasenName & "#" & i.ToString
+                    phaseShapeName = projectboardShapes.calcPhaseShapeName(pname, phasenName) & i.ToString
+                    'phaseShapeName = pname & "#" & phasenName & "#" & i.ToString
 
                     Try
                         phaseShape = worksheetShapes.Item(phaseShapeName)
@@ -9264,7 +9266,8 @@ Public Module Projekte
                         cResult = cphase.getResult(r)
                         cBewertung = cResult.getBewertung(1)
 
-                        msShapeName = hproj.name & "#" & cphase.name & "#M" & r.ToString
+                        msShapeName = projectboardShapes.calcMilestoneShapeName(hproj.name, cphase.name, r)
+                        'msShapeName = hproj.name & "#" & cphase.name & "#M" & r.ToString
                         ' existiert das schon ? 
                         Try
                             milestoneShape = worksheetShapes.Item(msShapeName)
@@ -9302,7 +9305,8 @@ Public Module Projekte
 
             If drawphases And (hproj.CountPhases > 1 Or hproj.getMilestones.Count > 0) Then
                 ' stelle das Projekt im Extended Mode dar  
-                Dim shapeGroupListe() As Object
+                'Dim shapeGroupListe() As Object
+                Dim shapeGroupListe() As String
                 Dim anzGroupElemente As Integer = 0
                 Dim projectShapesCollection As New Collection
 
@@ -9332,8 +9336,8 @@ Public Module Projekte
                         Throw New Exception("in zeichneProjektinPlantafel2 : keine Shape-Erstellung möglich ...  ")
                     End Try
 
-
-                    phaseShapeName = pname & "#" & phasenName & "#" & i.ToString
+                    phaseShapeName = projectboardShapes.calcPhaseShapeName(pname, phasenName) & i.ToString
+                    'phaseShapeName = pname & "#" & phasenName & "#" & i.ToString
                     With phaseShape
                         .Name = phaseShapeName
                         .Title = phasenName
@@ -9368,8 +9372,8 @@ Public Module Projekte
 
                             hproj.calculateResultCoord(cResult.getDate, zeilenOffset, top, left, width, height)
 
-
-                            msName = hproj.name & "#" & .name & "#M" & r.ToString
+                            msName = projectboardShapes.calcMilestoneShapeName(hproj.name, .name, r)
+                            'msName = hproj.name & "#" & .name & "#M" & r.ToString
                             ' existiert das schon ? 
                             Try
                                 msShape = worksheetShapes.Item(msName)
@@ -9473,6 +9477,19 @@ Public Module Projekte
 
         ' jetzt muss das neue Shape in der ShowProjekte.ShapeListe eingetragen werden ..
         ShowProjekte.AddShape(pname, shpUID:=projectShape.ID.ToString)
+
+        ' jetzt müssen ggf die noch zu zeichnenden Meilensteine und Phasen eingezeichnet werden  
+
+        Dim msNumber As Integer = 0
+        If drawPhaseList.Count > 0 And Not drawphases Then
+            Call zeichnePhasenInProjekt(hproj, drawPhaseList, False, msNumber)
+        End If
+
+        msNumber = 0
+        If drawMilestoneList.Count > 0 And Not drawphases Then
+            Call zeichneResultMilestonesInProjekt(hproj, drawMilestoneList, 4, False, False, msNumber, False)
+        End If
+
 
         If roentgenBlick.isOn Then
             With roentgenBlick
@@ -9945,7 +9962,7 @@ Public Module Projekte
 
                             projectboardShapes.add(shpElement)
 
-                        ElseIf shapeType = PTshty.projektE Or shapeType = PTshty.projektN Then
+                        ElseIf isProjectType(shapeType) Then
 
                             projectboardShapes.add(shpElement)
                             hproj = ShowProjekte.getProject(shpElement.Name)
@@ -10018,7 +10035,7 @@ Public Module Projekte
 
                                 projectboardShapes.add(shpElement)
 
-                            ElseIf shapeType = PTshty.projektE Or shapeType = PTshty.projektN Then
+                            ElseIf isProjectType(shapeType) Then
 
                                 projectboardShapes.add(shpElement)
                                 hproj = ShowProjekte.getProject(shpElement.Name)
@@ -10068,7 +10085,8 @@ Public Module Projekte
             worksheetShapes = .Shapes
 
 
-            shpName = hproj.name & "#Status#" & heuteColumn.ToString
+            'shpName = hproj.name & "#Status#" & heuteColumn.ToString
+            shpName = projectboardShapes.calcStatusShapeName(hproj.name, heuteColumn)
             ' existiert das schon ? 
             Try
                 shpElement = worksheetShapes.Item(shpName)
@@ -10101,7 +10119,7 @@ Public Module Projekte
         End With
     End Sub
 
-    Public Sub zeichneMilestones(ByVal nameList As SortedList(Of String, String), ByVal farbTyp As Integer, ByVal numberIt As Boolean)
+    Public Sub zeichneMilestones(ByVal nameList As Collection, ByVal farbTyp As Integer, ByVal numberIt As Boolean)
         ' tue es für alle Projekte in Showprojekte 
 
 
@@ -10154,7 +10172,7 @@ Public Module Projekte
     ''' gibt an, ob vom Reporting aufgerufen
     ''' </param>
     ''' <remarks></remarks>
-    Public Sub zeichneResultMilestonesInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As SortedList(Of String, String), ByVal farbTyp As Integer, ByVal showOnlyWithinTimeFrame As Boolean, _
+    Public Sub zeichneResultMilestonesInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal farbTyp As Integer, ByVal showOnlyWithinTimeFrame As Boolean, _
                                                       ByVal numberIt As Boolean, ByRef msNumber As Integer, ByVal report As Boolean)
 
         Dim top As Double, left As Double, width As Double, height As Double
@@ -10166,6 +10184,12 @@ Public Module Projekte
         Dim shpName As String
         Dim resultColumn As Integer
         Dim onlyFew As Boolean
+        Dim projectShape As Excel.Shape
+        Dim shapeGruppe As Excel.ShapeRange
+        Dim listOFShapes As New Collection
+        Dim found As Boolean = True
+
+
 
         ' sollen nur die in der Namenliste aufgeführten Meilensteine gezeichnet werden ? 
         Try
@@ -10178,88 +10202,79 @@ Public Module Projekte
             onlyFew = False
         End Try
 
-        With appInstance.Worksheets(arrWsNames(3))
-
-            worksheetShapes = .shapes
-
-            For p = 1 To hproj.CountPhases
-
-                Dim cphase As clsPhase = hproj.getPhase(p)
 
 
-                For r = 1 To cphase.CountResults
-                    Dim cResult As clsResult
-                    Dim cBewertung As clsBewertung
-                    Dim nameIstInListe As Boolean
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
 
-                    cResult = cphase.getResult(r)
-
-                    If namenListe.ContainsKey(cResult.name) Then
-                        nameIstInListe = True
-                    Else
-                        nameIstInListe = False
-                    End If
-
-                    cBewertung = cResult.getBewertung(1)
+            worksheetShapes = .Shapes
+            ' Änderung 12.7.14 Alle Milestone Shapes in ein gruppiertes Shape
+            ' jetzt muss das Projekt-Shape gesucht werden
+            Try
+                projectShape = worksheetShapes.Item(hproj.name)
+            Catch ex As Exception
+                found = False
+                projectShape = Nothing
+            End Try
 
 
-                    resultColumn = getColumnOfDate(cResult.getDate)
 
-                    If farbTyp = 4 Or farbTyp = cBewertung.colorIndex Then
-                        ' es muss nur etwas gemacht werden , wenn entweder alle Farben gezeichnet werden oder eben die übergebene
 
-                        If (showOnlyWithinTimeFrame And (resultColumn < showRangeLeft Or resultColumn > showRangeRight)) Or _
-                            (onlyFew And Not nameIstInListe) Then
-                            ' nichts machen 
+            ' 
+            If found Then
+
+                ' jetzt muss die Liste an Shapes aufgebaut werden 
+                If projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+
+                    listOFShapes.Add(projectShape.Name)
+
+                Else
+                    shapeGruppe = projectShape.Ungroup
+                    Dim anzElements As Integer = shapeGruppe.Count
+
+                    Dim i As Integer
+                    For i = 1 To anzElements
+                        listOFShapes.Add(shapeGruppe.Item(i).Name)
+                    Next
+
+
+                End If
+
+
+
+                For p = 1 To hproj.CountPhases
+
+                    Dim cphase As clsPhase = hproj.getPhase(p)
+
+
+                    For r = 1 To cphase.CountResults
+                        Dim cResult As clsResult
+                        Dim cBewertung As clsBewertung
+                        Dim nameIstInListe As Boolean
+
+                        cResult = cphase.getResult(r)
+
+                        If namenListe.Contains(cResult.name) Then
+                            nameIstInListe = True
                         Else
-                            hproj.calculateResultCoord(cResult.getDate, top, left, width, height)
+                            nameIstInListe = False
+                        End If
 
-                            If DateDiff(DateInterval.Month, cResult.getDate, heute) >= 0 Then
-                                ' zeichne Raute für vergangenes Ziel 
-
-
-                                shpName = hproj.name & "#" & cphase.name & "#M" & r.ToString
-                                ' existiert das schon ? 
-                                Try
-                                    shpElement = worksheetShapes.Item(shpName)
-                                Catch ex As Exception
-                                    shpElement = Nothing
-                                End Try
-
-                                If shpElement Is Nothing Then
-
-                                    If report Then
-                                        top = top - 0.7 * boxWidth
-                                    End If
-                                    resultShape = .Shapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, _
-                                                                    left:=left, top:=top, width:=width, height:=height)
-
-                                    With resultShape
-                                        .Name = shpName
-                                        .Title = cResult.name
-                                        .AlternativeText = CInt(PTshty.milestoneN).ToString
-                                    End With
-
-                                    If numberIt Then
-                                        Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung)
-                                        msNumber = msNumber + 1
-                                    Else
-                                        Call defineResultAppearance(hproj, 0, resultShape, cBewertung)
-                                    End If
-
-                                    ' jetzt der Liste der ProjectboardShapes hinzufügen
-                                    projectboardShapes.add(resultShape)
-
-                                    'shapesCollection.Add(resultShape.Name)
-
-                                End If
+                        cBewertung = cResult.getBewertung(1)
 
 
+                        resultColumn = getColumnOfDate(cResult.getDate)
+
+                        If farbTyp = 4 Or farbTyp = cBewertung.colorIndex Then
+                            ' es muss nur etwas gemacht werden , wenn entweder alle Farben gezeichnet werden oder eben die übergebene
+
+                            If (showOnlyWithinTimeFrame And (resultColumn < showRangeLeft Or resultColumn > showRangeRight)) Or _
+                                (onlyFew And Not nameIstInListe) Then
+                                ' nichts machen 
                             Else
-                                ' zeichne Kreis für zukünftiges Ziel ; Kreis soll etwas kleiner sein als die Raute ...
+                                hproj.calculateResultCoord(cResult.getDate, top, left, width, height)
 
-
-                                shpName = hproj.name & "#" & cphase.name & "#M" & r.ToString
+                                shpName = projectboardShapes.calcMilestoneShapeName(hproj.name, cphase.name, r)
+                                'shpName = hproj.name & "#" & cphase.name & "#M" & r.ToString
                                 ' existiert das schon ? 
                                 Try
                                     shpElement = worksheetShapes.Item(shpName)
@@ -10269,14 +10284,12 @@ Public Module Projekte
 
                                 If shpElement Is Nothing Then
 
-                                    'resultShape = .Shapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeOval, _
-                                    '                                left:=left + 0.05 * width, top:=top + 0.05 * height, width:=width * 0.9, height:=height * 0.9)
-
                                     If report Then
-                                        top = top - 0.7 * boxWidth
+                                        top = top - boxWidth
                                     End If
                                     resultShape = .Shapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, _
-                                                                    left:=left, top:=top, width:=width, height:=height)
+                                                                    Left:=left, Top:=top, Width:=width, Height:=height)
+
                                     With resultShape
                                         .Name = shpName
                                         .Title = cResult.name
@@ -10293,48 +10306,32 @@ Public Module Projekte
                                     ' jetzt der Liste der ProjectboardShapes hinzufügen
                                     projectboardShapes.add(resultShape)
 
-                                    'shapesCollection.Add(resultShape.Name)
+                                    ' jetzt der Liste von Shapes hinzufügen, die dann nachher zum ProjektShape gruppiert werden sollen 
+                                    listOFShapes.Add(resultShape.Name)
 
                                 End If
 
                             End If
+
+
                         End If
 
 
-                    End If
 
-
+                    Next
 
                 Next
 
-            Next
-
-            ' hier werden die Shapes gruppiert
-            'anzGroupElemente = shapesCollection.Count
-
-            'If anzGroupElemente > 1 Then
-            '    ' es macht nur Sinn zu gruppieren, wenn es mehr als 1 Element ist ....
-
-            '    ReDim shapeGroupListe(anzGroupElemente - 1)
-            '    For i = 1 To anzGroupElemente
-            '        shapeGroupListe(i - 1) = shapesCollection.Item(i)
-            '    Next
-
-            '    Dim ShapeGroup As Excel.ShapeRange
-            '    ShapeGroup = worksheetShapes.Range(shapeGroupListe)
-            '    shpElement = ShapeGroup.Group()
+            End If
 
 
-            '    With shpElement
-            '        .Name = key
-            '    End With
+            If listOFShapes.Count > 1 Then
+                ' hier werden die Shapes gruppiert
+                projectShape = projectboardShapes.groupShapes(listOFShapes, hproj.name)
 
-            '    'ShowProjekte.AddShape(pname, shpUID:=shpElement.ID.ToString)
-            'Else
-            '    ' nichts zu tun
-            'End If
-
-
+                ' jetzt der Liste der ProjectboardShapes hinzufügen
+                projectboardShapes.add(projectShape)
+            End If
 
 
         End With
@@ -10404,7 +10401,8 @@ Public Module Projekte
                             curDegree = PTdpndncy.schwach
                         End If
 
-                        Dim newShapeName As String = pName.Trim & "#" & dpName.Trim
+                        'Dim newShapeName As String = pName.Trim & "#" & dpName.Trim
+                        Dim newShapeName As String = projectboardShapes.calcDependencyShapeName(pName, dpName)
 
                         ' prüfen , ob das Shape schon existiert ? 
                         Try
@@ -10478,7 +10476,8 @@ Public Module Projekte
                             curDegree = PTdpndncy.schwach
                         End If
 
-                        Dim newShapeName As String = pName.Trim & "#" & dpName.Trim
+                        Dim newShapeName As String = projectboardShapes.calcDependencyShapeName(pName, dpName)
+                        'Dim newShapeName As String = pName.Trim & "#" & dpName.Trim
 
                         ' prüfen , ob das Shape schon existiert ? 
                         Try
@@ -10583,6 +10582,12 @@ Public Module Projekte
         Dim shpName As String
 
         Dim onlyFew As Boolean
+        Dim projectShape As Excel.Shape
+        Dim shapeGruppe As Excel.ShapeRange
+        Dim listOFShapes As New Collection
+        Dim found As Boolean = True
+
+
         Dim nameIstInListe As Boolean
         Dim linienDicke As Double = 2.0
 
@@ -10604,103 +10609,117 @@ Public Module Projekte
         End Try
 
 
-        With appInstance.Worksheets(arrWsNames(3))
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
 
-            worksheetShapes = .shapes
+            worksheetShapes = .Shapes
 
-
-            For p = 1 To hproj.CountPhases
-
-                Dim cphase As clsPhase = hproj.getPhase(p)
-
-                Try
-                    nameIstInListe = namenListe.Contains(cphase.name)
-                Catch ex As Exception
-                    nameIstInListe = False
-                End Try
+            ' Änderung 12.7.14 Alle Phasen Shapes in ein gruppiertes Shape
+            ' jetzt muss das Projekt-Shape gesucht werden
+            Try
+                projectShape = worksheetShapes.Item(hproj.name)
+            Catch ex As Exception
+                found = False
+                projectShape = Nothing
+            End Try
 
 
+            If found Then
 
-                If onlyFew And Not nameIstInListe Then
-                    ' nichts machen 
+
+                ' jetzt muss die Liste an Shapes aufgebaut werden 
+                If projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+
+                    listOFShapes.Add(projectShape.Name)
+
                 Else
+                    shapeGruppe = projectShape.Ungroup
+                    Dim anzElements As Integer = shapeGruppe.Count
 
-                    linienDicke = boxHeight * 0.3
+                    Dim i As Integer
+                    For i = 1 To anzElements
+                        listOFShapes.Add(shapeGruppe.Item(i).Name)
+                    Next
+                End If
 
+
+                For p = 1 To hproj.CountPhases
+
+                    Dim cphase As clsPhase = hproj.getPhase(p)
 
                     Try
-                        cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
+                        nameIstInListe = namenListe.Contains(cphase.name)
                     Catch ex As Exception
-                        Throw New ArgumentException(ex.Message)
+                        nameIstInListe = False
                     End Try
 
-                    nummer = nummer + 1
-
-                    shpName = hproj.name & "#" & cphase.name
-                    ' existiert das schon ? 
-                    Try
-                        shpElement = worksheetShapes.Item(shpName)
-                    Catch ex As Exception
-                        shpElement = Nothing
-                    End Try
-
-                    If shpElement Is Nothing Then
 
 
-                        phasenShape = .Shapes.AddConnector(MsoConnectorType.msoConnectorStraight, left1, top1, left2, top2)
+                    If onlyFew And Not nameIstInListe Then
+                        ' nichts machen 
+                    Else
 
-                        With phasenShape
-                            .Name = shpName
-                            .Title = cphase.name
-                            .AlternativeText = CInt(PTshty.phaseN).ToString
-                        End With
+                        linienDicke = boxHeight * 0.3
 
-                        If numberIt Then
-                            Call defineLineAppearance(hproj, cphase, msNumber, phasenShape, linienDicke)
-                            msNumber = msNumber + 1
-                        Else
-                            Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
+
+                        Try
+                            cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
+                        Catch ex As Exception
+                            Throw New ArgumentException(ex.Message)
+                        End Try
+
+                        nummer = nummer + 1
+
+                        shpName = projectboardShapes.calcPhaseShapeName(hproj.name, cphase.name)
+                        
+                        Try
+                            shpElement = worksheetShapes.Item(shpName)
+                        Catch ex As Exception
+                            shpElement = Nothing
+                        End Try
+
+                        If shpElement Is Nothing Then
+
+
+                            phasenShape = .Shapes.AddConnector(MsoConnectorType.msoConnectorStraight, left1, top1, left2, top2)
+
+                            With phasenShape
+                                .Name = shpName
+                                .Title = cphase.name
+                                .AlternativeText = CInt(PTshty.phaseN).ToString
+                            End With
+
+                            If numberIt Then
+                                Call defineLineAppearance(hproj, cphase, msNumber, phasenShape, linienDicke)
+                                msNumber = msNumber + 1
+                            Else
+                                Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
+                            End If
+
+                            ' jetzt der Liste der ProjectboardShapes hinzufügen
+                            projectboardShapes.add(phasenShape)
+
+                            ' jetzt der Liste von Shapes hinzufügen, die dann nachher zum ProjektShape gruppiert werden sollen 
+                            listOFShapes.Add(phasenShape.Name)
+
                         End If
 
-                        ' jetzt der Liste der ProjectboardShapes hinzufügen
-                        projectboardShapes.add(phasenShape)
 
                     End If
 
+                Next
+
+            End If
 
 
 
-                End If
+            If listOFShapes.Count > 1 Then
+                ' hier werden die Shapes gruppiert
+                projectShape = projectboardShapes.groupShapes(listOFShapes, hproj.name)
 
-            Next
+                ' jetzt der Liste der ProjectboardShapes hinzufügen
+                projectboardShapes.add(projectShape)
 
-            ' hier werden die Shapes gruppiert
-            'anzGroupElemente = shapesCollection.Count
-
-            'If anzGroupElemente > 1 Then
-            '    ' es macht nur Sinn zu gruppieren, wenn es mehr als 1 Element ist ....
-
-            '    ReDim shapeGroupListe(anzGroupElemente - 1)
-            '    For i = 1 To anzGroupElemente
-            '        shapeGroupListe(i - 1) = shapesCollection.Item(i)
-            '    Next
-
-            '    Dim ShapeGroup As Excel.ShapeRange
-            '    ShapeGroup = worksheetShapes.Range(shapeGroupListe)
-            '    shpElement = ShapeGroup.Group()
-
-
-            '    With shpElement
-            '        .Name = key
-            '    End With
-
-            '    'ShowProjekte.AddShape(pname, shpUID:=shpElement.ID.ToString)
-            'Else
-            '    ' nichts zu tun
-            'End If
-
-
-
+            End If
 
         End With
 
@@ -10833,6 +10852,12 @@ Public Module Projekte
         Dim todoListe As New Collection
 
         Dim onlyFew As Boolean
+        Dim projectShape As Excel.Shape
+        Dim shapeGruppe As Excel.ShapeRange
+        Dim listOFShapes As New Collection
+        Dim found As Boolean = True
+
+
         Dim nameIstInListe As Boolean
         Dim linienDicke As Double = 2.0
         Dim ok As Boolean = True
@@ -10863,122 +10888,127 @@ Public Module Projekte
 
         End Try
 
-        With appInstance.Worksheets(arrWsNames(3))
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
 
-            worksheetShapes = .shapes
+            worksheetShapes = .Shapes
 
-            Dim cphase As clsPhase
-
-            ' in der todoListe stehen jetzt nur Phasen, die den angegeben Zeitraum betreffen 
-            For p = 1 To todoListe.Count
-
-                Dim phaseName As String = todoListe(p)
-                cphase = hproj.getPhase(phaseName)
-
-                Try
-                    ' soll diese Phase überhaupt gezeigt werden ? 
-                    nameIstInListe = namenListe.Contains(phaseName)
-
-                Catch ex As Exception
-                    nameIstInListe = False
-                End Try
+            ' Änderung 12.7.14 Alle Phasen Shapes in ein gruppiertes Shape
+            ' jetzt muss das Projekt-Shape gesucht werden
+            Try
+                projectShape = worksheetShapes.Item(hproj.name)
+            Catch ex As Exception
+                found = False
+                projectShape = Nothing
+            End Try
 
 
+            If found Then
 
-                If onlyFew And Not nameIstInListe Then
-                    ' nichts machen 
+                ' jetzt muss die Liste an Shapes aufgebaut werden 
+                If projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+
+                    listOFShapes.Add(projectShape.Name)
+
                 Else
+                    shapeGruppe = projectShape.Ungroup
+                    Dim anzElements As Integer = shapeGruppe.Count
 
-                    linienDicke = boxHeight * 0.3
-                    'If gesamtZahl > 1 Then
-                    '    If gesamtZahl <= 10 Then
-                    '        linienDicke = linienDicke * (1 - 0.08 * gesamtZahl)
-                    '    Else
-                    '        linienDicke = linienDicke * 0.2
-                    '    End If
-                    'End If
+                    Dim i As Integer
+                    For i = 1 To anzElements
+                        listOFShapes.Add(shapeGruppe.Item(i).Name)
+                    Next
+                End If
+
+
+                Dim cphase As clsPhase
+
+                ' in der todoListe stehen jetzt nur Phasen, die den angegeben Zeitraum betreffen 
+                For p = 1 To todoListe.Count
+
+                    Dim phaseName As String = todoListe(p)
+                    cphase = hproj.getPhase(phaseName)
 
                     Try
-                        cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
+                        ' soll diese Phase überhaupt gezeigt werden ? 
+                        nameIstInListe = namenListe.Contains(phaseName)
+
                     Catch ex As Exception
-                        ok = False
+                        nameIstInListe = False
                     End Try
 
 
 
-                    If ok Then
-                        nummer = nummer + 1
+                    If onlyFew And Not nameIstInListe Then
+                        ' nichts machen 
+                    Else
 
-                        shpName = hproj.name & "#" & cphase.name
-                        ' existiert das schon ? 
+                        linienDicke = boxHeight * 0.3
+                       
                         Try
-                            shpElement = worksheetShapes.Item(shpName)
+                            cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
                         Catch ex As Exception
-                            shpElement = Nothing
+                            ok = False
                         End Try
 
-                        If shpElement Is Nothing Then
 
 
-                            phasenShape = .Shapes.AddConnector(MsoConnectorType.msoConnectorStraight, left1, top1, left2, top2)
+                        If ok Then
+                            nummer = nummer + 1
 
-                            With phasenShape
-                                .Name = shpName
-                                .Title = cphase.name
-                                .AlternativeText = CInt(PTshty.phaseN).ToString
-                            End With
+                            shpName = projectboardShapes.calcPhaseShapeName(hproj.name, cphase.name)
+                            'shpName = hproj.name & "#" & cphase.name
+                            ' existiert das schon ? 
+                            Try
+                                shpElement = worksheetShapes.Item(shpName)
+                            Catch ex As Exception
+                                shpElement = Nothing
+                            End Try
 
-                            If numberIt Then
-                                Call defineLineAppearance(hproj, cphase, msNumber, phasenShape, linienDicke)
-                                msNumber = msNumber + 1
-                            Else
-                                Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
+                            If shpElement Is Nothing Then
+
+
+                                phasenShape = .Shapes.AddConnector(MsoConnectorType.msoConnectorStraight, left1, top1, left2, top2)
+
+                                With phasenShape
+                                    .Name = shpName
+                                    .Title = cphase.name
+                                    .AlternativeText = CInt(PTshty.phaseN).ToString
+                                End With
+
+                                If numberIt Then
+                                    Call defineLineAppearance(hproj, cphase, msNumber, phasenShape, linienDicke)
+                                    msNumber = msNumber + 1
+                                Else
+                                    Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
+                                End If
+
+                                ' jetzt der Liste der ProjectboardShapes hinzufügen
+                                projectboardShapes.add(phasenShape)
+
+                                ' jetzt der Liste von Shapes hinzufügen, die dann nachher zum ProjektShape gruppiert werden sollen 
+                                listOFShapes.Add(phasenShape.Name)
+
+
                             End If
-
-                            ' jetzt der Liste der ProjectboardShapes hinzufügen
-                            projectboardShapes.add(phasenShape)
 
                         End If
 
+
                     End If
 
+                    ok = True
+                Next
 
+            End If
+            
+            If listOFShapes.Count > 1 Then
+                ' hier werden die Shapes gruppiert
+                projectShape = projectboardShapes.groupShapes(listOFShapes, hproj.name)
 
+                ' jetzt der Liste der ProjectboardShapes hinzufügen
+                projectboardShapes.add(projectShape)
 
-
-
-                End If
-
-                ok = True
-            Next
-
-            ' hier werden die Shapes gruppiert
-            'anzGroupElemente = shapesCollection.Count
-
-            'If anzGroupElemente > 1 Then
-            '    ' es macht nur Sinn zu gruppieren, wenn es mehr als 1 Element ist ....
-
-            '    ReDim shapeGroupListe(anzGroupElemente - 1)
-            '    For i = 1 To anzGroupElemente
-            '        shapeGroupListe(i - 1) = shapesCollection.Item(i)
-            '    Next
-
-            '    Dim ShapeGroup As Excel.ShapeRange
-            '    ShapeGroup = worksheetShapes.Range(shapeGroupListe)
-            '    shpElement = ShapeGroup.Group()
-
-
-            '    With shpElement
-            '        .Name = key
-            '    End With
-
-            '    'ShowProjekte.AddShape(pname, shpUID:=shpElement.ID.ToString)
-            'Else
-            '    ' nichts zu tun
-            'End If
-
-
-
+            End If
 
         End With
 
@@ -11516,8 +11546,7 @@ Public Module Projekte
         Try
             shpelement = tmpshapes.Item(pname)
             With shpelement
-                projectboardShapes.remove(.Name)
-                .Delete()
+                projectboardShapes.remove(shpelement)
             End With
         Catch ex As Exception
 
@@ -13730,7 +13759,7 @@ Public Module Projekte
     ''' wenn es sich um mehrere Projekte handelt: "x"</param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function getKennung(ByVal typ As String, ByVal index As Integer, ByVal mycollection As Collection) As String
+    Public Function calcChartKennung(ByVal typ As String, ByVal index As Integer, ByVal mycollection As Collection) As String
         Dim IDkennung As String
         Dim cName As String
 
@@ -13812,7 +13841,7 @@ Public Module Projekte
         End If
 
 
-        getKennung = IDkennung
+        calcChartKennung = IDkennung
 
 
     End Function
@@ -14489,6 +14518,7 @@ Public Module Projekte
                     .phaseName.Text = phaseName
                     .Height = 530
                     .lessonsLearnedControl.Visible = True
+
                     .erlaeuterung.Visible = True
                     .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
                     .explSonderabl.Text = "Sonderabläufe der Phase " & phaseName & _
@@ -14520,6 +14550,8 @@ Public Module Projekte
                     .projectName.Text = projectName
                     .phaseName.Text = phaseName
                     .Height = 220
+                    .lessonsLearnedControl.Visible = False
+
                     .erlaeuterung.Visible = False
 
                     .phaseStart.Text = phaseStartdate.ToShortDateString
@@ -14632,6 +14664,10 @@ Public Module Projekte
 
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
+        Dim shpElement As Excel.Shape
+        Dim phaseList As New Collection
+        Dim milestoneList As New Collection
+
 
         Dim differentToPrevious As Boolean = False
 
@@ -14765,6 +14801,18 @@ Public Module Projekte
                         If ShowProjekte.Liste.ContainsKey(pname) Then
 
 
+                            shpElement = ShowProjekte.getShape(pname)
+
+                            Dim typCollection As New Collection
+                            typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                            typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                            phaseList = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+
+                            typCollection.Clear()
+                            typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                            typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                            milestoneList = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+
                             ' Shape wird auf der Plan-Tafel gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
                             Call clearProjektinPlantafel(hproj.name)
 
@@ -14865,7 +14913,7 @@ Public Module Projekte
                         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                         ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                         Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile)
+                        Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, phaseList, milestoneList)
 
                         ' jetzt müssen die ggf aktuell gezeigten Diagramme neu gezeichnet werden 
                         Call awinNeuZeichnenDiagramme(2)
@@ -15080,15 +15128,23 @@ Public Module Projekte
 
     End Function
 
+    ''' <summary>
+    ''' extrahiert den Projekt-, Phasen- Namen bzw. die Meilenstein Nummer
+    ''' je nachdem was als type angegeben wurde 
+    ''' </summary>
+    ''' <param name="shapeName"></param>
+    ''' <param name="type">kann einer der ptshty Enumeration Werte sein</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Function extractName(ByVal shapeName As String, ByVal type As Integer) As String
 
         Dim shpNameParts() As String
         Dim msNameParts() As String
         Dim tmpName As String = ""
 
-        shpNameParts = shapeName.Split(New Char() {"#"}, 5)
+        shpNameParts = shapeName.Split(New Char() {CChar("#")}, 5)
 
-        If type = PTshty.projektE Or type = PTshty.projektN Then
+        If isProjectType(type) Then
 
             tmpName = shpNameParts(0)
 
@@ -15098,12 +15154,29 @@ Public Module Projekte
 
         ElseIf type = PTshty.milestoneE Or type = PTshty.milestoneN Then
 
-            msNameParts = shpNameParts(2).Split(New Char() {"M"}, 2)
+            msNameParts = shpNameParts(2).Split(New Char() {CChar("M")}, 2)
             tmpName = msNameParts(1)
 
         End If
 
         extractName = tmpName
+
+    End Function
+
+
+    ''' <summary>
+    ''' gibt zurück, ob es sich bei dem angegebenen Typ um einen Projekt-Typ handelt
+    ''' </summary>
+    ''' <param name="type"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isProjectType(ByVal type As Integer) As Boolean
+
+        If type = PTshty.projektE Or type = PTshty.projektN Or type = PTshty.projektC Then
+            isProjectType = True
+        Else
+            isProjectType = False
+        End If
 
     End Function
 

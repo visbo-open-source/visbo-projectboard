@@ -66,7 +66,7 @@
     <DocumentationFile>Projectboard.xml</DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
-    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
+    <NoWarn>42017,42018,42019,42032,42036</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
   </PropertyGroup>
@@ -81,7 +81,7 @@
     <DocumentationFile>Projectboard.xml</DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
-    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
+    <NoWarn>42017,42018,42019,42032,42036</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
   </PropertyGroup>

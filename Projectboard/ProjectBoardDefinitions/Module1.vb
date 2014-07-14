@@ -32,7 +32,7 @@ Public Module Module1
     Public enableOnUpdate As Boolean = True
 
     ' MongoDB ist gestartet mongoDBaktiv = true; MongoDB ist unterbrochen mongoDBaktiv=false
-    Public mongoDBaktiv = False
+    Public mongoDBaktiv As Boolean = False
 
     Public Projektvorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte
@@ -162,13 +162,14 @@ Public Module Module1
     ' Enumertaion, um in Onupdate, etc. den Typ des Shapes feststellen zu können 
     Public Enum PTshty
         projektN = 0
-        projektE = 1
-        phaseN = 2
-        phaseE = 3
-        milestoneN = 4
-        milestoneE = 5
-        status = 6
-        dependency = 7
+        projektC = 1
+        projektE = 2
+        phaseN = 3
+        phaseE = 4
+        milestoneN = 5
+        milestoneE = 6
+        status = 7
+        dependency = 8
     End Enum
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
@@ -1593,13 +1594,41 @@ Public Module Module1
 
         Dim worksheetShapes As Excel.Shapes
         Dim shpElement As Excel.Shape
-        Dim firstTime As Boolean = True
         Dim shapeType As Integer
+
+        Dim typCollection As New Collection
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formereO As Boolean = enableOnUpdate
         appInstance.EnableEvents = False
         enableOnUpdate = False
+
+
+        Select Case auswahl
+            Case 0
+                formMilestone.Visible = False
+                formStatus.Visible = False
+                formPhase.Visible = False
+
+                typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+
+            Case 1
+                formMilestone.Visible = False
+                typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+
+            Case 2
+                formStatus.Visible = False
+
+            Case 3
+                formPhase.Visible = False
+                typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+
+            Case Else
+                appInstance.EnableEvents = formerEE
+                enableOnUpdate = formereO
+                Exit Sub
+        End Select
 
         Try
             worksheetShapes = appInstance.Worksheets(arrWsNames(3)).shapes
@@ -1608,126 +1637,17 @@ Public Module Module1
 
                 shapeType = kindOfShape(shpElement)
 
-                'With shpElement
+                ' neu 
 
-                '    Select Case auswahl
-                '        Case 0
-                '            If .AutoShapeType = MsoAutoShapeType.msoShapeDiamond Or _
-                '                .AutoShapeType = MsoAutoShapeType.msoShapeOval Or _
-                '                (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue) Or _
-                '                (.Connector = MsoTriState.msoTrue And .Title = "Dependency") Then
-                '                .Delete()
-                '            End If
+                If isProjectType(shapeType) And shpElement.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
 
-                '            If firstTime Then
-                '                ' Schließen der Status Anzeige Fenster
-                '                formMilestone.Visible = False
-                '                formStatus.Visible = False
-                '                formPhase.Visible = False
-                '            End If
+                    projectboardShapes.removeChildsOfType(shpElement, typCollection)
 
+                ElseIf shapeType = PTshty.status Then
+                    projectboardShapes.remove(shpElement)
+                End If
 
-                '        Case 1
-                '            If .AutoShapeType = MsoAutoShapeType.msoShapeDiamond Then
-                '                .Delete()
-                '            End If
-                '            If firstTime Then
-                '                formMilestone.Visible = False
-                '            End If
-
-                '        Case 2
-                '            If .AutoShapeType = MsoAutoShapeType.msoShapeOval Then
-                '                .Delete()
-                '            End If
-                '            If firstTime Then
-                '                formStatus.Visible = False
-                '            End If
-
-                '        Case 3
-                '            If (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue And .Title <> "Dependency") Then
-                '                .Delete()
-                '            End If
-
-                '            If firstTime Then
-                '                formPhase.Visible = False
-                '            End If
-
-
-                '        Case 4
-                '            If (.Connector = MsoTriState.msoTrue And .Title = "Dependency") Then
-                '                .Delete()
-                '            End If
-
-                '        Case Else
-
-                '    End Select
-
-                'End With
-
-                With shpElement
-
-                    Select Case auswahl
-                        Case 0
-                            If shapeType = PTshty.milestoneN Or _
-                                shapeType = PTshty.status Or _
-                                shapeType = PTshty.phaseN Or _
-                                shapeType = PTshty.dependency Then
-
-                                projectboardShapes.remove(.Name)
-                                .Delete()
-
-                            End If
-
-                            If firstTime Then
-                                ' Schließen der Status Anzeige Fenster
-                                formMilestone.Visible = False
-                                formStatus.Visible = False
-                                formPhase.Visible = False
-                            End If
-
-
-                        Case 1
-                            If shapeType = PTshty.milestoneN Then
-                                projectboardShapes.remove(.Name)
-                                .Delete()
-                            End If
-                            If firstTime Then
-                                formMilestone.Visible = False
-                            End If
-
-                        Case 2
-                            If shapeType = PTshty.status Then
-                                projectboardShapes.remove(.Name)
-                                .Delete()
-                            End If
-                            If firstTime Then
-                                formStatus.Visible = False
-                            End If
-
-                        Case 3
-                            If shapeType = PTshty.phaseN Then
-                                projectboardShapes.remove(.Name)
-                                .Delete()
-                            End If
-
-                            If firstTime Then
-                                formPhase.Visible = False
-                            End If
-
-
-                        Case 4
-                            If shapeType = PTshty.dependency Then
-                                projectboardShapes.remove(.Name)
-                                .Delete()
-                            End If
-
-                        Case Else
-
-                    End Select
-
-                End With
-
-                firstTime = False
+                ' Ende neu 
 
             Next
         Catch ex As Exception

@@ -110,8 +110,8 @@ Public Class clsCommandBarEvents
 
 
 
-        With appInstance.Worksheets(arrWsNames(3))
-            tmpShapes = .shapes
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            tmpShapes = .Shapes
             'tmpShapes = awinSelection
 
 
@@ -131,7 +131,7 @@ Public Class clsCommandBarEvents
                     ' Änderung 5.11: prüfung auf hasChart ist notwendig, um zusammengesetztes Projekt-Shape von Chart zu unterscheiden ...
                     ' Änderung 17.11: prüfung auf Connector ist notwendig, um zusammengesetztes Shape von Connector = Phasen-Shape zu unterscheiden
 
-                    If shapeType = PTshty.projektE Or shapeType = PTshty.projektN Then
+                    If isProjectType(shapeType) Then
 
 
                         SID = shpelement.ID.ToString
@@ -197,7 +197,7 @@ Public Class clsCommandBarEvents
 
                                 End If
 
-                                
+
                             End If
 
                             Try
@@ -324,7 +324,7 @@ Public Class clsCommandBarEvents
                                 ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                                 ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                                 Dim tmpCollection As New Collection
-                                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile)
+                                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, tmpCollection, tmpCollection)
 
                                 enableOnUpdate = True
 
@@ -469,7 +469,7 @@ Public Class clsCommandBarEvents
                             Exit For
 
                         End If
-                        
+
 
                     ElseIf shapeType = PTshty.status Then
                         ' war vorher: 

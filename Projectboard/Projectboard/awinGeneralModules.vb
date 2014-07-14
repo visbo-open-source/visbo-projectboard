@@ -2206,7 +2206,7 @@ Public Module awinGeneralModules
                     ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                     ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                     Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, kvp.Value.name, kvp.Value.tfZeile)
+                    Call ZeichneProjektinPlanTafel(tmpCollection, kvp.Value.name, kvp.Value.tfZeile, tmpCollection, tmpCollection)
 
                 Catch ex As Exception
                     ' nichts tun - das Projekt ist einfach nur schon da .... 
@@ -2232,7 +2232,7 @@ Public Module awinGeneralModules
                     ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                     ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                     Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, kvp.Value.name, kvp.Value.tfZeile)
+                    Call ZeichneProjektinPlanTafel(tmpCollection, kvp.Value.name, kvp.Value.tfZeile, tmpCollection, tmpCollection)
 
                 Catch ex As Exception
                     Call MsgBox(ex.Message)
@@ -3154,7 +3154,7 @@ Public Module awinGeneralModules
             ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
             ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
             Dim tmpCollection As New Collection
-            Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile)
+            Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
             curZeile = lastZeile + getNeededSpace(hproj)
 
 

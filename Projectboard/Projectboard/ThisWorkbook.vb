@@ -217,7 +217,12 @@ Public Class ThisWorkbook
         Call awinKontextReset()
 
         ' hier sollen jetzt noch die Phasen weggeschrieben werden 
-        Call awinWritePhaseDefinitions()
+        Try
+            Call awinWritePhaseDefinitions()
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Schreiben Customization File")
+        End Try
+
 
 
         returnValue = projektespeichern.ShowDialog
