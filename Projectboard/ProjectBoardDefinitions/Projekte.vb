@@ -7234,7 +7234,7 @@ Public Module Projekte
 
     Public Sub awinDeleteChart(ByRef chtobj As ChartObject)
         Dim kennung As String
-
+        Dim hDiagramm As clsDiagramm
 
         ' in der DiagramList wird die letzte Position gespeichert , deshlab ist es kontra produktiv , das zu löschen 
 
@@ -7245,6 +7245,7 @@ Public Module Projekte
         End Try
 
         Try
+            hDiagramm = DiagramList.getDiagramm(kennung)
             With DiagramList.getDiagramm(kennung)
                 .top = chtobj.Top
                 .left = chtobj.Left
@@ -7276,10 +7277,16 @@ Public Module Projekte
         Dim newchtobj As Excel.ChartObject
         Dim chtobj As Excel.ChartObject
         Dim hchtobj As Excel.ChartObject
+        Dim hshape As Excel.Shape
         Dim xlsCockpits As xlNS.Workbook = Nothing
         Dim wsSheet As xlNS.Worksheet = Nothing
+        Dim sichtbarerBereich As Excel.Range
 
         Try
+            ' Merken des aktuell gesetzten sichtbaren Bereich in der ProjektTafel
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+            End With
 
             With appInstance.Worksheets(arrWsNames(3))
                 ' benötigt um die Spaltenbreite und Zeilenhöhe  zu setzen für die Tabelle in "Project Board Cockpit.xlsx", in die das neue Cockpit gespeichert wird.
@@ -7334,7 +7341,9 @@ Public Module Projekte
                         wsSheet = xlsCockpits.Worksheets.Item(i)
                         If wsSheet.Name = cockpitname Then
                             ' Tabellenblatt existiert bereits, es muss gelöscht werden und neu angelegt
+                            xlsCockpits.Worksheets.Application.DisplayAlerts = False
                             wsSheet.Delete()
+                            xlsCockpits.Worksheets.Application.DisplayAlerts = True
                             wsfound = True
                         Else
                             i = i + 1
@@ -7361,7 +7370,6 @@ Public Module Projekte
 
                     End With
 
-
                     ' Tabellenblatt existiert jetzt sicher
 
                     ' alle Charts durchgehen und in "Project Board Cockpits.xlsx" Tabelle "cockpitname" speichern
@@ -7377,8 +7385,10 @@ Public Module Projekte
 
                         found = False
                         i = 1
-                        While i <= wsSheet.ChartObjects.count And Not found
+                        anzChartsInCockpit = wsSheet.ChartObjects.count
+                        While i <= anzChartsInCockpit And Not found
                             hchtobj = wsSheet.ChartObjects(i)
+                            ' an awinLoadCockpit anpassen
                             If hchtobj.Name = chtobj.Name Then
                                 hchtobj.Delete()
                                 found = True
@@ -7386,33 +7396,287 @@ Public Module Projekte
                                 i = i + 1
                             End If
                         End While
+                     
+
 
                         ' Chart aus dem Buffer nun in das Tabellenblatt einfügen
                         wsSheet.Paste()
                         anzChartsInCockpit = wsSheet.ChartObjects.Count
 
-                        ' dem neu eingefügten Chart die richtige Position eintragen
+                        ' dem neu eingefügten Chart die richtige Position eintragen, neutralisiert um den sichtbaren Bereich
                         newchtobj = wsSheet.ChartObjects(anzChartsInCockpit)
-                        newchtobj.Top = chtobj.Top
-                        newchtobj.Left = chtobj.Left
+                        newchtobj.Top = chtobj.Top - sichtbarerBereich.Top
+                        newchtobj.Left = chtobj.Left - sichtbarerBereich.Left
+
+                        ' aus der DiagrammList noch DiagrammTyp herausholen und in das Chart bei AlternativText eintragen
+                        Dim hdiagramm As clsDiagramm
+                        i = 1
+                        found = False
+
+                        While i <= DiagramList.Count And Not found
+
+                            hdiagramm = DiagramList.getDiagramm(i)
+                            If hdiagramm.kennung = newchtobj.Name Then
+                                'newchtobj.Chart.Name = hdiagramm.diagrammTyp
+                                found = True
+                                hshape = chtobj2shape(newchtobj)
+                                hshape.Title = hdiagramm.diagrammTyp
+                                Try
+                                    For hi = 1 To hdiagramm.gsCollection.Count
+                                        If hi = 1 Then
+                                            hshape.AlternativeText = hdiagramm.gsCollection.Item(hi)
+                                        Else
+                                            hshape.AlternativeText = hshape.AlternativeText & ";" & hdiagramm.gsCollection.Item(hi)
+                                        End If
+                                    Next hi
+
+                                Catch ex As Exception
+                                    Throw New Exception("Fehler  Cockpits '" & cockpitname & vbLf & ex.Message)
+                                End Try
+
+                            End If
+                            i = i + 1
+
+                        End While
+
+
+                        ' aus der DiagrammList noch Collection herausholen und in das Chart bei Beschreibung eintragen
                         k = k + 1
 
                     End While
-                    Call MsgBox("Es wurden zu Cockpit '" & cockpitname & "' " & anzDiagrams & " Charts gespeichert")
+
+                    appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                    Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
+                    'xlsCockpits.Close(SaveChanges:=True)
+
                 Else
                     Call MsgBox("Es sind keine Charts vorhanden")
                 End If
             End With
 
-            xlsCockpits.Close(SaveChanges:=True)
-
-
         Catch ex As Exception
-            Throw New ArgumentException("Fehler beim Speichern des Cockpits '" & cockpitname & vbLf, ex.Message)
+            Throw New Exception("Fehler beim Speichern des Cockpits '" & cockpitname & vbLf & ex.Message)
         End Try
 
     End Sub
+    Public Sub awinLoadCockpit(ByVal cockpitname As String)
+        'Dim kennung As String
 
+        Dim fileName As String
+        Dim found As Boolean = False
+        Dim wsfound As Boolean = False
+        Dim fileIsOpen As Boolean = False
+        Dim anzDiagrams As Integer
+        Dim i As Integer
+        Dim k As Integer = 1
+        Dim j As Integer = 1
+        Dim logMessage As String = " "
+        Dim newchtobj As Excel.ChartObject
+        Dim hchtobj As Excel.ChartObject
+        Dim hshape As Excel.Shape
+        Dim chtobj As Excel.ChartObject
+        Dim xlsCockpits As xlNS.Workbook = Nothing
+        Dim wsSheet As xlNS.Worksheet = Nothing
+        Dim currentWS As xlNS.Worksheet = Nothing
+        Dim sichtbarerBereich As Excel.Range
+        Dim hstring As String
+
+        Try
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+            End With
+
+            currentWS = appInstance.Worksheets(arrWsNames(3))
+
+            fileName = awinPath & cockpitsFile
+
+            If My.Computer.FileSystem.FileExists(fileName) Then
+
+                Try
+
+                    xlsCockpits = appInstance.Workbooks.Open(fileName)
+                Catch ex As Exception
+
+                    i = 1
+                    While i <= appInstance.Workbooks.Count And Not fileIsOpen
+                        If appInstance.Workbooks(i).Name = fileName Then
+                            xlsCockpits = appInstance.Workbooks(i)
+                            fileIsOpen = True
+                        Else
+                            i = i + 1
+                        End If
+                    End While
+
+                    If Not fileIsOpen Then
+                        logMessage = "Öffnen von " & fileName & " fehlgeschlagen" & vbLf & _
+                                                    "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
+
+                        Throw New ArgumentException(logMessage)
+                    End If
+
+                End Try
+
+                ' richtige Tabellenblatt finden in Datei "Project Board Cockpits.xlsx" finden
+
+                i = 1
+                While i <= xlsCockpits.Worksheets.Count And Not wsfound
+                    wsSheet = xlsCockpits.Worksheets.Item(i)
+                    If wsSheet.Name = cockpitname Then
+                        ' Tabellenblatt existiert 
+                        k = 1
+                        While k <= wsSheet.ChartObjects.count
+                            chtobj = wsSheet.ChartObjects(k)
+
+
+                            chtobj.Copy()
+
+                            ' testen, ob dieses Chart bereits angezeigt wird, dann ggfls. löschen
+                            found = False
+                            j = 1
+                            While j <= currentWS.ChartObjects.Count And Not found
+                                hchtobj = currentWS.ChartObjects(j)
+                                Dim lng As Integer = chtobj.Chart.ChartTitle.Text.Length
+                                ' Überprüfen, ob das Chart bereits angezeigt wird, dann ersetzen
+                                If hchtobj.Name <> "" Then
+                                    If hchtobj.Name = chtobj.Name Then
+                                        currentWS.ChartObjects(j).Delete()
+                                        found = True
+                                    Else
+                                        Dim newtmpArray() As String
+                                        Dim tmpArray() As String
+                                        tmpArray = hchtobj.Name.Split(New Char() {CType("#", Char)}, 5)
+                                        newtmpArray = chtobj.Name.Split(New Char() {CType("#", Char)}, 5)
+                                        ' chtoj name ist aufgebaut: pr#PTprdk.kennung#pName#Auswahl
+                                        ' oder
+                                        ' chtobj name ist so: pf#zahl#zahl
+                                        If tmpArray(0) = "pr" Then
+
+                                            If tmpArray(0) = newtmpArray(0) And tmpArray(1) = newtmpArray(1) And tmpArray(3) = newtmpArray(3) Then
+                                                currentWS.ChartObjects(j).Delete()
+                                                found = True
+                                            End If
+                                        Else
+                                            'If tmpArray(0) = "pf" Then
+                                            '    If tmpArray(0) = newtmpArray(0) And tmpArray(1) = newtmpArray(1) And tmpArray(2) = newtmpArray(2) Then
+                                            '        currentWS.ChartObjects(j).Delete()
+                                            '        found = True
+                                            '    End If
+                                            'End If
+                                        End If
+                                    End If
+
+                                End If
+                                j = j + 1
+                            End While
+
+                            currentWS.Paste()
+                            anzDiagrams = currentWS.ChartObjects.Count
+                            ' dem neu eingefügten Chart die richtige Position eintragen
+                            newchtobj = currentWS.ChartObjects(anzDiagrams)
+                            newchtobj.Top = sichtbarerBereich.Top + chtobj.Top
+                            newchtobj.Left = sichtbarerBereich.Left + chtobj.Left
+
+                            ' Alternativtext herausbekommen
+                            hshape = chtobj2shape(newchtobj)
+
+                           
+                            ' hier wird die maximale Anzahl an Phasen oder Rollen oder Kosten herausgefunden
+                            Dim maxAnz As Integer = System.Math.Max(RoleDefinitions.Count, PhaseDefinitions.Count)
+                            maxAnz = System.Math.Max(maxAnz, CostDefinitions.Count)
+
+                            Dim tmpArray1() As String
+                            Dim myCollection As New Collection
+                            tmpArray1 = hshape.AlternativeText.Split(New Char() {CType(";", Char)}, maxAnz)
+
+                            ' myCollection aufbauen mit den verschiedenen Werten die im Diagramm angezeigt werden sollen
+                            For hi = 0 To tmpArray1.Count - 1
+                                hstring = tmpArray1(hi)
+                                myCollection.Add(hstring, hstring)
+                            Next hi
+
+                            ' Diagramme in die diagrammListe einfügen mit allen Angaben
+
+                            Dim prcDiagram As New clsDiagramm
+
+                            ' Anfang Event Handling für Chart 
+                            Dim prcChart As New clsEventsPrcCharts
+                            prcChart.PrcChartEvents = newchtobj.Chart
+                            prcDiagram.setDiagramEvent = prcChart
+                            ' Ende Event Handling für Chart 
+
+                            With prcDiagram
+                                .DiagrammTitel = newchtobj.Chart.ChartTitle.Text
+                                .diagrammTyp = hshape.Title.Trim
+                                .gsCollection = myCollection
+                                .isCockpitChart = False
+                                .top = newchtobj.Top
+                                .left = newchtobj.Left
+                                .width = newchtobj.Width
+                                .height = newchtobj.Height
+                                .kennung = newchtobj.Name
+                            End With
+
+                            ' eintragen in die sortierte Liste mit .kennung als dem Schlüssel 
+                            ' wenn das Diagramm bereits existiert, muss es gelöscht werden, dann neu ergänzt ... 
+                            Try
+                                DiagramList.Add(prcDiagram)
+                            Catch ex As Exception
+                                Try
+                                    DiagramList.Remove(prcDiagram.kennung)
+                                    DiagramList.Add(prcDiagram)
+                                Catch ex1 As Exception
+
+                                End Try
+                            End Try
+
+
+
+                            k = k + 1
+
+                        End While
+                        wsfound = True
+                        'Call MsgBox("Es wurden " & k - 1 & " Charts eingefügt")
+                    Else
+                        i = i + 1
+                    End If
+
+                End While
+                If Not wsfound Then
+                    Call MsgBox("Es sind keine Charts zu Cockpit '" & cockpitname & "' vorhanden.")
+                End If
+
+                xlsCockpits.Close(SaveChanges:=False)
+
+            Else
+                ' Project Board Cockpit.xlsx ist nicht vorhanden
+                Call MsgBox("Es sind keine Charts vorhanden." & vbLf & "'Project Board Cockpit.xlsx ist nicht vorhanden.")
+
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler beim Laden des Cockpits '" & cockpitname & vbLf, ex.Message)
+        End Try
+
+    End Sub
+    '
+    ''' <summary>
+    ''' gibt die Referenz für dazu zum ChartObject cho gehörige Excel.Shape zurück
+    ''' </summary>
+    ''' <param name="cho">ChartObject</param>
+    ''' <remarks></remarks>
+    Function chtobj2shape(ByRef cho As ChartObject) As Excel.Shape
+
+        Dim zo As Long
+        Dim ws As Worksheet
+        Dim shc As Excel.Shapes
+        Dim sh As Excel.Shape
+        zo = cho.ZOrder
+        ws = cho.Parent
+        shc = ws.Shapes
+        sh = shc.Item(zo)
+        chtobj2shape = sh
+
+    End Function
     '
     ''' <summary>
     ''' das Projekt beauftragen bzw. die Änderungen akzeptieren
@@ -9378,7 +9642,7 @@ Public Module Projekte
             tryzeile = 2
         End If
 
-        
+
         zeile = findeMagicBoardPosition(noCollection, pname, tryzeile, start, laenge)
 
 

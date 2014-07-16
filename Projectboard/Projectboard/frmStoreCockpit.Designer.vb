@@ -35,6 +35,7 @@ Partial Class frmStoreCockpit
         Me.ComboBox1.Margin = New System.Windows.Forms.Padding(4)
         Me.ComboBox1.Name = "ComboBox1"
         Me.ComboBox1.Size = New System.Drawing.Size(581, 24)
+        Me.ComboBox1.Sorted = True
         Me.ComboBox1.TabIndex = 1
         '
         'Label1

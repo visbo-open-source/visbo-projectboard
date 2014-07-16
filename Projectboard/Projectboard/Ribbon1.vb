@@ -317,7 +317,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim anzDiagrams As Integer
         Dim chtobj As Excel.ChartObject
-        Dim i As Integer = 0
+        Dim i As Integer = 1
 
         Call projektTafelInit()
 
@@ -325,9 +325,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             anzDiagrams = .ChartObjects.Count
 
-            While i < anzDiagrams
+            While i <= anzDiagrams
 
-                chtobj = .ChartObjects(i)
+                chtobj = .ChartObjects(1)
                 Call awinDeleteChart(chtobj)
                 i = i + 1
 
@@ -345,18 +345,61 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim storeCockpitFrm As New frmStoreCockpit
         Dim returnValue As DialogResult
         Dim cockpitName As String
+        Try
+
+            Call projektTafelInit()
+
+            ' hier muss die Auswahl des Names für das Cockpit erfolgen
+
+            returnValue = storeCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
+
+            If returnValue = DialogResult.OK Then
+
+                cockpitName = storeCockpitFrm.ComboBox1.Text
+
+                appInstance.ScreenUpdating = False
+
+                Call awinStoreCockpit(cockpitName)
+
+                appInstance.ScreenUpdating = True
+            Else
+
+
+            End If
+            ' hier muss eventuell ein Neuzeichnen erfolgen
+
+        Catch ex As Exception
+            Throw New ArgumentException("PT0SaveCockpit: Fehler:  ", ex.Message)
+        End Try
+
+    End Sub
+
+    Sub PT0ShowCockpit(control As IRibbonControl)
+
+
+        Dim i As Integer = 1
+        Dim loadCockpitFrm As New frmLoadCockpit
+        Dim returnValue As DialogResult
+        Dim cockpitName As String
 
         Call projektTafelInit()
 
         ' hier muss die Auswahl des Names für das Cockpit erfolgen
 
-        returnValue = storeCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
+        returnValue = loadCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
 
         If returnValue = DialogResult.OK Then
 
-            cockpitName = storeCockpitFrm.ComboBox1.Text
+            cockpitName = loadCockpitFrm.ListBox1.Text
 
-            Call awinStoreCockpit(cockpitName)
+            appInstance.ScreenUpdating = False
+
+            Call awinLoadCockpit(cockpitName)
+
+            Call awinNeuZeichnenDiagramme(9)
+
+            appInstance.ScreenUpdating = True
+
         Else
 
 
@@ -4285,7 +4328,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         If myCollection.Count > 0 Then
 
             With appInstance.ActiveWindow
-                sichtbarerBereich = .VisibleRange
+                sichtbarerBereich = .VisibleRange.t
                 left = sichtbarerBereich.Left + (sichtbarerBereich.Width - 600) / 2
                 If left < sichtbarerBereich.Left Then
                     left = sichtbarerBereich.Left + 2
