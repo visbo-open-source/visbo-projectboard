@@ -130,7 +130,7 @@ Public Class ThisWorkbook
         'Call MsgBox(" in Open")
 
 
-        Application.Worksheets(arrWsNames(3)).Activate()
+        CType(Application.Worksheets(arrWsNames(3)), Excel.Worksheet).Activate()
         
         plantafel = Application.ActiveWindow
         

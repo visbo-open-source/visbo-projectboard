@@ -22,6 +22,7 @@ Public Class frmSelectRPlanImport
 
         Dim listOfRPLANImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
         Try
+            Dim i As Integer
             For i = 1 To listOfRPLANImportfiles.Count
                 dateiName = Dir(listOfRPLANImportfiles.Item(i - 1))
                 RPLANImportDropbox.Items.Add(dateiName)

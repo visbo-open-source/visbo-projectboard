@@ -64,6 +64,7 @@ Public Class frmDeleteProjects
             If awinSelection.Count > 0 Then
                 'selektierte Projekte ins Formular eintragen
                 anzElements = awinSelection.Count
+                Dim i As Integer
                 For i = 1 To anzElements
 
                     singleShp = awinSelection.Item(i)
@@ -264,7 +265,7 @@ Public Class frmDeleteProjects
     End Sub
     Private Sub TreeViewProjekte_AfterCheck(sender As Object, e As Windows.Forms.TreeViewEventArgs) Handles TreeViewProjekte.AfterCheck
         Dim node As TreeNode
-        Dim schluessel = ""
+        Dim schluessel As String = ""
         Dim selCollection As SortedList(Of Date, String)
         Dim timeStamp As Date
 
@@ -303,6 +304,7 @@ Public Class frmDeleteProjects
 
                     selCollection = projektHistorien.getTimeStamps(schluessel)
 
+                    Dim i As Integer
                     For i = 1 To selCollection.Count
                         timeStamp = selCollection.ElementAt(i - 1).Key
                         selectedToDelete.Add(schluessel, timeStamp)
@@ -315,6 +317,7 @@ Public Class frmDeleteProjects
 
                     selCollection = projektHistorien.getTimeStamps(schluessel)
 
+                    Dim i As Integer
                     For i = 1 To selCollection.Count
                         timeStamp = selCollection.ElementAt(i - 1).Key
                         selectedToDelete.Remove(schluessel, timeStamp)

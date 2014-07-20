@@ -83,7 +83,7 @@ Public Module testModule
                     worker.ReportProgress(0, e)
                     'frmSelectPPTTempl.statusNotification.Text = " Report für Projekt '" & hproj.name & " wird erstellt !"
 
-                    createPPTSlidesFromProject(hproj, vorlagenDateiName)
+                    Call createPPTSlidesFromProject(hproj, vorlagenDateiName)
                     tatsErstellt = tatsErstellt + 1
 
                 End If
@@ -224,8 +224,9 @@ Public Module testModule
             ' jetzt werden die Charts gezeichnet 
 
             anzShapes = pptSlide.Shapes.Count
-            Dim newShape As pptNS.ShapeRange
-            Dim newShape2 As pptNS.ShapeRange
+            Dim newShapeRange As pptNS.ShapeRange
+            Dim newShapeRange2 As pptNS.ShapeRange
+            Dim newShape As pptNS.Shape
 
             ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
             For i = 1 To anzShapes
@@ -586,10 +587,10 @@ Public Module testModule
 
                                 If Not repObj1 Is Nothing Then
                                     Try
-                                        repObj1.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-                                        newShape = pptSlide.Shapes.Paste
+                                        repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                        newShapeRange = pptSlide.Shapes.Paste
 
-                                        With newShape(1)
+                                        With newShapeRange(1)
                                             .Top = top + 0.02 * height
                                             .Left = left + 0.02 * width
                                             .Width = width * 0.96
@@ -601,10 +602,10 @@ Public Module testModule
 
                                         If Not repObj2 Is Nothing Then
                                             Try
-                                                repObj2.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-                                                newShape2 = pptSlide.Shapes.Paste
+                                                repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                                newShapeRange2 = pptSlide.Shapes.Paste
 
-                                                With newShape2(1)
+                                                With newShapeRange2(1)
                                                     .Top = topNext
                                                     .Left = left + 0.02 * width
                                                     .Width = width * 0.96
@@ -613,11 +614,11 @@ Public Module testModule
 
                                                 ' jetzt muss noch geschaut werden, ob die Shapes zu viele Höhe beanspruchen 
                                                 Try
-                                                    If newShape(1).Height + newShape2(1).Height > 0.96 * height Then
-                                                        widthFaktor = 0.96 * height / (newShape(1).Height + newShape2(1).Height)
-                                                        newShape.Width = widthFaktor * newShape.Width
-                                                        newShape2.Width = widthFaktor * newShape2.Width
-                                                        newShape2.Top = newShape.Top + newShape.Height + 0.02 * height
+                                                    If newShapeRange(1).Height + newShapeRange2(1).Height > 0.96 * height Then
+                                                        widthFaktor = 0.96 * height / (newShapeRange(1).Height + newShapeRange2(1).Height)
+                                                        newShapeRange(1).Width = widthFaktor * newShapeRange(1).Width
+                                                        newShapeRange2(1).Width = widthFaktor * newShapeRange2(1).Width
+                                                        newShapeRange2(1).Top = newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height
                                                     End If
                                                 Catch ex As Exception
 
@@ -694,10 +695,10 @@ Public Module testModule
 
                                 If Not repObj1 Is Nothing Then
                                     Try
-                                        repObj1.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-                                        newShape = pptSlide.Shapes.Paste
+                                        repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                        newShapeRange = pptSlide.Shapes.Paste
 
-                                        With newShape(1)
+                                        With newShapeRange(1)
                                             .Top = top + 0.02 * height
                                             .Left = left + 0.02 * width
                                             .Width = width * 0.96
@@ -709,10 +710,10 @@ Public Module testModule
 
                                         If Not repObj2 Is Nothing Then
                                             Try
-                                                repObj2.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-                                                newShape2 = pptSlide.Shapes.Paste
+                                                repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                                newShapeRange2 = pptSlide.Shapes.Paste
 
-                                                With newShape2(1)
+                                                With newShapeRange2(1)
                                                     .Top = topNext
                                                     .Left = left + 0.02 * width
                                                     .Width = width * 0.96
@@ -722,11 +723,11 @@ Public Module testModule
                                                 repObj2.Delete()
 
                                                 ' jetzt muss noch geschaut werden, ob die Shapes zu viele Höhe beanspruchen 
-                                                If newShape(1).Height + newShape2(1).Height > 0.96 * height Then
-                                                    widthFaktor = 0.96 * height / (newShape(1).Height + newShape2(1).Height)
-                                                    newShape.Width = widthFaktor * newShape.Width
-                                                    newShape2.Width = widthFaktor * newShape2.Width
-                                                    newShape2.Top = newShape.Top + newShape.Height + 0.02 * height
+                                                If newShapeRange(1).Height + newShapeRange2(1).Height > 0.96 * height Then
+                                                    widthFaktor = 0.96 * height / (newShapeRange(1).Height + newShapeRange2(1).Height)
+                                                    newShapeRange(1).Width = widthFaktor * newShapeRange(1).Width
+                                                    newShapeRange2(1).Width = widthFaktor * newShapeRange2(1).Width
+                                                    newShapeRange2(1).Top = newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height
                                                 End If
                                             Catch ex As Exception
 
@@ -795,10 +796,10 @@ Public Module testModule
 
                                 If Not repObj1 Is Nothing Then
                                     Try
-                                        repObj1.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-                                        newShape = pptSlide.Shapes.Paste
+                                        repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                        newShapeRange = pptSlide.Shapes.Paste
 
-                                        With newShape(1)
+                                        With newShapeRange(1)
                                             .Top = top + 0.02 * height
                                             .Left = left + 0.02 * width
                                             .Width = width * 0.96
@@ -810,10 +811,10 @@ Public Module testModule
 
                                         If Not repObj2 Is Nothing Then
                                             Try
-                                                repObj2.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-                                                newShape2 = pptSlide.Shapes.Paste
+                                                repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                                newShapeRange2 = pptSlide.Shapes.Paste
 
-                                                With newShape2(1)
+                                                With newShapeRange2(1)
                                                     .Top = topNext
                                                     .Left = left + 0.02 * width
                                                     .Width = width * 0.96
@@ -823,11 +824,11 @@ Public Module testModule
                                                 repObj2.Delete()
 
                                                 ' jetzt muss noch geschaut werden, ob die Shapes zu viele Höhe beanspruchen 
-                                                If newShape(1).Height + newShape2(1).Height > 0.96 * height Then
-                                                    widthFaktor = 0.96 * height / (newShape(1).Height + newShape2(1).Height)
-                                                    newShape.Width = widthFaktor * newShape.Width
-                                                    newShape2.Width = widthFaktor * newShape2.Width
-                                                    newShape2.Top = newShape.Top + newShape.Height + 0.02 * height
+                                                If newShapeRange(1).Height + newShapeRange2(1).Height > 0.96 * height Then
+                                                    widthFaktor = 0.96 * height / (newShapeRange(1).Height + newShapeRange2(1).Height)
+                                                    newShapeRange(1).Width = widthFaktor * newShapeRange(1).Width
+                                                    newShapeRange2(1).Width = widthFaktor * newShapeRange2(1).Width
+                                                    newShapeRange2(1).Top = newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height
                                                 End If
                                             Catch ex As Exception
 
@@ -1506,7 +1507,8 @@ Public Module testModule
                                     End With
 
                                     reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
+                                    newShapeRange = pptSlide.Shapes.Paste
+                                    newShape = newShapeRange.Item(1)
 
                                     With newShape
                                         .Top = top + 0.02 * height
@@ -1725,7 +1727,9 @@ Public Module testModule
                 Next
 
 
-                Dim newShape As pptNS.ShapeRange
+                Dim newShapeRange As pptNS.ShapeRange
+                Dim newShape As pptNS.Shape
+
                 Dim boxName As String
 
                 For Each tmpShape As pptNS.Shape In listofShapes
@@ -1811,15 +1815,20 @@ Public Module testModule
                                     End With
 
                                     With appInstance.Worksheets(arrWsNames(3))
+
+                                        
+
                                         rng = .range(.cells(1, minColumn), .cells(maxzeile, maxColumn))
                                         colorrng = .range(.cells(2, showRangeLeft), .cells(maxzeile, showRangeRight))
+                                        
+                                        If Not awinSettings.showTimeSpanInPT Then
 
-                                        Try
-                                            colorrng.Interior.Color = showtimezone_color
-                                        Catch ex1 As Exception
+                                            Try
+                                                colorrng.Interior.Color = showtimezone_color
+                                            Catch ex1 As Exception
 
-                                        End Try
-
+                                            End Try
+                                        End If
 
                                         ' hier werden die Milestones gezeichnet 
                                         If qualifier = "Milestones R" Then
@@ -1860,8 +1869,14 @@ Public Module testModule
                                         End If
 
 
-                                        rng.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-                                        colorrng.Interior.ColorIndex = -4142
+                                        rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                        newShapeRange = pptSlide.Shapes.Paste
+                                        newShape = newShapeRange.Item(1)
+
+                                        If Not awinSettings.showTimeSpanInPT Then
+                                            colorrng.Interior.ColorIndex = -4142
+                                        End If
+
 
                                         ' lösche alle Milestones wieder 
                                         If qualifier <> "" Then
@@ -1876,11 +1891,12 @@ Public Module testModule
                                     End With
 
 
-                                    newShape = pptSlide.Shapes.Paste
+
                                     Dim ratio As Double
+                                    ratio = height / width
 
                                     With newShape
-                                        ratio = height / width
+
                                         If ratio < .Height / .Width Then
                                             ' orientieren an width 
                                             .Width = width * 0.96
@@ -1934,11 +1950,14 @@ Public Module testModule
                                         rng = .range(.cells(1, minColumn), .cells(maxzeile, maxColumn))
                                         colorrng = .range(.cells(2, showRangeLeft), .cells(maxzeile, showRangeRight))
 
-                                        Try
-                                            colorrng.Interior.Color = showtimezone_color
-                                        Catch ex1 As Exception
+                                        If Not awinSettings.showTimeSpanInPT Then
 
-                                        End Try
+                                            Try
+                                                colorrng.Interior.Color = showtimezone_color
+                                            Catch ex1 As Exception
+
+                                            End Try
+                                        End If
 
                                         ' hier werden die Phasen gezeichnet 
                                         Call awinDeleteMilestoneShapes(0)
@@ -1967,8 +1986,17 @@ Public Module testModule
                                         If phNameCollection.Count > 0 Then
 
                                             Call awinZeichnePhasen(phNameCollection, False)
-                                            rng.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-                                            colorrng.Interior.ColorIndex = -4142
+                                            rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+
+                                            If Not awinSettings.showTimeSpanInPT Then
+
+                                                Try
+                                                    colorrng.Interior.ColorIndex = -4142
+                                                Catch ex1 As Exception
+
+                                                End Try
+                                            End If
+
 
                                             ' lösche alle Phase Shapes wieder wieder 
                                             If qualifier <> "" Then
@@ -1987,11 +2015,13 @@ Public Module testModule
                                     End With
 
                                     If ok Then
-                                        newShape = pptSlide.Shapes.Paste
-                                        Dim ratio As Double
+                                        newShapeRange = pptSlide.Shapes.Paste
 
-                                        With newShape
-                                            ratio = height / width
+                                        Dim ratio As Double
+                                        ratio = height / width
+
+                                        With newShapeRange.Item(1)
+
                                             If ratio < .Height / .Width Then
                                                 ' orientieren an width 
                                                 .Width = width * 0.96
@@ -2113,9 +2143,9 @@ Public Module testModule
                                 End With
 
                                 reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
+                                newShapeRange = pptSlide.Shapes.Paste
 
-                                With newShape
+                                With newShapeRange.Item(1)
                                     .Top = top + 0.02 * height
                                     .Left = left + 0.02 * width
                                     .Width = width * 0.96
@@ -2150,9 +2180,9 @@ Public Module testModule
                                 End With
 
                                 reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
+                                newShapeRange = pptSlide.Shapes.Paste
 
-                                With newShape
+                                With newShapeRange.Item(1)
                                     .Top = top + 0.02 * height
                                     .Left = left + 0.02 * width
                                     .Width = width * 0.96
@@ -2187,9 +2217,9 @@ Public Module testModule
                                 End With
 
                                 reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
+                                newShapeRange = pptSlide.Shapes.Paste
 
-                                With newShape
+                                With newShapeRange.Item(1)
                                     .Top = top + 0.02 * height
                                     .Left = left + 0.02 * width
                                     .Width = width * 0.96
@@ -2231,9 +2261,9 @@ Public Module testModule
                                 End With
 
                                 reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
+                                newShapeRange = pptSlide.Shapes.Paste
 
-                                With newShape
+                                With newShapeRange.Item(1)
                                     .Top = top + 0.02 * height
                                     .Left = left + 0.02 * width
                                     .Width = width * 0.96
@@ -2277,9 +2307,9 @@ Public Module testModule
                                 End With
 
                                 reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
+                                newShapeRange = pptSlide.Shapes.Paste
 
-                                With newShape
+                                With newShapeRange.Item(1)
                                     .Top = top + 0.02 * height
                                     .Left = left + 0.02 * width
                                     .Width = width * 0.96
@@ -2323,9 +2353,9 @@ Public Module testModule
                                 End With
 
                                 reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
+                                newShapeRange = pptSlide.Shapes.Paste
 
-                                With newShape
+                                With newShapeRange.Item(1)
                                     .Top = top + 0.02 * height
                                     .Left = left + 0.02 * width
                                     .Width = width * 0.96
@@ -2433,9 +2463,9 @@ Public Module testModule
                                     End With
 
                                     reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
+                                    newShapeRange = pptSlide.Shapes.Paste
 
-                                    With newShape
+                                    With newShapeRange.Item(1)
                                         .Top = top + 0.02 * height
                                         .Left = left + 0.02 * width
                                         .Width = width * 0.96
@@ -2479,9 +2509,9 @@ Public Module testModule
                                 End With
 
                                 reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
+                                newShapeRange = pptSlide.Shapes.Paste
 
-                                With newShape
+                                With newShapeRange.Item(1)
                                     .Top = top + 0.02 * height
                                     .Left = left + 0.02 * width
                                     .Width = width * 0.96
@@ -2518,9 +2548,9 @@ Public Module testModule
                                 End With
 
                                 reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
+                                newShapeRange = pptSlide.Shapes.Paste
 
-                                With newShape
+                                With newShapeRange.Item(1)
                                     .Top = top + 0.02 * height
                                     .Left = left + 0.02 * width
                                     .Width = width * 0.96
@@ -2558,9 +2588,9 @@ Public Module testModule
                                 End With
 
                                 reportObj.Copy()
-                                newShape = pptSlide.Shapes.Paste
+                                newShapeRange = pptSlide.Shapes.Paste
 
-                                With newShape
+                                With newShapeRange.Item(1)
                                     .Top = top + 0.02 * height
                                     .Left = left + 0.02 * width
                                     .Width = width * 0.96
@@ -2602,9 +2632,9 @@ Public Module testModule
                                     End With
 
                                     reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
+                                    newShapeRange = pptSlide.Shapes.Paste
 
-                                    With newShape
+                                    With newShapeRange.Item(1)
                                         .Top = top + 0.02 * height
                                         .Left = left + 0.02 * width
                                         .Width = width * 0.96
@@ -2652,9 +2682,9 @@ Public Module testModule
                                     End With
 
                                     reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
+                                    newShapeRange = pptSlide.Shapes.Paste
 
-                                    With newShape
+                                    With newShapeRange.Item(1)
                                         .Top = top + 0.02 * height
                                         .Left = left + 0.02 * width
                                         .Width = width * 0.96
@@ -2726,9 +2756,9 @@ Public Module testModule
                                     End With
 
                                     reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
+                                    newShapeRange = pptSlide.Shapes.Paste
 
-                                    With newShape
+                                    With newShapeRange.Item(1)
                                         .Top = top + 0.02 * height
                                         .Left = left + 0.02 * width
                                         .Width = width * 0.96
@@ -2801,9 +2831,9 @@ Public Module testModule
                                     End With
 
                                     reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
+                                    newShapeRange = pptSlide.Shapes.Paste
 
-                                    With newShape
+                                    With newShapeRange.Item(1)
                                         .Top = top + 0.02 * height
                                         .Left = left + 0.02 * width
                                         .Width = width * 0.96
@@ -2872,9 +2902,9 @@ Public Module testModule
                                     End With
 
                                     reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
+                                    newShapeRange = pptSlide.Shapes.Paste
 
-                                    With newShape
+                                    With newShapeRange.Item(1)
                                         .Top = top + 0.02 * height
                                         .Left = left + 0.02 * width
                                         .Width = width * 0.96
@@ -2944,9 +2974,9 @@ Public Module testModule
                                     End With
 
                                     reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
+                                    newShapeRange = pptSlide.Shapes.Paste
 
-                                    With newShape
+                                    With newShapeRange.Item(1)
                                         .Top = top + 0.02 * height
                                         .Left = left + 0.02 * width
                                         .Width = width * 0.96
@@ -2993,9 +3023,9 @@ Public Module testModule
                                     End With
 
                                     reportObj.Copy()
-                                    newShape = pptSlide.Shapes.Paste
+                                    newShapeRange = pptSlide.Shapes.Paste
 
-                                    With newShape
+                                    With newShapeRange.Item(1)
                                         .Top = top + 0.02 * height
                                         .Left = left + 0.02 * width
                                         .Width = width * 0.96
@@ -3145,7 +3175,7 @@ Public Module testModule
 
     End Sub
 
-    Public Function StoreSelectedProjectsinDB()
+    Public Function StoreSelectedProjectsinDB() As Integer
 
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt
@@ -3286,7 +3316,7 @@ Public Module testModule
     End Function
 
 
-    Public Function RemoveSelectedProjectsfromDB()
+    Public Function RemoveSelectedProjectsfromDB() As Integer
 
 
         Dim hproj As New clsProjekt
@@ -4380,7 +4410,8 @@ Public Module testModule
         Dim rng As xlNS.Range
         Dim selectionType As Integer = -1 ' keine Einschränkung
         Dim pptSize As Integer
-        Dim newshape As pptNS.ShapeRange
+        Dim newshapeRange As pptNS.ShapeRange
+        Dim newShape As pptNS.Shape
 
 
         pptSize = pptShape.TextFrame2.TextRange.Font.Size
@@ -4430,8 +4461,10 @@ Public Module testModule
 
 
             rng = .Range(.Cells(newzeile, minColumn), .Cells(newzeile + 1, maxColumn))
-            rng.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
-
+            'rng.CopyPicture(Microsoft.Office.Interop.Excel.XlPictureAppearance.xlScreen)
+            rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+            newshapeRange = pptslide.Shapes.Paste
+            newShape = newshapeRange.Item(1)
 
             Call awinDeleteMilestoneShapes(0)
 
@@ -4453,11 +4486,12 @@ Public Module testModule
         End With
 
 
-        newshape = pptslide.Shapes.Paste
-        Dim ratio As Double
 
-        With newshape
-            ratio = pptShape.Height / pptShape.Width
+        Dim ratio As Double
+        ratio = pptShape.Height / pptShape.Width
+
+        With newShape
+
             If ratio < .Height / .Width Then
                 ' orientieren an width 
                 .Width = pptShape.Width * 0.96

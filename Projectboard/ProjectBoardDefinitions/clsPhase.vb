@@ -64,7 +64,7 @@
     End Property
 
 
-    Public Sub changeStartandDauer(ByVal startOffset As Integer, ByVal dauer As Integer)
+    Public Sub changeStartandDauer(ByVal startOffset As Long, ByVal dauer As Long)
 
         Dim projektStartdate As Date
         Dim projektstartColumn As Integer
@@ -134,7 +134,7 @@
                 Catch ex As Exception
 
                 End Try
-                
+
 
                 If awinSettings.autoCorrectBedarfe Then
 
@@ -160,7 +160,7 @@
 
                     End If
 
-                   
+
                 End If
 
 

@@ -31,6 +31,7 @@ Public Class frmSelectPPTTempl
 
         Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
         Try
+            Dim i As Integer
             For i = 1 To listOfVorlagen.Count
                 dateiName = Dir(listOfVorlagen.Item(i - 1))
                 RepVorlagenDropbox.Items.Add(dateiName)
@@ -114,8 +115,21 @@ Public Class frmSelectPPTTempl
         Me.BackgroundWorker1.CancelAsync()
         Me.BackgroundWorker2.CancelAsync()
 
+
+        With appInstance
+            If Not .EnableEvents Then
+                .EnableEvents = True
+            End If
+
+            If Not .ScreenUpdating Then
+                .ScreenUpdating = True
+            End If
+        End With
+       
+
         Call MsgBox("Berichterstellung wurde beendet")
         MyBase.Close()
+
     End Sub
 
 
