@@ -47,7 +47,7 @@ Public Class clsCommandBarEvents
         ' awinSelection enthält alle selektierten Shapes 
         Dim awinSelection As Excel.ShapeRange
         Try
-            awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
             If awinSelection.Count > 0 Then
 
                 
@@ -59,7 +59,7 @@ Public Class clsCommandBarEvents
 
                     With shpelement
                         Try
-                            If .ID = ShowProjekte.getProject(.Name).shpUID Then
+                            If .ID = CInt(ShowProjekte.getProject(.Name).shpUID) Then
                                 selCollection.Add(.Name, .Name)
                             End If
                         Catch ex1 As Exception
@@ -137,7 +137,7 @@ Public Class clsCommandBarEvents
                         SID = shpelement.ID.ToString
 
 
-                        laengeInMon = shpelement.Width / boxWidth
+                        laengeInMon = CInt(shpelement.Width / boxWidth)
 
 
                         '
@@ -335,10 +335,10 @@ Public Class clsCommandBarEvents
                                 With shpelement
                                     .Name = pname
                                     .TextFrame2.TextRange.Text = pname
-                                    .Top = top
-                                    .Left = left
-                                    .Width = width
-                                    .Height = height
+                                    .Top = CSng(top)
+                                    .Left = CSng(left)
+                                    .Width = CSng(width)
+                                    .Height = CSng(height)
                                     .Rotation = 0.0
                                 End With
 
@@ -528,7 +528,7 @@ Public Class clsCommandBarEvents
                 updateKennung = 3
 
                 For i = 1 To tmpDelListe.Count
-                    pname = tmpDelListe.Item(i)
+                    pname = CStr(tmpDelListe.Item(i))
 
                     If roentgenBlick.isOn Then
                         Call NoshowNeedsofProject(pname)

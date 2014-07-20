@@ -459,6 +459,9 @@ Public Module awinGeneralModules
             StartofCalendar = awinSettings.kalenderStart
             StartofCalendar = StartofCalendar.ToLocalTime()
 
+            historicDate = StartofCalendar
+
+
             '
             ' ende Auslesen Einstellungen in Sheet "Einstellungen"
             '
@@ -2282,6 +2285,7 @@ Public Module awinGeneralModules
         '    NoShowProjekte.Add(kvp.Value)
         'Next
         ShowProjekte.Clear()
+        AlleProjekte.Clear()
         ' jetzt werden die Start-Values entsprechend gesetzt ..
 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste

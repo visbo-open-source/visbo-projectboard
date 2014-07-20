@@ -210,7 +210,7 @@ Public Class clsProjekt
 
         If phaseEnde > 0 Then
 
-            maxM = DateDiff(DateInterval.Month, Me.startDate, Me.startDate.AddDays(phaseEnde)) + 1
+            maxM = CInt(DateDiff(DateInterval.Month, Me.startDate, Me.startDate.AddDays(phaseEnde)) + 1)
             If maxM <> _Dauer And maxM > 0 Then
                 _Dauer = maxM
                 ' hier muss jetzt die Dauer der Allgemeinen Phase angepasst werden ... 
@@ -257,7 +257,7 @@ Public Class clsProjekt
                     ' Ist das startdatum unterschiedlich?
                     If Me.startDate.Date <> vglproj.startDate.Date Then
                         Try
-                            tmpCollection.Add(PThcc.startdatum, PThcc.startdatum)
+                            tmpCollection.Add(CInt(PThcc.startdatum).ToString, CInt(PThcc.startdatum).ToString)
                         Catch ex As Exception
 
                         End Try
@@ -269,7 +269,7 @@ Public Class clsProjekt
                     cValues = vglproj.getPhaseInfos
                     If arraysAreDifferent(hValues, cValues) Then
                         Try
-                            tmpCollection.Add(PThcc.phasen, PThcc.phasen)
+                            tmpCollection.Add(CInt(PThcc.phasen).ToString, CInt(PThcc.phasen).ToString)
                         Catch ex As Exception
 
                         End Try
@@ -281,7 +281,7 @@ Public Class clsProjekt
                     cdates = vglproj.getMilestones
                     If dateListsareDifferent(hdates, cdates) Then
                         Try
-                            tmpCollection.Add(PThcc.resultdates, PThcc.resultdates)
+                            tmpCollection.Add(CInt(PThcc.resultdates).ToString, CInt(PThcc.resultdates).ToString)
                         Catch ex As Exception
 
                         End Try
@@ -293,7 +293,7 @@ Public Class clsProjekt
                     cValues = vglproj.getAllPersonalKosten
                     If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
                         Try
-                            tmpCollection.Add(PThcc.perscost, PThcc.perscost)
+                            tmpCollection.Add(CInt(PThcc.perscost).ToString, CInt(PThcc.perscost).ToString)
                         Catch ex As Exception
 
                         End Try
@@ -305,7 +305,7 @@ Public Class clsProjekt
                     cValues = vglproj.getGesamtAndereKosten
                     If arraysAreDifferent(hValues, cValues) And (hValues.Sum > 0 Or cValues.Sum > 0) Then
                         Try
-                            tmpCollection.Add(PThcc.othercost, PThcc.othercost)
+                            tmpCollection.Add(CInt(PThcc.othercost).ToString, CInt(PThcc.othercost).ToString)
                         Catch ex As Exception
 
                         End Try
@@ -326,7 +326,7 @@ Public Class clsProjekt
 
                     If aktErg <> vglErg Then
                         Try
-                            tmpCollection.Add(PThcc.ergebnis, PThcc.ergebnis)
+                            tmpCollection.Add(CInt(PThcc.ergebnis).ToString, CInt(PThcc.ergebnis).ToString)
                         Catch ex As Exception
 
                         End Try
@@ -337,7 +337,7 @@ Public Class clsProjekt
                     If Me.StrategicFit <> vglproj.StrategicFit Or _
                         Me.Risiko <> vglproj.Risiko Then
                         Try
-                            tmpCollection.Add(PThcc.fitrisk, PThcc.fitrisk)
+                            tmpCollection.Add(CInt(PThcc.fitrisk).ToString, CInt(PThcc.fitrisk).ToString)
                         Catch ex As Exception
 
                         End Try
@@ -347,7 +347,7 @@ Public Class clsProjekt
                     ' prüfen, ob die Projekt Ampel unterschiedlich ist 
                     If Me.ampelStatus <> vglproj.ampelStatus Then
                         Try
-                            tmpCollection.Add(PThcc.projektampel, PThcc.projektampel)
+                            tmpCollection.Add(CInt(PThcc.projektampel).ToString, CInt(PThcc.projektampel).ToString)
                         Catch ex As Exception
 
                         End Try
@@ -359,7 +359,7 @@ Public Class clsProjekt
                     cValues = vglproj.getMilestoneColors
                     If arraysAreDifferent(hValues, cValues) Then
                         Try
-                            tmpCollection.Add(PThcc.resultampel, PThcc.resultampel)
+                            tmpCollection.Add(CInt(PThcc.resultampel).ToString, CInt(PThcc.resultampel).ToString)
                         Catch ex As Exception
 
                         End Try
@@ -370,7 +370,7 @@ Public Class clsProjekt
                     Dim hUsedRoles As Collection = Me.getUsedRollen
                     Dim cUsedRoles As Collection = vglproj.getUsedRollen
 
-                    For Each role In hUsedRoles
+                    For Each role As String In hUsedRoles
 
 
                         hValues = Me.getRessourcenBedarf(role)
@@ -400,7 +400,7 @@ Public Class clsProjekt
                     ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
                     ' die müssen dann auf alle fälle aufgenommen werden 
 
-                    For Each role In cUsedRoles
+                    For Each role As String In cUsedRoles
 
                         cValues = vglproj.getRessourcenBedarf(role)
 
@@ -420,7 +420,7 @@ Public Class clsProjekt
                     ReDim hValues(0)
                     ReDim cValues(0)
 
-                    For Each role In hUsedRoles
+                    For Each role As String In hUsedRoles
                         hValues(0) = Me.getRessourcenBedarf(role).Sum
 
                         If cUsedRoles.Contains(role) Then
@@ -446,7 +446,7 @@ Public Class clsProjekt
                     ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
                     ' die müssen dann auf alle fälle aufgenommen werden 
 
-                    For Each role In cUsedRoles
+                    For Each role As String In cUsedRoles
 
                         cValues(0) = vglproj.getRessourcenBedarf(role).Sum
 
@@ -466,7 +466,7 @@ Public Class clsProjekt
                     Dim hUsedCosts As Collection = Me.getUsedKosten
                     Dim cUsedCosts As Collection = vglproj.getUsedKosten
 
-                    For Each cost In hUsedCosts
+                    For Each cost As String In hUsedCosts
                         hValues = Me.getKostenBedarf(cost)
 
                         If cUsedCosts.Contains(cost) Then
@@ -492,7 +492,7 @@ Public Class clsProjekt
                     ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
                     ' die müssen dann auf alle fälle aufgenommen werden 
 
-                    For Each cost In cUsedCosts
+                    For Each cost As String In cUsedCosts
                         cValues = vglproj.getKostenBedarf(cost)
                         If Not hUsedCosts.Contains(cost) And cValues.Sum > 0 Then
                             Try
@@ -511,7 +511,7 @@ Public Class clsProjekt
                     ReDim hValues(0)
                     ReDim cValues(0)
 
-                    For Each cost In hUsedCosts
+                    For Each cost As String In hUsedCosts
                         hValues(0) = Me.getKostenBedarf(cost).Sum
                         If cUsedCosts.Contains(cost) Then
 
@@ -536,7 +536,7 @@ Public Class clsProjekt
                     ' jetzt muss noch geprüft werden, ob es in vglproj Rollen gibt, die nicht in hproj enthalten sind 
                     ' die müssen dann auf alle fälle aufgenommen werden 
 
-                    For Each cost In cUsedCosts
+                    For Each cost As String In cUsedCosts
                         cValues(0) = vglproj.getKostenBedarf(cost).Sum
                         If Not hUsedCosts.Contains(cost) And cValues(0) > 0 Then
                             Try
@@ -665,13 +665,13 @@ Public Class clsProjekt
 
                                     If i = 0 Then
 
-                                        numberOfDays = Max(0.0, DateDiff(DateInterval.Day, phaseStart, StartofCalendar.AddMonths(Me.Start + .relStart - 1).AddDays(-1)))
+                                        numberOfDays = CInt(Max(0.0, DateDiff(DateInterval.Day, phaseStart, StartofCalendar.AddMonths(Me.Start + .relStart - 1).AddDays(-1))))
                                         anteil = numberOfDays / 365 * 12
                                         phaseValues(.relStart - 1 + i) = Min(1.0, anteil)
 
                                     ElseIf i = .relEnde - .relStart Then
 
-                                        numberOfDays = Max(0.0, DateDiff(DateInterval.Day, StartofCalendar.AddMonths(Me.Start + .relEnde - 2), phaseEnd))
+                                        numberOfDays = CInt(Max(0.0, DateDiff(DateInterval.Day, StartofCalendar.AddMonths(Me.Start + .relEnde - 2), phaseEnd)))
                                         anteil = numberOfDays / 365 * 12
                                         phaseValues(.relStart - 1 + i) = Min(1.0, anteil)
 
@@ -708,7 +708,7 @@ Public Class clsProjekt
         Get
             Dim i As Integer
             Dim max As Double = 0
-            Dim offsetProjStart As Integer = DateDiff(DateInterval.Day, StartofCalendar, Me.startDate)
+            Dim offsetProjStart As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, Me.startDate))
 
             ' Bestimmung der Dauer 
 
@@ -858,20 +858,20 @@ Public Class clsProjekt
         Set(newValue As Date)
             Dim value As Date = newValue.Date
             Dim olddate As Date = _startDate
-            Dim differenzInTagen As Integer = DateDiff(DateInterval.Day, olddate, value)
+            Dim differenzInTagen As Integer = CInt(DateDiff(DateInterval.Day, olddate, value))
             Dim updatePhases As Boolean = False
 
             ' Änderung am 25.5.14: es ist nicht mehr erlaubt, das Startdatum innerhalb des gleichen Monats zu verschieben 
             ' es muss geprüft werden, ob es noch im Planungs-Stadium ist: nur dann darf noch verschoben werden ...
             If _Status = ProjektStatus(0) And differenzInTagen <> 0 Then
                 _startDate = value
-                _Start = DateDiff(DateInterval.Month, StartofCalendar, value) + 1
+                _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 ' Änderung 25.5 die Xwerte müssen jetzt synchronisiert werden 
                 currentConstellation = ""
 
             ElseIf _startDate = NullDatum Then
                 _startDate = value
-                _Start = DateDiff(DateInterval.Month, StartofCalendar, value) + 1
+                _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, value) + 1)
                 If differenzInTagen <> 0 Then
                     ' mit diesem Vorgang wird die Konstellation (= Projekt-Portfolio) geändert , deshalb muss das zurückgesetzt werden 
                     currentConstellation = ""
@@ -1109,12 +1109,12 @@ Public Class clsProjekt
                     Select Case type
                         Case DiagrammTypen(0)
 
-                            itemName = mycollection.Item(1)
+                            itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
                             valueArray = Me.getPhasenBedarf(itemName)
 
                             For i = 2 To mycollection.Count
-                                itemName = mycollection.Item(i)
+                                itemName = CStr(mycollection.Item(i))
                                 tempArray = Me.getPhasenBedarf(itemName)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
@@ -1123,12 +1123,12 @@ Public Class clsProjekt
 
                         Case DiagrammTypen(1)
 
-                            itemName = mycollection.Item(1)
+                            itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
                             valueArray = Me.getRessourcenBedarf(itemName)
 
                             For i = 2 To mycollection.Count
-                                itemName = mycollection.Item(i)
+                                itemName = CStr(mycollection.Item(i))
                                 tempArray = Me.getRessourcenBedarf(itemName)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
@@ -1137,13 +1137,13 @@ Public Class clsProjekt
 
                         Case DiagrammTypen(2)
 
-                            itemName = mycollection.Item(1)
+                            itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
                             valueArray = Me.getKostenBedarf(itemName)
 
 
                             For i = 2 To mycollection.Count
-                                itemName = mycollection.Item(i)
+                                itemName = CStr(mycollection.Item(i))
                                 tempArray = Me.getKostenBedarf(itemName)
                                 For k = 0 To projektDauer - 1
                                     valueArray(k) = valueArray(k) + tempArray(k)
@@ -1152,7 +1152,7 @@ Public Class clsProjekt
 
                         Case DiagrammTypen(4)
                             Dim riskShare As Double
-                            itemName = mycollection.Item(1)
+                            itemName = CStr(mycollection.Item(1))
                             ' jetzt wird der Wert berechnet ...
                             valueArray = Me.getGesamtKostenBedarf
 
@@ -1239,7 +1239,7 @@ Public Class clsProjekt
 
                             Try
                                 result = .getResult(r)
-                                monatsIndex = DateDiff(DateInterval.Month, Me.startDate, result.getDate)
+                                monatsIndex = CInt(DateDiff(DateInterval.Month, Me.startDate, result.getDate))
 
                                 ' Sicherstellen, daß Ergebnisse, die vor oder auch nach dem Projekt erreicht werden sollen, richtig behandelt werden 
 
@@ -1285,7 +1285,7 @@ Public Class clsProjekt
             Else
 
                 ReDim resultValues(0)
-                resultValues(0) = ""
+                resultValues(0) = 0
 
             End If
 
@@ -1637,7 +1637,7 @@ Public Class clsProjekt
 
             ElseIf auswahl = 1 Then
 
-                Dim nullWert As Integer = DateDiff(DateInterval.Day, Me.startDate, refDate) + 1
+                Dim nullWert As Integer = CInt(DateDiff(DateInterval.Day, Me.startDate, refDate) + 1)
 
                 If nullWert > Me.dauerInDays Then
                     ' Projekt ist bereits beendet ...
@@ -1664,7 +1664,7 @@ Public Class clsProjekt
 
                         For r = 1 To anzResults
                             tmpDate = tmpPhase.getResult(r).getDate
-                            tmpAbstand = DateDiff(DateInterval.Day, refDate, tmpDate)
+                            tmpAbstand = CInt(DateDiff(DateInterval.Day, refDate, tmpDate))
                             If tmpAbstand > 0 And tmpAbstand < curAbstand Then
                                 curMsName = tmpPhase.getResult(r).name
                                 curPhName = tmpPhase.name
@@ -1722,7 +1722,7 @@ Public Class clsProjekt
                                 Else
 
                                     With tmpPhase
-                                        vglWert2 = .startOffsetinDays + tmpResult.offset
+                                        vglWert2 = CInt(.startOffsetinDays + tmpResult.offset)
                                         chkDate2 = tmpResult.getDate
                                     End With
 
@@ -1819,7 +1819,7 @@ Public Class clsProjekt
 
 
 
-            Dim nullWert As Integer = DateDiff(DateInterval.Day, Me.startDate, refDate) + 1
+            Dim nullWert As Integer = CInt(DateDiff(DateInterval.Day, Me.startDate, refDate) + 1)
 
             If nullWert > Me.dauerInDays Then
                 ' Projekt ist bereits beendet ...
@@ -1844,7 +1844,7 @@ Public Class clsProjekt
 
                     For r = 1 To anzResults
                         tmpDate = tmpPhase.getResult(r).getDate
-                        tmpAbstand = DateDiff(DateInterval.Day, refDate, tmpDate)
+                        tmpAbstand = CInt(DateDiff(DateInterval.Day, refDate, tmpDate))
                         If tmpAbstand > 0 And tmpAbstand < curAbstand Then
                             curMsName = tmpPhase.getResult(r).name
                             curPhName = tmpPhase.name
@@ -1902,7 +1902,7 @@ Public Class clsProjekt
                             Else
 
                                 With tmpPhase
-                                    vglWert2 = .startOffsetinDays + tmpResult.offset
+                                    vglWert2 = CInt(.startOffsetinDays + tmpResult.offset)
                                     chkDate2 = tmpResult.getDate
                                 End With
 
@@ -2098,7 +2098,7 @@ Public Class clsProjekt
 
 
         Dim projektStartdate As Date = Me.startDate
-        Dim startpunkt As Integer = DateDiff(DateInterval.Day, StartofCalendar, projektStartdate)
+        Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
 
         If startpunkt < 0 Then
             Throw New Exception("calculate Shape Coord für Phase: Projektstart liegt vor Start of Calendar ...")
@@ -2139,7 +2139,7 @@ Public Class clsProjekt
         Try
 
             Dim projektStartdate As Date = Me.startDate
-            Dim startpunkt As Integer = DateDiff(DateInterval.Day, StartofCalendar, projektStartdate)
+            Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
 
             If startpunkt < 0 Then
                 Throw New Exception("calculate Shape Coord für Phase: Projektstart liegt vor Start of Calendar ...")
@@ -2228,7 +2228,7 @@ Public Class clsProjekt
         Try
 
             Dim projektStartdate As Date = Me.startDate
-            Dim startpunkt As Integer = DateDiff(DateInterval.Day, StartofCalendar, projektStartdate)
+            Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
 
             If startpunkt < 0 Then
                 Throw New Exception("calculate Shape Coord für Phase: Projektstart liegt vor Start of Calendar ...")
@@ -2250,7 +2250,7 @@ Public Class clsProjekt
                     height = 0.8 * boxHeight
                 Else
                     'top = topOfMagicBoard + (Me.tfZeile + zeilenOffset - 1) * boxHeight + 0.1 * boxHeight
-                    top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.1 * boxHeight + (zeilenOffset + 1) * boxHeight * 0.5
+                    top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.5 * (1 - 0.33) * boxHeight + (zeilenOffset) * boxHeight
                     left = (phasenStart / 365) * boxWidth * 12
                     width = ((phasenDauer) / 365) * boxWidth * 12
                     height = 0.33 * boxHeight
@@ -2269,56 +2269,64 @@ Public Class clsProjekt
     End Sub
 
 
-    Public Sub calculateResultCoord(ByVal resultDate As Date, ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
+    'Public Sub calculateResultCoord(ByVal resultDate As Date, ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
 
 
 
-        Dim msStart As Integer = DateDiff(DateInterval.Day, StartofCalendar, resultDate)
-        Dim faktor As Double = 1.0
+    '    Dim msStart As Integer = DateDiff(DateInterval.Day, StartofCalendar, resultDate)
+    '    Dim faktor As Double = 0.66
 
-        'Dim tagebisResult As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(Me.Start - 1), resultDate)
-        'Dim ratio As Double = tagebisResult / anzahlTage
+    '    'Dim tagebisResult As Integer = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(Me.Start - 1), resultDate)
+    '    'Dim ratio As Double = tagebisResult / anzahlTage
 
-        If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
-            'top = topOfMagicBoard + (Me.tfZeile - 1.0) * boxHeight - boxWidth / 2
-            top = topOfMagicBoard + (Me.tfZeile - 1.0) * boxHeight + boxHeight * 0.05
-            left = (msStart / 365) * boxWidth * 12 - boxWidth * 0.5 * faktor
-            'width = boxWidth
-            'height = boxWidth
-            width = boxHeight * 0.8
-            height = boxHeight * 0.8
-        Else
-            Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
-        End If
+    '    If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
+    '        top = topOfMagicBoard + (Me.tfZeile - 1.0) * boxHeight + boxHeight * 0.05
+    '        left = (msStart / 365) * boxWidth * 12 - boxHeight * 0.5 * faktor
+    '        'width = boxWidth
+    '        'height = boxWidth
+    '        width = boxHeight * faktor
+    '        height = boxHeight * faktor
+    '    Else
+    '        Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
+    '    End If
 
 
-    End Sub
+    'End Sub
 
     Public Sub calculateResultCoord(ByVal resultDate As Date, ByVal zeilenOffset As Integer, _
                                     ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
 
 
         'Dim endDatum As Date = StartofCalendar.AddMonths(Me.Start - 1 + Dauer).AddDays(-1)
-        Dim diffMonths As Integer = DateDiff(DateInterval.Month, StartofCalendar, resultDate)
+        Dim diffMonths As Integer = CInt(DateDiff(DateInterval.Month, StartofCalendar, resultDate))
         Dim dayOfResult As Integer = resultDate.Day
-        Dim msStart As Integer = DateDiff(DateInterval.Day, StartofCalendar, resultDate)
+        Dim msStart As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, resultDate))
 
-        Dim faktor As Double = 0.66
+        Dim faktor As Double = 0.6
 
         If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
 
             ' Änderung 18.3.14 Zeilenoffset gibt an, in die wievielte Zeile das geschrieben werden soll 
+
             If zeilenOffset = 0 Then
-                top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight - boxWidth * 0.5 * faktor
-                left = (msStart / 365) * boxWidth * 12 - boxWidth * 0.5 * faktor
-                width = faktor * boxWidth
-                height = faktor * boxWidth
+                
+                'top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight - boxWidth * 0.5 * faktor
+                top = topOfMagicBoard + (Me.tfZeile - 1.0) * boxHeight + boxHeight * 0.3 * (1 - faktor)
+                'left = (msStart / 365) * boxWidth * 12 - boxWidth * 0.5 * faktor
+                left = (msStart / 365) * boxWidth * 12 - boxHeight * 0.5 * faktor
+                width = boxHeight * faktor
+                height = boxHeight * faktor
+
             Else
                 'top = topOfMagicBoard + (Me.tfZeile + zeilenOffset - 1) * boxHeight + 0.1 * boxHeight
-                top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + (zeilenOffset + 1) * boxHeight * 0.5 - boxWidth * 0.5 * faktor
-                left = (msStart / 365) * boxWidth * 12 - boxWidth * 0.5 * faktor
-                width = faktor * boxWidth
-                height = faktor * boxWidth
+                'top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + (zeilenOffset + 1) * boxHeight * 0.5 - boxWidth * 0.5 * faktor
+                top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + (zeilenOffset) * boxHeight + boxHeight * 0.3 * (1 - faktor)
+                'left = (msStart / 365) * boxWidth * 12 - boxWidth * 0.5 * faktor
+                left = (msStart / 365) * boxWidth * 12 - boxHeight * 0.5 * faktor
+                'width = faktor * boxWidth
+                'height = faktor * boxWidth
+                width = boxHeight * faktor
+                height = boxHeight * faktor
             End If
 
 
@@ -2365,7 +2373,7 @@ Public Class clsProjekt
 
 
 
-        Dim diffMonths As Integer = DateDiff(DateInterval.Month, StartofCalendar, resultDate)
+        Dim diffMonths As Integer = CInt(DateDiff(DateInterval.Month, StartofCalendar, resultDate))
         'Dim dayOfResult As Integer = resultDate.Day
         Dim dayOfResult As Integer = 15 ' wähle die Mitte des Monats
 
@@ -2442,9 +2450,9 @@ Public Class clsProjekt
         _earliestStartDate = earliestStartdate
         _latestStartDate = latestStartdate
 
-        _Start = DateDiff(DateInterval.Month, StartofCalendar, startDate) + 1
-        _earliestStart = DateDiff(DateInterval.Month, startDate, earliestStartdate)
-        _latestStart = DateDiff(DateInterval.Month, startDate, latestStartdate)
+        _Start = CInt(DateDiff(DateInterval.Month, StartofCalendar, startDate) + 1)
+        _earliestStart = CInt(DateDiff(DateInterval.Month, startDate, earliestStartdate))
+        _latestStart = CInt(DateDiff(DateInterval.Month, startDate, latestStartdate))
 
         _Status = ProjektStatus(0)
         _variantName = ""

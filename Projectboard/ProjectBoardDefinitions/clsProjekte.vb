@@ -715,7 +715,7 @@ Public Class clsProjekte
 
             For r = 1 To myCollection.Count
 
-                rname = myCollection.Item(r)
+                rname = CStr(myCollection.Item(r))
                 hkapa = PhaseDefinitions.getPhaseDef(rname).schwellWert
 
                 For m = 0 To zeitraum
@@ -766,7 +766,7 @@ Public Class clsProjekte
 
 
             For r = 1 To myCollection.Count
-                rname = myCollection.Item(r)
+                rname = CStr(myCollection.Item(r))
                 hkapa = RoleDefinitions.getRoledef(rname).Startkapa
 
                 For i = showRangeLeft To showRangeRight
@@ -1720,7 +1720,7 @@ Public Class clsProjekte
             For i = 1 To roleCollection.Count
                 ReDim roleValues(zeitraum)
                 ReDim kapaValues(zeitraum)
-                roleName = roleCollection.Item(i)
+                roleName = CStr(roleCollection.Item(i))
 
                 tagessatzExtern = RoleDefinitions.getRoledef(roleName).tagessatzExtern
                 tagessatzIntern = RoleDefinitions.getRoledef(roleName).tagessatzIntern
@@ -1780,7 +1780,7 @@ Public Class clsProjekte
             tmpSum = 0.0
 
             For i = 1 To myCollection.Count
-                rcName = myCollection.Item(i)
+                rcName = CStr(myCollection.Item(i))
 
                 ReDim tmpValues(zeitraum)
 
@@ -1828,7 +1828,7 @@ Public Class clsProjekte
             tmpSum = 0.0
 
             For i = 1 To myCollection.Count
-                rcName = myCollection.Item(i)
+                rcName = CStr(myCollection.Item(i))
 
                 ReDim tmpValues(zeitraum)
 

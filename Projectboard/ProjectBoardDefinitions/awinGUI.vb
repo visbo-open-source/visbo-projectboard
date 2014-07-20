@@ -4,50 +4,7 @@ Imports Microsoft.Office.Interop.Excel
 Public Module awinGUI
 
 
-    Sub awinDeletePortfolioDiagram()
-        Dim diagramTitle As String = "strategischer Fit, Risiko & Marge"
-        Dim anzdiagrams As Integer
-        Dim found As Boolean
-        Dim i As Integer
-        Dim chttitle As String = " "
-
-
-        With appInstance.Worksheets(arrWsNames(3))
-            anzdiagrams = .ChartObjects.Count
-            '
-            ' um welches Diagramm handelt es sich ...
-            '
-            i = 1
-            found = False
-            While i <= anzdiagrams And Not found
-                Try
-                    chttitle = .ChartObjects(i).Chart.ChartTitle.text
-                Catch ex As Exception
-                    chttitle = " "
-                End Try
-
-                If chttitle Like ("*" & diagramTitle & "*") Then
-                    found = True
-                Else
-                    i = i + 1
-                End If
-            End While
-
-            If found Then
-                .ChartObjects(i).delete()
-            End If
-
-            Try
-                DiagramList.Remove(diagramTitle)
-            Catch ex As Exception
-
-            End Try
-
-        End With
-
-    End Sub
-
-
+   
  
    
 
@@ -125,7 +82,7 @@ Public Module awinGUI
 
 
         If isProjektCharakteristik And ProjektListe.Count = 1 Then
-            pname = ProjektListe.Item(1)
+            pname = CStr(ProjektListe.Item(1))
             tmpCollection.Add(pname & "#0")
             kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
         Else
@@ -252,7 +209,7 @@ Public Module awinGUI
         Dim passiveMax As Integer = 0
 
         For i = 1 To ProjektListe.Count
-            pname = ProjektListe.Item(i)
+            pname = CStr(ProjektListe.Item(i))
             Try
                 hproj = ShowProjekte.getProject(pname)
                 With hproj
@@ -379,17 +336,17 @@ Public Module awinGUI
 
 
 
-        With appInstance.Worksheets(arrWsNames(3))
-            anzDiagrams = .ChartObjects.Count
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
             '
             i = 1
             found = False
             While i <= anzDiagrams And Not found
-                If chtobjName = .chartObjects(i).name Then
+                If chtobjName = .ChartObjects(i).name Then
                     found = True
-                    repChart = .ChartObjects(i)
+                    repChart = CType(.ChartObjects(i), Excel.ChartObject)
                     Exit Sub
                 Else
                     i = i + 1
@@ -719,7 +676,7 @@ Public Module awinGUI
                 pfDiagram = New clsDiagramm
 
                 pfChart = New clsEventsPfCharts
-                pfChart.PfChartEvents = .ChartObjects(anzDiagrams + 1).Chart
+                pfChart.PfChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
 
                 pfDiagram.setDiagramEvent = pfChart
 
@@ -736,7 +693,7 @@ Public Module awinGUI
                 DiagramList.Add(pfDiagram)
             End If
 
-            repChart = .ChartObjects(anzDiagrams + 1)
+            repChart = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
 
         End With
 
@@ -781,7 +738,7 @@ Public Module awinGUI
         ' hier wird in der Objektkennung nachgesehen, von welchem Typ dieses Portfolio-Diagramm ist
         ' PTpfdk.FitRisiko oder PTpfdk.ZeitRisiko oder PTpfdk.ComplexRisiko
 
-        tmpstr = chtobj.Name.Trim.Split(New Char() {"#"}, 4)
+        tmpstr = chtobj.Name.Trim.Split(New Char() {CChar("#")}, 4)
         If tmpstr(0) = "pr" Then
             isSingleProject = True
             projektListe.Add(tmpstr(2))
@@ -790,7 +747,7 @@ Public Module awinGUI
             Dim selectionType As Integer = -1 ' keine Einschränkung
             projektListe = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
         End If
-        charttype = tmpstr(1)
+        charttype = CInt(tmpstr(1))
 
         'foundDiagramm = DiagramList.getDiagramm(chtobj.Name)
         ' event. für eine Erweiterung benötigt
@@ -825,7 +782,7 @@ Public Module awinGUI
         If charttype = PTpfdk.Dependencies Then
             Dim deleteList As New Collection
             For i = 1 To projektListe.Count
-                pname = projektListe.Item(i)
+                pname = CStr(projektListe.Item(i))
                 Try
                     hproj = ShowProjekte.getProject(pname)
                     activeNumber = allDependencies.activeNumber(pname, PTdpndncyType.inhalt)
@@ -840,7 +797,7 @@ Public Module awinGUI
 
             ' jetzt müssen die Projekte rausgenommen werden, die keine Abhängigkeiten haben 
             For i = 1 To deleteList.Count
-                pname = deleteList.Item(i)
+                pname = CStr(deleteList.Item(i))
                 Try
                     projektListe.Remove(pname)
                 Catch ex As Exception
@@ -855,7 +812,7 @@ Public Module awinGUI
 
 
         For i = 1 To projektListe.Count
-            pname = projektListe.Item(i)
+            pname = CStr(projektListe.Item(i))
             Try
                 hproj = ShowProjekte.getProject(pname)
                 With hproj
@@ -1221,24 +1178,6 @@ Public Module awinGUI
 
         Next
 
-        'With appInstance.Worksheets(arrWsNames(3))
-        '    suchfeld = .Range("Projekteingabebereich")
-        '    lastrow = suchfeld.Rows.Count
-        '    lastcolumn = suchfeld.Columns.Count
-        '    max = 0
-
-        '    For spalte = 1 To lastcolumn
-        '        current = .Cells(lastrow, spalte).End(XlDirection.xlUp).row
-        '        If current > max Then
-        '            max = current
-        '        End If
-        '    Next spalte
-
-        'End With
-
-
-        ''zeile = appInstance.ActiveSheet.UsedRange.Rows.Count
-        'zeile = max
         WertfuerTop = lastrow * boxHeight + 60   ' starte oben
 
 
@@ -1248,139 +1187,6 @@ Public Module awinGUI
         WertfuerTop = 1000 + diagrammTyp * 100
 
     End Function
-
-    'Function WertfuerletzteZeile() As Integer
-    '    Dim spalte As Integer
-    '    Dim max As Integer
-    '    Dim current As Integer
-    '    Dim lastrow As Integer, lastcolumn As Integer
-    '    Dim suchfeld As Range
-
-
-    '    With appInstance.Worksheets(arrWsNames(3))
-    '        suchfeld = .Range("Projekteingabebereich")
-    '        lastrow = suchfeld.Rows.Count
-    '        lastcolumn = suchfeld.Columns.Count
-    '        max = 0
-
-    '        For spalte = 1 To lastcolumn
-    '            current = .Cells(lastrow, spalte).End(XlDirection.xlUp).row
-    '            If current > max Then
-    '                max = current
-    '            End If
-    '        Next spalte
-
-    '    End With
-
-
-    '    WertfuerletzteZeile = max
-
-
-    'End Function
-
-    '
-    '
-    '
-    '    Sub awinMoveChartUp()
-    '        Dim chtobj As ChartObject
-
-
-
-    '        On Error GoTo End_of_sub
-
-    '        With appInstance.ActiveChart
-    '            chtobj = .Parent
-    '        End With
-
-    '        With chtobj
-    '            If .top < HoehePrcChart Then
-    '                .top = 0
-    '            Else
-    '                .top = .top - HoehePrcChart
-    '            End If
-    '        End With
-
-    'End_of_sub:
-
-
-    '    End Sub
-
-    '
-    '
-    '
-    '    Sub awinMoveChartDown()
-    '        Dim chtobj As ChartObject
-
-
-    '        On Error GoTo End_of_sub
-
-    '        With appInstance.ActiveChart
-    '            chtobj = .Parent
-    '        End With
-
-    '        With chtobj
-    '            .top = .top + HoehePrcChart
-    '        End With
-
-    'End_of_sub:
-
-
-    '    End Sub
-
-    '
-    '
-    '
-    Sub ProjektEdit_DelKey()
-        Dim anz_zeilen As Integer, anz_spalten As Integer
-        Dim zeile As Integer, spalte As Integer
-        Dim i As Integer
-        Dim psel As Excel.Range
-
-
-        appInstance.EnableEvents = False
-
-        psel = appInstance.ActiveWindow.RangeSelection
-
-        With appInstance.Worksheets(arrWsNames(11))
-            .Unprotect()
-            anz_zeilen = psel.Rows.Count
-            anz_spalten = psel.Columns.Count
-            zeile = psel.Row
-            spalte = psel.Column
-            If psel.Rows(1).Interior.color = iProjektFarbe Then
-                ' ein ganzes Paket wurde selektiert
-                psel.Clear()
-                If .Rows(zeile).Interior.ColorIndex = Excel.Constants.xlNone Then
-                    ' dann können die kompletten Zeilen gelöscht werden ...
-                    For i = 1 To anz_zeilen + 1
-                        .Rows(zeile).EntireRow.Delete()
-                    Next i
-                End If
-            ElseIf spalte = 1 And psel(1, 1).Value <> "" Then
-                ' die Zeile mit der Rolle soll gelöscht werden ...
-                .Rows(zeile).EntireRow.Delete()
-
-            End If
-            .Protect()
-        End With
-
-        appInstance.EnableEvents = True
-
-    End Sub
-
-    '
-    '
-    '
-    Sub ProjektEdit_InsKey()
-
-        'anz_zeilen = psel.Rows.Count
-        'anz_spalten = psel.Columns.Count
-        'Application.EnableEvents = False
-
-
-        'Application.EnableEvents = True
-
-    End Sub
 
 
 

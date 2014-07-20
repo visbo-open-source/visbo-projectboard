@@ -320,7 +320,7 @@ Public Module Module1
     Public RepProjectVorOrdner As String = requirementsOrdner & "ReportTemplatesProject"
     Public RepPortfolioVorOrdner As String = requirementsOrdner & "ReportTemplatesPortfolio"
     Public demoModusHistory As Boolean = False
-    Public historicDate As Date = #6/6/2012#
+    Public historicDate As Date
 
     Public FirstX As Double = -1.0
     Public FirstY As Double = -1.0
@@ -499,7 +499,7 @@ Public Module Module1
 
         Try
 
-            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
                 If CInt(tmpStr(1)) = PTpfdk.Rollen Then
@@ -568,7 +568,7 @@ Public Module Module1
 
         Try
 
-            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
 
@@ -607,7 +607,7 @@ Public Module Module1
 
         Try
 
-            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
                 If CInt(tmpStr(1)) = PTpfdk.Kosten Then
@@ -642,7 +642,7 @@ Public Module Module1
 
         Try
 
-            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
                 If CInt(tmpStr(1)) = PTpfdk.Phasen Then
@@ -678,7 +678,7 @@ Public Module Module1
 
         Try
 
-            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
                 If CInt(tmpStr(1)) = PTpfdk.Meilenstein Then
@@ -711,7 +711,7 @@ Public Module Module1
 
         Try
 
-            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
                 If CInt(tmpStr(1)) = PTpfdk.FitRisiko Or _
@@ -1020,7 +1020,7 @@ Public Module Module1
 
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Umbenennen"
             .Tag = "Umbenennen"
@@ -1034,7 +1034,7 @@ Public Module Module1
 
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Löschen"
             .Tag = "Loesche aus Portfolio"
@@ -1047,7 +1047,7 @@ Public Module Module1
         awinButtonEvents.Add(awinevent)
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Show / Noshow"
             .Tag = "Show / Noshow"
@@ -1060,7 +1060,7 @@ Public Module Module1
         awinButtonEvents.Add(awinevent)
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Bearbeiten Projekt-Attribute"
             .Tag = "Bearbeiten Projekt-Attribute"
@@ -1073,7 +1073,7 @@ Public Module Module1
         awinButtonEvents.Add(awinevent)
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Beauftragen"
             .Tag = "Beauftragen"
@@ -1119,7 +1119,7 @@ Public Module Module1
 
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Löschen"
             .Tag = "Löschen"
@@ -1133,7 +1133,7 @@ Public Module Module1
         awinButtonEvents.Add(awinevent)
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Röntgenblick ein/aus"
             .Tag = "Bedarf anzeigen"
@@ -1146,7 +1146,7 @@ Public Module Module1
         awinButtonEvents.Add(awinevent)
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Optimieren"
             .Tag = "Optimieren"
@@ -1193,20 +1193,6 @@ Public Module Module1
 
     End Sub
 
-    Function awinRetrieveUniqueId(objekttyp As String) As Long
-        Dim nr As Long
-
-        With appInstance.Worksheets(arrWsNames(14))
-            nr = .Cells(1, 1).Value
-            .Cells(1, 1).Value = nr + 1
-            .Cells(2 + nr, 1).Value = nr
-            .Cells(2 + nr, 2).Value = objekttyp
-        End With
-
-        awinRetrieveUniqueId = nr
-
-    End Function
-
 
 
     '
@@ -1250,11 +1236,11 @@ Public Module Module1
     '
     Sub awinLoescheCockpitCharts()
         Dim i As Integer
-        Dim chtobj As ChartObject
+        Dim chtobj As Excel.ChartObject
 
-        With appInstance.Worksheets(arrWsNames(3))
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
 
-            For Each chtobj In .ChartObjects
+            For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 If istCockpitDiagramm(chtobj) Then
                     chtobj.Delete()
                 End If
@@ -1282,14 +1268,14 @@ Public Module Module1
     ''' <remarks></remarks>
     Sub awinLoescheCockpitCharts(ByVal prctyp As Integer)
         Dim i As Integer
-        Dim chtobj As ChartObject
+        Dim chtobj As Excel.ChartObject
         Dim chtTitle As String
 
         ' finde alle Charts, die Cockpit Chart sind und vom Typ her diagrammtypen(prctyp)
 
         With appInstance.Worksheets(arrWsNames(3))
             Dim found As Boolean
-            For Each chtobj In .ChartObjects
+            For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 Try
                     chtTitle = chtobj.Chart.ChartTitle.Text
                 Catch ex As Exception
@@ -1321,7 +1307,7 @@ Public Module Module1
 
     Sub awinLoescheChartsAtPosition(ByVal left As Double)
 
-        Dim chtobj As ChartObject
+        Dim chtobj As Excel.ChartObject
         Dim tstLeft As Double
         Dim tmpArray() As String
 
@@ -1331,7 +1317,7 @@ Public Module Module1
 
         With appInstance.Worksheets(arrWsNames(3))
 
-            For Each chtobj In .ChartObjects
+            For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
 
                 tmpArray = chtobj.Name.Split(New Char() {CType("#", Char)}, 5)
 
@@ -1348,7 +1334,7 @@ Public Module Module1
                 Catch ex As Exception
 
                 End Try
-                
+
             Next chtobj
 
         End With
@@ -1448,7 +1434,7 @@ Public Module Module1
         '
         Try
             With appInstance.ActiveWindow
-                ziel = (.VisibleRange.Left + .VisibleRange.Width / 2) / boxWidth
+                ziel = CInt((.VisibleRange.Left + .VisibleRange.Width / 2) / boxWidth)
             End With
 
             With appInstance.ActiveSheet
@@ -1478,7 +1464,7 @@ Public Module Module1
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
                 With kvp.Value
-                    If zeile = .tfZeile Then
+                    If zeile >= .tfZeile And zeile < .tfZeile + getNeededSpace(kvp.Value) Then
                         istfrei = False
                         Exit For
                     End If
@@ -1590,7 +1576,7 @@ Public Module Module1
     ''' 2=nur Status
     ''' 3=nur Phasen</param>
     ''' <remarks></remarks>
-    Public Sub awinDeleteMilestoneShapes(ByVal auswahl As Integer)
+    Public Sub awinDeleteProjectChildShapes(ByVal auswahl As Integer)
 
         Dim worksheetShapes As Excel.Shapes
         Dim shpElement As Excel.Shape
@@ -1631,7 +1617,7 @@ Public Module Module1
         End Select
 
         Try
-            worksheetShapes = appInstance.Worksheets(arrWsNames(3)).shapes
+            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
             For Each shpElement In worksheetShapes
 
@@ -1659,6 +1645,76 @@ Public Module Module1
 
     End Sub
 
+
+    ''' <summary>
+    ''' löscht zu dem angegebenen Shape die Child Shapes Milestone, Phase oder Status 
+    ''' </summary>
+    ''' <param name="pShape"></param>
+    ''' <param name="auswahl">
+    ''' 0=alle
+    ''' 1=nur meilensteine
+    ''' 2=nur Status
+    ''' 3=nur Phasen</param>
+    ''' <remarks></remarks>
+    Public Sub awinDeleteProjectChildShapes(ByVal pShape As Excel.Shape, ByVal auswahl As Integer)
+
+        Dim shapeType As Integer
+        Dim typCollection As New Collection
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formereO As Boolean = enableOnUpdate
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+
+        Select Case auswahl
+            Case 0
+
+                typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+
+            Case 1
+
+                typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+
+            Case 2
+
+            Case 3
+
+                typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+
+            Case Else
+                appInstance.EnableEvents = formerEE
+                enableOnUpdate = formereO
+                Exit Sub
+        End Select
+
+        Try
+            
+
+            shapeType = kindOfShape(pShape)
+
+                ' neu 
+
+            If isProjectType(shapeType) And pShape.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
+
+                projectboardShapes.removeChildsOfType(pShape, typCollection)
+
+            ElseIf shapeType = PTshty.status Then
+                projectboardShapes.remove(pShape)
+            End If
+
+                ' Ende neu 
+
+
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = formerEE
+        enableOnUpdate = formereO
+
+    End Sub
 
 
     ''' <summary>
@@ -1753,7 +1809,7 @@ Public Module Module1
                 Case 2
                     ' gleich bzw Buckel Funktion - aktuell wie aufsteigend, aber beginnend in der Mitte  
                     ix = 0
-                    ixi = newLength / 2
+                    ixi = CInt(newLength / 2)
                     Do While ix <= newSum
 
                         newValues(ixi) = newValues(ixi) + 1
@@ -1768,7 +1824,7 @@ Public Module Module1
                     Loop
 
                     If ix < newSum Then
-                        newValues(newLength / 2) = newValues(newLength / 2) + newSum - ix
+                        newValues(CInt(newLength / 2)) = newValues(CInt(newLength / 2)) + newSum - ix
                     End If
 
 
@@ -1824,7 +1880,7 @@ Public Module Module1
             min = Bedarf.Min
             max = Bedarf.Max
             avg = Bedarf.Sum / Bedarf.Length
-            bereich = Bedarf.Length / 4
+            bereich = CInt(Bedarf.Length / 4)
         Catch ex As Exception
             Throw New ArgumentException("Fehler ... Bedarf kein Arraey von zahlen ? ")
         End Try
@@ -1868,9 +1924,9 @@ Public Module Module1
     Public Function calcDauerIndays(ByVal startDatum As Date, ByVal endeDatum As Date) As Integer
 
         If startDatum.Date > endeDatum.Date Then
-            calcDauerIndays = DateDiff(DateInterval.Day, startDatum, endeDatum) - 1
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) - 1)
         Else
-            calcDauerIndays = DateDiff(DateInterval.Day, startDatum, endeDatum) + 1
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) + 1)
         End If
 
     End Function
@@ -1905,9 +1961,9 @@ Public Module Module1
         End If
 
         If startDatum.Date > endeDatum.Date Then
-            calcDauerIndays = DateDiff(DateInterval.Day, startDatum, endeDatum) - 1
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) - 1)
         Else
-            calcDauerIndays = DateDiff(DateInterval.Day, startDatum, endeDatum) + 1
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) + 1)
         End If
 
 
@@ -2068,7 +2124,7 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Function calcXCoordToTage(ByVal refDate As Date, ByVal XCoord As Double) As Integer
         Dim tmpValue As Integer
-        tmpValue = CInt(365 * XCoord / (12 * boxWidth)) - DateDiff(DateInterval.Day, StartofCalendar, refDate)
+        tmpValue = CInt(365 * XCoord / (12 * boxWidth)) - CInt(DateDiff(DateInterval.Day, StartofCalendar, refDate))
 
         calcXCoordToTage = tmpValue
 
@@ -2095,7 +2151,7 @@ Public Module Module1
 
         Dim tmpValue As Double
         Dim anzahlTage As Integer
-        anzahlTage = DateDiff(DateInterval.Day, StartofCalendar, datum)
+        anzahlTage = CInt(DateDiff(DateInterval.Day, StartofCalendar, datum))
         If anzahlTage < 0 Then
             Throw New ArgumentException("Datum kann nicht vor Start des Kalenders liegen")
         End If

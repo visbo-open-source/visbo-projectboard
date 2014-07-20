@@ -27,7 +27,7 @@ Public Class clsProjektShapes
             Dim projectShape As Excel.ShapeRange
 
             ' hier sind alle Shapes drin
-            projectShapes = appInstance.Worksheets(arrWsNames(3)).shapes
+            projectShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
             ' hole das Projekt-Shape 
             projectShape = projectShapes.Range(pName)
@@ -78,7 +78,7 @@ Public Class clsProjektShapes
                 ReDim arrayOFNames(anzElements - 1)
 
                 For i = 1 To anzElements
-                    arrayOFNames(i - 1) = listOFNames.Item(i)
+                    arrayOFNames(i - 1) = CStr(listOFNames.Item(i))
                 Next
 
                 shapegruppe = worksheetShapes.Range(arrayOFNames)
@@ -282,6 +282,7 @@ Public Class clsProjektShapes
 
             End If
 
+            Me.add(projektshape)
 
         End If
 
@@ -439,7 +440,7 @@ Public Class clsProjektShapes
 
             ' Test-Routine: 
             If todoListe1.Count <> todoListe2.Count Then
-                Call MsgBox("Fehler in clsprojektShapes.remove)")
+                'Call MsgBox("Fehler in clsprojektShapes.remove)")
             End If
         End If
 
@@ -534,18 +535,18 @@ Public Class clsProjektShapes
             If Abs(oldCoord(0) - shpCoord(0)) > tolY Then
                 isdifferent = True
             Else
-                shpElement.Top = oldCoord(0)
+                shpElement.Top = CSng(oldCoord(0))
             End If
 
             ' Left überprüfen
             If Abs(oldCoord(1) - shpCoord(1)) > tolX Then
                 isdifferent = True
             Else
-                shpElement.Left = oldCoord(1)
+                shpElement.Left = CSng(oldCoord(1))
             End If
 
             ' Höhe darf niemals verändert werden ...
-            shpElement.Height = oldCoord(2)
+            shpElement.Height = CSng(oldCoord(2))
 
             ' Width überprüfen: width darf nur bei phaseE, phaseN, projektN, projektC, projektE
             If shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Or _
@@ -554,11 +555,11 @@ Public Class clsProjektShapes
                 If Abs(oldCoord(3) - shpCoord(3)) > tolX * 0.2 Then
                     isdifferent = True
                 Else
-                    shpElement.Width = oldCoord(3)
+                    shpElement.Width = CSng(oldCoord(3))
                 End If
 
             Else
-                shpElement.Width = oldCoord(3)
+                shpElement.Width = CSng(oldCoord(3))
             End If
 
 
@@ -664,7 +665,7 @@ Public Class clsProjektShapes
         If arraysAreDifferent(curCoord, oldCoord) Then
 
             ' die Height muss immer gleich bleiben 
-            shpElement.Height = oldCoord(2)
+            shpElement.Height = CSng(oldCoord(2))
 
 
             If moveAllowed Then
@@ -674,11 +675,11 @@ Public Class clsProjektShapes
 
                     If isProjectType(shapeType) Then
                         Dim tmpZeile As Integer = calcYCoordToZeile(curCoord(0))
-                        shpElement.Top = calcZeileToYCoord(tmpZeile)
+                        shpElement.Top = CSng(calcZeileToYCoord(tmpZeile))
                         curCoord(0) = shpElement.Top
                     Else
                         ' korrigiere die Position 
-                        shpElement.Top = oldCoord(0)
+                        shpElement.Top = CSng(oldCoord(0))
                         curCoord(0) = shpElement.Top
                     End If
 
@@ -782,7 +783,7 @@ Public Class clsProjektShapes
 
                     ' Shape wurde gelöscht , der Variable shpElement muss das neue Shape wieder zugewiesen werden 
                     ' damit die aufrufende Routine das shpelement wieder hat 
-                    tmpRange = appInstance.Worksheets(arrWsNames(3)).shapes.Range(pName)
+                    tmpRange = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
                     shpElement = tmpRange.Item(1)
 
                     ' workaround: 
@@ -931,7 +932,7 @@ Public Class clsProjektShapes
 
                         ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
                         ' Projekt-Shape zugewiesen werden 
-                        tmpRange = appInstance.Worksheets(arrWsNames(3)).shapes.Range(pName)
+                        tmpRange = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
                         shpElement = tmpRange.Item(1)
 
                         ' jetzt noch die Budget Werte neu berechnen 
@@ -1014,7 +1015,7 @@ Public Class clsProjektShapes
 
                         ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
                         ' Projekt-Shape zugewiesen werden 
-                        tmpRange = appInstance.Worksheets(arrWsNames(3)).shapes.Range(pName)
+                        tmpRange = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
                         shpElement = tmpRange.Item(1)
 
                     End If
@@ -1097,7 +1098,7 @@ Public Class clsProjektShapes
 
                 ' Shape-Element wurde gelöscht , jetzt muss dem shpElement wieder das entsprechende 
                 ' Projekt-Shape zugewiesen werden 
-                tmpRange = appInstance.Worksheets(arrWsNames(3)).shapes.Range(pName)
+                tmpRange = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Range(pName)
                 shpElement = tmpRange.Item(1)
 
             End If

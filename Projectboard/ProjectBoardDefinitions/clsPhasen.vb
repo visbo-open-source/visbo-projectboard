@@ -32,7 +32,7 @@
     Public ReadOnly Property getPhaseDef(ByVal myitem As String) As clsPhasenDefinition
 
         Get
-            getPhaseDef = AllPhasen.Item(myitem)
+            getPhaseDef = CType(AllPhasen.Item(myitem), clsPhasenDefinition)
         End Get
 
     End Property
@@ -40,7 +40,7 @@
     Public ReadOnly Property getPhaseDef(ByVal myitem As Integer) As clsPhasenDefinition
 
         Get
-            getPhaseDef = AllPhasen.Item(myitem)
+            getPhaseDef = CType(AllPhasen.Item(myitem), clsPhasenDefinition)
         End Get
 
     End Property

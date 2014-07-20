@@ -35,7 +35,7 @@ Public Class clsEventsPrcCharts
         Cancel = True
 
         Try
-            chtobj = Me.PrcChartEvents.Parent
+            chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
 
             IDKennung = chtobj.Name
             foundDiagram = DiagramList.getDiagramm(IDKennung)
@@ -181,7 +181,7 @@ Public Class clsEventsPrcCharts
         rcIdentifier = 0
 
         Try
-            chtobj = appInstance.ActiveChart.Parent
+            chtobj = CType(appInstance.ActiveChart.Parent, Microsoft.Office.Interop.Excel.ChartObject)
             IDkennung = chtobj.Name
             foundDiagramm = DiagramList.getDiagramm(IDkennung)
             found = True
@@ -199,7 +199,7 @@ Public Class clsEventsPrcCharts
                 If myCollection.Count < 1 Then
                     name = ""
                 ElseIf myCollection.Count = 1 Then
-                    name = myCollection.Item(1)
+                    name = CStr(myCollection.Item(1))
                 ElseIf myCollection.Count > 1 Then
                     name = "Collection"
                 End If
@@ -413,9 +413,9 @@ Public Class clsEventsPrcCharts
 
 
         Try
-            chtobj = Me.PrcChartEvents.Parent
+            chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
             Try
-                chtobj1 = appInstance.ActiveChart.Parent
+                chtobj1 = CType(appInstance.ActiveChart.Parent, Microsoft.Office.Interop.Excel.ChartObject)
             Catch ex As Exception
 
             End Try
@@ -507,12 +507,12 @@ Public Class clsEventsPrcCharts
             'Jetzt muss bestimmt werden , um welches Chart es sich handelt 
 
 
-            Call awinDeleteMilestoneShapes(3)
+            Call awinDeleteProjectChildShapes(3)
 
             Try
-                chtobjname = Me.PrcChartEvents.Parent.Name
+                chtobjname = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject).Name
 
-                chtobj = Me.PrcChartEvents.Parent
+                chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
                 Dim IDKennung As String
                 IDKennung = chtobj.Name
 

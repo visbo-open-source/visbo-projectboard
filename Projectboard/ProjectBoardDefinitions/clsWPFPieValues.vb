@@ -10,7 +10,7 @@
         name = ""
         toolTip = ""
         value = 0.0
-        color = RGB(255, 255, 255)
+        color = CType(RGB(255, 255, 255), UInt32)
     End Sub
 
 

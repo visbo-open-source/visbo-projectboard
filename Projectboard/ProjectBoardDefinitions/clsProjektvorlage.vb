@@ -52,7 +52,7 @@
 
         If phaseEnde > 0 Then
 
-            maxM = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(phaseEnde)) + 1
+            maxM = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(phaseEnde)) + 1)
             If maxM <> _Dauer And maxM > 0 Then
                 _Dauer = maxM
                 ' hier muss jetzt die Dauer der Allgemeinen Phase angepasst werden ... 
@@ -828,7 +828,7 @@
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
-                    costname = ErgebnisListe.Item(r)
+                    costname = CStr(ErgebnisListe.Item(r))
                     costValues = Me.getKostenBedarf(costname)
                     For i = 0 To _Dauer - 1
                         costSum = costSum + costValues(i)
@@ -937,7 +937,7 @@
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
-                    costname = ErgebnisListe.Item(r)
+                    costname = CStr(ErgebnisListe.Item(r))
                     tmpValues = Me.getKostenBedarf(costname)
                     For i = 0 To _Dauer - 1
                         costValues(i) = costValues(i) + tmpValues(i)
@@ -976,7 +976,7 @@
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
-                    costname = ErgebnisListe.Item(r)
+                    costname = CStr(ErgebnisListe.Item(r))
                     tmpValues = Me.getKostenBedarf(costname)
                     For i = 0 To _Dauer - 1
                         costValues(i) = costValues(i) + tmpValues(i)
@@ -1017,7 +1017,7 @@
                 anzRollen = ErgebnisListe.Count
 
                 For r = 1 To anzRollen
-                    roleName = ErgebnisListe.Item(r)
+                    roleName = CStr(ErgebnisListe.Item(r))
                     roleValues = Me.getRessourcenBedarf(roleName)
                     For i = 0 To _Dauer - 1
                         roleSum = roleSum + roleValues(i)
@@ -1060,7 +1060,7 @@
                 anzRollen = ErgebnisListe.Count
 
                 For r = 1 To anzRollen
-                    roleName = ErgebnisListe.Item(r)
+                    roleName = CStr(ErgebnisListe.Item(r))
                     roleValues = Me.getRessourcenBedarf(roleName)
                     For i = 0 To _Dauer - 1
                         alleValues(i) = alleValues(i) + roleValues(i)

@@ -91,7 +91,7 @@
             If dauer = 0 And _relEnde > 0 Then
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
-                _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
+                _startOffsetinDays = CInt(DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1)))
                 _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
 
 
@@ -108,8 +108,8 @@
                 End If
 
 
-                _startOffsetinDays = startOffset
-                _dauerInDays = dauer
+                _startOffsetinDays = CInt(startOffset)
+                _dauerInDays = CInt(dauer)
 
 
 
@@ -176,7 +176,7 @@
 
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
-                _startOffsetinDays = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1))
+                _startOffsetinDays = CInt(DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1)))
                 '_dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
                 '                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
                 _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
@@ -184,11 +184,11 @@
 
             Else
                 '  
-                _startOffsetinDays = startOffset
-                _dauerInDays = dauer
+                _startOffsetinDays = CInt(startOffset)
+                _dauerInDays = CInt(dauer)
 
-                _relStart = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1
-                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1
+                _relStart = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1)
+                _relEnde = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1)
 
 
             End If
@@ -229,7 +229,7 @@
             If dauer = 0 And _relEnde > 0 Then
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
-                _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
+                _startOffsetinDays = CInt(DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1)))
                 _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
 
 
@@ -292,7 +292,7 @@
 
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
-                _startOffsetinDays = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1))
+                _startOffsetinDays = CInt(DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1)))
                 '_dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
                 '                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
                 _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
@@ -303,8 +303,8 @@
                 _startOffsetinDays = startOffset
                 _dauerInDays = dauer
 
-                _relStart = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1
-                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1
+                _relStart = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1)
+                _relEnde = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1)
 
 
             End If
@@ -595,7 +595,7 @@
 
             Dim korrPosition As Double = nummer / gesamtZahl
             Dim faktor As Double = linienDicke / boxHeight
-            Dim startpunkt As Integer = DateDiff(DateInterval.Day, StartofCalendar, projektStartdate)
+            Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
 
             If startpunkt < 0 Then
                 Throw New Exception("calculate Line Coord: Projektstart liegt vor Start of Calendar ...")
@@ -867,7 +867,7 @@
                 newresult = New clsResult(parent:=newphase)
                 Me.getResult(r).CopyTo(newresult)
                 ' korrigiert den Offset der Meilensteine 
-                newresult.offset = System.Math.Round(CLng(Me.getResult(r).offset * corrFactor))
+                newresult.offset = CLng(System.Math.Round(CLng(Me.getResult(r).offset * corrFactor)))
 
                 .addresult(newresult)
             Next
@@ -887,7 +887,7 @@
         For r = 1 To Me.AllResults.Count
             
             ' korrigiert den Offset der Meilensteine 
-            newOffset = System.Math.Round(CLng(Me.getResult(r).offset * faktor))
+            newOffset = CInt(System.Math.Round(CLng(Me.getResult(r).offset * faktor)))
 
             If newOffset < 0 Then
                 newOffset = 0

@@ -1829,39 +1829,39 @@ Public Module testModule
 
                                         ' hier werden die Milestones gezeichnet 
                                         If qualifier = "Milestones R" Then
-                                            Call awinDeleteMilestoneShapes(0)
+                                            Call awinDeleteProjectChildShapes(0)
 
                                             farbtyp = 3
-                                            Call awinZeichneMilestones(nameList, farbtyp, True)
+                                            Call awinZeichneMilestones(nameList, farbtyp, True, False)
 
 
 
                                         ElseIf qualifier = "Milestones GR" Then
-                                            Call awinDeleteMilestoneShapes(0)
+                                            Call awinDeleteProjectChildShapes(0)
 
                                             farbtyp = 2
-                                            Call awinZeichneMilestones(nameList, farbtyp, False)
+                                            Call awinZeichneMilestones(nameList, farbtyp, False, False)
                                             farbtyp = 3
-                                            Call awinZeichneMilestones(nameList, farbtyp, False)
+                                            Call awinZeichneMilestones(nameList, farbtyp, False, False)
 
                                         ElseIf qualifier = "Milestones GGR" Then
-                                            Call awinDeleteMilestoneShapes(0)
+                                            Call awinDeleteProjectChildShapes(0)
 
                                             farbtyp = 1
-                                            Call awinZeichneMilestones(nameList, farbtyp, False)
+                                            Call awinZeichneMilestones(nameList, farbtyp, False, False)
                                             farbtyp = 2
-                                            Call awinZeichneMilestones(nameList, farbtyp, False)
+                                            Call awinZeichneMilestones(nameList, farbtyp, False, False)
                                             farbtyp = 3
-                                            Call awinZeichneMilestones(nameList, farbtyp, False)
+                                            Call awinZeichneMilestones(nameList, farbtyp, False, False)
 
                                         ElseIf qualifier = "Milestones ALL" Then
-                                            Call awinDeleteMilestoneShapes(0)
+                                            Call awinDeleteProjectChildShapes(0)
 
                                             farbtyp = 4
-                                            Call awinZeichneMilestones(nameList, farbtyp, False)
+                                            Call awinZeichneMilestones(nameList, farbtyp, False, False)
 
                                         ElseIf qualifier = "Status" Then
-                                            Call awinDeleteMilestoneShapes(0)
+                                            Call awinDeleteProjectChildShapes(0)
                                             Call awinZeichneStatus(True)
                                         End If
 
@@ -1877,7 +1877,7 @@ Public Module testModule
 
                                         ' lösche alle Milestones wieder 
                                         If qualifier <> "" Then
-                                            Call awinDeleteMilestoneShapes(0)
+                                            Call awinDeleteProjectChildShapes(0)
                                         End If
                                     End With
 
@@ -1957,7 +1957,7 @@ Public Module testModule
                                         End If
 
                                         ' hier werden die Phasen gezeichnet 
-                                        Call awinDeleteMilestoneShapes(0)
+                                        Call awinDeleteProjectChildShapes(0)
 
                                         Dim qstr(20) As String
                                         Dim phNameCollection As New Collection
@@ -1982,7 +1982,7 @@ Public Module testModule
 
                                         If phNameCollection.Count > 0 Then
 
-                                            Call awinZeichnePhasen(phNameCollection, False)
+                                            Call awinZeichnePhasen(phNameCollection, False, True)
                                             rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
 
                                             If Not awinSettings.showTimeSpanInPT Then
@@ -1997,7 +1997,7 @@ Public Module testModule
 
                                             ' lösche alle Phase Shapes wieder wieder 
                                             If qualifier <> "" Then
-                                                Call awinDeleteMilestoneShapes(0)
+                                                Call awinDeleteProjectChildShapes(0)
                                             End If
 
                                         Else
@@ -4436,7 +4436,7 @@ Public Module testModule
         Dim number As Integer = 1
         Dim nameList As New Collection
 
-        Call awinDeleteMilestoneShapes(0)
+        Call awinDeleteProjectChildShapes(0)
 
         With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
 
@@ -4465,7 +4465,7 @@ Public Module testModule
             newshapeRange = pptslide.Shapes.Paste
             newShape = newshapeRange.Item(1)
 
-            Call awinDeleteMilestoneShapes(0)
+            Call awinDeleteProjectChildShapes(0)
 
             ' Shape wieder an die alte Position bringen 
             hproj.tfZeile = oldposition

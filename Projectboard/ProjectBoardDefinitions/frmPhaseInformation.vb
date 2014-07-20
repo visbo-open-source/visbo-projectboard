@@ -11,15 +11,15 @@
         frmCoord(PTfrm.phaseInfo, PTpinfo.top) = Me.Top
         frmCoord(PTfrm.phaseInfo, PTpinfo.left) = Me.Left
 
-        Call awinDeleteMilestoneShapes(3)
+        Call awinDeleteProjectChildShapes(3)
 
     End Sub
 
 
     Private Sub frmPhaseInformation_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        Me.Top = frmCoord(PTfrm.phaseInfo, PTpinfo.top)
-        Me.Left = frmCoord(PTfrm.phaseInfo, PTpinfo.left)
+        Me.Top = CInt(frmCoord(PTfrm.phaseInfo, PTpinfo.top))
+        Me.Left = CInt(frmCoord(PTfrm.phaseInfo, PTpinfo.left))
 
         oldStart = CDate(phaseStart.Text)
         oldEnd = CDate(phaseEnde.Text)

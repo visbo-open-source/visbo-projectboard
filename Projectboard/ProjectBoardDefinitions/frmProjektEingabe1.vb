@@ -41,8 +41,8 @@ Public Class frmProjektEingabe1
                 '
                 ' Voreinstellungg auf Projekt-Typ 1
                 '
-                vorlagenDropbox.Text = vorlagenDropbox.Items(1)
-                awinSettings.lastProjektTyp = vorlagenDropbox.Items(1)
+                vorlagenDropbox.Text = CStr(vorlagenDropbox.Items(1))
+                awinSettings.lastProjektTyp = CStr(vorlagenDropbox.Items(1))
             End If
 
             ' jetzt die Vorlagen dauer bestimmen 
@@ -79,8 +79,8 @@ Public Class frmProjektEingabe1
 
 
 
-            .Top = frmCoord(PTfrm.eingabeProj, PTpinfo.top)
-            .Left = frmCoord(PTfrm.eingabeProj, PTpinfo.left)
+            .Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
+            .Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
 
             '.selectedMonth.Value = DateDiff(DateInterval.Month, StartofCalendar, Date.Now) + 2
 

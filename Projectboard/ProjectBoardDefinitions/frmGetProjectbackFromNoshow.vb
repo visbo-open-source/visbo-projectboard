@@ -62,7 +62,7 @@
         Next
 
         For i = 1 To toDoListe.Count
-            pname = toDoListe.Item(i)
+            pname = CStr(toDoListe.Item(i))
             ListBox1.Items.Remove(pname)
         Next
 

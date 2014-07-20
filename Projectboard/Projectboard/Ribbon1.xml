@@ -17,8 +17,6 @@
           <separator id="PTXG1s1"/>
           <button id="PTXG1B2" label="Ziele-Bewertung" onAction="PT0ShowZieleUebersicht" />
           <separator id="PTXG1s2"/>
-          <!--<button id="PTXG1B3" label="alle roten Meilensteine" onAction="Tom2G2M5M2B3ShowMilestones" />
-          <separator id="PTXG1s3"/>-->
           <button id="PTXG1B4" label="Auslastung" onAction="PT0ShowAuslastung" />
           <separator id="PTXG1s4"/>
           <button id="PTXG1B5" label="Engpass" onAction="PTXShowEngpass" />
@@ -47,10 +45,6 @@
           </menu>
           <separator id="PT0G1s3"/>
           <menu id="PT0G1M2" label="Meilensteine">
-            <!--<button id="PT0G1M2B1" label="Grün" onAction="Tom2G2M5M2B1ShowMilestones" />
-            <button id="PT0G1M2B2" label="Gelb" onAction="Tom2G2M5M2B2ShowMilestones" />
-            <button id="PT0G1M2B3" label="Rot" onAction="Tom2G2M5M2B3ShowMilestones" />
-            <button id="PT0G1M2B4" label="Grau" onAction="Tom2G2M5M2B4ShowMilestones" />-->
             <button id="PT0G1M2B5" label="Alle" onAction="Tom2G2M5M2B5ShowMilestones" />
             <button id="PT0G1M2B6" label="Namen wählen" onAction="PTShowMilestonesByName" />
             <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="PTShowMilestoneTrend" />
@@ -81,7 +75,6 @@
           <separator id="PT0G2s3"/>
           <menu id="PT0G2M2" label="Meilensteine">
             <button id="PT0G2M2B1" label="Ampel Übersicht" onAction="PT0ShowZieleUebersicht" />
-            <!--<button id="PT0G2M2B2" label="Alle anzeigen" onAction="Tom2G2M5M2B5ShowMilestones" />-->
             <button id="PT0G2M2B3" label="Namen wählen" onAction="PTShowAllMilestonesByName" />
             <button id="PT0G2M2B4" label="Summen Charts" onAction="PTShowMilestoneSummen" />
             <!--<button id="PT0G2M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />-->

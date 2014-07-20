@@ -615,7 +615,7 @@
 
                 Dim found As Boolean = False
                 Dim lg As Integer = 0, rg As Integer = _liste.Count - 1
-                Dim suchindex As Integer = (rg - lg) / 2
+                Dim suchindex As Integer = CInt((rg - lg) / 2)
 
                 Do While suchindex > lg And suchindex < rg And Not found
 
@@ -624,11 +624,11 @@
                     ElseIf _liste.ElementAt(suchindex).Key > suchDatum Then
                         ' links suchen 
                         rg = suchindex
-                        suchindex = lg + (rg - lg) / 2
+                        suchindex = CInt(lg + (rg - lg) / 2)
                     Else
                         ' rechts suchen
                         lg = suchindex
-                        suchindex = lg + (rg - lg) / 2
+                        suchindex = CInt(lg + (rg - lg) / 2)
 
                     End If
 

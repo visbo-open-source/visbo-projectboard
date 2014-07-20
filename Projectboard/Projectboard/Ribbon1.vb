@@ -6,6 +6,9 @@ Imports WPFPieChart
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
+Imports System.Security.Principal
+Imports System.Diagnostics
+Imports System.Drawing
 
 
 
@@ -53,6 +56,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim constellationName As String
         Dim speichernDatenbank As String = "Pt5G2B1"
         Dim request As New Request(awinSettings.databaseName)
+
+
+        
 
 
         Call projektTafelInit()
@@ -2988,99 +2994,6 @@ Imports Excel = Microsoft.Office.Interop.Excel
     End Sub
 
 
-    ''' <summary>
-    ''' zeige die grünen Milestones für die ausgewählten Projekte an 
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub Tom2G2M5M2B1ShowMilestones(control As IRibbonControl)
-
-
-        Dim farbTyp As Integer = 1
-        Dim numberIt As Boolean = False
-        Dim namelist As New Collection
-
-        Call projektTafelInit()
-
-        appInstance.EnableEvents = False
-        'appInstance.ScreenUpdating = False
-        enableOnUpdate = False
-
-        Call awinZeichneMilestones(namelist, farbTyp, numberIt)
-
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
-        'appInstance.ScreenUpdating = formerSU
-
-
-    End Sub
-
-    Sub Tom2G2M5M2B2ShowMilestones(control As IRibbonControl)
-
-
-        Dim farbTyp As Integer = 2
-        Dim numberIt As Boolean = False
-        Dim namelist As New Collection
-
-        Call projektTafelInit()
-
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        Dim formerEE As Boolean = appInstance.EnableEvents
-
-
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        Call awinZeichneMilestones(namelist, farbTyp, numberIt)
-
-        enableOnUpdate = True
-        appInstance.EnableEvents = formerEE
-
-
-    End Sub
-
-    Sub Tom2G2M5M2B3ShowMilestones(control As IRibbonControl)
-
-
-        Dim farbTyp As Integer = 3
-        Dim numberIt As Boolean = False
-        Dim namelist As New Collection
-
-        Call projektTafelInit()
-
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        Call awinZeichneMilestones(namelist, farbTyp, numberIt)
-
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
-
-
-
-
-    End Sub
-
-    Sub Tom2G2M5M2B4ShowMilestones(control As IRibbonControl)
-
-
-        Dim farbTyp As Integer = 0
-        Dim numberIt As Boolean = False
-        Dim namelist As New Collection
-
-        Call projektTafelInit()
-
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        Call awinZeichneMilestones(namelist, farbTyp, numberIt)
-
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
-
-
-
-    End Sub
 
     Sub Tom2G2M5M2B5ShowMilestones(control As IRibbonControl)
 
@@ -3094,7 +3007,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        Call awinZeichneMilestones(namelist, farbTyp, numberIt)
+        Call awinZeichneMilestones(namelist, farbTyp, numberIt, False)
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -3159,7 +3072,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 Next
 
                 ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
 
 
                 With auswahlFenster
@@ -3472,7 +3385,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             ' erst noch alle Connectoren löschen ... 
 
-            Call awinDeleteMilestoneShapes(4)
+            Call awinDeleteProjectChildShapes(4)
 
             For Each singleShp In awinSelection
 
@@ -3503,7 +3416,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
     Sub Tom2G2M5B3NoShowSymbols(control As IRibbonControl)
         Call projektTafelInit()
-        Call awinDeleteMilestoneShapes(0)
+        Call awinDeleteProjectChildShapes(0)
     End Sub
 
 
@@ -3515,7 +3428,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
     Sub Tom2G2M5B3NoShowMilestones(control As IRibbonControl)
 
         Call projektTafelInit()
-        Call awinDeleteMilestoneShapes(1)
+        Call awinDeleteProjectChildShapes(1)
 
     End Sub
 
@@ -3546,6 +3459,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Catch ex As Exception
             awinSelection = Nothing
         End Try
+
+
+        Dim anzElem As Integer = selektierteProjekte.Count
 
         If Not awinSelection Is Nothing Then
 
@@ -3579,7 +3495,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 Next
 
                 ' jetzt stehen in der listOfItems die Namen der Phasen 
-                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
 
                 von = showRangeLeft
                 bis = showRangeRight
@@ -5735,7 +5651,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                     With showCharacteristics
 
-                        .Text = "Historie für Projekt " & pName.Trim
+                        .Text = "Historie für Projekt " & pName.Trim & vbLf & _
+                                "( " & projekthistorie.getZeitraum & " )"
                         .timeSlider.Minimum = 0
                         .timeSlider.Maximum = nrSnapshots - 1
 

@@ -148,19 +148,20 @@ namespace WpfWindow
                     {
                         int farbID = 4;
                         VBCollection nameList = new VBCollection();
-
+                        bool deleteOtherShapes = false;
 
                         if (this.checkbox1.IsChecked == true)
                         {
-                            Module1.awinDeleteMilestoneShapes(1);
+                            //Module1.awinDeleteProjectChildShapes(1);
+                            deleteOtherShapes = true;
                         }
 
                         foreach (string name in this.listbox.SelectedItems)
                         {
                             nameList.Add(name, name);
                         }
-                        
-                        Projekte.awinZeichneMilestones(nameList, farbID, false);
+
+                        Projekte.awinZeichneMilestones(nameList, farbID, false, deleteOtherShapes);
 
 
                         Module1.appInstance.EnableEvents = true;
@@ -219,17 +220,17 @@ namespace WpfWindow
                     
                     VBCollection myCollection = new VBCollection();
 
-                    if (this.checkbox1.IsChecked == true)
-                    {
-                        Module1.awinDeleteMilestoneShapes(3);
-                    }
+                    //if (this.checkbox1.IsChecked == true)
+                    //{
+                    //    Module1.awinDeleteProjectChildShapes(3);
+                    //}
                         
                     foreach (string name in this.listbox.SelectedItems)
                     {
                         myCollection.Add(name, name);
                     }
 
-                    Projekte.awinZeichnePhasen(myCollection, false);
+                    Projekte.awinZeichnePhasen(myCollection, false, (bool)this.checkbox1.IsChecked);
 
                     Module1.appInstance.EnableEvents = true;
                     Module1.enableOnUpdate = true;

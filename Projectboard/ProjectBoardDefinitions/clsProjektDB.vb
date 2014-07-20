@@ -309,7 +309,7 @@
                 ' nicht aber der Wert für dauerindays oder startoffset
                 If Me.dauerInDays = 0 Then
                     ' nutze 
-                    startoffset = DateDiff(DateInterval.Day, .Parent.startDate, .Parent.startDate.AddMonths(Me.relStart - 1))
+                    startoffset = CInt(DateDiff(DateInterval.Day, .Parent.startDate, .Parent.startDate.AddMonths(Me.relStart - 1)))
                     'dauer = DateDiff(DateInterval.Day, .Parent.startDate.AddMonths(Me.relStart - 1), .Parent.startDate.AddMonths(Me.relEnde).AddDays(-1)) + 1
                     dauer = calcDauerIndays(.Parent.startDate.AddDays(startoffset), Me.relEnde - Me.relStart + 1, True)
                 Else
@@ -390,7 +390,7 @@
                 Me.RollenTyp = .RollenTyp
                 Me.name = .name
                 Me.farbe = .farbe
-                Me.startkapa = .Startkapa
+                Me.startkapa = CInt(.Startkapa)
                 Me.tagessatzIntern = .tagessatzIntern
                 Me.tagessatzExtern = .tagessatzExtern
                 Bedarf = .Xwerte
