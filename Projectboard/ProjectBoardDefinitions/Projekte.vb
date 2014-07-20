@@ -14486,6 +14486,7 @@ Public Module Projekte
 
                 If specialListofPhases.Contains(phaseName) Then
 
+                    .lessonsLearnedControl.Visible = True
                     .projectName.Text = projectName
                     .phaseName.Text = phaseName
                     .Height = 530
@@ -14518,6 +14519,7 @@ Public Module Projekte
 
                 Else
 
+                    .lessonsLearnedControl.Visible = False
                     .projectName.Text = projectName
                     .phaseName.Text = phaseName
                     .Height = 220
