@@ -62,7 +62,11 @@ Public Class frmStoreCockpit
 
             End Try
         Else
-            Throw New ArgumentException("Die Datei " & fileName & " existiert nicht.")
+            ' Cockpits-File neu anlegen 
+            xlsCockpits = appInstance.Workbooks.Add()
+            xlsCockpits.SaveAs(fileName)
+
+            'Throw New ArgumentException("Die Datei " & fileName & " existiert nicht.")
         End If
 
         ' alle vorhandenen Cockpits (=Tabellenblätter) zur Auswahl anzeigen

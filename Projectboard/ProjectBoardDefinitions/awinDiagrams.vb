@@ -1416,7 +1416,7 @@ Public Module awinDiagrams
             isCockpitChart = True
         Else
             isCockpitChart = False
-
+            ' hier ändern???
             width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
 
         End If
@@ -1864,9 +1864,11 @@ Public Module awinDiagrams
                 If isCockpitChart Then
                     .HasLegend = False
                 ElseIf lastSC > 1 And seldatenreihe.Sum = 0 Then
-                    .HasLegend = True
-                    .Legend.Position = Excel.Constants.xlTop
-                    .Legend.Font.Size = awinSettings.fontsizeLegend
+                    ''ur: 29.7.2014'''.HasLegend = True
+                    ''ur: 29.7.2014'''.Legend.Position = Excel.Constants.xlTop
+                    ' ur: 17.7.2014 geändert
+                    ' fontsize aus vorhandenm Diagramm lassen
+                    '.Legend.Font.Size = awinSettings.fontsizeLegend
                 Else
 
                     .HasLegend = False
@@ -1964,7 +1966,7 @@ Public Module awinDiagrams
 
         Dim positiv As Boolean = True
 
-        ' Ausrechnen amteiliges Budget, das i Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
+        ' Ausrechnen anteiliges Budget, das i Zeitraum zur Verfügung steht und der im Zeitraum anfallenden Kosten  
         budgetSum = System.Math.Round(ShowProjekte.getBudgetValuesInMonth.Sum / 10, mode:=MidpointRounding.ToEven) * 10
         costValues = ShowProjekte.getTotalCostValuesInMonth
         zeitraumCost = System.Math.Round(costValues.Sum / 10, mode:=MidpointRounding.ToEven) * 10
@@ -2127,7 +2129,8 @@ Public Module awinDiagrams
                             .HasDataLabel = True
                             .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
                             .Interior.color = itemColor(iv)
-                            .DataLabel.Font.Size = awinSettings.fontsizeLegend
+                            ' ur: 17.7.2014 fontsize kommt aus existierendem Chart
+                            '.DataLabel.Font.Size = awinSettings.fontsizeLegend
                             Try
                                 .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
                             Catch ex As Exception
@@ -2138,41 +2141,42 @@ Public Module awinDiagrams
                     Next
 
                 End With
+                ' ur: 17.7.2014 kommt von existierendem Chart
+                '.HasAxis(Excel.XlAxisType.xlCategory) = True
+                '.HasAxis(Excel.XlAxisType.xlValue) = False
 
-                .HasAxis(Excel.XlAxisType.xlCategory) = True
-                .HasAxis(Excel.XlAxisType.xlValue) = False
+                'With .Axes(Excel.XlAxisType.xlCategory)
+                '    .HasTitle = False
+                '    If minScale < 0 Then
+                '        .TickLabelPosition = Excel.Constants.xlLow
+                '    End If
+                '    '.MinimumScale = 0
 
-                With .Axes(Excel.XlAxisType.xlCategory)
-                    .HasTitle = False
-                    If minScale < 0 Then
-                        .TickLabelPosition = Excel.Constants.xlLow
-                    End If
-                    '.MinimumScale = 0
+                'End With
 
-                End With
+                ' ur: 17.7.2014 kommt von existierendem Chart
+                'Try
+                '    With .Axes(Excel.XlAxisType.xlValue)
+                '        .HasTitle = False
+                '        .HasMajorGridlines = False
+                '        .hasminorgridlines = False
+                '        If minScale < 0 Then
+                '            .MinimumScale = System.Math.Round((minScale - 1) / 10, mode:=MidpointRounding.ToEven) * 10
+                '        Else
+                '            .MinimumScale = 0
+                '        End If
+                '    End With
+                'Catch ex As Exception
 
-
-                Try
-                    With .Axes(Excel.XlAxisType.xlValue)
-                        .HasTitle = False
-                        .HasMajorGridlines = False
-                        .hasminorgridlines = False
-                        If minScale < 0 Then
-                            .MinimumScale = System.Math.Round((minScale - 1) / 10, mode:=MidpointRounding.ToEven) * 10
-                        Else
-                            .MinimumScale = 0
-                        End If
-                    End With
-                Catch ex As Exception
-
-                End Try
+                'End Try
 
 
                 .HasLegend = False
                 .HasTitle = True
 
                 .ChartTitle.Text = diagramTitle
-                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                ' ur: 17.7.2014 fontsize kommt von Existierendem Chart
+                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
                 .Location(Where:=XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
             End With
 
@@ -2828,8 +2832,8 @@ Public Module awinDiagrams
                         With .Points(i)
                             .HasDataLabel = True
                             .DataLabel.text = htxt
-
-                            .DataLabel.Font.Size = awinSettings.fontsizeItems + 2
+                            ' ur: 17.7.2014 fontsize kommt von existierenden Chart
+                            '.DataLabel.Font.Size = awinSettings.fontsizeItems + 2
 
 
                             Try
@@ -2846,7 +2850,8 @@ Public Module awinDiagrams
 
 
                 .ChartTitle.Text = diagramTitle
-                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                ' ur: 17.7.2014 fontsizes kommen von existierenden Chart
+                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
                 .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
                     titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
@@ -3729,7 +3734,8 @@ Public Module awinDiagrams
                             .HasDataLabel = True
                             .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
                             .Interior.color = itemColor(iv)
-                            .DataLabel.Font.Size = awinSettings.fontsizeLegend
+                            ' ur:17.7.2014 fontsize bei update nicht ändern für die Legend
+                            '.DataLabel.Font.Size = awinSettings.fontsizeLegend
                             Try
                                 .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
                             Catch ex As Exception

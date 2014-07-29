@@ -1879,7 +1879,7 @@ Public Module testModule
                                     newShape = pptSlide.Shapes.Paste
                                     Dim ratio As Double
 
-                                    With newShape
+                                    With newShape.Item(1)
                                         ratio = height / width
                                         If ratio < .Height / .Width Then
                                             ' orientieren an width 

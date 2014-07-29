@@ -349,24 +349,38 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             Call projektTafelInit()
 
-            ' hier muss die Auswahl des Names für das Cockpit erfolgen
+            Call awinDeSelect()
 
-            returnValue = storeCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
+            Dim anzDiagrams As Integer = appInstance.Worksheets(arrWsNames(3)).ChartObjects.Count
+          
+            If anzDiagrams > 0 Then
 
-            If returnValue = DialogResult.OK Then
+           
+                ' hier muss die Auswahl des Names für das Cockpit erfolgen
 
-                cockpitName = storeCockpitFrm.ComboBox1.Text
+                returnValue = storeCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
 
-                appInstance.ScreenUpdating = False
+                If returnValue = DialogResult.OK Then
 
-                Call awinStoreCockpit(cockpitName)
+                    cockpitName = storeCockpitFrm.ComboBox1.Text
 
-                appInstance.ScreenUpdating = True
+                    'appInstance.ScreenUpdating = False
+
+                    enableOnUpdate = False
+
+                    Call awinStoreCockpit(cockpitName)
+
+                    enableOnUpdate = True
+
+                    'appInstance.ScreenUpdating = True
+                Else
+
+
+                End If
+                ' hier muss eventuell ein Neuzeichnen erfolgen
             Else
-
-
+                Call MsgBox("Es ist kein Chart angezeigt")
             End If
-            ' hier muss eventuell ein Neuzeichnen erfolgen
 
         Catch ex As Exception
             Throw New ArgumentException("PT0SaveCockpit: Fehler:  ", ex.Message)
@@ -384,28 +398,85 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Call projektTafelInit()
 
-        ' hier muss die Auswahl des Names für das Cockpit erfolgen
+        If ShowProjekte.Count > 0 Then
 
-        returnValue = loadCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
+            If showRangeRight - showRangeLeft > 5 Then
 
-        If returnValue = DialogResult.OK Then
+                Dim awinSelection As Excel.ShapeRange
 
-            cockpitName = loadCockpitFrm.ListBox1.Text
+                Try
+                    'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                Catch ex As Exception
+                    awinSelection = Nothing
+                End Try
 
-            appInstance.ScreenUpdating = False
+                appInstance.EnableEvents = False
+                enableOnUpdate = False
 
-            Call awinLoadCockpit(cockpitName)
+                ' hier muss die Auswahl des Names für das Cockpit erfolgen
 
-            Call awinNeuZeichnenDiagramme(9)
+                returnValue = loadCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
 
-            appInstance.ScreenUpdating = True
+                If returnValue = DialogResult.OK Then
 
+                    cockpitName = loadCockpitFrm.ListBox1.Text
+
+                    'appInstance.ScreenUpdating = False
+
+                    Try
+                        Call awinLoadCockpit(cockpitName)
+
+                        ' nur wenn ein Projekt selektiert wurde, werden die Projekt-Charts aktualisiert
+                        If Not awinSelection Is Nothing Then
+
+
+                            If awinSelection.Count = 1 Then
+                                Dim singleShp As Excel.Shape
+                                Dim hproj As clsProjekt
+
+                                ' jetzt die Aktion durchführen ...
+                                singleShp = awinSelection.Item(1)
+
+                                Try
+                                    hproj = ShowProjekte.getProject(singleShp.Name)
+                                Catch ex As Exception
+                                    Call MsgBox("Projekt nicht gefunden ..." & singleShp.Name)
+                                    Exit Sub
+                                End Try
+
+                                Call aktualisiereCharts(hproj, True)
+
+                                Call awinDeSelect()
+                            End If
+
+                        End If
+
+                        Call awinNeuZeichnenDiagramme(9)
+
+                    Catch ex As Exception
+                        Call MsgBox("Fehler beim Laden ..")
+                    End Try
+
+
+                   
+                    
+                    'appInstance.ScreenUpdating = True
+
+                Else
+
+
+                End If
+            Else
+                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+            End If
         Else
-
-
+            Call MsgBox("Es sind noch keine Projekte geladen!")
         End If
-        ' hier muss eventuell ein Neuzeichnen erfolgen
 
+        ' hier muss eventuell ein Neuzeichnen erfolgen
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
     End Sub
 
 
