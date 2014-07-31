@@ -4420,16 +4420,16 @@ Public Module Projekte
 
 
             With chtobj.Chart
-                ' remove extra series
-                Do Until .SeriesCollection.Count = 0
-                    .SeriesCollection(1).Delete()
-                Loop
+                '' remove extra series
+                'Do Until .SeriesCollection.Count = 0
+                '    .SeriesCollection(1).Delete()
+                'Loop
 
 
                 ' -----------------------
                 ' Schreibe Über- bzw Unterauslastung 
 
-                With .SeriesCollection.NewSeries
+                With .SeriesCollection(1)
                     .name = "Details"
 
                     .Values = tdatenreihe
@@ -4462,8 +4462,8 @@ Public Module Projekte
                 .ChartTitle.Text = diagramTitle
                 ' ur: 17.7.2014 fontsize kommt vom existierenden chart
                 ' .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                '    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
             End With
 

@@ -2810,17 +2810,17 @@ Public Module awinDiagrams
 
             With repObj.Chart
 
+                ' ur:31.07.2014
+                'Do Until .SeriesCollection.Count = 0
+                '    .SeriesCollection(1).Delete()
+                'Loop
 
-                Do Until .SeriesCollection.Count = 0
-                    .SeriesCollection(1).Delete()
-                Loop
 
-
-                With .SeriesCollection.NewSeries
+                With .SeriesCollection(1)
                     .name = "Auslastung"
                     .Values = datenreihe
                     .XValues = Xdatenreihe
-                    .HasDataLabels = False
+                    '.HasDataLabels = False
                     .ChartType = Excel.XlChartType.xlPie
                     .Points(1).Interior.color = awinSettings.AmpelGruen
                     .Points(2).Interior.color = awinSettings.AmpelRot
@@ -2852,8 +2852,8 @@ Public Module awinDiagrams
                 .ChartTitle.Text = diagramTitle
                 ' ur: 17.7.2014 fontsizes kommen von existierenden Chart
                 '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                '    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
             End With
 

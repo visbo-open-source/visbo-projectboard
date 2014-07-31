@@ -34,8 +34,9 @@ Public Class frmLoadCockpit
     Private Sub frmStoreCockpit_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Dim i As Integer
         Dim fileName As String
-
         Dim wsSheet As xlNS.Worksheet = Nothing
+
+        appInstance.ScreenUpdating = False
 
         fileName = awinPath & cockpitsFile
 
@@ -78,7 +79,7 @@ Public Class frmLoadCockpit
         End While
 
         xlsCockpits.Close(SaveChanges:=False)
-
+        'appInstance.ScreenUpdating = True
     End Sub
 
     Private Sub ComboBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListBox1.SelectedIndexChanged

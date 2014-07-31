@@ -464,7 +464,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     appInstance.ScreenUpdating = True
 
                 Else
-
+                    appInstance.ScreenUpdating = True
 
                 End If
             Else
