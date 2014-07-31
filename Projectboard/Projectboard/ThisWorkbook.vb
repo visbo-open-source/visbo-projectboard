@@ -178,19 +178,19 @@ Public Class ThisWorkbook
         ' hier sollen jetzt noch die Phasen weggeschrieben werden 
         Call awinWritePhaseDefinitions()
 
-
-        returnValue = projektespeichern.ShowDialog
         Try
 
-            If returnValue = DialogResult.Yes Then
+            If AlleProjekte.Count > 0 Then
 
-                If AlleProjekte.Count > 0 Then
+                returnValue = projektespeichern.ShowDialog
+
+                If returnValue = DialogResult.Yes Then
 
                     Call StoreAllProjectsinDB()
 
-                Else
-                    Call MsgBox("keine Projekte zu speichern ...")
                 End If
+            Else
+                Call MsgBox("keine Projekte zu speichern ...")
 
             End If
 

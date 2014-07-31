@@ -7378,6 +7378,7 @@ Public Module Projekte
         Dim maxColumns As Integer
         Dim logMessage As String = " "
         Dim newchtobj As Excel.ChartObject
+        Dim oldchtobj As Excel.ChartObject
         Dim chtobj As Excel.ChartObject
         Dim hchtobj As Excel.ChartObject
         Dim hshape As Excel.Shape
@@ -7487,7 +7488,11 @@ Public Module Projekte
 
                     While k <= anzDiagrams
 
+                        wsPT.Activate()
+
                         chtobj = wsPT.ChartObjects(k)
+
+                        oldchtobj = chtobj
 
                         chtobj.Copy()
 
@@ -7507,7 +7512,9 @@ Public Module Projekte
                             End If
                         End While
 
+                        'chtobj.Cut()
 
+                        wsSheet.Activate()
 
                         ' Chart aus dem Buffer nun in das Tabellenblatt einfügen
                         wsSheet.Paste()
@@ -7515,8 +7522,8 @@ Public Module Projekte
 
                         ' dem neu eingefügten Chart die richtige Position eintragen, neutralisiert um den sichtbaren Bereich
                         newchtobj = wsSheet.ChartObjects(anzChartsInCockpit)
-                        newchtobj.Top = chtobj.Top - sichtbarerBereich.Top
-                        newchtobj.Left = chtobj.Left - sichtbarerBereich.Left
+                        newchtobj.Top = oldchtobj.Top - sichtbarerBereich.Top
+                        newchtobj.Left = oldchtobj.Left - sichtbarerBereich.Left
 
                         ' aus der DiagrammList noch DiagrammTyp herausholen und in das Chart bei AlternativText eintragen
                         Dim hdiagramm As clsDiagramm
@@ -7672,8 +7679,9 @@ Public Module Projekte
                                                 found = True
                                             End If
                                         Else
-                                            If CPtmpArray(0) = "pf" And PTtmpArray(0) = "pf" Then
-                                                If CPtmpArray(0) = PTtmpArray(0) And CPtmpArray(1) = PTtmpArray(1) Then
+                                            If isPfDiagramm Then
+                                                If hchtobj.Name = chtobj.Name Then
+
                                                     currentWS.ChartObjects(j).Delete()
                                                     found = True
                                                 End If
@@ -7723,11 +7731,11 @@ Public Module Projekte
 
                             ' myCollection aufbauen mit den verschiedenen Werten die im Diagramm angezeigt werden sollen
                             For hi = 0 To tmpArray1.Length - 1
-                                If tmpArray1.Length <> 1 And tmpArray1(hi) <> "" Then
+                                If tmpArray1.Length >= 1 And tmpArray1(hi) <> "" Then
                                     hstring = tmpArray1(hi)
                                     myCollection.Add(hstring, hstring)
-                                Else
-                                    myCollection = Nothing
+                                    'Else
+                                    '    myCollection = Nothing
                                 End If
 
                             Next hi

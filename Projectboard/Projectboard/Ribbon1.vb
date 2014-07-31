@@ -364,7 +364,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                     cockpitName = storeCockpitFrm.ComboBox1.Text
 
-                    'appInstance.ScreenUpdating = False
+                    appInstance.ScreenUpdating = False
 
                     enableOnUpdate = False
 
@@ -372,7 +372,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                     enableOnUpdate = True
 
-                    'appInstance.ScreenUpdating = True
+                    appInstance.ScreenUpdating = True
                 Else
 
 
@@ -422,7 +422,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                     cockpitName = loadCockpitFrm.ListBox1.Text
 
-                    'appInstance.ScreenUpdating = False
+                    appInstance.ScreenUpdating = False
 
                     Try
                         Call awinLoadCockpit(cockpitName)
@@ -461,7 +461,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                    
                     
-                    'appInstance.ScreenUpdating = True
+                    appInstance.ScreenUpdating = True
 
                 Else
 
