@@ -4777,14 +4777,23 @@ Imports System.Drawing
             If awinSelection.Count = 1 Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
-                Dim hproj As clsProjekt = ShowProjekte.getProject(singleShp.Name)
-                Dim cproj As New clsProjekt
-                Dim top As Double = singleShp.Top + boxHeight + 2
-                Dim left As Double = singleShp.Left - boxWidth
-                If left <= 0 Then
-                    left = 1
-                End If
-                Call awinCompareProject(hproj, cproj, 0, top, left)
+                Dim hproj As clsProjekt
+
+                Try
+                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    Dim cproj As New clsProjekt
+                    Dim top As Double = singleShp.Top + boxHeight + 2
+                    Dim left As Double = singleShp.Left - boxWidth
+                    If left <= 0 Then
+                        left = 1
+                    End If
+                    Call awinCompareProject(hproj, cproj, 0, top, left)
+
+                Catch ex As Exception
+                    Call MsgBox("Fehler bei Beauftragung " & vbLf & ex.Message)
+                End Try
+                
+
                 'Call awinCompareProject(pname1:=singleShp.Name, pname2:=" ", compareType:=0)
 
             Else
@@ -5330,14 +5339,22 @@ Imports System.Drawing
                 ' jetzt die Aktion durchführen ...
                 singleShp1 = awinSelection.Item(1)
                 singleShp2 = awinSelection.Item(2)
-                Dim hproj As clsProjekt = ShowProjekte.getProject(singleShp1.Name)
-                Dim cproj As clsProjekt = ShowProjekte.getProject(singleShp2.Name)
-                Dim top As Double = singleShp1.Top + boxHeight + 2
-                Dim left As Double = singleShp1.Left - boxWidth
-                If left <= 0 Then
-                    left = 1
-                End If
-                Call awinCompareProject(hproj, cproj, 3, top, left)
+
+                Dim hproj As clsProjekt
+                Dim cproj As clsProjekt
+                Try
+                    hproj = ShowProjekte.getProject(singleShp1.Name)
+                    cproj = ShowProjekte.getProject(singleShp2.Name)
+                    Dim top As Double = singleShp1.Top + boxHeight + 2
+                    Dim left As Double = singleShp1.Left - boxWidth
+                    If left <= 0 Then
+                        left = 1
+                    End If
+                    Call awinCompareProject(hproj, cproj, 3, top, left)
+                Catch ex As Exception
+                    Call MsgBox("Fehler bei Compare" & vbLf & ex.Message)
+                End Try
+                
             Else
                 Call MsgBox("bitte zwei Projekte selektieren")
                 'For Each singleShp In awinSelection
@@ -5387,7 +5404,7 @@ Imports System.Drawing
 
             If Not awinSelection Is Nothing Then
 
-                If awinSelection.Count = 1 Then
+                If awinSelection.Count = 1 And isProjectType(kindOfShape(awinSelection.Item(1))) Then
                     ' jetzt die Aktion durchführen ...
                     singleShp = awinSelection.Item(1)
 
@@ -5491,7 +5508,7 @@ Imports System.Drawing
 
         If Not awinSelection Is Nothing Then
 
-            If awinSelection.Count = 1 Then
+            If awinSelection.Count = 1 And isProjectType(kindOfShape(awinSelection.Item(1))) Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
 
@@ -5599,7 +5616,7 @@ Imports System.Drawing
         If Not awinSelection Is Nothing Then
 
 
-            If awinSelection.Count = 1 Then
+            If awinSelection.Count = 1 And isProjectType(kindOfShape(awinSelection.Item(1))) Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
                 hproj = ShowProjekte.getProject(singleShp.Name)

@@ -14,6 +14,28 @@ Public Class clsProjektShapes
     Private AllShapes As SortedList(Of String, Double())
 
     ''' <summary>
+    ''' gibt true zurück, wenn der Name in der Shape Liste enthalten ist
+    ''' false, sonst
+    ''' </summary>
+    ''' <param name="suchName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property contains(ByVal suchName As String) As Boolean
+        Get
+
+            Try
+                contains = AllShapes.ContainsKey(suchName)
+            Catch ex As Exception
+                contains = False
+            End Try
+
+
+        End Get
+    End Property
+
+
+    ''' <summary>
     ''' gibt ein ShapeRange Objekt zurück, das alle Shapes enthält, die in Shape mit Namen pName enthalten sind 
     ''' </summary>
     ''' <param name="pName"></param>
@@ -56,58 +78,96 @@ Public Class clsProjektShapes
             Dim shapegruppe As Excel.ShapeRange
             Dim hproj As clsProjekt
 
+            Try
+                hproj = ShowProjekte.getProject(pName)
 
-            hproj = ShowProjekte.getProject(pName)
-
-            With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
-                worksheetShapes = .Shapes
-            End With
+                With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+                    worksheetShapes = .Shapes
+                End With
 
 
 
-            If anzElements = 0 Then
+                If anzElements = 0 Then
 
-                groupShapes = Nothing
+                    groupShapes = Nothing
 
-            ElseIf anzElements = 1 Then
+                ElseIf anzElements = 1 Then
 
-                groupShapes = worksheetShapes.Item(listOFNames.Item(1))
+                    groupShapes = worksheetShapes.Item(listOFNames.Item(1))
 
-            Else
+                Else
 
-                ReDim arrayOFNames(anzElements - 1)
+                    ReDim arrayOFNames(anzElements - 1)
 
-                For i = 1 To anzElements
-                    arrayOFNames(i - 1) = CStr(listOFNames.Item(i))
-                Next
+                    For i = 1 To anzElements
+                        arrayOFNames(i - 1) = CStr(listOFNames.Item(i))
+                    Next
 
-                shapegruppe = worksheetShapes.Range(arrayOFNames)
-                groupShapes = shapegruppe.Group
+                    shapegruppe = worksheetShapes.Range(arrayOFNames)
+                    groupShapes = shapegruppe.Group
 
-            End If
+                End If
 
-            If anzElements > 0 Then
-                With groupShapes
+                If anzElements > 0 Then
+                    With groupShapes
 
-                    .Name = pName
-                    If awinSettings.drawphases Then
-                        .AlternativeText = CInt(PTshty.projektE).ToString
-                    Else
-                        If anzElements = 1 Then
-                            .AlternativeText = CInt(PTshty.projektN).ToString
+                        .Name = pName
+                        If awinSettings.drawphases Then
+                            .AlternativeText = CInt(PTshty.projektE).ToString
                         Else
-                            .AlternativeText = CInt(PTshty.projektC).ToString
+                            If anzElements = 1 Then
+                                .AlternativeText = CInt(PTshty.projektN).ToString
+                            Else
+                                .AlternativeText = CInt(PTshty.projektC).ToString
+                            End If
+
                         End If
+
+                        hproj.shpUID = .ID.ToString
+
+                    End With
+
+                    ' jetzt muss das auch in der Liste Showprojekte eingetragen werden 
+                    ShowProjekte.AddShape(pName, hproj.shpUID)
+
+                    If anzElements > 1 Then
+                        ' jetzt muss das Phase 1 Shape als shty.phaseN deklariert werden 
+                        ' damit ändert sich auch der Name des Shapes 
+                        Dim phase1Shape As Excel.Shape
+
+
+                        Try
+                            phase1Shape = groupShapes.GroupItems.Item(1)
+
+                            With phase1Shape
+                                If awinSettings.drawphases Then
+                                    .AlternativeText = CInt(PTshty.phaseE).ToString
+                                Else
+                                    .AlternativeText = CInt(PTshty.phase1).ToString
+                                End If
+
+                                .Name = projectboardShapes.calcPhaseShapeName(hproj.name, hproj.getPhase(1).name)
+
+
+                            End With
+
+
+
+                        Catch ex As Exception
+
+                        End Try
 
                     End If
 
-                    hproj.shpUID = .ID.ToString
+                End If
 
-                End With
+            Catch ex As Exception
+                Call MsgBox("Fehler in groupShapes: " & vbLf & ex.Message)
+                groupShapes = Nothing
+            End Try
 
-                ' jetzt muss das auch in der Liste Showprojekte eingetragen werden 
-                ShowProjekte.AddShape(pName, hproj.shpUID)
-            End If
+
+            
 
         End Get
     End Property
@@ -124,18 +184,25 @@ Public Class clsProjektShapes
         Dim pShape As Excel.Shape
         Dim hproj As clsProjekt
 
-        hproj = ShowProjekte.getProject(pName)
-        pShape = shapeSammlung.Regroup
 
-        With pShape
-            .Name = pName
-            .AlternativeText = CInt(PTshty.projektE).ToString
-            hproj.shpUID = .ID.ToString
+        Try
 
-        End With
+            hproj = ShowProjekte.getProject(pName)
+            pShape = shapeSammlung.Regroup
 
-        ' jetzt muss das auch in der Liste Showprojekte eingetragen werden 
-        ShowProjekte.AddShape(pName, hproj.shpUID)
+            With pShape
+                .Name = pName
+                .AlternativeText = CInt(PTshty.projektE).ToString
+                hproj.shpUID = .ID.ToString
+
+            End With
+
+            ' jetzt muss das auch in der Liste Showprojekte eingetragen werden 
+            ShowProjekte.AddShape(pName, hproj.shpUID)
+        Catch ex As Exception
+
+        End Try
+        
 
     End Sub
 
@@ -193,7 +260,9 @@ Public Class clsProjektShapes
     ''' <remarks></remarks>
     Public ReadOnly Property calcStatusShapeName(ByVal pName As String, ByVal dateColumn As Integer) As String
         Get
-            calcStatusShapeName = pName & "#Status#" & dateColumn.ToString
+            'calcStatusShapeName = pName & "#Status#" & dateColumn.ToString
+            ' der status soll nur einmal gezeichnet werden 
+            calcStatusShapeName = pName & "#Status#"
         End Get
     End Property
 
@@ -242,6 +311,7 @@ Public Class clsProjektShapes
     ''' <summary>
     ''' löscht zu dem angegeben projektshape die Child-Shapes mit den in typCollection angegebenen Typen
     ''' wenn typCollection Null ist , dann sollen alle Elemente gelöscht werden 
+    ''' Ausnahme: die Phase 1 darf nicht geöscht werden 
     ''' </summary>
     ''' <param name="projektshape"></param>
     ''' <param name="typCollection"></param>
@@ -250,16 +320,15 @@ Public Class clsProjektShapes
 
         
         Dim pName As String
+
         Dim done As Boolean
         Dim shapeGruppe As ShapeRange
         Dim nameCollection As New Collection
 
-        
-
         ' nur dann kann es aus mehreren bestehen ....
         If projektshape.AutoShapeType = Microsoft.Office.Core.MsoAutoShapeType.msoShapeMixed Then
 
-            pName = projektshape.Name
+            pName = extractName(projektshape.Name, PTshty.projektN)
 
             shapeGruppe = projektshape.Ungroup
 
@@ -365,11 +434,15 @@ Public Class clsProjektShapes
                                     Dim phaseName As String = extractName(tmpShape.Name, PTshty.phaseN)
                                     Dim msNr As Integer = CInt(extractName(tmpShape.Name, PTshty.milestoneN))
 
-                                    elementName = hproj.getPhase(phaseName).getResult(msNr).name
 
-                                    If Not tmpCollection.Contains(elementName) Then
-                                        tmpCollection.Add(elementName, elementName)
-                                    End If
+                                    Try
+                                        elementName = hproj.getPhase(phaseName).getResult(msNr).name
+                                        If Not tmpCollection.Contains(elementName) Then
+                                            tmpCollection.Add(elementName, elementName)
+                                        End If
+                                    Catch ex As Exception
+
+                                    End Try
 
 
                                 End If
@@ -428,20 +501,21 @@ Public Class clsProjektShapes
 
         Dim shpName As String = shpElement.Name
         Dim done As Boolean
-        Dim todoListe1 As New Collection
+        'Dim todoListe1 As New Collection
         Dim todoListe2 As New Collection
         Dim shapetype As Integer = kindOfShape(shpElement)
         Dim tmpCollection As New Collection
 
 
         If isProjectType(shapetype) Then
-            todoListe1 = Me.getAllChildswithType(shpElement, tmpCollection)
+            'Test
+            'todoListe1 = Me.getAllChildswithType(shpElement, tmpCollection)
             todoListe2 = Me.getAllChilds(shpElement.Name)
 
-            ' Test-Routine: 
-            If todoListe1.Count <> todoListe2.Count Then
-                'Call MsgBox("Fehler in clsprojektShapes.remove)")
-            End If
+            'Test 
+            'If todoListe1.Count <> todoListe2.Count Then
+            'Call MsgBox("Fehler in clsprojektShapes.remove)")
+            'End If
         End If
 
         Try
@@ -549,7 +623,7 @@ Public Class clsProjektShapes
             shpElement.Height = CSng(oldCoord(2))
 
             ' Width überprüfen: width darf nur bei phaseE, phaseN, projektN, projektC, projektE
-            If shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Or _
+            If shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Or shapeType = PTshty.phase1 Or _
                 isProjectType(shapeType) Then
 
                 If Abs(oldCoord(3) - shpCoord(3)) > tolX * 0.2 Then
@@ -620,7 +694,8 @@ Public Class clsProjektShapes
 
             If hproj.Status = ProjektStatus(0) _
                 And Not shapeType = PTshty.status _
-                And Not shapeType = PTshty.dependency Then
+                And Not shapeType = PTshty.dependency _
+                And Not shapeType = PTshty.phase1 Then
                 moveAllowed = True
             Else
                 moveAllowed = False

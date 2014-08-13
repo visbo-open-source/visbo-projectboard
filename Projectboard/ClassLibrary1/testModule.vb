@@ -4324,9 +4324,14 @@ Public Module testModule
         timeFrameProjekte = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
         For Each pname As String In timeFrameProjekte
-            hproj = ShowProjekte.getProject(pname)
-            key = 10000 * hproj.tfZeile + hproj.Start
-            todoListe.Add(key, hproj)
+            Try
+                hproj = ShowProjekte.getProject(pname)
+                key = 10000 * hproj.tfZeile + hproj.Start
+                todoListe.Add(key, hproj)
+            Catch ex As Exception
+
+            End Try
+            
         Next
 
 
@@ -4456,7 +4461,7 @@ Public Module testModule
             End With
 
             Call zeichneStatusSymbolInPlantafel(hproj, 0)
-            Call zeichneResultMilestonesInProjekt(hproj, nameList, 4, False, True, number, True)
+            Call zeichneResultMilestonesInProjekt(hproj, nameList, 4, 0, 0, True, number, True)
 
 
             rng = .Range(.Cells(newzeile, minColumn), .Cells(newzeile + 1, maxColumn))

@@ -3135,36 +3135,42 @@ Public Module awinGeneralModules
         Dim i As Integer
         For i = 1 To todoListe.Count
             pname = todoListe.ElementAt(i - 1).Value
-            hproj = ShowProjekte.getProject(pname)
 
-            If i = 1 Then
-                curZeile = hproj.tfZeile
-                lastZeileOld = hproj.tfZeile
-                lastZeile = curZeile
-                max = curZeile
-            Else
-                If lastZeileOld = hproj.tfZeile Then
-                    curZeile = lastZeile
-                Else
-                    lastZeile = max
+            Try
+                hproj = ShowProjekte.getProject(pname)
+
+                If i = 1 Then
+                    curZeile = hproj.tfZeile
                     lastZeileOld = hproj.tfZeile
+                    lastZeile = curZeile
+                    max = curZeile
+                Else
+                    If lastZeileOld = hproj.tfZeile Then
+                        curZeile = lastZeile
+                    Else
+                        lastZeile = max
+                        lastZeileOld = hproj.tfZeile
+                    End If
+
                 End If
 
-            End If
-
-            hproj.tfZeile = curZeile
-            lastZeile = curZeile
-            'Call ZeichneProjektinPlanTafel2(pname, curZeile)
-            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-            Dim tmpCollection As New Collection
-            Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
-            curZeile = lastZeile + getNeededSpace(hproj)
+                hproj.tfZeile = curZeile
+                lastZeile = curZeile
+                'Call ZeichneProjektinPlanTafel2(pname, curZeile)
+                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                Dim tmpCollection As New Collection
+                Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
+                curZeile = lastZeile + getNeededSpace(hproj)
 
 
-            If curZeile > max Then
-                max = curZeile
-            End If
+                If curZeile > max Then
+                    max = curZeile
+                End If
+            Catch ex As Exception
+
+            End Try
+            
 
 
         Next

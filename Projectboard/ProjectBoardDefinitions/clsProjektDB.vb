@@ -403,11 +403,6 @@
 
             With role
                 .RollenTyp = Me.RollenTyp
-                '.name = Me.name
-                '.farbe = Me.farbe
-                '.Startkapa = Me.startkapa
-                '.tagessatzIntern = Me.tagessatzIntern
-                '.tagessatzExtern
                 .Xwerte = Me.Bedarf
                 .isCalculated = Me.isCalculated
             End With
@@ -449,8 +444,6 @@
 
             With cost
                 .KostenTyp = Me.KostenTyp
-                'Me.name = .name
-                'Me.farbe = .farbe
                 .Xwerte = Bedarf
             End With
 

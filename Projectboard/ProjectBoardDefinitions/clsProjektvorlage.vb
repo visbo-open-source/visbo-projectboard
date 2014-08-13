@@ -65,6 +65,36 @@
 
     End Sub
 
+    ''' <summary>
+    ''' gibt zu einem gegebenen Meilenstein-Namen das clsResult Objekt zurück, sofern es existiert
+    ''' Nothing sonst
+    ''' </summary>
+    ''' <param name="msName">Name des Meilensteins</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getResult(ByVal msName As String) As clsResult
+        Get
+            Dim tmpResult As clsResult = Nothing
+            Dim p As Integer
+            Dim found As Boolean = False
+
+            While (p <= AllPhases.Count - 1) And (Not found)
+
+                tmpResult = AllPhases.Item(p).getResult(msName)
+                If Not IsNothing(tmpResult) Then
+                    found = True
+                Else
+                    p = p + 1
+                End If
+            End While
+
+            getResult = tmpResult
+
+        End Get
+    End Property
+
+
     Public Property farbe() As Object
 
     Public Property Schrift() As Integer
@@ -719,7 +749,7 @@
                                         For i = phasenStart To phasenStart + dimension
 
                                             costValues(i) = costValues(i) + tempArray(i - phasenStart)
-                                            
+
 
                                         Next i
                                     End If
@@ -777,7 +807,7 @@
                                 'Catch ex As Exception
 
                                 'End Try
-                                
+
                             End If
                         Next k
                     End With
@@ -1048,7 +1078,7 @@
             Dim i As Integer, r As Integer
             Dim roleName As String
 
-            
+
             If _Dauer > 0 Then
 
                 ReDim roleValues(_Dauer - 1)
@@ -1080,7 +1110,7 @@
     End Property
 
 
-    
+
     ''' <summary>
     ''' gibt die Personalkosten des betreffenden Projektes zurück ; zugrundgelegt wird der interne Tagessatz 
     ''' </summary>

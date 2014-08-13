@@ -162,7 +162,7 @@ Public Class frmShowProjCharacteristics
         ' Ende Änderung-Ergänzung 140717
 
 
-
+        Call aktualisierePMSForms(hproj)
         Call aktualisiereCharts(hproj, False)
         timeMachineIsOn = False
 
@@ -536,12 +536,19 @@ Public Class frmShowProjCharacteristics
         ' in ProjektHistorie sind die Projekt-Snapshots in aufsteigender Reihenfolge sortiert 
 
         Dim pname As String = hproj.name
-        Dim cproj As clsProjekt = ShowProjekte.getProject(pname)
-        Dim top As Double = Me.Top + Me.Height + 5
-        Dim left As Double = Me.Left + Me.Width * 0.6
+        Dim cproj As clsProjekt
+
+        Try
+            cproj = ShowProjekte.getProject(pname)
+            Dim top As Double = Me.Top + Me.Height + 5
+            Dim left As Double = Me.Left + Me.Width * 0.6
 
 
-        Call awinCompareProject(hproj, cproj, 4, top, left)
+            Call awinCompareProject(hproj, cproj, 4, top, left)
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Compare " & hproj.name & vbLf & ex.Message)
+        End Try
+       
 
     End Sub
 
@@ -600,7 +607,7 @@ Public Class frmShowProjCharacteristics
 
         End With
 
-
+        Call aktualisierePMSForms(hproj)
         Call aktualisiereCharts(hproj, False)
 
     End Sub

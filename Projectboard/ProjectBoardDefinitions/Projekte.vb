@@ -8449,21 +8449,25 @@ Public Module Projekte
 
         ' jetzt müssen alle Shapes, die keine Charts sind, gelöscht werden ....
 
-
-
         For Each shp As Excel.Shape In CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
-            If CBool(shp.HasChart) Then
-                ' do nothing, sollen ja erhalten bleiben 
-            Else
-                shp.Delete()
-                'With shp
-                '    If shp.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                '        shp.AutoShapeType = MsoAutoShapeType.msoShapeIsoscelesTriangle Or _
-                '        shp.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
-                '        .Delete()
-                '    End If
-                'End With
-            End If
+
+            Try
+                If CBool(shp.HasChart) Then
+                    ' do nothing, sollen ja erhalten bleiben 
+                Else
+                    shp.Delete()
+                    'With shp
+                    '    If shp.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
+                    '        shp.AutoShapeType = MsoAutoShapeType.msoShapeIsoscelesTriangle Or _
+                    '        shp.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
+                    '        .Delete()
+                    '    End If
+                    'End With
+                End If
+            Catch ex As Exception
+
+            End Try
+            
 
         Next shp
 
@@ -8500,10 +8504,16 @@ Public Module Projekte
 
         For Each shp As Excel.Shape In CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
             With shp
-                If shp.AutoShapeType = MsoAutoShapeType.msoShapeRightArrow Or _
+
+                Try
+                    If shp.AutoShapeType = MsoAutoShapeType.msoShapeRightArrow Or _
                     shp.AutoShapeType = MsoAutoShapeType.msoShapeLeftArrow Then
-                    .Delete()
-                End If
+                        .Delete()
+                    End If
+                Catch ex As Exception
+
+                End Try
+                
             End With
         Next shp
 
@@ -8925,6 +8935,7 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="nameList">enthält die Namen der Phasen, die gezeichnet werden sollen; alle, wenn leer</param>
     ''' <param name="numberIt">gibt an, ob di ePhasen nummeriert werden sollen</param>
+    ''' <param name="deleteOtherShapes">gibt an, ob die anderen Phasen-Shapes gelöscht werden sollen</param>
     ''' <remarks></remarks>
     Public Sub awinZeichnePhasen(ByVal nameList As Collection, ByVal numberIt As Boolean, ByVal deleteOtherShapes As Boolean)
 
@@ -8934,6 +8945,7 @@ Public Module Projekte
         Dim vglName As String = " "
         Dim pName As String
         Dim ok As Boolean = True
+        Dim msNumber As Integer = 1
 
         Dim awinSelection As Excel.ShapeRange
 
@@ -8950,15 +8962,20 @@ Public Module Projekte
             awinSelection = Nothing
         End Try
 
+
         If Not awinSelection Is Nothing Then
+
+            Dim anzSelect As Integer = awinSelection.Count
 
             ' jetzt die Aktion durchführen ...
 
             For Each singleShp In awinSelection
                 ok = True
                 With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                        .AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
+                    If isProjectType(kindOfShape(singleShp)) Then
+
+                        'If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
+                        '    .AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
 
                         Try
                             hproj = ShowProjekte.getProject(singleShp.Name)
@@ -8974,7 +8991,7 @@ Public Module Projekte
 
                             Try
                                 pName = hproj.name
-                                Call zeichnePhasenInProjekt(hproj, nameList, False, 0)
+                                Call zeichnePhasenInProjekt(hproj, nameList, False, msNumber)
 
                             Catch ex As Exception
 
@@ -8986,6 +9003,14 @@ Public Module Projekte
                     End If
                 End With
             Next
+
+            If msNumber = 1 Then
+                If nameList.Count > 1 Then
+                    Call MsgBox("Auswahl enthält diese Phasen nicht")
+                Else
+                    Call MsgBox("Auswahl enthält diese Phase nicht:  " & nameList.Item(1))
+                End If
+            End If
 
         Else
             ' tue es für alle Projekte in Showprojekte 
@@ -9000,7 +9025,7 @@ Public Module Projekte
                 todoListe.Add(key, kvp.Value)
 
             Next
-            Dim msNumber As Integer = 1
+
 
             For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
 
@@ -9023,10 +9048,18 @@ Public Module Projekte
             Next
 
 
-
+            If msNumber = 1 Then
+                If nameList.Count > 1 Then
+                    Call MsgBox("im gewählten Zeitraum gibt es diese Phasen nicht")
+                Else
+                    Call MsgBox("im gewählten Zeitraum gibt es diese Phase nicht: " & nameList.Item(1))
+                End If
+            End If
 
 
         End If
+
+       
 
         Call awinDeSelect()
 
@@ -9054,6 +9087,7 @@ Public Module Projekte
         Dim vglName As String = " "
         Dim pName As String
         Dim ok As Boolean = True
+        Dim msNumber As Integer = 1
 
         Dim awinSelection As Excel.ShapeRange
 
@@ -9077,8 +9111,8 @@ Public Module Projekte
             For Each singleShp In awinSelection
                 ok = True
                 With singleShp
-                    If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                        .AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
+
+                    If isProjectType(kindOfShape(singleShp)) Then
 
                         Try
                             hproj = ShowProjekte.getProject(singleShp.Name)
@@ -9094,7 +9128,7 @@ Public Module Projekte
 
                             Try
                                 pName = hproj.name
-                                Call zeichneResultMilestonesInProjekt(hproj, nameList, farbTyp, False, False, 0, False)
+                                Call zeichneResultMilestonesInProjekt(hproj, nameList, farbTyp, 0, 0, False, msNumber, False)
                             Catch ex As Exception
 
                             End Try
@@ -9105,6 +9139,15 @@ Public Module Projekte
                     End If
                 End With
             Next
+
+            If msNumber = 1 Then
+                If nameList.Count > 1 Then
+                    Call MsgBox("Auswahl enthält  diese Meilensteine nicht")
+                Else
+                    Call MsgBox("Auswahl enthält keinen Meilenstein " & nameList.Item(1))
+                End If
+
+            End If
 
         Else
 
@@ -9123,7 +9166,7 @@ Public Module Projekte
                         todoListe.Add(key, kvp.Value)
 
                     Next
-                    Dim msNumber As Integer = 1
+
 
                     For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
 
@@ -9132,9 +9175,18 @@ Public Module Projekte
                             Call awinDeleteProjectChildShapes(singleShp, 1)
                         End If
 
-                        Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, True, numberIt, msNumber, False)
+                        Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
 
                     Next
+
+                    If msNumber = 1 Then
+                        If nameList.Count > 1 Then
+                            Call MsgBox("im gewählten Zeitraum gibt es diese Meilensteine nicht")
+                        Else
+                            Call MsgBox("im gewählten Zeitraum gibt es keinen Meilenstein " & nameList.Item(1))
+                        End If
+
+                    End If
 
                 Else
                     Call MsgBox("Es sind keine Projekte geladen!")
@@ -9155,12 +9207,81 @@ Public Module Projekte
 
     End Sub
 
+    Public Sub zeichneMilestones(ByVal nameList As Collection, ByVal farbTyp As Integer, ByVal numberIt As Boolean)
+        ' tue es für alle Projekte in Showprojekte 
+
+
+        Dim todoListe As New SortedList(Of Long, clsProjekt)
+        Dim key As Long
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formereO As Boolean = enableOnUpdate
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+            todoListe.Add(key, kvp.Value)
+
+        Next
+
+        Dim msNumber As Integer = 1
+
+        For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
+
+            Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
+
+        Next
+
+        appInstance.EnableEvents = formerEE
+        enableOnUpdate = formereO
+
+    End Sub
+
+    ''' <summary>
+    ''' bringt alle charts in den Vordergrund, so daß sie nicht von einem neu gezeichneten Projekt überdeckt werden 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub bringChartsToFront(ByVal projectShape As Excel.Shape)
+
+        Dim worksheetShapes As Excel.Shapes
+        Dim chtobj As Excel.ChartObject
+
+        Try
+
+            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+
+        Catch ex As Exception
+            Throw New Exception("in bringChartstoFront : keine Shapes Zuordnung möglich ")
+        End Try
+
+
+        For Each chtobj In CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).ChartObjects
+
+            With chtobj
+                If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
+                    (.Top >= projectShape.Top And .Top <= projectShape.Top + projectShape.Height)) And _
+                    ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
+                    (.Left >= projectShape.Left And .Left <= projectShape.Left + projectShape.Width)) Then
+
+                    CType(worksheetShapes.Item(chtobj.Name), Excel.Shape).ZOrder(MsoZOrderCmd.msoBringToFront)
+
+                End If
+            End With
+            
+        Next
+
+
+    End Sub
+
+
     ''' <summary>
     ''' zeichnet das Projekt "pname" in die Plantafel; 
     ''' wenn es bereits vorhanden ist: keine Aktion  
     ''' noCollection ist eine Collection von Projekt-Namen, die beim Suchen nach einem Platz 
     ''' auf der Projekt-Tafel nicht berücksichtigt werden soll
-    ''' ist insbesondere wichtig, wenn mehrere PRojekte selektiert wurden und verschoben werden 
+    ''' ist insbesondere wichtig, wenn mehrere Projekte selektiert wurden und verschoben werden 
     ''' </summary>
     ''' <param name="pname"></param>
     ''' <remarks></remarks>
@@ -9505,7 +9626,7 @@ Public Module Projekte
 
         msNumber = 0
         If drawMilestoneList.Count > 0 And Not drawphases Then
-            Call zeichneResultMilestonesInProjekt(hproj, drawMilestoneList, 4, False, False, msNumber, False)
+            Call zeichneResultMilestonesInProjekt(hproj, drawMilestoneList, 4, 0, 0, False, msNumber, False)
         End If
 
 
@@ -9514,6 +9635,9 @@ Public Module Projekte
                 Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
             End With
         End If
+
+        ' jetzt müssen die Charts, die vom Projekt evtl überdeckt werden in den Vordergrund geholt werden 
+        Call bringChartsToFront(projectShape)
 
         appInstance.EnableEvents = formerEE
         enableOnUpdate = True
@@ -9970,7 +10094,7 @@ Public Module Projekte
                         .Top = CSng(.Top + differenz)
 
                         ' Ergänzung 11.5.2014: Projekte Anpassen und projectboardShapes Einträge korrigieren 
-                        If shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Or _
+                        If shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Or shapeType = PTshty.phase1 Or _
                         shapeType = PTshty.milestoneE Or shapeType = PTshty.milestoneN Or _
                         shapeType = PTshty.status Then
 
@@ -10043,7 +10167,7 @@ Public Module Projekte
                             .Top = CSng(.Top - differenz)
 
                             ' Ergänzung 11.5.2014: Projekte Anpassen und projectboardShapes Einträge korrigieren 
-                            If shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Or _
+                            If shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Or shapeType = PTshty.phase1 Or _
                             shapeType = PTshty.milestoneE Or shapeType = PTshty.milestoneN Or _
                             shapeType = PTshty.status Then
 
@@ -10086,82 +10210,60 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' zeichnet für das Projekt das Status Shape; wenn es bereits existiert, wird das alte gelöscht, das neue gezeichnet 
+    ''' wenn number > 0 , wird diese Zahl in das Symbol geschrieben 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="number"></param>
+    ''' <remarks></remarks>
     Public Sub zeichneStatusSymbolInPlantafel(ByVal hproj As clsProjekt, ByVal number As Integer)
         Dim top As Double, left As Double, height As Double, width As Double
         Dim worksheetShapes As Excel.Shapes
-        Dim shpElement As Excel.Shape
-        Dim resultShape As Excel.Shape
+        Dim statusShape As Excel.Shape
         Dim shpName As String
-        Dim heute As Date = Date.Now
-        Dim heuteColumn As Integer = getColumnOfDate(heute)
+        Dim timeAtStatus As Date = hproj.timeStamp
+        Dim heuteColumn As Integer = getColumnOfDate(timeAtStatus)
 
         With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
             worksheetShapes = .Shapes
 
-
-            'shpName = hproj.name & "#Status#" & heuteColumn.ToString
             shpName = projectboardShapes.calcStatusShapeName(hproj.name, heuteColumn)
             ' existiert das schon ? 
             Try
-                shpElement = worksheetShapes.Item(shpName)
+                statusShape = worksheetShapes.Item(shpName)
+                statusShape.Delete()
             Catch ex As Exception
-                shpElement = Nothing
+                'statusShape = Nothing
             End Try
 
-            If shpElement Is Nothing Then
+            'If statusShape Is Nothing Then
 
-                hproj.calculateStatusCoord(heute, top, left, width, height)
-                resultShape = .Shapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeOval, _
-                                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+            hproj.calculateStatusCoord(timeAtStatus, top, left, width, height)
+            statusShape = .Shapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeOval, _
+                                            Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
 
-                With resultShape
-                    .Name = shpName
-                    .Title = "Status"
-                    .AlternativeText = CInt(PTshty.status).ToString
-                End With
+            With statusShape
+                .Name = shpName
+                .Title = "Status"
+                .AlternativeText = CInt(PTshty.status).ToString
+            End With
 
-                Call defineStatusAppearance(hproj, number, resultShape)
+            Call defineStatusAppearance(hproj, number, statusShape)
 
-                ' jetzt der Liste der ProjectboardShapes hinzufügen
-                projectboardShapes.add(resultShape)
+            ' jetzt der Liste der ProjectboardShapes hinzufügen
+            projectboardShapes.add(statusShape)
 
-                'shapesCollection.Add(resultShape.Name)
+            'shapesCollection.Add(resultShape.Name)
 
-            End If
+            'End If
 
 
         End With
-    End Sub
 
-    Public Sub zeichneMilestones(ByVal nameList As Collection, ByVal farbTyp As Integer, ByVal numberIt As Boolean)
-        ' tue es für alle Projekte in Showprojekte 
+        ' jetzt müssen die Charts ggf wieder nach vorne gebracht werden 
+        Call bringChartsToFront(statusShape)
 
-
-        Dim todoListe As New SortedList(Of Long, clsProjekt)
-        Dim key As Long
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        Dim formereO As Boolean = enableOnUpdate
-
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-            key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
-            todoListe.Add(key, kvp.Value)
-
-        Next
-
-        Dim msNumber As Integer = 1
-
-        For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
-
-            Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, True, numberIt, msNumber, False)
-
-        Next
-
-        appInstance.EnableEvents = formerEE
-        enableOnUpdate = formereO
 
     End Sub
 
@@ -10176,8 +10278,9 @@ Public Module Projekte
     ''' wenn leer, werden alle gezeichnet</param>
     ''' <param name="farbTyp">
     ''' gibt an , welche Farbe gezeichnet werden soll; bei 4 werden alle gezeichnet </param>
-    ''' <param name="showOnlyWithinTimeFrame">
-    ''' gibt an , ob der aktuell betrachtete Zeitraum berücksichtigt werden soll</param>
+    ''' <param name="tmpShowrangeleft">
+    ''' gibt den linken Rand des Zeitraums an, sofern einer betrachtet werden soll </param>
+    ''' <param name="tmpShowrangeRight">gibt den rechten Rand des Zeitraums an, sofern einer betrachtet werden soll </param>
     ''' <param name="numberIt">
     ''' gibt an, ob der Meilenstein nummeriert werden soll</param>
     ''' <param name="msNumber">
@@ -10186,7 +10289,7 @@ Public Module Projekte
     ''' gibt an, ob vom Reporting aufgerufen
     ''' </param>
     ''' <remarks></remarks>
-    Public Sub zeichneResultMilestonesInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal farbTyp As Integer, ByVal showOnlyWithinTimeFrame As Boolean, _
+    Public Sub zeichneResultMilestonesInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal farbTyp As Integer, ByVal tmpShowRangeLeft As Integer, ByVal tmpShowrangeRight As Integer, _
                                                       ByVal numberIt As Boolean, ByRef msNumber As Integer, ByVal report As Boolean)
 
         Dim top As Double, left As Double, width As Double, height As Double
@@ -10202,7 +10305,20 @@ Public Module Projekte
         Dim shapeGruppe As Excel.ShapeRange
         Dim listOFShapes As New Collection
         Dim found As Boolean = True
+        Dim showOnlyWithinTimeFrame As Boolean
 
+
+        If tmpShowRangeLeft <= 0 Or _
+            tmpShowrangeRight <= 0 Or _
+            tmpShowRangeLeft > tmpShowrangeRight Then
+
+            showOnlyWithinTimeFrame = False
+
+        Else
+
+            showOnlyWithinTimeFrame = True
+
+        End If
 
 
         ' sollen nur die in der Namenliste aufgeführten Meilensteine gezeichnet werden ? 
@@ -10281,7 +10397,7 @@ Public Module Projekte
                         If farbTyp = 4 Or farbTyp = cBewertung.colorIndex Then
                             ' es muss nur etwas gemacht werden , wenn entweder alle Farben gezeichnet werden oder eben die übergebene
 
-                            If (showOnlyWithinTimeFrame And (resultColumn < showRangeLeft Or resultColumn > showRangeRight)) Or _
+                            If (showOnlyWithinTimeFrame And (resultColumn < tmpShowRangeLeft Or resultColumn > tmpShowRangeRight)) Or _
                                 (onlyFew And Not nameIstInListe) Then
                                 ' nichts machen 
                             Else
@@ -10311,9 +10427,10 @@ Public Module Projekte
                                         .AlternativeText = CInt(PTshty.milestoneN).ToString
                                     End With
 
+                                    msNumber = msNumber + 1
                                     If numberIt Then
                                         Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung)
-                                        msNumber = msNumber + 1
+
                                     Else
                                         Call defineResultAppearance(hproj, 0, resultShape, cBewertung)
                                     End If
@@ -10351,6 +10468,9 @@ Public Module Projekte
 
         End With
 
+
+        ' jetzt müssen ggf die Charts wieder in den Vordergrund gebracht werden 
+        Call bringChartsToFront(projectShape)
 
     End Sub
 
@@ -10457,6 +10577,8 @@ Public Module Projekte
                                 .AlternativeText = CInt(PTshty.dependency).ToString
                             End With
 
+                            Call bringChartsToFront(newConnector)
+
                         End Try
 
 
@@ -10530,6 +10652,8 @@ Public Module Projekte
                                 .Name = newShapeName
                                 .Title = "Dependency"
                             End With
+
+                            Call bringChartsToFront(newConnector)
 
                         End Try
 
@@ -10703,9 +10827,10 @@ Public Module Projekte
                                 .AlternativeText = CInt(PTshty.phaseN).ToString
                             End With
 
+                            msNumber = msNumber + 1
                             If numberIt Then
                                 Call defineLineAppearance(hproj, cphase, msNumber, phasenShape, linienDicke)
-                                msNumber = msNumber + 1
+
                             Else
                                 Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
                             End If
@@ -10739,11 +10864,54 @@ Public Module Projekte
         End With
 
 
+        ' jetzt müssen die Charts ggf wieder nach vorne gebracht werden 
+        Call bringChartsToFront(projectShape)
+
     End Sub
 
     ''' <summary>
+    ''' aktualisiert mit dem angegebenen Projekt die evtl angezeigten Info Forms zu Phase, Meilenstein oder Status
+    ''' wenn das Objekt mit dem Namen nicht existiert, dann wird es entsprechend dort vermerkt 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <remarks></remarks>
+    Public Sub aktualisierePMSForms(ByVal hproj As clsProjekt)
+
+        Dim phaseName As String
+        Dim resultName As String
+
+        If formPhase.Visible Then
+            phaseName = formPhase.phaseName.Text
+            Call updatePhaseInformation(hproj, phaseName)
+        End If
+
+        If formMilestone.Visible Then
+
+            phaseName = formMilestone.phaseName.Text
+            resultName = formMilestone.resultName.Text
+            Call updateMilestoneInformation(hproj, phaseName, resultName)
+
+        End If
+
+
+
+        If formStatus.Visible Then
+
+            Call zeichneStatusSymbolInPlantafel(hproj, 0)
+            Call updateStatusInformation(hproj)
+
+        End If
+
+
+       
+
+
+    End Sub
+
+
+    ''' <summary>
     ''' aktualisiert mit dem selektierten Projekt die evtl angezeigten Projekt-Info Charts
-    ''' replaceProj = false, wenn die Skalierung nicht angepasts werden soll; also z.Bsp bei Aufruf aus Time-Machine 
+    ''' replaceProj = false, wenn die Skalierung nicht angepasst werden soll; also z.Bsp bei Aufruf aus Time-Machine 
     ''' </summary>
     ''' <param name="hproj">das selektierte Projekt</param>
     ''' <remarks></remarks>
@@ -10959,7 +11127,7 @@ Public Module Projekte
                     Else
 
                         linienDicke = boxHeight * 0.3
-                       
+
                         Try
                             cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
                         Catch ex As Exception
@@ -10991,9 +11159,10 @@ Public Module Projekte
                                     .AlternativeText = CInt(PTshty.phaseN).ToString
                                 End With
 
+                                msNumber = msNumber + 1
                                 If numberIt Then
                                     Call defineLineAppearance(hproj, cphase, msNumber, phasenShape, linienDicke)
-                                    msNumber = msNumber + 1
+
                                 Else
                                     Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
                                 End If
@@ -11016,7 +11185,7 @@ Public Module Projekte
                 Next
 
             End If
-            
+
             If listOFShapes.Count > 1 Then
                 ' hier werden die Shapes gruppiert
                 projectShape = projectboardShapes.groupShapes(listOFShapes, hproj.name)
@@ -11027,6 +11196,9 @@ Public Module Projekte
             End If
 
         End With
+
+        ' jetzt müssen die Charts ggf wieder nach vorne gebracht werden 
+        Call bringChartsToFront(projectShape)
 
 
     End Sub
@@ -11232,7 +11404,7 @@ Public Module Projekte
         Try
             If projectShape.GroupItems.Count > 1 Then
                 ' es handelt sich um die Darstellung inkl der Meilensteine
-                myshape = CType(projectShape.GroupItems(0), Excel.Shape)
+                myshape = CType(projectShape.GroupItems.Item(1), Excel.Shape)
             Else
                 myshape = projectShape
             End If
@@ -11303,7 +11475,7 @@ Public Module Projekte
             If roentgenBlick.isOn Then
                 .TextFrame2.TextRange.Text = ""
             Else
-                .TextFrame2.TextRange.Text = .Name
+                .TextFrame2.TextRange.Text = pname ' statt .name
             End If
 
             If status = ProjektStatus(0) Then
@@ -11347,7 +11519,7 @@ Public Module Projekte
 
         Try
 
-            myshape = CType(projectShape.GroupItems(phasenIndex - 1), Excel.Shape)
+            myshape = CType(projectShape.GroupItems.Item(phasenIndex), Excel.Shape)
 
         Catch ex As Exception
             myshape = projectShape
@@ -11598,7 +11770,7 @@ Public Module Projekte
 
         Dim start As Integer
         Dim laenge As Integer
-        Dim pcolor As integer, schriftfarbe As Object, fillColor As Integer, borderColor As integer
+        Dim pcolor As Integer, schriftfarbe As Object, fillColor As Integer, borderColor As Integer
         Dim schriftgroesse As Integer
         Dim zeilenOffset As Integer = 1
         Dim spaltenOffset As Integer = 0
@@ -12922,7 +13094,7 @@ Public Module Projekte
                     eingabeBereich.Interior.Color = iProjektFarbe
                     Call InputZahlValidationforRange(eingabeBereich)
                 End If
-                
+
                 zeile = zeile + 1
             Next p
 
@@ -13156,10 +13328,10 @@ Public Module Projekte
 
         With appInstance.ActiveSheet
 
-            
+
             lastRow = System.Math.Max(CType(.cells(2000, 1), Excel.Range).End(XlDirection.xlUp).Row, CType(.cells(2000, 2), Excel.Range).End(XlDirection.xlUp).Row) + 1
             rng = CType(.range(.cells(2, 1), .cells(lastRow, 1)), Excel.Range)
-            
+
             For Each zelle In rng
                 Select Case chkPhase
                     Case True
@@ -13955,239 +14127,261 @@ Public Module Projekte
     ''' <summary>
     ''' aktualisiert bzw. zeigt das Status Fenster zur Ampel-Erläuterung eines Projektes 
     ''' </summary>
-    ''' <param name="resultShape">übergeben wird das Result-Shape des Projektes </param>
+    ''' <param name="hproj">übergeben wird das betreffende Projekt</param>
     ''' <remarks></remarks>
-    Public Sub updateStatusInformation(ByVal resultShape As Excel.Shape)
+    Public Sub updateStatusInformation(ByVal hproj As clsProjekt)
 
-        Dim tmpstr() As String
-        Dim projectName As String
-        Dim ok As Boolean = True
-        Dim hproj As New clsProjekt
         Dim description As String
 
-        With resultShape
+        Try
 
-            tmpstr = .Name.Split(New Char() {CChar("#")}, 10)
-            projectName = tmpstr(0)
-
-            Try
-                hproj = ShowProjekte.getProject(projectName)
-            Catch ex As Exception
-                hproj = Nothing
-                ok = False
-            End Try
-
-            If ok Then
-
-                Try
-
-                    description = hproj.ampelErlaeuterung
-
-                    With formStatus
-
-                        .projectName.Text = hproj.name
-                        .bewertungsText.Text = description
-
-                        If .Visible Then
-                        Else
-                            .Visible = True
-                            .Show()
-                        End If
-
-                    End With
+            description = hproj.ampelErlaeuterung
 
 
+            If awinSettings.createIfNotThere Then
+                ' prüfen, ob das Shape bereits angezeigt wird 
+                Dim tstshpName = projectboardShapes.calcStatusShapeName(hproj.name, getColumnOfDate(hproj.timeStamp))
+                If Not projectboardShapes.contains(tstshpName) Then
+                    ' jetzt muss das Shape gezeichnet werden 
+                    Dim tmpNr As Integer = 0
 
-                Catch ex As Exception
+                    Dim formerEoU As Boolean = enableOnUpdate
+                    Dim formerEE As Boolean = appInstance.EnableEvents
 
-                    ok = False
-                End Try
+                    enableOnUpdate = False
+                    appInstance.EnableEvents = False
 
-                If Not ok Then
-                    'Call MsgBox("keine Information abrufbar ...")
+                    Call zeichneStatusSymbolInPlantafel(hproj, tmpNr)
+
+
+                    appInstance.EnableEvents = formerEE
+                    enableOnUpdate = formerEoU
+
                 End If
-
-            Else
-                'Call MsgBox("keine Information abrufbar ...")
             End If
 
+            With formStatus
 
-        End With
+                .projectName.Text = hproj.name
+                .bewertungsText.Text = description
 
-    End Sub
-
-    Public Sub updateMilestoneInformation(ByVal resultShape As Excel.Shape)
-
-        Dim tmpstr() As String
-        Dim projectName As String
-        Dim phaseName As String
-        Dim cPhase As clsPhase
-        Dim resultName As String
-        Dim cResult As clsResult
-        Dim bewertung As New clsBewertung
-        Dim ok As Boolean = True
-        Dim hproj As New clsProjekt
-
-
-        With resultShape
-
-            tmpstr = .Name.Split(New Char() {CChar("#")}, 10)
-            projectName = tmpstr(0)
-
-            Try
-                hproj = ShowProjekte.getProject(projectName)
-            Catch ex As Exception
-                hproj = Nothing
-                ok = False
-            End Try
-
-
-
-            If ok Then
-
-                Try
-                    phaseName = tmpstr(1).Trim
-                    cPhase = hproj.getPhase(phaseName)
-                    'cResult = New clsResult(parent:=cPhase)
-                    resultName = .Title
-                    cResult = cPhase.getResult(resultName)
-
-                    If IsNothing(cResult) Then
-                    Else
-
-                        With formMilestone
-                            .bewertungsListe = cResult.bewertungsListe
-                            .projectName.Text = hproj.name
-                            .phaseName.Text = cPhase.name
-
-                            .resultDate.Text = cResult.getDate.ToShortDateString
-                            .resultName.Text = cResult.name
-
-
-                            If .bewertungsListe.Count > 0 Then
-                                Dim hb As clsBewertung = .bewertungsListe.ElementAt(0).Value
-
-                                Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(CInt(hb.color))
-
-                                .bewertungsText.Text = hb.description
-
-
-                            Else
-
-                                Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(CInt(awinSettings.AmpelNichtBewertet))
-
-                                .bewertungsText.Text = "es existiert noch keine Bewertung ...."
-
-
-                            End If
-
-                            If .Visible Then
-                            Else
-                                .Visible = True
-                                .Show()
-                            End If
-
-                        End With
-
-
-                    End If
-
-
-
-
-                Catch ex As Exception
-                    phaseName = ""
-                    resultName = ""
-                    ok = False
-                End Try
-
-                If Not ok Then
-                    'Call MsgBox("keine Information abrufbar ...")
+                If .Visible Then
+                Else
+                    .Visible = True
+                    .Show()
                 End If
 
-            Else
-                'Call MsgBox("keine Information abrufbar ...")
-            End If
+            End With
+
+        Catch ex As Exception
 
 
-        End With
-
+        End Try
 
 
     End Sub
 
+    'Public Sub updateMilestoneInformation(ByVal resultShape As Excel.Shape)
+
+    '    Dim tmpstr() As String
+    '    Dim projectName As String
+    '    Dim phaseName As String
+    '    Dim cPhase As clsPhase
+    '    Dim resultName As String
+    '    Dim cResult As clsResult
+    '    Dim bewertung As New clsBewertung
+    '    Dim ok As Boolean = True
+    '    Dim hproj As New clsProjekt
+
+
+    '    With resultShape
+
+    '        tmpstr = .Name.Split(New Char() {CChar("#")}, 10)
+    '        projectName = tmpstr(0)
+
+    '        Try
+    '            hproj = ShowProjekte.getProject(projectName)
+    '        Catch ex As Exception
+    '            hproj = Nothing
+    '            ok = False
+    '        End Try
+
+
+
+    '        If ok Then
+
+    '            Try
+    '                phaseName = tmpstr(1).Trim
+    '                cPhase = hproj.getPhase(phaseName)
+    '                'cResult = New clsResult(parent:=cPhase)
+    '                resultName = .Title
+    '                cResult = cPhase.getResult(resultName)
+
+    '                If IsNothing(cResult) Then
+    '                Else
+
+    '                    With formMilestone
+    '                        .bewertungsListe = cResult.bewertungsListe
+    '                        .projectName.Text = hproj.name
+    '                        .phaseName.Text = cPhase.name
+
+    '                        .resultDate.Text = cResult.getDate.ToShortDateString
+    '                        .resultName.Text = cResult.name
+
+
+    '                        If .bewertungsListe.Count > 0 Then
+    '                            Dim hb As clsBewertung = .bewertungsListe.ElementAt(0).Value
+
+    '                            Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(CInt(hb.color))
+
+    '                            .bewertungsText.Text = hb.description
+
+
+    '                        Else
+
+    '                            Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(CInt(awinSettings.AmpelNichtBewertet))
+
+    '                            .bewertungsText.Text = "es existiert noch keine Bewertung ...."
+
+
+    '                        End If
+
+    '                        If .Visible Then
+    '                        Else
+    '                            .Visible = True
+    '                            .Show()
+    '                        End If
+
+    '                    End With
+
+
+    '                End If
+
+
+
+
+    '            Catch ex As Exception
+    '                phaseName = ""
+    '                resultName = ""
+    '                ok = False
+    '            End Try
+
+    '            If Not ok Then
+    '                'Call MsgBox("keine Information abrufbar ...")
+    '            End If
+
+    '        Else
+    '            'Call MsgBox("keine Information abrufbar ...")
+    '        End If
+
+
+    '    End With
+
+
+
+    'End Sub
+
+    ''' <summary>
+    ''' aktualisiert die Meilenstein Information; 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="phaseName"></param>
+    ''' <param name="resultName"></param>
+    ''' <remarks></remarks>
     Public Sub updateMilestoneInformation(ByVal hproj As clsProjekt, ByVal phaseName As String, ByVal resultName As String)
 
 
         Dim cPhase As clsPhase
-        Dim cResult As clsResult
+        Dim cResult As clsResult = Nothing
         Dim bewertung As New clsBewertung
         Dim ok As Boolean = True
 
+        Dim projektName As String = ""
+        Dim explanation As String = ""
+        Dim dateText As String = ""
+        Dim farbe As System.Drawing.Color
+        Dim msNR As Integer = 0
+
+
+
+
+        Try
+            projektName = hproj.name
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            cResult = hproj.getResult(resultName)
+            cPhase = cResult.Parent
+            phaseName = cPhase.name
+            msNR = cPhase.getlfdNr(resultName)
+
+        Catch ex As Exception
+            explanation = resultName & " existiert nicht"
+            ok = False
+        End Try
 
 
         If ok Then
 
-            Try
-                cPhase = hproj.getPhase(phaseName)
-                cResult = cPhase.getResult(resultName)
+            If awinSettings.createIfNotThere Then
+                ' prüfen, ob das Shape bereits angezeigt wird 
+                Dim tstshpName = projectboardShapes.calcMilestoneShapeName(projektName, phaseName, msNR)
+                If Not projectboardShapes.contains(tstshpName) Then
+                    ' jetzt muss das Shape gezeichnet werden 
+                    Dim tmpNr As Integer = 1
+                    Dim tmpCollection As New Collection
+                    tmpCollection.Add(resultName, resultName)
 
-                If IsNothing(cResult) Then
-                Else
-
-                    With formMilestone
-                        .bewertungsListe = cResult.bewertungsListe
-                        .projectName.Text = hproj.name
-                        .phaseName.Text = cPhase.name
-
-                        .resultDate.Text = cResult.getDate.ToShortDateString
-                        .resultName.Text = cResult.name
-
-
-                        If .bewertungsListe.Count > 0 Then
-                            Dim hb As clsBewertung = .bewertungsListe.ElementAt(0).Value
-
-                            Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(CInt(hb.color))
-
-                            .bewertungsText.Text = hb.description
-
-
-                        Else
-
-                            Dim farbe As System.Drawing.Color = System.Drawing.Color.FromArgb(CInt(awinSettings.AmpelNichtBewertet))
-
-                            .bewertungsText.Text = "es existiert noch keine Bewertung ...."
-
-
-                        End If
-
-                        If .Visible Then
-                        Else
-                            .Visible = True
-                            .Show()
-                        End If
-
-                    End With
-
+                    Dim formerEoU As Boolean = enableOnUpdate
+                    Dim formerEE As Boolean = appInstance.EnableEvents
+                    enableOnUpdate = False
+                    appInstance.EnableEvents = False
+                    Call zeichneResultMilestonesInProjekt(hproj, tmpCollection, 4, 0, 0, False, tmpNr, False)
+                    appInstance.EnableEvents = formerEE
+                    enableOnUpdate = formerEoU
 
                 End If
-
-
-
-
-            Catch ex As Exception
-                phaseName = ""
-                resultName = ""
-                ok = False
-            End Try
-
-            If Not ok Then
-                'Call MsgBox("keine Information abrufbar ...")
             End If
 
-        Else
-            'Call MsgBox("keine Information abrufbar ...")
+            If cResult.bewertungsListe.Count > 0 Then
+
+                Dim hb As clsBewertung = cResult.bewertungsListe.ElementAt(0).Value
+                farbe = System.Drawing.Color.FromArgb(CInt(hb.color))
+
+                explanation = hb.description
+
+
+            Else
+
+                farbe = System.Drawing.Color.FromArgb(CInt(awinSettings.AmpelNichtBewertet))
+                explanation = "es existiert noch keine Bewertung ...."
+
+            End If
+
+            dateText = cResult.getDate.ToShortDateString
+
+
         End If
+
+
+        With formMilestone
+            '.bewertungsListe = explanation
+            .projectName.Text = projektName
+            .phaseName.Text = phaseName
+
+            .resultDate.Text = dateText
+            .resultName.Text = resultName
+            .bewertungsText.Text = explanation
+
+            If .Visible Then
+            Else
+                .Visible = True
+                .Show()
+            End If
+
+        End With
 
 
     End Sub
@@ -14378,129 +14572,136 @@ Public Module Projekte
     End Sub
 
 
-    Public Sub updatePhaseInformation(ByVal phaseShape As Excel.Shape)
+    'Public Sub updatePhaseInformation(ByVal phaseShape As Excel.Shape)
 
-        Dim tmpstr() As String
-        Dim projectName As String
-        Dim phaseName As String
-        Dim cPhase As clsPhase
+    '    Dim tmpstr() As String
+    '    Dim projectName As String
+    '    Dim phaseName As String
+    '    Dim cPhase As clsPhase
 
-        Dim ok As Boolean = True
-        Dim hproj As New clsProjekt
+    '    Dim ok As Boolean = True
+    '    Dim hproj As New clsProjekt
 
-        Dim phaseStartdate As Date
-        Dim phaseEnddate As Date
-        Dim phaseDauerDays As Integer
-
-
-
-        With phaseShape
-
-            tmpstr = .Name.Split(New Char() {CChar("#")}, 10)
-            projectName = tmpstr(0)
-
-        End With
-
-        Try
-            hproj = ShowProjekte.getProject(projectName)
-        Catch ex As Exception
-            hproj = Nothing
-            ok = False
-        End Try
-
-        If ok Then
-
-            cPhase = New clsPhase(hproj)
-            Try
-                phaseName = tmpstr(1).Trim
-                cPhase = hproj.getPhase(phaseName)
-                'phaseStartdate = hproj.startDate.AddMonths(cPhase.relStart - 1)
-
-                phaseStartdate = cPhase.getStartDate
-                phaseEnddate = cPhase.getEndDate
-                phaseDauerDays = cPhase.dauerInDays
+    '    Dim phaseStartdate As Date
+    '    Dim phaseEnddate As Date
+    '    Dim phaseDauerDays As Integer
 
 
-                With formPhase
 
-                    If specialListofPhases.Contains(phaseName) Then
+    '    With phaseShape
 
-                        .projectName.Text = projectName
-                        .phaseName.Text = phaseName
-                        .Height = 440
-                        .lessonsLearnedControl.Visible = True
-                        .erlaeuterung.Visible = True
-                        .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
-                        .explSonderabl.Text = "Sonderabläufe der Phase " & phaseName & _
-                            ", Projekt " & projectName
-                        .explEnabler.Text = "Enabler der Phase " & phaseName & _
-                            ", Projekt " & projectName
-                        .explRisiken.Text = "Zusatzrisiken der Phase " & phaseName & _
-                            ", Projekt " & projectName
+    '        tmpstr = .Name.Split(New Char() {CChar("#")}, 10)
+    '        projectName = tmpstr(0)
 
-                        .phaseStart.Text = phaseStartdate.ToShortDateString
-                        .phaseStart.TextAlign = HorizontalAlignment.Left
+    '    End With
 
-                        .phaseEnde.Text = phaseEnddate.ToShortDateString
-                        .phaseEnde.TextAlign = HorizontalAlignment.Right
+    '    Try
+    '        hproj = ShowProjekte.getProject(projectName)
+    '    Catch ex As Exception
+    '        hproj = Nothing
+    '        ok = False
+    '    End Try
 
-                        .phaseDauer.Text = phaseDauerDays.ToString & " Tage"
-                        .phaseDauer.TextAlign = HorizontalAlignment.Center
+    '    If ok Then
 
+    '        cPhase = New clsPhase(hproj)
+    '        Try
+    '            phaseName = tmpstr(1).Trim
+    '            cPhase = hproj.getPhase(phaseName)
+    '            'phaseStartdate = hproj.startDate.AddMonths(cPhase.relStart - 1)
 
-                        If .Visible Then
-                        Else
-                            .Visible = True
-                            .Show()
-                        End If
+    '            phaseStartdate = cPhase.getStartDate
+    '            phaseEnddate = cPhase.getEndDate
+    '            phaseDauerDays = cPhase.dauerInDays
 
 
-                    Else
+    '            With formPhase
 
-                        .projectName.Text = projectName
-                        .phaseName.Text = phaseName
-                        .Height = 220
-                        .erlaeuterung.Visible = False
+    '                If specialListofPhases.Contains(phaseName) Then
 
-                        .phaseStart.Text = phaseStartdate.ToShortDateString
-                        .phaseStart.TextAlign = HorizontalAlignment.Left
+    '                    .projectName.Text = projectName
+    '                    .phaseName.Text = phaseName
+    '                    .Height = 440
+    '                    .lessonsLearnedControl.Visible = True
+    '                    .erlaeuterung.Visible = True
+    '                    .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
+    '                    .explSonderabl.Text = "Sonderabläufe der Phase " & phaseName & _
+    '                        ", Projekt " & projectName
+    '                    .explEnabler.Text = "Enabler der Phase " & phaseName & _
+    '                        ", Projekt " & projectName
+    '                    .explRisiken.Text = "Zusatzrisiken der Phase " & phaseName & _
+    '                        ", Projekt " & projectName
 
-                        .phaseEnde.Text = phaseEnddate.ToShortDateString
-                        .phaseEnde.TextAlign = HorizontalAlignment.Right
+    '                    .phaseStart.Text = phaseStartdate.ToShortDateString
+    '                    .phaseStart.TextAlign = HorizontalAlignment.Left
 
-                        .phaseDauer.Text = phaseDauerDays.ToString & " Tage"
-                        .phaseDauer.TextAlign = HorizontalAlignment.Center
+    '                    .phaseEnde.Text = phaseEnddate.ToShortDateString
+    '                    .phaseEnde.TextAlign = HorizontalAlignment.Right
 
-                        If .Visible Then
-                        Else
-                            .Visible = True
-                            .Show()
-                        End If
-
-
-                    End If
-
-
-                End With
+    '                    .phaseDauer.Text = phaseDauerDays.ToString & " Tage"
+    '                    .phaseDauer.TextAlign = HorizontalAlignment.Center
 
 
-            Catch ex As Exception
-                phaseName = ""
-                ok = False
-            End Try
+    '                    If .Visible Then
+    '                    Else
+    '                        .Visible = True
+    '                        .Show()
+    '                    End If
 
 
-        Else
-            'Call MsgBox("keine Information abrufbar ...")
-        End If
+    '                Else
+
+    '                    .projectName.Text = projectName
+    '                    .phaseName.Text = phaseName
+    '                    .Height = 220
+    '                    .erlaeuterung.Visible = False
+
+    '                    .phaseStart.Text = phaseStartdate.ToShortDateString
+    '                    .phaseStart.TextAlign = HorizontalAlignment.Left
+
+    '                    .phaseEnde.Text = phaseEnddate.ToShortDateString
+    '                    .phaseEnde.TextAlign = HorizontalAlignment.Right
+
+    '                    .phaseDauer.Text = phaseDauerDays.ToString & " Tage"
+    '                    .phaseDauer.TextAlign = HorizontalAlignment.Center
+
+    '                    If .Visible Then
+    '                    Else
+    '                        .Visible = True
+    '                        .Show()
+    '                    End If
 
 
+    '                End If
+
+
+    '            End With
+
+
+    '        Catch ex As Exception
+    '            phaseName = ""
+    '            ok = False
+    '        End Try
+
+
+    '    Else
+    '        'Call MsgBox("keine Information abrufbar ...")
+    '    End If
 
 
 
 
-    End Sub
 
+
+    'End Sub
+
+    ''' <summary>
+    ''' aktualisiert die Phasen-Information zu dem Projekt; 
+    ''' wenn die Phase nicht existiert, werden  
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="phaseName"></param>
+    ''' <remarks></remarks>
     Public Sub updatePhaseInformation(ByVal hproj As clsProjekt, phaseName As String)
 
         Dim projectName As String = hproj.name
@@ -14509,87 +14710,19 @@ Public Module Projekte
 
         Dim ok As Boolean = True
 
-        Dim phaseStartdate As Date
-        Dim phaseEnddate As Date
-        Dim phaseDauerDays As Integer
 
-
-
+        Dim startdateText As String = "-"
+        Dim enddateText As String = "-"
+        Dim dauerText = "-"
 
 
         Try
             cPhase = hproj.getPhase(phaseName)
             'phaseStartdate = hproj.startDate.AddMonths(cPhase.relStart - 1)
 
-            phaseStartdate = cPhase.getStartDate
-            phaseEnddate = cPhase.getEndDate
-            phaseDauerDays = cPhase.dauerInDays
-
-
-            With formPhase
-
-                If specialListofPhases.Contains(phaseName) Then
-
-                    .projectName.Text = projectName
-                    .phaseName.Text = phaseName
-                    .Height = 530
-                    .lessonsLearnedControl.Visible = True
-
-                    .erlaeuterung.Visible = True
-                    .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
-                    .explSonderabl.Text = "Sonderabläufe der Phase " & phaseName & _
-                        ", Projekt " & projectName
-                    .explEnabler.Text = "Enabler der Phase " & phaseName & _
-                        ", Projekt " & projectName
-                    .explRisiken.Text = "Zusatzrisiken der Phase " & phaseName & _
-                        ", Projekt " & projectName
-
-                    .phaseStart.Text = phaseStartdate.ToShortDateString
-                    .phaseStart.TextAlign = HorizontalAlignment.Left
-
-                    .phaseEnde.Text = phaseEnddate.ToShortDateString
-                    .phaseEnde.TextAlign = HorizontalAlignment.Right
-
-                    .phaseDauer.Text = phaseDauerDays.ToString & " Tage"
-                    .phaseDauer.TextAlign = HorizontalAlignment.Center
-
-
-                    If .Visible Then
-                    Else
-                        .Visible = True
-                        .Show()
-                    End If
-
-
-                Else
-
-                    .projectName.Text = projectName
-                    .phaseName.Text = phaseName
-                    .Height = 220
-                    .lessonsLearnedControl.Visible = False
-
-                    .erlaeuterung.Visible = False
-
-                    .phaseStart.Text = phaseStartdate.ToShortDateString
-                    .phaseStart.TextAlign = HorizontalAlignment.Left
-
-                    .phaseEnde.Text = phaseEnddate.ToShortDateString
-                    .phaseEnde.TextAlign = HorizontalAlignment.Right
-
-                    .phaseDauer.Text = phaseDauerDays.ToString & " Tage"
-                    .phaseDauer.TextAlign = HorizontalAlignment.Center
-
-                    If .Visible Then
-                    Else
-                        .Visible = True
-                        .Show()
-                    End If
-
-
-                End If
-
-
-            End With
+            startdateText = cPhase.getStartDate.ToShortDateString
+            enddateText = cPhase.getEndDate.ToShortDateString
+            dauerText = cPhase.dauerInDays.ToString & " Tage"
 
 
         Catch ex As Exception
@@ -14597,6 +14730,97 @@ Public Module Projekte
             ok = False
         End Try
 
+        If ok Then
+            If awinSettings.createIfNotThere And Not awinSettings.drawphases Then
+                ' prüfen, ob das Shape bereits angezeigt wird 
+                Dim tstshpName = projectboardShapes.calcPhaseShapeName(projectName, phaseName)
+                If Not projectboardShapes.contains(tstshpName) Then
+                    ' jetzt muss das Shape gezeichnet werden 
+                    Dim tmpNr As Integer = 1
+                    Dim tmpCollection As New Collection
+                    tmpCollection.Add(phaseName, phaseName)
+
+                    Dim formerEoU As Boolean = enableOnUpdate
+                    Dim formerEE As Boolean = appInstance.EnableEvents
+
+                    enableOnUpdate = False
+                    appInstance.EnableEvents = False
+
+                    Call zeichnePhasenInProjekt(hproj, tmpCollection, False, tmpNr)
+
+                    appInstance.EnableEvents = formerEE
+                    enableOnUpdate = formerEoU
+
+                End If
+            End If
+        End If
+
+
+
+        With formPhase
+
+            If specialListofPhases.Contains(phaseName) And ok Then
+
+                .projectName.Text = projectName
+                .phaseName.Text = phaseName
+                .Height = 530
+                .lessonsLearnedControl.Visible = True
+
+                .erlaeuterung.Visible = True
+                .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
+                .explSonderabl.Text = "Sonderabläufe der Phase " & phaseName & _
+                    ", Projekt " & projectName
+                .explEnabler.Text = "Enabler der Phase " & phaseName & _
+                    ", Projekt " & projectName
+                .explRisiken.Text = "Zusatzrisiken der Phase " & phaseName & _
+                    ", Projekt " & projectName
+
+                .phaseStart.Text = startdateText
+                .phaseStart.TextAlign = HorizontalAlignment.Left
+
+                .phaseEnde.Text = enddateText
+                .phaseEnde.TextAlign = HorizontalAlignment.Right
+
+                .phaseDauer.Text = dauerText
+                .phaseDauer.TextAlign = HorizontalAlignment.Center
+
+
+                If .Visible Then
+                Else
+                    .Visible = True
+                    .Show()
+                End If
+
+
+            Else
+
+                .projectName.Text = projectName
+                .phaseName.Text = phaseName
+                .Height = 220
+                .lessonsLearnedControl.Visible = False
+
+                .erlaeuterung.Visible = False
+
+                .phaseStart.Text = startdateText
+                .phaseStart.TextAlign = HorizontalAlignment.Left
+
+                .phaseEnde.Text = enddateText
+                .phaseEnde.TextAlign = HorizontalAlignment.Right
+
+                .phaseDauer.Text = dauerText
+                .phaseDauer.TextAlign = HorizontalAlignment.Center
+
+                If .Visible Then
+                Else
+                    .Visible = True
+                    .Show()
+                End If
+
+
+            End If
+
+
+        End With
 
 
     End Sub
@@ -14980,7 +15204,7 @@ Public Module Projekte
         End With
 
     End Sub
-    
+
 
     '
     Private Sub InputValidationforRange(ByRef selrange As Range, ByVal stage As Integer, showvalidation As Boolean)
@@ -15160,11 +15384,11 @@ Public Module Projekte
 
         shpNameParts = shapeName.Split(New Char() {CChar("#")}, 5)
 
-        If isProjectType(type) Then
+        If isProjectType(type) Or type = CInt(PTshty.status) Then
 
             tmpName = shpNameParts(0)
 
-        ElseIf type = PTshty.phaseE Or type = PTshty.phaseN Then
+        ElseIf type = PTshty.phaseE Or type = PTshty.phaseN Or type = PTshty.phase1 Then
 
             tmpName = shpNameParts(1)
 

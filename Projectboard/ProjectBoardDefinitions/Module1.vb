@@ -166,10 +166,11 @@ Public Module Module1
         projektE = 2
         phaseN = 3
         phaseE = 4
-        milestoneN = 5
-        milestoneE = 6
-        status = 7
-        dependency = 8
+        phase1 = 5
+        milestoneN = 6
+        milestoneE = 7
+        status = 8
+        dependency = 9
     End Enum
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
@@ -1518,42 +1519,48 @@ Public Module Module1
         Dim anzahlzeilen As Integer
 
 
-        Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
-        anzahlzeilen = getNeededSpace(hproj)
 
-        ' Konsistenzbedingung prüfen ... 
-        If zeile < 2 Then
-            zeile = 2
-        End If
+        Try
+            Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
+            anzahlzeilen = getNeededSpace(hproj)
 
-        'If mycollection.Count = 0 Then
-        '    mycollection.Add(pname, pname)
-        'End If
+            ' Konsistenzbedingung prüfen ... 
+            If zeile < 2 Then
+                zeile = 2
+            End If
 
-        If Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen) Then
-            tryoben = zeile - 1
-            tryunten = zeile + 1
+            'If mycollection.Count = 0 Then
+            '    mycollection.Add(pname, pname)
+            'End If
 
-            ' jetzt ggf eine neue Position für das Shape suchen - dabei iterierend unten bzw oben suchen
-            zeile = tryunten
-            lookDown = True
+            If Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen) Then
+                tryoben = zeile - 1
+                tryunten = zeile + 1
 
-            While Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen)
-                'lookDown = Not lookDown
-                If lookDown Then
-                    tryunten = tryunten + 1
-                    zeile = tryunten
-                Else
-                    tryoben = tryoben - 1
-                    If tryoben < 2 Then
+                ' jetzt ggf eine neue Position für das Shape suchen - dabei iterierend unten bzw oben suchen
+                zeile = tryunten
+                lookDown = True
+
+                While Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen)
+                    'lookDown = Not lookDown
+                    If lookDown Then
                         tryunten = tryunten + 1
                         zeile = tryunten
                     Else
-                        zeile = tryoben
+                        tryoben = tryoben - 1
+                        If tryoben < 2 Then
+                            tryunten = tryunten + 1
+                            zeile = tryunten
+                        Else
+                            zeile = tryoben
+                        End If
                     End If
-                End If
-            End While
-        End If
+                End While
+            End If
+        Catch ex As Exception
+
+        End Try
+        
 
         findeMagicBoardPosition = zeile
 

@@ -102,7 +102,7 @@ Partial Class frmPhaseInformation
         Me.praemissen.Controls.Add(Me.erlaeuterung)
         Me.praemissen.Location = New System.Drawing.Point(4, 22)
         Me.praemissen.Name = "praemissen"
-        Me.praemissen.Padding = New System.Windows.Forms.Padding(3, 3, 3, 3)
+        Me.praemissen.Padding = New System.Windows.Forms.Padding(3)
         Me.praemissen.Size = New System.Drawing.Size(440, 191)
         Me.praemissen.TabIndex = 0
         Me.praemissen.Text = "Prämissen"
@@ -123,7 +123,7 @@ Partial Class frmPhaseInformation
         Me.sonderAblaeufe.Controls.Add(Me.explSonderabl)
         Me.sonderAblaeufe.Location = New System.Drawing.Point(4, 22)
         Me.sonderAblaeufe.Name = "sonderAblaeufe"
-        Me.sonderAblaeufe.Padding = New System.Windows.Forms.Padding(3, 3, 3, 3)
+        Me.sonderAblaeufe.Padding = New System.Windows.Forms.Padding(3)
         Me.sonderAblaeufe.Size = New System.Drawing.Size(440, 191)
         Me.sonderAblaeufe.TabIndex = 1
         Me.sonderAblaeufe.Text = "Sonderabläufe"
@@ -190,6 +190,7 @@ Partial Class frmPhaseInformation
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
+        Me.AutoSize = True
         Me.BackColor = System.Drawing.SystemColors.Window
         Me.ClientSize = New System.Drawing.Size(482, 383)
         Me.Controls.Add(Me.lessonsLearnedControl)

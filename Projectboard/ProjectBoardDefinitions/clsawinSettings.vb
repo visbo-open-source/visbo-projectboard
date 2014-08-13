@@ -52,6 +52,9 @@
     ' sollen die Werte der selektierten Projekte in PRC Summencharts angezeigt werden ? 
     Property showValuesOfSelected As Boolean
 
+    ' sollen Shapes aus den Update Informations-Forms heraus erzeugt werden, wenn sie noch nicht da sind 
+    Property createIfNotThere As Boolean
+
     ' Settings für die letzte User Selektion in der Tafel 
     Property selectedColumn As Integer
     Property selectedRow As Integer
@@ -106,6 +109,7 @@
         _drawphases = False
         _showValuesOfSelected = False
         _loadProjectsOnChange = False
+        _createIfNotThere = True
 
         ' Settings für Import / Export 
         _EinzelRessExport = 0

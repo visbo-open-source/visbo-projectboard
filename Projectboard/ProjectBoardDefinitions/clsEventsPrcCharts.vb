@@ -493,11 +493,12 @@ Public Class clsEventsPrcCharts
 
         ' in ARG2 steht, das wievielte Element selektiert wurde ...
 
-        If (ElementID = xlNS.XlChartItem.xlSeries) And Arg1 = 1 And Arg2 > 0 Then
+        'If (ElementID = xlNS.XlChartItem.xlSeries) And Arg1 = 1 And Arg2 > 0 Then
+        If (ElementID = xlNS.XlChartItem.xlSeries) And Arg2 > 0 Then
             'Dim i As Integer
             Dim chtobjname As String
             Dim diagOBJ As clsDiagramm
-            Dim msNumber As Integer
+            Dim msNumber As Integer = 1
             Dim selMonth As Integer = showRangeLeft + Arg2 - 1
             Dim chtobj As xlNS.ChartObject
 
@@ -507,7 +508,7 @@ Public Class clsEventsPrcCharts
             'Jetzt muss bestimmt werden , um welches Chart es sich handelt 
 
 
-            Call awinDeleteProjectChildShapes(3)
+
 
             Try
                 chtobjname = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject).Name
@@ -527,6 +528,7 @@ Public Class clsEventsPrcCharts
                 '
                 If diagOBJ.diagrammTyp = DiagrammTypen(0) And diagOBJ.gsCollection.Count > 0 Then
 
+                    Call awinDeleteProjectChildShapes(3)
 
                     For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
@@ -534,9 +536,19 @@ Public Class clsEventsPrcCharts
 
                     Next
 
+                ElseIf diagOBJ.diagrammTyp = DiagrammTypen(5) And diagOBJ.gsCollection.Count > 0 Then
+
+                    Call awinDeleteProjectChildShapes(1)
+
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                        Call zeichneResultMilestonesInProjekt(kvp.Value, diagOBJ.gsCollection, 4, selMonth, selMonth, False, msNumber, False)
+
+                    Next
+
                 End If
 
-                
+
 
             Catch ex As Exception
 

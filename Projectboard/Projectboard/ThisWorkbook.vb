@@ -2,6 +2,7 @@
 Imports ClassLibrary1
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
+Imports MongoDbAccess
 
 
 
@@ -46,7 +47,7 @@ Public Class ThisWorkbook
         'Dim cbar As CommandBar
 
         appInstance = Application
-        
+
 
         ' die Short Cut Menues aus Excel werden hier nicht mehr de-aktiviert 
         ' das wird jetzt nur in Tabelle1, also der Projekt-Tafel gemacht ...
@@ -79,7 +80,7 @@ Public Class ThisWorkbook
         anzahlCalls = 0
 
 
-        
+
         'Call awinRightClickinPortfolioAendern()
         Call awinRightClickinPRCCharts()
 
@@ -88,7 +89,7 @@ Public Class ThisWorkbook
     Private Sub ThisWorkbook_Shutdown() Handles Me.Shutdown
 
         'Dim cbar As CommandBar
-       
+
         ' die Short Cut Menues aus Excel alle wieder aktivieren ...
         'For Each cbar In appInstance.CommandBars
 
@@ -131,9 +132,9 @@ Public Class ThisWorkbook
 
 
         CType(Application.Worksheets(arrWsNames(3)), Excel.Worksheet).Activate()
-        
+
         plantafel = Application.ActiveWindow
-        
+
         With plantafel
             .Caption = windowNames(5)
             .ScrollRow = 1
@@ -155,7 +156,7 @@ Public Class ThisWorkbook
 
         End If
 
-        
+
         ' hier wird die Projekt Tafel so dargestellt, daß Zeitraum zu sehen ist ... und ein späteres Diagramm 
         ' Änderung 29.06.14 hier nicht mehr notwendig 
         ' Call awinScrollintoView()
@@ -190,12 +191,12 @@ Public Class ThisWorkbook
         'Else
         '    Call MsgBox("keine Projekte zu speichern ...")
         'End If
-        
 
 
 
 
-       
+
+
 
     End Sub
 
@@ -204,6 +205,7 @@ Public Class ThisWorkbook
 
         Dim projektespeichern As New frmProjekteSpeichern
         Dim returnValue As DialogResult
+        Dim request As New Request(awinSettings.databaseName)
 
         If roentgenBlick.isOn Then
             Call awinNoshowProjectNeeds()
@@ -224,32 +226,37 @@ Public Class ThisWorkbook
         End Try
 
 
+        ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
 
-        returnValue = projektespeichern.ShowDialog
-        Try
+        If request.pingMongoDb() Then
+            returnValue = projektespeichern.ShowDialog
+            Try
 
-            If returnValue = DialogResult.Yes Then
+                If returnValue = DialogResult.Yes Then
 
-                If AlleProjekte.Count > 0 Then
+                    If AlleProjekte.Count > 0 Then
 
-                    Call StoreAllProjectsinDB()
+                        Call StoreAllProjectsinDB()
 
-                Else
-                    Call MsgBox("keine Projekte zu speichern ...")
+                    Else
+                        Call MsgBox("keine Projekte zu speichern ...")
+                    End If
+
                 End If
 
-            End If
+            Catch ex As Exception
+                ' Bei Fehler, soll Excel nicht geschlossen werden.
+                Call MsgBox(ex.Message)
+                Application.ActiveWorkbook.Saved = True
+                Cancel = True ' Event Schließen soll nicht ausgeführt werden
+            End Try
+        End If
 
-            ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
-            Application.ActiveWorkbook.Saved = True
-            Application.Quit()
+        ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
+        Application.ActiveWorkbook.Saved = True
+        Application.Quit()
 
-        Catch ex As Exception
-            ' Bei Fehler, soll Excel nicht geschlossen werden.
-            Call MsgBox(ex.Message)
-            Application.ActiveWorkbook.Saved = True
-            Cancel = True ' Event Schließen soll nicht ausgeführt werden
-        End Try
+       
     End Sub
 
 End Class

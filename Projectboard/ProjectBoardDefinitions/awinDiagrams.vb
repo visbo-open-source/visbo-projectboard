@@ -760,6 +760,7 @@ Public Module awinDiagrams
         Dim von As Integer, bis As Integer
         Dim i As Integer, m As Integer, d As Integer, r As Integer
         Dim found As Boolean
+        Dim hmxWert As Double = -10000.0 ' nimmt den Max-Wert der Datenreihe auf
 
         Dim minwert As Double, maxwert As Double
         Dim nr_pts As Integer
@@ -940,7 +941,7 @@ Public Module awinDiagrams
                         einheit = " "
                         objektFarbe = PhaseDefinitions.getPhaseDef(prcName).farbe
                         datenreihe = ShowProjekte.getCountPhasesInMonth(prcName)
-
+                        hmxWert = datenreihe.Max
 
                         If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
                             ' Ergänzung wegen Anzeige der selektierten Objekte ... 
@@ -956,6 +957,8 @@ Public Module awinDiagrams
                         einheit = " " & awinSettings.kapaEinheit
                         objektFarbe = RoleDefinitions.getRoledef(prcName).farbe
                         datenreihe = ShowProjekte.getRoleValuesInMonth(prcName)
+                        hmxWert = datenreihe.Max
+
 
                         If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
                             ' Ergänzung wegen Anzeige der selektierten Objekte ... 
@@ -976,6 +979,7 @@ Public Module awinDiagrams
                             edatenreihe = ShowProjekte.getCosteValuesInMonth
                             For i = 0 To bis - von
                                 seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + edatenreihe(i)
+                                hmxWert = Max(hmxWert, datenreihe(i) + edatenreihe(i))
                             Next i
 
                         Else
@@ -983,6 +987,7 @@ Public Module awinDiagrams
                             isPersCost = False
                             objektFarbe = CostDefinitions.getCostdef(prcName).farbe
                             datenreihe = ShowProjekte.getCostValuesInMonth(prcName)
+                            hmxWert = datenreihe.Max
 
                             If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
                                 ' Ergänzung wegen Anzeige der selektierten Objekte ... 
@@ -1029,7 +1034,6 @@ Public Module awinDiagrams
 
                         einheit = " "
                         msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName)
-
                     End If
 
                     For i = 0 To bis - von
@@ -1063,6 +1067,7 @@ Public Module awinDiagrams
 
                                 For i = 0 To bis - von
                                     datenreihe(i) = msdatenreihe(c, i)
+                                    seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
                                 Next
 
                                 With .SeriesCollection.NewSeries
@@ -1337,7 +1342,7 @@ Public Module awinDiagrams
         End With
 
         ' Skalierung nur ändern, wenn erforderlich, weil der maxwert höher ist als die bisherige Skalierung ... 
-        Dim hmxWert As Double = seriesSumDatenreihe.Max
+        hmxWert = Max(seriesSumDatenreihe.Max, hmxWert)
         If hmxWert > currentScale Then
             With chtobj.Chart.Axes(Excel.XlAxisType.xlValue)
                 .MaximumScale = hmxWert + 1
@@ -3735,12 +3740,12 @@ Public Module awinDiagrams
 
                 Try
                     If .GroupItems.Count > 1 Then
-                        .GroupItems(1).TextFrame2.TextRange.Text = projektname
+                        .GroupItems.Item(1).TextFrame2.TextRange.Text = projektname
                         For i = 1 To .GroupItems.Count
                             If pStatus = ProjektStatus(0) Then
-                                .GroupItems(i - 1).Fill.Transparency = 0.35
+                                .GroupItems.Item(i).Fill.Transparency = 0.35
                             Else
-                                .GroupItems(i - 1).Fill.Transparency = 0.0
+                                .GroupItems.Item(i).Fill.Transparency = 0.0
                             End If
                         Next
                     Else

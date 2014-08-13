@@ -145,7 +145,7 @@ Public Class clsCommandBarEvents
                         '
                         If ShowProjekte.shpListe.ContainsKey(SID) Then
 
-                            ' wenn es nur gerigfügige Änderugen waren, wird das Shape in dieser Funktion 
+                            ' wenn es nur gerigfügige Änderungen waren, wird das Shape in dieser Funktion 
                             ' wieder auf den alten Zustand eingerüttelt
                             somethingChanged = projectboardShapes.hasAchanged(shpelement)
                             hproj = ShowProjekte.getProjectS(SID)
@@ -310,7 +310,7 @@ Public Class clsCommandBarEvents
                                 End With
                             End If
 
-                            If shapeType = PTshty.projektE Then
+                            If shapeType = PTshty.projektE Or shapeType = PTshty.projektC Then
                                 '
                                 ' zusammengesetztes Shape 
                                 '
@@ -355,12 +355,13 @@ Public Class clsCommandBarEvents
 
                         ' Änderung 8.6.14 hier werden jetzt die Projekt Charts aktualisiert, sofern welche da sind und die Time Machine nicht aktiv ist
                         If Not timeMachineIsOn Then
+                            Call aktualisierePMSForms(hproj)
                             Call aktualisiereCharts(hproj, True)
                         End If
 
 
 
-                    ElseIf shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Then
+                    ElseIf shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Or shapeType = PTshty.phase1 Then
 
 
                         ' es darf nur ein Shape von diesem Typ selektiert sein ... 
@@ -479,17 +480,20 @@ Public Class clsCommandBarEvents
                         ' es darf nur ein Shape von diesem Typ selektiert sein ... 
                         If awinSelection.Count = 1 Then
 
+                            pname = extractName(shpelement.Name, PTshty.projektN)
+                            hproj = ShowProjekte.getProject(pname)
+
                             If formStatus Is Nothing Then
                                 formStatus = New frmStatusInformation
                             End If
 
-                            If Not formStatus.Visible Then
+                            If (Not formStatus.Visible) Then
                                 If formStatus.IsDisposed Then
                                     formStatus = New frmStatusInformation
                                 End If
                             End If
 
-                            Call updateStatusInformation(shpelement)
+                            Call updateStatusInformation(hproj)
 
                         Else
 

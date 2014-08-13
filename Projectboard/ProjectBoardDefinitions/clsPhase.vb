@@ -972,6 +972,34 @@
 
     End Property
 
+    ''' <summary>
+    ''' gibt die laufende Nummer des Meilensteins in der Phase zurück
+    ''' 0: wenn nicht gefunden
+    ''' </summary>
+    ''' <param name="msName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getlfdNr(ByVal msName As String) As Integer
+        Get
+            Dim r As Integer = 1
+            Dim found As Boolean = False
+            Dim tmpValue As Integer = 0
+
+            While r <= Me.CountResults And Not found
+                If Me.getResult(r).name = msName Then
+                    found = True
+                    tmpValue = r
+                Else
+                    r = r + 1
+                End If
+            End While
+
+            getlfdNr = tmpValue
+
+        End Get
+    End Property
+
     Public Sub AddCost(ByVal cost As clsKostenart)
 
         AllCosts.Add(cost)
