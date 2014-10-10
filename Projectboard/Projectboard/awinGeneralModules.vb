@@ -3154,6 +3154,11 @@ Public Module awinGeneralModules
 
                 End If
 
+                ' Änderung 9.10.14, damit die Spaces in einer 
+                If hproj.tfZeile >= curZeile + 1 Then
+                    curZeile = curZeile + 1
+                End If
+                ' Ende Änderung
                 hproj.tfZeile = curZeile
                 lastZeile = curZeile
                 'Call ZeichneProjektinPlanTafel2(pname, curZeile)

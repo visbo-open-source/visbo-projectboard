@@ -63,7 +63,7 @@ Public Module testModule
                                                                                 storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
                                 projekthistorie.Add(Date.Now, hproj)
                             Catch ex As Exception
-                                projekthistorie = Nothing
+                                projekthistorie.clear()
                             End Try
                         Else
                             Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
@@ -1892,7 +1892,10 @@ Public Module testModule
                                     Dim ratio As Double
                                     ratio = height / width
 
+
                                     With newShape
+
+                                        ratio = height / width
 
                                         If ratio < .Height / .Width Then
                                             ' orientieren an width 
@@ -2448,8 +2451,6 @@ Public Module testModule
                                     Call awinCreateBetterWorsePortfolio(ProjektListe:=myCollection, repChart:=obj, showAbsoluteDiff:=showAbsoluteDiff, isTimeTimeVgl:=isTimeTimeVgl, vglTyp:=vglTyp, _
                                                     charttype:=charttype, bubbleColor:=0, bubbleValueTyp:=bubbleValueTyp, showLabels:=showLabels, chartBorderVisible:=True, _
                                                     top:=htop, left:=hleft, width:=hwidth, height:=hheight)
-
-
 
 
                                     reportObj = obj
@@ -3352,6 +3353,8 @@ Public Module testModule
 
                     If Not projekthistorie Is Nothing Then
                         projekthistorie.clear() ' alte Historie löschen
+                    Else
+                        projekthistorie = New clsProjektHistorie
                     End If
 
                     'tmpstr = title.Trim.Split(New Char() {"#"}, 4)
@@ -3593,6 +3596,8 @@ Public Module testModule
                     If projekthistorie.Count > 0 Then
                         vglName = projekthistorie.First.name
                     End If
+                Else
+                    projekthistorie = New clsProjektHistorie
                 End If
 
 
@@ -4047,6 +4052,8 @@ Public Module testModule
             If projekthistorie.Count > 0 Then
                 vglName = projekthistorie.First.name
             End If
+        Else
+            projekthistorie = New clsProjektHistorie
         End If
 
 
@@ -4982,7 +4989,7 @@ Public Module testModule
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
                                 Else
-                                    If unterschiede.Contains(PThcc.phasen.ToString) Then
+                                    If unterschiede.Contains(CInt(PThcc.phasen).ToString) Then
                                         TimeTimeColor = hproj.getTimeTimeColor(vglproj, True, Date.Now)
 
                                         If TimeTimeColor(0) < 0 Then
@@ -5037,7 +5044,7 @@ Public Module testModule
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
                                 Else
-                                    If unterschiede.Contains(PThcc.resultdates.ToString) Or unterschiede.Contains(PThcc.resultampel.ToString) Then
+                                    If unterschiede.Contains(CInt(PThcc.resultdates).ToString) Or unterschiede.Contains(CInt(PThcc.resultampel).ToString) Then
 
                                         TimeTimeColor = hproj.getTimeTimeColor(vglproj, True, Date.Now)
 
@@ -5360,7 +5367,7 @@ Public Module testModule
                                     CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "siehe folgende Charts"
                                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "nicht verfügbar"
                                 Else
-                                    If unterschiede.Contains(PThcc.phasen.ToString) Or unterschiede.Contains(PThcc.resultdates.ToString) Then
+                                    If unterschiede.Contains(CInt(PThcc.phasen).ToString) Or unterschiede.Contains(CInt(PThcc.resultdates).ToString) Then
                                         TimeTimeColor = hproj.getTimeTimeColor(vglproj, True, Date.Now)
 
                                         If TimeTimeColor(0) < 0 Then
@@ -6082,7 +6089,7 @@ Public Module testModule
                 End If
 
             Catch ex As Exception
-                projekthistorie = Nothing
+                projekthistorie.clear()
             End Try
 
         Next
@@ -6682,4 +6689,5 @@ Public Module testModule
         End If
 
     End Sub
+  
 End Module

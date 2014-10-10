@@ -362,6 +362,8 @@ Public Class frmDeleteProjects
                     Try
                         If Not projekthistorie Is Nothing Then
                             projekthistorie.clear()
+                        else
+                            projekthistorie = New clsProjektHistorie
                         End If
 
                         projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=projName, variantName:=variantName, _
@@ -370,7 +372,7 @@ Public Class frmDeleteProjects
                         '                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
 
                     Catch ex As Exception
-                        projekthistorie = Nothing
+                        projekthistorie.clear()
                     End Try
 
                     If projekthistorie.Count > 0 Then

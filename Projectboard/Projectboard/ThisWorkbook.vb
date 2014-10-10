@@ -227,36 +227,38 @@ Public Class ThisWorkbook
 
 
         ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
+        Try
 
-        If request.pingMongoDb() Then
-            returnValue = projektespeichern.ShowDialog
-            Try
+            If request.pingMongoDb() And AlleProjekte.Count > 0 Then
+                returnValue = projektespeichern.ShowDialog
+
 
                 If returnValue = DialogResult.Yes Then
 
-                    If AlleProjekte.Count > 0 Then
-
-                        Call StoreAllProjectsinDB()
-
-                    Else
-                        Call MsgBox("keine Projekte zu speichern ...")
-                    End If
+                    Call StoreAllProjectsinDB()
 
                 End If
 
-            Catch ex As Exception
-                ' Bei Fehler, soll Excel nicht geschlossen werden.
-                Call MsgBox(ex.Message)
-                Application.ActiveWorkbook.Saved = True
-                Cancel = True ' Event Schließen soll nicht ausgeführt werden
-            End Try
-        End If
+            Else
+                Call MsgBox("keine Projekte zu speichern ...")
 
-        ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
+
+            End If
+        Catch ex As Exception
+
+            ' Bei Fehler, soll Excel nicht geschlossen werden.
+            Call MsgBox(ex.Message)
+            Application.ActiveWorkbook.Saved = True
+            Cancel = True ' Event Schließen soll nicht ausgeführt werden
+
+        End Try
+        
+
+                    ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
         Application.ActiveWorkbook.Saved = True
         Application.Quit()
 
-       
+
     End Sub
 
 End Class

@@ -7,58 +7,66 @@
       <tabSet idMso="TabSetPictureTools" visible ="false" />
       <tabSet idMso="TabSetSmartArtTools" visible ="false" />
     </contextualTabs>
-    <!--
-    
-    -->
+    <!---->
     <tabs>
       <tab id="PTX" label ="Management-Info">
-        <group id="PTXG1" label ="Schnell-Analyse">
-          <button id="PTXG1B1" label="Projekt-Bewertung" onAction="Tom2G2M5M1B3ShowStatus" />
+        <group id="PTXG1" label ="Multiprojekt-Analyse">
+          <button id="PTXG1B1" label="Projekt-Ampeln" onAction="Tom2G2M5M1B3ShowStatus" />
           <separator id="PTXG1s1"/>
-          <button id="PTXG1B2" label="Ziele-Bewertung" onAction="PT0ShowZieleUebersicht" />
+          <button id="PTXG1B2" label="Meilenstein-Ampeln" onAction="PT0ShowZieleUebersicht" />
           <separator id="PTXG1s2"/>
-          <button id="PTXG1B4" label="Auslastung" onAction="PT0ShowAuslastung" />
-          <separator id="PTXG1s4"/>
+          <!--<button id="PTXG1B4" label="Auslastung" onAction="PT0ShowAuslastung" />-->
+          <button id="PTXG1B4" label="Planelemente visualisieren" onAction="VisPlanObjects001" />
+          <separator id="PTXG1s3"/>
+          <button id="PTXG1B7" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
+          <!--<separator id="PTXG1s4"/>
           <button id="PTXG1B5" label="Engpass" onAction="PTXShowEngpass" />
           <separator id="PTXG1s5"/>
-          <button id="PTXG1B6" label="Symbole löschen" onAction="Tom2G2M5B3NoShowSymbols" />
+          <button id="PTXG1B6" label="Symbole löschen" onAction="Tom2G2M5B3NoShowSymbols" />-->
+        </group>
+        <group id="PTFK" label ="Finanz-Kennzahlen">
+          <button id="PTFKB1" label="Budget/Kosten" onAction="PT0ShowPortfolioBudgetCost" />
+          <button id="PTFKB2" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" />
         </group>
       </tab>
-      <!--
       
-      -->
-      <tab id="PT0" label="Visualisieren">
+      <tab id="PT0" label="Detail-Info">
         <group id="PT0G1" label="Projekt">
-          <button id="PT0G1B0" label="Status" onAction="PT0ShowProjektStatus" />
+          <!--<menu id="PT0G1M3" label="Chart-Cockpit">
+            <button id="PT0G1M3B1" label="Cockpit visualisieren" onAction="PT0ShowCockpit" />
+            <button id="PT0G1M3B2" label="Cockpit speichern" onAction="PT0SaveCockpit" />
+          </menu>
           <separator id="PT0G1s0"/>
-          <button id="PT0G1B1" label="Abhängigkeiten" onAction="PT0ShowDependencies" />
+            <button id="PT0G1B0" label="Status" onAction="PT0ShowProjektStatus" />
           <separator id="PT0G1s1"/>
+          <button id="PT0G1B1" label="Abhängigkeiten" onAction="PT0ShowDependencies" />
+          <separator id="PT0G1s2"/>-->
           <menu id="PT0G1M0" label="Phasen">
             <button id="PT0G1M0B1" label="Namen wählen" onAction="PT0VisualizePhases" />
             <button id="PT0G1M0B2" label="Phasen Übersicht" onAction="Tom2G2M1B1Phasen" />
             <!--<button id="PT0G1M0B3" label="Phasen Darstellung" onAction="Tom2G2M1B1Phasen2" />-->
           </menu>
-          <separator id="PT0G1s2"/>
+          <separator id="PT0G1s3"/>
           <menu id="PT0G1M1" label="Ressourcen">
             <button id="PT0G1M1B1" label="Personal Bedarfe" onAction="Tom2G2M1B2Resources" />
             <button id="PT0G1M1B2" label="Kosten Bedarfe" onAction="Tom2G2M1B5GKosten" />
           </menu>
-          <separator id="PT0G1s3"/>
+          <separator id="PT0G1s4"/>
           <menu id="PT0G1M2" label="Meilensteine">
             <button id="PT0G1M2B5" label="Alle" onAction="Tom2G2M5M2B5ShowMilestones" />
-            <button id="PT0G1M2B6" label="Namen wählen" onAction="PTShowMilestonesByName" />
+            <button id="PT0G1M2B6" label="Meilenstein anzeigen" onAction="PTShowMilestonesByName" />
             <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="PTShowMilestoneTrend" />
-            <button id="PT0G1M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
+            <!--<button id="PT0G1M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />-->
           </menu>
-          <separator id="PT0G1s4"/>
+          <!--<separator id="PT0G1s5"/>
           <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
-          <!--<button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />-->
+          <button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />
           <button id="PT0G1B5" label="Abhängigkeiten" onAction="Tom2G2M1B6Abhaengigkeit" />
-          <!--<button id="PT0G1B4" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />-->
-          <separator id="PT0G1s5"/>
+          <button id="PT0G1B4" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />-->
+          <separator id="PT0G1s6"/>
           <button id="PT0G1B6" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
         </group>
-        <!---->
+        
         <group id="PT0G2" label="Portfolio">
           <button id="PT0G2B1" label="Status" onAction="Tom2G2M5M1B3ShowStatus" />
           <separator id="PT0G2s1"/>
@@ -77,13 +85,13 @@
             <button id="PT0G2M2B1" label="Ampel Übersicht" onAction="PT0ShowZieleUebersicht" />
             <button id="PT0G2M2B3" label="Namen wählen" onAction="PTShowAllMilestonesByName" />
             <button id="PT0G2M2B4" label="Summen Charts" onAction="PTShowMilestoneSummen" />
-            <!--<button id="PT0G2M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />-->
+            <button id="PT0G2M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
           </menu>
           <separator id="PT0G2s4"/>
           <button id="PT0G2B3" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
-          <!--<button id="PT0G2B4" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />-->
-          <!--<button id="PT0G2B5" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />-->
-          <!--<button id="PT0G2B6" label="Zeit/Risiko/Volumen" onAction="PT0ShowZeitRisiko" />-->
+          <button id="PT0G2B4" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />
+          <button id="PT0G2B5" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />
+          <button id="PT0G2B6" label="Zeit/Risiko/Volumen" onAction="PT0ShowZeitRisiko" />
           <button id="PT0G2B7" label="Abhängigkeiten" onAction="PT0ShowAbhaengigkeiten" />
           <button id="PT0G2B8" label="besser/schlechter als letzter Stand" onAction="PT0ShowAttentionL" />
           <button id="PT0G2B9" label="besser/schlechter als Beauftragung" onAction="PT0ShowAttentionB" />
@@ -100,6 +108,8 @@
           <button id="PT1G1B1" label="Einzelprojekt Bericht" onAction="Tom2G1Doku" />
           <separator id="PT1G1s1"/>
           <button id="PT1G1B2" label="Portfolio Bericht" onAction="awinAllprojectsReport" />
+          <!--<separator id="PT1G1s2"/>
+          <button id="PT1G1B3" label="Visualisieren Neu" onAction="VisPlanObjects001" />-->
         </group>
       </tab>
       <!--
@@ -134,11 +144,11 @@
           <separator id="PT2G2s2"/>
           <button id="PT2G2B3" label="Löschen" onAction="PTRemoveKonstellation" />
         </group>
-        <group id="PT2G3" label="Projekt Abhängigkeiten">
+        <!--<group id="PT2G3" label="Projekt Abhängigkeiten">
           <button id="PT2G3B1" label="Definieren" onAction="PTDefineDependencies" />
           <separator id="PT2G3s1"/>
           <button id="PT2G3B2" label="Löschen" onAction="PTDeleteDependencies" enabled="false"/>
-        </group>
+        </group>-->
       </tab>
       <!--
       

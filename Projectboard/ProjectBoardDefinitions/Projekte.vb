@@ -2,6 +2,8 @@
 Imports Microsoft.Office.Interop.Excel
 Imports System.Windows.Forms
 Imports Microsoft.Office.Core
+Imports xlNS = Microsoft.Office.Interop.Excel
+Imports System.ComponentModel
 Imports Microsoft.VisualBasic.Constants
 
 
@@ -1233,17 +1235,20 @@ Public Module Projekte
             End With
         Next i
 
-
+        'Dim dlfontsize As Double
 
         With chtobj.Chart
-            ' remove extra series
-            Do Until CType(.SeriesCollection, Excel.SeriesCollection).Count = 0
-                CType(.SeriesCollection(1), Excel.Series).Delete()
-            Loop
+
+
+            '' remove extra series
+            'Do Until .SeriesCollection.Count = 0
+            '    .SeriesCollection(1).Delete()
+            'Loop
 
             'Aufbau der Series 
 
-            With CType(.SeriesCollection, Excel.SeriesCollection).NewSeries
+            'With .SeriesCollection.NewSeries
+            With .SeriesCollection(1)
 
                 For i = 0 To anzPhasen - 1
                     mdatenreihe(i) = tdatenreihe1(i) / 365 * 12
@@ -1252,22 +1257,28 @@ Public Module Projekte
                 .Interior.ColorIndex = -4142
                 .Values = mdatenreihe
                 .XValues = Xdatenreihe
-                .HasDataLabels = False
+                'ur: 22.07.2014: die DataLabel bleiben wie im Chart bereits definiert.
+                '.HasDataLabels = False
+
+
 
                 For px = 1 To anzPhasen
 
                     With CType(.Points(px), Excel.Point)
+
                         If tdatenreihe1(px - 1) < 90 Then
                             .HasDataLabel = False
                         Else
+
                             .HasDataLabel = True
                             .DataLabel.Text = hproj.startDate.AddDays(tdatenreihe1(px - 1)).ToShortDateString
-                            .DataLabel.Font.Size = awinSettings.fontsizeItems + 2
+
+                            '.DataLabel.Format.TextFrame2.TextRange.Characters(, ).Font.Size = dlfontsize
                             If mdatenreihe(px - 1) < 5 Then
 
                                 Try
                                     .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
-                                    .DataLabel.Font.Size = awinSettings.fontsizeItems
+                                    '.DataLabel.Font.Size = awinSettings.fontsizeItems
                                 Catch ex As Exception
                                     .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionInsideEnd
                                 End Try
@@ -1285,7 +1296,9 @@ Public Module Projekte
                 .ChartType = Excel.XlChartType.xlBarStacked
             End With
 
-            With CType(.SeriesCollection, Excel.SeriesCollection).NewSeries
+
+            'With .SeriesCollection.NewSeries
+            With .SeriesCollection(2)
 
                 For i = 0 To anzPhasen - 1
                     mdatenreihe(i) = tdatenreihe2(i) / 365 * 12
@@ -1301,8 +1314,9 @@ Public Module Projekte
                 .XValues = Xdatenreihe
 
                 .HasDataLabels = True
-                CType(.DataLabels, Excel.DataLabels).Font.Size = awinSettings.fontsizeItems
-                CType(.DataLabels, Excel.DataLabels).Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
+
+                '.DataLabels.Font.Size = awinSettings.fontsizeItems
+                .DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionCenter
 
                 For i = 1 To anzPhasen
                     With CType(.Points(i), Excel.Point)
@@ -1320,16 +1334,21 @@ Public Module Projekte
                 .ChartType = Excel.XlChartType.xlBarStacked
             End With
 
-            With CType(.SeriesCollection, Excel.SeriesCollection).NewSeries
+
+            'With .SeriesCollection.NewSeries
+            With .SeriesCollection(3)
 
                 .Name = "null2"
-                .Interior.ColorIndex = -4142
+                .Interior.colorindex = -4142
+
                 .Values = tdatenreihe3
                 .XValues = Xdatenreihe
 
                 .HasDataLabels = True
-                CType(.DataLabels, Excel.DataLabels).Font.Size = awinSettings.fontsizeItems + 2
-                CType(.DataLabels, Excel.DataLabels).Position = Excel.XlDataLabelPosition.xlLabelPositionInsideBase
+
+                '.DataLabels.Font.Size = awinSettings.fontsizeItems + 2
+                .DataLabels.Position = Excel.XlDataLabelPosition.xlLabelPositionInsideBase
+
 
                 Dim bis As Integer
                 For px = 1 To anzPhasen
@@ -1376,9 +1395,9 @@ Public Module Projekte
 
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
-                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
                 .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                       titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End If
 
         End With
@@ -1496,7 +1515,9 @@ Public Module Projekte
 
 
         For i = 1 To projektListe.Count
+
             pName = CStr(projektListe.Item(i))
+
             Try
 
                 With hproj
@@ -1650,20 +1671,70 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
+        ' nur dann neue Series-Collection aufbauen, wenn auch tatsächlich was in der Projektliste ist ..
+
+        If projektListe.Count > 0 Then
+
+            With CType(chtobj.Chart, Excel.Chart)
+
+                showLabels = True
+
+                ' Einstellungen der vorhandenen SeriesCollection merken
+
+                Dim pts As Excel.Points = CType(.SeriesCollection(1).Points, Excel.Points)
+                Dim dlFontSize As Double
+                Dim dlFontBackground As Double
+                Dim dlFontBold As Boolean
+                Dim dlFontColorIndex As Integer
+                Dim dlFontColor As Integer
+                Dim dlFontFontStyle As String = ""
+                Dim dlFontItalic As Boolean
+                Dim dlFontStrikethrough As Boolean
+                Dim dlFontSuperscript As Boolean
+                Dim dlFontSubscript As Boolean
+                Dim dlFontUnderline As Double
+
+                For i = 1 To pts.Count
+
+                    With CType(.SeriesCollection(1).Points(i), Excel.Point)
+
+                        Try
+                            If .HasDataLabel = True Then
+
+                                With .DataLabel
+                                    dlFontSize = CDbl(.Font.Size)
+                                    dlFontBackground = CDbl(.Font.Background)
+                                    dlFontBold = CBool(.Font.Bold)
+                                    dlFontColorIndex = CInt(.Font.ColorIndex)
+                                    dlFontFontStyle = CStr(.Font.FontStyle)
+                                    dlFontItalic = CBool(.Font.Italic)
+                                    dlFontStrikethrough = CBool(.Font.Strikethrough)
+                                    dlFontSubscript = CBool(.Font.Subscript)
+                                    dlFontSuperscript = CBool(.Font.Superscript)
+                                    dlFontUnderline = CDbl(.Font.Underline)
+                                    dlFontSize = CDbl(.Font.Size)
+                                    If .Font.Color <> awinSettings.AmpelRot Then
+                                        dlFontColor = CInt(.Font.Color)
+                                    End If
+
+                                End With
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
+                    End With
+
+                Next i
 
 
-        With chtobj.Chart
 
-            showLabels = True
+                ' remove old series
+                Do Until .SeriesCollection.Count = 0
+                    .SeriesCollection(1).Delete()
+                Loop
 
-            ' remove old series
-            Do Until .SeriesCollection.Count = 0
-                .SeriesCollection(1).Delete()
-            Loop
 
-            ' nur dann neue Series-Collection aufbauen, wenn auch tatsächlich was in der Projektliste ist ..
-
-            If projektListe.Count > 0 Then
 
                 .SeriesCollection.NewSeries()
                 .SeriesCollection(1).name = diagramTitle
@@ -1700,22 +1771,41 @@ Public Module Projekte
                             CType(series1.Points(1), Excel.Point)
 
                 'Dim testName As String
+
+                Dim bubblePoint As Excel.Point
                 For i = 1 To anzBubbles
+
+                    bubblePoint = CType(.SeriesCollection(1).Points(i), Excel.Point)
 
                     With CType(.SeriesCollection(1).Points(i), Excel.Point)
 
                         If showLabels Then
                             Try
                                 .HasDataLabel = True
+
                                 With .DataLabel
                                     .Text = PfChartBubbleNames(i - 1)
-                                    .Font.Size = awinSettings.CPfontsizeItems + 4
+                                    .Font.Size = dlFontSize
+                                    .Font.Background = dlFontBackground
+                                    .Font.Bold = dlFontBold
+                                    .Font.Color = dlFontColor
+                                    .Font.ColorIndex = dlFontColorIndex
+                                    .Font.FontStyle = dlFontFontStyle
+                                    .Font.Italic = dlFontItalic
+                                    .Font.Strikethrough = dlFontStrikethrough
+                                    .Font.Subscript = dlFontSubscript
+                                    .Font.Superscript = dlFontSuperscript
+                                    .Font.Underline = dlFontUnderline
+
+                                    'ur: 17.7.2014: fontsize kommt vom existierenden Chart
+                                    '.Font.Size = awinSettings.CPfontsizeItems
 
                                     ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
+
                                     If bubbleValues(i - 1) < 0 Then
                                         .Font.Color = awinSettings.AmpelRot
-                                    End If
 
+                                    End If
                                     Select Case positionValues(i - 1)
                                         Case labelPosition(0)
                                             .Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
@@ -1760,17 +1850,19 @@ Public Module Projekte
                     End If
                 End With
 
-            End If
 
-            If .HasTitle Then
-                .ChartTitle.Text = diagramTitle
-                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
-            End If
+                If .HasTitle Then
+                    .ChartTitle.Text = diagramTitle
+                    ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+                    '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                    '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                    '   titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                End If
 
 
-        End With
+            End With
+
+        End If
 
         chtobj.Name = kennung
         appInstance.EnableEvents = formerEE
@@ -3907,7 +3999,7 @@ Public Module Projekte
 
         With chtobj.Chart
 
-            ' remove extra series
+            '' remove extra series
             Do Until .SeriesCollection.Count = 0
                 .SeriesCollection(1).Delete()
             Loop
@@ -3931,7 +4023,8 @@ Public Module Projekte
 
                 'series
                 With .SeriesCollection.NewSeries
-                    .name = roleName
+
+                    .Name = roleName
                     .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
                     .Values = tdatenreihe
                     .XValues = Xdatenreihe
@@ -3965,9 +4058,10 @@ Public Module Projekte
 
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
-                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                ' ur: 21.07.2014: auskommentiert für Chart-Cockpit
+                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                '       titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End If
 
 
@@ -4335,16 +4429,16 @@ Public Module Projekte
 
 
             With chtobj.Chart
-                ' remove extra series
-                Do Until .SeriesCollection.Count = 0
-                    .SeriesCollection(1).Delete()
-                Loop
+                '' remove extra series
+                'Do Until .SeriesCollection.Count = 0
+                '    .SeriesCollection(1).Delete()
+                'Loop
 
 
                 ' -----------------------
                 ' Schreibe Über- bzw Unterauslastung 
 
-                With .SeriesCollection.NewSeries
+                With .SeriesCollection(1)
                     .name = "Details"
 
                     .Values = tdatenreihe
@@ -4355,7 +4449,8 @@ Public Module Projekte
 
                     With .Datalabels
                         .Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
-                        .Font.Size = awinSettings.fontsizeItems + 2
+                        ' ur: 17.7.2014 fontsize kommt vom existierenden chart
+                        '.Font.Size = awinSettings.fontsizeItems + 2
                     End With
 
                 End With
@@ -4366,16 +4461,18 @@ Public Module Projekte
                     roleName = RoleDefinitions.getRoledef(r).name
                     With .SeriesCollection(1).Points(r)
                         .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
-                        .DataLabel.Font.Size = awinSettings.fontsizeItems
+                        ' ur: 17.7.2014 fontsize kommt vom existierenden chart
+                        '.DataLabel.Font.Size = awinSettings.fontsizeItems
                     End With
 
                 Next r
 
                 .HasTitle = True
                 .ChartTitle.Text = diagramTitle
-                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                ' ur: 17.7.2014 fontsize kommt vom existierenden chart
+                ' .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                '    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
 
             End With
 
@@ -4484,9 +4581,9 @@ Public Module Projekte
         Dim ik As Integer = 1 ' wird für die Unterscheidung benötigt, ob mit Personal-Kosten oder ohne 
 
 
-        With chtobj.Chart
+        With CType(chtobj.Chart, Excel.Chart)
 
-            ' remove extra series
+            '' remove extra series
             Do Until .SeriesCollection.Count = 0
                 .SeriesCollection(1).Delete()
             Loop
@@ -4500,7 +4597,7 @@ Public Module Projekte
                 Next
 
                 With .SeriesCollection.NewSeries
-                    .name = costname
+                    .Name = costname
                     .Interior.color = CostDefinitions.getCostdef(pkIndex).farbe
                     .Values = tdatenreihe
                     .XValues = Xdatenreihe
@@ -4515,6 +4612,7 @@ Public Module Projekte
                 For i = 0 To plen - 1
                     sumdatenreihe(i) = sumdatenreihe(i) + tdatenreihe(i)
                 Next
+                Dim iSerColl As Integer = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
                 With .SeriesCollection.NewSeries
                     .name = costname
@@ -4550,9 +4648,10 @@ Public Module Projekte
 
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
-                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End If
 
         End With
@@ -5121,13 +5220,15 @@ Public Module Projekte
 
 
         With chtobj.Chart
-            ' remove extra series
-            Do Until .SeriesCollection.Count = 0
-                .SeriesCollection(1).Delete()
-            Loop
+            'ur:22.07.2014 wegen Chart-Cockpit
+            '' remove extra series
+            'Do Until .SeriesCollection.Count = 0
+            '    .SeriesCollection(1).Delete()
+            'Loop
 
-            With .SeriesCollection.NewSeries
-                .name = pname
+            'With .SeriesCollection.NewSeries
+            With .SeriesCollection(1)
+                .Name = pname
                 .Values = tdatenreihe
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlPie
@@ -5139,19 +5240,21 @@ Public Module Projekte
                 roleName = CStr(ErgebnisListeR.Item(r))
                 With .SeriesCollection(1).Points(r)
                     .Interior.color = RoleDefinitions.getRoledef(roleName).farbe
-                    .DataLabel.Font.Size = awinSettings.fontsizeItems
+                    ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+                    '.DataLabel.Font.Size = awinSettings.fontsizeItems
                 End With
             Next r
 
             ' Änderung: evtl wurde ja der Titel gelöscht 
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
-                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End If
-            
-           
+
+
         End With
 
         chtobj.Name = kennung
@@ -5502,13 +5605,16 @@ Public Module Projekte
 
 
         With chtobj.Chart
-            ' remove extra series
-            Do Until .SeriesCollection.Count = 0
-                .SeriesCollection(1).Delete()
-            Loop
+            ' ur: 22.07.2014: ist bereits im Cockpit-Chart enthalten
+            '' remove extra series
+            'Do Until .SeriesCollection.Count = 0
+            '    .SeriesCollection(1).Delete()
+            'Loop
 
-            With .SeriesCollection.NewSeries
-                .name = pname
+
+            'With .SeriesCollection.NewSeries
+            With .SeriesCollection(1)
+                .Name = pname
                 .Values = tdatenreihe
                 .XValues = Xdatenreihe
                 .ChartType = Excel.XlChartType.xlPie
@@ -5521,14 +5627,16 @@ Public Module Projekte
                     costname = "Personal-Kosten"
                     With .SeriesCollection(1).Points(k + 1)
                         .Interior.color = CostDefinitions.getCostdef(pkIndex).farbe
-                        .DataLabel.Font.Size = 10
+                        ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+                        '.DataLabel.Font.Size = 10
 
                     End With
                 Else
                     costname = CStr(ErgebnisListeK.Item(k + 1))
                     With .SeriesCollection(1).Points(k + 1)
                         .Interior.color = CostDefinitions.getCostdef(costname).farbe
-                        .DataLabel.Font.Size = 10
+                        ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+                        '.DataLabel.Font.Size = 10
 
                     End With
                 End If
@@ -5537,16 +5645,17 @@ Public Module Projekte
 
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
-                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                ' ur: 21.07.2014 für Chart-Cockpit auskommentiert
+                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                '        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End If
-            
-           
+
+
         End With
 
         chtobj.Name = kennung
-        
+
         appInstance.EnableEvents = formerEE
 
 
@@ -6768,11 +6877,13 @@ Public Module Projekte
         Dim valueCrossesNull As Boolean = False
 
         With chtobj.Chart
-            ' remove extra series
 
-            Do Until .SeriesCollection.Count = 0
-                .SeriesCollection(1).Delete()
-            Loop
+            'ur:22.07.2014: bereits in Charts enthalten und soll nur mit neuen Daten bestückt werden
+            '' remove extra series
+
+            'Do Until .SeriesCollection.Count = 0
+            '    .SeriesCollection(1).Delete()
+            'Loop
 
             Dim crossindex As Integer = -1
 
@@ -6821,7 +6932,8 @@ Public Module Projekte
 
 
             'series
-            With .SeriesCollection.NewSeries
+            'With .SeriesCollection.NewSeries
+            With .SeriesCollection(1)
                 .name = "Bottom"
                 .HasDataLabels = False
                 .Interior.colorindex = -4142
@@ -6837,7 +6949,9 @@ Public Module Projekte
 
             End With
 
-            With .SeriesCollection.NewSeries
+
+            'With .SeriesCollection.NewSeries
+            With .SeriesCollection(2)
                 .name = "Top"
                 .HasDataLabels = True
                 .Values = valueDatenreihe2
@@ -6850,7 +6964,7 @@ Public Module Projekte
                         .HasDataLabel = True
                         .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
                         .Interior.color = itemColor(iv)
-                        .DataLabel.Font.Size = awinSettings.fontsizeItems + 2
+                        '.DataLabel.Font.Size = awinSettings.fontsizeItems + 2
                         'Try
                         '    .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
                         'Catch ex As Exception
@@ -6925,9 +7039,9 @@ Public Module Projekte
 
             If .HasTitle Then
                 .ChartTitle.Text = diagramTitle
-                .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                '.ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                '.ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                '    titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
             End If
 
 
@@ -7232,7 +7346,7 @@ Public Module Projekte
 
     Public Sub awinDeleteChart(ByRef chtobj As ChartObject)
         Dim kennung As String
-
+        Dim hDiagramm As clsDiagramm
 
         ' in der DiagramList wird die letzte Position gespeichert , deshlab ist es kontra produktiv , das zu löschen 
 
@@ -7243,6 +7357,7 @@ Public Module Projekte
         End Try
 
         Try
+            hDiagramm = DiagramList.getDiagramm(kennung)
             With DiagramList.getDiagramm(kennung)
                 .top = chtobj.Top
                 .left = chtobj.Left
@@ -7256,6 +7371,466 @@ Public Module Projekte
 
     End Sub
 
+    Public Sub awinStoreCockpit(ByVal cockpitname As String)
+        'Dim kennung As String
+
+        Dim currentDirectoryName As String = My.Computer.FileSystem.CurrentDirectory & "\"
+        Dim fileName As String
+        Dim found As Boolean = False
+        Dim wsfound As Boolean = False
+        Dim fileIsOpen As Boolean = False
+        Dim anzChartsInCockpit As Integer
+        Dim anzDiagrams As Integer
+        Dim i As Integer
+        Dim k As Integer = 1
+        Dim maxRows As Integer
+        Dim maxColumns As Integer
+        Dim logMessage As String = " "
+        Dim newchtobj As Excel.ChartObject
+        Dim oldchtobj As Excel.ChartObject
+        Dim chtobj As Excel.ChartObject
+        Dim hchtobj As Excel.ChartObject
+        Dim hshape As Excel.Shape
+        Dim xlsCockpits As xlNS.Workbook = Nothing
+        Dim wsSheet As xlNS.Worksheet = Nothing
+        Dim wsPT As xlNS.Worksheet = Nothing
+        Dim sichtbarerBereich As Excel.Range
+
+        Try
+            ' Merken des aktuell gesetzten sichtbaren Bereich in der ProjektTafel
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+            End With
+            wsPT = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            With wsPT
+                ' benötigt um die Spaltenbreite und Zeilenhöhe  zu setzen für die Tabelle in "Project Board Cockpit.xlsx", in die das neue Cockpit gespeichert wird.
+                maxRows = .Rows.Count
+                maxColumns = .Columns.Count
+                ' Anzahl Diagramme, die gespeichert werden zu diesem Cockpit
+                anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
+
+
+                If anzDiagrams > 0 Then
+
+                    fileName = awinPath & cockpitsFile
+
+                    If My.Computer.FileSystem.FileExists(fileName) Then
+
+                        Try
+                            If Not fileIsOpen Then
+                                xlsCockpits = appInstance.Workbooks.Open(fileName)
+                                fileIsOpen = True
+                            End If
+                        Catch ex As Exception
+
+                            i = 1
+                            While i <= appInstance.Workbooks.Count And Not fileIsOpen
+                                If appInstance.Workbooks(i).Name = fileName Then
+                                    xlsCockpits = appInstance.Workbooks(i)
+                                    fileIsOpen = True
+                                Else
+                                    i = i + 1
+                                End If
+                            End While
+
+                            If Not fileIsOpen Then
+                                logMessage = "Öffnen von " & fileName & " fehlgeschlagen" & vbLf & _
+                                                            "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
+
+                                Throw New ArgumentException(logMessage)
+                            End If
+
+                        End Try
+                    Else
+                        ' Cockpits-File neu anlegen 
+                        xlsCockpits = appInstance.Workbooks.Add()
+                        xlsCockpits.SaveAs(fileName)
+                    End If
+
+                    ' wenn das richtige Tabellenblatt in Datei "Project Board Cockpits.xlsx" vorhanden, dann löschen 
+                    Try
+                        wsSheet = CType(xlsCockpits.Worksheets(cockpitname), Excel.Worksheet)
+                        If wsSheet.Name = cockpitname Then
+                            ' Tabellenblatt existiert bereits, es muss gelöscht werden und neu angelegt
+                            xlsCockpits.Worksheets.Application.DisplayAlerts = False
+                            wsSheet.Delete()
+                            xlsCockpits.Worksheets.Application.DisplayAlerts = True
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+                    'i = 1
+                    'While i <= xlsCockpits.Worksheets.Count And Not wsfound
+                    '    wsSheet = xlsCockpits.Worksheets.Item(i)
+                    '    If wsSheet.Name = cockpitname Then
+                    '        ' Tabellenblatt existiert bereits, es muss gelöscht werden und neu angelegt
+                    '        xlsCockpits.Worksheets.Application.DisplayAlerts = False
+                    '        wsSheet.Delete()
+                    '        xlsCockpits.Worksheets.Application.DisplayAlerts = True
+                    '        wsfound = True
+                    '    Else
+                    '        i = i + 1
+                    '    End If
+
+                    'End While
+
+                    ' Tabellenblatt muss neu hinzugefügt werden
+
+                    wsSheet = CType(xlsCockpits.Worksheets.Add(), Excel.Worksheet)
+                    wsSheet.Name = cockpitname
+                    ' hier werden jetzt die Spaltenbreiten und Zeilenhöhen gesetzt 
+
+                    'With wsSheet
+
+                    '    CType(.Range(.Cells(1, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2
+                    '    CType(.Columns, Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = awinSettings.spaltenbreite
+
+
+                    '    .Range(.Cells(2, 1), .Cells(maxRows, maxColumns)).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    '    .Range(.Cells(2, 1), .Cells(maxRows, maxColumns)).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+
+                    'End With
+
+                    ' Tabellenblatt existiert jetzt sicher
+
+                    ' alle Charts durchgehen und in "Project Board Cockpits.xlsx" Tabelle "cockpitname" speichern
+
+                    While k <= anzDiagrams
+
+                        wsPT.Activate()
+
+                        chtobj = CType(wsPT.ChartObjects(k), Excel.ChartObject)
+
+                        oldchtobj = chtobj
+
+                        chtobj.Copy()
+
+                        ' wenn Chart vorhanden, dann ersetzen, sonst hinzufügen
+
+                        found = False
+                        i = 1
+                        anzChartsInCockpit = CType(wsSheet.ChartObjects, Excel.ChartObjects).Count
+                        While i <= anzChartsInCockpit And Not found
+                            hchtobj = CType(wsSheet.ChartObjects(i), Excel.ChartObject)
+                            ' an awinLoadCockpit anpassen
+                            If hchtobj.Name = chtobj.Name Then
+                                hchtobj.Delete()
+                                found = True
+                            Else
+                                i = i + 1
+                            End If
+                        End While
+
+                        'chtobj.Cut()
+
+                        wsSheet.Activate()
+
+                        ' Chart aus dem Buffer nun in das Tabellenblatt einfügen
+                        wsSheet.Paste()
+                        anzChartsInCockpit = CType(wsSheet.ChartObjects, Excel.ChartObjects).Count
+
+                        ' dem neu eingefügten Chart die richtige Position eintragen, neutralisiert um den sichtbaren Bereich
+                        newchtobj = CType(wsSheet.ChartObjects(anzChartsInCockpit), Excel.ChartObject)
+
+                        newchtobj.Top = oldchtobj.Top - CDbl(sichtbarerBereich.Top)
+                        newchtobj.Left = oldchtobj.Left - CDbl(sichtbarerBereich.Left)
+
+
+                        ' aus der DiagrammList noch DiagrammTyp herausholen und in das Chart bei AlternativText eintragen
+                        Dim hdiagramm As clsDiagramm
+                        i = 1
+                        found = False
+
+                        While i <= DiagramList.Count And Not found
+
+                            hdiagramm = DiagramList.getDiagramm(i)
+                            If hdiagramm.kennung = newchtobj.Name Then
+                                'newchtobj.Chart.Name = hdiagramm.diagrammTyp
+                                found = True
+                                hshape = chtobj2shape(newchtobj)
+                                hshape.Title = hdiagramm.diagrammTyp
+                                Try
+                                    If Not IsNothing(hdiagramm.gsCollection) Then
+                                        For hi = 1 To hdiagramm.gsCollection.Count
+                                            If hi = 1 Then
+                                                hshape.AlternativeText = CStr(hdiagramm.gsCollection.Item(hi))
+                                            Else
+                                                hshape.AlternativeText = hshape.AlternativeText & ";" & CStr(hdiagramm.gsCollection.Item(hi))
+                                            End If
+                                        Next hi
+                                    End If
+                                Catch ex As Exception
+                                    Throw New Exception("Fehler  Cockpits '" & cockpitname & vbLf & ex.Message)
+                                End Try
+
+                            End If
+                            i = i + 1
+
+                        End While
+
+
+                        ' aus der DiagrammList noch Collection herausholen und in das Chart bei Beschreibung eintragen
+                        k = k + 1
+
+                    End While
+
+                    appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                    Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
+                    'xlsCockpits.Close(SaveChanges:=True)
+
+                Else
+                    Call MsgBox("Es sind keine Charts vorhanden")
+                End If
+            End With
+
+        Catch ex As Exception
+            Throw New Exception("Fehler beim Speichern des Cockpits '" & cockpitname & vbLf & ex.Message)
+        End Try
+
+    End Sub
+    Public Sub awinLoadCockpit(ByVal cockpitname As String)
+        'Dim kennung As String
+
+        Dim fileName As String
+        Dim found As Boolean = False
+        Dim wsfound As Boolean = False
+        Dim fileIsOpen As Boolean = False
+        Dim isPfDiagramm As Boolean = False
+        Dim anzDiagrams As Integer
+        Dim i As Integer
+        Dim k As Integer = 1
+        Dim j As Integer = 1
+        Dim logMessage As String = " "
+        Dim newchtobj As Excel.ChartObject
+        Dim hchtobj As Excel.ChartObject
+        Dim hshape As Excel.Shape
+        Dim chtobj As Excel.ChartObject
+        Dim xlsCockpits As xlNS.Workbook = Nothing
+        Dim wsSheet As xlNS.Worksheet = Nothing
+        Dim currentWS As xlNS.Worksheet = Nothing
+        Dim sichtbarerBereich As Excel.Range
+        Dim hstring As String
+
+        appInstance.EnableEvents = False
+        Try
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+            End With
+
+            currentWS = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+
+            fileName = awinPath & cockpitsFile
+
+            If My.Computer.FileSystem.FileExists(fileName) Then
+
+                Try
+
+                    xlsCockpits = appInstance.Workbooks.Open(fileName)
+
+                Catch ex As Exception
+
+                    i = 1
+                    While i <= appInstance.Workbooks.Count And Not fileIsOpen
+                        If appInstance.Workbooks(i).Name = fileName Then
+                            xlsCockpits = appInstance.Workbooks(i)
+                            fileIsOpen = True
+                        Else
+                            i = i + 1
+                        End If
+                    End While
+
+                    If Not fileIsOpen Then
+                        logMessage = "Öffnen von " & fileName & " fehlgeschlagen" & vbLf & _
+                                                    "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
+
+                        Throw New ArgumentException(logMessage)
+                    End If
+
+                End Try
+
+                ' richtige Tabellenblatt  in Datei "Project Board Cockpits.xlsx" aktivieren
+                Try
+                    wsSheet = CType(xlsCockpits.Worksheets(cockpitname), Excel.Worksheet)
+
+                    k = 1
+                    Dim anzChartObj As Integer = CType(wsSheet.ChartObjects, Excel.ChartObjects).Count
+                    While k <= anzChartObj
+
+                        wsSheet.Activate()
+                        chtobj = CType(wsSheet.ChartObjects(1), Excel.ChartObject)  ' immer das Chart 1 lesen, da die anderen mit Cut ausgeschnitten wurden
+
+                        ' löschen der Zwischenablage
+                        My.Computer.Clipboard.Clear()
+
+                        Dim CPtmpArray() As String
+                        CPtmpArray = chtobj.Name.Split(New Char() {CType("#", Char)}, 5)
+                        isPfDiagramm = (CPtmpArray(0) = "pf")
+
+                        ' testen, ob dieses Chart bereits angezeigt wird, dann ggfalls. löschen
+                        found = False
+                        j = 1
+                        While j <= CType(currentWS.ChartObjects, Excel.ChartObjects).Count And Not found
+                            hchtobj = CType(currentWS.ChartObjects(j), Excel.ChartObject)
+
+                            Dim PTtmpArray() As String
+                            PTtmpArray = hchtobj.Name.Split(New Char() {CType("#", Char)}, 5)
+
+                            ' Überprüfen, ob das Chart bereits angezeigt wird, dann ersetzen
+                            If Not IsNothing(hchtobj) Then
+
+                                If hchtobj.Name <> "" Then
+
+                                    If hchtobj.Name <> chtobj.Name Then
+                                        ' chtobj name ist aufgebaut: pr#PTprdk.kennung#pName#Auswahl
+                                        ' oder
+                                        ' chtobj name ist so: pf#zahl#zahl
+                                        If CPtmpArray(0) = "pr" And PTtmpArray(0) = "pr" Then
+                                            If CPtmpArray(0) = PTtmpArray(0) And CPtmpArray(1) = PTtmpArray(1) And CPtmpArray(3) = PTtmpArray(3) Then
+                                                currentWS.ChartObjects(j).Delete()
+                                                found = True
+                                            End If
+                                        Else
+                                            If isPfDiagramm Then
+                                                If hchtobj.Name = chtobj.Name Then
+
+                                                    currentWS.ChartObjects(j).Delete()
+                                                    found = True
+                                                End If
+                                            End If
+                                        End If
+                                    Else
+                                        currentWS.ChartObjects(j).Delete()
+                                        found = True
+                                    End If
+
+                                End If
+                            End If
+
+                            isPfDiagramm = (CPtmpArray(0) = "pf")
+
+                            j = j + 1
+                        End While
+                        ''  die Position merken
+                        Dim chtTop As Double = chtobj.Top
+                        Dim chtLeft As Double = chtobj.Left
+
+                  
+                        chtobj.Cut()
+                      
+                        'Dim newtestshape As Excel.ChartObject
+                        currentWS.Activate()
+                        currentWS.Paste()
+                        anzDiagrams = CType(currentWS.ChartObjects, Excel.ChartObjects).Count
+                        ' dem neu eingefügten Chart die richtige Position eintragen
+                        newchtobj = CType(currentWS.ChartObjects(anzDiagrams), Excel.ChartObject)
+                        newchtobj.Top = CDbl(sichtbarerBereich.Top) + chtTop
+                        newchtobj.Left = CDbl(sichtbarerBereich.Left) + chtLeft
+
+                        If isPfDiagramm Then
+
+                            ' Alternativtext herausbekommen
+                            hshape = chtobj2shape(newchtobj)
+
+
+                            ' hier wird die maximale Anzahl an Phasen oder Rollen oder Kosten herausgefunden
+                            Dim maxAnz As Integer = System.Math.Max(RoleDefinitions.Count, PhaseDefinitions.Count)
+                            maxAnz = System.Math.Max(maxAnz, CostDefinitions.Count)
+
+                            Dim tmpArray1() As String
+                            Dim myCollection As New Collection
+                            tmpArray1 = hshape.AlternativeText.Split(New Char() {CType(";", Char)}, maxAnz)
+
+                            ' myCollection aufbauen mit den verschiedenen Werten die im Diagramm angezeigt werden sollen
+                            For hi = 0 To tmpArray1.Length - 1
+                                If tmpArray1.Length >= 1 And tmpArray1(hi) <> "" Then
+                                    hstring = tmpArray1(hi)
+                                    myCollection.Add(hstring, hstring)
+                                    'Else
+                                    '    myCollection = Nothing
+                                End If
+
+                            Next hi
+
+                            ' Diagramme in die diagrammListe einfügen mit allen Angaben
+
+                            Dim prcDiagram As New clsDiagramm
+
+                            ' Anfang Event Handling für Chart 
+                            Dim prcChart As New clsEventsPrcCharts
+                            prcChart.PrcChartEvents = newchtobj.Chart
+                            prcDiagram.setDiagramEvent = prcChart
+                            ' Ende Event Handling für Chart 
+
+                            With prcDiagram
+                                .DiagrammTitel = newchtobj.Chart.ChartTitle.Text
+                                .diagrammTyp = hshape.Title.Trim
+                                .gsCollection = myCollection
+                                .isCockpitChart = False
+                                .top = newchtobj.Top
+                                .left = newchtobj.Left
+                                .width = newchtobj.Width
+                                .height = newchtobj.Height
+                                .kennung = newchtobj.Name
+                            End With
+
+                            ' eintragen in die sortierte Liste mit .kennung als dem Schlüssel 
+                            ' wenn das Diagramm bereits existiert, muss es gelöscht werden, dann neu ergänzt ... 
+                            Try
+                                DiagramList.Add(prcDiagram)
+                            Catch ex As Exception
+                                Try
+                                    DiagramList.Remove(prcDiagram.kennung)
+                                    DiagramList.Add(prcDiagram)
+                                Catch ex1 As Exception
+
+                                End Try
+                            End Try
+
+                        End If                ' Ende der PF-Diagramm Spezialbehandlung
+
+                        k = k + 1
+
+                    End While
+                    wsfound = True
+                    'Call MsgBox("Es wurden " & k - 1 & " Charts eingefügt")
+                Catch ex As Exception
+                    xlsCockpits.Close(SaveChanges:=False)
+                    Throw New ArgumentException("Fehler beim Laden des Cockpits '" & cockpitname & vbLf, ex.Message)
+                End Try
+              
+                xlsCockpits.Close(SaveChanges:=False)
+
+            Else
+                ' Project Board Cockpit.xlsx ist nicht vorhanden
+                Call MsgBox("Es sind keine Charts vorhanden." & vbLf & "'Project Board Cockpit.xlsx ist nicht vorhanden.")
+
+            End If
+
+        Catch ex As Exception
+            xlsCockpits.Close(SaveChanges:=False)
+            Throw New ArgumentException("Fehler beim Laden des Cockpits '" & cockpitname & vbLf, ex.Message)
+        End Try
+        appInstance.EnableEvents = True
+    End Sub
+    '
+    ''' <summary>
+    ''' gibt die Referenz für dazu zum ChartObject cho gehörige Excel.Shape zurück
+    ''' </summary>
+    ''' <param name="cho">ChartObject</param>
+    ''' <remarks></remarks>
+    Function chtobj2shape(ByRef cho As ChartObject) As Excel.Shape
+
+        Dim zo As Long
+        Dim ws As Excel.Worksheet
+        Dim shc As Excel.Shapes
+        Dim sh As Excel.Shape
+        zo = cho.ZOrder
+        ws = CType(cho.Parent, Excel.Worksheet)
+        shc = ws.Shapes
+        sh = shc.Item(zo)
+        chtobj2shape = sh
+
+    End Function
     '
     ''' <summary>
     ''' das Projekt beauftragen bzw. die Änderungen akzeptieren
@@ -9143,10 +9718,10 @@ Public Module Projekte
             If msNumber = 1 Then
                 If nameList.Count > 1 Then
                     Call MsgBox("Auswahl enthält  diese Meilensteine nicht")
-                Else
-                    Call MsgBox("Auswahl enthält keinen Meilenstein " & nameList.Item(1))
-                End If
+                ElseIf nameList.Count = 1 Then
+                        Call MsgBox("Auswahl enthält keinen Meilenstein " & nameList.Item(1))
 
+                End If
             End If
 
         Else
@@ -9179,13 +9754,13 @@ Public Module Projekte
 
                     Next
 
+
                     If msNumber = 1 Then
                         If nameList.Count > 1 Then
                             Call MsgBox("im gewählten Zeitraum gibt es diese Meilensteine nicht")
-                        Else
+                        ElseIf nameList.Count = 1 Then
                             Call MsgBox("im gewählten Zeitraum gibt es keinen Meilenstein " & nameList.Item(1))
                         End If
-
                     End If
 
                 Else
@@ -9257,7 +9832,7 @@ Public Module Projekte
         End Try
 
 
-        For Each chtobj In CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).ChartObjects
+        For Each chtobj In CType(CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
 
             With chtobj
                 If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
@@ -9269,7 +9844,7 @@ Public Module Projekte
 
                 End If
             End With
-            
+
         Next
 
 
@@ -10932,7 +11507,7 @@ Public Module Projekte
                         chtobj = CType(.ChartObjects(i), Excel.ChartObject)
                         If chtobj.Name <> "" Then
                             tmpArray = chtobj.Name.Split(New Char() {CType("#", Char)}, 5)
-                            ' chtoj name ist aufgebaut: pr#PTprdk.kennung#pName#Auswahl
+                            ' chtobj name ist aufgebaut: pr#PTprdk.kennung#pName#Auswahl
                             If tmpArray(0) = "pr" Then
 
                                 If replaceProj Or (tmpArray(2).Trim = vglName) Then

@@ -729,6 +729,10 @@ Public Module awinGUI
         Dim charttype As Integer
         Dim tmpstr(5) As String
         Dim isSingleProject As Boolean = False
+        Dim datalabelSize As Integer = 0
+        Dim datalabelColor As Double = 0
+        Dim datalabelFont As Excel.Font
+        Dim datalabel As Excel.DataLabel = Nothing
 
         'Dim pfDiagram As clsDiagramm
         'Dim pfChart As clsEventsPfCharts
@@ -775,8 +779,6 @@ Public Module awinGUI
 
         anzBubbles = 0
 
-
-
         ' Änderung 8.3 : hier muss die Unterscheidung gemacht werden, welche Projekte im Zeitraum denn überhaupt Abhängigkeiten haben  
 
         If charttype = PTpfdk.Dependencies Then
@@ -805,10 +807,6 @@ Public Module awinGUI
                 End Try
             Next
         End If
-
-
-
-
 
 
         For i = 1 To projektListe.Count
@@ -936,7 +934,6 @@ Public Module awinGUI
         End Select
 
 
-
         ' bestimmen der besten Position für die Werte ...
         Dim labelPosition(4) As String
         labelPosition(0) = "oben"
@@ -957,20 +954,69 @@ Public Module awinGUI
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-
-
         With chtobj.Chart
 
             showLabels = True
 
-            ' remove old series
-            Do Until .SeriesCollection.Count = 0
-                .SeriesCollection(1).Delete()
-            Loop
-
-            ' nur dann neue Series-Collection aufbauen, wenn auch tatsächlich was in der Projektliste ist ..
-
             If projektListe.Count > 0 Then
+
+                ' Einstellungen der vorhandenen SeriesCollection merken
+
+                Dim pts As Excel.Points = CType(.SeriesCollection(1).Points, Excel.Points)
+                Dim dlFontSize As Double
+                Dim dlFontBackground As Double
+                Dim dlFontBold As Boolean
+                Dim dlFontColorIndex As Integer
+                Dim dlFontColor As Integer
+                Dim dlFontFontStyle As String = ""
+                Dim dlFontItalic As Boolean
+                Dim dlFontStrikethrough As Boolean
+                Dim dlFontSuperscript As Boolean
+                Dim dlFontSubscript As Boolean
+                Dim dlFontUnderline As Double
+
+                For i = 1 To pts.Count
+
+                    With CType(.SeriesCollection(1).Points(i), Excel.Point)
+
+                        Try
+                            If .HasDataLabel = True Then
+                                datalabel = .DataLabel
+                                With .DataLabel
+                                    datalabelFont = .Font
+                                    dlFontSize = CDbl(.Font.Size)
+                                    dlFontBackground = CDbl(.Font.Background)
+                                    dlFontBold = CBool(.Font.Bold)
+                                    dlFontColorIndex = CInt(.Font.ColorIndex)
+                                    dlFontFontStyle = CStr(.Font.FontStyle)
+                                    dlFontItalic = CBool(.Font.Italic)
+                                    dlFontStrikethrough = CBool(.Font.Strikethrough)
+                                    dlFontSubscript = CBool(.Font.Subscript)
+                                    dlFontSuperscript = CBool(.Font.Superscript)
+                                    dlFontUnderline = CDbl(.Font.Underline)
+                                    dlFontSize = CDbl(.Font.Size)
+                                    If .Font.Color <> awinSettings.AmpelRot Then
+                                        dlFontColor = CInt(.Font.Color)
+                                    End If
+
+                                End With
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
+                    End With
+
+                Next i
+
+                ' remove old series
+                Do Until .SeriesCollection.Count = 0
+                    .SeriesCollection(1).Delete()
+                Loop
+
+                ' nur dann neue Series-Collection aufbauen, wenn auch tatsächlich was in der Projektliste ist ..
+
+
 
                 .SeriesCollection.NewSeries()
                 .SeriesCollection(1).name = diagramTitle
@@ -1007,20 +1053,41 @@ Public Module awinGUI
                             CType(series1.Points(1), Excel.Point)
 
                 'Dim testName As String
+
+                Dim bubblePoint As Excel.Point
                 For i = 1 To anzBubbles
+
+                    bubblePoint = CType(.SeriesCollection(1).Points(i), Excel.Point)
 
                     With CType(.SeriesCollection(1).Points(i), Excel.Point)
 
                         If showLabels Then
                             Try
                                 .HasDataLabel = True
+
                                 With .DataLabel
                                     .Text = PfChartBubbleNames(i - 1)
-                                    .Font.Size = awinSettings.CPfontsizeItems
+                                    .Font.Size = dlFontSize
+                                    .Font.Background = dlFontBackground
+                                    .Font.Bold = dlFontBold
+                                    .Font.Color = dlFontColor
+                                    .Font.ColorIndex = dlFontColorIndex
+                                    .Font.FontStyle = dlFontFontStyle
+                                    .Font.Italic = dlFontItalic
+                                    .Font.Size = dlFontSize
+                                    .Font.Strikethrough = dlFontStrikethrough
+                                    .Font.Subscript = dlFontSubscript
+                                    .Font.Superscript = dlFontSuperscript
+                                    .Font.Underline = dlFontUnderline
+
+                                    'ur: 17.7.2014: fontsize kommt vom existierenden Chart
+                                    '.Font.Size = awinSettings.CPfontsizeItems
 
                                     ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
+
                                     If bubbleValues(i - 1) < 0 Then
                                         .Font.Color = awinSettings.AmpelRot
+
                                     End If
 
                                     Select Case positionValues(i - 1)
@@ -1074,7 +1141,7 @@ Public Module awinGUI
             .ChartTitle.Text = diagramTitle
         End With
 
-        appInstance.EnableEvents = formerEE
+                appInstance.EnableEvents = formerEE
 
 
 

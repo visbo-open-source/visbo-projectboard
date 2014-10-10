@@ -636,8 +636,8 @@ Public Class clsProjekt
             Dim i As Integer, p As Integer
             Dim phase As clsPhase
             Dim phaseStart As Date, phaseEnd As Date
-            Dim numberOfDays As Integer
-            Dim anteil As Double
+            'Dim numberOfDays As Integer
+            'Dim anteil As Double
 
 
             ReDim phaseValues(_Dauer - 1)
@@ -665,15 +665,20 @@ Public Class clsProjekt
 
                                     If i = 0 Then
 
-                                        numberOfDays = CInt(Max(0.0, DateDiff(DateInterval.Day, phaseStart, StartofCalendar.AddMonths(Me.Start + .relStart - 1).AddDays(-1))))
-                                        anteil = numberOfDays / 365 * 12
-                                        phaseValues(.relStart - 1 + i) = Min(1.0, anteil)
+                                        'numberOfDays = CInt(Max(0.0, DateDiff(DateInterval.Day, phaseStart, StartofCalendar.AddMonths(Me.Start + .relStart - 1).AddDays(-1))))
+                                        'anteil = numberOfDays / 365 * 12
+                                        'phaseValues(.relStart - 1 + i) = Min(1.0, anteil)
+                                        ' Änderung: immer erst mal nur die Anzahl Projekte zählen, die in diesem Monat in dieser Phase sind 
+                                        phaseValues(.relStart - 1 + i) = 1
+
 
                                     ElseIf i = .relEnde - .relStart Then
 
-                                        numberOfDays = CInt(Max(0.0, DateDiff(DateInterval.Day, StartofCalendar.AddMonths(Me.Start + .relEnde - 2), phaseEnd)))
-                                        anteil = numberOfDays / 365 * 12
-                                        phaseValues(.relStart - 1 + i) = Min(1.0, anteil)
+                                        'numberOfDays = CInt(Max(0.0, DateDiff(DateInterval.Day, StartofCalendar.AddMonths(Me.Start + .relEnde - 2), phaseEnd)))
+                                        'anteil = numberOfDays / 365 * 12
+                                        'phaseValues(.relStart - 1 + i) = Min(1.0, anteil)
+                                        ' Änderung: immer erst mal nur die Anzahl Projekte zählen, die in diesem Monat in dieser Phase sind 
+                                        phaseValues(.relStart - 1 + i) = 1
 
                                     Else
 

@@ -78,7 +78,8 @@ Public Module awinDiagrams
     ''' 1 - Rolle
     ''' 2 - Kostenart
     ''' 3 - Portfolio
-    ''' 4 - Summe  
+    ''' 4 - Summe 
+    ''' 5 - Meilensteine 
     ''' </summary>
     ''' <param name="myCollection"></param>
     ''' <param name="top"></param>
@@ -404,31 +405,54 @@ Public Module awinDiagrams
 
                             If prcTyp = DiagrammTypen(5) Then
 
-                                For c = 0 To 3
-
-                                    For i = 0 To bis - von
-                                        datenreihe(i) = msdatenreihe(c, i)
+                                ' Änderung 8.10.14 die Zahl der MEilensteine insgesamt anzeigen 
+                                ' nicht aufgeschlüsselt nach welcher MEilenstein , welche Farbe
+                                
+                                For i = 0 To bis - von
+                                    datenreihe(i) = 0
+                                    For c = 0 To 3
+                                        datenreihe(i) = datenreihe(i) + msdatenreihe(c, i)
                                     Next
-
-                                    With .SeriesCollection.NewSeries
-                                        If c = 0 Then
-                                            .name = prcName & ", ohne Ampel"
-                                        ElseIf c = 1 Then
-                                            .name = prcName & ", grüne Ampel"
-                                        ElseIf c = 2 Then
-                                            .name = prcName & ", gelbe Ampel"
-                                        Else
-                                            .name = prcName & ", rote Ampel"
-                                        End If
-                                        .Interior.color = ampelfarbe(c)
-                                        .Values = datenreihe
-                                        .XValues = Xdatenreihe
-                                        .ChartType = Excel.XlChartType.xlColumnStacked
-                                        .HasDataLabels = False
-                                    End With
-
-
                                 Next
+
+                                With .SeriesCollection.NewSeries
+                                    .name = prcName
+                                    .Interior.color = ampelfarbe(0)
+                                    .Values = datenreihe
+                                    .XValues = Xdatenreihe
+                                    .ChartType = Excel.XlChartType.xlColumnStacked
+                                    .HasDataLabels = False
+                                End With
+
+
+
+
+                                ' Alt: vor 8.10.14
+                                'For c = 0 To 3
+
+                                '    For i = 0 To bis - von
+                                '        datenreihe(i) = msdatenreihe(c, i)
+                                '    Next
+
+                                '    With .SeriesCollection.NewSeries
+                                '        If c = 0 Then
+                                '            .name = prcName & ", ohne Ampel"
+                                '        ElseIf c = 1 Then
+                                '            .name = prcName & ", grüne Ampel"
+                                '        ElseIf c = 2 Then
+                                '            .name = prcName & ", gelbe Ampel"
+                                '        Else
+                                '            .name = prcName & ", rote Ampel"
+                                '        End If
+                                '        .Interior.color = ampelfarbe(c)
+                                '        .Values = datenreihe
+                                '        .XValues = Xdatenreihe
+                                '        .ChartType = Excel.XlChartType.xlColumnStacked
+                                '        .HasDataLabels = False
+                                '    End With
+
+
+                                'Next
 
                             Else
 
@@ -1242,10 +1266,12 @@ Public Module awinDiagrams
                             .Values = kdatenreihePlus
                             .XValues = Xdatenreihe
                             .ChartType = Excel.XlChartType.xlLine
+
                             With .Format.Line
                                 .DashStyle = MsoLineDashStyle.msoLineSysDot
                                 .ForeColor.RGB = XlRgbColor.rgbFuchsia
                                 .Weight = 3
+
                             End With
                             nr_pts = CType(.Points, Excel.Points).Count
                         End With
@@ -1762,6 +1788,7 @@ Public Module awinDiagrams
 
 
 
+
                     Do Until .SeriesCollection.Count = 0
                         .SeriesCollection(1).Delete()
                     Loop
@@ -1777,104 +1804,103 @@ Public Module awinDiagrams
                         .Points(2).Interior.color = awinSettings.AmpelRot
                         .Points(3).Interior.color = awinSettings.AmpelGelb
 
+                                For i = 1 To 3
+                                    htxt = Format(datenreihe(i - 1), "###,###0")
+                                    With .Points(i)
+                                        .HasDataLabel = True
+                                        .DataLabel.text = htxt
 
-                        For i = 1 To 3
-                            htxt = Format(datenreihe(i - 1), "###,###0")
-                            With .Points(i)
-                                .HasDataLabel = True
-                                .DataLabel.text = htxt
-
-                                .DataLabel.Font.Size = awinSettings.fontsizeItems + 2
+                                        .DataLabel.Font.Size = awinSettings.fontsizeItems + 2
 
 
-                                Try
-                                    .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
-                                Catch ex As Exception
+                                        Try
+                                            .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionOutsideEnd
+                                        Catch ex As Exception
 
-                                End Try
+                                        End Try
 
+
+                                    End With
+                                Next i
 
                             End With
-                        Next i
-
-                    End With
 
 
-                    .ChartTitle.text = diagramTitle
-                    .ChartTitle.Font.Size = awinSettings.fontsizeTitle
-                    .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
-                        titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
-                    .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
+                            .ChartTitle.text = diagramTitle
+                            .ChartTitle.Font.Size = awinSettings.fontsizeTitle
+                            .ChartTitle.Format.TextFrame2.TextRange.Characters(titelTeilLaengen(0) + 1, _
+                                titelTeilLaengen(1)).Font.Size = awinSettings.fontsizeLegend
+                            .Location(Where:=Excel.XlChartLocation.xlLocationAsObject, Name:=appInstance.Worksheets(arrWsNames(3)).name)
 
                 End With
-                With .ChartObjects(anzDiagrams + 1)
-                    .top = top
-                    .left = left
-                    .width = width
-                    .height = awinSettings.ChartHoehe2
-                    .name = chtobjName
-
-                End With
-
-
-                ' myCollection wird jetzt über alle Rollen aufgebaut ..
-                myCollection.Clear()
-
-                For i = 1 To RoleDefinitions.Count
-                    Dim roleName As String
-                    roleName = RoleDefinitions.getRoledef(i).name
-                    Try
-                        myCollection.Add(roleName, roleName)
-                    Catch ex As Exception
-
-                    End Try
-
-                Next
-
-                repObj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
-
-                ' jetzt muss die letzte Position des Diagramms gespeichert werden , wenn es nicht aus der Reporting Engine 
-                ' aufgerufen wurde
-                If Not calledfromReporting Then
-
-                    Dim prcDiagram As New clsDiagramm
-
-                    ' Anfang Event Handling für Chart 
-                    Dim prcChart As New clsEventsPrcCharts
-                    prcChart.PrcChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
-                    prcDiagram.setDiagramEvent = prcChart
-                    ' Ende Event Handling für Chart 
-
-
-                    With prcDiagram
-                        .DiagrammTitel = diagramTitle
-                        .diagrammTyp = DiagrammTypen(4)
-                        .gsCollection = myCollection
-                        .isCockpitChart = False
+                    With .ChartObjects(anzDiagrams + 1)
                         .top = top
                         .left = left
                         .width = width
-                        .height = height
-                        .kennung = chtobjName
+                        .height = awinSettings.ChartHoehe2
+                        .name = chtobjName
+
                     End With
 
-                    ' eintragen in die sortierte Liste mit .kennung als dem Schlüssel 
-                    ' wenn das Diagramm bereits existiert, muss es gelöscht werden, dann neu ergänzt ... 
-                    Try
-                        DiagramList.Add(prcDiagram)
-                    Catch ex As Exception
 
+                    ' myCollection wird jetzt über alle Rollen aufgebaut ..
+                    myCollection.Clear()
+
+                    For i = 1 To RoleDefinitions.Count
+                        Dim roleName As String
+                        roleName = RoleDefinitions.getRoledef(i).name
                         Try
-                            DiagramList.Remove(prcDiagram.kennung)
-                            DiagramList.Add(prcDiagram)
-                        Catch ex1 As Exception
+                            myCollection.Add(roleName, roleName)
+                        Catch ex As Exception
 
                         End Try
 
+                    Next
 
-                    End Try
+                    repObj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
 
-                End If
+                    ' jetzt muss die letzte Position des Diagramms gespeichert werden , wenn es nicht aus der Reporting Engine 
+                    ' aufgerufen wurde
+                    If Not calledfromReporting Then
+
+                        Dim prcDiagram As New clsDiagramm
+
+                        ' Anfang Event Handling für Chart 
+                        Dim prcChart As New clsEventsPrcCharts
+                        prcChart.PrcChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
+                        prcDiagram.setDiagramEvent = prcChart
+                        ' Ende Event Handling für Chart 
+
+
+                        With prcDiagram
+                            .DiagrammTitel = diagramTitle
+                            .diagrammTyp = DiagrammTypen(4)
+                            .gsCollection = myCollection
+                            .isCockpitChart = False
+                            .top = top
+                            .left = left
+                            .width = width
+                            .height = height
+                            .kennung = chtobjName
+                        End With
+
+                        ' eintragen in die sortierte Liste mit .kennung als dem Schlüssel 
+                        ' wenn das Diagramm bereits existiert, muss es gelöscht werden, dann neu ergänzt ... 
+                        Try
+                            DiagramList.Add(prcDiagram)
+                        Catch ex As Exception
+
+                            Try
+                                DiagramList.Remove(prcDiagram.kennung)
+                                DiagramList.Add(prcDiagram)
+                            Catch ex1 As Exception
+
+                            End Try
+
+
+                        End Try
+
+                    End If
 
 
 
@@ -2546,7 +2572,8 @@ Public Module awinDiagrams
                             .HasDataLabel = True
                             .DataLabel.text = Format(itemValue(iv), "###,###0") & " T€"
                             .Interior.color = itemColor(iv)
-                            .DataLabel.Font.Size = awinSettings.fontsizeLegend
+                            ' ur:17.7.2014 fontsize bei update nicht ändern für die Legend
+                            '.DataLabel.Font.Size = awinSettings.fontsizeLegend
                             Try
                                 .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionAbove
                             Catch ex As Exception
@@ -2609,6 +2636,7 @@ Public Module awinDiagrams
 
 
     End Sub
+
 
 
     ''' <summary>
@@ -3884,6 +3912,7 @@ Public Module awinDiagrams
         ' 6 - Ressourcen-Bedarfe, Kapas ändern
         ' 7 - Kosten-Bedarfe , Budgets ändern
         ' 8 - Selektion geändert
+        ' 9 - Cockpit wurde geladen; (alle Diagramme neuzeichnen)
 
 
 
@@ -3912,6 +3941,7 @@ Public Module awinDiagrams
                         ' 5: Stammdaten wurden geändert
                         ' 6: Ressourcen Bedarf eines existierenden Projektes wurde geändert
                         ' 7: Kosten Bedarf eines existierenden Projektes wurde geändert
+                        ' 9: Cockpit wurde geladen; (alle Diagramme neuzeichnen)
 
                         If (typus <> 5) And (istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
                             istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj)) Then
@@ -3963,352 +3993,7 @@ Public Module awinDiagrams
 
 
                         End If
-                        '
-                        '
-                        'Case 2 ' Projekt wurde eingefügt
-                        '    '
-                        '    If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                        '        istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
-
-                        '        Call awinUpdateprcCollectionDiagram(chtobj)
-
-
-                        '    ElseIf istSummenDiagramm(chtobj, p) Then
-
-                        '        If p = 1 Then
-                        '            Call awinUpdateErgebnisDiagramm(chtobj)
-                        '        ElseIf p = 2 Then
-                        '            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                        '        ElseIf p = 4 Then
-                        '            Call awinUpdatePersCostStructureDiagramm(chtobj)
-                        '        ElseIf p = 5 Then
-                        '            Call awinUpdateEffizienzDiagramm2(chtobj)
-                        '        ElseIf p = 6 Or p = 7 Or p = 8 Then
-                        '            Try
-                        '                Call awinUpdateColorDistributionDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-
-                        '        ElseIf p = 9 Then
-                        '            Try
-                        '                Call awinUpdateAuslastungsDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        ElseIf p = 10 Then
-                        '            Try
-                        '                Call updateAuslastungsDetailPie(chtobj, 1)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        ElseIf p = 11 Then
-                        '            Try
-                        '                Call updateAuslastungsDetailPie(chtobj, 2)
-                        '            Catch ex As Exception
-
-                        '            End Try
-
-                        '            ' p = 19 
-                        '        ElseIf p = PTpfdk.Budget Then
-                        '            Try
-                        '                Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        End If
-
-
-
-                        '    ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                        '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-
-                        '    Else ' ist Projekt-Charakteristik Diagramm
-                        '    End If
-
-                        'Case 3 ' Projekt wurde gelöscht
-                        '    If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                        '        istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
-
-                        '        Call awinUpdateprcCollectionDiagram(chtobj)
-
-
-                        '    ElseIf istSummenDiagramm(chtobj, p) Then
-
-                        '        If p = 1 Then
-                        '            Call awinUpdateErgebnisDiagramm(chtobj)
-                        '        ElseIf p = 2 Then
-                        '            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                        '        ElseIf p = 4 Then
-                        '            Call awinUpdatePersCostStructureDiagramm(chtobj)
-                        '        ElseIf p = 5 Then
-                        '            Call awinUpdateEffizienzDiagramm2(chtobj)
-                        '        ElseIf p = 6 Or p = 7 Or p = 8 Then
-                        '            Try
-                        '                Call awinUpdateColorDistributionDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-
-                        '        ElseIf p = 9 Then
-                        '            Try
-                        '                Call awinUpdateAuslastungsDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        ElseIf p = 10 Then
-                        '            Try
-                        '                Call updateAuslastungsDetailPie(chtobj, 1)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        ElseIf p = 11 Then
-                        '            Try
-                        '                Call updateAuslastungsDetailPie(chtobj, 2)
-                        '            Catch ex As Exception
-
-                        '            End Try
-
-                        '            ' p = 19 
-                        '        ElseIf p = PTpfdk.Budget Then
-                        '            Try
-                        '                Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        End If
-
-
-
-                        '    ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                        '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-
-                        '    Else ' ist Projekt-Charakteristik Diagramm
-                        '    End If
-
-                        'Case 4 ' betrachteter Zeitraum wurde geändert
-                        '    If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                        '        istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
-
-                        '        Call awinUpdateprcCollectionDiagram(chtobj)
-
-
-                        '    ElseIf istSummenDiagramm(chtobj, p) Then
-
-                        '        If p = 1 Then
-                        '            Call awinUpdateErgebnisDiagramm(chtobj)
-                        '        ElseIf p = 2 Then
-                        '            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                        '        ElseIf p = 4 Then
-                        '            Call awinUpdatePersCostStructureDiagramm(chtobj)
-                        '        ElseIf p = 5 Then
-                        '            Call awinUpdateEffizienzDiagramm2(chtobj)
-                        '        ElseIf p = 6 Or p = 7 Or p = 8 Then
-                        '            Try
-                        '                Call awinUpdateColorDistributionDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-
-                        '        ElseIf p = 9 Then
-                        '            Try
-                        '                Call awinUpdateAuslastungsDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        ElseIf p = 10 Then
-                        '            Try
-                        '                Call updateAuslastungsDetailPie(chtobj, 1)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        ElseIf p = 11 Then
-                        '            Try
-                        '                Call updateAuslastungsDetailPie(chtobj, 2)
-                        '            Catch ex As Exception
-
-                        '            End Try
-
-                        '            ' p = 19 
-                        '        ElseIf p = PTpfdk.Budget Then
-                        '            Try
-                        '                Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        End If
-
-
-                        '    ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                        '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-                        '    Else ' ist Projekt-Charakteristik Diagramm
-                        '    End If
-
-                        'Case 5 ' Stammdaten wurden geändert
-
-                        '    If istSummenDiagramm(chtobj, p) Then
-
-                        '        If p = 1 Then
-                        '            Call awinUpdateErgebnisDiagramm(chtobj)
-                        '        ElseIf p = 2 Then
-                        '            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                        '        ElseIf p = 4 Then
-                        '            Call awinUpdatePersCostStructureDiagramm(chtobj)
-                        '        ElseIf p = 5 Then
-                        '            Call awinUpdateEffizienzDiagramm2(chtobj)
-                        '        ElseIf p = 6 Or p = 7 Or p = 8 Then
-                        '            Try
-                        '                Call awinUpdateColorDistributionDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-
-                        '        ElseIf p = 9 Then
-                        '            Try
-                        '                Call awinUpdateAuslastungsDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        ElseIf p = 10 Then
-                        '            Try
-                        '                Call updateAuslastungsDetailPie(chtobj, 1)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        ElseIf p = 11 Then
-                        '            Try
-                        '                Call updateAuslastungsDetailPie(chtobj, 2)
-                        '            Catch ex As Exception
-
-                        '            End Try
-
-                        '            ' p = 19 
-                        '        ElseIf p = PTpfdk.Budget Then
-                        '            Try
-                        '                Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        End If
-
-
-
-
-                        '    ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                        '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-                        '    ElseIf istErgebnisDiagramm(chtobj, e) Then
-
-                        '        Call awinUpdateprcCollectionDiagram(chtobj)
-
-                        '    Else ' ist Projekt-Charakteristik Diagramm
-                        '    End If
-
-                        'Case 6 ' Ressourcen Bedarf eines existierenden Projektes wurde geändert
-
-                        '    If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                        '        istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
-
-                        '        Call awinUpdateprcCollectionDiagram(chtobj)
-
-                        '    ElseIf istSummenDiagramm(chtobj, p) Then
-
-                        '        If p = 1 Then
-                        '            Call awinUpdateErgebnisDiagramm(chtobj)
-                        '        ElseIf p = 2 Then
-                        '            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                        '        ElseIf p = 4 Then
-                        '            Call awinUpdatePersCostStructureDiagramm(chtobj)
-                        '        ElseIf p = 5 Then
-                        '            Call awinUpdateEffizienzDiagramm2(chtobj)
-                        '        ElseIf p = 6 Or p = 7 Or p = 8 Then
-                        '            Try
-                        '                Call awinUpdateColorDistributionDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-
-                        '        ElseIf p = 9 Then
-                        '            Try
-                        '                Call awinUpdateAuslastungsDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        ElseIf p = 10 Then
-                        '            Try
-                        '                Call updateAuslastungsDetailPie(chtobj, 1)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        ElseIf p = 11 Then
-                        '            Try
-                        '                Call updateAuslastungsDetailPie(chtobj, 2)
-                        '            Catch ex As Exception
-
-                        '            End Try
-
-                        '            ' p = 19 
-                        '        ElseIf p = PTpfdk.Budget Then
-                        '            Try
-                        '                Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        End If
-
-
-
-
-                        '    ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                        '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-
-                        '    Else ' ist Projekt-Charakteristik Diagramm
-                        '    End If
-
-                        'Case 7 ' Kosten Bedarf eines existierenden Projektes wurde geändert
-
-                        '    If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                        '        istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
-
-                        '        Call awinUpdateprcCollectionDiagram(chtobj)
-
-                        '    ElseIf istSummenDiagramm(chtobj, p) Then
-
-                        '        If p = 1 Then
-                        '            Call awinUpdateErgebnisDiagramm(chtobj)
-                        '        ElseIf p = 2 Then
-                        '            Call awinUpdatePortfolioDiagrams(chtobj, 0)
-                        '        ElseIf p = 4 Then
-                        '            Call awinUpdatePersCostStructureDiagramm(chtobj)
-                        '        ElseIf p = 5 Then
-                        '            Call awinUpdateEffizienzDiagramm2(chtobj)
-                        '        ElseIf p = PTpfdk.Budget Then
-                        '            Try
-                        '                Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                        '            Catch ex As Exception
-
-                        '            End Try
-                        '        End If
-
-
-
-                        '    ElseIf istPortfolioDiagramm(chtobj, p) Then
-
-                        '        Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-
-                        '    Else ' ist Projekt-Charakteristik Diagramm oder Phasen Diagramm
-                        '    End If
-
+                      
 
 
                 End Select

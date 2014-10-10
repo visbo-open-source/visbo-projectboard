@@ -97,6 +97,7 @@ Imports System.Drawing
 
         Dim loadFromDatenbank As String = "PT5G1B1"
         Dim loadConstellationFrm As New frmLoadConstellation
+
         Dim constellationName As String
         Dim request As New Request(awinSettings.databaseName)
 
@@ -337,13 +338,16 @@ Imports System.Drawing
         'Call diagramsVisible(True)
         appInstance.ScreenUpdating = True
 
+        ' projekthistorie zurücksetzen - kann jetzt anders sein
+        projekthistorie.clear()
+
     End Sub
 
     Sub PT6DeleteCharts(control As IRibbonControl)
 
         Dim anzDiagrams As Integer
         Dim chtobj As Excel.ChartObject
-        Dim i As Integer = 0
+        Dim i As Integer = 1
 
         Call projektTafelInit()
 
@@ -351,7 +355,7 @@ Imports System.Drawing
 
             anzDiagrams = CInt(CType(.ChartObjects, Excel.ChartObjects).Count)
 
-            While i < anzDiagrams
+            While i <= anzDiagrams
 
                 chtobj = CType(.ChartObjects(1), Excel.ChartObject)
                 Call awinDeleteChart(chtobj)
@@ -364,6 +368,147 @@ Imports System.Drawing
 
 
     End Sub
+    Sub PT0SaveCockpit(control As IRibbonControl)
+
+
+        Dim i As Integer = 1
+        Dim storeCockpitFrm As New frmStoreCockpit
+        Dim returnValue As DialogResult
+        Dim cockpitName As String
+        Try
+
+            Call projektTafelInit()
+
+            Call awinDeSelect()
+
+            Dim anzDiagrams As Integer = CType(appInstance.Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
+          
+            If anzDiagrams > 0 Then
+
+           
+                ' hier muss die Auswahl des Names für das Cockpit erfolgen
+
+                returnValue = storeCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
+
+                If returnValue = DialogResult.OK Then
+
+                    cockpitName = storeCockpitFrm.ComboBox1.Text
+
+                    appInstance.ScreenUpdating = False
+
+                    enableOnUpdate = False
+
+                    Call awinStoreCockpit(cockpitName)
+
+                    enableOnUpdate = True
+
+                    appInstance.ScreenUpdating = True
+                Else
+
+
+                End If
+                ' hier muss eventuell ein Neuzeichnen erfolgen
+            Else
+                Call MsgBox("Es ist kein Chart angezeigt")
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("PT0SaveCockpit: Fehler:  ", ex.Message)
+        End Try
+
+    End Sub
+
+    Sub PT0ShowCockpit(control As IRibbonControl)
+
+
+        Dim i As Integer = 1
+        Dim loadCockpitFrm As New frmLoadCockpit
+        Dim returnValue As DialogResult
+        Dim cockpitName As String
+
+        Call projektTafelInit()
+
+        If ShowProjekte.Count > 0 Then
+
+            If showRangeRight - showRangeLeft > 5 Then
+
+                Dim awinSelection As Excel.ShapeRange
+
+                Try
+                    'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                Catch ex As Exception
+                    awinSelection = Nothing
+                End Try
+
+                appInstance.EnableEvents = False
+                enableOnUpdate = False
+
+                ' hier muss die Auswahl des Names für das Cockpit erfolgen
+
+                returnValue = loadCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
+
+                If returnValue = DialogResult.OK Then
+
+                    cockpitName = loadCockpitFrm.ListBox1.Text
+
+                    appInstance.ScreenUpdating = False
+
+                    Try
+                        Call awinLoadCockpit(cockpitName)
+
+                        ' nur wenn ein Projekt selektiert wurde, werden die Projekt-Charts aktualisiert
+                        If Not awinSelection Is Nothing Then
+
+
+                            If awinSelection.Count = 1 Then
+                                Dim singleShp As Excel.Shape
+                                Dim hproj As clsProjekt
+
+                                ' jetzt die Aktion durchführen ...
+                                singleShp = awinSelection.Item(1)
+
+                                Try
+                                    hproj = ShowProjekte.getProject(singleShp.Name)
+                                Catch ex As Exception
+                                    Call MsgBox("Projekt nicht gefunden ..." & singleShp.Name)
+                                    Exit Sub
+                                End Try
+
+                                Call aktualisiereCharts(hproj, True)
+
+                                Call awinDeSelect()
+                            End If
+
+                        End If
+
+                        Call awinNeuZeichnenDiagramme(9)
+
+                    Catch ex As Exception
+                        Call MsgBox("Fehler beim Laden ..")
+                    End Try
+
+
+                   
+                    
+                    appInstance.ScreenUpdating = True
+
+                Else
+                    appInstance.ScreenUpdating = True
+
+                End If
+            Else
+                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+            End If
+        Else
+            Call MsgBox("Es sind noch keine Projekte geladen!")
+        End If
+
+        ' hier muss eventuell ein Neuzeichnen erfolgen
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+    End Sub
+
 
     ''' <summary>
     ''' wird aktuell verwendet , um eine Stelle für Testen bestimmter Funktionalitäten zu haben
@@ -609,7 +754,6 @@ Imports System.Drawing
 
                 Else
 
-                    mongoDBaktiv = False
                     Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
                     appInstance.ScreenUpdating = True
 
@@ -1071,6 +1215,40 @@ Imports System.Drawing
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
+    End Sub
+
+    ''' <summary>
+    ''' neues Formular zur Auswahl Phasen/Meilensteine/Rollen/Kosten anzeigen
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub VisPlanObjects001(control As IRibbonControl)
+
+        Dim visPlanObjects As New frmShowPlanElements
+
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = False
+
+        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
+        If ShowProjekte.Count > 0 Then
+
+            visPlanObjects.Show()
+
+        Else
+            If ShowProjekte.Count = 0 Then
+                Call MsgBox("Es sind keine Projekte sichtbar!  ")
+            End If
+        End If
+
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
+
     End Sub
 
     ''' <summary>
@@ -2811,6 +2989,8 @@ Imports System.Drawing
                     If projekthistorie.Count > 0 Then
                         vglName = projekthistorie.First.name
                     End If
+                Else
+                    projekthistorie = New clsProjektHistorie
                 End If
 
                 With hproj
@@ -3210,6 +3390,8 @@ Imports System.Drawing
                             If projekthistorie.Count > 0 Then
                                 vglName = projekthistorie.First.name
                             End If
+                        Else
+                            projekthistorie = New clsProjektHistorie
                         End If
 
                         If vglName.Trim <> pName.Trim Then
@@ -4255,10 +4437,12 @@ Imports System.Drawing
         If myCollection.Count > 0 Then
 
             With appInstance.ActiveWindow
+
                 sichtbarerBereich = .VisibleRange
                 left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
                 If left < CDbl(sichtbarerBereich.Left) Then
                     left = CDbl(sichtbarerBereich.Left) + 2
+
                 End If
 
                 top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
@@ -5089,6 +5273,8 @@ Imports System.Drawing
                             If projekthistorie.Count > 0 Then
                                 vglName = projekthistorie.First.name
                             End If
+                        Else
+                            projekthistorie = New clsProjektHistorie
                         End If
 
                         With hproj
@@ -5229,6 +5415,8 @@ Imports System.Drawing
                         If projekthistorie.Count > 0 Then
                             vglName = projekthistorie.First.name
                         End If
+                    Else
+                        projekthistorie = New clsProjektHistorie
                     End If
 
                     With hproj
@@ -5419,6 +5607,8 @@ Imports System.Drawing
                         If projekthistorie.Count > 0 Then
                             vglName = projekthistorie.First.name
                         End If
+                    Else
+                        projekthistorie = New clsProjektHistorie
                     End If
 
                     If vglName.Trim <> pName.Trim Then
@@ -5523,6 +5713,8 @@ Imports System.Drawing
                     If projekthistorie.Count > 0 Then
                         vglName = projekthistorie.First.name
                     End If
+                Else
+                    projekthistorie = New clsProjektHistorie
                 End If
 
                 If vglName.Trim <> pName.Trim Then
@@ -5635,6 +5827,9 @@ Imports System.Drawing
                     If projekthistorie.Count > 0 Then
                         vglName = projekthistorie.First.name
                     End If
+
+                Else
+                    projekthistorie = New clsProjektHistorie
                 End If
 
                 If vglName.Trim <> pName.Trim Then
