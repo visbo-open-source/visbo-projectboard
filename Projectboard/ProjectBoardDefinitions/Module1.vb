@@ -37,8 +37,10 @@ Public Module Module1
 
     Public Projektvorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte
+    Public noShowProjekte As New clsProjekte
     Public selectedProjekte As New clsProjekte
-    Public AlleProjekte As New SortedList(Of String, clsProjekt)
+    'Public AlleProjekte As New SortedList(Of String, clsProjekt)
+    Public AlleProjekte As New clsProjekteAlle
     Public ImportProjekte As New clsProjekte
     Public DeletedProjekte As New clsProjekte
     Public projectConstellations As New clsConstellations
@@ -48,7 +50,6 @@ Public Module Module1
 
     ' hier wird die Projekt Historie eines Projektes aufgenommen 
     Public projekthistorie As New clsProjektHistorie
-    Public selectedToDelete As New clsProjektDBInfos
     Public specialListofPhases As New Collection
 
     Public feierTage As New SortedSet(Of Date)
@@ -257,6 +258,14 @@ Public Module Module1
         height = 3
     End Enum
 
+    ' wird in der Treeview für Laden, Löschen, Aktivieren von TreeView Formularen benötigt 
+    Public Enum PTtvactions
+        delFromDB = 0
+        delFromSession = 1
+        loadPVS = 2
+        activateV = 3
+    End Enum
+
    
     Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
 
@@ -379,7 +388,7 @@ Public Module Module1
 
 
         ' prüfen, ob es in der ShowProjektListe ist ...
-        If ShowProjekte.Liste.ContainsKey(pname) Then
+        If ShowProjekte.contains(pname) Then
 
             ' Shape wird gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
             Call clearProjektinPlantafel(pname)
@@ -2157,12 +2166,13 @@ Public Module Module1
 
         Dim found As Boolean = False
         Dim foundinDatabase As Boolean = False
+        Dim key As String = calcProjektKey(strName, "")
         'Dim request As New Request(awinSettings.databaseName)
 
         If Len(strName) < 2 Then
             ' ProjektName soll mehr als 1 Zeichen haben
             found = True
-        ElseIf AlleProjekte.ContainsKey(strName & "#") Then
+        ElseIf AlleProjekte.ContainsKey(key) Then
             found = True
             'ElseIf request.pingMongoDb() Then
 

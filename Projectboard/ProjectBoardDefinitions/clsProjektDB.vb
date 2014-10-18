@@ -51,7 +51,15 @@
             If Not IsNothing(.Id) Then
                 Me.Id = .Id
             End If
-            Me.name = .name
+
+            ' wenn es einen Varianten-Namen gibt, wird als Datenbank Name 
+            ' .name = calcprojektkey(projekt) abgespeichert; das macht das Auslesen später effizienter 
+            If projekt.variantName <> "" And projekt.variantName.Trim.Length > 0 Then
+                Me.name = calcProjektKey(projekt)
+            Else
+                Me.name = .name
+            End If
+
             Me.variantName = .variantName
             Me.Risiko = .Risiko
             Me.StrategicFit = .StrategicFit
@@ -92,12 +100,29 @@
 
     Public Sub copyto(ByRef projekt As clsProjekt)
         Dim i As Integer
+        Dim tmpstr(5) As String
 
 
         With projekt
             .timeStamp = Me.timestamp.ToLocalTime
             .Id = Me.Id
-            .name = Me.name
+
+            ' jetzt muss der Datenbank Name aufgesplittet werden in name und variant-Name
+            If Me.variantName <> "" And Me.variantName.Trim.Length > 0 Then
+                tmpstr = Me.name.Split(New Char() {CChar("#")}, 3)
+                If tmpstr.Count > 1 Then
+                    If tmpstr(1) = Me.variantName Then
+                        .name = tmpstr(0)
+                    Else
+                        .name = Me.name
+                    End If
+                Else
+                    .name = Me.name
+                End If
+            Else
+                .name = Me.name
+            End If
+
             .variantName = Me.variantName
             .Risiko = Me.Risiko
             .StrategicFit = Me.StrategicFit
@@ -141,7 +166,7 @@
             Catch ex As Exception
 
             End Try
-            
+
             '.Dauer = Me.Dauer
             For i = 1 To Me.AllPhases.Count
                 Dim newPhase As New clsPhase(projekt)

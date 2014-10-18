@@ -283,7 +283,9 @@ Public Class clsCommandBarEvents
                             Dim successful As Boolean = False
                             While Not successful
                                 Try
-                                    key = pname & "#"
+                                    ' Änderung 14.10.14
+                                    'key = pname & "#"
+                                    key = calcProjektKey(pname, "")
                                     AlleProjekte.Add(key, hproj)
                                     successful = True
                                 Catch ex As Exception
@@ -334,7 +336,9 @@ Public Class clsCommandBarEvents
 
                                 With shpelement
                                     .Name = pname
-                                    .TextFrame2.TextRange.Text = pname
+                                    ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
+                                    .TextFrame2.TextRange.Text = hproj.getShapeText
+                                    ' Ende Änderung 13.10.14
                                     .Top = CSng(top)
                                     .Left = CSng(left)
                                     .Width = CSng(width)

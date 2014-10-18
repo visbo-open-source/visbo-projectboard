@@ -1,0 +1,196 @@
+﻿''' <summary>
+''' Klasse für AlleProjekte
+''' </summary>
+''' <remarks></remarks>
+Public Class clsProjekteAlle
+    Private _allProjects As SortedList(Of String, clsProjekt)
+
+    Public Sub New()
+        _allProjects = New SortedList(Of String, clsProjekt)
+    End Sub
+
+
+    ''' <summary>
+    ''' fügt der Sorted List ein Projekt-Element mit Schlüssel key hinzu 
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <param name="project"></param>
+    ''' <remarks></remarks>
+    Public Sub Add(ByVal key As String, ByVal project As clsProjekt)
+
+        _allProjects.Add(key, project)
+
+    End Sub
+
+
+    ''' <summary>
+    ''' gets or sets the sortedlist of (string, clsprojekt)
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property liste() As SortedList(Of String, clsProjekt)
+        Get
+            liste = _allProjects
+        End Get
+
+        Set(value As SortedList(Of String, clsProjekt))
+            _allProjects = value
+        End Set
+
+    End Property
+
+    ''' <summary>
+    ''' true, wenn die SortedList ein Element mit angegebenem Key enthält
+    ''' false, sonst
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property Containskey(ByVal key As String) As Boolean
+        Get
+            Containskey = _allProjects.ContainsKey(key)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt das Element zurück, das den angegebenen Schlüssel enthält
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property Item(ByVal key As String) As clsProjekt
+        Get
+
+            Item = _allProjects(key)
+            
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Anzahl Listenelemente der Sorted Liste zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property Count() As Integer
+        Get
+            Count = _allProjects.Count
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt das erste Element der Liste zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property First() As clsProjekt
+        Get
+            If _allProjects.Count > 0 Then
+                First = _allProjects.First.Value
+            Else
+                First = Nothing
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Namen der existierenden Varianten in einer Liste zurück 
+    ''' die "leere" Variante wird als () zurückgegeben , alle anderen Varianten als (Variante-Name)
+    ''' Voraussetzung: _allprojects ist eine sortierte Liste
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getVariantNames(ByVal pName As String) As Collection
+        Get
+            Dim tmpCollection As New Collection
+            Dim i As Integer = 0
+            Dim found As Boolean = False
+            Dim vName As String
+
+            ' Positioniere i auf das erste Vorkommen von pName in der Liste 
+            While i < _allProjects.Count And Not found
+                If _allProjects.ElementAt(i).Value.name = pName Then
+                    found = True
+                Else
+                    i = i + 1
+                End If
+            End While
+
+            ' Schreibe alle Varianten in die Ergebnis-Liste tmpCollection
+            While i < _allProjects.Count And found
+
+                If _allProjects.ElementAt(i).Value.name = pName Then
+                    vName = "(" & _allProjects.ElementAt(i).Value.variantName & ")"
+                    tmpCollection.Add(vName)
+                    i = i + 1
+                Else
+                    found = False
+                End If
+
+            End While
+
+            getVariantNames = tmpCollection
+
+        End Get
+    End Property
+
+
+
+    ''' <summary>
+    ''' gibt die Liste der unterschiedlichen Projekt-Namen zurück
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProjectNames() As Collection
+        Get
+            Dim tmpCollection As New Collection
+            Dim i As Integer = 0
+            Dim found As Boolean = False
+            Dim pName As String
+
+            If Me.Count > 0 Then
+                pName = _allProjects.ElementAt(i).Value.name
+                tmpCollection.Add(pName)
+                i = i + 1
+
+                While i < _allProjects.Count
+
+                    If _allProjects.ElementAt(i).Value.name <> pName Then
+                        pName = _allProjects.ElementAt(i).Value.name
+                        tmpCollection.Add(pName)
+                    End If
+
+                    i = i + 1
+
+                End While
+
+            End If
+
+
+            getProjectNames = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' entfernt das Element mit Schlüssel "Key" aus der Sorted List
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <remarks></remarks>
+    Public Sub Remove(ByVal key As String)
+
+        If _allProjects.ContainsKey(key) Then
+            _allProjects.Remove(key)
+        End If
+
+    End Sub
+
+
+End Class

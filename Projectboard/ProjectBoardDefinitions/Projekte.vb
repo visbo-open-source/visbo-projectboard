@@ -798,7 +798,7 @@ Public Module Projekte
         appInstance.EnableEvents = False
         'appInstance.ScreenUpdating = False
 
-        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.Phasen, tmpcollection)
 
         Try
@@ -822,14 +822,14 @@ Public Module Projekte
                 'kennung = hproj.name.Trim & "letzter Stand" & "#Phasen#1"
 
             Else
-                titelTeile(0) = hproj.name & " ,  " & hproj.startDate.ToShortDateString & _
+                titelTeile(0) = hproj.getShapeText & " ,  " & hproj.startDate.ToShortDateString & _
                                      " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
 
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
                 'kennung = hproj.name.Trim & "#Phasen#1"
             End If
         Catch ex As Exception
-            titelTeile(0) = hproj.name & vbLf
+            titelTeile(0) = hproj.getShapeText & vbLf
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             'kennung = hproj.name.Trim & "#Phasen#1"
         End Try
@@ -1158,7 +1158,7 @@ Public Module Projekte
 
 
         Dim pname As String = hproj.name
-        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.Phasen, tmpcollection)
 
 
@@ -1170,7 +1170,7 @@ Public Module Projekte
 
 
 
-        titelTeile(0) = hproj.name & " ,  " & hproj.startDate.ToShortDateString & _
+        titelTeile(0) = hproj.getShapeText & " ,  " & hproj.startDate.ToShortDateString & _
                                       " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
@@ -1897,6 +1897,7 @@ Public Module Projekte
         Dim found As Boolean
         Dim abbruch As Boolean = False
         Dim pname As String = hproj.name
+        Dim fullname As String = hproj.getShapeText
         Dim kennung As String = " "
         Dim diagramTitle As String = " "
         Dim zE As String = "(" & awinSettings.kapaEinheit & ")"
@@ -2189,7 +2190,7 @@ Public Module Projekte
         End Select
 
         titelTeilLaengen(0) = titelTeile(0).Length
-        titelTeile(1) = pname & vbLf
+        titelTeile(1) = fullname & vbLf
         titelTeilLaengen(1) = titelTeile(1).Length
         titelTeile(2) = " (" & hproj.timeStamp.ToString & ") "
         titelTeilLaengen(2) = titelTeile(2).Length
@@ -2417,7 +2418,7 @@ Public Module Projekte
                 End With
 
                 chtobj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
-                chtobj.Name = pname & "#" & kennung & "#" & "1"
+                chtobj.Name = fullname & "#" & kennung & "#" & "1"
 
 
             End If
@@ -2605,6 +2606,7 @@ Public Module Projekte
         Dim found As Boolean
         Dim abbruch As Boolean = False
         Dim pname As String = hproj.name
+        Dim fullname As String = hproj.getShapeText
         Dim kennung As String = " "
         Dim diagramTitle As String = " "
         Dim zE As String = "(" & awinSettings.kapaEinheit & ")"
@@ -2635,11 +2637,12 @@ Public Module Projekte
             ' finde in der Projekt-Historie das Projekt, das direkt vor hproj gespeichert wurde
 
             Dim vgl As Date = hproj.timeStamp.AddMinutes(-1)
-            Try
-                lastPlan = projekthistorie.ElementAtorBefore(vgl)
-            Catch ex As Exception
+
+            lastPlan = projekthistorie.ElementAtorBefore(vgl)
+
+            If IsNothing(lastPlan) Then
                 Throw New ArgumentException("es gibt keinen Stand vorher")
-            End Try
+            End If
 
 
         Else
@@ -2891,7 +2894,7 @@ Public Module Projekte
         End Select
 
         titelTeilLaengen(0) = titelTeile(0).Length
-        titelTeile(1) = pname & vbLf
+        titelTeile(1) = fullname & vbLf
         titelTeilLaengen(1) = titelTeile(1).Length
         titelTeile(2) = " (" & hproj.timeStamp.ToString & ") "
         titelTeilLaengen(2) = titelTeile(2).Length
@@ -3202,7 +3205,7 @@ Public Module Projekte
 
         Dim pname As String = hproj.name
 
-        titelTeile(0) = "Meilenstein Trend-Analyse " & pname & vbLf
+        titelTeile(0) = "Meilenstein Trend-Analyse " & hproj.getShapeText & vbLf
         titelTeilLaengen(0) = titelTeile(0).Length
         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
         titelTeilLaengen(1) = titelTeile(1).Length
@@ -3687,18 +3690,18 @@ Public Module Projekte
 
         Dim pname As String = hproj.name
 
-        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpcollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Personalbedarf " & zE & vbLf & pname & vbLf
+            titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Personalbedarf"
         ElseIf auswahl = 2 Then
-            titelTeile(0) = "Personalkosten (T€)" & vbLf & pname & vbLf
+            titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -3935,18 +3938,18 @@ Public Module Projekte
 
         Dim pname As String = hproj.name
 
-        tmpCollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpCollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpCollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Personalbedarf " & zE & vbLf & pname & vbLf
+            titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Personalbedarf"
         ElseIf auswahl = 2 Then
-            titelTeile(0) = "Personalkosten (T€)" & vbLf & pname & vbLf
+            titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -4121,19 +4124,19 @@ Public Module Projekte
 
         Dim pname As String = hproj.name
 
-        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
 
         If auswahl = 1 Then
 
-            titelTeile(0) = "Sonstige Kosten T€" & vbLf & pname & vbLf
+            titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Sonstige Kosten"
         Else
-            titelTeile(0) = "Gesamtkosten T€" & vbLf & pname & vbLf
+            titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -4523,18 +4526,18 @@ Public Module Projekte
 
         Dim pname As String = hproj.name
 
-        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.KostenBalken, tmpcollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Sonstige Kosten T€" & vbLf & pname & vbLf
+            titelTeile(0) = "Sonstige Kosten T€" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
 
         Else
-            titelTeile(0) = "Gesamtkosten T€" & vbLf & pname & vbLf
+            titelTeile(0) = "Gesamtkosten T€" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5003,18 +5006,18 @@ Public Module Projekte
 
         Next r
 
-        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.PersonalPie, tmpcollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("#####.") & zE & ")" & vbLf & pname & vbLf
+            titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("#####.") & zE & ")" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Personalbedarf"
         Else
-            titelTeile(0) = "Personalkosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & pname & vbLf
+            titelTeile(0) = "Personalkosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5196,11 +5199,11 @@ Public Module Projekte
 
         Next r
 
-        tmpCollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpCollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.PersonalPie, tmpCollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("####.#") & zE & ")" & vbLf & pname & vbLf
+            titelTeile(0) = "Personalbedarf (" & tdatenreihe.Sum.ToString("####.#") & zE & ")" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5208,7 +5211,7 @@ Public Module Projekte
 
             'kennung = "Personalbedarf"
         Else
-            titelTeile(0) = "Personalkosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & pname & vbLf
+            titelTeile(0) = "Personalkosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = "(" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5328,7 +5331,7 @@ Public Module Projekte
         '    Throw New Exception("keine Kosten-Bedarfe definiert")
         'End If
 
-        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.KostenPie, tmpcollection)
 
         If auswahl = 1 Then
@@ -5362,7 +5365,7 @@ Public Module Projekte
         End If
 
         If auswahl = 1 Then
-            titelTeile(0) = "Sonstige Kosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & pname & vbLf
+            titelTeile(0) = "Sonstige Kosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5370,7 +5373,7 @@ Public Module Projekte
 
             'kennung = "Sonstige Kosten"
         Else
-            titelTeile(0) = "Gesamtkosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & pname & vbLf
+            titelTeile(0) = "Gesamtkosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5553,7 +5556,7 @@ Public Module Projekte
         anzKostenarten = ErgebnisListeK.Count
 
 
-        tmpCollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpCollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.KostenPie, tmpCollection)
 
         If auswahl = 1 Then
@@ -5587,14 +5590,14 @@ Public Module Projekte
         End If
 
         If auswahl = 1 Then
-            titelTeile(0) = "Sonstige Kosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & pname & vbLf
+            titelTeile(0) = "Sonstige Kosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
 
         Else
-            titelTeile(0) = "Gesamtkosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & pname & vbLf
+            titelTeile(0) = "Gesamtkosten (" & tdatenreihe.Sum.ToString("####.#") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5718,7 +5721,7 @@ Public Module Projekte
 
         Dim pname As String = projekthistorie.Last.name
 
-        diagramTitle = "Planungs-Historie Kennzahlen " & vbLf & pname
+        diagramTitle = "Planungs-Historie Kennzahlen " & vbLf & projekthistorie.Last.getShapeText
 
 
         ' jetzt werden die einzelnen Werte aufgefüllt
@@ -5998,7 +6001,7 @@ Public Module Projekte
 
         Dim pname As String = projekthistorie.Last.name
 
-        diagramTitle = "Planungs-Historie strategischer Fit & Risiko: " & vbLf & pname
+        diagramTitle = "Planungs-Historie strategischer Fit & Risiko: " & vbLf & projekthistorie.Last.getShapeText
 
 
         ' jetzt werden die einzelnen Werte aufgefüllt
@@ -6480,7 +6483,7 @@ Public Module Projekte
         Dim tmpcollection As New Collection
 
 
-        tmpcollection.Add(hproj.name & "#" & auswahl.ToString)
+        tmpcollection.Add(hproj.getShapeText & "#" & auswahl.ToString)
         kennung = calcChartKennung("pr", PTprdk.Ergebnis, tmpcollection)
 
 
@@ -6527,11 +6530,11 @@ Public Module Projekte
 
 
         If auswahl = PThis.beauftragung Then
-            titelTeile(0) = pname & " (Beauftragung)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            titelTeile(0) = hproj.getShapeText & " (Beauftragung)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
         ElseIf auswahl = PThis.letzterStand Then
-            titelTeile(0) = pname & " (letzter Stand)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            titelTeile(0) = hproj.getShapeText & " (letzter Stand)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
         Else
-            titelTeile(0) = pname & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            titelTeile(0) = hproj.getShapeText & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
         End If
 
         titelTeilLaengen(0) = titelTeile(0).Length
@@ -7846,7 +7849,7 @@ Public Module Projekte
 
 
         ' prüfen, ob es in der ShowProjektListe ist ...
-        If ShowProjekte.Liste.ContainsKey(pname) Then
+        If ShowProjekte.contains(pname) Then
 
 
             Try
@@ -7884,7 +7887,7 @@ Public Module Projekte
 
 
         ' prüfen, ob es in der ShowProjektListe ist ...
-        If ShowProjekte.Liste.ContainsKey(pname) Then
+        If ShowProjekte.contains(pname) Then
 
 
             Try
@@ -7925,7 +7928,7 @@ Public Module Projekte
 
 
         ' prüfen, ob es in der ShowProjektListe ist ...
-        If ShowProjekte.Liste.ContainsKey(pname) Then
+        If ShowProjekte.contains(pname) Then
 
             ' Shape wird gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
             Call clearProjektinPlantafel(pname)
@@ -7933,14 +7936,22 @@ Public Module Projekte
 
             Try
                 hproj = ShowProjekte.getProject(pname)
-                'NoShowProjekte.Add(hproj)
+                ' aus Showprojekte rausnehmen
+                ShowProjekte.Remove(pname)
+
+                ' ist es bereits eine andere Variante in NoShowPRojekte?
+                If noShowProjekte.contains(pname) Then
+                    noShowProjekte.Remove(pname)
+                End If
+                noShowProjekte.Add(hproj)
+
             Catch ex As Exception
                 Call MsgBox(" Fehler in NoShow " & pname & " , Modul: NoShowProject")
                 Exit Sub
             End Try
 
 
-            ShowProjekte.Remove(pname)
+
 
             Dim abstand As Integer ' eigentlich nur Dummy Variable, wird aber in Tabelle2 benötigt ...
             Call awinClkReset(abstand)
@@ -12050,7 +12061,9 @@ Public Module Projekte
             If roentgenBlick.isOn Then
                 .TextFrame2.TextRange.Text = ""
             Else
-                .TextFrame2.TextRange.Text = pname ' statt .name
+                ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
+                .TextFrame2.TextRange.Text = myproject.getShapeText
+                ' Ende Änderung 13.10.14
             End If
 
             If status = ProjektStatus(0) Then
@@ -12182,7 +12195,10 @@ Public Module Projekte
                         .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
                         .WordWrap = MsoTriState.msoFalse
                     End With
-                    .TextFrame2.TextRange.Text = pname
+                    ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
+                    .TextFrame2.TextRange.Text = myproject.getShapeText
+                    ' Ende Änderung 13.10.14
+
                 Else
                     .TextFrame2.TextRange.Text = ""
                 End If
@@ -12518,7 +12534,7 @@ Public Module Projekte
                 pname = realname.Trim
             End If
 
-            If ShowProjekte.Liste.ContainsKey(pname) Then
+            If ShowProjekte.contains(pname) Then
                 hproj = ShowProjekte.getProject(pname)
                 With hproj
                     shpUID = .shpUID
@@ -12629,7 +12645,7 @@ Public Module Projekte
             appInstance.Workbooks.Open(awinPath & projektAustausch)
 
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
 
                 Try
 
@@ -14737,7 +14753,8 @@ Public Module Projekte
 
             With formStatus
 
-                .projectName.Text = hproj.name
+                '.projectName.Text = hproj.name
+                .projectName.Text = hproj.getShapeText
                 .bewertungsText.Text = description
 
                 If .Visible Then
@@ -14943,7 +14960,9 @@ Public Module Projekte
 
         With formMilestone
             '.bewertungsListe = explanation
-            .projectName.Text = projektName
+            ' Änderung 16.10.11 - Variante berücksichtigen 
+            .projectName.Text = hproj.getShapeText
+            '.projectName.Text = projektName
             .phaseName.Text = phaseName
 
             .resultDate.Text = dateText
@@ -15336,10 +15355,11 @@ Public Module Projekte
 
             If specialListofPhases.Contains(phaseName) And ok Then
 
-                .projectName.Text = projectName
-                .phaseName.Text = phaseName
                 .Height = 530
                 .lessonsLearnedControl.Visible = True
+                '.projectName.Text = projectName
+                .projectName.Text = hproj.getShapeText
+                .phaseName.Text = phaseName
 
                 .erlaeuterung.Visible = True
                 .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
@@ -15368,13 +15388,13 @@ Public Module Projekte
 
 
             Else
-
-                .projectName.Text = projectName
-                .phaseName.Text = phaseName
                 .Height = 220
                 .lessonsLearnedControl.Visible = False
-
                 .erlaeuterung.Visible = False
+
+                '.projectName.Text = projectName
+                .projectName.Text = hproj.getShapeText
+                .phaseName.Text = phaseName
 
                 .phaseStart.Text = startdateText
                 .phaseStart.TextAlign = HorizontalAlignment.Left
@@ -15613,7 +15633,7 @@ Public Module Projekte
 
 
                     Try
-                        If ShowProjekte.Liste.ContainsKey(pname) Then
+                        If ShowProjekte.contains(pname) Then
 
 
                             shpElement = ShowProjekte.getShape(pname)

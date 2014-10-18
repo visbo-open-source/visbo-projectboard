@@ -4,7 +4,7 @@ Imports System.Math
 
 ''' <summary>
 ''' Klasse , die eine Liste mit den Angaben zu eindeutiger Bezeichner und Koordinaten von allen Projekt-Shapes enthält 
-''' wrid hauptsächlich benötigt, um festzustellen, wann sich ein Shape verschoebn hat, gestaucht, gedehnt etc wurde 
+''' wrid hauptsächlich benötigt, um festzustellen, wann sich ein Shape verschoben hat, gestaucht, gedehnt etc wurde 
 ''' Es sind auch Methoden enthalten, um verschobene Shapes mit ihrem Projekt Pendant zu synchronisieren
 ''' </summary>
 ''' <remarks></remarks>

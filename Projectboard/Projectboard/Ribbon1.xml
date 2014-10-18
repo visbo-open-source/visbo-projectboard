@@ -117,23 +117,32 @@
       -->
       <tab id ="PT2" label="Bearbeiten">
         <group id="PT2G1" label="Projekt">
-          <button id="PT2G1B0" label="Neu" onAction="PT2ProjektNeu" />
-          <separator id="PT2G1s0"/>
-          <menu id="PT2G1M1" label="Editieren">
-            <button id="PT2G1M1B1" label="Ressourcen Bedarfe" onAction="Tom2G1Resources" />
-            <button id="PT2G1M1B2" label="Strategie/Risiko/Budget" onAction="Tom2G1Attribute" />
-            <button id="PT2G1M1B3" label="Zeitspanne f. Projektstart" onAction="Tom2G1EarliestLatestStart" />
+          <menu id="PT2G1M0" label ="Neues Projekt anlegen">
+            <button id="PT2G1M0B0" label="Neu auf Basis Vorlage" onAction="PT2ProjektNeu" />
+            <button id="PT2G1M0B1" label="Neu auf Basis Projekt" onAction="PT2ProjektNeuBasisProjekt" />
           </menu>
-          <separator id="PT2G1s3"/>
+          <separator id="PT2G1s0"/>
+          <menu id ="PT2G1M1" label ="Varianten">
+            <button id="PT2G1M1B0" label="neue Variante anlegen" onAction="PT2VarianteNeu" />
+            <button id="PT2G1M1B1" label="Variante aktivieren" onAction="PT2VarianteAktiv" />
+            <button id="PT2G1M1B2" label="Variante löschen" onAction="PT2VarianteLoeschen" />
+          </menu>
+          <separator id="PT2G1s1"/>
+          <menu id="PT2G1M2" label="Editieren">
+            <button id="PT2G1M2B1" label="Ressourcen Bedarfe" onAction="Tom2G1Resources" />
+            <button id="PT2G1M2B2" label="Strategie/Risiko/Budget" onAction="Tom2G1Attribute" />
+            <button id="PT2G1M2B3" label="Zeitspanne f. Projektstart" onAction="Tom2G1EarliestLatestStart" />
+          </menu>
+          <separator id="PT2G1s2"/>
           <!--<button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />-->
           <button id="PT2G1B2" label="Beauftragen" onAction="Tom2G1Beauftragen" />
           <button id="PT2G1B3" label="Beauftragung aufheben" onAction="Tom2GXBeauftragen" />
-          <separator id="PT2G1s1"/>
+          <separator id="PT2G1s3"/>
           <button id="PT2G1B4" label="in Warteschlange stellen" onAction="Tom2G1NoShow" />
           <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />
-          <separator id="PT2G1s2"/>
-          <button id="PT2G1B6" label="Umbenennen" onAction="Tom2G1Rename" />
           <separator id="PT2G1s4"/>
+          <button id="PT2G1B6" label="Umbenennen" onAction="Tom2G1Rename" />
+          <separator id="PT2G1s5"/>
           <button id="PT2G1B7" label="Löschen" onAction="Tom2G1Loeschen" />
         </group>
         <!---->

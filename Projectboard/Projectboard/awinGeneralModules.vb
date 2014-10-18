@@ -1244,7 +1244,8 @@ Public Module awinGeneralModules
                         'complexity = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
                         businessUnit = CStr(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
                         description = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        vglName = pName.Trim & "#" & ""
+                        'vglName = pName.Trim & "#" & ""
+                        vglName = calcProjektKey(pName.Trim, "")
 
                         If AlleProjekte.ContainsKey(vglName) Then
                             ' nichts tun ...
@@ -2143,7 +2144,7 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In lastConstellation.Liste
 
                 Try
-                    hproj = AlleProjekte(kvp.Key)
+                    hproj = AlleProjekte.Item(kvp.Key)
                     hproj.startDate = kvp.Value.Start
                     hproj.tfZeile = kvp.Value.zeile
                     If kvp.Value.show Then
@@ -2219,15 +2220,23 @@ Public Module awinGeneralModules
             Next
 
         Else
-            AlleProjekte = projekteImZeitraum
+            AlleProjekte.liste = projekteImZeitraum
             ShowProjekte.Clear()
             ' ShowProjekte aufbauen
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
 
                 Try
+                    ' bei Vorhandensein von mehreren Varianten, immer die Standard Variante laden
+                    If ShowProjekte.contains(kvp.Value.name) Then
+                        If kvp.Value.variantName = "" Then
+                            ShowProjekte.Remove(kvp.Value.name)
+                            ShowProjekte.Add(kvp.Value)
+                        End If
+                    Else
+                        ShowProjekte.Add(kvp.Value)
+                    End If
 
-                    ShowProjekte.Add(kvp.Value)
                     ' Workaround: 
                     laengeInTagen = kvp.Value.dauerInDays
                     Call awinCreateBudgetWerte(kvp.Value)
@@ -2285,14 +2294,14 @@ Public Module awinGeneralModules
         '    NoShowProjekte.Add(kvp.Value)
         'Next
         ShowProjekte.Clear()
-        AlleProjekte.Clear()
+        AlleProjekte.liste.Clear()
         ' jetzt werden die Start-Values entsprechend gesetzt ..
 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
 
             If AlleProjekte.ContainsKey(kvp.Key) Then
                 ' Projekt ist bereits im Hauptspeicher geladen
-                hproj = AlleProjekte(kvp.Key)
+                hproj = AlleProjekte.Item(kvp.Key)
             Else
                 If request.pingMongoDb() Then
 
@@ -2312,7 +2321,7 @@ Public Module awinGeneralModules
                             successMessage = successMessage & vbLf & _
                                                    "        " & kvp.Value.projectName
                         End If
-                       
+
                         'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                         'Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
                     End If
@@ -2410,6 +2419,101 @@ Public Module awinGeneralModules
             End Try
         Else
             Call MsgBox("Es ist ein Fehler beim Löschen es Portfolios aus der Datenbank aufgetreten ")
+        End If
+
+    End Sub
+
+
+    ''' <summary>
+    ''' löscht in der Datenbank alle Timestamps der Projekt-Variante pname, variantname
+    ''' die Timestamps werden zudem alle im Papierkorb gesichert 
+    ''' </summary>
+    ''' <param name="pname">Projektname</param>
+    ''' <param name="variantName">Variantenname</param>
+    ''' <remarks></remarks>
+    Public Sub deleteCompleteProjectVariant(ByVal pname As String, ByVal variantName As String)
+
+        Dim request As New Request(awinSettings.databaseName)
+        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
+
+        If Not projekthistorie Is Nothing Then
+            projekthistorie.clear() ' alte Historie löschen
+        End If
+
+        projekthistorie.liste = request.retrieveProjectHistoryFromDB _
+                                (projectname:=pname, variantName:=variantName, _
+                                 storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+
+        ' Speichern im Papierkorb 
+        For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
+            If requestTrash.storeProjectToDB(kvp.Value) Then
+            Else
+                ' es ging etwas schief
+                Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
+                            kvp.Value.name & ", " & kvp.Value.timeStamp.ToShortDateString)
+            End If
+        Next
+
+        ' jetzt alle Timestamps in der Datenbank löschen 
+        If request.deleteProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
+                                              storedEarliest:=projekthistorie.First.timeStamp, _
+                                              storedLatest:=projekthistorie.Last.timeStamp) Then
+
+        Else
+            Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName)
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' löscht den angegebenen timestamp von pname#variantname aus der Datenbank
+    ''' speichert den timestamp im Papierkorb
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="variantName"></param>
+    ''' <param name="timeStamp"></param>
+    ''' <param name="first"></param>
+    ''' <remarks></remarks>
+    Public Sub deleteProjectVariantTimeStamp(ByVal pname As String, ByVal variantName As String, _
+                                                  ByVal timeStamp As Date, ByVal first As Boolean)
+
+        Dim request As New Request(awinSettings.databaseName)
+        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
+        Dim hproj As clsProjekt
+
+        If first Then
+            projekthistorie.clear() ' alte Historie löschen
+            projekthistorie.liste = request.retrieveProjectHistoryFromDB _
+                                   (projectname:=pname, variantName:=variantName, _
+                                    storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+            first = False
+        End If
+
+
+        ' Speichern im Papierkorb
+        hproj = projekthistorie.ElementAtorBefore(timeStamp)
+
+        If IsNothing(hproj) Then
+            Call MsgBox("Timestamp " & timeStamp.ToShortDateString & vbLf & _
+                        "zu Projekt " & projekthistorie.First.getShapeText & " nicht gefunden")
+
+        Else
+            If requestTrash.storeProjectToDB(hproj) Then
+                If request.deleteProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
+                                      storedEarliest:=timeStamp, _
+                                      storedLatest:=timeStamp) Then
+
+                Else
+                    Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName & ", " & _
+                                timeStamp.ToShortDateString)
+                End If
+            Else
+                ' es ging etwas schief
+                Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
+                            hproj.name & ", " & hproj.timeStamp.ToShortDateString)
+            End If
+
         End If
 
     End Sub

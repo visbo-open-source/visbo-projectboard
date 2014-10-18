@@ -13,11 +13,15 @@
         For Each selectString In ListBox1.SelectedItems
             If selectString <> "" Then
                 pname = selectString
-                If AlleProjekte.ContainsKey(pname) Then
+                If noShowProjekte.contains(pname) Then
 
                     Try
-                        hproj = AlleProjekte.Item(pname)
+                        hproj = noShowProjekte.getProject(pname)
+                        If ShowProjekte.contains(pname) Then
+                            ShowProjekte.Remove(pname)
+                        End If
                         ShowProjekte.Add(hproj)
+                        noShowProjekte.Remove(pname)
                     Catch ex As Exception
                         Call MsgBox(" Fehler - kann nicht in Show übernommen werden " & ex.Message)
                         Exit Sub
@@ -31,18 +35,10 @@
 
                     End With
 
-                    ' Änderung 26.7 wird jetzt in zeichneProjektinPlantafel gemacht 
-                    'If roentgenBlick.isOn Then
-                    '    With roentgenBlick
-                    '        Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
-                    '    End With
 
-                    'End If
-
-                   
 
                     Try
-                        
+
                         toDoListe.Add(pname)
                         Dim shortName As String = hproj.name
 
@@ -87,15 +83,10 @@
 
     Private Sub frmGetProjectbackFromNoshow_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In noShowProjekte.Liste
 
-            If ShowProjekte.Liste.ContainsValue(kvp.Value) Then
-                ' nichts tun 
-            Else
-                ' in die Liste schreiben 
-                ListBox1.Items.Add(kvp.Key)
-            End If
-
+            ' in die Liste schreiben 
+            ListBox1.Items.Add(kvp.Key)
 
         Next
 

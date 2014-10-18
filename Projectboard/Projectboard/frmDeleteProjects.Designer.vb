@@ -23,53 +23,42 @@ Partial Class frmDeleteProjects
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.TreeViewProjekte = New System.Windows.Forms.TreeView()
-        Me.DeleteButton = New System.Windows.Forms.Button()
-        Me.AbbrechenButton = New System.Windows.Forms.Button()
+        Me.SubmitButton = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'TreeViewProjekte
         '
-        Me.TreeViewProjekte.Location = New System.Drawing.Point(45, 25)
+        Me.TreeViewProjekte.Location = New System.Drawing.Point(36, 20)
+        Me.TreeViewProjekte.Margin = New System.Windows.Forms.Padding(2)
         Me.TreeViewProjekte.Name = "TreeViewProjekte"
-        Me.TreeViewProjekte.Size = New System.Drawing.Size(479, 357)
+        Me.TreeViewProjekte.Size = New System.Drawing.Size(395, 286)
         Me.TreeViewProjekte.TabIndex = 0
         '
-        'DeleteButton
+        'SubmitButton
         '
-        Me.DeleteButton.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.DeleteButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.DeleteButton.Location = New System.Drawing.Point(93, 419)
-        Me.DeleteButton.Name = "DeleteButton"
-        Me.DeleteButton.Size = New System.Drawing.Size(146, 31)
-        Me.DeleteButton.TabIndex = 1
-        Me.DeleteButton.Text = "Löschen"
-        Me.DeleteButton.UseVisualStyleBackColor = True
-        '
-        'AbbrechenButton
-        '
-        Me.AbbrechenButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.AbbrechenButton.Location = New System.Drawing.Point(334, 419)
-        Me.AbbrechenButton.Name = "AbbrechenButton"
-        Me.AbbrechenButton.Size = New System.Drawing.Size(139, 31)
-        Me.AbbrechenButton.TabIndex = 2
-        Me.AbbrechenButton.Text = "Abbrechen"
-        Me.AbbrechenButton.UseVisualStyleBackColor = True
+        Me.SubmitButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.SubmitButton.Location = New System.Drawing.Point(175, 335)
+        Me.SubmitButton.Margin = New System.Windows.Forms.Padding(2)
+        Me.SubmitButton.Name = "SubmitButton"
+        Me.SubmitButton.Size = New System.Drawing.Size(117, 25)
+        Me.SubmitButton.TabIndex = 1
+        Me.SubmitButton.Text = "Löschen"
+        Me.SubmitButton.UseVisualStyleBackColor = True
         '
         'frmDeleteProjects
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink
-        Me.ClientSize = New System.Drawing.Size(584, 474)
-        Me.Controls.Add(Me.AbbrechenButton)
-        Me.Controls.Add(Me.DeleteButton)
+        Me.ClientSize = New System.Drawing.Size(467, 379)
+        Me.Controls.Add(Me.SubmitButton)
         Me.Controls.Add(Me.TreeViewProjekte)
+        Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmDeleteProjects"
-        Me.Text = "frmDeleteProjects"
+        Me.Text = "Projekte löschen"
         Me.ResumeLayout(False)
 
     End Sub
     Public WithEvents TreeViewProjekte As System.Windows.Forms.TreeView
-    Public WithEvents DeleteButton As System.Windows.Forms.Button
-    Public WithEvents AbbrechenButton As System.Windows.Forms.Button
+    Public WithEvents SubmitButton As System.Windows.Forms.Button
 End Class

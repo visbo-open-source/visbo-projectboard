@@ -114,12 +114,47 @@ Public Class clsProjekt
         End Get
 
         Set(value As String)
+
             If IsNothing(value) Then
                 _variantName = ""
             Else
-                _variantName = value
+                Try
+                    If value.Trim.Length > 0 Then
+                        _variantName = value.Trim
+
+                    Else
+                        _variantName = ""
+                    End If
+
+                Catch ex As Exception
+                    _variantName = ""
+                End Try
             End If
+
+
         End Set
+    End Property
+
+    ''' <summary>
+    ''' gibt den Text für das Shape zurück; 
+    ''' ist entweder nur der Projektname, oder aber der Projektname ( Varianten-Name ) 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getShapeText() As String
+        Get
+            If Not IsNothing(Me.variantName) Then
+                If Me.variantName.Length > 0 Then
+                    getShapeText = Me.name & "( " & Me.variantName & " )"
+                Else
+                    getShapeText = Me.name
+                End If
+            Else
+                getShapeText = Me.name
+            End If
+
+        End Get
     End Property
 
     ''' <summary>
@@ -139,7 +174,7 @@ Public Class clsProjekt
             Try
                 If value.Trim.Length > 0 Then
                     _name = value.Trim
-                    
+
                 Else
                     _name = ""
                 End If
@@ -742,7 +777,7 @@ Public Class clsProjekt
             If Me.CountPhases > 0 Then
 
                 _Dauer = Me.anzahlRasterElemente
-                
+
             End If
 
             dauerInDays = CInt(max)
@@ -1077,7 +1112,6 @@ Public Class clsProjekt
             .earliestStart = _earliestStart
             .latestStart = _latestStart
             .leadPerson = _leadPerson
-            '.ProjectMarge = imarge
             .Status = _Status
 
         End With
@@ -2314,7 +2348,7 @@ Public Class clsProjekt
             ' Änderung 18.3.14 Zeilenoffset gibt an, in die wievielte Zeile das geschrieben werden soll 
 
             If zeilenOffset = 0 Then
-                
+
                 'top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight - boxWidth * 0.5 * faktor
                 top = topOfMagicBoard + (Me.tfZeile - 1.0) * boxHeight + boxHeight * 0.3 * (1 - faktor)
                 'left = (msStart / 365) * boxWidth * 12 - boxWidth * 0.5 * faktor

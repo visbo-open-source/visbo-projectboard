@@ -125,6 +125,23 @@ Public Class clsProjekte
 
     End Sub
 
+    ''' <summary>
+    ''' gibt an, ob die Liste den angegebenen Schlüssel enthält oder nicht 
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property contains(ByVal key As String) As Boolean
+        Get
+            If AllProjects.ContainsKey(key) Then
+                contains = True
+            Else
+                contains = False
+            End If
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' gibt eine sortierte Liste der vorkommenden Phasen Namen in der Menge von Projekten zurück 

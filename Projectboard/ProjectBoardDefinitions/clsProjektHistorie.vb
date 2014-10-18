@@ -606,7 +606,7 @@
 
             ' die Ausschlusskriterien vorher prüfen 
             If suchDatum < _liste.First.Value.timeStamp Then
-                Throw New ArgumentException("es gibt keinen Projekt-Stand vor diesem Datum")
+                ElementAtorBefore = Nothing
             ElseIf suchDatum > _liste.Last.Value.timeStamp Then
                 _currentIndex = _liste.Count - 1
                 ElementAtorBefore = _liste.Last.Value

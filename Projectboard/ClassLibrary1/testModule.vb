@@ -47,7 +47,7 @@ Public Module testModule
 
                     If Not projekthistorie Is Nothing Then
                         If projekthistorie.Count > 0 Then
-                            vglName = projekthistorie.First.name
+                            vglName = projekthistorie.First.getShapeText
                         End If
                     End If
 
@@ -56,7 +56,7 @@ Public Module testModule
                         variantName = .variantName
                     End With
 
-                    If vglName.Trim <> pName.Trim Then
+                    If vglName <> hproj.getShapeText Then
                         If request.pingMongoDb() Then
                             Try
                                 projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -77,7 +77,7 @@ Public Module testModule
                         projekthistorie.Add(Date.Now, hproj)
                     End If
 
-                    e.Result = " Report für Projekt '" & hproj.name & "' wird erstellt !"
+                    e.Result = " Report für Projekt '" & hproj.getShapeText & "' wird erstellt !"
                     worker.ReportProgress(0, e)
                     'frmSelectPPTTempl.statusNotification.Text = " Report für Projekt '" & hproj.name & " wird erstellt !"
 
@@ -115,6 +115,7 @@ Public Module testModule
         Dim presentationFile As String = awinPath & requirementsOrdner & "projektdossier.pptx"
         Dim pptShape As pptNS.Shape
         Dim pname As String = hproj.name
+        Dim fullName As String = hproj.getShapeText
         Dim top As Double, left As Double, width As Double, height As Double
         Dim htop As Double, hleft As Double, hwidth As Double, hheight As Double
         Dim pptSize As Single = 18
@@ -401,9 +402,9 @@ Public Module testModule
                             Case "Projekt-Name"
 
                                 If qualifier.Length > 0 Then
-                                    .TextFrame2.TextRange.Text = pname & ": " & qualifier
+                                    .TextFrame2.TextRange.Text = fullName & ": " & qualifier
                                 Else
-                                    .TextFrame2.TextRange.Text = pname
+                                    .TextFrame2.TextRange.Text = fullName
                                 End If
 
                             Case "Projekt-Grafik"
@@ -3084,7 +3085,7 @@ Public Module testModule
             Try
                 ' jetzt werden die gezeigten Projekte in die Datenbank geschrieben 
 
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
 
                     Try
                         ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
@@ -3146,7 +3147,7 @@ Public Module testModule
 
                 Next
 
-                zeitStempel = AlleProjekte.First.Value.timeStamp
+                zeitStempel = AlleProjekte.First.timeStamp
 
                 Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
 
@@ -3245,58 +3246,6 @@ Public Module testModule
             End If
 
 
-
-            'historicDate = historicDate.AddMonths(1)
-
-            '' jetzt werden alle definierten Constellations weggeschrieben
-
-            'For Each kvp As KeyValuePair(Of String, clsConstellation) In projectConstellations.Liste
-
-            '    Try
-            '        If request.storeConstellationToDB(kvp.Value) Then
-            '        Else
-            '            Call MsgBox("Fehler in Schreiben Constellation " & kvp.Key)
-            '        End If
-            '    Catch ex As Exception
-            '        Throw New ArgumentException("Fehler beim Speichern der Portfolios in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
-            '        'Call MsgBox("Fehler beim Speichern der ProjekteConstellationen in die Datenbank. Datenbank nicht aktiviert?")
-            '        'Exit Sub
-            '    End Try
-
-            'Next
-
-
-            '' jetzt werden alle Abhängigkeiten weggeschreiben 
-
-            'For Each kvp As KeyValuePair(Of String, clsDependenciesOfP) In allDependencies.getSortedList
-
-            '    Try
-            '        If request.storeDependencyofPToDB(kvp.Value) Then
-            '        Else
-            '            Call MsgBox("Fehler in Schreiben Dependency " & kvp.Key)
-            '        End If
-            '    Catch ex As Exception
-            '        Throw New ArgumentException("Fehler beim Speichern der Abhängigkeiten in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
-            '        'Call MsgBox("Fehler beim Speichern der Abhängigkeiten in die Datenbank. Datenbank nicht aktiviert?")
-            '        'Exit Sub
-            '    End Try
-
-
-            'Next
-
-            'zeitStempel = AlleProjekte.First.Value.timeStamp
-
-            'Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
-
-            '' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
-            'Try
-            '    If projekthistorie.Count > 0 Then
-            '        projekthistorie.clear()
-            '    End If
-            'Catch ex As Exception
-
-            'End Try
-
         Else
 
             Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen")
@@ -3306,7 +3255,10 @@ Public Module testModule
 
         enableOnUpdate = True
 
-        zeitStempel = AlleProjekte.First.Value.timeStamp
+        If AlleProjekte.Count > 0 Then
+            zeitStempel = AlleProjekte.First.timeStamp
+        End If
+
 
         Call MsgBox("ok, " & anzStoredProj & " Projekte gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
         Return anzStoredProj
@@ -3314,7 +3266,7 @@ Public Module testModule
     End Function
 
 
-    Public Function RemoveSelectedProjectsfromDB() As Integer
+    Public Function RemoveSelectedProjectsfromDB(ByRef selectedToDelete As clsProjektDBInfos) As Integer
 
 
         Dim hproj As New clsProjekt
@@ -3326,6 +3278,7 @@ Public Module testModule
         Dim anzElements As Integer
         Dim found As Boolean = False
         Dim iSel As Integer = 0
+        Dim key As String
 
         Dim selCollection As SortedList(Of Date, String)
         enableOnUpdate = False
@@ -3398,9 +3351,10 @@ Public Module testModule
 
                     Call MsgBox("ok, " & anzDeletedTS & " TimeStamps zu Projekt " & hproj.name & " gelöscht")
 
+                    key = calcProjektKey(hproj)
                     If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName) Then
-                        If AlleProjekte.ContainsKey(hproj.name & "#" & hproj.variantName) Then
-                            AlleProjekte.Remove(hproj.name & "#" & hproj.variantName)
+                        If AlleProjekte.Containskey(key) Then
+                            AlleProjekte.Remove(key)
                             Try
                                 ShowProjekte.Remove(hproj.name)
                             Catch ex As Exception
@@ -3594,14 +3548,14 @@ Public Module testModule
 
                 If Not projekthistorie Is Nothing Then
                     If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.name
+                        vglName = projekthistorie.First.getShapeText
                     End If
                 Else
                     projekthistorie = New clsProjektHistorie
                 End If
 
 
-                If vglName.Trim <> pname.Trim Then
+                If vglName <> hproj.getShapeText Then
                     If request.pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
@@ -4050,14 +4004,14 @@ Public Module testModule
 
         If Not projekthistorie Is Nothing Then
             If projekthistorie.Count > 0 Then
-                vglName = projekthistorie.First.name
+                vglName = projekthistorie.First.getShapeText
             End If
         Else
             projekthistorie = New clsProjektHistorie
         End If
 
 
-        If vglName.Trim <> pname.Trim Then
+        If vglName <> hproj.getShapeText Then
             If request.pingMongoDb() Then
                 ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                 projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
@@ -4854,7 +4808,7 @@ Public Module testModule
                 ' jetzt wird die Überschrift aktualisiert 
                 With tabelle
 
-                    CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Projekt" & vbLf & hproj.name
+                    CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Projekt" & vbLf & hproj.getShapeText
 
                     tmpStr = CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text
                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString
@@ -5310,7 +5264,7 @@ Public Module testModule
                 ' jetzt wird die Überschrift aktualisiert 
                 With tabelle
 
-                    CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Projekt" & vbLf & hproj.name
+                    CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Projekt" & vbLf & hproj.getShapeText
 
                     tmpStr = CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text
                     CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = tmpStr & vbLf & vglproj.timeStamp.ToShortDateString

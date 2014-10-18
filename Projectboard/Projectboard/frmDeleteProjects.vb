@@ -7,14 +7,15 @@ Imports System.Windows.Forms
 
 Public Class frmDeleteProjects
 
-    Public projekteInDB As New SortedList(Of String, clsProjekt)
-    Public projektHistorien As New clsProjektDBInfos
-    Public ProjZuLöschen As clsProjekt
+    ' Public projekteInDB As New SortedList(Of String, clsProjekt)
+    Private aktuelleGesamtListe As New clsProjekteAlle
+    Private projektHistorien As New clsProjektDBInfos
+    Private stopRecursion As Boolean = False
+    ' wird an der aufrufenden Stelle gesetzt; steuert, was mit den ausgewählten ELementen geschieht
+    Friend aKtionskennung As Integer
+    Friend selectedItems As New clsProjektDBInfos
 
-    Private Sub DeleteButton_Click(sender As Object, e As EventArgs) Handles DeleteButton.Click
-
-        'Call MsgBox("DeleteButton_Click")
-    End Sub
+    
     Private Sub frmDeleteProjects_FormClosed(sender As Object, e As EventArgs) Handles Me.FormClosed
 
         frmCoord(PTfrm.eingabeProj, PTpinfo.top) = Me.Top
@@ -27,349 +28,458 @@ Public Class frmDeleteProjects
 
     Private Sub frmDeleteProjects_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        Dim treeview1 As New TreeView
-        Dim node As TreeNode
-        Dim zeitraumVon As Date = StartofCalendar
-        Dim zeitraumbis As Date = StartofCalendar.AddYears(20)
-        Dim storedHeute As Date = Now
-        Dim storedGestern As Date = StartofCalendar
-        Dim pname As String = ""
-        Dim variantName As String = ""
-     
 
-        Dim deletedProj As Integer = 0
-        Dim singleShp As Excel.Shape
-        Dim awinSelection As Excel.ShapeRange
-        Dim anzElements As Integer
-        Dim hproj As clsProjekt
-        Dim schluessel As String = ""
+        Call buildTreeview()
 
-        Dim request As New Request(awinSettings.databaseName)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
+        'Dim nodeLevel0 As TreeNode
+        'Dim nodeLevel1 As TreeNode
+        'Dim zeitraumVon As Date = StartofCalendar
+        'Dim zeitraumbis As Date = StartofCalendar.AddYears(20)
+        'Dim storedHeute As Date = Now
+        'Dim storedGestern As Date = StartofCalendar
+        'Dim pname As String = ""
+        'Dim variantName As String = ""
+        'Dim loadErrorMsg As String = ""
 
-        projektHistorien.clear()
 
-        ' Alle Projekte aus DB
-        ' projekteInDB = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+        'Dim deletedProj As Integer = 0
+        ''Dim singleShp As Excel.Shape
+        ''Dim awinSelection As Excel.ShapeRange
+        ''Dim anzElements As Integer
+        ''Dim hproj As clsProjekt
+        'Dim schluessel As String = ""
 
+        'Dim request As New Request(awinSettings.databaseName)
+        'Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
 
-        Try
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
+        'projektHistorien.clear()
 
-        If Not awinSelection Is Nothing Then    ' es sind Projekte selektiert
+        '' Alle Projekte aus DB
+        '' projekteInDB = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
 
-            If awinSelection.Count > 0 Then
-                'selektierte Projekte ins Formular eintragen
-                anzElements = awinSelection.Count
-                Dim i As Integer
-                For i = 1 To anzElements
+        'Select Case aKtionskennung
 
-                    singleShp = awinSelection.Item(i)
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+        '    Case PTtvactions.delFromDB
+        '        pname = ""
+        '        variantName = ""
+        '        aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+        '        loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
+        '    Case PTtvactions.delFromSession
+        '        aktuelleGesamtListe = AlleProjekte
+        '        loadErrorMsg = "es sind keine Projekte geladen"
 
-                    schluessel = hproj.name & "#" & hproj.variantName
+        '    Case PTtvactions.loadPVS
+        '        pname = ""
+        '        variantName = ""
+        '        aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+        '        loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
-                    'If request.pingMongoDb() Then
-                    '    ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                    '    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                    '                                                       storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                    'Else
-                    '    Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-                    '    projekthistorie.clear()
-                    'End If
+        '    Case PTtvactions.activateV
+        '        aktuelleGesamtListe = AlleProjekte
+        '        loadErrorMsg = "es sind keine Projekte geladen"
 
-                    'If projekthistorie.Count > 0 Then
-                    '    ' Aufbau der Listen 
-                    '    projektHistorien.Add(projekthistorie)
-                    'End If
+        'End Select
 
-                    projektHistorien.Add(schluessel, Date.MinValue) 'Platzhalter für die Projekthistorie
 
-                    With TreeViewProjekte
+        'If aktuelleGesamtListe.Count > 1 Then
 
-                        .CheckBoxes = True
+        '    With TreeViewProjekte
 
-                        node = .Nodes.Add(hproj.name)
-                        node.Nodes.Add(CType(Date.MinValue, String))    'Platzhalter für die Projekthistorie
+        '        .CheckBoxes = True
 
-                        'For Each kvp1 As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
-                        '    node.Nodes.Add(CType(kvp1.Key, String))
-                        'Next kvp1
+        '        Dim projektliste As Collection = aktuelleGesamtListe.getProjectNames
 
-                        'If node.IsSelected Then
-                        '    node.Expand()
-                        'End If
-                    End With
-                Next i
+        '        For Each pname In projektliste
 
-            End If
+        '            nodeLevel0 = .Nodes.Add(pname)
+        '            nodeLevel0.Tag = "P"
+        '            Dim variantListe As Collection = aktuelleGesamtListe.getVariantNames(pname)
 
+        '            ' Platzhalter einfügen
+        '            nodeLevel1 = nodeLevel0.Nodes.Add("()")
+        '            nodeLevel1.Tag = "P"
 
+        '        Next
 
-        Else
-            ' angezeigte Projekte ins Formular eintragen
 
-            If ShowProjekte.Count > 0 Then
+        '    End With
+        'Else
+        '    Call MsgBox(loadErrorMsg)
+        'End If
 
-                With TreeViewProjekte
 
-                    .CheckBoxes = True
+        ' Beginn alter Code 
+        '
+        '
+        'Try
+        '    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        'Catch ex As Exception
+        '    awinSelection = Nothing
+        'End Try
 
-                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-                        node = .Nodes.Add(kvp.Value.name)
-                        hproj = kvp.Value
-                        schluessel = hproj.name & "#" & hproj.variantName
+        'If Not awinSelection Is Nothing Then    ' es sind Projekte selektiert
 
-                        projektHistorien.Add(schluessel, Date.MinValue) 'Platzhalter für die Projekthistorie in der Liste
+        '    If awinSelection.Count > 0 Then
+        '        'selektierte Projekte ins Formular eintragen
+        '        anzElements = awinSelection.Count
+        '        Dim i As Integer
+        '        For i = 1 To anzElements
 
-                        node.Nodes.Add(CType(Date.MinValue, String))    'Platzhalter für die Projekthistorie im Formular
+        '            singleShp = awinSelection.Item(i)
+        '            hproj = ShowProjekte.getProject(singleShp.Name)
 
 
-                        'If request.pingMongoDb() Then
-                        '    ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        '    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                        '                                                       storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                        'Else
-                        '    Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-                        '    projekthistorie.clear()
-                        'End If
+        '            schluessel = calcProjektKey(hproj)
 
-                        'If projekthistorie.Count > 0 Then
-                        '    ' Aufbau der Listen 
-                        '    projektHistorien.Add(projekthistorie)
-                        'End If
 
-                        'For Each kvp1 As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
-                        '    node.Nodes.Add(CType(kvp1.Key, String))
-                        'Next kvp1
+        '            projektHistorien.Add(schluessel, Date.MinValue) 'Platzhalter für die Projekthistorie
 
-                        'If node.IsSelected Then
-                        '    node.Expand()
-                        'End If
+        '            With TreeViewProjekte
 
-                    Next kvp
+        '                .CheckBoxes = True
 
-                End With
+        '                nodeLevel0 = .Nodes.Add(hproj.name)
+        '                nodeLevel1 = nodeLevel0.Nodes.Add(hproj.variantName)
+        '                nodeLevel1.Nodes.Add(CType(Date.MinValue, String))    'Platzhalter für die Projekthistorie
 
+        '            End With
+        '        Next i
 
-            Else
+        '    End If
 
-                ' geladene Projekte ins Formular eintragen
 
-                If AlleProjekte.Count > 0 Then
 
-                    With TreeViewProjekte
+        'Else
 
-                        .CheckBoxes = True
 
-                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
-                            node = .Nodes.Add(kvp.Value.name)
-                            hproj = kvp.Value
-                            schluessel = hproj.name & "#" & hproj.variantName
+        '    '' geladene Projekte ins Formular eintragen
 
-                            projektHistorien.Add(schluessel, Date.MinValue) 'Platzhalter für die Projekthistorie
-                            node.Nodes.Add(CType(Date.MinValue, String))    'Platzhalter für die Projekthistorie im Formular
+        '    If AlleProjekte.Count > 0 Then
 
-                            'If request.pingMongoDb() Then
-                            '    ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            '    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                            '                                                       storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                            'Else
-                            '    Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-                            '    projekthistorie.clear()
-                            'End If
+        '        With TreeViewProjekte
 
-                            'If projekthistorie.Count > 0 Then
-                            '    ' Aufbau der Listen 
-                            '    projektHistorien.Add(projekthistorie)
-                            'End If
+        '            .CheckBoxes = True
 
-                            'For Each kvp1 As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
-                            '    node.Nodes.Add(CType(kvp1.Key, String))
-                            'Next kvp1
+        '            Dim projektliste As Collection = AlleProjekte.getProjectNames
 
-                            'If node.IsSelected Then
-                            '    node.Expand()
-                            'End If
+        '            For Each pname In projektliste
 
-                        Next kvp
-                    End With
+        '                nodeLevel0 = .Nodes.Add(pname)
+        '                With nodeLevel0
+        '                    .ToolTipText = "Projekt-Name"
+        '                End With
 
+        '                Dim variantListe As Collection = AlleProjekte.getVariantNames(pname)
 
+        '                For Each vName As String In variantListe
+        '                    nodeLevel1 = nodeLevel0.Nodes.Add(vName)
+        '                    With nodeLevel0
+        '                        .ToolTipText = "Varianten-Name"
+        '                    End With
+        '                    nodeLevel1.Nodes.Add(CType(Date.MinValue, String))    'Platzhalter für die Projekthistorie
+        '                Next
 
-                Else
-                    ' Alle Projekte aus DB
+        '            Next
 
-                    projekteInDB = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+        '        End With
 
-                    If projekteInDB.Count > 1 Then
 
-                        With TreeViewProjekte
 
-                            .CheckBoxes = True
+        '    Else
+        '        ' Alle Projekte aus DB
 
-                            For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteInDB
-                                node = .Nodes.Add(kvp.Value.name)
-                                hproj = kvp.Value
-                                schluessel = hproj.name & "#" & hproj.variantName
 
-                                projektHistorien.Add(schluessel, Date.MinValue) 'Platzhalter für die Projekthistorie
-                                node.Nodes.Add(CType(Date.MinValue, String))    'Platzhalter für die Projekthistorie im Formular
 
-                                'If request.pingMongoDb() Then
-                                '    ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                                '    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                                '                                                       storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                                'Else
-                                '    Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-                                '    projekthistorie.clear()
-                                'End If
+        '        If aktuelleGesamtListe.Count > 1 Then
 
-                                'If projekthistorie.Count > 0 Then
-                                '    ' Aufbau der Listen 
-                                '    projektHistorien.Add(projekthistorie)
-                                'End If
+        '            With TreeViewProjekte
 
-                                'For Each kvp1 As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
-                                '    node.Nodes.Add(CType(kvp1.Key, String))
-                                'Next kvp1
+        '                .CheckBoxes = True
 
-                                'If node.IsSelected Then
-                                '    node.Expand()
-                                'End If
+        '                Dim projektliste As Collection = aktuelleGesamtListe.getProjectNames
 
+        '                For Each pname In projektliste
 
-                            Next kvp
-                        End With
-                    Else
-                        Call MsgBox(" keine Projekte in der Datenbank")
-                    End If
+        '                    nodeLevel0 = .Nodes.Add(pname)
+        '                    nodeLevel0.Tag = "P"
+        '                    Dim variantListe As Collection = aktuelleGesamtListe.getVariantNames(pname)
 
-                End If 'AlleProjekte
+        '                    ' Platzhalter einfügen
+        '                    nodeLevel1 = nodeLevel0.Nodes.Add("()")
+        '                    nodeLevel1.Tag = "P"
 
-            End If 'showProjekte
+        '                Next
 
-        End If 'selektierte Projekte
+
+        '            End With
+        '        Else
+        '            Call MsgBox(" keine Projekte in der Datenbank")
+        '        End If
+
+        '    End If 'AlleProjekte
+
+
+        'End If 'selektierte Projekte
+        ' Ende alter Code
 
     End Sub
 
-    Private Sub TreeViewProjekte_AfterExpand(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjekte.AfterExpand
-
-    End Sub
-    Private Sub TreeViewProjekte_AfterSelect(sender As Object, e As Windows.Forms.TreeViewEventArgs) Handles TreeViewProjekte.AfterSelect
-      
-    End Sub
+    
+    ''' <summary>
+    ''' Aktion, die ausgeführt wird, nachdem eine Checkbox gewählt oder abgewählt wurde 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub TreeViewProjekte_AfterCheck(sender As Object, e As Windows.Forms.TreeViewEventArgs) Handles TreeViewProjekte.AfterCheck
         Dim node As TreeNode
         Dim schluessel As String = ""
-        Dim selCollection As SortedList(Of Date, String)
-        Dim timeStamp As Date
+        'Dim selCollection As SortedList(Of Date, String)
+        'Dim timeStamp As Date
+        Dim treeLevel As Integer
+        Dim i As Integer, j As Integer
+        Dim childNode As TreeNode
+        Dim parentNode As TreeNode
+
+        ' Andernfalls wird die Check Routine endlos aufgerufen ...
+        If stopRecursion Then
+            Exit Sub
+        End If
 
         node = e.Node
-
-        schluessel = CType(node.Text, String) & "#"
-
-        If Not IsNothing(node.Parent) Then
-            schluessel = CType(node.Parent.Text, String) & "#"
-            Try
-                selCollection = projektHistorien.getTimeStamps(schluessel)
-
-                ' Löschen aus der projektHistorien-Liste
-                ' projektHistorien.Remove(schluessel, CType(node.Text, Date))
-                If node.Checked = True Then
-                    ' Aufbau der Liste selectedToDelete
-                    selectedToDelete.Add(schluessel, selCollection.ElementAt(node.Index).Key)
-                Else
-                    selectedToDelete.Remove(schluessel, selCollection.ElementAt(node.Index).Key)
-                End If
-            Catch ex As Exception
-
-            End Try
+        treeLevel = node.Level
 
 
-        Else
-            schluessel = CType(node.Text, String) & "#"
-            Try
+        ' hier wird jetzt sichergestellt, daß nur die nach der aktuellen Aktion gültigen Checks gesetzt werden können
+
+        Select Case aKtionskennung
+
+            Case PTtvactions.delFromDB
+
+                stopRecursion = True
+
+                Select Case treeLevel
+
+                    Case 0 ' Projekt ist selektiert / nicht selektiert 
+
+                        For i = 1 To node.Nodes.Count
+                            childNode = node.Nodes.Item(i - 1)
+                            childNode.Checked = node.Checked
+                            For j = 1 To childNode.Nodes.Count
+                                childNode.Nodes.Item(j - 1).Checked = node.Checked
+                            Next
+                        Next
+
+                    Case 1 ' Variante ist selektiert / nicht selektiert
+
+                        ' nach unten: das Gleiche 
+                        For i = 1 To node.Nodes.Count
+                            childNode = node.Nodes.Item(i - 1)
+                            childNode.Checked = node.Checked
+                        Next
+                        ' nach oben 
+
+                        If node.Checked = False Then
+                            node.Parent.Checked = False
+                        End If
+
+                        ' wenn mit diesem Knoten jetzt alle gesetzt sind, soll auch parent wieder gesetzt werden 
+                        If node.Checked = True Then
+                            parentNode = node.Parent
+                            Dim allchecked As Boolean = True
+                            For i = 1 To parentNode.Nodes.Count
+                                allchecked = allchecked And parentNode.Nodes.Item(i - 1).Checked
+                            Next
+                            If allchecked Then
+                                parentNode.Checked = True
+                            End If
+                        End If
+
+                    Case 2 ' Snapshot ist selektiert / nicht selektiert 
+                        If node.Checked = False Then
+                            node.Parent.Checked = False
+                            parentNode = node.Parent
+                            parentNode.Parent.Checked = False
+                        End If
+
+                        If node.Checked = True Then
+                            parentNode = node.Parent
+                            Dim allchecked As Boolean = True
+                            For i = 1 To parentNode.Nodes.Count
+                                allchecked = allchecked And parentNode.Nodes.Item(i - 1).Checked
+                            Next
+                            If allchecked Then
+                                ' jetzt wird bewusst Rekursion angestossen, damit das nach oben weitergeht ...
+                                stopRecursion = False
+                                parentNode.Checked = True
+                            End If
+                        End If
+
+                End Select
+
+                stopRecursion = False
+
+            Case PTtvactions.delFromSession
+
+            Case PTtvactions.loadPVS
+
+            Case PTtvactions.activateV
+
+        End Select
 
 
-                If node.Checked = True Then
+        ' alter Code
+        'schluessel = CType(node.Text, String) & "#"
 
-                    If node.IsExpanded = False Then
-                        node.Expand()
-                    End If
+        'If Not IsNothing(node.Parent) Then
+        '    schluessel = CType(node.Parent.Text, String) & "#"
+        '    Try
+        '        selCollection = projektHistorien.getTimeStamps(schluessel)
 
-                    selCollection = projektHistorien.getTimeStamps(schluessel)
+        '        ' Löschen aus der projektHistorien-Liste
+        '        ' projektHistorien.Remove(schluessel, CType(node.Text, Date))
+        '        If node.Checked = True Then
+        '            ' Aufbau der Liste selectedToDelete
+        '            selectedItems.Add(schluessel, selCollection.ElementAt(node.Index).Key)
+        '        Else
+        '            selectedItems.Remove(schluessel, selCollection.ElementAt(node.Index).Key)
+        '        End If
+        '    Catch ex As Exception
 
-                    Dim i As Integer
-                    For i = 1 To selCollection.Count
-                        timeStamp = selCollection.ElementAt(i - 1).Key
-                        selectedToDelete.Add(schluessel, timeStamp)
-
-                        'Alle Unterknoten werden zum Löschen gecheckt
-                        e.Node.Nodes(i - 1).Checked = True
-
-                    Next i
-                Else
-
-                    selCollection = projektHistorien.getTimeStamps(schluessel)
-
-                    Dim i As Integer
-                    For i = 1 To selCollection.Count
-                        timeStamp = selCollection.ElementAt(i - 1).Key
-                        selectedToDelete.Remove(schluessel, timeStamp)
-
-                        '' Check wird für alle Unterknoten entfernt
-                        e.Node.Nodes(i - 1).Checked = False
-
-                    Next i
-                End If
-
-            Catch ex As Exception
-
-            End Try
+        '    End Try
 
 
-        End If
+        'Else
+        '    schluessel = CType(node.Text, String) & "#"
+        '    Try
+
+
+        '        If node.Checked = True Then
+
+        '            If node.IsExpanded = False Then
+        '                node.Expand()
+        '            End If
+
+        '            selCollection = projektHistorien.getTimeStamps(schluessel)
+
+        '            Dim i As Integer
+        '            For i = 1 To selCollection.Count
+        '                timeStamp = selCollection.ElementAt(i - 1).Key
+        '                selectedItems.Add(schluessel, timeStamp)
+
+        '                'Alle Unterknoten werden zum Löschen gecheckt
+        '                e.Node.Nodes(i - 1).Checked = True
+
+        '            Next i
+        '        Else
+
+        '            selCollection = projektHistorien.getTimeStamps(schluessel)
+
+        '            Dim i As Integer
+        '            For i = 1 To selCollection.Count
+        '                timeStamp = selCollection.ElementAt(i - 1).Key
+        '                selectedItems.Remove(schluessel, timeStamp)
+
+        '                '' Check wird für alle Unterknoten entfernt
+        '                e.Node.Nodes(i - 1).Checked = False
+
+        '            Next i
+        '        End If
+
+        '    Catch ex As Exception
+
+        '    End Try
+
+
+        'End If
 
     End Sub
     Private Sub TreeViewProjekte_AfterCollapse(sender As Object, e As Windows.Forms.TreeViewEventArgs) Handles TreeViewProjekte.AfterCollapse
-       
+
     End Sub
     Private Sub TreeViewProjekte_BeforeExpand(sender As Object, e As Windows.Forms.TreeViewCancelEventArgs) Handles TreeViewProjekte.BeforeExpand
 
         Dim request As New Request(awinSettings.databaseName)
         Dim node As New TreeNode
-        Dim projName As String
+        Dim nodeVariant As New TreeNode
+        Dim nodeTimeStamp As New TreeNode
+        Dim projName As String = ""
         Dim variantName As String = ""
         Dim hliste As SortedList(Of Date, String)
+        Dim nodeLevel As Integer
+        Dim variantListe As Collection
+
 
 
         node = e.Node
-        projName = node.Text
+        nodeLevel = node.Level
 
-        hliste = projektHistorien.getTimeStamps(projName & "#" & variantName)
+        If nodeLevel = 0 Then
+            projName = node.Text
 
-        If hliste.Count = 1 Then
+            ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
+            If node.Tag = "P" Then
+                ' Inhalte der Sub-Nodes müssen neu aufgebaut werden 
+                variantListe = aktuelleGesamtListe.getVariantNames(projName)
 
-            If hliste.ElementAt(0).Key = Date.MinValue Then
+                ' Löschen von Platzhalter
+                node.Nodes.Clear()
 
-                If request.pingMongoDb() And request.projectNameAlreadyExists(projName, variantName) Then
+                ' Eintragen der zum Projekt gehörenden Varianten
+                For Each variantName In variantListe
+                    nodeVariant = node.Nodes.Add(CType(variantName, String))
+                    nodeVariant.Checked = node.Checked
 
+
+                    If aKtionskennung = 0 Or _
+                        aKtionskennung = 2 Then
+                        ' Einfügen eines Platzhalters macht nur Sinn bei Snapshots löschen bzw. Snapshots laden 
+
+                        nodeVariant.Tag = "P"
+                        nodeVariant.Nodes.Add("()")
+                    Else
+                        nodeVariant.Tag = "X"
+                    End If
+                    
+                Next
+
+                node.Tag = "X"
+                'If node.IsSelected Then
+                '    node.Expand()
+                'End If
+            End If
+
+
+
+        ElseIf nodeLevel = 1 Then
+
+
+            If node.Tag = "P" Then
+
+                node.Tag = "X"
+                projName = node.Parent.Text
+                variantName = getVariantNameOf(node.Text)
+
+                hliste = projektHistorien.getTimeStamps(calcProjektKey(projName, variantName))
+
+                If hliste.Count = 0 Then
+
+                    If request.pingMongoDb() Then
+                    Else
+                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+                    End If
+
+                    ' Lesen der TimeStamp Snapshots für ProjNAme, variantName 
                     Try
                         If Not projekthistorie Is Nothing Then
                             projekthistorie.clear()
-                        else
+                        Else
                             projekthistorie = New clsProjektHistorie
                         End If
 
                         projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=projName, variantName:=variantName, _
                                                                          storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
-                        'projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=projName, variantName:="", _
-                        '                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
 
                     Catch ex As Exception
                         projekthistorie.clear()
@@ -384,14 +494,15 @@ Public Class frmDeleteProjects
                         projektHistorien.Add(projekthistorie)
 
 
-                        ' Eintragen der zum Projekt gehörenden TimeStamps
+                        ' Eintragen der zur Projekt-Variante gehörenden TimeStamps
                         For Each kvp1 As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
-                            node.Nodes.Add(CType(kvp1.Value.timeStamp, String))
+                            nodeTimeStamp = node.Nodes.Add(CType(kvp1.Value.timeStamp, String))
+                            nodeTimeStamp.Checked = node.Checked
                         Next kvp1
 
-                        If node.IsSelected Then
-                            node.Expand()
-                        End If
+                        'If node.IsSelected Then
+                        '    node.Expand()
+                        'End If
                     Else
 
                         If projekthistorie.Count = 0 Then
@@ -401,18 +512,216 @@ Public Class frmDeleteProjects
                         End If
                     End If
 
-                Else
-                    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+
+
+
                 End If
 
             End If
-            ' es ist nichts zu machen, da die Historie zu diesem Projekt schon aus DB gelesen
+
+
         End If
+
+
+
 
     End Sub
 
-    Private Sub AbbrechenButton_Click(sender As Object, e As EventArgs) Handles AbbrechenButton.Click
-        'Call MsgBox("AbbrechenButton")
+    
+
+    ''' <summary>
+    ''' liefert den Namen der Variante zurück, bereinigt um die öffnende und schließende Klammer
+    ''' </summary>
+    ''' <param name="nodeText"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function getVariantNameOf(ByVal nodeText As String) As String
+        Dim tmpstr() As String
+        Dim vName As String = ""
+
+        tmpstr = nodeText.Split(New Char() {CChar("("), CChar(")")}, 3)
+        If tmpstr.Count = 3 Then
+            vName = tmpstr(1)
+        End If
+
+        getVariantNAmeOf = vName
+
+    End Function
+
+    ''' <summary>
+    ''' baut den aktuell gültigen Treeview auf  
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub buildTreeview()
+
+        Dim nodeLevel0 As TreeNode
+        Dim nodeLevel1 As TreeNode
+        Dim zeitraumVon As Date = StartofCalendar
+        Dim zeitraumbis As Date = StartofCalendar.AddYears(20)
+        Dim storedHeute As Date = Now
+        Dim storedGestern As Date = StartofCalendar
+        Dim pname As String = ""
+        Dim variantName As String = ""
+        Dim loadErrorMsg As String = ""
+
+
+        Dim deletedProj As Integer = 0
+
+
+        Dim request As New Request(awinSettings.databaseName)
+        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
+
+        ' alles zurücksetzen 
+        projektHistorien.clear()
+
+        With TreeViewProjekte
+            .Nodes.Clear()
+        End With
+
+        ' Alle Projekte aus DB
+        ' projekteInDB = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+
+        Select Case aKtionskennung
+
+            Case PTtvactions.delFromDB
+                pname = ""
+                variantName = ""
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                loadErrorMsg = "es gibt keine Projekte in der Datenbank"
+
+            Case PTtvactions.delFromSession
+                aktuelleGesamtListe = AlleProjekte
+                loadErrorMsg = "es sind keine Projekte geladen"
+
+            Case PTtvactions.loadPVS
+                pname = ""
+                variantName = ""
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                loadErrorMsg = "es gibt keine Projekte in der Datenbank"
+
+            Case PTtvactions.activateV
+                aktuelleGesamtListe = AlleProjekte
+                loadErrorMsg = "es sind keine Projekte geladen"
+
+        End Select
+
+
+        If aktuelleGesamtListe.Count > 1 Then
+
+            With TreeViewProjekte
+
+                .CheckBoxes = True
+
+                Dim projektliste As Collection = aktuelleGesamtListe.getProjectNames
+
+                For Each pname In projektliste
+
+                    nodeLevel0 = .Nodes.Add(pname)
+                    nodeLevel0.Tag = "P"
+                    Dim variantListe As Collection = aktuelleGesamtListe.getVariantNames(pname)
+
+                    ' Platzhalter einfügen
+                    nodeLevel1 = nodeLevel0.Nodes.Add("()")
+                    nodeLevel1.Tag = "P"
+
+                Next
+
+
+            End With
+        Else
+            Call MsgBox(loadErrorMsg)
+        End If
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' wird bei Auslösen des "Aktionsbuttons" ausgeführt; 
+    ''' in Abhängigkeit von Aktionskennung 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub SubmitButton_Click(sender As Object, e As EventArgs) Handles SubmitButton.Click
+
+        Dim projektNode As TreeNode, variantNode As TreeNode, timeStampNode As TreeNode
+        Dim anzahlProjekte As Integer
+        Dim anzahlVarianten As Integer
+        Dim anzahlTimeStamps As Integer
+        Dim pname As String, variantName As String, timestamp As Date
+
+        Dim request As New Request(awinSettings.databaseName)
+        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
+
+        Dim p As Integer, v As Integer, t As Integer
+
+
+        With TreeViewProjekte
+            anzahlProjekte = .Nodes.Count
+
+            For p = 1 To anzahlProjekte
+
+                projektNode = .Nodes.Item(p - 1)
+                pname = projektNode.Text
+
+                If projektNode.Checked Then
+                    ' Aktion auf allen Varianten und Timestamps 
+                    ' Schleife über alle Varianten: 
+                    ' lösche in Datenbank pname#vname
+                    anzahlVarianten = projektNode.Nodes.Count
+
+                    For v = 1 To anzahlVarianten
+
+                        variantNode = projektNode.Nodes.Item(v - 1)
+                        variantName = getVariantNameOf(variantNode.Text)
+                        Call deleteCompleteProjectVariant(pname, variantName)
+
+                    Next
+
+
+                Else
+
+                    anzahlVarianten = projektNode.Nodes.Count
+                    For v = 1 To anzahlVarianten
+                        variantNode = projektNode.Nodes.Item(v - 1)
+                        variantName = getVariantNameOf(variantNode.Text)
+
+
+                        If variantNode.Checked Then
+                            ' Aktion auf allen Timestamps
+                            ' lösche in Datenbank das Objekt mit DB-Namen pname#vname
+
+                            Call deleteCompleteProjectVariant(pname, variantName)
+
+                        Else
+
+                            anzahlTimeStamps = variantNode.Nodes.Count
+                            Dim first As Boolean = True
+
+                            For t = 1 To anzahlTimeStamps
+                                timeStampNode = variantNode.Nodes.Item(t - 1)
+
+                                If timeStampNode.Checked Then
+                                    ' Aktion auf diesem timestamp
+
+                                    timestamp = CType(timeStampNode.Text, Date)
+                                    Call deleteProjectVariantTimeStamp(pname, variantName, timestamp, first)
+
+
+                                End If
+                            Next
+                        End If
+
+                    Next
+                End If
+
+            Next
+
+
+        End With
+
+
     End Sub
 
 

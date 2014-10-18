@@ -297,25 +297,21 @@ Imports System.Drawing
 
         Dim deletedProj As Integer = 0
         Dim returnValue As DialogResult
-
-        Dim DeleteProjects As New frmDeleteProjects
+        
+        Dim deleteProjects As New frmDeleteProjects
 
         Try
 
+            With deleteProjects
+                .Text = "Projekte löschen"
+                .aKtionskennung = PTtvactions.delFromDB
+            End With
 
-            returnValue = DeleteProjects.ShowDialog
+            returnValue = deleteProjects.ShowDialog
 
             If returnValue = DialogResult.OK Then
-                deletedProj = RemoveSelectedProjectsfromDB()    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+                deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
-                If selectedToDelete.Count = 0 Then
-                    Call MsgBox("Es wurde kein Projekt/TimeStamp zum Löschen ausgewählt " & vbLf & "Alle Projekte löschen?", MsgBoxStyle.OkCancel)
-                    If CBool(MsgBoxResult.Ok) Then
-                        'Call removeAllProjectsfromDB()
-                    End If
-                Else
-                    'Call MsgBox("Es wurden " & deletedProj & " Projekte gelöscht!")
-                End If
             Else
                 ' returnValue = DialogResult.Cancel
 
@@ -327,7 +323,6 @@ Imports System.Drawing
         End Try
 
         Call awinDeSelect()
-        selectedToDelete.Liste.Clear()
 
 
         appInstance.ScreenUpdating = False
@@ -618,11 +613,14 @@ Imports System.Drawing
 
         Dim singleShp As Excel.Shape
         Dim request As New Request(awinSettings.databaseName)
+        'Dim pName As String, variantName As String
+        'Dim shapeText As String
 
         Dim tmpshapes As Excel.Shapes
         Dim oldKey As String, newKey As String
         Dim erg As String = ""
         Dim atleastOne As Boolean = False
+        Dim hproj As clsProjekt
 
         Call projektTafelInit()
 
@@ -649,58 +647,79 @@ Imports System.Drawing
 
                     With singleShp
 
+
+
                         If isProjectType(shapeArt) Then
 
-                            If .Name <> .TextFrame2.TextRange.Text Then
-                                ' das Shape wurde vom Nutzer umbenannt 
-                                atleastOne = True
+                            ' jetzt muss Pname und Variant-Name ermittel werde 
+                            Try
+                                hproj = ShowProjekte.getProject(.Name)
+                                
+
+                                If hproj.getShapeText <> .TextFrame2.TextRange.Text Then
+                                    ' das Shape wurde vom Nutzer umbenannt 
+                                    atleastOne = True
 
 
-                                Dim oldName As String = .Name
-                                Dim newName As String = .TextFrame2.TextRange.Text
+                                    Dim oldPname As String = hproj.name
+                                    Dim oldVname As String = hproj.variantName
+                                    Dim tmpstr(5) As String
+                                    Dim newPname As String = ""
+                                    Dim newVname As String = ""
+                                    tmpstr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
 
-                                Try
-                                    Dim hproj As clsProjekt = ShowProjekte.getProject(oldName)
-
-                                    If request.pingMongoDb() Then
-
-                                        If ShowProjekte.Liste.ContainsKey(newName) Or request.projectNameAlreadyExists(newName, hproj.variantName) Or Len(newName.Trim) = 0 Or IsNumeric(newName) Then
-
-                                            ' ungültiger Name - alten Namen wiederherstellen 
-                                            .TextFrame2.TextRange.Text = oldName
-                                            erg = erg & oldName & " bleibt, " & newName & " ungültig oder existiert bereits in DB" & vbLf
-                                        Else
-                                            ' der neue Name ist gültig 
-                                            .Name = newName
-
-                                            oldKey = calcProjektKey(hproj)
-                                            newKey = calcProjektKey(newName, hproj.variantName)
-                                            With hproj
-                                                .name = newName
-                                            End With
-
-                                            ShowProjekte.Remove(oldName)
-                                            hproj.timeStamp = Date.Now
-                                            ShowProjekte.Add(hproj)
-                                            AlleProjekte.Remove(oldKey)
-                                            AlleProjekte.Add(newKey, hproj)
-
-                                            erg = erg & oldName & " -> " & newName & vbLf
-
-                                        End If
-                                    Else
-                                        'Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
-                                        .TextFrame2.TextRange.Text = oldName
-                                        erg = erg & oldName & " bleibt, " & newName & " ungültig, DB ist nicht aktiv" & vbLf
+                                    newPname = tmpstr(0)
+                                    If tmpstr.Count > 1 Then
+                                        newVname = tmpstr(1)
                                     End If
 
-                                Catch ex As Exception
-                                    Call MsgBox(ex.Message)
-                                    .TextFrame2.TextRange.Text = oldName
-                                    erg = erg & oldName & " bleibt, " & newName & " ungültig" & vbLf
-                                End Try
+                                    Try
 
-                            End If
+
+                                        If request.pingMongoDb() Then
+
+                                            If ShowProjekte.contains(newPname) Or request.projectNameAlreadyExists(newPname, hproj.variantName) Or Len(newPname.Trim) = 0 Or IsNumeric(newPname) Then
+
+                                                ' ungültiger Name - alten Namen wiederherstellen 
+                                                .TextFrame2.TextRange.Text = hproj.getShapeText
+                                                erg = erg & oldPname & " bleibt, " & newPname & " ungültig oder existiert bereits in DB" & vbLf
+                                            Else
+                                                ' der neue Name ist gültig 
+                                                .Name = newPname
+
+                                                oldKey = calcProjektKey(hproj)
+                                                newKey = calcProjektKey(newPname, hproj.variantName)
+                                                With hproj
+                                                    .name = newPname
+                                                End With
+
+                                                ShowProjekte.Remove(oldPname)
+                                                hproj.timeStamp = Date.Now
+                                                ShowProjekte.Add(hproj)
+                                                AlleProjekte.Remove(oldKey)
+                                                AlleProjekte.Add(newKey, hproj)
+
+                                                erg = erg & oldPname & " -> " & newPname & vbLf
+
+                                            End If
+                                        Else
+                                            'Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+                                            .TextFrame2.TextRange.Text = oldPname
+                                            erg = erg & oldPname & " bleibt, " & newPname & " ungültig, DB ist nicht aktiv" & vbLf
+                                        End If
+
+                                    Catch ex1 As Exception
+                                        Call MsgBox(ex1.Message)
+                                        .TextFrame2.TextRange.Text = oldPname
+                                        erg = erg & oldPname & " bleibt, " & newPname & " ungültig" & vbLf
+                                    End Try
+
+                                End If
+                            Catch ex As Exception
+                                Call MsgBox("Fehler : zu Shape mit Namen " & .Name & " gibt es kein Projekt!")
+                            End Try
+
+
 
                         End If
                     End With
@@ -769,6 +788,116 @@ Imports System.Drawing
 
 
         enableOnUpdate = True
+
+    End Sub
+
+    ''' <summary>
+    ''' eine neue Variante anlegen 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT2VarianteNeu(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+        Dim hproj As clsProjekt
+        Dim awinSelection As Excel.ShapeRange
+        Dim neueVariante As New frmCreateNewVariant
+        Dim resultat As DialogResult
+        Dim request As New Request(awinSettings.databaseName)
+        Dim newproj As clsProjekt
+        Dim key As String
+
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            If awinSelection.Count = 1 Then
+                ' jetzt die Aktion durchführen ...
+                singleShp = awinSelection.Item(1)
+
+                Try
+                    hproj = ShowProjekte.getProject(singleShp.Name)
+                Catch ex As Exception
+                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                    enableOnUpdate = True
+                    Exit Sub
+                End Try
+
+                ' enableevents wird hier nicht false gesetzt; wenn dann wird das im Formular gemacht 
+                ' screenupdating wird hier ebenso nicht auf false gesetzt 
+
+                ' jetzt wird hier das Formular aufgerufen, wo eine neue Variante eingegeben werden kann 
+                With neueVariante
+                    .projektName.Text = hproj.name
+                    .variantenName.Text = hproj.variantName
+                    .newVariant.Text = ""
+                End With
+
+                resultat = neueVariante.ShowDialog
+                If resultat = DialogResult.OK Then
+
+                    newproj = New clsProjekt
+                    hproj.CopyTo(newproj)
+
+                    With newproj
+                        .name = hproj.name
+                        .variantName = neueVariante.newVariant.Text
+                        .ampelErlaeuterung = hproj.ampelErlaeuterung
+                        .ampelStatus = hproj.ampelStatus
+                        .timeStamp = Date.Now
+                        .shpUID = hproj.shpUID
+                        .tfZeile = hproj.tfZeile
+                        .Status = ProjektStatus(0)
+                        If Not IsNothing(hproj.budgetWerte) Then
+                            .budgetWerte = hproj.budgetWerte
+                        End If
+
+                    End With
+
+                    ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
+                    ShowProjekte.Remove(hproj.name)
+
+                    ' die neue Variante wird aufgenommen
+                    key = calcProjektKey(newproj)
+                    AlleProjekte.Add(key, newproj)
+                    ShowProjekte.Add(newproj)
+
+                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                    Try
+
+                        Dim tmpCollection As New Collection
+                        Call ZeichneProjektinPlanTafel(tmpCollection, newproj.name, newproj.tfZeile, tmpCollection, tmpCollection)
+
+                    Catch ex As Exception
+
+                        Call MsgBox("Fehler bei Zeichnen Projekt: " & ex.Message)
+
+                    End Try
+                    
+
+                End If
+                
+            Else
+                Call MsgBox("bitte nur ein Projekt selektieren")
+
+            End If
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+
+
 
     End Sub
 
@@ -2987,7 +3116,7 @@ Imports System.Drawing
 
                 If Not projekthistorie Is Nothing Then
                     If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.name
+                        vglName = projekthistorie.First.getShapeText
                     End If
                 Else
                     projekthistorie = New clsProjektHistorie
@@ -2998,7 +3127,7 @@ Imports System.Drawing
                     variantName = .variantName
                 End With
 
-                If vglName.Trim <> pName.Trim Then
+                If vglName <> hproj.getShapeText Then
                     If request.pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -3388,13 +3517,13 @@ Imports System.Drawing
 
                         If Not projekthistorie Is Nothing Then
                             If projekthistorie.Count > 0 Then
-                                vglName = projekthistorie.First.name
+                                vglName = projekthistorie.First.getShapeText
                             End If
                         Else
                             projekthistorie = New clsProjektHistorie
                         End If
 
-                        If vglName.Trim <> pName.Trim Then
+                        If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                             projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -5271,7 +5400,7 @@ Imports System.Drawing
 
                         If Not projekthistorie Is Nothing Then
                             If projekthistorie.Count > 0 Then
-                                vglName = projekthistorie.First.name
+                                vglName = projekthistorie.First.getShapeText
                             End If
                         Else
                             projekthistorie = New clsProjektHistorie
@@ -5282,7 +5411,7 @@ Imports System.Drawing
                             variantName = .variantName
                         End With
 
-                        If vglName.Trim <> pName.Trim Then
+                        If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                             projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -5413,7 +5542,7 @@ Imports System.Drawing
 
                     If Not projekthistorie Is Nothing Then
                         If projekthistorie.Count > 0 Then
-                            vglName = projekthistorie.First.name
+                            vglName = projekthistorie.First.getShapeText
                         End If
                     Else
                         projekthistorie = New clsProjektHistorie
@@ -5424,7 +5553,7 @@ Imports System.Drawing
                         variantName = .variantName
                     End With
 
-                    If vglName.Trim <> pName.Trim Then
+                    If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -5605,13 +5734,13 @@ Imports System.Drawing
 
                     If Not projekthistorie Is Nothing Then
                         If projekthistorie.Count > 0 Then
-                            vglName = projekthistorie.First.name
+                            vglName = projekthistorie.First.getShapeText
                         End If
                     Else
                         projekthistorie = New clsProjektHistorie
                     End If
 
-                    If vglName.Trim <> pName.Trim Then
+                    If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -5711,13 +5840,13 @@ Imports System.Drawing
 
                 If Not projekthistorie Is Nothing Then
                     If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.name
+                        vglName = projekthistorie.First.getShapeText
                     End If
                 Else
                     projekthistorie = New clsProjektHistorie
                 End If
 
-                If vglName.Trim <> pName.Trim Then
+                If vglName <> hproj.getShapeText Then
                     If request.pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -5825,14 +5954,14 @@ Imports System.Drawing
 
                 If Not projekthistorie Is Nothing Then
                     If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.name
+                        vglName = projekthistorie.First.getShapeText
                     End If
 
                 Else
                     projekthistorie = New clsProjektHistorie
                 End If
 
-                If vglName.Trim <> pName.Trim Then
+                If vglName <> hproj.getShapeText Then
 
                     If request.pingMongoDb() Then
                         ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde

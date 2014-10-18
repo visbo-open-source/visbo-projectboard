@@ -83,7 +83,8 @@ Public Module awinGUI
 
         If isProjektCharakteristik And ProjektListe.Count = 1 Then
             pname = CStr(ProjektListe.Item(1))
-            tmpCollection.Add(pname & "#0")
+            hproj = ShowProjekte.getProject(pname)
+            tmpCollection.Add(hproj.getShapeText & "#0")
             kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
         Else
             kennung = calcChartKennung("pf", charttype, ProjektListe)
@@ -94,7 +95,7 @@ Public Module awinGUI
 
                 If isProjektCharakteristik Then
                     If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisiko) & " " & pname & vbLf
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisiko) & " " & hproj.getShapeText & vbLf
                         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
                     Else
@@ -111,7 +112,7 @@ Public Module awinGUI
 
                 If isProjektCharakteristik Then
                     If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & " " & pname & vbLf
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & " " & hproj.getShapeText & vbLf
                         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
                     Else
@@ -128,7 +129,7 @@ Public Module awinGUI
 
                 If isProjektCharakteristik Then
                     If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & " " & pname & vbLf
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & " " & hproj.getShapeText & vbLf
                         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
                     Else
@@ -144,7 +145,7 @@ Public Module awinGUI
             Case PTpfdk.FitRisikoVol
                 If isProjektCharakteristik Then
                     If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & " " & pname & vbLf
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & " " & hproj.getShapeText & vbLf
                         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
                     Else
@@ -161,7 +162,7 @@ Public Module awinGUI
                 ' neuer Typ: 8.3.14 Abhängigkeiten
                 If isProjektCharakteristik Then
                     If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Dependencies) & " " & pname & vbLf
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Dependencies) & " " & hproj.getShapeText & vbLf
                         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
                     Else
@@ -745,7 +746,14 @@ Public Module awinGUI
         tmpstr = chtobj.Name.Trim.Split(New Char() {CChar("#")}, 4)
         If tmpstr(0) = "pr" Then
             isSingleProject = True
-            projektListe.Add(tmpstr(2))
+            Dim komplett As String = tmpstr(2)
+            tmpstr = komplett.Split(New Char() {CChar("("), CChar(")")}, 4)
+            If tmpstr.Count > 1 Then
+                projektListe.Add(tmpstr(0))
+            Else
+                projektListe.Add(komplett)
+            End If
+
         Else
             isSingleProject = False
             Dim selectionType As Integer = -1 ' keine Einschränkung

@@ -151,6 +151,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
+    <Compile Include="frmCreateNewVariant.Designer.vb">
+      <DependentUpon>frmCreateNewVariant.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmCreateNewVariant.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmShowPlanElements.Designer.vb">
       <DependentUpon>frmShowPlanElements.vb</DependentUpon>
     </Compile>
@@ -261,6 +267,9 @@
     <Compile Include="ThisWorkbook.vb">
       <DependentUpon>Projectboard.xlsx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="frmCreateNewVariant.resx">
+      <DependentUpon>frmCreateNewVariant.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmDeleteProjects.resx">
       <DependentUpon>frmDeleteProjects.vb</DependentUpon>
     </EmbeddedResource>
