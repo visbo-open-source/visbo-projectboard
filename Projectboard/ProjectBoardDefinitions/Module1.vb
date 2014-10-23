@@ -42,7 +42,7 @@ Public Module Module1
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
     Public ImportProjekte As New clsProjekte
-    Public DeletedProjekte As New clsProjekte
+    'Public DeletedProjekte As New clsProjekte
     Public projectConstellations As New clsConstellations
     Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
@@ -397,11 +397,11 @@ Public Module Module1
             Try
                 hproj = ShowProjekte.getProject(pname)
                 key = calcProjektKey(hproj)
-                Try
-                    DeletedProjekte.Add(hproj)
-                Catch ex As Exception
-                    ' nichts tun, dann wurde das eben schon mal gelöscht ..
-                End Try
+                'Try
+                '    DeletedProjekte.Add(hproj)
+                'Catch ex As Exception
+                '    ' nichts tun, dann wurde das eben schon mal gelöscht ..
+                'End Try
 
             Catch ex As Exception
                 Call MsgBox(" Fehler in Delete " & pname & " , Modul: awinLoescheProjekt")
@@ -420,8 +420,8 @@ Public Module Module1
             AlleProjekte.Remove(key)
 
 
-            Dim abstand As Integer ' eigentlich nur Dummy Variable, wird aber in Tabelle2 benötigt ...
-            Call awinClkReset(abstand)
+            'Dim abstand As Integer ' eigentlich nur Dummy Variable, wird aber in Tabelle2 benötigt ...
+            'Call awinClkReset(abstand)
 
             ' ein Projekt wurde gelöscht bzw aus Showprojekte entfernt  - typus = 3
             Call awinNeuZeichnenDiagramme(3)
@@ -942,40 +942,12 @@ Public Module Module1
 
     'End Sub
 
-    Sub awinClkReset(abstand As Integer)
-        'Dim hproj As clsProjekt
-        'Dim tfz As Integer, tfs As Integer
-        'Dim plaenge As Integer
-        'Dim pcolor As Object = 0
-        'Dim failfree As Boolean = True
+    'Sub awinClkReset(abstand As Integer)
+
+    '    abstand = 0
 
 
-        'Exit Sub
-
-        'Call DeleteStartMarkers()
-
-        'If selectedProjects(1) <> "" Then
-        '    ' jetzt muss das bisher selektierte Projekt zurückgesetzt werden 
-        '    Try
-        '        hproj = ShowProjekte.getProject(selectedProjects(1))
-        '        With hproj
-        '            tfz = .tfZeile
-        '            tfs = .tfSpalte
-        '            plaenge = .Dauer
-        '            pcolor = .farbe
-        '        End With
-
-        '    Catch ex As Exception
-        '        failfree = False
-        '    End Try
-
-        'End If
-
-
-        abstand = 0
-
-
-    End Sub
+    'End Sub
 
 
 

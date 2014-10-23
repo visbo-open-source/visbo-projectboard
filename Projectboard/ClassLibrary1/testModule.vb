@@ -3266,166 +3266,172 @@ Public Module testModule
     End Function
 
 
-    Public Function RemoveSelectedProjectsfromDB(ByRef selectedToDelete As clsProjektDBInfos) As Integer
+    ' ''' <summary>
+    ' ''' alte Version: wird mit der Änderung vom 19.10 zum Löschen von Projekten, Varianten, Snapshots nicht mehr benötigt 
+    ' ''' </summary>
+    ' ''' <param name="selectedToDelete"></param>
+    ' ''' <returns></returns>
+    ' ''' <remarks></remarks>
+    'Public Function RemoveSelectedProjectsfromDB(ByRef selectedToDelete As clsProjektDBInfos) As Integer
 
 
-        Dim hproj As New clsProjekt
-        Dim jetzt As Date = Date.Now
-        'Dim zeitStempel As Date
-        Dim anzSelectedProj As Integer = 0
-        Dim anzDeletedProj As Integer = 0
-        Dim anzDeletedTS As Integer = 0
-        Dim anzElements As Integer
-        Dim found As Boolean = False
-        Dim iSel As Integer = 0
-        Dim key As String
+    '    Dim hproj As New clsProjekt
+    '    Dim jetzt As Date = Date.Now
+    '    'Dim zeitStempel As Date
+    '    Dim anzSelectedProj As Integer = 0
+    '    Dim anzDeletedProj As Integer = 0
+    '    Dim anzDeletedTS As Integer = 0
+    '    Dim anzElements As Integer
+    '    Dim found As Boolean = False
+    '    Dim iSel As Integer = 0
+    '    Dim key As String
 
-        Dim selCollection As SortedList(Of Date, String)
-        enableOnUpdate = False
-        Dim tmpstr(4) As String
+    '    Dim selCollection As SortedList(Of Date, String)
+    '    enableOnUpdate = False
+    '    Dim tmpstr(4) As String
 
-        Dim request As New Request(awinSettings.databaseName)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
+    '    Dim request As New Request(awinSettings.databaseName)
+    '    Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
 
-        If request.pingMongoDb() Then
+    '    If request.pingMongoDb() Then
 
-            If selectedToDelete.Count > 0 Then
+    '        If selectedToDelete.Count > 0 Then
 
-                anzSelectedProj = selectedToDelete.Count
-
-
-                For Each kvpSelToDel As KeyValuePair(Of String, SortedList(Of Date, String)) In selectedToDelete.Liste
-
-                    selCollection = selectedToDelete.getTimeStamps(kvpSelToDel.Key)
-                    anzElements = selCollection.Count
-
-                    'If AlleProjekte.ContainsKey(kvpSelToDel.Key) Then
-                    '    ' Projekt ist bereits im Hauptspeicher geladen
-                    '    hproj = AlleProjekte(kvpSelToDel.Key)
-                    'End If
-
-                    If Not projekthistorie Is Nothing Then
-                        projekthistorie.clear() ' alte Historie löschen
-                    Else
-                        projekthistorie = New clsProjektHistorie
-                    End If
-
-                    'tmpstr = title.Trim.Split(New Char() {"#"}, 4)
-                    tmpstr = kvpSelToDel.Key.Trim.Split(New Char() {CChar("#")}, 4)   ' Projektnamen aus key separieren
-
-                    projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=tmpstr(0), variantName:="", storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
-
-                    anzDeletedTS = 0    ' Anzahl gelöschter TimeStamps dieses Projekts
-
-                    For i = 1 To anzElements  ' Schleife über die zu löschenden TimeStamps dieses Projekts
-
-                        'Dim ms As Long = selCollection.ElementAt(i - 1).Key.Millisecond
-
-                        found = False
-                        iSel = 0
-
-                        While Not found
-                            hproj = projekthistorie.ElementAt(iSel)
-                            If hproj.timeStamp = selCollection.ElementAt(i - 1).Key Then
-                                found = True
-                            End If
-                            iSel = iSel + 1
-                        End While
-
-                        If requestTrash.storeProjectToDB(hproj) Then
-
-                            If request.deleteProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                                                                         storedEarliest:=selCollection.ElementAt(i - 1).Key, storedLatest:=selCollection.ElementAt(i - 1).Key) Then
-                                anzDeletedTS = anzDeletedTS + 1
-
-                            Else
-                                Call MsgBox("Fehler beim Löschen von " & hproj.name)
-                            End If
-
-                        Else
-                            Call MsgBox("Fehler beim Speichern von " & hproj.name & " im Papierkorb")
-                        End If
-
-                    Next i      'nächsten TimeStamp holen
+    '            anzSelectedProj = selectedToDelete.Count
 
 
-                    Call MsgBox("ok, " & anzDeletedTS & " TimeStamps zu Projekt " & hproj.name & " gelöscht")
+    '            For Each kvpSelToDel As KeyValuePair(Of String, SortedList(Of Date, String)) In selectedToDelete.Liste
 
-                    key = calcProjektKey(hproj)
-                    If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName) Then
-                        If AlleProjekte.Containskey(key) Then
-                            AlleProjekte.Remove(key)
-                            Try
-                                ShowProjekte.Remove(hproj.name)
-                            Catch ex As Exception
-                            End Try
-                        End If
-                    End If
+    '                selCollection = selectedToDelete.getTimeStamps(kvpSelToDel.Key)
+    '                anzElements = selCollection.Count
 
-                    anzDeletedProj = anzDeletedProj + 1
+    '                'If AlleProjekte.ContainsKey(kvpSelToDel.Key) Then
+    '                '    ' Projekt ist bereits im Hauptspeicher geladen
+    '                '    hproj = AlleProjekte(kvpSelToDel.Key)
+    '                'End If
 
-                Next
+    '                If Not projekthistorie Is Nothing Then
+    '                    projekthistorie.clear() ' alte Historie löschen
+    '                Else
+    '                    projekthistorie = New clsProjektHistorie
+    '                End If
 
-                'projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                '                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+    '                'tmpstr = title.Trim.Split(New Char() {"#"}, 4)
+    '                tmpstr = kvpSelToDel.Key.Trim.Split(New Char() {CChar("#")}, 4)   ' Projektnamen aus key separieren
 
-                'For Each kvpHist As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
+    '                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=tmpstr(0), variantName:="", storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
 
-                '    If kvpHist.Value.timeStamp = kvpSelToDel.Value.timeStamp Then
-                '        If requestTrash.storeProjectToDB(kvpHist.Value) Then
+    '                anzDeletedTS = 0    ' Anzahl gelöschter TimeStamps dieses Projekts
 
-                '            If request.deleteProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
-                '                                                 storedEarliest:=kvpHist.Value.timeStamp, storedLatest:=kvpHist.Value.timeStamp) Then
-                '                anzDeleted = anzDeleted + 1
-                '                'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
+    '                For i = 1 To anzElements  ' Schleife über die zu löschenden TimeStamps dieses Projekts
 
-                '            Else
-                '                Call MsgBox("Fehler beim Löschen von Projekt " & kvpSelToDel.Value.name & vbLf & kvpHist.Value.timeStamp.ToShortDateString)
-                '            End If
+    '                    'Dim ms As Long = selCollection.ElementAt(i - 1).Key.Millisecond
 
-                '        Else
+    '                    found = False
+    '                    iSel = 0
 
-                '            Call MsgBox("Fehler in Löschen von Projekt " & hproj.name)
-                '        End If
-                '    Else
-                '        ' Es ist nicht der richtige TimeStamp von hproj.name
+    '                    While Not found
+    '                        hproj = projekthistorie.ElementAt(iSel)
+    '                        If hproj.timeStamp = selCollection.ElementAt(i - 1).Key Then
+    '                            found = True
+    '                        End If
+    '                        iSel = iSel + 1
+    '                    End While
 
-                '    End If
+    '                    If requestTrash.storeProjectToDB(hproj) Then
 
+    '                        If request.deleteProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+    '                                                                     storedEarliest:=selCollection.ElementAt(i - 1).Key, storedLatest:=selCollection.ElementAt(i - 1).Key) Then
+    '                            anzDeletedTS = anzDeletedTS + 1
 
-                'Next kvpHist
+    '                        Else
+    '                            Call MsgBox("Fehler beim Löschen von " & hproj.name)
+    '                        End If
 
-                '    anzDeletedProj = anzDeletedProj + 1
-                '    'Call MsgBox("ok, Projekt '" & hproj.name & "' gelöscht!" & vbLf & hproj.timeStamp.ToShortDateString)
-                'End If
+    '                    Else
+    '                        Call MsgBox("Fehler beim Speichern von " & hproj.name & " im Papierkorb")
+    '                    End If
 
-                '    Catch ex As Exception
-
-                '    ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
-                '    Throw New ArgumentException("Fehler beim Löschen der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
-                '    'Exit Sub
-                'End Try
+    '                Next i      'nächsten TimeStamp holen
 
 
-            Else
-                'Call MsgBox("Es wurde kein Projekt selektiert")
-                ' die Anzahl selektierter und auch gespeicherter Projekte ist damit = 0
-                anzDeletedProj = anzSelectedProj
-                Return anzDeletedProj
-            End If
+    '                Call MsgBox("ok, " & anzDeletedTS & " TimeStamps zu Projekt " & hproj.name & " gelöscht")
 
-        Else
+    '                key = calcProjektKey(hproj)
+    '                If Not request.projectNameAlreadyExists(hproj.name, hproj.variantName) Then
+    '                    If AlleProjekte.Containskey(key) Then
+    '                        AlleProjekte.Remove(key)
+    '                        Try
+    '                            ShowProjekte.Remove(hproj.name)
+    '                        Catch ex As Exception
+    '                        End Try
+    '                    End If
+    '                End If
 
-            Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen")
+    '                anzDeletedProj = anzDeletedProj + 1
 
-        End If
+    '            Next
+
+    '            'projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+    '            '                                                 storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+
+    '            'For Each kvpHist As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
+
+    '            '    If kvpHist.Value.timeStamp = kvpSelToDel.Value.timeStamp Then
+    '            '        If requestTrash.storeProjectToDB(kvpHist.Value) Then
+
+    '            '            If request.deleteProjectHistoryFromDB(projectname:=hproj.name, variantName:=hproj.variantName, _
+    '            '                                                 storedEarliest:=kvpHist.Value.timeStamp, storedLatest:=kvpHist.Value.timeStamp) Then
+    '            '                anzDeleted = anzDeleted + 1
+    '            '                'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
+
+    '            '            Else
+    '            '                Call MsgBox("Fehler beim Löschen von Projekt " & kvpSelToDel.Value.name & vbLf & kvpHist.Value.timeStamp.ToShortDateString)
+    '            '            End If
+
+    '            '        Else
+
+    '            '            Call MsgBox("Fehler in Löschen von Projekt " & hproj.name)
+    '            '        End If
+    '            '    Else
+    '            '        ' Es ist nicht der richtige TimeStamp von hproj.name
+
+    '            '    End If
 
 
-        enableOnUpdate = True
+    '            'Next kvpHist
 
-        Return anzDeletedProj
+    '            '    anzDeletedProj = anzDeletedProj + 1
+    '            '    'Call MsgBox("ok, Projekt '" & hproj.name & "' gelöscht!" & vbLf & hproj.timeStamp.ToShortDateString)
+    '            'End If
 
-    End Function
+    '            '    Catch ex As Exception
+
+    '            '    ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
+    '            '    Throw New ArgumentException("Fehler beim Löschen der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+    '            '    'Exit Sub
+    '            'End Try
+
+
+    '        Else
+    '            'Call MsgBox("Es wurde kein Projekt selektiert")
+    '            ' die Anzahl selektierter und auch gespeicherter Projekte ist damit = 0
+    '            anzDeletedProj = anzSelectedProj
+    '            Return anzDeletedProj
+    '        End If
+
+    '    Else
+
+    '        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen")
+
+    '    End If
+
+
+    '    enableOnUpdate = True
+
+    '    Return anzDeletedProj
+
+    'End Function
 
     ' Prozedur zum Erzeugen einer Status Übersicht 
 

@@ -7292,58 +7292,50 @@ Public Module Projekte
     '
     '
     ''' <summary>
-    ''' löscht das angegebene Projekt mit Name vprojektName
+    ''' löscht das angegebene Projekt mit Name pName inkl all seiner Varianten 
     ''' </summary>
-    ''' <param name="vprojektname"></param>
-    ''' <param name="firstCall">
+    ''' <param name="pName"></param>
     ''' gibt an , ob es der erste Aufruf war
     ''' wenn ja, kommt erst der Bestätigungs-Dialog 
     ''' wenn nein, wird ohne Aufforderung zur Bestätigung gelöscht 
     ''' </param>
     ''' <remarks></remarks>
-    Public Sub awinDeleteChartorProject(ByVal vprojektname As String, ByVal firstCall As Boolean)
+    Public Sub awinDeleteProjectInSession(ByVal pName As String)
 
-        Dim abstand As Integer
-        Dim returnValue As DialogResult
+
         Dim bestaetigeLoeschen As New frmconfirmDeletePrj
         Dim zeile As Integer
         Dim hproj As clsProjekt
         Dim anzahlZeilen As Integer
 
+        Dim formerEOU As Boolean = enableOnUpdate
         enableOnUpdate = False
-        hproj = ShowProjekte.getProject(vprojektname)
+
+        hproj = ShowProjekte.getProject(pName)
         anzahlZeilen = getNeededSpace(hproj)
 
-        If firstCall Then
-            returnValue = bestaetigeLoeschen.ShowDialog
 
-            If returnValue = DialogResult.OK Then
 
-                zeile = hproj.tfZeile
-                Call awinLoescheProjekt(vprojektname)
-                Call awinClkReset(abstand)
+        If ShowProjekte.contains(pName) Then
 
-                ' ein Projekt wurde gelöscht  - typus = 3
-                Call awinNeuZeichnenDiagramme(3)
+            ' Aktuelle Konstellation ändert sich dadurch
+            currentConstellation = ""
 
-                Call moveShapesUp(zeile, anzahlZeilen)
-            Else
-                Throw New ArgumentException("Abbruch")
-            End If
-
-        Else
             zeile = hproj.tfZeile
-            Call awinLoescheProjekt(vprojektname)
-            Call awinClkReset(abstand)
 
-            ' ein Projekt wurde gelöscht  - typus = 3
-            Call awinNeuZeichnenDiagramme(3)
+            ' Shape wird gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
+            Call clearProjektinPlantafel(pName)
+
+            ShowProjekte.Remove(pName)
+
+            ' in der Projekt-Tafel den Platz nutzen ... 
             Call moveShapesUp(zeile, anzahlZeilen)
+
         End If
 
 
-
-        enableOnUpdate = True
+        AlleProjekte.RemoveAllVariantsOf(pName)
+        enableOnUpdate = formerEOU
 
     End Sub
 
@@ -7953,8 +7945,8 @@ Public Module Projekte
 
 
 
-            Dim abstand As Integer ' eigentlich nur Dummy Variable, wird aber in Tabelle2 benötigt ...
-            Call awinClkReset(abstand)
+            'Dim abstand As Integer ' eigentlich nur Dummy Variable, wird aber in Tabelle2 benötigt ...
+            'Call awinClkReset(abstand)
 
             ' ein Projekt wurde gelöscht bzw aus Showprojekte entfernt  - typus = 3
             Call awinNeuZeichnenDiagramme(3)
@@ -12630,56 +12622,56 @@ Public Module Projekte
 
 
 
-    ''' <summary>
-    ''' speichert alle Projekte, die aktuell in Show- bzw NoShow sind
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub awinExportAllProjects()
-        '
-        Dim dateinameQ As String, dateinameZ As String
+    ' ''' <summary>
+    ' ''' speichert alle Projekte, die aktuell in Show- bzw NoShow sind
+    ' ''' </summary>
+    ' ''' <remarks></remarks>
+    'Public Sub awinExportAllProjects()
+    '    '
+    '    Dim dateinameQ As String, dateinameZ As String
 
 
-        appInstance.ScreenUpdating = False
-        Try
-            ' hier muss jetzt das File Projekt Detail aufgemacht werden ...
-            appInstance.Workbooks.Open(awinPath & projektAustausch)
+    '    appInstance.ScreenUpdating = False
+    '    Try
+    '        ' hier muss jetzt das File Projekt Detail aufgemacht werden ...
+    '        appInstance.Workbooks.Open(awinPath & projektAustausch)
 
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+    '        For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
 
-                Try
+    '            Try
 
-                    Call awinExportProject(kvp.Value)
+    '                Call awinExportProject(kvp.Value)
 
-                Catch ex As Exception
+    '            Catch ex As Exception
 
-                End Try
-
-
-            Next kvp
-
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In DeletedProjekte.Liste
-                dateinameQ = awinPath & projektFilesOrdner & "\" & kvp.Key & ".xlsm"
-                dateinameZ = awinPath & deletedFilesOrdner & "\" & kvp.Key & ".xlsm"
-                Try
-                    My.Computer.FileSystem.MoveFile(dateinameQ, dateinameZ, True)
-                Catch ex As Exception
-
-                End Try
+    '            End Try
 
 
-            Next kvp
+    '        Next kvp
 
-        Catch ex As Exception
-            Call MsgBox(ex.Message)
-            Throw New ArgumentException("Abbruch - es konnten nicht ale Projekte gesichert werden ...")
-            Exit Sub
-        End Try
+    '        For Each kvp As KeyValuePair(Of String, clsProjekt) In DeletedProjekte.Liste
+    '            dateinameQ = awinPath & projektFilesOrdner & "\" & kvp.Key & ".xlsm"
+    '            dateinameZ = awinPath & deletedFilesOrdner & "\" & kvp.Key & ".xlsm"
+    '            Try
+    '                My.Computer.FileSystem.MoveFile(dateinameQ, dateinameZ, True)
+    '            Catch ex As Exception
 
-        appInstance.ActiveWorkbook.Close(SaveChanges:=False)  'UR:06.05.2014 PROJEKTSteckbrief darf nicht geändert werden
-        appInstance.ScreenUpdating = True
+    '            End Try
 
-    End Sub
+
+    '        Next kvp
+
+    '    Catch ex As Exception
+    '        Call MsgBox(ex.Message)
+    '        Throw New ArgumentException("Abbruch - es konnten nicht ale Projekte gesichert werden ...")
+    '        Exit Sub
+    '    End Try
+
+    '    appInstance.ActiveWorkbook.Close(SaveChanges:=False)  'UR:06.05.2014 PROJEKTSteckbrief darf nicht geändert werden
+    '    appInstance.ScreenUpdating = True
+
+    'End Sub
 
 
     Public Sub awinExportProject(hproj As clsProjekt)
@@ -14674,6 +14666,69 @@ Public Module Projekte
             calcProjektKey = .name & trennzeichen & .variantName
 
         End With
+
+
+    End Function
+
+    ''' <summary>
+    ''' errechnet den für Projekt-Varinte in der MongoDB verwendeten Schlüssel
+    ''' ist aus historischen Gründen etwas anders als der Schlüssel in AlleProjekte 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcProjektKeyDB(ByVal hproj As clsProjekt) As String
+
+        Dim tmpName As String
+        With hproj
+
+
+            ' Konsistenzbedingungen gewährleisten
+            If IsNothing(.name) Then
+                Throw New ArgumentException("Projekt-Name kann nicht Nothing sein")
+            ElseIf .name.Length < 2 Then
+                Throw New ArgumentException("Projekt-Name muss mindestens zwei Zeichen lang sein: " & .name)
+            ElseIf IsNothing(.variantName) Then
+                .variantName = ""
+            End If
+
+            If hproj.variantName <> "" And hproj.variantName.Trim.Length > 0 Then
+                tmpName = calcProjektKey(hproj)
+            Else
+                tmpName = .name
+            End If
+
+            calcProjektKeyDB = tmpName
+
+        End With
+
+
+    End Function
+
+    Public Function calcProjektKeyDB(ByVal pName As String, ByVal vName As String) As String
+
+        Dim tmpName As String
+
+
+
+        ' Konsistenzbedingungen gewährleisten
+        If IsNothing(pName) Then
+            Throw New ArgumentException("Projekt-Name kann nicht Nothing sein")
+        ElseIf pName.Length < 2 Then
+            Throw New ArgumentException("Projekt-Name muss mindestens zwei Zeichen lang sein: " & pName)
+        ElseIf IsNothing(vName) Then
+            vName = ""
+        End If
+
+        If vName <> "" And vName.Trim.Length > 0 Then
+            tmpName = calcProjektKey(pName, vName)
+        Else
+            tmpName = pName
+        End If
+
+        calcProjektKeyDB = tmpName
+
+
 
 
     End Function

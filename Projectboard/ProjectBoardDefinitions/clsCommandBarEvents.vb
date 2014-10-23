@@ -552,7 +552,7 @@ Public Class clsCommandBarEvents
                         Try
                             ShowProjekte.Remove(pname)
                             AlleProjekte.Remove(key)
-                            DeletedProjekte.Add(hproj)
+                            'DeletedProjekte.Add(hproj)
                         Catch ex1 As Exception
 
                         End Try

@@ -86,8 +86,8 @@ Public Class clsEventsPfCharts
                 End If
             End With
 
-            Dim abstand As Integer
-            Call awinClkReset(abstand)
+            'Dim abstand As Integer
+            'Call awinClkReset(abstand)
             Dim calledFromPf As Boolean = True
             Call awinSelectProjectiST(pname, calledFromPf)
 

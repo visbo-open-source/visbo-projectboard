@@ -97,6 +97,7 @@ Public Class clsProjekteAlle
         End Get
     End Property
 
+
     ''' <summary>
     ''' gibt die Namen der existierenden Varianten in einer Liste zurück 
     ''' die "leere" Variante wird als () zurückgegeben , alle anderen Varianten als (Variante-Name)
@@ -140,7 +141,45 @@ Public Class clsProjekteAlle
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die Anzahl Varianten für den übergebenen pName an 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getVariantZahl(ByVal pName As String) As Integer
+        Get
+            Dim anzahl As Integer = 0
+            Dim i As Integer = 0
+            Dim found As Boolean = False
+            
+            ' Positioniere i auf das erste Vorkommen von pName in der Liste 
+            While i < _allProjects.Count And Not found
+                If _allProjects.ElementAt(i).Value.name = pName Then
+                    found = True
+                    anzahl = anzahl + 1
+                End If
+                i = i + 1
 
+            End While
+
+            ' zähle alle weiteren Vorkommnisse
+            While i < _allProjects.Count And found
+
+                If _allProjects.ElementAt(i).Value.name = pName Then
+                    anzahl = anzahl + 1
+                Else
+                    found = False
+                End If
+
+                i = i + 1
+            End While
+
+            getVariantZahl = anzahl
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt die Liste der unterschiedlichen Projekt-Namen zurück
@@ -189,6 +228,38 @@ Public Class clsProjekteAlle
         If _allProjects.ContainsKey(key) Then
             _allProjects.Remove(key)
         End If
+
+    End Sub
+
+    ''' <summary>
+    ''' entfernt alle Projekt-Varianten mit ProjektNamen = pName
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <remarks></remarks>
+    Public Sub RemoveAllVariantsOf(ByVal pName As String)
+
+        Dim i As Integer = 0
+        Dim found As Boolean = False
+
+        ' Positioniere i auf das erste Vorkommen von pName in der Liste 
+        While i < _allProjects.Count And Not found
+            If _allProjects.ElementAt(i).Value.name = pName Then
+                found = True
+            Else
+                i = i + 1
+            End If
+        End While
+
+        ' Lösche alle Varianten mit ProjektName = pName 
+        While found
+
+            If _allProjects.ElementAt(i).Value.name = pName Then
+                _allProjects.RemoveAt(i)
+            Else
+                found = False
+            End If
+
+        End While
 
     End Sub
 

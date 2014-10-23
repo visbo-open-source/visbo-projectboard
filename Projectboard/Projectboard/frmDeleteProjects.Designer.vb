@@ -56,6 +56,7 @@ Partial Class frmDeleteProjects
         Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmDeleteProjects"
         Me.Text = "Projekte löschen"
+        Me.TopMost = True
         Me.ResumeLayout(False)
 
     End Sub

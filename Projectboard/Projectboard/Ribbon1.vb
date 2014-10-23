@@ -303,14 +303,14 @@ Imports System.Drawing
         Try
 
             With deleteProjects
-                .Text = "Projekte löschen"
+                .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
                 .aKtionskennung = PTtvactions.delFromDB
             End With
 
             returnValue = deleteProjects.ShowDialog
 
             If returnValue = DialogResult.OK Then
-                deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+                'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
             Else
                 ' returnValue = DialogResult.Cancel
@@ -322,19 +322,7 @@ Imports System.Drawing
             Call MsgBox(ex.Message)
         End Try
 
-        Call awinDeSelect()
-
-
-        appInstance.ScreenUpdating = False
-        'Call diagramsVisible(False)
-        Call awinClearPlanTafel()
-        Call awinZeichnePlanTafel()
-        Call awinNeuZeichnenDiagramme(2)
-        'Call diagramsVisible(True)
-        appInstance.ScreenUpdating = True
-
-        ' projekthistorie zurücksetzen - kann jetzt anders sein
-        projekthistorie.clear()
+        
 
     End Sub
 
@@ -897,6 +885,45 @@ Imports System.Drawing
 
         enableOnUpdate = True
 
+
+
+    End Sub
+
+    ''' <summary>
+    ''' aktiviert die selektierte Variante 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT2VarianteAktiv(control As IRibbonControl)
+
+        Dim deletedProj As Integer = 0
+        'Dim returnValue As DialogResult
+
+        Dim activateVariant As New frmDeleteProjects
+
+        Try
+
+            With activateVariant
+                .Text = "Variante aktivieren"
+                .aKtionskennung = PTtvactions.activateV
+                .SubmitButton.Visible = False
+            End With
+
+            'returnValue = activateVariant.ShowDialog
+            activateVariant.Show()
+
+            'If returnValue = DialogResult.OK Then
+            '    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+
+            'Else
+            '    ' returnValue = DialogResult.Cancel
+
+            'End If
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
 
 
     End Sub
@@ -1574,6 +1601,7 @@ Imports System.Drawing
         Dim bestaetigeLoeschen As New frmconfirmDeletePrj
         Dim singleShp As Excel.Shape
         Dim awinSelection As Excel.ShapeRange
+        Dim returnValue As DialogResult
 
         Call projektTafelInit()
 
@@ -1591,8 +1619,21 @@ Imports System.Drawing
 
         If Not awinSelection Is Nothing Then
 
+
+            returnValue = bestaetigeLoeschen.ShowDialog
+
+            If returnValue = DialogResult.Cancel Then
+
+                enableOnUpdate = True
+                Exit Sub
+
+            End If
+
+
+
             ' jetzt die Aktion durchführen ...
-            Dim firstCall As Boolean = True
+
+
             For Each singleShp In awinSelection
 
 
@@ -1603,8 +1644,8 @@ Imports System.Drawing
                     If isProjectType(shapeArt) Then
 
                         Try
-                            Call awinDeleteChartorProject(vprojektname:=.Name, firstCall:=firstCall)
-                            firstCall = False
+                            Call awinDeleteProjectInSession(pName:=.Name)
+
                         Catch ex As Exception
                             Exit For
                         End Try
@@ -1615,8 +1656,45 @@ Imports System.Drawing
 
             Next
 
+            ' ein oder mehrere Projekte wurden gelöscht  - typus = 3
+            Call awinNeuZeichnenDiagramme(3)
+
         Else
-            Call MsgBox("vorher Projekt selektieren ...")
+
+            Dim deletedProj As Integer = 0
+
+            If AlleProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte geladen !")
+            Else
+
+                Dim deleteProjects As New frmDeleteProjects
+                Try
+
+                    With deleteProjects
+                        .Text = "Projekte, Varianten aus der Session löschen"
+                        .aKtionskennung = PTtvactions.delFromSession
+                    End With
+
+                    returnValue = deleteProjects.ShowDialog
+
+                    If returnValue = DialogResult.OK Then
+
+                        'Call MsgBox("ok, aus Session gelöscht  !")
+
+                    Else
+                        ' returnValue = DialogResult.Cancel
+
+                    End If
+
+                Catch ex As Exception
+
+                    Call MsgBox(ex.Message)
+                End Try
+
+            End If
+
+            
+
         End If
 
         Call awinDeSelect()

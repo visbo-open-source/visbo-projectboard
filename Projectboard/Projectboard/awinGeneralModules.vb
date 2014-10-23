@@ -735,8 +735,7 @@ Public Module awinGeneralModules
 
 
         If showRangeLeft <> von Or showRangeRight <> bis Or _
-            AlleProjekte.Count = 0 Or _
-            DeletedProjekte.Count > 0 Then
+            AlleProjekte.Count = 0 Then
 
 
             '
@@ -764,8 +763,8 @@ Public Module awinGeneralModules
 
                     Call awinProjekteImZeitraumLaden(awinSettings.databaseName)
 
-                    ' jetzt sind wieder alle Projekte des Zeitraums da - deswegen muss nicht ggf nachgeladen werden 
-                    DeletedProjekte.Clear()
+                    '' jetzt sind wieder alle Projekte des Zeitraums da - deswegen muss nicht ggf nachgeladen werden 
+                    'DeletedProjekte.Clear()
 
                     '
                     '   wenn "selectedRoleNeeds" ungleich Null ist, werden Bedarfe angezeigt - die müssen hier wieder - mit den neuen Daten für show_range_lefet, .._right eingeblendet werden
@@ -2431,40 +2430,175 @@ Public Module awinGeneralModules
     ''' <param name="pname">Projektname</param>
     ''' <param name="variantName">Variantenname</param>
     ''' <remarks></remarks>
-    Public Sub deleteCompleteProjectVariant(ByVal pname As String, ByVal variantName As String)
+    Public Sub deleteCompleteProjectVariant(ByVal pname As String, ByVal variantName As String, ByVal kennung As Integer)
 
-        Dim request As New Request(awinSettings.databaseName)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
 
-        If Not projekthistorie Is Nothing Then
-            projekthistorie.clear() ' alte Historie löschen
-        End If
+        If kennung = PTtvactions.delFromDB Then
 
-        projekthistorie.liste = request.retrieveProjectHistoryFromDB _
-                                (projectname:=pname, variantName:=variantName, _
-                                 storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
+            Dim request As New Request(awinSettings.databaseName)
+            Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
 
-        ' Speichern im Papierkorb 
-        For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
-            If requestTrash.storeProjectToDB(kvp.Value) Then
-            Else
-                ' es ging etwas schief
-                Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
-                            kvp.Value.name & ", " & kvp.Value.timeStamp.ToShortDateString)
+            If Not projekthistorie Is Nothing Then
+                projekthistorie.clear() ' alte Historie löschen
             End If
-        Next
 
-        ' jetzt alle Timestamps in der Datenbank löschen 
-        If request.deleteProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
-                                              storedEarliest:=projekthistorie.First.timeStamp, _
-                                              storedLatest:=projekthistorie.Last.timeStamp) Then
+            projekthistorie.liste = request.retrieveProjectHistoryFromDB _
+                                    (projectname:=pname, variantName:=variantName, _
+                                     storedEarliest:=Date.MinValue, storedLatest:=Date.Now)
 
-        Else
-            Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName)
+            ' Speichern im Papierkorb 
+            For Each kvp As KeyValuePair(Of Date, clsProjekt) In projekthistorie.liste
+                If requestTrash.storeProjectToDB(kvp.Value) Then
+                Else
+                    ' es ging etwas schief
+                    Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
+                                kvp.Value.name & ", " & kvp.Value.timeStamp.ToShortDateString)
+                End If
+            Next
+
+            ' jetzt alle Timestamps in der Datenbank löschen 
+            If request.deleteProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
+                                                  storedEarliest:=projekthistorie.First.timeStamp, _
+                                                  storedLatest:=projekthistorie.Last.timeStamp) Then
+
+            Else
+                Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName)
+            End If
+
+
+        ElseIf kennung = PTtvactions.delFromSession Then
+
+            ' eine einzelne Variante kann nur gelöscht werden, wenn 
+            ' es sich weder um die variantName = "" noch um die aktuell gezeigte Variante handelt 
+
+            Dim hproj As clsProjekt
+            Try
+                hproj = ShowProjekte.getProject(pname)
+            Catch ex As Exception
+                hproj = Nothing
+            End Try
+
+            If IsNothing(hproj) Or hproj.variantName <> variantName Then
+                Dim key As String = calcProjektKey(pname, variantName)
+                AlleProjekte.Remove(key)
+
+            Else
+                If variantName = "" Then
+
+                    Call MsgBox("die Basis Variante kann nicht gelöscht werden")
+
+                ElseIf hproj.variantName = variantName Then
+                    ' es wird die Stand-Variante aktiviert 
+                    Dim stdProj As clsProjekt
+                    Dim stdkey As String = calcProjektKey(pname, "")
+
+                    Dim key As String = calcProjektKey(pname, variantName)
+
+                    Try
+                        stdProj = AlleProjekte.Item(stdkey)
+
+                        ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
+                        ShowProjekte.Remove(hproj.name)
+
+                        ' die gewählte Variante wird rausgenommen
+                        AlleProjekte.Remove(key)
+
+                        ' die Standard Variante wird aufgenommen
+                        ShowProjekte.Add(stdProj)
+
+                        Call clearProjektinPlantafel(pname)
+
+                        ' neu zeichnen des Projekts 
+                        Dim tmpCollection As New Collection
+                        Call ZeichneProjektinPlanTafel(tmpCollection, stdProj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
+
+                    Catch ex As Exception
+
+                    End Try
+
+                Else
+                    Call MsgBox("Fehler beim Löschen der Variante")
+                End If
+            End If
+
+
+
         End If
 
 
     End Sub
+
+    ''' <summary>
+    ''' aktiviert die angegebene Projekt-Variante und zeichnet das entsprechende Shape in der Projekt-Tafel 
+    ''' selektiert ggf das Shape, um die Aktualisierung gleich durchzuführen 
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="newVariant"></param>
+    ''' <remarks></remarks>
+    Sub replaceProjectVariant(ByVal pname As String, ByVal newVariant As String, ByVal selectIT As Boolean)
+
+        Dim newProj As clsProjekt
+        Dim hproj As clsProjekt
+        Dim key As String = calcProjektKey(pname, newVariant)
+        Dim tfzeile As Integer
+
+
+
+
+
+        
+        ' gibt es die neue Variante überhaupt ? 
+        If AlleProjekte.Containskey(key) Then
+            newProj = AlleProjekte.Item(key)
+
+            ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
+            If ShowProjekte.contains(pname) Then
+                hproj = ShowProjekte.getProject(pname)
+
+                ' prüfen, ob es überhaupt eine andere Variante ist 
+                If hproj.variantName = newVariant Then
+                    Exit Sub
+                End If
+
+                tfzeile = hproj.tfZeile
+
+                ' Projekt aus Showprojekte rausnehmen
+                ShowProjekte.Remove(pname)
+
+                ' die Darstellung in der Projekt-Tafel löschen
+                Call clearProjektinPlantafel(pname)
+
+            End If
+
+
+            ' die  Variante wird aufgenommen
+            ShowProjekte.Add(newProj)
+
+            ' neu zeichnen des Projekts 
+            Dim tmpCollection As New Collection
+            Call ZeichneProjektinPlanTafel(tmpCollection, newProj.name, tfzeile, tmpCollection, tmpCollection)
+
+            If selectIT Then
+
+                Try
+                    CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(newProj.name).Select()
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
+        Else
+            Throw New ArgumentException("Projektvariante existiert nicht")
+        End If
+
+
+
+
+
+    End Sub
+
 
     ''' <summary>
     ''' löscht den angegebenen timestamp von pname#variantname aus der Datenbank
@@ -2476,7 +2610,7 @@ Public Module awinGeneralModules
     ''' <param name="first"></param>
     ''' <remarks></remarks>
     Public Sub deleteProjectVariantTimeStamp(ByVal pname As String, ByVal variantName As String, _
-                                                  ByVal timeStamp As Date, ByVal first As Boolean)
+                                                  ByVal timeStamp As Date, ByRef first As Boolean)
 
         Dim request As New Request(awinSettings.databaseName)
         Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
@@ -2491,19 +2625,25 @@ Public Module awinGeneralModules
         End If
 
 
-        ' Speichern im Papierkorb
+
         hproj = projekthistorie.ElementAtorBefore(timeStamp)
+
+        If DateDiff(DateInterval.Second, timeStamp, hproj.timeStamp) <> 0 Then
+            Call MsgBox("hier ist was faul" & timeStamp.ToShortDateString & vbLf & _
+                         hproj.timeStamp.ToShortDateString)
+        End If
+        timeStamp = hproj.timeStamp
 
         If IsNothing(hproj) Then
             Call MsgBox("Timestamp " & timeStamp.ToShortDateString & vbLf & _
                         "zu Projekt " & projekthistorie.First.getShapeText & " nicht gefunden")
 
         Else
+            ' Speichern im Papierkorb, dann löschen
             If requestTrash.storeProjectToDB(hproj) Then
-                If request.deleteProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
-                                      storedEarliest:=timeStamp, _
-                                      storedLatest:=timeStamp) Then
-
+                If request.deleteProjectTimestampFromDB(projectname:=pname, variantName:=variantName, _
+                                      stored:=timeStamp) Then
+                    'Call MsgBox("ok, gelöscht")
                 Else
                     Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName & ", " & _
                                 timeStamp.ToShortDateString)

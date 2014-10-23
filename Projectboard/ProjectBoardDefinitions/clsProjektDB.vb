@@ -54,11 +54,8 @@
 
             ' wenn es einen Varianten-Namen gibt, wird als Datenbank Name 
             ' .name = calcprojektkey(projekt) abgespeichert; das macht das Auslesen später effizienter 
-            If projekt.variantName <> "" And projekt.variantName.Trim.Length > 0 Then
-                Me.name = calcProjektKey(projekt)
-            Else
-                Me.name = .name
-            End If
+
+            Me.name = calcProjektKeyDB(projekt)
 
             Me.variantName = .variantName
             Me.Risiko = .Risiko
