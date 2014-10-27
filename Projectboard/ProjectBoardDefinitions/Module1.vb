@@ -264,6 +264,8 @@ Public Module Module1
         delFromSession = 1
         loadPVS = 2
         activateV = 3
+        definePortfolioDB = 4
+        definePortfolioSE = 5
     End Enum
 
    

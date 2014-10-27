@@ -53,11 +53,11 @@ Imports System.Drawing
 
         Dim storeConstellationFrm As New frmStoreConstellation
         Dim returnValue As DialogResult
-        Dim constellationName As String
+        'Dim constellationName As String
         Dim speichernDatenbank As String = "Pt5G2B1"
         Dim request As New Request(awinSettings.databaseName)
 
-
+        Dim newConstellationForm As New frmProjPortfolioAdmin
         
 
 
@@ -73,22 +73,53 @@ Imports System.Drawing
             End If
         End If
 
-        If AlleProjekte.Count > 0 Then
-            returnValue = storeConstellationFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Portfolios
+        Try
+
+            With newConstellationForm
+                .Text = "Portfolio erstellen bzw. ändern"
+                .portfolioName.Text = currentConstellation
+                .portfolioName.Visible = True
+                .Label1.Visible = True
+                .aKtionskennung = PTtvactions.definePortfolioSE
+            End With
+
+            returnValue = newConstellationForm.ShowDialog
 
             If returnValue = DialogResult.OK Then
-                constellationName = storeConstellationFrm.ComboBox1.Text
+                'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
-                Call awinStoreConstellation(constellationName)
-
-                ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
-                currentConstellation = constellationName
+            Else
+                ' returnValue = DialogResult.Cancel
 
             End If
-        Else
-            Call MsgBox("Es sind keine Projekte in der Projekt-Tafel geladen!")
-        End If
 
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
+
+        '
+        ' alte Version ; vor dem 26.10.14
+        '
+        'If AlleProjekte.Count > 0 Then
+        '    returnValue = storeConstellationFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Portfolios
+
+        '    If returnValue = DialogResult.OK Then
+        '        constellationName = storeConstellationFrm.ComboBox1.Text
+
+        '        Call awinStoreConstellation(constellationName)
+
+        '        ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
+        '        currentConstellation = constellationName
+
+        '    End If
+        'Else
+        '    Call MsgBox("Es sind keine Projekte in der Projekt-Tafel geladen!")
+        'End If
+        ' 
+        ' Ende alte Version; vor dem 26.10.14
+        '
         enableOnUpdate = True
 
     End Sub

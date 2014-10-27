@@ -13,7 +13,6 @@ Public Class frmDeleteProjects
     Private stopRecursion As Boolean = False
     ' wird an der aufrufenden Stelle gesetzt; steuert, was mit den ausgewählten ELementen geschieht
     Friend aKtionskennung As Integer
-    'Friend selectedItems As New clsProjektDBInfos
 
     
     Private Sub frmDeleteProjects_FormClosed(sender As Object, e As EventArgs) Handles Me.FormClosed
@@ -28,7 +27,15 @@ Public Class frmDeleteProjects
 
     Private Sub frmDeleteProjects_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        Call buildTreeview()
+        If frmCoord(PTfrm.eingabeProj, PTpinfo.top) > 0 Then
+            Me.Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
+        End If
+
+        If frmCoord(PTfrm.eingabeProj, PTpinfo.left) > 0 Then
+            Me.Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
+        End If
+
+        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung)
 
     End Sub
 
@@ -238,6 +245,16 @@ Public Class frmDeleteProjects
 
 
     End Sub
+
+    Private Sub TreeViewProjekte_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjekte.AfterSelect
+
+        Dim node As TreeNode = e.Node
+
+        If node.IsSelected Then
+            node.Expand()
+        End If
+
+    End Sub
     
     Private Sub TreeViewProjekte_BeforeExpand(sender As Object, e As Windows.Forms.TreeViewCancelEventArgs) Handles TreeViewProjekte.BeforeExpand
 
@@ -250,7 +267,7 @@ Public Class frmDeleteProjects
         Dim hliste As SortedList(Of Date, String)
         Dim nodeLevel As Integer
         Dim variantListe As Collection
-        Dim hproj As clsProjekt
+        Dim hproj As New clsProjekt
 
 
 
@@ -266,7 +283,10 @@ Public Class frmDeleteProjects
                 variantListe = aktuelleGesamtListe.getVariantNames(projName)
 
                 ' hproj wird benötigt, um herauszufinden, welche Variante gerade aktiv ist
-                hproj = ShowProjekte.getProject(projName)
+                If aKtionskennung = PTtvactions.activateV Then
+                    hproj = ShowProjekte.getProject(projName)
+                End If
+
 
                 ' Löschen von Platzhalter
                 node.Nodes.Clear()
@@ -303,9 +323,11 @@ Public Class frmDeleteProjects
                 Next
 
                 node.Tag = "X"
-                'If node.IsSelected Then
-                '    node.Expand()
-                'End If
+
+                If node.IsSelected Then
+                    node.Expand()
+                End If
+
             End If
 
 
@@ -359,9 +381,9 @@ Public Class frmDeleteProjects
                             nodeTimeStamp.Checked = node.Checked
                         Next kvp1
 
-                        'If node.IsSelected Then
-                        '    node.Expand()
-                        'End If
+                        If node.IsSelected Then
+                            node.Expand()
+                        End If
                     Else
 
                         If projekthistorie.Count = 0 Then
@@ -407,118 +429,7 @@ Public Class frmDeleteProjects
 
     End Function
 
-    ''' <summary>
-    ''' baut den aktuell gültigen Treeview auf  
-    ''' </summary>
-    ''' <remarks></remarks>
-    Private Sub buildTreeview()
-
-        Dim nodeLevel0 As TreeNode
-        Dim nodeLevel1 As TreeNode
-        Dim zeitraumVon As Date = StartofCalendar
-        Dim zeitraumbis As Date = StartofCalendar.AddYears(20)
-        Dim storedHeute As Date = Now
-        Dim storedGestern As Date = StartofCalendar
-        Dim pname As String = ""
-        Dim variantName As String = ""
-        Dim loadErrorMsg As String = ""
-
-
-        Dim deletedProj As Integer = 0
-
-
-        Dim request As New Request(awinSettings.databaseName)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
-
-        ' alles zurücksetzen 
-        projektHistorien.clear()
-
-        With TreeViewProjekte
-            .Nodes.Clear()
-        End With
-
-        ' Alle Projekte aus DB
-        ' projekteInDB = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-
-        Select Case aKtionskennung
-
-            Case PTtvactions.delFromDB
-                pname = ""
-                variantName = ""
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-                loadErrorMsg = "es gibt keine Projekte in der Datenbank"
-
-            Case PTtvactions.delFromSession
-                aktuelleGesamtListe = AlleProjekte
-                loadErrorMsg = "es sind keine Projekte geladen"
-
-            Case PTtvactions.loadPVS
-                pname = ""
-                variantName = ""
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-                loadErrorMsg = "es gibt keine Projekte in der Datenbank"
-
-            Case PTtvactions.activateV
-                aktuelleGesamtListe = AlleProjekte
-                loadErrorMsg = "es sind keine Projekte geladen"
-
-        End Select
-
-
-        If aktuelleGesamtListe.Count > 1 Then
-
-            With TreeViewProjekte
-
-                .CheckBoxes = True
-
-                Dim projektliste As Collection = aktuelleGesamtListe.getProjectNames
-                Dim showPname As Boolean
-
-                For Each pname In projektliste
-
-                    showPname = True
-
-                    ' im Falle activate Variante: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
-                    If aKtionskennung = PTtvactions.activateV Then
-                        If aktuelleGesamtListe.getVariantZahl(pname) = 1 Then
-                            showPname = False
-                        End If
-                    End If
-
-                    If showPname Then
-
-                        nodeLevel0 = .Nodes.Add(pname)
-
-                        ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
-                        If aKtionskennung = PTtvactions.delFromSession Or _
-                            aKtionskennung = PTtvactions.activateV Then
-                            If aktuelleGesamtListe.getVariantZahl(pname) > 1 Then
-                                nodeLevel0.Tag = "P"
-                                nodeLevel1 = nodeLevel0.Nodes.Add("()")
-                                nodeLevel1.Tag = "P"
-
-                            Else
-                                nodeLevel0.Tag = "X"
-                            End If
-                        Else
-                            nodeLevel0.Tag = "P"
-                            nodeLevel1 = nodeLevel0.Nodes.Add("()")
-                            nodeLevel1.Tag = "P"
-                        End If
-                    End If
-                    
-
-
-                Next
-
-
-            End With
-        Else
-            Call MsgBox(loadErrorMsg)
-        End If
-
-
-    End Sub
+    
 
 
     ''' <summary>
@@ -636,6 +547,8 @@ Public Class frmDeleteProjects
 
 
     End Sub
+
+   
 
 
 End Class

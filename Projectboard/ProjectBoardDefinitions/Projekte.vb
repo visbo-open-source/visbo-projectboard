@@ -7294,7 +7294,7 @@ Public Module Projekte
     ''' <summary>
     ''' löscht das angegebene Projekt mit Name pName inkl all seiner Varianten 
     ''' </summary>
-    ''' <param name="pName"></param>
+    ''' <param name="pName">
     ''' gibt an , ob es der erste Aufruf war
     ''' wenn ja, kommt erst der Bestätigungs-Dialog 
     ''' wenn nein, wird ohne Aufforderung zur Bestätigung gelöscht 

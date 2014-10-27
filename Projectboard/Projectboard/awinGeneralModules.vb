@@ -3541,5 +3541,144 @@ Public Module awinGeneralModules
         enableOnUpdate = True
 
     End Sub
- 
+
+    ''' <summary>
+    ''' baut den aktuell gültigen Treeview auf  
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub buildTreeview(ByRef projektHistorien As clsProjektDBInfos, _
+                              ByRef TreeviewProjekte As TreeView, _
+                              ByRef aktuelleGesamtListe As clsProjekteAlle, _
+                              ByVal aKtionskennung As Integer)
+
+        Dim nodeLevel0 As TreeNode
+        Dim nodeLevel1 As TreeNode
+        Dim zeitraumVon As Date = StartofCalendar
+        Dim zeitraumbis As Date = StartofCalendar.AddYears(20)
+        Dim storedHeute As Date = Now
+        Dim storedGestern As Date = StartofCalendar
+        Dim pname As String = ""
+        Dim variantName As String = ""
+        Dim loadErrorMsg As String = ""
+
+
+        Dim deletedProj As Integer = 0
+
+
+        Dim request As New Request(awinSettings.databaseName)
+        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
+
+        ' alles zurücksetzen 
+        projektHistorien.clear()
+
+        With TreeviewProjekte
+            .Nodes.Clear()
+        End With
+
+        ' Alle Projekte aus DB
+        ' projekteInDB = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+
+        Select Case aKtionskennung
+
+            Case PTtvactions.delFromDB
+                pname = ""
+                variantName = ""
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                loadErrorMsg = "es gibt keine Projekte in der Datenbank"
+
+            Case PTtvactions.delFromSession
+                aktuelleGesamtListe = AlleProjekte
+                loadErrorMsg = "es sind keine Projekte geladen"
+
+            Case PTtvactions.loadPVS
+                pname = ""
+                variantName = ""
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                loadErrorMsg = "es gibt keine Projekte in der Datenbank"
+
+            Case PTtvactions.activateV
+                aktuelleGesamtListe = AlleProjekte
+                loadErrorMsg = "es sind keine Projekte geladen"
+
+            Case PTtvactions.definePortfolioDB
+                pname = ""
+                variantName = ""
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                loadErrorMsg = "es gibt keine Projekte in der Datenbank"
+
+            Case PTtvactions.definePortfolioSE
+                pname = ""
+                variantName = ""
+                aktuelleGesamtListe = AlleProjekte
+                loadErrorMsg = "es sind keine Projekte geladen"
+
+        End Select
+
+
+        If aktuelleGesamtListe.Count > 1 Then
+
+            With TreeviewProjekte
+
+                .CheckBoxes = True
+
+                Dim projektliste As Collection = aktuelleGesamtListe.getProjectNames
+                Dim showPname As Boolean
+
+                For Each pname In projektliste
+
+                    showPname = True
+
+                    ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
+                    If aKtionskennung = PTtvactions.activateV Then
+                        If aktuelleGesamtListe.getVariantZahl(pname) = 1 Then
+                            showPname = False
+                        End If
+                    End If
+
+                    If showPname Then
+
+                        nodeLevel0 = .Nodes.Add(pname)
+
+                        ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
+                        If aKtionskennung = PTtvactions.delFromSession Or _
+                            aKtionskennung = PTtvactions.activateV Or _
+                            aKtionskennung = PTtvactions.definePortfolioDB Or _
+                            aKtionskennung = PTtvactions.definePortfolioSE Then
+                            If aktuelleGesamtListe.getVariantZahl(pname) > 1 Then
+                                nodeLevel0.Tag = "P"
+                                nodeLevel1 = nodeLevel0.Nodes.Add("()")
+                                nodeLevel1.Tag = "P"
+
+                            Else
+                                nodeLevel0.Tag = "X"
+                            End If
+
+                            ' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 
+                            If aKtionskennung = PTtvactions.definePortfolioSE Then
+                                If ShowProjekte.contains(pname) Then
+                                    ' im aufrufenden Teil wird stopRecursion auf true gesetzt ... 
+                                    nodeLevel0.Checked = True
+
+                                End If
+                            End If
+
+                        Else
+                            nodeLevel0.Tag = "P"
+                            nodeLevel1 = nodeLevel0.Nodes.Add("()")
+                            nodeLevel1.Tag = "P"
+                        End If
+                    End If
+
+
+
+                Next
+
+
+            End With
+        Else
+            Call MsgBox(loadErrorMsg)
+        End If
+
+
+    End Sub
 End Module
