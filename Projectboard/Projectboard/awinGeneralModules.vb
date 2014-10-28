@@ -3560,6 +3560,7 @@ Public Module awinGeneralModules
         Dim pname As String = ""
         Dim variantName As String = ""
         Dim loadErrorMsg As String = ""
+        Dim listOfVariantNamesDB As Collection
 
 
         Dim deletedProj As Integer = 0
@@ -3627,47 +3628,50 @@ Public Module awinGeneralModules
                 For Each pname In projektliste
 
                     showPname = True
+                    listOfVariantNamesDB = request.retrieveVariantNamesFromDB(pname)
 
                     ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
-                    If aKtionskennung = PTtvactions.activateV Then
-                        If aktuelleGesamtListe.getVariantZahl(pname) = 1 Then
+                    If aKtionskennung = PTtvactions.activateV then 
+                        If aktuelleGesamtListe.getVariantZahl(pname) = 0 Or _
+                            listOfVariantNamesDB.Count = 0 Then
                             showPname = False
                         End If
                     End If
 
-                    If showPname Then
+        If showPname Then
 
-                        nodeLevel0 = .Nodes.Add(pname)
+            nodeLevel0 = .Nodes.Add(pname)
 
-                        ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
-                        If aKtionskennung = PTtvactions.delFromSession Or _
-                            aKtionskennung = PTtvactions.activateV Or _
-                            aKtionskennung = PTtvactions.definePortfolioDB Or _
-                            aKtionskennung = PTtvactions.definePortfolioSE Then
-                            If aktuelleGesamtListe.getVariantZahl(pname) > 1 Then
-                                nodeLevel0.Tag = "P"
-                                nodeLevel1 = nodeLevel0.Nodes.Add("()")
-                                nodeLevel1.Tag = "P"
+            ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
+            If aKtionskennung = PTtvactions.delFromSession Or _
+                aKtionskennung = PTtvactions.activateV Or _
+                aKtionskennung = PTtvactions.definePortfolioDB Or _
+                aKtionskennung = PTtvactions.definePortfolioSE Then
+                If aktuelleGesamtListe.getVariantZahl(pname) > 0 Or _
+                    listOfVariantNamesDB.Count > 0 Then
+                    nodeLevel0.Tag = "P"
+                    nodeLevel1 = nodeLevel0.Nodes.Add("()")
+                    nodeLevel1.Tag = "P"
 
-                            Else
-                                nodeLevel0.Tag = "X"
-                            End If
+                Else
+                    nodeLevel0.Tag = "X"
+                End If
 
-                            ' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 
-                            If aKtionskennung = PTtvactions.definePortfolioSE Then
-                                If ShowProjekte.contains(pname) Then
-                                    ' im aufrufenden Teil wird stopRecursion auf true gesetzt ... 
-                                    nodeLevel0.Checked = True
+                ' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 
+                If aKtionskennung = PTtvactions.definePortfolioSE Then
+                    If ShowProjekte.contains(pname) Then
+                        ' im aufrufenden Teil wird stopRecursion auf true gesetzt ... 
+                        nodeLevel0.Checked = True
 
-                                End If
-                            End If
-
-                        Else
-                            nodeLevel0.Tag = "P"
-                            nodeLevel1 = nodeLevel0.Nodes.Add("()")
-                            nodeLevel1.Tag = "P"
-                        End If
                     End If
+                End If
+
+            Else
+                nodeLevel0.Tag = "P"
+                nodeLevel1 = nodeLevel0.Nodes.Add("()")
+                nodeLevel1.Tag = "P"
+            End If
+        End If
 
 
 

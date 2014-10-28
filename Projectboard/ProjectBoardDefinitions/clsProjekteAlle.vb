@@ -143,6 +143,10 @@ Public Class clsProjekteAlle
 
     ''' <summary>
     ''' gibt die Anzahl Varianten für den übergebenen pName an 
+    ''' Das Projekt mit variantName = "" zählt dabei nicht als Variante 
+    ''' es gibt nur das Projekt mit Variante "": 0
+    ''' es gibt nicht einmal das Projekt mit Namen pName: -1
+    ''' Anzahl Varianten mit variantName <> "": sonst
     ''' </summary>
     ''' <param name="pName"></param>
     ''' <value></value>
@@ -176,7 +180,7 @@ Public Class clsProjekteAlle
                 i = i + 1
             End While
 
-            getVariantZahl = anzahl
+            getVariantZahl = anzahl - 1
 
         End Get
     End Property

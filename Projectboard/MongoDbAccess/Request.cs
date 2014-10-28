@@ -64,6 +64,7 @@ namespace MongoDbAccess
             result = CollectionProjects.AsQueryable<clsProjektDB>()
                     .Any(c => c.name == searchstr);
 
+            
             return result;
 
             //if (variantname != null && variantname.Length > 0)
@@ -205,7 +206,7 @@ namespace MongoDbAccess
                     
                     //// Ergänzt 15.10.14
                     //// wieder zurückgenommen, weil jetzt in der Datenbank gespeichert wird, daß ein Projektname 
-                    //// pName#vName ist, sofern es einen vName gibt 
+                    //// pName#vName ist, sofern es einen variantName gibt 
 
                     
                     //var prequeryV = CollectionProjects.AsQueryable<clsProjektDB>()
@@ -294,6 +295,38 @@ namespace MongoDbAccess
             return result;
         }
 
+
+        public Collection retrieveVariantNamesFromDB(string projectName)
+        {
+            var result = new Collection();
+
+            string trennzeichen = "#";
+            string searchstr = string.Concat(projectName, trennzeichen);
+                        
+            //gegeben: Projektname, Backupzeitraum (also storedEarliest, storedLatest)
+            //var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
+            //               where e.name.Contains(searchstr)
+            //               select e.variantName
+            //               .Distinct();
+
+
+            var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                            .Where(c => c.name.Contains(searchstr))
+                            .Select(c => c.variantName)
+                            .Distinct();
+
+            foreach (string vName in prequery)
+            {
+                result.Add(vName);
+            }
+
+            return result;
+        }
+
+        
+        //
+        // gibt die Projekthistorie innerhalb eines gegebenen Zeitraums zu einem gegebenen Projekt+Varianten-Namen zurück
+        //
         public SortedList<DateTime, clsProjekt> retrieveProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
         {
             var result = new SortedList<DateTime, clsProjekt>();

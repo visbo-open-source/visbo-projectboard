@@ -329,13 +329,17 @@ Imports System.Drawing
         Dim deletedProj As Integer = 0
         Dim returnValue As DialogResult
         
-        Dim deleteProjects As New frmDeleteProjects
+        'Dim deleteProjects As New frmDeleteProjects
+        Dim deleteProjects As New frmProjPortfolioAdmin
 
         Try
 
             With deleteProjects
                 .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
                 .aKtionskennung = PTtvactions.delFromDB
+                .OKButton.Text = "Löschen"
+                .portfolioName.Visible = False
+                .Label1.Visible = False
             End With
 
             returnValue = deleteProjects.ShowDialog
@@ -930,14 +934,18 @@ Imports System.Drawing
         Dim deletedProj As Integer = 0
         'Dim returnValue As DialogResult
 
-        Dim activateVariant As New frmDeleteProjects
+        'Dim activateVariant As New frmDeleteProjects
+        Dim activateVariant As New frmProjPortfolioAdmin
 
         Try
 
             With activateVariant
                 .Text = "Variante aktivieren"
                 .aKtionskennung = PTtvactions.activateV
-                .SubmitButton.Visible = False
+                .OKButton.Visible = False
+                '.OKButton.Text = "Löschen"
+                .portfolioName.Visible = False
+                .Label1.Visible = False
             End With
 
             'returnValue = activateVariant.ShowDialog
@@ -1698,12 +1706,16 @@ Imports System.Drawing
                 Call MsgBox("es sind keine Projekte geladen !")
             Else
 
-                Dim deleteProjects As New frmDeleteProjects
+                'Dim deleteProjects As New frmDeleteProjects
+                Dim deleteProjects As New frmProjPortfolioAdmin
                 Try
 
                     With deleteProjects
                         .Text = "Projekte, Varianten aus der Session löschen"
                         .aKtionskennung = PTtvactions.delFromSession
+                        .OKButton.Text = "Löschen"
+                        .portfolioName.Visible = False
+                        .Label1.Visible = False
                     End With
 
                     returnValue = deleteProjects.ShowDialog

@@ -73,6 +73,7 @@ Partial Class frmProjPortfolioAdmin
         Me.Controls.Add(Me.TreeViewProjekte)
         Me.Name = "frmProjPortfolioAdmin"
         Me.Text = "Portfolio erstellen"
+        Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()
 

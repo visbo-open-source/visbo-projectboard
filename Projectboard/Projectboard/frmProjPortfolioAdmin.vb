@@ -653,9 +653,6 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
-    Private Sub portfolioName_SelectedIndexChanged(sender As Object, e As EventArgs) Handles portfolioName.SelectedIndexChanged
-
-    End Sub
-
     
+
 End Class
