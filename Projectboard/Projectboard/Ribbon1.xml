@@ -208,20 +208,19 @@
       </tab>
       <tab id ="PT5" label ="Datenbank">
         <group id ="PT5G1" label ="Laden">
-          <button id="PT5G1B1" label="Portfolios" onAction="PTLadenKonstellation" />
-          <button id="PT5G1B2" label="Programme" onAction="PT5DatenbankLoadPrograms" enabled="false"/>
-          <button id="PT5G1B3" label="Projekte d.Zeitraums" onAction="PT5DatenbankLoadZeitraum" enabled="false"/>
+          <button id="PT5G1B1" label="Portfolio" onAction="PTLadenKonstellation" />
+          <!--<button id="PT5G1B2" label="Programme" onAction="PT5DatenbankLoadPrograms" enabled="false"/>-->
+          <button id="PT5G1B3" label="Projekte" onAction="PT5DatenbankLoadProjekte"/>
         </group>
         <group id ="PT5G2" label ="Speichern">
-          <button id="Pt5G2B1" label="Portfolio " onAction="PTNeueKonstellation" />
-          <button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" enabled="false"/>
+          <button id="Pt5G2B1" label="Portfolio" onAction="PTNeueKonstellation" />
+          <!--<button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" enabled="false"/>-->
           <button id="Pt5G2B3" label="Projekte " onAction="PT5StoreProjects" />
         </group>
         <group id ="PT5G3" label ="Löschen">
-          <button id="Pt5G3B1" label="Portfolio " onAction="PTRemoveKonstellation" />
-          <button id="Pt5G3B2" label="Programm " onAction="PT5DeleteProgramme" enabled="false"/>
+          <button id="Pt5G3B1" label="Portfolio" onAction="PTRemoveKonstellation" />
+          <!--<button id="Pt5G3B2" label="Programm " onAction="PT5DeleteProgramme" enabled="false"/>-->
           <button id="Pt5G3B3" label="Projekte " onAction="PT5DeleteProjects" />  
-         
         </group>
       </tab>
       <tab id ="PT6" label ="Einstellungen">

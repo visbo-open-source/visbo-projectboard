@@ -1,10 +1,12 @@
 ﻿Public Class clsPhasenDefinition
 
+    Private uuid As Long
+
     Public Property name As String
     Public Property farbe As Object
     Public Property schwellWert As Integer
 
-    Private uuid As Long
+
 
     Public Property UID() As Long
         Get

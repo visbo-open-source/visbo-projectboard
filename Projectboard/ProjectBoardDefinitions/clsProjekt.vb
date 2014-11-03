@@ -607,7 +607,7 @@ Public Class clsProjekt
         Get
             Dim found As Boolean = False
             Dim cphase As clsPhase
-            Dim cresult As clsResult
+            Dim cresult As clsMeilenstein
             Dim tmpDate As Date
             Dim p As Integer = 1
             Dim colorIndex As Integer
@@ -1252,7 +1252,7 @@ Public Class clsProjekt
             Dim anzPhasen As Integer
             Dim p As Integer, r As Integer
             Dim phase As clsPhase
-            Dim result As clsResult
+            Dim result As clsMeilenstein
             Dim phasenStart As Integer, phasenEnde As Integer
             Dim monatsIndex As Integer
 
@@ -1344,7 +1344,7 @@ Public Class clsProjekt
             Dim anzPhasen As Integer
             Dim i As Integer, p As Integer, r As Integer
             Dim phase As clsPhase
-            Dim result As clsResult
+            Dim result As clsMeilenstein
             Dim monatsIndex As Integer
 
 
@@ -1514,7 +1514,7 @@ Public Class clsProjekt
     ''' <remarks></remarks>
     Public Sub copyResultsTo(ByRef newproj As clsProjekt)
 
-        Dim newresult As clsResult
+        Dim newresult As clsMeilenstein
         Dim newphase As clsPhase
 
         ' Kopiere die Ampel - und die Ampel-Bewertung
@@ -1529,7 +1529,7 @@ Public Class clsProjekt
                 newphase = newproj.getPhase(cphase.name)
                 ' wenn gefunden dann alle Results kopieren 
                 For r = 1 To cphase.CountResults
-                    newresult = New clsResult(parent:=newphase)
+                    newresult = New clsMeilenstein(parent:=newphase)
                     cphase.getResult(r).CopyToWithoutBewertung(newresult)
                     newphase.addresult(newresult)
                 Next
@@ -1548,7 +1548,7 @@ Public Class clsProjekt
 
     Public Sub copyBewertungenTo(ByRef newproj As clsProjekt)
 
-        Dim newresult As clsResult
+        Dim newresult As clsMeilenstein
         Dim newphase As clsPhase
 
         ' Kopiere die Ampel - und die Ampel-Bewertung
@@ -1563,7 +1563,7 @@ Public Class clsProjekt
                 newphase = newproj.getPhase(cphase.name)
                 ' wenn gefunden dann alle Results kopieren 
                 For r = 1 To cphase.CountResults
-                    newresult = New clsResult(parent:=newphase)
+                    newresult = New clsMeilenstein(parent:=newphase)
                     cphase.getResult(r).CopyTo(newresult)
                     newphase.addresult(newresult)
                 Next
@@ -1742,7 +1742,7 @@ Public Class clsProjekt
                         Else
 
                             If curMsName <> "" Then
-                                Dim tmpResult As clsResult
+                                Dim tmpResult As clsMeilenstein
                                 tmpResult = tmpPhase.getResult(curMsName)
                                 ' gibt es den Meilenstein in der Phase ? 
                                 If IsNothing(tmpResult) Then
@@ -1922,7 +1922,7 @@ Public Class clsProjekt
                     Else
 
                         If curMsName <> "" Then
-                            Dim tmpResult As clsResult
+                            Dim tmpResult As clsMeilenstein
                             tmpResult = tmpPhase.getResult(curMsName)
                             ' gibt es den Meilenstein in der Phase ? 
                             If IsNothing(tmpResult) Then

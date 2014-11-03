@@ -153,6 +153,11 @@ Public Module awinGeneralModules
         portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
 
 
+        autoSzenarioNamen(0) = "vor Optimierung"
+        autoSzenarioNamen(1) = "1. Optimum"
+        autoSzenarioNamen(2) = "2. Optimum"
+        autoSzenarioNamen(3) = "3. Optimum"
+
         windowNames(0) = "Cockpit Phasen"
         windowNames(1) = "Cockpit Rollen"
         windowNames(2) = "Cockpit Kosten"
@@ -824,7 +829,7 @@ Public Module awinGeneralModules
         Dim projektFarbe As Object
         Dim anfang As Integer, ende As Integer
         Dim cphase As clsPhase
-        Dim cresult As clsResult
+        Dim cresult As clsMeilenstein
         Dim cbewertung As clsBewertung
         Dim ix As Integer
         Dim tmpStr(20) As String
@@ -1018,7 +1023,7 @@ Public Module awinGeneralModules
                     duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
                     cphase.changeStartandDauer(startoffset, duration)
 
-                    cresult = New clsResult(parent:=cphase)
+                    cresult = New clsMeilenstein(parent:=cphase)
                     cresult.name = "SOP"
                     cresult.setDate = sopDate
 
@@ -1100,7 +1105,7 @@ Public Module awinGeneralModules
                                     explanation = CStr(CType(.Cells(i, 1), Excel.Range).Value)
 
                                     cphase = hproj.getPhase(lastPhaseName)
-                                    cresult = New clsResult(parent:=cphase)
+                                    cresult = New clsMeilenstein(parent:=cphase)
                                     cbewertung = New clsBewertung
 
 
@@ -1272,7 +1277,7 @@ Public Module awinGeneralModules
 
                     End If
 
-                        zeile = zeile + 1
+                    zeile = zeile + 1
 
                 End While
 
@@ -1443,7 +1448,7 @@ Public Module awinGeneralModules
             Throw New ArgumentException("Fehler in awinImportProject, Lesen Attribute")
         End Try
 
-     
+
         ' ------------------------------------------------------------------------------------------------------
         ' Einlesen der Ressourcen
         ' ------------------------------------------------------------------------------------------------------
@@ -1798,7 +1803,7 @@ Public Module awinGeneralModules
                         For zeile = rowOffset + 1 To lastrow
 
 
-                            Dim cResult As clsResult
+                            Dim cResult As clsMeilenstein
                             Dim cBewertung As clsBewertung
                             Dim cphase As clsPhase
                             Dim objectName As String
@@ -1961,13 +1966,13 @@ Public Module awinGeneralModules
                                             End If
                                         End If
 
-                                            cphase.changeStartandDauer(offset, duration)
+                                        cphase.changeStartandDauer(offset, duration)
 
-                                            ' jetzt wird auf Inkonsistenz geprüft 
-                                            Dim inkonsistent As Boolean = False
+                                        ' jetzt wird auf Inkonsistenz geprüft 
+                                        Dim inkonsistent As Boolean = False
 
-                                            If cphase.CountRoles > 0 Or cphase.CountCosts > 0 Then
-                                                ' prüfen , ob es Inkonsistenzen gibt ? 
+                                        If cphase.CountRoles > 0 Or cphase.CountCosts > 0 Then
+                                            ' prüfen , ob es Inkonsistenzen gibt ? 
                                             Dim r As Integer
                                             For r = 1 To cphase.CountRoles
                                                 If cphase.getRole(r).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
@@ -1981,16 +1986,16 @@ Public Module awinGeneralModules
                                                     inkonsistent = True
                                                 End If
                                             Next
-                                            End If
+                                        End If
 
-                                            If inkonsistent Then
-                                                anzFehler = anzFehler + 1
-                                                Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
-                                                                     "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
-                                            End If
-                                            If Not cphaseExisted Then
-                                                hproj.AddPhase(cphase)
-                                            End If
+                                        If inkonsistent Then
+                                            anzFehler = anzFehler + 1
+                                            Throw New Exception("Der Import konnte nicht fertiggestellt werden. " & vbLf & "Die Dauer der Phase '" & cphase.name & "'  in 'Termine' ist ungleich der in 'Ressourcen' " & vbLf &
+                                                                 "Korrigieren Sie bitte gegebenenfalls diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
+                                        End If
+                                        If Not cphaseExisted Then
+                                            hproj.AddPhase(cphase)
+                                        End If
 
 
                                     Catch ex As Exception
@@ -2001,7 +2006,7 @@ Public Module awinGeneralModules
 
 
                                     phaseName = cphase.name
-                                    cResult = New clsResult(parent:=cphase)
+                                    cResult = New clsMeilenstein(parent:=cphase)
                                     cBewertung = New clsBewertung
 
                                     resultName = objectName.Trim
@@ -2088,21 +2093,21 @@ Public Module awinGeneralModules
             Throw New Exception(ex.Message)
         End Try
 
-            If isTemplate Then
-                ' hier müssen die Werte für die Vorlage übergeben werden.
-                Dim projVorlage As New clsProjektvorlage
-                projVorlage.VorlagenName = hproj.name
-                projVorlage.Schrift = hproj.Schrift
-                projVorlage.Schriftfarbe = hproj.Schriftfarbe
-                projVorlage.farbe = hproj.farbe
-                projVorlage.earliestStart = -6
-                projVorlage.latestStart = 6
-                projVorlage.AllPhases = hproj.AllPhases
-                hprojTemp = projVorlage
+        If isTemplate Then
+            ' hier müssen die Werte für die Vorlage übergeben werden.
+            Dim projVorlage As New clsProjektvorlage
+            projVorlage.VorlagenName = hproj.name
+            projVorlage.Schrift = hproj.Schrift
+            projVorlage.Schriftfarbe = hproj.Schriftfarbe
+            projVorlage.farbe = hproj.farbe
+            projVorlage.earliestStart = -6
+            projVorlage.latestStart = 6
+            projVorlage.AllPhases = hproj.AllPhases
+            hprojTemp = projVorlage
 
-            Else
-                hprojekt = hproj
-            End If
+        Else
+            hprojekt = hproj
+        End If
 
     End Sub
 
@@ -2143,7 +2148,7 @@ Public Module awinGeneralModules
             For Each kvp As KeyValuePair(Of String, clsConstellationItem) In lastConstellation.Liste
 
                 Try
-                    hproj = AlleProjekte.Item(kvp.Key)
+                    hproj = AlleProjekte.getProject(kvp.Key)
                     hproj.startDate = kvp.Value.Start
                     hproj.tfZeile = kvp.Value.zeile
                     If kvp.Value.show Then
@@ -2284,23 +2289,21 @@ Public Module awinGeneralModules
         End Try
 
         ' die aktuelle Konstellation in "Last" speichern 
-        Call awinStoreConstellation("Last")
+        Call storeSessionConstellation(ShowProjekte, "Last")
 
-        ' jetzt wird die activeConstellation in ShowProjekte bzw. NoShowProjekte umgesetzt 
-        ' dazu werden erst mal alle Projekte in Showprojekte in Noshowprojekte verschoben ...
-
-        'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-        '    NoShowProjekte.Add(kvp.Value)
-        'Next
         ShowProjekte.Clear()
-        AlleProjekte.liste.Clear()
+
+        ' 3.11.14 : das hier darf nicht gemacht werden ! denn dann nimmt er ausschließlich alle Daten aus der Datenbank !
+        ' AlleProjekte.liste.Clear()
+
+
         ' jetzt werden die Start-Values entsprechend gesetzt ..
 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
 
             If AlleProjekte.ContainsKey(kvp.Key) Then
                 ' Projekt ist bereits im Hauptspeicher geladen
-                hproj = AlleProjekte.Item(kvp.Key)
+                hproj = AlleProjekte.getProject(kvp.Key)
             Else
                 If request.pingMongoDb() Then
 
@@ -2350,18 +2353,9 @@ Public Module awinGeneralModules
                 If kvp.Value.show Then
 
                     Try
+
                         ShowProjekte.Add(hproj)
 
-                        Dim pname As String
-                        Dim tryzeile As Integer
-                        With hproj
-                            pname = .name
-                            tryzeile = .tfZeile
-                        End With
-                        ' nicht zeichnen - das wird nachher alles auf einen Schlag erledigt ..
-                        'Call ZeichneProjektinPlanTafel(pname, tryzeile)
-
-                        'NoShowProjekte.Remove(hproj.name)
                     Catch ex1 As Exception
                         Call MsgBox("Fehler in awinLoadConstellation aufgetreten: " & ex1.Message)
                     End Try
@@ -2372,7 +2366,7 @@ Public Module awinGeneralModules
 
         Next
 
-        
+
     End Sub
     ''' <summary>
     ''' löscht ein bestimmtes Portfolio aus der Datenbank und der Liste der Portfolios im Hauptspeicher
@@ -2422,6 +2416,41 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' lädt die über pName#vName angegebene Variante aus der Datenbank;
+    ''' show = true: es wird in Showprojekte eingetragen; sonst nur in AlleProjekte 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="vName"></param>
+    ''' <remarks></remarks>
+    Public Sub loadProjectfromDB(ByVal pName As String, vName As String, ByVal show As Boolean)
+
+        Dim request As New Request(awinSettings.databaseName)
+        Dim hproj As clsProjekt
+        Dim key As String = calcProjektKey(pName, vName)
+
+        hproj = request.retrieveOneProjectfromDB(pName, vName)
+
+        ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+        ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
+        If AlleProjekte.Containskey(key) Then
+            AlleProjekte.Remove(key)
+        End If
+
+        AlleProjekte.Add(key, hproj)
+
+        If show Then
+            ' prüfen, ob es bereits in der Showprojekt enthalten ist
+            ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
+            ' replaceProjectVariant
+
+            Call replaceProjectVariant(pName, vName, False)
+
+        End If
+
+
+
+    End Sub
 
     ''' <summary>
     ''' löscht in der Datenbank alle Timestamps der Projekt-Variante pname, variantname
@@ -2495,7 +2524,7 @@ Public Module awinGeneralModules
                     Dim key As String = calcProjektKey(pname, variantName)
 
                     Try
-                        stdProj = AlleProjekte.Item(stdkey)
+                        stdProj = AlleProjekte.getProject(stdkey)
 
                         ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
                         ShowProjekte.Remove(hproj.name)
@@ -2529,75 +2558,7 @@ Public Module awinGeneralModules
 
     End Sub
 
-    ''' <summary>
-    ''' aktiviert die angegebene Projekt-Variante und zeichnet das entsprechende Shape in der Projekt-Tafel 
-    ''' selektiert ggf das Shape, um die Aktualisierung gleich durchzuführen 
-    ''' </summary>
-    ''' <param name="pname"></param>
-    ''' <param name="newVariant"></param>
-    ''' <remarks></remarks>
-    Sub replaceProjectVariant(ByVal pname As String, ByVal newVariant As String, ByVal selectIT As Boolean)
-
-        Dim newProj As clsProjekt
-        Dim hproj As clsProjekt
-        Dim key As String = calcProjektKey(pname, newVariant)
-        Dim tfzeile As Integer
-
-
-
-
-
-        
-        ' gibt es die neue Variante überhaupt ? 
-        If AlleProjekte.Containskey(key) Then
-            newProj = AlleProjekte.Item(key)
-
-            ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
-            If ShowProjekte.contains(pname) Then
-                hproj = ShowProjekte.getProject(pname)
-
-                ' prüfen, ob es überhaupt eine andere Variante ist 
-                If hproj.variantName = newVariant Then
-                    Exit Sub
-                End If
-
-                tfzeile = hproj.tfZeile
-
-                ' Projekt aus Showprojekte rausnehmen
-                ShowProjekte.Remove(pname)
-
-                ' die Darstellung in der Projekt-Tafel löschen
-                Call clearProjektinPlantafel(pname)
-
-            End If
-
-
-            ' die  Variante wird aufgenommen
-            ShowProjekte.Add(newProj)
-
-            ' neu zeichnen des Projekts 
-            Dim tmpCollection As New Collection
-            Call ZeichneProjektinPlanTafel(tmpCollection, newProj.name, tfzeile, tmpCollection, tmpCollection)
-
-            If selectIT Then
-
-                Try
-                    CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(newProj.name).Select()
-                Catch ex As Exception
-
-                End Try
-
-            End If
-
-        Else
-            Throw New ArgumentException("Projektvariante existiert nicht")
-        End If
-
-
-
-
-
-    End Sub
+   
 
 
     ''' <summary>
@@ -3339,113 +3300,7 @@ Public Module awinGeneralModules
 
     End Sub
 
-    ''' <summary>
-    ''' zeichnet die Plantafel mit den Projekten neu; 
-    ''' versucht dabei immer die alte Position der Projekte zu übernehmen 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub awinZeichnePlanTafel()
-
-        Dim todoListe As New SortedList(Of Double, String)
-        Dim key As Double
-        Dim pname As String
-        Dim zeile As Integer, lastZeile As Integer, curZeile As Integer, max As Integer
-        Dim lastZeileOld As Integer
-        Dim hproj As clsProjekt
-
-
-
-
-        ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-            With kvp.Value
-                key = 10000 * .tfZeile + kvp.Value.Start
-                todoListe.Add(key, .name)
-            End With
-
-        Next
-
-        zeile = 2
-        lastZeile = 0
-
-
-        'If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
-        ' dann sollen die Projekte im extended mode gezeichnet werden 
-        ' jetzt erst mal die Konstellation "last" speichern
-        Call awinStoreConstellation("Last")
-
-        ' jetzt die todoListe abarbeiten
-        Dim i As Integer
-        For i = 1 To todoListe.Count
-            pname = todoListe.ElementAt(i - 1).Value
-
-            Try
-                hproj = ShowProjekte.getProject(pname)
-
-                If i = 1 Then
-                    curZeile = hproj.tfZeile
-                    lastZeileOld = hproj.tfZeile
-                    lastZeile = curZeile
-                    max = curZeile
-                Else
-                    If lastZeileOld = hproj.tfZeile Then
-                        curZeile = lastZeile
-                    Else
-                        lastZeile = max
-                        lastZeileOld = hproj.tfZeile
-                    End If
-
-                End If
-
-                ' Änderung 9.10.14, damit die Spaces in einer 
-                If hproj.tfZeile >= curZeile + 1 Then
-                    curZeile = curZeile + 1
-                End If
-                ' Ende Änderung
-                hproj.tfZeile = curZeile
-                lastZeile = curZeile
-                'Call ZeichneProjektinPlanTafel2(pname, curZeile)
-                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                Dim tmpCollection As New Collection
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
-                curZeile = lastZeile + getNeededSpace(hproj)
-
-
-                If curZeile > max Then
-                    max = curZeile
-                End If
-            Catch ex As Exception
-
-            End Try
-            
-
-
-        Next
-
-        'Else
-
-
-        '    Dim tryzeile As Integer
-
-        '    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-        '        pname = kvp.Key
-        '        tryzeile = kvp.Value.tfZeile
-        '        If tryzeile <= 1 Then
-        '            tryzeile = -1
-        '        End If
-        '        Call ZeichneProjektinPlanTafel(pname, tryzeile) ' es wird versucht, an der alten Stelle zu zeichnen 
-        '    Next
-
-
-        'End If
-
-
-
-
-
-    End Sub
+   
 
     ''' <summary>
     ''' liest die im Diretory ../ressource manager liegenden detaillierten Kapa files zu den Rollen aus
@@ -3597,6 +3452,12 @@ Public Module awinGeneralModules
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
+            Case PTtvactions.loadPV
+                pname = ""
+                variantName = ""
+                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                loadErrorMsg = "es gibt keine Projekte in der Datenbank"
+
             Case PTtvactions.activateV
                 aktuelleGesamtListe = AlleProjekte
                 loadErrorMsg = "es sind keine Projekte geladen"
@@ -3632,46 +3493,48 @@ Public Module awinGeneralModules
 
                     ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
                     If aKtionskennung = PTtvactions.activateV then 
-                        If aktuelleGesamtListe.getVariantZahl(pname) = 0 Or _
-                            listOfVariantNamesDB.Count = 0 Then
+                        If aktuelleGesamtListe.getVariantZahl(pname) = 0 Then
                             showPname = False
                         End If
                     End If
 
-        If showPname Then
+                    If showPname Then
 
-            nodeLevel0 = .Nodes.Add(pname)
+                        nodeLevel0 = .Nodes.Add(pname)
 
-            ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
-            If aKtionskennung = PTtvactions.delFromSession Or _
-                aKtionskennung = PTtvactions.activateV Or _
-                aKtionskennung = PTtvactions.definePortfolioDB Or _
-                aKtionskennung = PTtvactions.definePortfolioSE Then
-                If aktuelleGesamtListe.getVariantZahl(pname) > 0 Or _
-                    listOfVariantNamesDB.Count > 0 Then
-                    nodeLevel0.Tag = "P"
-                    nodeLevel1 = nodeLevel0.Nodes.Add("()")
-                    nodeLevel1.Tag = "P"
+                        ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
+                        If aKtionskennung = PTtvactions.delFromSession Or _
+                            aKtionskennung = PTtvactions.activateV Or
+                            aKtionskennung = PTtvactions.loadPV Or _
+                            aKtionskennung = PTtvactions.definePortfolioDB Or _
+                            aKtionskennung = PTtvactions.definePortfolioSE Then
+                            If aktuelleGesamtListe.getVariantZahl(pname) > 0 Or _
+                                listOfVariantNamesDB.Count > 0 Then
 
-                Else
-                    nodeLevel0.Tag = "X"
-                End If
+                                nodeLevel0.Tag = "P"
+                                nodeLevel1 = nodeLevel0.Nodes.Add("()")
+                                nodeLevel1.Tag = "P"
 
-                ' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 
-                If aKtionskennung = PTtvactions.definePortfolioSE Then
-                    If ShowProjekte.contains(pname) Then
-                        ' im aufrufenden Teil wird stopRecursion auf true gesetzt ... 
-                        nodeLevel0.Checked = True
+                            Else
+                                nodeLevel0.Tag = "X"
+                            End If
 
+                            ' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 
+                            If aKtionskennung = PTtvactions.definePortfolioSE Then
+                                If ShowProjekte.contains(pname) Then
+                                    ' im aufrufenden Teil wird stopRecursion auf true gesetzt ... 
+                                    nodeLevel0.Checked = True
+
+                                End If
+                            End If
+
+
+                        Else
+                            nodeLevel0.Tag = "P"
+                            nodeLevel1 = nodeLevel0.Nodes.Add("()")
+                            nodeLevel1.Tag = "P"
+                        End If
                     End If
-                End If
-
-            Else
-                nodeLevel0.Tag = "P"
-                nodeLevel1 = nodeLevel0.Nodes.Add("()")
-                nodeLevel1.Tag = "P"
-            End If
-        End If
 
 
 

@@ -12,6 +12,34 @@ Imports System.Math
 Public Class clsProjektShapes
 
     Private AllShapes As SortedList(Of String, Double())
+    
+
+    ''' <summary>
+    ''' gibt die Zeile zurück, ab der nach unten in der Projekttafel frei ist
+    ''' maxzeile ist auch bereits frei 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks>
+    ''' shp.value(0) enthält top , shp.value(2) enthält height</remarks>
+    Public ReadOnly Property getMaxZeile() As Integer
+        Get
+            Dim maxzeile As Integer = 1
+
+            For Each shpElem As KeyValuePair(Of String, Double()) In AllShapes
+
+                If shpElem.Value.Length > 3 Then
+                    If CInt(1 + (shpElem.Value(0) + shpElem.Value(2) - topOfMagicBoard) / boxHeight) > maxzeile Then
+                        maxzeile = CInt(1 + (shpElem.Value(0) + shpElem.Value(2) - topOfMagicBoard) / boxHeight)
+                    End If
+                End If
+
+            Next
+
+            getMaxZeile = maxzeile
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt true zurück, wenn der Name in der Shape Liste enthalten ist
@@ -1022,7 +1050,7 @@ Public Class clsProjektShapes
                     ' für Meilensteine: berechne das neue Datum ; muss innerhalb der Phase bleiben 
 
                     Dim cphase As clsPhase
-                    Dim cresult As clsResult
+                    Dim cresult As clsMeilenstein
 
                     Dim reDraw As Boolean = False
                     Dim tmpDauerIndays = hproj.dauerInDays

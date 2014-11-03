@@ -473,7 +473,7 @@ Public Class clsProjekte
             Dim anzProjekte As Integer
 
             Dim cphase As clsPhase
-            Dim cresult As clsResult
+            Dim cresult As clsMeilenstein
             Dim hproj As clsProjekt
             Dim ix As Integer
             Dim idFarbe As Integer

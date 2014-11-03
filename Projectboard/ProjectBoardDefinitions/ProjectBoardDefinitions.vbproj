@@ -75,6 +75,8 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsMeilensteinDefinition.vb" />
+    <Compile Include="clsSynonyms.vb" />
     <Compile Include="clsProjekteAlle.vb" />
     <Compile Include="clsProjektDBInfos.vb" />
     <Compile Include="clsProjektShapes.vb" />
@@ -84,9 +86,8 @@
     <Compile Include="clsDependency.vb" />
     <Compile Include="clsProjektHistorie.vb" />
     <Compile Include="clsWPFPieValues.vb" />
-    <Compile Include="clsMilestone.vb" />
     <Compile Include="clsBewertung.vb" />
-    <Compile Include="clsResult.vb" />
+    <Compile Include="clsMeilenstein.vb" />
     <Compile Include="clsConstellationDB.vb" />
     <Compile Include="clsAwinEvents.vb" />
     <Compile Include="clsawinSettings.vb" />

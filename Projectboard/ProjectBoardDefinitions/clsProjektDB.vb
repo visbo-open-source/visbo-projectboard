@@ -366,7 +366,7 @@
                     Dim tstAnzahl As Integer = Me.AllResults.Count
                     For r = 1 To tstAnzahl
 
-                        Dim newresult As New clsResult(parent:=phase)
+                        Dim newresult As New clsMeilenstein(parent:=phase)
 
                         Try
                             Me.getResult(r).CopyTo(newresult)
@@ -382,7 +382,7 @@
 
 
 
-                
+
 
             End With
 
@@ -509,7 +509,7 @@
         End Property
 
 
-        Friend Sub CopyTo(ByRef newResult As clsResult)
+        Friend Sub CopyTo(ByRef newResult As clsMeilenstein)
             Dim i As Integer
 
             Try
@@ -537,11 +537,11 @@
 
             End Try
 
-            
+
 
         End Sub
 
-        Friend Sub CopyFrom(ByVal newResult As clsResult)
+        Friend Sub CopyFrom(ByVal newResult As clsMeilenstein)
             Dim i As Integer
             Dim newb As New clsBewertungDB
 
@@ -559,7 +559,7 @@
                 Catch ex As Exception
 
                 End Try
-                
+
 
             End With
 

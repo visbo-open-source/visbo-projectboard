@@ -299,6 +299,12 @@ Public Class clsEventsPrcCharts
                     Call MsgBox("für dieses Diagramm ist der Röntgenblick nicht verfügbar")
                 End If
 
+            Case "Varianten optimieren"
+
+                enableOnUpdate = False
+                Call awinCalcOptimizationVarianten(diagrammTyp, myCollection)
+                enableOnUpdate = False
+
 
             Case "Optimieren"
                 ' hier werden die Werte der Optimierung vermerkt: welche Projekte müssen verschoben werden , um welchen Offset 
@@ -308,7 +314,7 @@ Public Class clsEventsPrcCharts
 
                 enableOnUpdate = False
 
-                Call awinCalculateOptimization1(diagrammTyp, myCollection, OptimierungsErgebnis)
+                Call awinCalcOptimizationFreiheitsgrade(diagrammTyp, myCollection, OptimierungsErgebnis)
 
                 If OptimierungsErgebnis.Count > 0 Then
 

@@ -3078,7 +3078,7 @@ Public Module testModule
         enableOnUpdate = False
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
-        Call awinStoreConstellation("Last")
+        Call storeSessionConstellation(ShowProjekte, "Last")
 
         If request.pingMongoDb() Then
 
@@ -4316,7 +4316,7 @@ Public Module testModule
                 Dim resultColumn As Integer
 
                 For r = 1 To cphase.CountResults
-                    Dim cResult As clsResult
+                    Dim cResult As clsMeilenstein
                     Dim cBewertung As clsBewertung
 
                     cResult = cphase.getResult(r)
@@ -4601,14 +4601,14 @@ Public Module testModule
 
 
                 For r = 1 To cphase.CountResults
-                    Dim cResult As clsResult = Nothing
+                    Dim cResult As clsMeilenstein = Nothing
                     Dim cBewertung As clsBewertung = Nothing
 
-                    Dim bResult As clsResult = Nothing
+                    Dim bResult As clsMeilenstein = Nothing
                     Dim bbewertung As clsBewertung = Nothing
 
 
-                    Dim lResult As clsResult = Nothing
+                    Dim lResult As clsMeilenstein = Nothing
                     Dim lbewertung As clsBewertung = Nothing
                     Dim bDate As Date, lDate As Date
                     Dim currentDate As Date
@@ -5566,7 +5566,7 @@ Public Module testModule
                 Dim phaseStart As Date = hproj.startDate.AddMonths(cphase.relStart - 1)
 
                 For r = 1 To cphase.CountResults
-                    Dim cResult As clsResult
+                    Dim cResult As clsMeilenstein
                     Dim cBewertung As clsBewertung
 
                     cResult = cphase.getResult(r)
@@ -6594,60 +6594,6 @@ Public Module testModule
 
     End Sub  ' Ende Prozedur awinCreatePortfolioChartDiagramm
 
-    ''' <summary>
-    ''' 
-    ''' </summary>
-    ''' <param name="constellationName"></param>
-    ''' <remarks></remarks>
-    Public Sub awinStoreConstellation(ByVal constellationName As String)
-
-        Dim request As New Request(awinSettings.databaseName)
-        ' prüfen, ob diese Constellation bereits existiert ..
-        If projectConstellations.Contains(constellationName) Then
-
-            Try
-                projectConstellations.Remove(constellationName)
-            Catch ex As Exception
-
-            End Try
-
-        End If
-
-        Dim newC As New clsConstellation
-        With newC
-            .constellationName = constellationName
-        End With
-
-        Dim newConstellationItem As clsConstellationItem
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-            newConstellationItem = New clsConstellationItem
-            With newConstellationItem
-                .projectName = kvp.Key
-                .show = True
-                .Start = kvp.Value.startDate
-                .variantName = kvp.Value.variantName
-                .zeile = kvp.Value.tfZeile
-            End With
-            newC.Add(newConstellationItem)
-        Next
-
-
-        Try
-            projectConstellations.Add(newC)
-
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
-        End Try
-
-        ' Portfolio in die Datenbank speichern
-        If request.pingMongoDb() Then
-            If Not request.storeConstellationToDB(newC) Then
-                Call MsgBox("Fehler beim Speichern der projektConstellation '" & newC.constellationName & "' in die Datenbank")
-            End If
-        Else
-            Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!")
-        End If
-
-    End Sub
+    
   
 End Module

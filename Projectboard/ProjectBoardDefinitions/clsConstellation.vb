@@ -44,6 +44,8 @@
 
     End Sub
 
+
+
     Sub New()
 
         allItems = New Dictionary(Of String, clsConstellationItem)

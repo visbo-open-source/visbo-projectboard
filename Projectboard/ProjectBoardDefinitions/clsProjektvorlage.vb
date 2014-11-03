@@ -73,9 +73,9 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getResult(ByVal msName As String) As clsResult
+    Public ReadOnly Property getResult(ByVal msName As String) As clsMeilenstein
         Get
-            Dim tmpResult As clsResult = Nothing
+            Dim tmpResult As clsMeilenstein = Nothing
             Dim p As Integer
             Dim found As Boolean = False
 
@@ -515,7 +515,7 @@
     Public ReadOnly Property getMilestoneColors() As Double()
         Get
             Dim cphase As clsPhase
-            Dim cresult As clsResult
+            Dim cresult As clsMeilenstein
             Dim tmpvalues() As Double
             Dim colorIndex As Integer
             Dim anzahlMilestones As Integer = 0
@@ -561,7 +561,7 @@
             Dim tmpValues As New SortedList(Of Date, String)
             Dim tmpDate As Date
             Dim cphase As clsPhase
-            Dim cresult As clsResult
+            Dim cresult As clsMeilenstein
 
             For p = 1 To Me.CountPhases
                 cphase = Me.getPhase(p)

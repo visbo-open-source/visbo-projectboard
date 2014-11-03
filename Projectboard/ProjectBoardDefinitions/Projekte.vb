@@ -9193,6 +9193,129 @@ Public Module Projekte
 
     'End Sub
 
+    ''' <summary>
+    ''' lädt die angegebene Projekt-Konstellation hinzu bzw. neu
+    ''' funktioniert nur, wenn sowohl Konstellation als auch alle Projekte  im Hauptspeicher sind 
+    ''' </summary>
+    ''' <param name="constellationName">NAme der Konstellation</param>
+    ''' <param name="addProjects">gibt an, ob Projekte hinzugefügt werden sollen oder ob komplett neu gezeichnet werden soll</param>
+    ''' <param name="storeLast">gibt an, ob die aktuelle Konstellation gespeichert werden soll</param>
+    ''' <remarks></remarks>
+    Public Sub loadSessionConstellation(ByVal constellationName As String, ByVal addProjects As Boolean, ByVal storeLast As Boolean)
+
+        Dim activeConstellation As New clsConstellation
+        Dim hproj As New clsProjekt
+        Dim tfZeile As Integer
+        Dim successMessage As String = ""
+        Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
+                                        "   Das Projekt wurde bereits beauftragt."
+
+        Dim projectDidNotExistYet As Boolean = True
+        Dim firstFreeZeile As Integer = projectboardShapes.getMaxZeile + 1
+        Dim anzahlNeueProjekte As Integer = 0
+
+
+        ' prüfen, ob diese Constellation bereits existiert ..
+        Try
+            activeConstellation = projectConstellations.getConstellation(constellationName)
+        Catch ex As Exception
+            Call MsgBox(" Projekt-Konstellation " & constellationName & " existiert nicht ")
+            Exit Sub
+        End Try
+
+        ' ggf die aktuelle Konstellation in "Last" speichern 
+
+        If storeLast Then
+            Call storeSessionConstellation(ShowProjekte, "Last")
+        End If
+
+        If Not addProjects Then
+            ShowProjekte.Clear()
+            tfZeile = 2
+        Else
+            tfZeile = projectboardShapes.getMaxZeile + 1
+        End If
+
+
+        ' jetzt werden die Start-Values entsprechend gesetzt ..
+
+        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
+
+            If AlleProjekte.Containskey(kvp.Key) Then
+                ' Projekt ist bereits im Hauptspeicher geladen
+
+                hproj = AlleProjekte.getProject(kvp.Key)
+
+                If ShowProjekte.contains(hproj.name) Then
+                    With hproj
+                        Call replaceProjectVariant(.name, .variantName, False)
+                        projectDidNotExistYet = False
+                    End With
+                ElseIf kvp.Value.show = True Then
+                    ShowProjekte.Add(hproj)
+                    projectDidNotExistYet = True
+                    anzahlNeueProjekte = anzahlNeueProjekte + 1
+                End If
+
+
+                With hproj
+
+                    ' Änderung THOMAS Start 
+                    If .Status = ProjektStatus(0) Then
+                        .startDate = kvp.Value.Start
+                    ElseIf .startDate <> kvp.Value.Start Then
+                        ' wenn das Datum nicht angepasst werden kann, weil das Projekt bereits beauftragt wurde  
+                        successMessage = successMessage & vbLf & vbLf & loadDateMessage & vbLf & _
+                                            "        " & hproj.name & ": " & kvp.Value.Start.ToShortDateString
+                    End If
+                    ' Änderung THOMAS Ende 
+
+                    .StartOffset = 0
+
+                    If projectDidNotExistYet Then
+                        If addProjects Then
+                            .tfZeile = firstFreeZeile + anzahlNeueProjekte
+                        Else
+                            .tfZeile = kvp.Value.zeile
+                        End If
+                    End If
+                    
+
+                End With
+
+
+
+            Else
+
+                Call MsgBox("Projekt " & kvp.Value.projectName & ", Variante: " & kvp.Value.variantName & vbLf & _
+                             "ist nicht geladen!")
+
+            End If
+
+
+        Next
+
+        enableOnUpdate = False
+
+        appInstance.ScreenUpdating = False
+        'Call diagramsVisible(False)
+        Call awinClearPlanTafel()
+        Call awinZeichnePlanTafel()
+        Call awinNeuZeichnenDiagramme(2)
+        'Call diagramsVisible(True)
+        appInstance.ScreenUpdating = True
+
+
+        Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
+        
+
+        ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
+        currentConstellation = constellationName
+
+
+        enableOnUpdate = True
+
+    End Sub
 
 
     Public Sub awinCalculateOptimization(ByVal diagrammTyp As String, ByRef myCollection As Collection, _
@@ -9349,8 +9472,232 @@ Public Module Projekte
 
     End Sub
 
-    Public Sub awinCalculateOptimization1(ByVal diagrammTyp As String, ByRef myCollection As Collection, _
-                                   ByRef OptimierungsErgebnis As SortedList(Of String, clsOptimizationObject))
+    Public Sub awinCalcOptimizationVarianten(ByVal diagrammTyp As String, ByRef myCollection As Collection)
+
+        Dim anzahlVarianten As Integer
+        Dim maxValue() As Integer
+        Dim indexValue() As Integer
+        Dim anzProjMitVar As Integer
+        Dim PPointer As Integer
+        Dim anzSchleifen As Integer = 0
+        Dim firstValue As Double = 100000000000.0
+        Dim secondValue As Double = 100000000000.0
+        Dim thirdValue As Double = 100000000000.0
+        Dim atleastOne As Boolean = False
+
+        Dim moreThanOne As New Collection
+        Dim justOne As New Collection
+
+        ' bestimme die Collection mit Projekten mit mehr als einer Variante
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+            anzahlVarianten = AlleProjekte.getVariantNames(kvp.Key).Count
+            If anzahlVarianten = 1 Then
+                justOne.Add(kvp.Key, kvp.Key)
+            ElseIf anzahlVarianten > 1 Then
+                moreThanOne.Add(kvp.Key, kvp.Key)
+            End If
+        Next
+
+
+        If moreThanOne.Count = 0 Then
+            Call MsgBox("es gibt keine Varianten .. demnach gibt es auch nichts zu optimieren !")
+            Exit Sub
+        Else
+            ' speichern der letzten Konstellation
+            Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(0))
+        End If
+
+
+        ' nimmt die Anzahl der Varianten auf
+        anzProjMitVar = moreThanOne.Count
+        ReDim maxValue(anzProjMitVar - 1)
+        ReDim indexValue(anzProjMitVar - 1)
+
+        ' jetzt wird bestimmt: 
+        ' wievele Varianten hat das i.-te Element in morethanOne
+        ' an welcher Stelle steht der Varianten-Zeiger Zeiger für das die bestimmt werden 
+        Dim i As Integer = 0
+
+        For Each pName As String In moreThanOne
+            maxValue(i) = AlleProjekte.getVariantZahl(pName)
+            indexValue(i) = 0
+            i = i + 1
+        Next
+
+        PPointer = 0
+
+        ' Start der Rekursion - und die Ausgangs-Konstellation als Vorgabe, als aktuelle "1. Varianten Optimum" behalten 
+        firstValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
+        Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(1))
+
+        ' die anderen Szenarien sollen jetzt gelöscht werden 
+        If projectConstellations.Contains(autoSzenarioNamen(2)) Then
+            projectConstellations.Remove(autoSzenarioNamen(2))
+        End If
+
+        If projectConstellations.Contains(autoSzenarioNamen(3)) Then
+            projectConstellations.Remove(autoSzenarioNamen(3))
+        End If
+
+
+
+        Call IterateOptimization(PPointer, anzProjMitVar, maxValue, indexValue, _
+                                diagrammTyp, myCollection, anzSchleifen, atleastOne, _
+                                justOne, moreThanOne, _
+                                firstValue, secondValue, thirdValue)
+
+
+        If atleastOne Then
+            Call loadSessionConstellation(autoSzenarioNamen(1), False, False)
+        Else
+            Call loadSessionConstellation(autoSzenarioNamen(0), False, False)
+            Call MsgBox("in " & anzSchleifen.ToString & " Kombinationen" & vbLf & "konnte keine Verbesserung gefunden werden")
+        End If
+
+
+        ' erstelle alle Kombinationen der Varianten in der Variablen Current 
+
+
+    End Sub
+
+
+
+
+    ''' <summary>
+    ''' rekursive Funktion, die die Kombinatorik der Varianten ermittelt 
+    ''' </summary>
+    ''' <param name="PPointer"></param>
+    ''' <param name="anzProjMitVar"></param>
+    ''' <param name="maxvalue"></param>
+    ''' <param name="indexvalue"></param>
+    ''' <param name="anzSchleifen"></param>
+    ''' <remarks></remarks>
+    Private Sub IterateOptimization(ByVal PPointer As Integer, ByVal anzProjMitVar As Integer, _
+                                           ByVal maxvalue() As Integer, ByVal indexvalue() As Integer, _
+                                           ByRef diagrammTyp As String, ByRef myCollection As Collection, _
+                                           ByRef anzSchleifen As Integer, ByRef atleastOne As Boolean, _
+                                           ByRef justOne As Collection, ByRef moreThanOne As Collection, _
+                                           ByRef firstValue As Double, ByRef secondValue As Double, ByRef thirdValue As Double)
+
+        'Dim currentSzenario As New clsProjekte
+        Dim currentValue As Double
+        Dim tmpConstellation As clsConstellation
+
+        Dim hproj As clsProjekt
+
+
+        If PPointer = anzProjMitVar - 1 Then
+
+            indexvalue(anzProjMitVar - 1) = 0
+
+            While indexvalue(anzProjMitVar - 1) <= maxvalue(anzProjMitVar - 1)
+
+
+                ' jetzt die Aktion ausführen 
+                anzSchleifen = anzSchleifen + 1
+                Dim txtMSG As String = ""
+                'currentSzenario = New clsProjekte
+                For i = 1 To anzProjMitVar
+
+                    If i = 1 Then
+                        txtMSG = indexvalue(i - 1).ToString & ", "
+                    ElseIf i = anzProjMitVar Then
+                        txtMSG = txtMSG & indexvalue(i - 1).ToString
+                    Else
+                        txtMSG = txtMSG & indexvalue(i - 1).ToString & ", "
+                    End If
+
+                    hproj = AlleProjekte.getProject(CStr(moreThanOne.Item(i)), indexvalue(i - 1))
+                    'currentSzenario.Add(hproj)
+
+                    Call replaceProjectVariant(hproj.name, hproj.variantName, False)
+
+                Next
+
+                'For Each pName As String In justOne
+                '    hproj = AlleProjekte.getProject(calcProjektKey(pName, ""))
+                '    currentSzenario.Add(hproj)
+                'Next
+
+                ' jetzt muss der Wert für current bestimmt werden 
+                currentValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
+                If currentValue < firstValue Then
+                    thirdValue = secondValue
+                    secondValue = firstValue
+                    firstValue = currentValue
+
+                    atleastOne = True
+
+
+                    If projectConstellations.Contains(autoSzenarioNamen(2)) Then
+                        tmpConstellation = projectConstellations.getConstellation(autoSzenarioNamen(2))
+                        projectConstellations.Remove(autoSzenarioNamen(2))
+                        tmpConstellation.constellationName = autoSzenarioNamen(3)
+                        projectConstellations.Add(tmpConstellation)
+
+                        tmpConstellation = projectConstellations.getConstellation(autoSzenarioNamen(1))
+                        projectConstellations.Remove(autoSzenarioNamen(1))
+                        tmpConstellation.constellationName = autoSzenarioNamen(2)
+                        projectConstellations.Add(tmpConstellation)
+
+                    End If
+
+                    Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(1))
+                    Call awinNeuZeichnenDiagramme(2)
+
+                ElseIf currentValue < secondValue Then
+                    thirdValue = secondValue
+                    secondValue = currentValue
+
+                    If projectConstellations.Contains(autoSzenarioNamen(3)) Then
+                        tmpConstellation = projectConstellations.getConstellation(autoSzenarioNamen(2))
+                        projectConstellations.Remove(autoSzenarioNamen(2))
+                        tmpConstellation.constellationName = autoSzenarioNamen(3)
+                        projectConstellations.Add(tmpConstellation)
+
+                    End If
+
+                    Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(2))
+
+                ElseIf currentValue < thirdValue Then
+                    thirdValue = currentValue
+                    Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(3))
+                End If
+
+                indexvalue(PPointer) = indexvalue(PPointer) + 1
+                'Call MsgBox(txtMSG)
+
+            End While
+
+            indexvalue(anzProjMitVar - 1) = 0
+
+
+        Else
+
+            For i = 0 To maxvalue(PPointer)
+                indexvalue(PPointer) = i
+                Call IterateOptimization(PPointer + 1, anzProjMitVar, maxvalue, indexvalue, _
+                                        diagrammTyp, myCollection, anzSchleifen, atleastOne, _
+                                        justOne, moreThanOne, firstValue, secondValue, thirdValue)
+            Next
+
+
+        End If
+
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' bereichnet auf Basis der Freiheitsgrade der Projekte die beste Konstellation
+    ''' </summary>
+    ''' <param name="diagrammTyp"></param>
+    ''' <param name="myCollection"></param>
+    ''' <param name="OptimierungsErgebnis"></param>
+    ''' <remarks></remarks>
+    Public Sub awinCalcOptimizationFreiheitsgrade(ByVal diagrammTyp As String, ByRef myCollection As Collection, _
+                                       ByRef OptimierungsErgebnis As SortedList(Of String, clsOptimizationObject))
         Dim currentValue As Double
         Dim bestValue As Double
         Dim startoffset As Integer
@@ -9375,7 +9722,7 @@ Public Module Projekte
                     End If
                 Next kvp
 
-                bestValue = berechneOptimierungsWert(diagrammTyp, myCollection)
+                bestValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
                 lokalesOptimum.bestValue = bestValue
                 lokalesOptimum.projectName = " "
                 OptimierungsErgebnis.Clear()
@@ -9401,7 +9748,7 @@ Public Module Projekte
                         For versatz = curProj.earliestStart To curProj.latestStart
                             If versatz <> 0 Then
                                 curProj.StartOffset = versatz
-                                currentValue = berechneOptimierungsWert(diagrammTyp, myCollection)
+                                currentValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
 
                                 If currentValue < bestValue Then
                                     bestValue = currentValue
@@ -9456,19 +9803,19 @@ Public Module Projekte
 
     End Sub
 
-    Public Function berechneOptimierungsWert(ByRef DiagrammTyp As String, ByRef myCollection As Collection) As Double
+    Public Function berechneOptimierungsWert(ByRef currentProjektListe As clsProjekte, ByRef DiagrammTyp As String, ByRef myCollection As Collection) As Double
         Dim value As Double
         Dim avgValue As Double
 
         If DiagrammTyp = DiagrammTypen(1) Then
-            value = ShowProjekte.getbadCostOfRole(myCollection)
+            value = currentProjektListe.getbadCostOfRole(myCollection)
         ElseIf DiagrammTyp = DiagrammTypen(0) Or DiagrammTyp = DiagrammTypen(2) Then
-            avgValue = ShowProjekte.getAverage(myCollection, DiagrammTyp)
-            value = ShowProjekte.getDeviationfromAverage(myCollection, avgValue, DiagrammTyp)
+            avgValue = currentProjektListe.getAverage(myCollection, DiagrammTyp)
+            value = currentProjektListe.getDeviationfromAverage(myCollection, avgValue, DiagrammTyp)
         ElseIf DiagrammTyp = DiagrammTypen(4) Then
             ' da der Optimierungs-Algorithmus die kleinste Zahl sucht , muss mit -1 multipliziert werden, 
             ' damit tatsächlich der größte Ertrag heraus kommt 
-            value = ShowProjekte.getErgebniskennzahl * (-1)
+            value = currentProjektListe.getErgebniskennzahl * (-1)
         Else
             Throw New ArgumentException("Optimierung ist für diesen Diagramm-Typ nicht implementiert")
         End If
@@ -9637,7 +9984,7 @@ Public Module Projekte
 
         End If
 
-       
+
 
         Call awinDeSelect()
 
@@ -9722,7 +10069,7 @@ Public Module Projekte
                 If nameList.Count > 1 Then
                     Call MsgBox("Auswahl enthält  diese Meilensteine nicht")
                 ElseIf nameList.Count = 1 Then
-                        Call MsgBox("Auswahl enthält keinen Meilenstein " & nameList.Item(1))
+                    Call MsgBox("Auswahl enthält keinen Meilenstein " & nameList.Item(1))
 
                 End If
             End If
@@ -9853,6 +10200,115 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' zeichnet die Plantafel mit den Projekten neu; 
+    ''' versucht dabei immer die alte Position der Projekte zu übernehmen 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub awinZeichnePlanTafel()
+
+        Dim todoListe As New SortedList(Of Double, String)
+        Dim key As Double
+        Dim pname As String
+        Dim zeile As Integer, lastZeile As Integer, curZeile As Integer, max As Integer
+        Dim lastZeileOld As Integer
+        Dim hproj As clsProjekt
+
+
+
+
+        ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            With kvp.Value
+                key = 10000 * .tfZeile + kvp.Value.Start
+                todoListe.Add(key, .name)
+            End With
+
+        Next
+
+        zeile = 2
+        lastZeile = 0
+
+
+        'If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
+        ' dann sollen die Projekte im extended mode gezeichnet werden 
+        ' jetzt erst mal die Konstellation "last" speichern
+        ' 3.11.14 Auskommentiert: Zeichnen sollte nichts zu tun haben mit dem Verwalten von Konstellationen 
+        ' Call storeSessionConstellation(ShowProjekte, "Last")
+
+        ' jetzt die todoListe abarbeiten
+        Dim i As Integer
+        For i = 1 To todoListe.Count
+            pname = todoListe.ElementAt(i - 1).Value
+
+            Try
+                hproj = ShowProjekte.getProject(pname)
+
+                If i = 1 Then
+                    curZeile = hproj.tfZeile
+                    lastZeileOld = hproj.tfZeile
+                    lastZeile = curZeile
+                    max = curZeile
+                Else
+                    If lastZeileOld = hproj.tfZeile Then
+                        curZeile = lastZeile
+                    Else
+                        lastZeile = max
+                        lastZeileOld = hproj.tfZeile
+                    End If
+
+                End If
+
+                ' Änderung 9.10.14, damit die Spaces in einer 
+                If hproj.tfZeile >= curZeile + 1 Then
+                    curZeile = curZeile + 1
+                End If
+                ' Ende Änderung
+                hproj.tfZeile = curZeile
+                lastZeile = curZeile
+                'Call ZeichneProjektinPlanTafel2(pname, curZeile)
+                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                Dim tmpCollection As New Collection
+                Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
+                curZeile = lastZeile + getNeededSpace(hproj)
+
+
+                If curZeile > max Then
+                    max = curZeile
+                End If
+            Catch ex As Exception
+
+            End Try
+
+
+
+        Next
+
+        'Else
+
+
+        '    Dim tryzeile As Integer
+
+        '    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        '        pname = kvp.Key
+        '        tryzeile = kvp.Value.tfZeile
+        '        If tryzeile <= 1 Then
+        '            tryzeile = -1
+        '        End If
+        '        Call ZeichneProjektinPlanTafel(pname, tryzeile) ' es wird versucht, an der alten Stelle zu zeichnen 
+        '    Next
+
+
+        'End If
+
+
+
+
+
+    End Sub
+
 
     ''' <summary>
     ''' zeichnet das Projekt "pname" in die Plantafel; 
@@ -9936,7 +10392,7 @@ Public Module Projekte
         '
         ' ist dort überhaupt Platz ? wenn nicht, dann Zeile mit freiem Platz suchen ...
         If tryzeile < 2 Then
-            tryzeile = 2
+            tryzeile = projectboardShapes.getMaxZeile
         End If
 
 
@@ -9977,7 +10433,7 @@ Public Module Projekte
 
                     For r = 1 To cphase.CountResults
 
-                        Dim cResult As clsResult
+                        Dim cResult As clsMeilenstein
                         Dim cBewertung As clsBewertung
 
                         cResult = cphase.getResult(r)
@@ -10081,7 +10537,7 @@ Public Module Projekte
 
                         For r = 1 To .CountResults
 
-                            Dim cResult As clsResult
+                            Dim cResult As clsMeilenstein
                             Dim cBewertung As clsBewertung
 
                             cResult = .getResult(r)
@@ -10955,7 +11411,7 @@ Public Module Projekte
 
 
                     For r = 1 To cphase.CountResults
-                        Dim cResult As clsResult
+                        Dim cResult As clsMeilenstein
                         Dim cBewertung As clsBewertung
                         Dim nameIstInListe As Boolean
 
@@ -10975,7 +11431,7 @@ Public Module Projekte
                         If farbTyp = 4 Or farbTyp = cBewertung.colorIndex Then
                             ' es muss nur etwas gemacht werden , wenn entweder alle Farben gezeichnet werden oder eben die übergebene
 
-                            If (showOnlyWithinTimeFrame And (resultColumn < tmpShowRangeLeft Or resultColumn > tmpShowRangeRight)) Or _
+                            If (showOnlyWithinTimeFrame And (resultColumn < tmpShowRangeLeft Or resultColumn > tmpShowrangeRight)) Or _
                                 (onlyFew And Not nameIstInListe) Then
                                 ' nichts machen 
                             Else
@@ -11387,7 +11843,7 @@ Public Module Projekte
                         nummer = nummer + 1
 
                         shpName = projectboardShapes.calcPhaseShapeName(hproj.name, cphase.name)
-                        
+
                         Try
                             shpElement = worksheetShapes.Item(shpName)
                         Catch ex As Exception
@@ -11481,7 +11937,7 @@ Public Module Projekte
         End If
 
 
-       
+
 
 
     End Sub
@@ -13199,7 +13655,7 @@ Public Module Projekte
             Dim cphase As New clsPhase(hproj)
             Dim phaseName As String
             Dim r As Integer
-            Dim cResult As New clsResult(parent:=cphase)
+            Dim cResult As New clsMeilenstein(parent:=cphase)
             Dim cBewertung As clsBewertung
             Dim phaseStart As Date
             Dim phaseEnde As Date
@@ -14939,7 +15395,7 @@ Public Module Projekte
 
 
         Dim cPhase As clsPhase
-        Dim cResult As clsResult = Nothing
+        Dim cResult As clsMeilenstein = Nothing
         Dim bewertung As New clsBewertung
         Dim ok As Boolean = True
 
@@ -15541,6 +15997,135 @@ Public Module Projekte
     End Function
 
     ''' <summary>
+    ''' speichert die aktuelle Konstellation in currentProjektListe in eine Konstellation
+    ''' </summary>
+    ''' <param name="constellationName"></param>
+    ''' <remarks></remarks>
+    Public Sub storeSessionConstellation(ByRef currentProjektListe As clsProjekte, ByVal constellationName As String)
+
+        'Dim request As New Request(awinSettings.databaseName)
+
+
+        ' prüfen, ob diese Constellation bereits existiert ..
+        If projectConstellations.Contains(constellationName) Then
+
+            Try
+                projectConstellations.Remove(constellationName)
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
+        Dim newC As New clsConstellation
+        With newC
+            .constellationName = constellationName
+        End With
+
+        Dim newConstellationItem As clsConstellationItem
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In currentProjektListe.Liste
+            newConstellationItem = New clsConstellationItem
+            With newConstellationItem
+                .projectName = kvp.Key
+                .show = True
+                .Start = kvp.Value.startDate
+                .variantName = kvp.Value.variantName
+                .zeile = kvp.Value.tfZeile
+            End With
+            newC.Add(newConstellationItem)
+        Next
+
+
+        Try
+            projectConstellations.Add(newC)
+
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
+        End Try
+
+        ' Portfolio in die Datenbank speichern
+        ' 2.11.14 wird nicht automatisch in der Datenbank gespeichert 
+        ' erst mit dem expliziten Speichern in die Datenbank werden die Portfolios auch mitgespeichert  
+        'If request.pingMongoDb() Then
+        '    If Not request.storeConstellationToDB(newC) Then
+        '        Call MsgBox("Fehler beim Speichern der projektConstellation '" & newC.constellationName & "' in die Datenbank")
+        '    End If
+        'Else
+        '    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!")
+        'End If
+
+    End Sub
+
+    ''' <summary>
+    ''' aktiviert die angegebene Projekt-Variante und zeichnet das entsprechende Shape in der Projekt-Tafel 
+    ''' selektiert ggf das Shape, um die Aktualisierung gleich durchzuführen 
+    ''' </summary>
+    ''' <param name="pname"></param>
+    ''' <param name="newVariant"></param>
+    ''' <remarks></remarks>
+    Sub replaceProjectVariant(ByVal pname As String, ByVal newVariant As String, ByVal selectIT As Boolean)
+
+        Dim newProj As clsProjekt
+        Dim hproj As clsProjekt
+        Dim key As String = calcProjektKey(pname, newVariant)
+        Dim tfzeile As Integer = 0
+
+
+        ' gibt es die neue Variante überhaupt ? 
+        If AlleProjekte.Containskey(key) Then
+            newProj = AlleProjekte.getProject(key)
+
+            ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
+            If ShowProjekte.contains(pname) Then
+                hproj = ShowProjekte.getProject(pname)
+
+                ' prüfen, ob es überhaupt eine andere Variante ist 
+                ' Änderung 30.10.14: das sollte kein Abbruch-Kriterium sein; denn wenn das Projekt aus 
+                ' der Datenbank neu geladen wird, kann es ggf unterschiedlich sein; also sollte es auf alle Fälle geladen werden 
+                'If hproj.variantName = newVariant Then
+                '    Exit Sub
+                'End If
+
+                tfzeile = hproj.tfZeile
+
+                ' Projekt aus Showprojekte rausnehmen
+                ShowProjekte.Remove(pname)
+
+                ' die Darstellung in der Projekt-Tafel löschen
+                Call clearProjektinPlantafel(pname)
+
+            End If
+
+
+            ' die  Variante wird aufgenommen
+            ShowProjekte.Add(newProj)
+
+            ' neu zeichnen des Projekts 
+            Dim tmpCollection As New Collection
+            Call ZeichneProjektinPlanTafel(tmpCollection, newProj.name, tfzeile, tmpCollection, tmpCollection)
+
+            If selectIT Then
+
+                Try
+                    CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(newProj.name).Select()
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
+        Else
+            Throw New ArgumentException("Projektvariante existiert nicht")
+        End If
+
+
+
+
+
+    End Sub
+
+
+    ''' <summary>
     ''' Methode trägt alle Projekte aus ImportProjekte in AlleProjekte bzw. Showprojekte ein, sofern die Anzahl mit der myCollection übereinstimmt
     ''' die Projekte werden in der Reihenfolge auf das Board gezeichnet, wie sie in der myCollection aufgeführt sind
     ''' </summary>
@@ -15592,7 +16177,7 @@ Public Module Projekte
 
                 vglName = calcProjektKey(hproj)
                 Try
-                    cproj = AlleProjekte.Item(vglName)
+                    cproj = AlleProjekte.getProject(vglName)
                     anzAktualisierungen = anzAktualisierungen + 1
 
 

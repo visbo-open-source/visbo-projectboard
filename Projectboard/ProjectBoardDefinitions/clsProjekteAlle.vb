@@ -54,20 +54,7 @@ Public Class clsProjekteAlle
         End Get
     End Property
 
-    ''' <summary>
-    ''' gibt das Element zurück, das den angegebenen Schlüssel enthält
-    ''' </summary>
-    ''' <param name="key"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property Item(ByVal key As String) As clsProjekt
-        Get
-
-            Item = _allProjects(key)
-            
-        End Get
-    End Property
+   
 
     ''' <summary>
     ''' gibt die Anzahl Listenelemente der Sorted Liste zurück 
@@ -140,6 +127,64 @@ Public Class clsProjekteAlle
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt das Element zurück, das den angegebenen Schlüssel key enthält
+    ''' </summary>
+    ''' <param name="key">key = pName#vName</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProject(ByVal key As String) As clsProjekt
+        Get
+
+            getProject = _allProjects(key)
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die entsprechende bezeichnete Variante zurück
+    ''' VariantNummer = 0 => 1. Projekt-Vorkommen, meist mit Varianten-Namen "" 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <param name="variantNummer"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProject(ByVal pName As String, ByVal variantNummer As Integer) As clsProjekt
+        Get
+
+
+            Dim i As Integer = 0
+            Dim found As Boolean = False
+
+            ' Positioniere position auf das erste Vorkommen von pName in der Liste 
+            While i < _allProjects.Count And Not found
+
+                If _allProjects.ElementAt(i).Value.name = pName Then
+                    found = True
+                Else
+                    i = i + 1
+                End If
+
+
+
+            End While
+
+
+            If found Then
+                getProject = _allProjects.ElementAt(i + variantNummer).Value
+            Else
+                getProject = Nothing
+            End If
+
+
+        End Get
+    End Property
+
+
+
 
     ''' <summary>
     ''' gibt die Anzahl Varianten für den übergebenen pName an 

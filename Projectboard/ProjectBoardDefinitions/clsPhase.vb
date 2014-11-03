@@ -3,7 +3,7 @@
     ' earliestStart und latestStart sind absolute Werte im "koordinaten-System" des Projektes
     ' von daher ist es anders gelöst als in clsProjekt, wo earlieststart und latestStart relative Angaben sind 
 
-    Private AllResults As List(Of clsResult)
+    Private AllResults As List(Of clsMeilenstein)
     Private AllRoles As List(Of clsRolle)
     Private AllCosts As List(Of clsKostenart)
     Private _Offset As Integer
@@ -656,7 +656,7 @@
 
     End Sub
 
-    Public Sub addresult(ByVal result As clsResult)
+    Public Sub addresult(ByVal result As clsMeilenstein)
 
         ' in Abhängigkeit von milestoneFreeFloat: 
         ' es wird geprüft, ob der Meilenstein innerhalb der Phasengrenze  ist 
@@ -672,7 +672,7 @@
                 result.offset = 0
             End If
 
-        
+
         End If
 
         AllResults.Add(result)
@@ -688,7 +688,7 @@
 
     End Property
 
-    Public ReadOnly Property ResultListe() As List(Of clsResult)
+    Public ReadOnly Property ResultListe() As List(Of clsMeilenstein)
 
         Get
             ResultListe = AllResults
@@ -727,7 +727,7 @@
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle
         Dim newcost As clsKostenart
-        Dim newresult As clsResult
+        Dim newresult As clsMeilenstein
         ' Dimension ist die Länge des Arrays , der kopiert werden soll; 
         ' mit der eingeführten Unschärfe ist nicht mehr gewährleistet, 
         ' daß relende-relstart die tatsächliche Dimension des Arrays wiedergibt 
@@ -771,7 +771,7 @@
             .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
             For r = 1 To Me.AllResults.Count
-                newresult = New clsResult(parent:=newphase)
+                newresult = New clsMeilenstein(parent:=newphase)
                 Me.getResult(r).CopyTo(newresult)
                 .AddResult(newresult)
             Next
@@ -783,7 +783,7 @@
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle, oldrole As clsRolle
         Dim newcost As clsKostenart, oldcost As clsKostenart
-        Dim newresult As clsResult
+        Dim newresult As clsMeilenstein
         ' Dimension ist die Länge des Arrays , der kopiert werden soll; 
         ' mit der eingeführten Unschärfe ist nicht mehr gewährleistet, 
         ' daß relende-relstart die tatsächliche Dimension des Arrays wiedergibt 
@@ -864,7 +864,7 @@
             ' alt .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
             For r = 1 To Me.AllResults.Count
-                newresult = New clsResult(parent:=newphase)
+                newresult = New clsMeilenstein(parent:=newphase)
                 Me.getResult(r).CopyTo(newresult)
                 ' korrigiert den Offset der Meilensteine 
                 newresult.offset = CLng(System.Math.Round(CLng(Me.getResult(r).offset * corrFactor)))
@@ -885,7 +885,7 @@
     Public Sub adjustMilestones(ByVal faktor As Double)
         Dim newOffset As Integer
         For r = 1 To Me.AllResults.Count
-            
+
             ' korrigiert den Offset der Meilensteine 
             newOffset = CInt(System.Math.Round(CLng(Me.getResult(r).offset * faktor)))
 
@@ -930,7 +930,7 @@
 
     End Property
 
-    Public ReadOnly Property getResult(ByVal index As Integer) As clsResult
+    Public ReadOnly Property getResult(ByVal index As Integer) As clsMeilenstein
 
         Get
             getResult = AllResults.Item(index - 1)
@@ -947,10 +947,10 @@
     ''' <returns>Objekt vom Typ Result</returns>
     ''' <remarks>
     ''' Rückgabe von Nothing ist schneller als über Throw Exception zu arbeiten</remarks>
-    Public ReadOnly Property getResult(ByVal key As String) As clsResult
+    Public ReadOnly Property getResult(ByVal key As String) As clsMeilenstein
 
         Get
-            Dim tmpResult As clsResult = Nothing
+            Dim tmpResult As clsMeilenstein = Nothing
             Dim found As Boolean = False
             Dim r As Integer = 1
 
@@ -1040,7 +1040,7 @@
 
         AllRoles = New List(Of clsRolle)
         AllCosts = New List(Of clsKostenart)
-        AllResults = New List(Of clsResult)
+        AllResults = New List(Of clsMeilenstein)
         _minDauer = 1
         _maxDauer = 60
         _Offset = 0
@@ -1059,7 +1059,7 @@
 
         AllRoles = New List(Of clsRolle)
         AllCosts = New List(Of clsKostenart)
-        AllResults = New List(Of clsResult)
+        AllResults = New List(Of clsMeilenstein)
         _minDauer = 1
         _maxDauer = 60
         _Offset = 0

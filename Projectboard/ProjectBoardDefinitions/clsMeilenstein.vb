@@ -1,4 +1,4 @@
-﻿Public Class clsResult
+﻿Public Class clsMeilenstein
 
     Private bewertungen As SortedList(Of String, clsBewertung)
     Private _Parent As clsPhase
@@ -101,9 +101,9 @@
         End Get
     End Property
 
-    Public Sub CopyToWithoutBewertung(ByRef newResult As clsResult)
+    Public Sub CopyToWithoutBewertung(ByRef newResult As clsMeilenstein)
 
-        
+
         With newResult
 
             .name = Me.name
@@ -115,7 +115,7 @@
     End Sub
 
 
-    Public Sub CopyTo(ByRef newResult As clsResult)
+    Public Sub CopyTo(ByRef newResult As clsMeilenstein)
         Dim i As Integer
         Dim newb As New clsBewertung
 

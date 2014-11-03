@@ -222,7 +222,7 @@ Imports System.Drawing
             If constellationName = currentConstellation Then
 
                 ' aktuelle Konstellation unter dem Namen 'Last' speichern
-                Call awinStoreConstellation("Last")
+                Call storeSessionConstellation(ShowProjekte, "Last")
                 currentConstellation = "Last"
             Else
                 ' aktuelle Konstellation bleibt unverändert
@@ -2309,6 +2309,50 @@ Imports System.Drawing
         End If
 
     End Sub
+
+    ''' <summary>
+    ''' lädt die gewählten Projekte und gewählten Varianten in die Session
+    ''' </summary>
+    ''' <param name="Control"></param>
+    ''' <remarks></remarks>
+    Public Sub PT5DatenbankLoadProjekte(Control As IRibbonControl)
+
+        Dim deletedProj As Integer = 0
+        Dim returnValue As DialogResult
+
+        'Dim deleteProjects As New frmDeleteProjects
+        Dim loadProjectsForm As New frmProjPortfolioAdmin
+
+        Try
+
+            With loadProjectsForm
+                .Text = "Projekte und Varianten in die Session laden "
+                .aKtionskennung = PTtvactions.loadPV
+                .OKButton.Text = "Laden"
+                .portfolioName.Visible = False
+                .Label1.Visible = False
+            End With
+
+            returnValue = loadProjectsForm.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+
+            Else
+                ' returnValue = DialogResult.Cancel
+
+            End If
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
+
+
+
+    End Sub
+
 
     Public Sub PT5loadprojectsInit(control As IRibbonControl, ByRef pressed As Boolean)
 

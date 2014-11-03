@@ -61,7 +61,8 @@ Public Class frmProjPortfolioAdmin
 
         ' hier wird jetzt sichergestellt, daß nur die nach der aktuellen Aktion gültigen Checks gesetzt werden können
 
-        If aKtionskennung = PTtvactions.delFromDB Then
+        If aKtionskennung = PTtvactions.delFromDB Or _
+            aKtionskennung = PTtvactions.loadPV Then
 
             stopRecursion = True
 
@@ -224,8 +225,13 @@ Public Class frmProjPortfolioAdmin
 
                     End If
 
-                    ' jetzt die Variante aktivieren 
-                    Call replaceProjectVariant(pName, selectedVariantName, True)
+                    If aKtionskennung = PTtvactions.activateV Then
+                        ' jetzt die Variante aktivieren 
+                        Call replaceProjectVariant(pName, selectedVariantName, True)
+                        Call awinNeuZeichnenDiagramme(2)
+                    End If
+
+
 
             End Select
 
@@ -240,9 +246,9 @@ Public Class frmProjPortfolioAdmin
 
         Dim node As TreeNode = e.Node
 
-        If node.IsSelected Then
-            node.Expand()
-        End If
+        'If node.IsSelected Then
+        '    node.Expand()
+        'End If
 
     End Sub
 
@@ -258,6 +264,7 @@ Public Class frmProjPortfolioAdmin
         Dim nodeLevel As Integer
         Dim variantListe As Collection
         Dim hproj As New clsProjekt
+        Dim key As String
 
 
 
@@ -294,6 +301,20 @@ Public Class frmProjPortfolioAdmin
                             nodeVariant.Checked = False
                         End If
                         stopRecursion = False
+
+                    ElseIf aKtionskennung = PTtvactions.loadPV Then
+
+                        key = calcProjektKey(pName:=projName, variantName:=variantName)
+
+                        stopRecursion = True
+                        ' soll gesetzt sein, wenn es entweder bereits geladen ist oder aber sowieso alle geladen werden sollen
+                        If AlleProjekte.Containskey(key) Or node.Checked = True Then
+                            nodeVariant.Checked = True
+                        Else
+                            nodeVariant.Checked = False
+                        End If
+                        stopRecursion = False
+
                     Else
                         nodeVariant.Checked = node.Checked
                     End If
@@ -314,9 +335,7 @@ Public Class frmProjPortfolioAdmin
 
                 node.Tag = "X"
 
-                If node.IsSelected Then
-                    node.Expand()
-                End If
+                
 
             End If
 
@@ -371,9 +390,7 @@ Public Class frmProjPortfolioAdmin
                             nodeTimeStamp.Checked = node.Checked
                         Next kvp1
 
-                        If node.IsSelected Then
-                            node.Expand()
-                        End If
+                        
                     Else
 
                         If projekthistorie.Count = 0 Then
@@ -441,6 +458,9 @@ Public Class frmProjPortfolioAdmin
 
         Dim p As Integer, v As Integer, t As Integer
 
+        '
+        ' Aktivieren von Varianten erfordert überhaupt keinen Button; deswegen ist das jetzt hier nicht abgefragt 
+        '
         If aKtionskennung = PTtvactions.definePortfolioSE Or _
             aKtionskennung = PTtvactions.definePortfolioDB Then
             '
@@ -504,7 +524,8 @@ Public Class frmProjPortfolioAdmin
                         newC.Add(newConstellationItem)
 
 
-                    Else
+                        ' wenn es bereits ersetzt wurde, dann stimmt anzahlVarianten = ... 
+                    ElseIf projektNode.Tag = "X" Then
 
                         anzahlVarianten = projektNode.Nodes.Count
 
@@ -561,8 +582,11 @@ Public Class frmProjPortfolioAdmin
 
             End With
 
-        Else
-            ' alle anderen Aktionen wie Projekte löschen, Varianten aktivieren ... 
+        ElseIf aKtionskennung = PTtvactions.delFromDB Or _
+            aKtionskennung = PTtvactions.delFromSession Or _
+            aKtionskennung = PTtvactions.loadPV Then
+
+            ' alle anderen Aktionen wie Projekte aus Datenbank löschen , aus Session löschen, aus Datenbank laden  ... 
             With TreeViewProjekte
                 anzahlProjekte = .Nodes.Count
 
@@ -575,30 +599,70 @@ Public Class frmProjPortfolioAdmin
                         ' Aktion auf allen Varianten und Timestamps 
                         ' Schleife über alle Varianten: 
                         ' lösche in Datenbank pname#vname
-                        anzahlVarianten = projektNode.Nodes.Count
+
+                        'anzahlVarianten = projektNode.Nodes.Count
+
+                        Dim variantListe As Collection = aktuelleGesamtListe.getVariantNames(pname)
+                        anzahlVarianten = variantListe.Count
 
                         If aKtionskennung = PTtvactions.delFromSession Then
+
                             Call awinDeleteProjectInSession(pName:=pname)
-                        Else
-                            For v = 1 To anzahlVarianten
 
-                                variantNode = projektNode.Nodes.Item(v - 1)
-                                variantName = getVariantNameOf(variantNode.Text)
-                                If aKtionskennung = PTtvactions.delFromDB Or _
-                                    aKtionskennung = PTtvactions.delFromSession Then
+                        ElseIf aKtionskennung = PTtvactions.delFromDB Then
+
+                            If anzahlVarianten = 1 Then
+                                variantName = ""
+                                Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
+                            Else
+
+                                For v = 1 To anzahlVarianten
+
+                                    'variantNode = projektNode.Nodes.Item(v - 1)
+                                    'variantName = getVariantNameOf(variantNode.Text)
+                                    variantName = getVariantNameOf(CStr(variantListe.Item(v)))
                                     Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
-                                End If
+
+                                Next
+                            End If
 
 
-                            Next
+                        ElseIf aKtionskennung = PTtvactions.loadPV Then
+
+                            If anzahlVarianten = 1 Then
+                                variantName = ""
+
+                                Call loadProjectfromDB(pname, variantName, True)
+
+                            Else
+                                For v = 1 To anzahlVarianten
+
+                                    'variantNode = projektNode.Nodes.Item(v - 1)
+                                    'variantName = getVariantNameOf(variantNode.Text)
+                                    variantName = getVariantNameOf(CStr(variantListe.Item(v)))
+
+                                    If v = 1 Then
+                                        Call loadProjectfromDB(pname, variantName, True)
+                                    Else
+                                        Call loadProjectfromDB(pname, variantName, False)
+                                    End If
+
+
+                                Next
+                            End If
+
+
+
                         End If
 
 
 
 
-                    Else
+                    ElseIf projektNode.Tag = "X" Then
 
                         anzahlVarianten = projektNode.Nodes.Count
+                        Dim first As Boolean = True
+
                         For v = 1 To anzahlVarianten
                             variantNode = projektNode.Nodes.Item(v - 1)
                             variantName = getVariantNameOf(variantNode.Text)
@@ -611,6 +675,12 @@ Public Class frmProjPortfolioAdmin
                                 If aKtionskennung = PTtvactions.delFromDB Or _
                                     aKtionskennung = PTtvactions.delFromSession Then
                                     Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
+
+                                ElseIf aKtionskennung = PTtvactions.loadPV Then
+
+                                    Call loadProjectfromDB(pname, variantName, first)
+                                    first = False
+
                                 End If
 
 
@@ -618,8 +688,7 @@ Public Class frmProjPortfolioAdmin
                                     aKtionskennung = PTtvactions.loadPVS Then
 
                                 anzahlTimeStamps = variantNode.Nodes.Count
-                                Dim first As Boolean = True
-
+                                Dim firstTS As Boolean = True
                                 For t = 1 To anzahlTimeStamps
                                     timeStampNode = variantNode.Nodes.Item(t - 1)
 
@@ -628,7 +697,7 @@ Public Class frmProjPortfolioAdmin
 
                                         timestamp = CType(timeStampNode.Text, Date)
                                         If aKtionskennung = PTtvactions.delFromDB Then
-                                            Call deleteProjectVariantTimeStamp(pname, variantName, timestamp, first)
+                                            Call deleteProjectVariantTimeStamp(pname, variantName, timestamp, firstTS)
                                         Else
                                             ' Aktion für LoadPVS : aber hier gibt es wahrscheinlich gar keinen OK-Button
                                         End If
@@ -642,11 +711,18 @@ Public Class frmProjPortfolioAdmin
 
                 Next
 
+                If aKtionskennung = PTtvactions.loadPV Or _
+                    aKtionskennung = PTtvactions.delFromSession Then
+                    Call awinNeuZeichnenDiagramme(2)
+                End If
 
             End With
 
             DialogResult = Windows.Forms.DialogResult.OK
             MyBase.Close()
+
+        Else
+            Call MsgBox("nicht unterstützte Option in ProjPortfolio Admin Formular ...")
         End If
 
 

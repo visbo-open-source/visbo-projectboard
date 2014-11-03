@@ -178,6 +178,8 @@ Public Module Module1
     ' wird in awinSetTypen dimensioniert und gesetzt 
     Public portfolioDiagrammtitel() As String
 
+    ' nimmt die Namen der im Zuge der Optimierung automatisch generierten Szenarios auf
+    Public autoSzenarioNamen(3) As String
 
 
     ' Enumeration History Change Criteria: um anzugeben, welche Veränderung man in der History eines Projektes sucht 
@@ -266,6 +268,7 @@ Public Module Module1
         activateV = 3
         definePortfolioDB = 4
         definePortfolioSE = 5
+        loadPV = 6
     End Enum
 
    
@@ -1113,7 +1116,7 @@ Public Module Module1
         ' Add a menu item
         myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
-            .Caption = "Optimieren"
+            .Caption = "nach Freiheitsgraden optimieren"
             .Tag = "Optimieren"
             '.OnAction = "awinOptimizeStartOfProjects"
         End With
@@ -1123,6 +1126,19 @@ Public Module Module1
         awinevent.PrcChartRightClick = myitem
         awinButtonEvents.Add(awinevent)
 
+        ' ergänzt am 2.11.2014
+        ' Add a menu item
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
+        With myitem
+            .Caption = "nach Varianten optimieren"
+            .Tag = "Varianten optimieren"
+            '.OnAction = "awinOptimizeStartOfProjects"
+        End With
+        'awinevent = New clsAwinEvent
+        'awinevent.Button4Events = myitem
+        awinevent = New clsEventsPrcCharts
+        awinevent.PrcChartRightClick = myitem
+        awinButtonEvents.Add(awinevent)
 
     End Sub
 
