@@ -125,6 +125,12 @@
     <Compile Include="frmEarliestLatestStart.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmOptimizeKPI.Designer.vb">
+      <DependentUpon>frmOptimizeKPI.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmOptimizeKPI.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmPhaseInformation.Designer.vb">
       <DependentUpon>frmPhaseInformation.vb</DependentUpon>
     </Compile>
@@ -237,6 +243,9 @@
   <ItemGroup>
     <EmbeddedResource Include="frmEarliestLatestStart.resx">
       <DependentUpon>frmEarliestLatestStart.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmOptimizeKPI.resx">
+      <DependentUpon>frmOptimizeKPI.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmPhaseInformation.resx">
       <DependentUpon>frmPhaseInformation.vb</DependentUpon>

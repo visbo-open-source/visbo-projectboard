@@ -302,7 +302,7 @@ Public Class clsEventsPrcCharts
             Case "Varianten optimieren"
 
                 enableOnUpdate = False
-                Call awinCalcOptimizationVarianten(diagrammTyp, myCollection)
+                'Call awinCalcOptimizationVarianten(diagrammTyp, myCollection)
                 enableOnUpdate = False
 
 

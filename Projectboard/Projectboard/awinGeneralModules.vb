@@ -2444,7 +2444,7 @@ Public Module awinGeneralModules
             ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
             ' replaceProjectVariant
 
-            Call replaceProjectVariant(pName, vName, False)
+            Call replaceProjectVariant(pName, vName, False, True)
 
         End If
 

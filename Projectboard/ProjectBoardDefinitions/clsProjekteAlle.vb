@@ -191,7 +191,7 @@ Public Class clsProjekteAlle
     ''' Das Projekt mit variantName = "" zählt dabei nicht als Variante 
     ''' es gibt nur das Projekt mit Variante "": 0
     ''' es gibt nicht einmal das Projekt mit Namen pName: -1
-    ''' Anzahl Varianten mit variantName <> "": sonst
+    ''' Anzahl Varianten mit variantName ungleich "": sonst
     ''' </summary>
     ''' <param name="pName"></param>
     ''' <value></value>

@@ -9197,11 +9197,13 @@ Public Module Projekte
     ''' lädt die angegebene Projekt-Konstellation hinzu bzw. neu
     ''' funktioniert nur, wenn sowohl Konstellation als auch alle Projekte  im Hauptspeicher sind 
     ''' </summary>
-    ''' <param name="constellationName">NAme der Konstellation</param>
+    ''' <param name="constellationName">Name der Konstellation</param>
     ''' <param name="addProjects">gibt an, ob Projekte hinzugefügt werden sollen oder ob komplett neu gezeichnet werden soll</param>
     ''' <param name="storeLast">gibt an, ob die aktuelle Konstellation gespeichert werden soll</param>
+    ''' <param name="updateProjektTafel">gibt an, ob die Projekt-Tafel neu gezeichnet werden soll oder ob die Konstellation nur im Showprojekte geladen werden soll</param> 
     ''' <remarks></remarks>
-    Public Sub loadSessionConstellation(ByVal constellationName As String, ByVal addProjects As Boolean, ByVal storeLast As Boolean)
+    Public Sub loadSessionConstellation(ByVal constellationName As String, ByVal addProjects As Boolean, ByVal storeLast As Boolean, _
+                                        ByVal updateProjektTafel As Boolean)
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
@@ -9229,10 +9231,10 @@ Public Module Projekte
             Call storeSessionConstellation(ShowProjekte, "Last")
         End If
 
-        If Not addProjects Then
+        If Not addProjects And updateProjektTafel Then
             ShowProjekte.Clear()
             tfZeile = 2
-        Else
+        ElseIf addProjects And updateProjektTafel Then
             tfZeile = projectboardShapes.getMaxZeile + 1
         End If
 
@@ -9248,7 +9250,7 @@ Public Module Projekte
 
                 If ShowProjekte.contains(hproj.name) Then
                     With hproj
-                        Call replaceProjectVariant(.name, .variantName, False)
+                        Call replaceProjectVariant(.name, .variantName, False, True)
                         projectDidNotExistYet = False
                     End With
                 ElseIf kvp.Value.show = True Then
@@ -9272,14 +9274,14 @@ Public Module Projekte
 
                     .StartOffset = 0
 
-                    If projectDidNotExistYet Then
+                    If projectDidNotExistYet And updateProjektTafel Then
                         If addProjects Then
                             .tfZeile = firstFreeZeile + anzahlNeueProjekte
                         Else
                             .tfZeile = kvp.Value.zeile
                         End If
                     End If
-                    
+
 
                 End With
 
@@ -9295,25 +9297,26 @@ Public Module Projekte
 
         Next
 
-        enableOnUpdate = False
+        If updateProjektTafel Then
+            enableOnUpdate = False
 
-        appInstance.ScreenUpdating = False
-        'Call diagramsVisible(False)
-        Call awinClearPlanTafel()
-        Call awinZeichnePlanTafel()
-        Call awinNeuZeichnenDiagramme(2)
-        'Call diagramsVisible(True)
-        appInstance.ScreenUpdating = True
+            'appInstance.ScreenUpdating = False
+            'Call diagramsVisible(False)
+            Call awinClearPlanTafel()
+            Call awinZeichnePlanTafel()
+            Call awinNeuZeichnenDiagramme(2)
+            'Call diagramsVisible(True)
+            'appInstance.ScreenUpdating = True
 
 
-        Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
-        
+            Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
+
+            enableOnUpdate = True
+        End If
 
         ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
         currentConstellation = constellationName
 
-
-        enableOnUpdate = True
 
     End Sub
 
@@ -9472,7 +9475,8 @@ Public Module Projekte
 
     End Sub
 
-    Public Sub awinCalcOptimizationVarianten(ByVal diagrammTyp As String, ByRef myCollection As Collection)
+    Public Sub awinCalcOptimizationVarianten(ByVal diagrammTyp As String, ByRef myCollection As Collection, _
+                                             ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
 
         Dim anzahlVarianten As Integer
         Dim maxValue() As Integer
@@ -9484,6 +9488,8 @@ Public Module Projekte
         Dim secondValue As Double = 100000000000.0
         Dim thirdValue As Double = 100000000000.0
         Dim atleastOne As Boolean = False
+        Dim anzKombinationen As Integer = 1
+        Dim anzOptimierungen As Integer = 0
 
         Dim moreThanOne As New Collection
         Dim justOne As New Collection
@@ -9500,7 +9506,8 @@ Public Module Projekte
 
 
         If moreThanOne.Count = 0 Then
-            Call MsgBox("es gibt keine Varianten .. demnach gibt es auch nichts zu optimieren !")
+            e.Result = "es gibt keine Varianten .. demnach gibt es auch nichts zu optimieren !"
+            worker.ReportProgress(0, e)
             Exit Sub
         Else
             ' speichern der letzten Konstellation
@@ -9518,8 +9525,14 @@ Public Module Projekte
         ' an welcher Stelle steht der Varianten-Zeiger Zeiger für das die bestimmt werden 
         Dim i As Integer = 0
 
+        anzKombinationen = 1
         For Each pName As String In moreThanOne
             maxValue(i) = AlleProjekte.getVariantZahl(pName)
+            ' in maxvalue steht 0, wenn es nur die Basis Variante gibt ..
+            If maxValue(i) >= 0 Then
+                anzKombinationen = anzKombinationen * (maxValue(i) + 1)
+            End If
+
             indexValue(i) = 0
             i = i + 1
         Next
@@ -9542,16 +9555,22 @@ Public Module Projekte
 
 
         Call IterateOptimization(PPointer, anzProjMitVar, maxValue, indexValue, _
-                                diagrammTyp, myCollection, anzSchleifen, atleastOne, _
+                                diagrammTyp, myCollection, anzKombinationen, anzSchleifen, anzOptimierungen, _
                                 justOne, moreThanOne, _
-                                firstValue, secondValue, thirdValue)
+                                firstValue, secondValue, thirdValue, _
+                                worker, e)
 
 
-        If atleastOne Then
-            Call loadSessionConstellation(autoSzenarioNamen(1), False, False)
+
+        If anzOptimierungen > 0 Then
+            ' wieder den alten Zustand herstellen 
+            Call loadSessionConstellation(autoSzenarioNamen(0), False, False, False)
         Else
-            Call loadSessionConstellation(autoSzenarioNamen(0), False, False)
-            Call MsgBox("in " & anzSchleifen.ToString & " Kombinationen" & vbLf & "konnte keine Verbesserung gefunden werden")
+            ' es hat sich eh nichts geändert ... 
+            'Call loadSessionConstellation(autoSzenarioNamen(0), False, False)
+            e.Result = "in " & anzSchleifen.ToString & " Kombinationen" & vbLf & "konnte keine Verbesserung gefunden werden"
+            worker.ReportProgress(0, e)
+
         End If
 
 
@@ -9575,15 +9594,23 @@ Public Module Projekte
     Private Sub IterateOptimization(ByVal PPointer As Integer, ByVal anzProjMitVar As Integer, _
                                            ByVal maxvalue() As Integer, ByVal indexvalue() As Integer, _
                                            ByRef diagrammTyp As String, ByRef myCollection As Collection, _
-                                           ByRef anzSchleifen As Integer, ByRef atleastOne As Boolean, _
+                                           ByVal anzKombinationen As Integer, ByRef anzSchleifen As Integer, ByRef anzOptimierungen As Integer, _
                                            ByRef justOne As Collection, ByRef moreThanOne As Collection, _
-                                           ByRef firstValue As Double, ByRef secondValue As Double, ByRef thirdValue As Double)
+                                           ByRef firstValue As Double, ByRef secondValue As Double, ByRef thirdValue As Double, _
+                                           ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
 
         'Dim currentSzenario As New clsProjekte
         Dim currentValue As Double
         Dim tmpConstellation As clsConstellation
 
+
         Dim hproj As clsProjekt
+
+        If worker.CancellationPending Then
+            e.Cancel = True
+            e.Result = "Berichterstellung abgebrochen ..."
+            Exit Sub
+        End If
 
 
         If PPointer = anzProjMitVar - 1 Then
@@ -9594,7 +9621,7 @@ Public Module Projekte
 
 
                 ' jetzt die Aktion ausführen 
-                anzSchleifen = anzSchleifen + 1
+
                 Dim txtMSG As String = ""
                 'currentSzenario = New clsProjekte
                 For i = 1 To anzProjMitVar
@@ -9610,7 +9637,7 @@ Public Module Projekte
                     hproj = AlleProjekte.getProject(CStr(moreThanOne.Item(i)), indexvalue(i - 1))
                     'currentSzenario.Add(hproj)
 
-                    Call replaceProjectVariant(hproj.name, hproj.variantName, False)
+                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, False)
 
                 Next
 
@@ -9621,37 +9648,50 @@ Public Module Projekte
 
                 ' jetzt muss der Wert für current bestimmt werden 
                 currentValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
+                anzSchleifen = anzSchleifen + 1
+
                 If currentValue < firstValue Then
                     thirdValue = secondValue
                     secondValue = firstValue
                     firstValue = currentValue
 
-                    atleastOne = True
+                    anzOptimierungen = anzOptimierungen + 1
 
 
                     If projectConstellations.Contains(autoSzenarioNamen(2)) Then
                         tmpConstellation = projectConstellations.getConstellation(autoSzenarioNamen(2))
-                        projectConstellations.Remove(autoSzenarioNamen(2))
+
+                        If projectConstellations.Contains(autoSzenarioNamen(3)) Then
+                            projectConstellations.Remove(autoSzenarioNamen(3))
+                        End If
+
                         tmpConstellation.constellationName = autoSzenarioNamen(3)
                         projectConstellations.Add(tmpConstellation)
 
                         tmpConstellation = projectConstellations.getConstellation(autoSzenarioNamen(1))
-                        projectConstellations.Remove(autoSzenarioNamen(1))
+                        If projectConstellations.Contains(autoSzenarioNamen(2)) Then
+                            projectConstellations.Remove(autoSzenarioNamen(2))
+                        End If
+
                         tmpConstellation.constellationName = autoSzenarioNamen(2)
                         projectConstellations.Add(tmpConstellation)
 
                     End If
 
                     Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(1))
-                    Call awinNeuZeichnenDiagramme(2)
+                    'Call awinNeuZeichnenDiagramme(2)
 
                 ElseIf currentValue < secondValue Then
+
+                    anzOptimierungen = anzOptimierungen + 1
+
                     thirdValue = secondValue
                     secondValue = currentValue
 
                     If projectConstellations.Contains(autoSzenarioNamen(3)) Then
                         tmpConstellation = projectConstellations.getConstellation(autoSzenarioNamen(2))
-                        projectConstellations.Remove(autoSzenarioNamen(2))
+
+                        projectConstellations.Remove(autoSzenarioNamen(3))
                         tmpConstellation.constellationName = autoSzenarioNamen(3)
                         projectConstellations.Add(tmpConstellation)
 
@@ -9660,12 +9700,18 @@ Public Module Projekte
                     Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(2))
 
                 ElseIf currentValue < thirdValue Then
+
+                    anzOptimierungen = anzOptimierungen + 1
+
                     thirdValue = currentValue
                     Call storeSessionConstellation(ShowProjekte, autoSzenarioNamen(3))
                 End If
 
+                e.Result = anzSchleifen.ToString & " / " & anzKombinationen.ToString & " Berechnungen; " & _
+                            anzOptimierungen.ToString & " Optimierung(en"
+                worker.ReportProgress(0, e)
                 indexvalue(PPointer) = indexvalue(PPointer) + 1
-                'Call MsgBox(txtMSG)
+
 
             End While
 
@@ -9677,8 +9723,16 @@ Public Module Projekte
             For i = 0 To maxvalue(PPointer)
                 indexvalue(PPointer) = i
                 Call IterateOptimization(PPointer + 1, anzProjMitVar, maxvalue, indexvalue, _
-                                        diagrammTyp, myCollection, anzSchleifen, atleastOne, _
-                                        justOne, moreThanOne, firstValue, secondValue, thirdValue)
+                                        diagrammTyp, myCollection, anzKombinationen, anzSchleifen, anzOptimierungen, _
+                                        justOne, moreThanOne, firstValue, secondValue, thirdValue, _
+                                        worker, e)
+
+                If worker.CancellationPending Then
+                    e.Cancel = True
+                    e.Result = "Berichterstellung abgebrochen ..."
+                    Exit For
+                End If
+
             Next
 
 
@@ -16059,16 +16113,25 @@ Public Module Projekte
     ''' <summary>
     ''' aktiviert die angegebene Projekt-Variante und zeichnet das entsprechende Shape in der Projekt-Tafel 
     ''' selektiert ggf das Shape, um die Aktualisierung gleich durchzuführen 
+    ''' wenn replaceAnyhow, dann wird auf alle Fälle ersetzt, andernfalls nur, wenn der Varianten-Name nicht schon geladen ist
     ''' </summary>
     ''' <param name="pname"></param>
     ''' <param name="newVariant"></param>
+    ''' <param name="selectIT" >gibt an, ob das Shape gleich selektiert werden soll</param>
+    ''' <param name="replaceAnyhow">gibt an, ob die Ersetzung auf alle Fälle erfolgen soll oder nur wenn nicht diese Variante 
+    ''' bereits in Showprojekte geladen ist </param>
     ''' <remarks></remarks>
-    Sub replaceProjectVariant(ByVal pname As String, ByVal newVariant As String, ByVal selectIT As Boolean)
+    Sub replaceProjectVariant(ByVal pname As String, ByVal newVariant As String, _
+                              ByVal selectIT As Boolean, ByVal replaceAnyhow As Boolean)
 
         Dim newProj As clsProjekt
         Dim hproj As clsProjekt
         Dim key As String = calcProjektKey(pname, newVariant)
         Dim tfzeile As Integer = 0
+        Dim projectshape As Excel.ShapeRange
+
+        Dim phaseList As New Collection
+        Dim milestoneList As New Collection
 
 
         ' gibt es die neue Variante überhaupt ? 
@@ -16080,11 +16143,15 @@ Public Module Projekte
                 hproj = ShowProjekte.getProject(pname)
 
                 ' prüfen, ob es überhaupt eine andere Variante ist 
-                ' Änderung 30.10.14: das sollte kein Abbruch-Kriterium sein; denn wenn das Projekt aus 
-                ' der Datenbank neu geladen wird, kann es ggf unterschiedlich sein; also sollte es auf alle Fälle geladen werden 
-                'If hproj.variantName = newVariant Then
-                '    Exit Sub
-                'End If
+                ' Änderung 09.10.14: das sollte dann ein Abbruch-Kriterium sein, wenn nicht ohnehin ersetzt werden soll 
+                ' denn wenn das Projekt aus der Datenbank neu geladen wird, kann es ggf unterschiedlich sein; 
+                ' also sollte es bei replaceAnyhow auf alle Fälle geladen werden 
+                If hproj.variantName = newVariant And Not replaceAnyhow Then
+                    Exit Sub
+                End If
+
+                ' bestimme die bisher angezeigten Phasen und Meilensteine 
+
 
                 tfzeile = hproj.tfZeile
 

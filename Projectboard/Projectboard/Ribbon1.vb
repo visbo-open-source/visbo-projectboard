@@ -5005,6 +5005,27 @@ Imports System.Drawing
 
     End Sub
 
+    Sub PTOPTVariantenOptimieren(control As IRibbonControl)
+
+
+        Dim optmierungsFenster As New frmOptimizeKPI
+        Dim returnValue As DialogResult
+
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        returnValue = optmierungsFenster.ShowDialog
+        'optmierungsFenster.Show()
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
+    End Sub
+
+
     Sub PT0ShowPortfolioBudgetCost(control As IRibbonControl)
         Dim selectionType As Integer = -1 ' keine Einschränkung
         Dim top As Double, left As Double, width As Double, height As Double

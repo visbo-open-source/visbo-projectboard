@@ -28,6 +28,10 @@
           <button id="PTFKB1" label="Budget/Kosten" onAction="PT0ShowPortfolioBudgetCost" />
           <button id="PTFKB2" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" />
         </group>
+        <group id="PTOPT" label="Optimieren">
+          <button id="PTOPTB1" label ="optimale Varianten-Kombination" onAction ="PTOPTVariantenOptimieren"/>
+          <button id="PTOPTB2" label ="Spielraum nutzen" onAction ="PTOPTFreiraumOptimieren" enabled ="false"/>
+        </group>
       </tab>
       
       <tab id="PT0" label="Detail-Info">
@@ -137,9 +141,9 @@
           <!--<button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />-->
           <button id="PT2G1B2" label="Beauftragen" onAction="Tom2G1Beauftragen" />
           <button id="PT2G1B3" label="Beauftragung aufheben" onAction="Tom2GXBeauftragen" />
-          <separator id="PT2G1s3"/>
+          <!--<separator id="PT2G1s3"/>
           <button id="PT2G1B4" label="in Warteschlange stellen" onAction="Tom2G1NoShow" />
-          <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />
+          <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />-->
           <separator id="PT2G1s4"/>
           <button id="PT2G1B6" label="Umbenennen" onAction="Tom2G1Rename" />
           <separator id="PT2G1s5"/>
