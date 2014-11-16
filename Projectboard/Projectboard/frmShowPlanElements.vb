@@ -4,8 +4,31 @@ Public Class frmShowPlanElements
 
     ' kann von ausserhalb gesetzt werden; gibt an ob das ganze Portfolio angezeigt werden soll
     ' oder nur die selektierten Projekte 
-    Public showModePortfolio As Boolean
-    Private existingNames As Collection
+    Friend showModePortfolio As Boolean
+    Friend menuOption As Integer
+    Private existingNames As New Collection
+
+    Private selectedMilestones As New Collection
+    Private sKeyMilestones As String = ""
+
+    Private selectedPhases As New Collection
+    Private sKeyPhases As String = ""
+
+    Private selectedCosts As New Collection
+    Private sKeyCosts As String = ""
+
+    Private selectedRoles As New Collection
+    Private sKeyRoles As String = ""
+
+
+    Private Enum PTauswahlTyp
+        phase = 0
+        meilenstein = 1
+        Rolle = 2
+        Kostenart = 3
+    End Enum
+
+
 
     Private chtop As Double
     Private chleft As Double
@@ -48,14 +71,25 @@ Public Class frmShowPlanElements
                 If chkbxShowObjects.Checked = True Then
 
                     ' alles in einem Chart anzeigen 
-                    myCollection = New Collection
-                    For Each element As String In ListBox1.SelectedItems
-                        myCollection.Add(element, element)
+                    selectedPhases.Clear()
+                    'For Each element As String In ListBox1.SelectedItems
+                    For Each element As String In selectedPhases
+                        selectedPhases.Add(element, element)
                     Next
 
                     ' Phasen anzeigen 
 
-                    Call awinZeichnePhasen(myCollection, False, True)
+                    Call awinZeichnePhasen(selectedPhases, False, True)
+
+                    If selectedMilestones.Count > 0 Then
+                        ' Phasen anzeigen 
+                        Dim farbID As Integer = 4
+                        Call awinZeichneMilestones(selectedMilestones, farbID, False, True)
+
+                    End If
+
+                    selectedMilestones.Clear()
+                    selectedPhases.Clear()
 
                 End If
 
@@ -109,18 +143,30 @@ Public Class frmShowPlanElements
 
                 ' wenn Röntgen Blick an ist: ausschalten und Anzeige löschen
                 ' Alle bisher angezeigten Milestones löschen
+                Dim farbID As Integer = 4
 
                 If chkbxShowObjects.Checked = True Then
 
+                    If selectedPhases.Count > 0 Then
+
+                        ' Phasen anzeigen 
+                        Call awinZeichnePhasen(selectedPhases, False, True)
+
+                    End If
+
+
+
                     ' alles in einem Chart anzeigen 
-                    myCollection = New Collection
+                    selectedMilestones.Clear()
                     For Each element As String In ListBox1.SelectedItems
-                        myCollection.Add(element, element)
+                        selectedMilestones.Add(element, element)
                     Next
 
                     ' Phasen anzeigen 
-                    Dim farbID As Integer = 4
-                    Call awinZeichneMilestones(myCollection, farbID, False, True)
+                    Call awinZeichneMilestones(selectedMilestones, farbID, False, True)
+
+                    selectedMilestones.Clear()
+                    selectedPhases.Clear()
 
                 End If
 
@@ -250,21 +296,17 @@ Public Class frmShowPlanElements
         ' This call is required by the designer.
         InitializeComponent()
 
-
-        ' Add any initialization after the InitializeComponent() call.
-        existingNames = New Collection
-        showModePortfolio = True
-        Me.rdbPhases.Checked = True
-        Me.chkbxShowObjects.Checked = False
-        Me.chkbxOneChart.Checked = False
-        Me.chkbxCreateCharts.Checked = True
-
-
     End Sub
 
+    ''' <summary>
+    ''' stellt ggf den vorherigen Zustand an vor-selektierten Items wieder her
+    ''' ebenso den Searchkey 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub rdbPhases_CheckedChanged(sender As Object, e As EventArgs) Handles rdbPhases.CheckedChanged
 
-        Dim i As Integer
 
         If Me.rdbPhases.Checked Then
             ' clear Listbox1 
@@ -276,18 +318,20 @@ Public Class frmShowPlanElements
             chkbxCreateCharts.Text = "Summen-Chart"
             chkbxOneChart.Text = "Alles in einem Chart"
 
-            If showModePortfolio Then
-                ' showModePortfolio kann nur gesetzt sein, wenn es auch einen selektierten Zeitraum gibt 
-                existingNames = ShowProjekte.getPhaseNames
-                For i = 1 To existingNames.Count
-                    ListBox1.Items.Add(existingNames.Item(i))
-                Next
-
-            Else
-
-            End If
+            ' showModePortfolio kann nur gesetzt sein, wenn es auch einen selektierten Zeitraum gibt 
+            existingNames = ShowProjekte.getPhaseNames
+            Call rebuildFormerState(PTauswahlTyp.phase, existingNames)
 
 
+        Else
+            ' Merken, was ggf. das Filterkriterium war 
+            sKeyPhases = filterBox.Text
+
+            ' Merken welches die selektierten Phasen waren 
+            selectedPhases.Clear()
+            For Each element As String In ListBox1.SelectedItems
+                selectedPhases.Add(element, element)
+            Next
 
         End If
 
@@ -295,7 +339,6 @@ Public Class frmShowPlanElements
 
     Private Sub rdbMilestones_CheckedChanged(sender As Object, e As EventArgs) Handles rdbMilestones.CheckedChanged
 
-        Dim i As Integer
 
         If Me.rdbMilestones.Checked Then
             ' clear Listbox1 
@@ -307,16 +350,21 @@ Public Class frmShowPlanElements
             chkbxCreateCharts.Text = "Summen-Chart"
             chkbxOneChart.Text = "Alles in einem Chart"
 
-            If showModePortfolio Then
-                ' showModePortfolio kann nur gesetzt sein, wenn es auch einen selektierten Zeitraum gibt 
-                existingNames = ShowProjekte.getMilestoneNames
-                For i = 1 To existingNames.Count
-                    ListBox1.Items.Add(existingNames.Item(i))
-                Next
+            existingNames = ShowProjekte.getMilestoneNames
+            Call rebuildFormerState(PTauswahlTyp.meilenstein, existingNames)
 
-            Else
 
-            End If
+
+        Else
+            ' Merken, was ggf. das Filterkriterium war 
+            sKeyMilestones = filterBox.Text
+
+            ' Merken welches die selektierten Phasen waren 
+            selectedMilestones.Clear()
+            For Each element As String In ListBox1.SelectedItems
+                selectedMilestones.Add(element, element)
+            Next
+
 
         End If
     End Sub
@@ -330,6 +378,7 @@ Public Class frmShowPlanElements
     Private Sub rdbRoles_CheckedChanged(sender As Object, e As EventArgs) Handles rdbRoles.CheckedChanged
 
         Dim i As Integer
+
         If RoleDefinitions.Count = 0 Then
             Call MsgBox("es sind keine Kostenarten definiert !")
         Else
@@ -343,27 +392,31 @@ Public Class frmShowPlanElements
                 chkbxCreateCharts.Text = "Summen-Chart"
                 chkbxOneChart.Text = "Alles in einem Chart"
 
-                If showModePortfolio Then
-                    ' showModePortfolio kann nur gesetzt sein, wenn es auch einen selektierten Zeitraum gibt 
+                For i = 1 To RoleDefinitions.Count
+                    existingNames.Add(RoleDefinitions.getRoledef(i).name)
+                Next
+
+                Call rebuildFormerState(PTauswahlTyp.Rolle, existingNames)
 
 
-                    For i = 1 To RoleDefinitions.Count
-                        existingNames.Add(RoleDefinitions.getRoledef(i).name)
-                        ListBox1.Items.Add(RoleDefinitions.getRoledef(i).name)
-                    Next
 
-                Else
+            Else
+                ' Merken, was ggf. das Filterkriterium war 
+                sKeyRoles = filterBox.Text
 
-                End If
+                ' Merken welches die selektierten Phasen waren 
+                selectedRoles.Clear()
+                For Each element As String In ListBox1.SelectedItems
+                    selectedRoles.Add(element, element)
+                Next
 
             End If
         End If
-        
+
     End Sub
 
     Private Sub rdbCosts_CheckedChanged(sender As Object, e As EventArgs) Handles rdbCosts.CheckedChanged
         Dim i As Integer
-
 
         If CostDefinitions.Count = 0 Then
             Call MsgBox("es sind keine Kostenarten definiert !")
@@ -378,27 +431,42 @@ Public Class frmShowPlanElements
                 chkbxCreateCharts.Text = "Summen-Chart"
                 chkbxOneChart.Text = "Alles in einem Chart"
 
-                If showModePortfolio Then
-                    ' showModePortfolio kann nur gesetzt sein, wenn es auch einen selektierten Zeitraum gibt 
+                For i = 1 To CostDefinitions.Count
+                    existingNames.Add(CostDefinitions.getCostdef(i).name)
+                Next
 
+                Call rebuildFormerState(PTauswahlTyp.Kostenart, existingNames)
 
-                    For i = 1 To CostDefinitions.Count
-                        existingNames.Add(CostDefinitions.getCostdef(i).name)
-                        ListBox1.Items.Add(CostDefinitions.getCostdef(i).name)
-                    Next
+            Else
+                ' Merken, was ggf. das Filterkriterium war 
+                sKeyCosts = filterBox.Text
 
-                Else
-
-                End If
+                ' Merken welches die selektierten Phasen waren 
+                selectedCosts.Clear()
+                For Each element As String In ListBox1.SelectedItems
+                    selectedCosts.Add(element, element)
+                Next
 
             End If
         End If
-        
+
     End Sub
 
     Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
 
-        MyBase.Close()
+        ListBox1.SelectedItems.Clear()
+        filterBox.Text = ""
+
+        If rdbPhases.Checked Then
+            selectedPhases.Clear()
+        ElseIf rdbMilestones.Checked Then
+            selectedMilestones.Clear()
+        ElseIf rdbRoles.Checked Then
+            selectedRoles.Clear()
+        Else
+            selectedCosts.Clear()
+        End If
+        'MyBase.Close()
 
     End Sub
 
@@ -476,4 +544,55 @@ Public Class frmShowPlanElements
     Private Sub pictureZoom_Click(sender As Object, e As EventArgs) Handles pictureZoom.Click
         filterBox.Text = ""
     End Sub
+
+    Private Sub rebuildFormerState(ByVal typ As Integer, ByVal listOfNames As Collection)
+
+        Dim searchkey As String = ""
+        Dim tmpCollection As New Collection
+        Dim i As Integer
+
+        Select Case typ
+            Case PTauswahlTyp.phase
+                searchkey = sKeyPhases
+                tmpCollection = selectedPhases
+
+            Case PTauswahlTyp.meilenstein
+                searchkey = sKeyMilestones
+                tmpCollection = selectedMilestones
+
+            Case PTauswahlTyp.Rolle
+                searchkey = sKeyRoles
+                tmpCollection = selectedRoles
+
+            Case PTauswahlTyp.Kostenart
+                searchkey = sKeyCosts
+                tmpCollection = selectedCosts
+
+        End Select
+
+        If searchkey.Length > 0 Then
+
+            For Each s As String In listOfNames
+                If s.Contains(searchkey) Then
+                    ListBox1.Items.Add(s)
+                End If
+            Next
+
+        Else
+            For i = 1 To listOfNames.Count
+                ListBox1.Items.Add(listOfNames.Item(i))
+            Next
+        End If
+
+        ' Filter Box Test setzen 
+
+        filterBox.Text = searchkey
+
+        ' jetzt prüfen, ob selectedphases bereits etwas enthält
+        ' wenn ja, dann werden diese Items selektiert
+        For Each element As String In tmpCollection
+            ListBox1.SelectedItem = element
+        Next
+    End Sub
+
 End Class

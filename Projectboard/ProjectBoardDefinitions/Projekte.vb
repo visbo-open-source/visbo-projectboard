@@ -9309,7 +9309,7 @@ Public Module Projekte
             'appInstance.ScreenUpdating = True
 
 
-            Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
+            'Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
 
             enableOnUpdate = True
         End If
@@ -16128,7 +16128,7 @@ Public Module Projekte
         Dim hproj As clsProjekt
         Dim key As String = calcProjektKey(pname, newVariant)
         Dim tfzeile As Integer = 0
-        Dim projectshape As Excel.ShapeRange
+        'Dim projectshape As Excel.ShapeRange
 
         Dim phaseList As New Collection
         Dim milestoneList As New Collection
@@ -16141,6 +16141,10 @@ Public Module Projekte
             ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
             If ShowProjekte.contains(pname) Then
                 hproj = ShowProjekte.getProject(pname)
+
+                ' welche Phasen werden angezeigt , welche Meilensteine werden angezeigt ? 
+                phaseList = projectboardShapes.getPhaseList(pname)
+                milestoneList = projectboardShapes.getMilestoneList(pname)
 
                 ' prüfen, ob es überhaupt eine andere Variante ist 
                 ' Änderung 09.10.14: das sollte dann ein Abbruch-Kriterium sein, wenn nicht ohnehin ersetzt werden soll 
@@ -16169,7 +16173,7 @@ Public Module Projekte
 
             ' neu zeichnen des Projekts 
             Dim tmpCollection As New Collection
-            Call ZeichneProjektinPlanTafel(tmpCollection, newProj.name, tfzeile, tmpCollection, tmpCollection)
+            Call ZeichneProjektinPlanTafel(tmpCollection, newProj.name, tfzeile, phaseList, milestoneList)
 
             If selectIT Then
 
@@ -16206,7 +16210,7 @@ Public Module Projekte
 
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
-        Dim shpElement As Excel.Shape
+        'Dim shpElement As Excel.Shape
         Dim phaseList As New Collection
         Dim milestoneList As New Collection
 
@@ -16343,17 +16347,20 @@ Public Module Projekte
                         If ShowProjekte.contains(pname) Then
 
 
-                            shpElement = ShowProjekte.getShape(pname)
+                            'shpElement = ShowProjekte.getShape(pname)
 
-                            Dim typCollection As New Collection
-                            typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                            typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                            phaseList = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+                            'Dim typCollection As New Collection
+                            'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                            'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                            'phaseList = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+                            phaseList = projectboardShapes.getPhaseList(pname)
 
-                            typCollection.Clear()
-                            typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                            typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                            milestoneList = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+
+                            'typCollection.Clear()
+                            'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                            'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                            'milestoneList = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+                            milestoneList = projectboardShapes.getMilestoneList(pname)
 
                             ' Shape wird auf der Plan-Tafel gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
                             Call clearProjektinPlantafel(hproj.name)

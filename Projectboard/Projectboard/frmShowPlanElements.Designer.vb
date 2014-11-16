@@ -56,10 +56,10 @@ Partial Class frmShowPlanElements
         Me.ListBox1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.ListBox1.FormattingEnabled = True
         Me.ListBox1.ItemHeight = 16
-        Me.ListBox1.Location = New System.Drawing.Point(12, 141)
+        Me.ListBox1.Location = New System.Drawing.Point(12, 109)
         Me.ListBox1.Name = "ListBox1"
         Me.ListBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple
-        Me.ListBox1.Size = New System.Drawing.Size(349, 164)
+        Me.ListBox1.Size = New System.Drawing.Size(349, 196)
         Me.ListBox1.Sorted = True
         Me.ListBox1.TabIndex = 0
         '
@@ -73,7 +73,7 @@ Partial Class frmShowPlanElements
         Me.Panel1.Controls.Add(Me.rdbRoles)
         Me.Panel1.Controls.Add(Me.rdbMilestones)
         Me.Panel1.Controls.Add(Me.rdbPhases)
-        Me.Panel1.Location = New System.Drawing.Point(12, 25)
+        Me.Panel1.Location = New System.Drawing.Point(12, 12)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(349, 57)
         Me.Panel1.TabIndex = 7
@@ -159,15 +159,15 @@ Partial Class frmShowPlanElements
         Me.Panel2.Controls.Add(Me.chkbxOneChart)
         Me.Panel2.Controls.Add(Me.chkbxCreateCharts)
         Me.Panel2.Controls.Add(Me.chkbxShowObjects)
-        Me.Panel2.Location = New System.Drawing.Point(12, 317)
+        Me.Panel2.Location = New System.Drawing.Point(12, 306)
         Me.Panel2.Name = "Panel2"
-        Me.Panel2.Size = New System.Drawing.Size(349, 54)
+        Me.Panel2.Size = New System.Drawing.Size(349, 82)
         Me.Panel2.TabIndex = 8
         '
         'chkbxOneChart
         '
         Me.chkbxOneChart.AutoSize = True
-        Me.chkbxOneChart.Location = New System.Drawing.Point(226, 30)
+        Me.chkbxOneChart.Location = New System.Drawing.Point(225, 19)
         Me.chkbxOneChart.Name = "chkbxOneChart"
         Me.chkbxOneChart.Size = New System.Drawing.Size(118, 17)
         Me.chkbxOneChart.TabIndex = 8
@@ -177,7 +177,7 @@ Partial Class frmShowPlanElements
         'chkbxCreateCharts
         '
         Me.chkbxCreateCharts.AutoSize = True
-        Me.chkbxCreateCharts.Location = New System.Drawing.Point(206, 8)
+        Me.chkbxCreateCharts.Location = New System.Drawing.Point(206, 3)
         Me.chkbxCreateCharts.Name = "chkbxCreateCharts"
         Me.chkbxCreateCharts.Size = New System.Drawing.Size(97, 17)
         Me.chkbxCreateCharts.TabIndex = 7
@@ -187,7 +187,7 @@ Partial Class frmShowPlanElements
         'chkbxShowObjects
         '
         Me.chkbxShowObjects.AutoSize = True
-        Me.chkbxShowObjects.Location = New System.Drawing.Point(20, 8)
+        Me.chkbxShowObjects.Location = New System.Drawing.Point(20, 3)
         Me.chkbxShowObjects.Name = "chkbxShowObjects"
         Me.chkbxShowObjects.Size = New System.Drawing.Size(136, 17)
         Me.chkbxShowObjects.TabIndex = 6
@@ -216,7 +216,7 @@ Partial Class frmShowPlanElements
         'filterBox
         '
         Me.filterBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.filterBox.Location = New System.Drawing.Point(130, 102)
+        Me.filterBox.Location = New System.Drawing.Point(130, 76)
         Me.filterBox.Name = "filterBox"
         Me.filterBox.Size = New System.Drawing.Size(176, 22)
         Me.filterBox.TabIndex = 11
@@ -225,7 +225,7 @@ Partial Class frmShowPlanElements
         '
         Me.headerLine.AutoSize = True
         Me.headerLine.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.headerLine.Location = New System.Drawing.Point(12, 102)
+        Me.headerLine.Location = New System.Drawing.Point(12, 76)
         Me.headerLine.Name = "headerLine"
         Me.headerLine.Size = New System.Drawing.Size(49, 16)
         Me.headerLine.TabIndex = 12
@@ -233,8 +233,8 @@ Partial Class frmShowPlanElements
         '
         'pictureZoom
         '
-        Me.pictureZoom.Image = Global.ExcelWorkbook1.My.Resources.Resources.zoom_in
-        Me.pictureZoom.Location = New System.Drawing.Point(312, 95)
+        Me.pictureZoom.Image = Global.ExcelWorkbook1.My.Resources.Resources.zoom_out
+        Me.pictureZoom.Location = New System.Drawing.Point(312, 69)
         Me.pictureZoom.Name = "pictureZoom"
         Me.pictureZoom.Size = New System.Drawing.Size(33, 33)
         Me.pictureZoom.TabIndex = 20

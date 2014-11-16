@@ -171,7 +171,7 @@ Public Class frmShowProjCharacteristics
     
 
     Private Sub frmShowProjCharacteristics_Load(sender As Object, e As EventArgs) Handles Me.Load
-        Dim pShape As Excel.Shape
+        'Dim pShape As Excel.Shape
 
         Me.Top = CInt(frmCoord(PTfrm.timeMachine, PTpinfo.top))
         Me.Left = CInt(frmCoord(PTfrm.timeMachine, PTpinfo.left))
@@ -222,15 +222,17 @@ Public Class frmShowProjCharacteristics
 
         ' Änderung 140717
         ' jetzt werden die Settings für das Neuzeichnen der Shapes gesetzt 
-        pShape = ShowProjekte.getShape(vglName)
-        typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-        typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-        phaseList = projectboardShapes.getAllChildswithType(pshape, typCollection)
+        'pShape = ShowProjekte.getShape(vglName)
+        'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+        'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+        'phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+        phaseList = projectboardShapes.getPhaseList(vglName)
 
-        typCollection.Clear()
-        typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-        typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-        milestoneList = projectboardShapes.getAllChildswithType(pshape, typCollection)
+        'typCollection.Clear()
+        'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+        'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+        'milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+        milestoneList = projectboardShapes.getMilestoneList(vglName)
 
         ' Ende Änderung 140717
 

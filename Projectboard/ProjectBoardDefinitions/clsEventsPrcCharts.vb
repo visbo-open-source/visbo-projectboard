@@ -310,7 +310,7 @@ Public Class clsEventsPrcCharts
                 ' hier werden die Werte der Optimierung vermerkt: welche Projekte müssen verschoben werden , um welchen Offset 
 
                 Dim OptimierungsErgebnis As New SortedList(Of String, clsOptimizationObject)
-                Dim shpElement As Microsoft.Office.Interop.Excel.Shape
+                'Dim shpElement As Microsoft.Office.Interop.Excel.Shape
 
                 enableOnUpdate = False
 
@@ -345,17 +345,18 @@ Public Class clsEventsPrcCharts
                                             Call .syncXWertePhases()
                                         End If
 
-                                        shpElement = ShowProjekte.getShape(.name)
+                                        'shpElement = ShowProjekte.getShape(.name)
 
-                                        Dim typCollection As New Collection
-                                        typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                                        typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                                        Dim phaseList As Collection = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+                                        'Dim typCollection As New Collection
+                                        'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                                        'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                                        'Dim phaseList As Collection = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+                                        Dim phaseList As Collection = projectboardShapes.getPhaseList(.name)
 
-                                        typCollection.Clear()
-                                        typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                                        typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                                        Dim milestoneList As Collection = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+                                        'typCollection.Clear()
+                                        'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                                        'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                                        Dim milestoneList As Collection = projectboardShapes.getMilestoneList(.name)
 
 
 

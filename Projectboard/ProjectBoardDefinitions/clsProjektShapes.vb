@@ -385,7 +385,64 @@ Public Class clsProjektShapes
 
 
     End Sub
-  
+
+    ''' <summary>
+    ''' gibt für das Projekt mit Namen pName alle aktuell im Projekt-Tafel Shape gezeigten Meilensteine zurück
+    ''' </summary>
+    ''' <param name="pName">Projekt-Name im Showprojekte </param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneList(ByVal pName As String) As Collection
+        Get
+            Dim projektShape As Excel.Shape
+            Dim tmpCollection As New Collection
+
+            projektShape = ShowProjekte.getShape(pName)
+
+            If IsNothing(projektShape) Then
+
+            Else
+                tmpCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                tmpCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+
+                tmpCollection = getAllChildswithType(projektShape, tmpCollection)
+            End If
+
+            getMilestoneList = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt für das Projekt mit Namen pName alle aktuell im Projekt-Tafel Shape gezeigten Phasen zurück
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseList(ByVal pName As String) As Collection
+        Get
+            Dim projektShape As Excel.Shape
+            Dim tmpCollection As New Collection
+
+            projektShape = ShowProjekte.getShape(pName)
+
+            If IsNothing(projektShape) Then
+
+            Else
+                tmpCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                tmpCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+
+                tmpCollection = getAllChildswithType(projektShape, tmpCollection)
+            End If
+
+            getPhaseList = tmpCollection
+
+        End Get
+    End Property
+
+
     ''' <summary>
     ''' gibt eine Collection der Shape-Namen zurück, die im gruppierten Shape projektshape enthalten sind
     ''' jedes Item hat folgende Struktur: 
@@ -399,7 +456,7 @@ Public Class clsProjektShapes
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAllChildswithType(ByVal projektShape As Excel.Shape, ByVal typCollection As Collection) As Collection
+    Private ReadOnly Property getAllChildswithType(ByVal projektShape As Excel.Shape, ByVal typCollection As Collection) As Collection
         Get
             Dim tmpCollection As New Collection
             Dim i As Integer
@@ -485,7 +542,7 @@ Public Class clsProjektShapes
                 End If
 
             End If
-            
+
 
             getAllChildswithType = tmpCollection
 
@@ -867,15 +924,16 @@ Public Class clsProjektShapes
                     pShape = shpElement
                     Dim phaseList As Collection
                     Dim milestoneList As Collection
-                    Dim typCollection As New Collection
-                    typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                    typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                    phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
-
-                    typCollection.Clear()
-                    typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                    typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                    milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+                    'Dim typCollection As New Collection
+                    'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                    'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                    'phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+                    phaseList = Me.getPhaseList(pName)
+                    milestoneList = Me.getMilestoneList(pName)
+                    'typCollection.Clear()
+                    'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                    'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                    'milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
 
                     Call clearProjektinPlantafel(pName)
                     ' in selCollection sind die Namen der Projekte, die beim Neuzeichnen nicht berücksichtigt werden sollen, weil 
@@ -1014,15 +1072,18 @@ Public Class clsProjektShapes
 
                         Dim phaseList As Collection
                         Dim milestoneList As Collection
-                        Dim typCollection As New Collection
-                        typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                        typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                        phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+                        'Dim typCollection As New Collection
+                        'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                        'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                        'phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
 
-                        typCollection.Clear()
-                        typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                        typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                        milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+                        phaseList = Me.getPhaseList(pName)
+                        milestoneList = Me.getMilestoneList(pName)
+
+                        'typCollection.Clear()
+                        'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                        'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                        'milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
 
 
                         Call clearProjektinPlantafel(pName)
@@ -1097,15 +1158,18 @@ Public Class clsProjektShapes
 
                         Dim phaseList As Collection
                         Dim milestoneList As Collection
-                        Dim typCollection As New Collection
-                        typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                        typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                        phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+                        'Dim typCollection As New Collection
+                        'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                        'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                        'phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
 
-                        typCollection.Clear()
-                        typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                        typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                        milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+                        phaseList = Me.getPhaseList(pName)
+                        milestoneList = Me.getMilestoneList(pName)
+
+                        'typCollection.Clear()
+                        'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                        'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                        'milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
 
                         Call clearProjektinPlantafel(pName)
 
@@ -1181,15 +1245,18 @@ Public Class clsProjektShapes
                     pShape = ShowProjekte.getShape(hproj.name)
                 End If
 
-                Dim typCollection As New Collection
-                typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                Dim phaseList As Collection = Me.getAllChildswithType(pShape, typCollection)
+                'Dim typCollection As New Collection
+                'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                'Dim phaseList As Collection = Me.getAllChildswithType(pShape, typCollection)
 
-                typCollection.Clear()
-                typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                Dim milestoneList As Collection = Me.getAllChildswithType(pShape, typCollection)
+                Dim phaseList As Collection = Me.getPhaseList(pName)
+                Dim milestoneList As Collection = Me.getMilestoneList(pName)
+
+                'typCollection.Clear()
+                'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                'Dim milestoneList As Collection = Me.getAllChildswithType(pShape, typCollection)
 
 
                 Call clearProjektinPlantafel(pName)

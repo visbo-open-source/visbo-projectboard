@@ -829,6 +829,8 @@ Imports System.Drawing
         Dim request As New Request(awinSettings.databaseName)
         Dim newproj As clsProjekt
         Dim key As String
+        Dim phaseList As New Collection
+        Dim milestoneList As New Collection
 
 
         Call projektTafelInit()
@@ -849,6 +851,8 @@ Imports System.Drawing
 
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name)
+                    phaseList = projectboardShapes.getPhaseList(hproj.name)
+                    milestoneList = projectboardShapes.getMilestoneList(hproj.name)
                 Catch ex As Exception
                     Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
                     enableOnUpdate = True
@@ -899,7 +903,7 @@ Imports System.Drawing
                     Try
 
                         Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(tmpCollection, newproj.name, newproj.tfZeile, tmpCollection, tmpCollection)
+                        Call ZeichneProjektinPlanTafel(tmpCollection, newproj.name, newproj.tfZeile, phaseList, milestoneList)
 
                     Catch ex As Exception
 
@@ -1419,7 +1423,7 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub VisPlanObjects001(control As IRibbonControl)
 
-        Dim visPlanObjects As New frmShowPlanElements
+        Dim auswahlFormular As New frmShowPlanElements
 
 
         Call projektTafelInit()
@@ -1428,20 +1432,96 @@ Imports System.Drawing
         appInstance.EnableEvents = False
 
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
-        If ShowProjekte.Count > 0 Then
+        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
 
-            visPlanObjects.Show()
+            With auswahlFormular
+                .Text = "Plan-Elemente visualisieren"
+                .rdbPhases.Checked = True
 
-        Else
-            If ShowProjekte.Count = 0 Then
-                Call MsgBox("Es sind keine Projekte sichtbar!  ")
-            End If
+                .chkbxShowObjects.Checked = True
+                .chkbxShowObjects.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .chkbxCreateCharts.Checked = False
+                .chkbxCreateCharts.Visible = False
+
+                .showModePortfolio = True
+                .menuOption = PTmenue.visualisieren
+
+                .Show()
+            End With
+
+
+        ElseIf ShowProjekte.Count = 0 Then
+
+            Call MsgBox("Es sind keine Projekte sichtbar!  ")
+
+        ElseIf showRangeRight - showRangeLeft <= 5 Then
+
+            Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
+
         End If
 
 
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
+
+
+    End Sub
+
+
+    Sub AnalyseLeistbarkeit(ByVal control As IRibbonControl)
+
+        Dim auswahlFormular As New frmShowPlanElements
+
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = False
+
+        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
+        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+
+            With auswahlFormular
+                .Text = "Leistbarkeit analysieren"
+                .rdbPhases.Checked = True
+
+                .chkbxShowObjects.Checked = False
+                .chkbxShowObjects.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = True
+
+                .chkbxCreateCharts.Checked = True
+                .chkbxCreateCharts.Visible = False
+
+                .showModePortfolio = True
+
+                .menuOption = PTmenue.leistbarkeitsAnalyse
+
+                .Show()
+            End With
+
+
+        ElseIf ShowProjekte.Count = 0 Then
+
+            Call MsgBox("Es sind keine Projekte geladen!  ")
+
+        ElseIf showRangeRight - showRangeLeft <= 5 Then
+
+            Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
+
+        End If
+
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
 
 
     End Sub

@@ -18,6 +18,8 @@
           <!--<button id="PTXG1B4" label="Auslastung" onAction="PT0ShowAuslastung" />-->
           <button id="PTXG1B4" label="Planelemente visualisieren" onAction="VisPlanObjects001" />
           <separator id="PTXG1s3"/>
+          <button id="PTXG1B5" label="Leistbarkeit analysieren" onAction="AnalyseLeistbarkeit" />
+          <separator id="PTXG1s4"/>
           <button id="PTXG1B7" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
           <!--<separator id="PTXG1s4"/>
           <button id="PTXG1B5" label="Engpass" onAction="PTXShowEngpass" />
@@ -35,7 +37,7 @@
       </tab>
       
       <tab id="PT0" label="Detail-Info">
-        <group id="PT0G1" label="Projekt">
+        <group id="PT0G1" label="Projekt Informationen">
           <!--<menu id="PT0G1M3" label="Chart-Cockpit">
             <button id="PT0G1M3B1" label="Cockpit visualisieren" onAction="PT0ShowCockpit" />
             <button id="PT0G1M3B2" label="Cockpit speichern" onAction="PT0SaveCockpit" />
@@ -71,7 +73,7 @@
           <button id="PT0G1B6" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
         </group>
         
-        <group id="PT0G2" label="Portfolio">
+        <!--<group id="PT0G2" label="Portfolio">
           <button id="PT0G2B1" label="Status" onAction="Tom2G2M5M1B3ShowStatus" />
           <separator id="PT0G2s1"/>
           <menu id="PT0G2M0" label="Phasen">
@@ -102,7 +104,7 @@
           <separator id="PT0G2s5"/>
           <button id="PT0G2B10" label="Budget/Kosten" onAction="PT0ShowPortfolioBudgetCost" />
           <button id="PT0G2B11" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" />
-        </group>
+        </group>-->
       </tab>
       <!--
       
@@ -111,9 +113,9 @@
         <group id="PT1G1" label="Powerpoint">
           <button id="PT1G1B1" label="Einzelprojekt Bericht" onAction="Tom2G1Doku" />
           <separator id="PT1G1s1"/>
-          <button id="PT1G1B2" label="Portfolio Bericht" onAction="awinAllprojectsReport" />
-          <!--<separator id="PT1G1s2"/>
-          <button id="PT1G1B3" label="Visualisieren Neu" onAction="VisPlanObjects001" />-->
+          <button id="PT1G1B2" label="Szenario/KPI Bericht" onAction="awinAllprojectsReport" />
+          <separator id="PT1G1s2"/>
+          <button id="PT1G1B3" label="Multiprojekt Sicht" onAction="MultiprojektReport" />
         </group>
       </tab>
       <!--

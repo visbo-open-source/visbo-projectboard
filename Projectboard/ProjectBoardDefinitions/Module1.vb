@@ -175,13 +175,6 @@ Public Module Module1
         dependency = 9
     End Enum
 
-    ' wird in awinSetTypen dimensioniert und gesetzt 
-    Public portfolioDiagrammtitel() As String
-
-    ' nimmt die Namen der im Zuge der Optimierung automatisch generierten Szenarios auf
-    Public autoSzenarioNamen(3) As String
-
-
     ' Enumeration History Change Criteria: um anzugeben, welche Veränderung man in der History eines Projektes sucht 
 
     Public Enum PThcc
@@ -224,6 +217,20 @@ Public Module Module1
         none = 0
         inhalt = 1
     End Enum
+
+    Public Enum PTmenue
+        visualisieren = 0
+        leistbarkeitsAnalyse = 1
+        multiprojektReport = 2
+    End Enum
+
+
+    ' wird in awinSetTypen dimensioniert und gesetzt 
+    Public portfolioDiagrammtitel() As String
+
+    ' nimmt die Namen der im Zuge der Optimierung automatisch generierten Szenarios auf
+    Public autoSzenarioNamen(3) As String
+
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
     ' die Koordinaten werden in der Reihenfolge gespeichert: top, left, width, height 
