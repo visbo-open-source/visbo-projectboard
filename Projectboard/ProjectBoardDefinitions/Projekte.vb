@@ -15065,6 +15065,13 @@ Public Module Projekte
 
                         End If
 
+                    Case PTpfdk.Meilenstein
+
+                        For i = 1 To mycollection.Count
+                            cName = CStr(mycollection.Item(i))
+                            IDkennung = IDkennung & "#" & cName
+                        Next
+
                     Case PTpfdk.Rollen
 
                         If mycollection.Count = RoleDefinitions.Count Then

@@ -229,6 +229,77 @@ Public Class clsProjekte
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt in earliestDate und latestDate das früheste und späteste Datum zurück, wo eine der angegebenen Phasen / Meilensteine 
+    ''' beginnt bzw. endet 
+    ''' </summary>
+    ''' <param name="selectedphases"></param>
+    ''' <param name="selectedMilestones"></param>
+    ''' <param name="von"></param>
+    ''' <param name="bis"></param>
+    ''' <param name="firstDate"></param>
+    ''' <param name="lastDate"></param>
+    ''' <remarks></remarks>
+    Public Sub calcFirstandLastDate(ByVal selectedphases As Collection, ByVal selectedMilestones As Collection, _
+                                        ByVal von As Integer, ByVal bis As Integer, _
+                                        ByRef firstDate As Date, ByRef lastDate As Date)
+
+        Dim tmpListe As New Collection
+        Dim cphase As clsPhase
+        Dim tmp1 As Date = StartofCalendar.AddYears(100), tmp2 As Date = StartofCalendar
+
+        Dim milestone As clsMeilenstein
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+
+            Try
+                For p = 1 To kvp.Value.CountPhases
+
+                    cphase = kvp.Value.getPhase(p)
+
+                    If selectedMilestones.Count > 0 Then
+                        For r = 1 To cphase.CountResults
+
+                            milestone = cphase.getResult(r)
+                            If selectedMilestones.Contains(milestone.name) Then
+
+                                If DateDiff(DateInterval.Day, milestone.getDate, tmp1) > 0 Then
+                                    tmp1 = milestone.getDate
+                                End If
+
+                            End If
+
+                        Next
+                    End If
+
+                    If selectedphases.Count > 0 Then
+                        If selectedphases.Contains(cphase.name) Then
+                            If DateDiff(DateInterval.Day, cphase.getStartDate, tmp1) > 0 Then
+                                tmp1 = cphase.getStartDate
+                            End If
+
+                            If DateDiff(DateInterval.Day, cphase.getEndDate, tmp2) < 0 Then
+                                tmp2 = cphase.getEndDate
+                            End If
+
+                        End If
+                    End If
+
+
+                Next
+            Catch ex As Exception
+
+            End Try
+
+
+        Next
+
+        firstDate = tmp1
+        lastDate = tmp2
+
+    End Sub
+
+
 
     ''' <summary>
     ''' gibt die nach Namen sortierte Liste von Projekten zurück 

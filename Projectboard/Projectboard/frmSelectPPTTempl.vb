@@ -145,7 +145,10 @@ Public Class frmSelectPPTTempl
 
         Dim vorlagenDateiName As String = CType(e.Argument, String)
 
-        Call createPPTSlidesFromConstellation(vorlagenDateiName, worker, e)
+        'Call createPPTSlidesFromConstellation(vorlagenDateiName, worker, e)
+        Dim tmpCollection As New Collection
+        Call createPPTSlidesFromConstellation(vorlagenDateiName, tmpCollection, tmpCollection, _
+                                              tmpCollection, tmpCollection, False, 4, True, worker, e)
 
 
     End Sub
@@ -197,4 +200,7 @@ Public Class frmSelectPPTTempl
 
     End Sub
 
+    Private Sub statusNotification_TextChanged(sender As Object, e As EventArgs) Handles statusNotification.TextChanged
+
+    End Sub
 End Class

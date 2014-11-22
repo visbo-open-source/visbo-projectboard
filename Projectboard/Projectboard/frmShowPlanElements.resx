@@ -118,6 +118,16 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="picturePhasen.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAAFxEAABcRAcom8z8AAAAGYktHRAD/AP8A/6C9p5MAAAAHdElNRQfeCgkHFzYcLode
+        AAAAtElEQVRYR+2UMQrCMBhGQ6mzo4MeyKFDvI/gGdTFIzgUGr2Am6N08AR1r7mA1E/4kFBKdEgCyv/g
+        QYYP3j9FCYLwxtgRHCcyZ9XB2CvsErln1cHYpjeK6YFVBznA2HNvFNMdq6S6vw7I4TSBM5hBxgXBw6md
+        8xWe7WXBl4d1rdWm1iVsAnqDmgk/GGbwAbvAHpnwg2GsAwZ+wgEw/NsDKiY+g3EBlwFdwQlkwcNXI0EQ
+        fhulnowRMcdd5Ct2AAAAAElFTkSuQmCC
+</value>
+  </data>
   <data name="pictureMilestones.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -132,14 +142,10 @@
         qZiFn9sAAAAASUVORK5CYII=
 </value>
   </data>
-  <data name="picturePhasen.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFxEAABcRAcom8z8AAAAGYktHRAD/AP8A/6C9p5MAAAAHdElNRQfeCgkHFzYcLode
-        AAAAtElEQVRYR+2UMQrCMBhGQ6mzo4MeyKFDvI/gGdTFIzgUGr2Am6N08AR1r7mA1E/4kFBKdEgCyv/g
-        QYYP3j9FCYLwxtgRHCcyZ9XB2CvsErln1cHYpjeK6YFVBznA2HNvFNMdq6S6vw7I4TSBM5hBxgXBw6md
-        8xWe7WXBl4d1rdWm1iVsAnqDmgk/GGbwAbvAHpnwg2GsAwZ+wgEw/NsDKiY+g3EBlwFdwQlkwcNXI0EQ
-        fhulnowRMcdd5Ct2AAAAAElFTkSuQmCC
-</value>
-  </data>
+  <metadata name="BackgroundWorker1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>129</value>
+  </metadata>
 </root>

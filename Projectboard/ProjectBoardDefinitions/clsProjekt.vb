@@ -596,7 +596,7 @@ Public Class clsProjekt
     ''' liefert zu einem gegebenen Meilenstein das definierte Datum zurück
     ''' die Ampelfarbe wird ebenfalls in das Datum als Ablauf von Sekunden nach Mitternacht integriert
     ''' 0-nicht bewertet, 1-grün, 2-gelb, 3-rot
-    ''' Fehler, wenn Meilenstein nicht existiert
+    ''' Nothing, wenn Meilenstein nicht existiert
     ''' Existieren mehrere Meilensteine desselben Namens so wird nur der erste zurückgebracht 
     ''' </summary>
     ''' <param name="milestoneName"></param>
@@ -646,7 +646,7 @@ Public Class clsProjekt
             If found Then
                 getMilestoneDate = tmpDate
             Else
-                Throw New Exception("Meilenstein existiert nicht")
+                getMilestoneDate = Nothing
             End If
 
         End Get

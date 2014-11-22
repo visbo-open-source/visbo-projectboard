@@ -1,4 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
+Imports System.ComponentModel
+Imports ClassLibrary1
 
 Public Class frmShowPlanElements
 
@@ -19,6 +21,8 @@ Public Class frmShowPlanElements
 
     Private selectedRoles As New Collection
     Private sKeyRoles As String = ""
+
+    Private backgroundRunning As Boolean = False
 
 
     Private Enum PTauswahlTyp
@@ -53,6 +57,34 @@ Public Class frmShowPlanElements
             Me.Left = 100
         End If
 
+        statusLabel.Text = ""
+        statusLabel.Visible = True
+
+
+        ' jetzt werden die ProjektReport- bzw. PortfolioReport-Vorlagen ausgelesen 
+        ' in diesem Fall werden nur die mit Multiprojekt angezeigt 
+
+        If Me.menuOption = PTmenue.multiprojektReport Then
+            Dim dateiName As String = ""
+            Dim dirname As String = awinPath & RepPortfolioVorOrdner
+
+            Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
+            Try
+
+                Dim i As Integer
+                For i = 1 To listOfVorlagen.Count
+                    dateiName = Dir(listOfVorlagen.Item(i - 1))
+                    If dateiName.Contains("Multiprojekt") Then
+                        repVorlagenDropbox.Items.Add(dateiName)
+                    End If
+
+                Next i
+            Catch ex As Exception
+                'Call MsgBox(ex.Message & ": " & dateiName)
+            End Try
+        End If
+
+
 
     End Sub
 
@@ -64,224 +96,317 @@ Public Class frmShowPlanElements
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        If ListBox1.SelectedItems.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+        statusLabel.Text = ""
 
-            If Me.rdbPhases.Checked = True Then
+        ' hier muss jetzt noch der aktuelle rdb ausgelesen werden ..
+        If Me.rdbPhases.Checked = True Then
 
-                If chkbxShowObjects.Checked = True Then
-
-                    ' alles in einem Chart anzeigen 
-                    selectedPhases.Clear()
-                    'For Each element As String In ListBox1.SelectedItems
-                    For Each element As String In selectedPhases
-                        selectedPhases.Add(element, element)
-                    Next
-
-                    ' Phasen anzeigen 
-
-                    Call awinZeichnePhasen(selectedPhases, False, True)
-
-                    If selectedMilestones.Count > 0 Then
-                        ' Phasen anzeigen 
-                        Dim farbID As Integer = 4
-                        Call awinZeichneMilestones(selectedMilestones, farbID, False, True)
-
-                    End If
-
-                    selectedMilestones.Clear()
-                    selectedPhases.Clear()
-
+            selectedPhases.Clear()
+            For Each element As String In ListBox1.SelectedItems
+                If Not selectedPhases.Contains(element) Then
+                    selectedPhases.Add(element, element)
                 End If
+            Next
 
+        ElseIf Me.rdbMilestones.Checked = True Then
 
-                If chkbxCreateCharts.Checked = True Then
-
-                    ' Window Position festlegen 
-                    chtop = 50.0 + awinSettings.ChartHoehe1
-                    chleft = (showRangeRight - 1) * boxWidth + 4
-                    chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
-                    chHeight = awinSettings.ChartHoehe1
-                    chTyp = DiagrammTypen(0)
-
-                    If chkbxOneChart.Checked = True Then
-
-                        ' alles in einem Chart anzeigen 
-                        myCollection = New Collection
-                        For Each element As String In ListBox1.SelectedItems
-                            myCollection.Add(element, element)
-                        Next
-
-                        repObj = Nothing
-                        Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
-                                                                          chWidth, chHeight, False, chTyp, False)
-
-
-                    Else
-                        ' für jedes ITEM ein eigenes Chart machen
-                        For Each element As String In ListBox1.SelectedItems
-                            ' es muss jedesmal eine neue Collection erzeugt werden - die Collection wird in DiagramList gemerkt
-                            ' wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
-                            myCollection = New Collection
-                            myCollection.Add(element, element)
-                            repObj = Nothing
-
-                            Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
-                                                                               chWidth, chHeight, False, chTyp, False)
-
-                            chtop = chtop + chHeight + 2
-                        Next
-
-                    End If
-
+            selectedMilestones.Clear()
+            For Each element As String In ListBox1.SelectedItems
+                If Not selectedMilestones.Contains(element) Then
+                    selectedMilestones.Add(element, element)
                 End If
+            Next
+
+        ElseIf rdbRoles.Checked = True Then
+
+            selectedRoles.Clear()
+            For Each element As String In ListBox1.SelectedItems
+                If Not selectedRoles.Contains(element) Then
+                    selectedRoles.Add(element, element)
+                End If
+            Next
+
+        ElseIf rdbCosts.Checked = True Then
+
+            selectedCosts.Clear()
+            For Each element As String In ListBox1.SelectedItems
+                If Not selectedCosts.Contains(element) Then
+                    selectedCosts.Add(element, element)
+                End If
+            Next
+
+        End If
 
 
+        ''''
+        ''
+        ''
+        ' jetzt kommt die Fall-Unterscheidung 
+        ''
+        ''
+        ''''
+
+        If Me.menuOption = PTmenue.multiprojektReport Then
+
+            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
+                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
+                    And showRangeRight - showRangeLeft > 5 Then
+
+                Dim vorlagenDateiName As String
+                vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
+                                    "\" & repVorlagenDropbox.Text
+
+                Try
+                    rdbMilestones.Enabled = False
+                    rdbPhases.Enabled = False
+                    rdbRoles.Enabled = False
+                    rdbCosts.Enabled = False
+                    filterBox.Enabled = False
+                    ListBox1.Enabled = False
+                    OKButton.Enabled = False
+                    repVorlagenDropbox.Enabled = False
+                    AbbrButton.Cursor = Cursors.Arrow
+
+                    statusLabel.Text = ""
+                    statusLabel.Visible = True
+
+                    Me.Cursor = Cursors.WaitCursor
+
+                    ' Alternativ ohne Background Worker
+
+                    BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
+
+                Catch ex As Exception
+                    Call MsgBox(ex.Message)
+                End Try
 
 
-            ElseIf Me.rdbMilestones.Checked = True Then
-                ' Milestones anzeigen
+            Else
+                Call MsgBox("bitte mindestens ein Element selektieren bzw. " & vbLf & _
+                             "einen Zeitraum angeben ...")
+            End If
 
-                ' wenn Röntgen Blick an ist: ausschalten und Anzeige löschen
-                ' Alle bisher angezeigten Milestones löschen
-                Dim farbID As Integer = 4
+        ElseIf Me.menuOption = PTmenue.leistbarkeitsAnalyse Or Me.menuOption = PTmenue.visualisieren Then
 
-                If chkbxShowObjects.Checked = True Then
+            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
+                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
+                    And showRangeRight - showRangeLeft > 5 Then
 
-                    If selectedPhases.Count > 0 Then
+                If Me.rdbPhases.Checked = True Then
+
+                    If chkbxShowObjects.Checked = True Then
 
                         ' Phasen anzeigen 
+
                         Call awinZeichnePhasen(selectedPhases, False, True)
 
+                        If selectedMilestones.Count > 0 Then
+                            ' Phasen anzeigen 
+                            Dim farbID As Integer = 4
+                            Call awinZeichneMilestones(selectedMilestones, farbID, False, True)
+
+                        End If
+
+                        selectedMilestones.Clear()
+                        selectedPhases.Clear()
+
+                    End If
+
+
+                    If chkbxCreateCharts.Checked = True Then
+
+                        ' Window Position festlegen 
+                        chtop = 50.0 + awinSettings.ChartHoehe1
+                        chleft = (showRangeRight - 1) * boxWidth + 4
+                        chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
+                        chHeight = awinSettings.ChartHoehe1
+                        chTyp = DiagrammTypen(0)
+
+                        If chkbxOneChart.Checked = True Then
+
+                            ' alles in einem Chart anzeigen 
+                            myCollection = New Collection
+                            For Each element As String In ListBox1.SelectedItems
+                                myCollection.Add(element, element)
+                            Next
+
+                            repObj = Nothing
+                            Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
+                                                                              chWidth, chHeight, False, chTyp, False)
+
+
+                        Else
+                            ' für jedes ITEM ein eigenes Chart machen
+                            For Each element As String In ListBox1.SelectedItems
+                                ' es muss jedesmal eine neue Collection erzeugt werden - die Collection wird in DiagramList gemerkt
+                                ' wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
+                                myCollection = New Collection
+                                myCollection.Add(element, element)
+                                repObj = Nothing
+
+                                Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
+                                                                                   chWidth, chHeight, False, chTyp, False)
+
+                                chtop = chtop + chHeight + 2
+                            Next
+
+                        End If
+
                     End If
 
 
 
-                    ' alles in einem Chart anzeigen 
-                    selectedMilestones.Clear()
-                    For Each element As String In ListBox1.SelectedItems
-                        selectedMilestones.Add(element, element)
-                    Next
 
-                    ' Phasen anzeigen 
-                    Call awinZeichneMilestones(selectedMilestones, farbID, False, True)
+                ElseIf Me.rdbMilestones.Checked = True Then
+                    ' Milestones anzeigen
 
-                    selectedMilestones.Clear()
-                    selectedPhases.Clear()
+                    ' wenn Röntgen Blick an ist: ausschalten und Anzeige löschen
+                    ' Alle bisher angezeigten Milestones löschen
+                    Dim farbID As Integer = 4
 
-                End If
+                    If chkbxShowObjects.Checked = True Then
+
+                        If selectedPhases.Count > 0 Then
+
+                            ' Phasen anzeigen 
+                            Call awinZeichnePhasen(selectedPhases, False, True)
+
+                        End If
 
 
-                If chkbxCreateCharts.Checked = True Then
-
-                    ' Window Position festlegen 
-                    chtop = 50.0 + awinSettings.ChartHoehe1
-                    chleft = (showRangeRight - 1) * boxWidth + 4
-                    chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
-                    chHeight = awinSettings.ChartHoehe1
-                    chTyp = DiagrammTypen(5)
-
-                    If chkbxOneChart.Checked = True Then
 
                         ' alles in einem Chart anzeigen 
-                        myCollection = New Collection
+                        selectedMilestones.Clear()
                         For Each element As String In ListBox1.SelectedItems
-                            myCollection.Add(element, element)
+                            selectedMilestones.Add(element, element)
                         Next
 
-                        repObj = Nothing
-                        Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
-                                                                          chWidth, chHeight, False, chTyp, False)
+                        ' Phasen anzeigen 
+                        Call awinZeichneMilestones(selectedMilestones, farbID, False, True)
+
+                        selectedMilestones.Clear()
+                        selectedPhases.Clear()
+
+                    End If
 
 
-                    Else
-                        ' für jedes ITEM ein eigenes Chart machen
-                        For Each element As String In ListBox1.SelectedItems
-                            ' es muss jedesmal eine neue Collection erzeugt werden - die Collection wird in DiagramList gemerkt
-                            ' wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
+                    If chkbxCreateCharts.Checked = True Then
+
+                        ' Window Position festlegen 
+                        chtop = 50.0 + awinSettings.ChartHoehe1
+                        chleft = (showRangeRight - 1) * boxWidth + 4
+                        chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
+                        chHeight = awinSettings.ChartHoehe1
+                        chTyp = DiagrammTypen(5)
+
+                        If chkbxOneChart.Checked = True Then
+
+                            ' alles in einem Chart anzeigen 
                             myCollection = New Collection
-                            myCollection.Add(element, element)
+                            For Each element As String In ListBox1.SelectedItems
+                                myCollection.Add(element, element)
+                            Next
+
                             repObj = Nothing
-
                             Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
-                                                                               chWidth, chHeight, False, chTyp, False)
+                                                                              chWidth, chHeight, False, chTyp, False)
 
-                            chtop = chtop + chHeight + 2
-                        Next
+
+                        Else
+                            ' für jedes ITEM ein eigenes Chart machen
+                            For Each element As String In ListBox1.SelectedItems
+                                ' es muss jedesmal eine neue Collection erzeugt werden - die Collection wird in DiagramList gemerkt
+                                ' wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
+                                myCollection = New Collection
+                                myCollection.Add(element, element)
+                                repObj = Nothing
+
+                                Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
+                                                                                   chWidth, chHeight, False, chTyp, False)
+
+                                chtop = chtop + chHeight + 2
+                            Next
+
+                        End If
 
                     End If
 
-                End If
+
+                ElseIf Me.rdbRoles.Checked = True Or Me.rdbCosts.Checked = True Then
+                    ' Rollen anzeigen 
 
 
-            ElseIf Me.rdbRoles.Checked = True Or Me.rdbCosts.Checked = True Then
-                ' Rollen anzeigen 
+                    If chkbxShowObjects.Checked = True Then
 
 
-                If chkbxShowObjects.Checked = True Then
-
-
-                End If
-
-                If chkbxCreateCharts.Checked = True Then
-
-                    ' Window Position festlegen 
-                    chtop = 50.0 + awinSettings.ChartHoehe1
-                    chleft = (showRangeRight - 1) * boxWidth + 4
-                    chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
-                    chHeight = awinSettings.ChartHoehe1
-
-                    If Me.rdbRoles.Checked = True Then
-                        chTyp = DiagrammTypen(1)
-                    Else
-                        chTyp = DiagrammTypen(2)
                     End If
 
+                    If chkbxCreateCharts.Checked = True Then
 
-                    If chkbxOneChart.Checked = True Then
+                        ' Window Position festlegen 
+                        chtop = 50.0 + awinSettings.ChartHoehe1
+                        chleft = (showRangeRight - 1) * boxWidth + 4
+                        chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
+                        chHeight = awinSettings.ChartHoehe1
 
-                        ' alles in einem Chart anzeigen 
-                        myCollection = New Collection
-                        For Each element As String In ListBox1.SelectedItems
-                            myCollection.Add(element, element)
-                        Next
-
-                        repObj = Nothing
-                        Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
-                                                                          chWidth, chHeight, False, chTyp, False)
+                        If Me.rdbRoles.Checked = True Then
+                            chTyp = DiagrammTypen(1)
+                        Else
+                            chTyp = DiagrammTypen(2)
+                        End If
 
 
-                    Else
-                        ' für jedes ITEM ein eigenes Chart machen
-                        For Each element As String In ListBox1.SelectedItems
-                            ' es muss jedesmal eine neue Collection erzeugt werden - die Collection wird in DiagramList gemerkt
-                            ' wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
+                        If chkbxOneChart.Checked = True Then
+
+                            ' alles in einem Chart anzeigen 
                             myCollection = New Collection
-                            myCollection.Add(element, element)
+                            For Each element As String In ListBox1.SelectedItems
+                                myCollection.Add(element, element)
+                            Next
+
                             repObj = Nothing
-
                             Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
-                                                                               chWidth, chHeight, False, chTyp, False)
+                                                                              chWidth, chHeight, False, chTyp, False)
 
-                            chtop = chtop + chHeight + 2
-                        Next
+
+                        Else
+                            ' für jedes ITEM ein eigenes Chart machen
+                            For Each element As String In ListBox1.SelectedItems
+                                ' es muss jedesmal eine neue Collection erzeugt werden - die Collection wird in DiagramList gemerkt
+                                ' wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
+                                myCollection = New Collection
+                                myCollection.Add(element, element)
+                                repObj = Nothing
+
+                                Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
+                                                                                   chWidth, chHeight, False, chTyp, False)
+
+                                chtop = chtop + chHeight + 2
+                            Next
+
+                        End If
 
                     End If
 
+
+
+                    'ElseIf Me.rdbCosts.Checked = True Then
+                    ' Kosten anzeigen
+
+                    ' Röntgen-Blick anschalten, wenn nicht eh schon an
+                    ' wenn der an war, alle Werte zurücksetzen
+
                 End If
 
-
-
-                'ElseIf Me.rdbCosts.Checked = True Then
-                ' Kosten anzeigen
-
-                ' Röntgen-Blick anschalten, wenn nicht eh schon an
-                ' wenn der an war, alle Werte zurücksetzen
-
+            Else
+                Call MsgBox("bitte mindestens ein Element selektieren bzw. " & vbLf & _
+                             "einen Zeitraum angeben ...")
             End If
 
         Else
-            Call MsgBox("bitte mindestens ein Element selektieren bzw. " & vbLf & _
-                         "einen Zeitraum angeben ...")
+
+            Call MsgBox("noch nicht unterstützt")
+
         End If
 
 
@@ -307,6 +432,7 @@ Public Class frmShowPlanElements
     ''' <remarks></remarks>
     Private Sub rdbPhases_CheckedChanged(sender As Object, e As EventArgs) Handles rdbPhases.CheckedChanged
 
+        statusLabel.Text = ""
 
         If Me.rdbPhases.Checked Then
             ' clear Listbox1 
@@ -339,6 +465,7 @@ Public Class frmShowPlanElements
 
     Private Sub rdbMilestones_CheckedChanged(sender As Object, e As EventArgs) Handles rdbMilestones.CheckedChanged
 
+        statusLabel.Text = ""
 
         If Me.rdbMilestones.Checked Then
             ' clear Listbox1 
@@ -379,6 +506,8 @@ Public Class frmShowPlanElements
 
         Dim i As Integer
 
+        statusLabel.Text = ""
+
         If RoleDefinitions.Count = 0 Then
             Call MsgBox("es sind keine Kostenarten definiert !")
         Else
@@ -418,6 +547,8 @@ Public Class frmShowPlanElements
     Private Sub rdbCosts_CheckedChanged(sender As Object, e As EventArgs) Handles rdbCosts.CheckedChanged
         Dim i As Integer
 
+        statusLabel.Text = ""
+
         If CostDefinitions.Count = 0 Then
             Call MsgBox("es sind keine Kostenarten definiert !")
         Else
@@ -454,21 +585,50 @@ Public Class frmShowPlanElements
 
     Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
 
-        ListBox1.SelectedItems.Clear()
-        filterBox.Text = ""
 
-        If rdbPhases.Checked Then
-            selectedPhases.Clear()
-        ElseIf rdbMilestones.Checked Then
-            selectedMilestones.Clear()
-        ElseIf rdbRoles.Checked Then
-            selectedRoles.Clear()
+        If menuOption = PTmenue.multiprojektReport And backgroundRunning Then
+
+            rdbMilestones.Enabled = True
+            rdbPhases.Enabled = True
+            rdbRoles.Enabled = True
+            rdbCosts.Enabled = True
+            filterBox.Enabled = True
+            ListBox1.Enabled = True
+            OKButton.Enabled = True
+            repVorlagenDropbox.Enabled = True
+            statusLabel.Text = "Berichterstellung wurde beendet"
+
+            Me.Cursor = Cursors.Arrow
+            backgroundRunning = False
+
+            Try
+                Me.BackgroundWorker1.CancelAsync()
+            Catch ex As Exception
+
+            End Try
+
+
         Else
-            selectedCosts.Clear()
+            ListBox1.SelectedItems.Clear()
+            filterBox.Text = ""
+
+            If rdbPhases.Checked Then
+                selectedPhases.Clear()
+            ElseIf rdbMilestones.Checked Then
+                selectedMilestones.Clear()
+            ElseIf rdbRoles.Checked Then
+                selectedRoles.Clear()
+            Else
+                selectedCosts.Clear()
+            End If
         End If
+
+        
         'MyBase.Close()
 
     End Sub
+
+
 
     Private Sub chkbxCreateCharts_CheckedChanged(sender As Object, e As EventArgs) Handles chkbxCreateCharts.CheckedChanged
 
@@ -595,4 +755,45 @@ Public Class frmShowPlanElements
         Next
     End Sub
 
+    Private Sub BackgroundWorker1_Disposed(sender As Object, e As EventArgs) Handles BackgroundWorker1.Disposed
+
+        
+
+    End Sub
+
+
+    Private Sub BackgroundWorker1_DoWork(sender As Object, e As DoWorkEventArgs) Handles BackgroundWorker1.DoWork
+
+        Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
+        Dim vorlagenDateiName As String = CType(e.Argument, String)
+
+        'Call MsgBox("Anzahl Phasen = " & selectedPhases.Count)
+
+        Call createPPTSlidesFromConstellation(vorlagenDateiName, selectedPhases, selectedMilestones, _
+                                              selectedRoles, selectedCosts, False, 4, True, worker, e)
+
+    End Sub
+
+    Private Sub BackgroundWorker1_ProgressChanged(sender As Object, e As ProgressChangedEventArgs) Handles BackgroundWorker1.ProgressChanged
+
+        Dim re As System.ComponentModel.DoWorkEventArgs = CType(e.UserState, System.ComponentModel.DoWorkEventArgs)
+        Me.statusLabel.Text = CType(re.Result, String)
+
+    End Sub
+
+    Private Sub BackgroundWorker1_RunWorkerCompleted(sender As Object, e As RunWorkerCompletedEventArgs) Handles BackgroundWorker1.RunWorkerCompleted
+
+        Me.statusLabel.Text = "...done"
+        Me.rdbMilestones.Enabled = True
+        Me.rdbPhases.Enabled = True
+        Me.rdbRoles.Enabled = True
+        Me.rdbCosts.Enabled = True
+        Me.filterBox.Enabled = True
+        Me.ListBox1.Enabled = True
+        Me.OKButton.Enabled = True
+        Me.repVorlagenDropbox.Enabled = True
+        Me.Cursor = Cursors.Arrow
+        Me.statusLabel.Visible = True
+
+    End Sub
 End Class

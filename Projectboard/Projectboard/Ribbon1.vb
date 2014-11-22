@@ -1447,6 +1447,9 @@ Imports System.Drawing
                 .chkbxCreateCharts.Checked = False
                 .chkbxCreateCharts.Visible = False
 
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
                 .showModePortfolio = True
                 .menuOption = PTmenue.visualisieren
 
@@ -1499,6 +1502,9 @@ Imports System.Drawing
                 .chkbxCreateCharts.Checked = True
                 .chkbxCreateCharts.Visible = False
 
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
                 .showModePortfolio = True
 
                 .menuOption = PTmenue.leistbarkeitsAnalyse
@@ -1506,6 +1512,70 @@ Imports System.Drawing
                 .Show()
             End With
 
+
+        ElseIf ShowProjekte.Count = 0 Then
+
+            Call MsgBox("Es sind keine Projekte geladen!  ")
+
+        ElseIf showRangeRight - showRangeLeft <= 5 Then
+
+            Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
+
+        End If
+
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
+
+
+    End Sub
+
+    Sub MultiprojektReport(ByVal control As IRibbonControl)
+
+        Dim auswahlFormular As New frmShowPlanElements
+        Dim returnValue As DialogResult
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = False
+
+        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
+        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+
+            appInstance.ScreenUpdating = False
+
+            With auswahlFormular
+                .Text = "Multiprojekt Reports erzeugen"
+                .rdbPhases.Checked = True
+
+                .chkbxShowObjects.Checked = False
+                .chkbxShowObjects.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .chkbxCreateCharts.Checked = False
+                .chkbxCreateCharts.Visible = False
+
+                .showModePortfolio = True
+
+                .repVorlagenDropbox.Visible = True
+                .labelPPTVorlage.Visible = True
+
+                .rdbRoles.Enabled = False
+                .rdbCosts.Enabled = False
+
+                .menuOption = PTmenue.multiprojektReport
+                .statusLabel.Text = ""
+
+                '.Show()
+                returnValue = .ShowDialog
+            End With
+
+            appInstance.ScreenUpdating = True
 
         ElseIf ShowProjekte.Count = 0 Then
 
