@@ -1589,14 +1589,17 @@ Public Module testModule
     ''' <param name="selectedCosts">Liste der Kosten</param>
     ''' <param name="showNames">Namen der Phasen und Meilensteine anzeigen </param>
     ''' <param name="reportSize">gibt das Report Format an ; 0=DinA0, 1= Din A1, etc. </param>
-    ''' <param name="showProjectLine">gibt an, ob eine dünne Linie gezeichnet werden soll, die das PRojekt kennzeichnet</param>
+    ''' <param name="showProjectLine">gibt an, ob eine dünne Linie gezeichnet werden soll, die das Projekt kennzeichnet</param>
+    ''' <param name="showAmpeln">gibt an, ob die Projekt- bzw. Meilenstein Ampeln angezeigt werden sollen </param>
+    ''' <param name="showDates">gibt an, ob die Datumswerte angezeigt werden sollen </param>
     ''' <param name="worker">background Worker</param>
     ''' <param name="e">hier werden die Progress Meldungen zurückgegeben</param>
     ''' <remarks></remarks>
     Public Sub createPPTSlidesFromConstellation(ByVal pptTemplate As String, _
                                                     ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                                     ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
-                                                    ByVal showNames As Boolean, ByVal reportSize As Integer, ByVal showProjectLine As Boolean, _
+                                                    ByVal showNames As Boolean, ByVal reportSize As Integer, ByVal showProjectLine As Boolean,
+                                                    ByVal showAmpeln As Boolean, showDates As Boolean, _
                                                     ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
         Dim pptApp As pptNS.Application = Nothing
         Dim pptPresentation As pptNS.Presentation = Nothing
@@ -1636,19 +1639,20 @@ Public Module testModule
 
         ' Wichtig für Zeichenfläche
         Dim elementDescVorlagenShape As pptNS.Shape = Nothing
-        Dim elementDescriptionShape As pptNS.Shape = Nothing
+        'Dim elementDescriptionShape As pptNS.Shape = Nothing
+        Dim elementDateVorlagenShape As pptNS.Shape = Nothing
 
         Dim projectNameVorlagenShape As pptNS.Shape = Nothing
-        Dim projectNameShape As pptNS.Shape = Nothing
+        'Dim projectNameShape As pptNS.Shape = Nothing
 
         Dim projectVorlagenShape As pptNS.Shape = Nothing
-        Dim projectShape As pptNS.Shape = Nothing
+        'Dim projectShape As pptNS.Shape = Nothing
 
-        Dim phaseShape As pptNS.Shape = Nothing
-        Dim phaseHeight As Double = 0.33
+        Dim phaseVorlagenShape As pptNS.Shape = Nothing
 
-        Dim milestoneShape As pptNS.Shape = Nothing
-        Dim milestoneHeight As Double = 0.33
+
+        Dim milestoneVorlagenShape As pptNS.Shape = Nothing
+
 
         ' Wichtig für Legende
         Dim legendLineShape As pptNS.Shape = Nothing
@@ -1678,7 +1682,7 @@ Public Module testModule
         ' gibt an, ob Monate oder Quartale gezeichnet werden sollen
         Dim drawMonths As Boolean = False
 
-        
+
 
         ' Wichtige Variable , um die Phasen/Meilensteine in der Drawing Area zu zeichnen 
         ' Offset zwischen Meilenstein und Phase
@@ -1717,7 +1721,7 @@ Public Module testModule
 
         ' mit completeDefinition wird überprüft , ob alle Informationen/Shapes vorhanden sind
         Dim completeDefinition() As Integer
-        ReDim completeDefinition(14)
+        ReDim completeDefinition(15)
 
 
         Try
@@ -1791,7 +1795,7 @@ Public Module testModule
             pptSlide = pptPresentation.Slides(anzahlSlides + j)
 
 
-                ' jetzt werden die Charts gezeichnet 
+            ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
 
 
@@ -1881,11 +1885,11 @@ Public Module testModule
                                 completeDefinition(5) = 1
 
                             Case "PhaseForm"
-                                phaseHeight = pptShape.Height
+                                phaseVorlagenShape = pptShape
                                 completeDefinition(6) = 1
 
                             Case "MilestoneForm"
-                                milestoneHeight = pptShape.Height
+                                milestoneVorlagenShape = pptShape
                                 completeDefinition(7) = 1
 
                             Case "LegendLine"
@@ -1916,6 +1920,10 @@ Public Module testModule
                                 calenderHeightShape = pptShape
                                 completeDefinition(14) = 1
 
+                            Case "ElementDate"
+                                elementDateVorlagenShape = pptShape
+                                completeDefinition(15) = 1
+
                             Case "CalendarStep"
                                 ' optional
                                 calendarStepShape = pptShape
@@ -1929,7 +1937,7 @@ Public Module testModule
                         End Select
                     End If
                     ' jetzt muss geprüft werden, ob es sich um ein definierendes Element für die Multiprojekt-Sichten handelt
-                    
+
                 End With
             Next
 
@@ -2063,7 +2071,21 @@ Public Module testModule
                                 quarterMonthVorlagenShape.Delete()
                                 calendarStepShape.Delete()
 
+                                ' bestimme die Projekte, die im angegebenen Zeitraum die gewünschten Phasen und/oder Meilensteine enthalten
+                                Dim projCollection As Collection = ShowProjekte.withinTimeFrame(0, selectedPhases, selectedMilestones, _
+                                                                                               showRangeLeft, showRangeRight)
+
+                                showNames = True
+                                showDates = True
+
                                 ' zeichne die Projekte 
+                                Call zeichnePPTprojects(pptSlide, projCollection, _
+                                                        pptStartofCalendar, pptEndOfCalendar, _
+                                                        calendarLineShape, legendLineShape, _
+                                                        selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                                        elementDescVorlagenShape, elementDateVorlagenShape, _
+                                                        phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape,
+                                                        showNames, showAmpeln, showDates, showProjectLine)
 
                                 ' zeichne die Legende 
                             Else
@@ -3342,7 +3364,7 @@ Public Module testModule
 
             Next
 
-                listofShapes.Clear()
+            listofShapes.Clear()
 
         Next
 
@@ -4508,11 +4530,18 @@ Public Module testModule
 
                 End Try
             Else
-                pptShape.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+
+                If pptShape.TextFrame2.HasText Then
+                    pptShape.TextFrame2.TextRange.Text = boxName & "nicht vorhanden"
+                End If
+
             End If
 
         Else
-            pptShape.TextFrame2.TextRange.Text = "es gibt keine laufenden Projekte im betrachteten Zeitraum ... "
+            If pptShape.TextFrame2.HasText Then
+                pptShape.TextFrame2.TextRange.Text = "es gibt keine laufenden Projekte im betrachteten Zeitraum ... "
+            End If
+
         End If
 
 
@@ -7115,6 +7144,60 @@ Public Module testModule
             .Left = calendarLineShape.Left
             .Top = calendarLineShape.Top - calendarHeightShape.Height
         End With
+
+
+    End Sub
+
+    ''' <summary>
+    ''' erstellt die Multiprojekt Sicht 
+    ''' </summary>
+    ''' <param name="pptslide">Powerpoint Folie</param>
+    ''' <param name="StartofPPTCalendar">Beginn des Powerpoint Kalenders</param>
+    ''' <param name="endOFPPTCalendar">Ende des Powerpoint Kalenders</param>
+    ''' <param name="calendarLineShape">Linie, die width und Top für dei Zeichenfläche bestimmt</param>
+    ''' <param name="selectedPhases">welche Phasen sollen dargestellt werden; auch mehrere Phasen werden alle in eine Zeile gezeichnet</param>
+    ''' <param name="selectedMilestones">welche Meilensteine sollen gezeichnet werden </param>
+    ''' <param name="selectedRoles">welche Rollen sollen dargestellt werden; wenn mehrere Rollen ausgewählt sind, wird die Summe dargestellt</param>
+    ''' <param name="selectedCosts">welche Kostenarten sollen dargestellt werden; wenn mehrere Kostenarten ausgewählt sind, wird die Summe dargestellt</param>
+    ''' <param name="elementDescVorlagenShape">Vorlage, d.h Schriftart, Größe und relative Lage zum Meilenstein für die Element-(Meilenstein) Beschriftung </param>
+    ''' <param name="elementDateVorlagenShape">Vorlage, d.h Schriftart, Größe und relative Lage zum Meilenstein für die Element-(Meilenstein) Beschriftung für das Meilenstein Datum </param>
+    ''' <param name="phaseVorlagenShape">Vorlage für die Höhe der Phasen Shape; ale s Shape wird die entsprechende Darstellungsklasse verwendet </param>
+    ''' <param name="milestoneVorlagenShape">Vorlage für die Höhe der Meilenstein Shape; als Shape wird die entsprechende Darstellungsklasse verwendet; dient auch zur relativen Einschätzung Meilenstein zu Phase</param>
+    ''' <param name="projectVorlagenForm">Vorlage (Strichdicke, etc) für die Darstellung des Projekts; Farbe wird vom Projekt übernommen </param>
+    ''' <param name="showNames">gibt an, ob die Meilenstein Kurzbezeichnungen gezeigt werden sollen</param>
+    ''' <param name="showAmpeln">gibt an, ob die Ampeln der Projekte neben den Projekt-Namen gezeichnet werden sollen </param>
+    ''' <param name="showDates">gibt an, ob das Datum gezeigt werden soll</param>
+    ''' <param name="showProjectLine">gibt an, ob die Linie als Projekt-Repräsentant gezeigt werden soll </param>
+    ''' <remarks></remarks>
+    Sub zeichnePPTprojects(ByRef pptslide As pptNS.Slide, ByVal projectCollection As Collection, _
+                           ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
+                           ByVal calendarLineShape As pptNS.Shape, ByVal legendlineShape As pptNS.Shape, _
+                               ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                               ByVal elementDescVorlagenShape As pptNS.Shape, ByVal elementDateVorlagenShape As pptNS.Shape, _
+                               ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, ByVal projectVorlagenForm As pptNS.Shape, _
+                               ByVal showNames As Boolean, ByVal showAmpeln As Boolean, ByVal showDates As Boolean, ByVal showProjectLine As Boolean)
+
+        ' Bestimmen der Zeichenfläche
+        Dim drawingAreaWidth As Double = calendarLineShape.Width
+        Dim drawingAreaLEft As Double = calendarLineShape.Left
+        Dim drawingAreaHeight As Double = 0.8 * (legendlineShape.Top - calendarLineShape.Top)
+        Dim drawingAreaTop = calendarLineShape.Top + 0.1 * (legendlineShape.Top - calendarLineShape.Top)
+        Dim drawingAreaBottom = legendlineShape.Top - 0.1 * (legendlineShape.Top - calendarLineShape.Top)
+        Dim tagesEinheit As Double = drawingAreaWidth / (DateDiff(DateInterval.Day, StartofPPTCalendar, endOFPPTCalendar) + 1)
+
+        ' Festlegung: Phase und Milestone werden zunächst immer zentriert dargestellt ; der Beschriftungstext kommt oben, zentriert hin, das Datum zentriert unten
+        ' Bestimmen, wieviele Projekte mit den gegebenen Einstellungen gezeichnet werden können
+        Dim projekthoehe As Double = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
+
+        If showNames Then
+            projekthoehe = projekthoehe + 0.87 * elementDescVorlagenShape.Height
+        End If
+
+        If showDates Then
+            projekthoehe = projekthoehe + 0.87 * elementDateVorlagenShape.Height
+        End If
+
+        Dim maxAnzahlProjekte As Integer = CInt(drawingAreaHeight / projekthoehe)
 
 
     End Sub

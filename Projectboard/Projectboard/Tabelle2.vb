@@ -133,22 +133,5 @@ Public Class Tabelle2
 
     End Sub
 
-    Private Sub Tabelle2_Startup() Handles Me.Startup
-
-    End Sub
-
-    Private Sub Tabelle2_Shutdown() Handles Me.Shutdown
-
-    End Sub
-
     
-
-    Private Sub Tabelle2_Deactivate() Handles Me.Deactivate
-
-
-    End Sub
-
-    Private Sub Tabelle2_SelectionChange(Target As Microsoft.Office.Interop.Excel.Range) Handles Me.SelectionChange
-
-    End Sub
 End Class

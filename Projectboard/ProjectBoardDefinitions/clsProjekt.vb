@@ -2151,7 +2151,6 @@ Public Class clsProjekt
 
         If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
             top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight
-            ' neue Positionierung: Tagesgenau 
             left = (startpunkt / 365) * boxWidth * 12
             width = ((projektlaenge) / 365) * boxWidth * 12
             height = 0.8 * boxHeight
@@ -2162,66 +2161,69 @@ Public Class clsProjekt
 
     End Sub
 
-    ''' <summary>
-    ''' berechnet die Koordinaten der Phase mit Nummer  phaseNr. 
-    ''' </summary>
-    ''' <param name="phaseNr"></param>
-    ''' <param name="top"></param>
-    ''' <param name="left"></param>
-    ''' <param name="width"></param>
-    ''' <param name="height"></param>
-    ''' <remarks></remarks>
-    Public Sub CalculateShapeCoord(ByVal phaseNr As Integer, ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
+    ' ''' <summary>
+    ' ''' berechnet die Koordinaten der Phase mit Nummer  phaseNr. 
+    ' ''' </summary>
+    ' ''' <param name="phaseNr"></param>
+    ' ''' <param name="top"></param>
+    ' ''' <param name="left"></param>
+    ' ''' <param name="width"></param>
+    ' ''' <param name="height"></param>
+    ' ''' <remarks></remarks>
+    'Public Sub CalculateShapeCoord(ByVal phaseNr As Integer, ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
 
-        Dim cphase As clsPhase
+    '    Dim cphase As clsPhase
 
-        Try
+    '    Try
 
-            Dim projektStartdate As Date = Me.startDate
-            Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
+    '        Dim projektStartdate As Date = Me.startDate
+    '        Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
 
-            If startpunkt < 0 Then
-                Throw New Exception("calculate Shape Coord für Phase: Projektstart liegt vor Start of Calendar ...")
-            End If
+    '        If startpunkt < 0 Then
+    '            Throw New Exception("calculate Shape Coord für Phase: Projektstart liegt vor Start of Calendar ...")
+    '        End If
 
-            cphase = Me.getPhase(phaseNr)
-            Dim phasenStart As Integer = startpunkt + cphase.startOffsetinDays
-            Dim phasenDauer As Integer = cphase.dauerInDays
-
-
-
-            If Me.tfZeile > 1 And phasenStart >= 1 And phasenDauer > 0 Then
-
-                If phaseNr = 1 Then
-                    top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight
-                    ' Änderung 28.11 jetzt wird tagesgenau positioniert 
-                    left = (phasenStart / 365) * boxWidth * 12
-                    width = ((phasenDauer) / 365) * boxWidth * 12
-                    height = 0.8 * boxHeight
-                Else
-                    If top <= 0 Then
-                        top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.1 * boxHeight
-                    Else
-                        ' nichts tun : top wird an der Aufrufenden Stelle gesetzt
-                        ' zeichneProjektinPlantafel2 Änderung 18.3.14 
-                    End If
-
-                    left = (phasenStart / 365) * boxWidth * 12
-                    width = ((phasenDauer) / 365) * boxWidth * 12
-                    height = 0.6 * boxHeight
-                End If
+    '        cphase = Me.getPhase(phaseNr)
+    '        Dim phasenStart As Integer = startpunkt + cphase.startOffsetinDays
+    '        Dim phasenDauer As Integer = cphase.dauerInDays
 
 
-            Else
-                Throw New ArgumentException("es kann kein Shape berechnet werden für : " & cphase.name)
-            End If
 
-        Catch ex As Exception
-            Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name & "Phase: " & phaseNr.ToString)
-        End Try
+    '        If Me.tfZeile > 1 And phasenStart >= 1 And phasenDauer > 0 Then
 
 
-    End Sub
+    '            If phaseNr = 1 Then
+    '                Me.CalculateShapeCoord(top, left, width, height)
+
+    '                top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight
+    '                ' Änderung 28.11 jetzt wird tagesgenau positioniert 
+    '                left = (phasenStart / 365) * boxWidth * 12
+    '                width = ((phasenDauer) / 365) * boxWidth * 12
+    '                height = 0.8 * boxHeight
+    '            Else
+    '                If top <= 0 Then
+    '                    top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.1 * boxHeight
+    '                Else
+    '                    ' nichts tun : top wird an der Aufrufenden Stelle gesetzt
+    '                    ' zeichneProjektinPlantafel2 Änderung 18.3.14 
+    '                End If
+
+    '                left = (phasenStart / 365) * boxWidth * 12
+    '                width = ((phasenDauer) / 365) * boxWidth * 12
+    '                height = 0.6 * boxHeight
+    '            End If
+
+
+    '        Else
+    '            Throw New ArgumentException("es kann kein Shape berechnet werden für : " & cphase.name)
+    '        End If
+
+    '    Catch ex As Exception
+    '        Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name & "Phase: " & phaseNr.ToString)
+    '    End Try
+
+
+    'End Sub
 
     ''' <summary>
     ''' gibt für die angegebene Phasen-Nummer den zeilenoffset zurück sowie die 
@@ -2283,16 +2285,18 @@ Public Class clsProjekt
 
                 ' Änderung 18.3.14 Zeilenoffset gibt an, in die wievielte Zeile das geschrieben werden soll 
                 If phaseNr = 1 Then
-                    top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.1 * boxHeight
-                    left = (phasenStart / 365) * boxWidth * 12
-                    width = ((phasenDauer) / 365) * boxWidth * 12
-                    height = 0.8 * boxHeight
+                    Me.CalculateShapeCoord(top, left, width, height)
+                    'top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.1 * boxHeight
+                    'left = (phasenStart / 365) * boxWidth * 12
+                    'width = ((phasenDauer) / 365) * boxWidth * 12
+                    'height = 0.8 * boxHeight
                 Else
-                    'top = topOfMagicBoard + (Me.tfZeile + zeilenOffset - 1) * boxHeight + 0.1 * boxHeight
-                    top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.5 * (1 - 0.33) * boxHeight + (zeilenOffset) * boxHeight
-                    left = (phasenStart / 365) * boxWidth * 12
-                    width = ((phasenDauer) / 365) * boxWidth * 12
-                    height = 0.33 * boxHeight
+                    cphase.CalculatePhaseShapeCoord(top, left, width, height)
+                    top = top + (zeilenOffset) * boxHeight
+                    'top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.5 * (1 - 0.33) * boxHeight + (zeilenOffset) * boxHeight
+                    'left = (phasenStart / 365) * boxWidth * 12
+                    'width = ((phasenDauer) / 365) * boxWidth * 12
+                    'height = 0.33 * boxHeight
                 End If
 
 
@@ -2346,28 +2350,12 @@ Public Class clsProjekt
         If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
 
             ' Änderung 18.3.14 Zeilenoffset gibt an, in die wievielte Zeile das geschrieben werden soll 
-
-            If zeilenOffset = 0 Then
-
-                'top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight - boxWidth * 0.5 * faktor
-                top = topOfMagicBoard + (Me.tfZeile - 1.0) * boxHeight + boxHeight * 0.3 * (1 - faktor)
-                'left = (msStart / 365) * boxWidth * 12 - boxWidth * 0.5 * faktor
-                left = (msStart / 365) * boxWidth * 12 - boxHeight * 0.5 * faktor
-                width = boxHeight * faktor
-                height = boxHeight * faktor
-
-            Else
-                'top = topOfMagicBoard + (Me.tfZeile + zeilenOffset - 1) * boxHeight + 0.1 * boxHeight
-                'top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + (zeilenOffset + 1) * boxHeight * 0.5 - boxWidth * 0.5 * faktor
-                top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + (zeilenOffset) * boxHeight + boxHeight * 0.3 * (1 - faktor)
-                'left = (msStart / 365) * boxWidth * 12 - boxWidth * 0.5 * faktor
-                left = (msStart / 365) * boxWidth * 12 - boxHeight * 0.5 * faktor
-                'width = faktor * boxWidth
-                'height = faktor * boxWidth
-                width = boxHeight * faktor
-                height = boxHeight * faktor
-            End If
-
+            ' Änderung 26.11 eine Unterscheidung zeilenoffset ist nicht notwendig 
+            top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.5 * (0.8 - faktor) * boxHeight + (zeilenOffset) * boxHeight
+            left = (msStart / 365) * boxWidth * 12 - 0.5 * boxHeight * faktor
+            width = boxHeight * faktor
+            height = boxHeight * faktor
+            
 
         Else
             Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)

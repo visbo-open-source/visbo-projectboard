@@ -21,6 +21,9 @@ Public Module Module1
     Public iWertFarbe As Object
     'Public HoehePrcChart As Double
 
+    Public myProjektTafel As String = ""
+    Public myCustomizationFile As String
+
     Public vergleichsfarbe0 As Object
     Public vergleichsfarbe1 As Object
     Public vergleichsfarbe2 As Object
@@ -48,6 +51,7 @@ Public Module Module1
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes
 
+
     ' hier wird die Projekt Historie eines Projektes aufgenommen 
     Public projekthistorie As New clsProjektHistorie
     Public specialListofPhases As New Collection
@@ -59,8 +63,10 @@ Public Module Module1
 
     Public PfChartBubbleNames() As String
 
+    Public appearanceDefinitions As New SortedList(Of String, clsAppearance)
     Public RoleDefinitions As New clsRollen
     Public PhaseDefinitions As New clsPhasen
+    Public MilestoneDefinitions As New clsMeilensteine
     Public CostDefinitions As New clsKostenarten
     Public DiagramList As New clsDiagramme
     Public awinButtonEvents As New clsAwinEvents

@@ -1,6 +1,7 @@
 ﻿Imports ProjectBoardDefinitions
 Imports System.ComponentModel
 Imports ClassLibrary1
+Imports Microsoft.Office.Interop.Excel
 
 Public Class frmShowPlanElements
 
@@ -22,6 +23,7 @@ Public Class frmShowPlanElements
     Private selectedRoles As New Collection
     Private sKeyRoles As String = ""
 
+
     Private backgroundRunning As Boolean = False
 
 
@@ -39,6 +41,8 @@ Public Class frmShowPlanElements
     Private chWidth As Double
     Private chHeight As Double
     Private chTyp As String
+
+    
 
     Private Sub frmShowPlanElements_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
 
@@ -59,6 +63,8 @@ Public Class frmShowPlanElements
 
         statusLabel.Text = ""
         statusLabel.Visible = True
+
+        Dim nrShapes As Integer = appearanceDefinitions.Count
 
 
         ' jetzt werden die ProjektReport- bzw. PortfolioReport-Vorlagen ausgelesen 
@@ -215,6 +221,8 @@ Public Class frmShowPlanElements
 
                     If chkbxCreateCharts.Checked = True Then
 
+                        Dim formerSU As Boolean = appInstance.ScreenUpdating
+                        appInstance.ScreenUpdating = False
                         ' Window Position festlegen 
                         chtop = 50.0 + awinSettings.ChartHoehe1
                         chleft = (showRangeRight - 1) * boxWidth + 4
@@ -223,6 +231,7 @@ Public Class frmShowPlanElements
                         chTyp = DiagrammTypen(0)
 
                         If chkbxOneChart.Checked = True Then
+
 
                             ' alles in einem Chart anzeigen 
                             myCollection = New Collection
@@ -251,6 +260,8 @@ Public Class frmShowPlanElements
                             Next
 
                         End If
+
+                        appInstance.ScreenUpdating = formerSU
 
                     End If
 
@@ -770,7 +781,7 @@ Public Class frmShowPlanElements
         'Call MsgBox("Anzahl Phasen = " & selectedPhases.Count)
 
         Call createPPTSlidesFromConstellation(vorlagenDateiName, selectedPhases, selectedMilestones, _
-                                              selectedRoles, selectedCosts, False, 4, True, worker, e)
+                                              selectedRoles, selectedCosts, False, 4, True, False, False, worker, e)
 
     End Sub
 

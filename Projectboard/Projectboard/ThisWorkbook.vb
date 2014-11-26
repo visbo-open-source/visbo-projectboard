@@ -48,6 +48,8 @@ Public Class ThisWorkbook
 
         appInstance = Application
 
+        myProjektTafel = appInstance.ActiveWorkbook.Name
+
 
         ' die Short Cut Menues aus Excel werden hier nicht mehr de-aktiviert 
         ' das wird jetzt nur in Tabelle1, also der Projekt-Tafel gemacht ...
@@ -61,11 +63,10 @@ Public Class ThisWorkbook
 
         magicBoardCmdBar.cmdbars = appInstance.CommandBars
 
-
-
         Try
             appInstance.ScreenUpdating = False
             Call awinsetTypen()
+
 
         Catch ex As Exception
 
@@ -80,46 +81,12 @@ Public Class ThisWorkbook
         anzahlCalls = 0
 
 
-
         'Call awinRightClickinPortfolioAendern()
         Call awinRightClickinPRCCharts()
 
     End Sub
 
-    Private Sub ThisWorkbook_Shutdown() Handles Me.Shutdown
-
-        'Dim cbar As CommandBar
-
-        ' die Short Cut Menues aus Excel alle wieder aktivieren ...
-        'For Each cbar In appInstance.CommandBars
-
-        '    If cbar.Type = MsoBarType.msoBarTypePopup Then
-        '        cbar.Enabled = True
-        '    End If
-        'Next
-
-        'Call MsgBox(" in shutdown")
-
-
-        appInstance.EnableEvents = True
-
-        Application.DisplayFormulaBar = True
-
-        With Application.ActiveWindow
-            .SplitColumn = 0
-            .SplitRow = 0
-            .DisplayWorkbookTabs = True
-            .GridlineColor = RGB(220, 220, 220)
-            .FreezePanes = True
-            .DisplayHeadings = True
-        End With
-
-        appInstance.ShowChartTipNames = True
-        appInstance.ShowChartTipValues = True
-
-        'Application.Quit()
-
-    End Sub
+    
 
 
     Private Sub ThisWorkbook_Open() Handles Me.Open
@@ -129,7 +96,7 @@ Public Class ThisWorkbook
 
 
         'Call MsgBox(" in Open")
-
+        CType(Application.Workbooks(myProjektTafel), Excel.Workbook).Activate()
 
         CType(Application.Worksheets(arrWsNames(3)), Excel.Worksheet).Activate()
 
@@ -207,24 +174,17 @@ Public Class ThisWorkbook
         Dim returnValue As DialogResult
         Dim request As New Request(awinSettings.databaseName)
 
-        If roentgenBlick.isOn Then
-            Call awinNoshowProjectNeeds()
-            With roentgenBlick
-                .isOn = False
-                .name = ""
-                .type = ""
-            End With
-        End If
+        'If roentgenBlick.isOn Then
+        '    Call awinNoshowProjectNeeds()
+        '    With roentgenBlick
+        '        .isOn = False
+        '        .name = ""
+        '        .type = ""
+        '    End With
+        'End If
+
 
         Call awinKontextReset()
-
-        ' hier sollen jetzt noch die Phasen weggeschrieben werden 
-        Try
-            Call awinWritePhaseDefinitions()
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Schreiben Customization File")
-        End Try
-
 
         ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
         Try
@@ -240,23 +200,73 @@ Public Class ThisWorkbook
                 End If
 
             Else
+
                 Call MsgBox("keine Projekte zu speichern ...")
 
 
             End If
         Catch ex As Exception
 
-            ' Bei Fehler, soll Excel nicht geschlossen werden.
-            Call MsgBox(ex.Message)
-            Application.ActiveWorkbook.Saved = True
-            Cancel = True ' Event Schließen soll nicht ausgeführt werden
-
+            
         End Try
-        
+
+        appInstance.ScreenUpdating = False
+        appInstance.EnableEvents = False
+
+        ' hier sollen jetzt noch die Phasen weggeschrieben werden 
+        Try
+            Call awinWritePhaseDefinitions()
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Schreiben Customization File")
+        End Try
+
+
+        appInstance.ActiveWorkbook.Saved = True
+
 
                     ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
-        Application.ActiveWorkbook.Saved = True
+
         Application.Quit()
+        appInstance.EnableEvents = True
+
+    End Sub
+
+    Private Sub ThisWorkbook_Shutdown() Handles Me.Shutdown
+
+        'Dim cbar As CommandBar
+
+        ' die Short Cut Menues aus Excel alle wieder aktivieren ...
+        'For Each cbar In appInstance.CommandBars
+
+        '    If cbar.Type = MsoBarType.msoBarTypePopup Then
+        '        cbar.Enabled = True
+        '    End If
+        'Next
+
+        'Call MsgBox(" in shutdown")
+
+
+
+        Application.DisplayFormulaBar = True
+
+        With Application.ActiveWindow
+            .SplitColumn = 0
+            .SplitRow = 0
+            .DisplayWorkbookTabs = True
+            .GridlineColor = RGB(220, 220, 220)
+            .FreezePanes = True
+            .DisplayHeadings = True
+        End With
+
+        appInstance.ShowChartTipNames = True
+        appInstance.ShowChartTipValues = True
+
+        Dim anzWindows As Integer = appInstance.Windows.Count
+
+
+        appInstance.ScreenUpdating = True
+        
+        'appInstance.Quit()
 
 
     End Sub

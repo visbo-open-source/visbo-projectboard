@@ -585,71 +585,115 @@
         End Set
     End Property
 
-
-    Public Sub calculateLineCoord(ByVal zeile As Integer, ByVal nummer As Integer, ByVal gesamtZahl As Integer, _
-                                  ByRef top1 As Double, ByRef left1 As Double, ByRef top2 As Double, ByRef left2 As Double, ByVal linienDicke As Double)
+    ''' <summary>
+    ''' berechnet die Shape Koordinaten dieser Phase 
+    ''' </summary>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="width"></param>
+    ''' <param name="height"></param>
+    ''' <remarks></remarks>
+    Public Sub CalculatePhaseShapeCoord(ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
 
         Try
 
             Dim projektStartdate As Date = Me.Parent.startDate
-
-            Dim korrPosition As Double = nummer / gesamtZahl
-            Dim faktor As Double = linienDicke / boxHeight
+            Dim tfzeile As Integer = Me.Parent.tfZeile
             Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
 
+
             If startpunkt < 0 Then
-                Throw New Exception("calculate Line Coord: Projektstart liegt vor Start of Calendar ...")
+                Throw New Exception("calculate Shape Coord für Phase: Projektstart liegt vor Start of Calendar ...")
             End If
 
             Dim phasenStart As Integer = startpunkt + Me.startOffsetinDays
             Dim phasenDauer As Integer = Me.dauerInDays
 
-            ' absolute Setzung - dadurch wird verhindert, daß die Linien sehr schmal gezeichnet werden ... 
-            ' es soll immer gleich groß gezeichnet werden - einfach überschreiben - das ist rvtl besser;
-            ' das muss einfach noch herausgefunden werden 
-            gesamtZahl = 1
-            nummer = 1
 
 
-            If gesamtZahl <= 0 Then
-                Throw New ArgumentException("unzulässige Gesamtzahl" & gesamtZahl)
-            End If
-
-            ' korrigiere, aber breche nicht ab wenn die Nummer der Line größer als die Gesamtzahl ist ... 
-            If nummer > gesamtZahl Then
-                nummer = gesamtZahl
-            End If
-
-            ' ausrechnen des Korrekturfaktors
-
-            korrPosition = nummer / (gesamtZahl + 1)
+            If tfzeile > 1 And phasenStart >= 1 And phasenDauer > 0 Then
 
 
-            If phasenStart >= 0 And phasenDauer > 0 Then
-
-                ' das folgende ist mühsam ausprobiert - um die Linien in unterschiedicher Stärke in der Projekt Form zu platzieren - möglichst auch jeweils mittig
-                If gesamtZahl <= 3 Then
-                    top1 = topOfMagicBoard + (zeile - 0.95) * boxHeight + korrPosition * boxHeight - linienDicke / 2
-                Else
-                    top1 = topOfMagicBoard + (zeile - 1.06) * boxHeight + korrPosition * boxHeight - linienDicke / 2
-                End If
-
-                top2 = top1
-
-                left1 = (phasenStart / 365) * boxWidth * 12
-                left2 = ((phasenStart + phasenDauer) / 365) * boxWidth * 12
+                top = topOfMagicBoard + (tfzeile - 1) * boxHeight + 0.5 * (0.8 - 0.23) * boxHeight
+                left = (phasenStart / 365) * boxWidth * 12
+                width = ((phasenDauer) / 365) * boxWidth * 12
+                height = 0.23 * boxHeight
 
             Else
-                Throw New ArgumentException("es kann keine Line berechnet werden für : " & Me.name)
+                Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("es kann keine Line berechnet werden für : " & Me.name)
+            Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
         End Try
 
 
-
     End Sub
+
+    'Public Sub calculateLineCoord(ByVal zeile As Integer, ByVal nummer As Integer, ByVal gesamtZahl As Integer, _
+    '                              ByRef top1 As Double, ByRef left1 As Double, ByRef top2 As Double, ByRef left2 As Double, ByVal linienDicke As Double)
+
+    '    Try
+
+    '        Dim projektStartdate As Date = Me.Parent.startDate
+
+    '        Dim korrPosition As Double = nummer / gesamtZahl
+    '        Dim faktor As Double = linienDicke / boxHeight
+    '        Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
+
+    '        If startpunkt < 0 Then
+    '            Throw New Exception("calculate Line Coord: Projektstart liegt vor Start of Calendar ...")
+    '        End If
+
+    '        Dim phasenStart As Integer = startpunkt + Me.startOffsetinDays
+    '        Dim phasenDauer As Integer = Me.dauerInDays
+
+    '        ' absolute Setzung - dadurch wird verhindert, daß die Linien sehr schmal gezeichnet werden ... 
+    '        ' es soll immer gleich groß gezeichnet werden - einfach überschreiben - das ist rvtl besser;
+    '        ' das muss einfach noch herausgefunden werden 
+    '        gesamtZahl = 1
+    '        nummer = 1
+
+
+    '        If gesamtZahl <= 0 Then
+    '            Throw New ArgumentException("unzulässige Gesamtzahl" & gesamtZahl)
+    '        End If
+
+    '        ' korrigiere, aber breche nicht ab wenn die Nummer der Line größer als die Gesamtzahl ist ... 
+    '        If nummer > gesamtZahl Then
+    '            nummer = gesamtZahl
+    '        End If
+
+    '        ' ausrechnen des Korrekturfaktors
+
+    '        korrPosition = nummer / (gesamtZahl + 1)
+
+
+    '        If phasenStart >= 0 And phasenDauer > 0 Then
+
+    '            ' das folgende ist mühsam ausprobiert - um die Linien in unterschiedicher Stärke in der Projekt Form zu platzieren - möglichst auch jeweils mittig
+    '            If gesamtZahl <= 3 Then
+    '                top1 = topOfMagicBoard + (zeile - 0.95) * boxHeight + korrPosition * boxHeight - linienDicke / 2
+    '            Else
+    '                top1 = topOfMagicBoard + (zeile - 1.06) * boxHeight + korrPosition * boxHeight - linienDicke / 2
+    '            End If
+
+    '            top2 = top1
+
+    '            left1 = (phasenStart / 365) * boxWidth * 12
+    '            left2 = ((phasenStart + phasenDauer) / 365) * boxWidth * 12
+
+    '        Else
+    '            Throw New ArgumentException("es kann keine Line berechnet werden für : " & Me.name)
+    '        End If
+
+    '    Catch ex As Exception
+    '        Throw New ArgumentException("es kann keine Line berechnet werden für : " & Me.name)
+    '    End Try
+
+
+
+    'End Sub
     Public Sub AddRole(ByVal role As clsRolle)
 
         AllRoles.Add(role)
@@ -773,7 +817,7 @@
             For r = 1 To Me.AllResults.Count
                 newresult = New clsMeilenstein(parent:=newphase)
                 Me.getResult(r).CopyTo(newresult)
-                .AddResult(newresult)
+                .addresult(newresult)
             Next
 
         End With

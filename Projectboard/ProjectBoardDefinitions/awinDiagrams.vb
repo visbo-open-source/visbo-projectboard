@@ -3768,7 +3768,11 @@ Public Module awinDiagrams
 
                 Try
                     If .GroupItems.Count > 1 Then
-                        .GroupItems.Item(1).TextFrame2.TextRange.Text = projektname
+
+                        If CBool(.GroupItems.Item(1).TextFrame2.HasText) Then
+                            .GroupItems.Item(1).TextFrame2.TextRange.Text = projektname
+                        End If
+
                         For i = 1 To .GroupItems.Count
                             If pStatus = ProjektStatus(0) Then
                                 .GroupItems.Item(i).Fill.Transparency = 0.35
@@ -3777,23 +3781,25 @@ Public Module awinDiagrams
                             End If
                         Next
                     Else
-                        .TextFrame2.TextRange.Text = projektname
+
                         If pStatus = ProjektStatus(0) Then
                             .Fill.Transparency = 0.35
                         Else
                             .Fill.Transparency = 0.0
                         End If
+
+                        .TextFrame2.TextRange.Text = projektname
                     End If
 
                 Catch ex1 As Exception
 
-                    .TextFrame2.TextRange.Text = projektname
                     If pStatus = ProjektStatus(0) Then
                         .Fill.Transparency = 0.35
                     Else
                         .Fill.Transparency = 0.0
                     End If
 
+                    .TextFrame2.TextRange.Text = projektname
                 End Try
 
 

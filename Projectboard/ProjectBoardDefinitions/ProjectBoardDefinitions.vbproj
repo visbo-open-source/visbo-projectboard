@@ -75,6 +75,8 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsAppearance.vb" />
+    <Compile Include="clsMeilensteine.vb" />
     <Compile Include="clsMeilensteinDefinition.vb" />
     <Compile Include="clsSynonyms.vb" />
     <Compile Include="clsProjekteAlle.vb" />

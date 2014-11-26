@@ -527,6 +527,109 @@ Public Class clsProjekte
     End Property
 
     ''' <summary>
+    ''' gibt eine Liste von Projektnamen in der showprojekte zurück, die einen der übergebenen SelItems1 bzw. SelItems enthalten 
+    ''' 
+    ''' </summary>
+    ''' <param name="suchTyp">0: selItems1/selitems2 = Phasen/Meilensteine</param>
+    ''' <param name="selItems1">Phasen , Rollen Kosten</param>
+    ''' <param name="selItems2">Meilensteine</param>
+    ''' <param name="von">Start des betrachteten Zeitraums</param>
+    ''' <param name="bis">Ende des betrachteten Zeitraums</param>
+    ''' <value></value>
+    ''' <returns>Collection of projectnames</returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property withinTimeFrame(ByVal suchTyp As Integer, ByVal selItems1 As Collection, ByVal selItems2 As Collection, ByVal von As Integer, ByVal bis As Integer) As Collection
+        Get
+            Dim tmpListe As New Collection
+            Dim cphase As clsPhase
+            Dim cmileStone As clsMeilenstein
+            Dim projektstart As Integer
+            Dim found As Boolean
+            ' selection type wird aktuell noch ignoriert .... 
+
+            suchTyp = 0
+
+            For Each kvp In Me.AllProjects
+
+                found = False
+                With kvp.Value
+
+                    projektstart = .Start + .StartOffset
+
+                    If (projektstart > bis) Or (projektstart + .anzahlRasterElemente - 1 < von) Then
+                        ' dann liegt das Projekt ausserhalb des Zeitraums und muss überhaupt nicht berücksichtig werden 
+
+                    Else
+
+                        For Each phaseName As String In selItems1
+
+                            cphase = kvp.Value.getPhase(phaseName)
+                            If Not IsNothing(cphase) Then
+                                If (projektstart + cphase.relStart - 1 > bis) Or (projektstart + cphase.relEnde - 1 < von) Then
+                                    ' dann liegt die Phase ausserhalb des betrachteten Zeitraums und muss nicht berücksichtigt werden 
+                                Else
+                                    found = True
+                                    Exit For
+                                End If
+                            End If
+
+                            For Each milestoneName As String In selItems2
+                                cmileStone = cphase.getResult(milestoneName)
+                                If Not IsNothing(cmileStone) Then
+                                    Dim msColumn As Integer = getColumnOfDate(cmileStone.getDate)
+                                    If msColumn > bis Or msColumn < von Then
+                                    Else
+                                        found = True
+                                        Exit For
+                                    End If
+                                End If
+                                
+                            Next
+
+                            If found Then
+                                Exit For
+                            End If
+
+                        Next
+
+                        If Not found And selItems1.Count = 0 Then
+                            For Each milestoneName As String In selItems2
+                                For Each hphase As clsPhase In kvp.Value.AllPhases
+                                    cmileStone = hphase.getResult(milestoneName)
+                                    If Not IsNothing(cmileStone) Then
+                                        Dim msColumn As Integer = getColumnOfDate(cmileStone.getDate)
+                                        If msColumn > bis Or msColumn < von Then
+                                        Else
+                                            found = True
+                                            Exit For
+                                        End If
+                                    End If
+                                Next
+
+                                If found Then
+                                    Exit For
+                                End If
+                            Next
+                        End If
+
+
+                    End If
+
+
+                End With
+
+                If found Then
+                    tmpListe.Add(kvp.Value.name)
+                End If
+
+            Next
+
+            withinTimeFrame = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt einen Array zurück, der angibt wie oft der übergebene Milestone im jeweiligen Monat vorkommt 
     ''' showrangeleft und showrangeright spannen den Betrachtungszeitraum auf
     ''' es wird ein Array der Dimension (3,zeitraum) zurückgegeben: 

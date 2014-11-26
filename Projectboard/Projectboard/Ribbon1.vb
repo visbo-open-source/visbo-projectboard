@@ -1431,6 +1431,7 @@ Imports System.Drawing
         enableOnUpdate = False
         appInstance.EnableEvents = False
 
+
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
         If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
 

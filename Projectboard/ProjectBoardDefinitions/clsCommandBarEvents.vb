@@ -337,7 +337,11 @@ Public Class clsCommandBarEvents
                                 With shpelement
                                     .Name = pname
                                     ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
+
+
                                     .TextFrame2.TextRange.Text = hproj.getShapeText
+
+
                                     ' Ende Änderung 13.10.14
                                     .Top = CSng(top)
                                     .Left = CSng(left)

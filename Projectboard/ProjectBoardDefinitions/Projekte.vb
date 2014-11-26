@@ -8950,70 +8950,6 @@ Public Module Projekte
     End Sub
 
 
-
-
-
-    '
-    ' zeigt einen Callout an mit den Infos zum Projekt: Name, Anfang, Ende , Dauer
-    '
-    Public Sub awinShowCallout(ByVal farbindex As Object)
-
-        'Dim top As Double, left As Double, height As Double, width As Double
-        Dim startdate As Date
-
-
-        'Dim textzeile As String
-
-        Call DeleteStartMarkers()
-
-        startdate = StartofCalendar
-
-
-        'diff = ClickPosition(1, 2) - 1
-        'vondate = startdate.AddMonths(diff)
-        'von = vondate.ToString("MMM yy")
-
-        'diff = ClickPosition(1, 2) + projektLaenge - 2
-        'bisdate = startdate.AddMonths(diff)
-        'bis = bisdate.ToString("MMM yy")
-
-        '
-        ' die Position des Callouts wird ausgerechnet ...
-        '
-
-        Call MsgBox("muss noch implementiert werden - die alte Vorgehensweise siehe auskommentiert im Folgenden ")
-        'top = (ClickPosition(1, 1) - 1) * 15 - 31
-        'If top < 0 Then
-        '    top = 2
-        'End If
-
-        'left = (ClickPosition(1, 2) + 2) * boxWidth + 16
-
-
-        'height = 50
-        'width = 150
-
-        'textzeile = selectedProjects(1) & Chr(10) & von & " - " & bis
-
-
-        'Call awinDrawCallout(textzeile, farbindex, top, left, width, height)
-
-
-    End Sub
-
-    Public Sub DeleteStartMarkers()
-
-        For Each shp As Excel.Shape In CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
-            With shp
-                'If .AutoShapeType = MsoAutoShapeType.msoShapeLineCallout3 Or .AutoShapeType = MsoAutoShapeType.msoShapeIsoscelesTriangle Then
-                If .AutoShapeType = MsoAutoShapeType.msoShapeIsoscelesTriangle Then
-                    .Delete()
-                End If
-            End With
-        Next shp
-    End Sub
-
-
     ''' <summary>
     ''' löscht die Einträge auf der Plantafel 
     ''' meist, um sie dann neu zeichnen zu können 
@@ -10398,6 +10334,7 @@ Public Module Projekte
         Dim worksheetShapes As Excel.Shapes
         Dim heute As Date = Date.Now
         Dim tmpShapeRange As Excel.ShapeRange
+        Dim vorlagenShape As xlNS.Shape
 
         Dim shpExists As Boolean
 
@@ -10494,7 +10431,7 @@ Public Module Projekte
                         cBewertung = cResult.getBewertung(1)
 
                         msShapeName = projectboardShapes.calcMilestoneShapeName(hproj.name, cphase.name, r)
-                        'msShapeName = hproj.name & "#" & cphase.name & "#M" & r.ToString
+
                         ' existiert das schon ? 
                         Try
                             milestoneShape = worksheetShapes.Item(msShapeName)
@@ -10552,12 +10489,24 @@ Public Module Projekte
 
                     End With
 
+                    vorlagenShape = PhaseDefinitions.getShape(phasenName)
 
                     Try
                         zeilenOffset = 0
-                        hproj.CalculateShapeCoord(i, zeilenOffset, top, left, width, height)
-                        phaseShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
+                        Call hproj.CalculateShapeCoord(i, zeilenOffset, top, left, width, height)
+                        'phaseShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
+                        '        Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+
+                        If i = 1 Then
+                            phaseShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
                                 Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                        Else
+                            phaseShape = worksheetShapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
+                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                        End If
+
+                        vorlagenShape.PickUp()
+                        phaseShape.Apply()
 
                     Catch ex As Exception
                         Throw New Exception("in zeichneProjektinPlantafel2 : keine Shape-Erstellung möglich ...  ")
@@ -10585,7 +10534,7 @@ Public Module Projekte
 
                     ' jetzt müssen alle Meilensteine dieser Phase gezeichnet werden 
 
-                    With hproj.getPhase(i)
+                    With CType(hproj.getPhase(i), clsPhase)
                         Dim msName As String
                         Dim msShape As Excel.Shape
 
@@ -10596,6 +10545,8 @@ Public Module Projekte
 
                             cResult = .getResult(r)
                             cBewertung = cResult.getBewertung(1)
+
+                            vorlagenShape = MilestoneDefinitions.getShape(cResult.name, phasenName)
 
                             hproj.calculateResultCoord(cResult.getDate, zeilenOffset, top, left, width, height)
 
@@ -10611,8 +10562,12 @@ Public Module Projekte
                             If msShape Is Nothing Then
 
 
-                                msShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, _
+                                'msShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, _
+                                '                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                msShape = worksheetShapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
                                                                 Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                vorlagenShape.PickUp()
+                                msShape.Apply()
 
                                 With msShape
                                     .Name = msName
@@ -11394,6 +11349,8 @@ Public Module Projekte
         Dim listOFShapes As New Collection
         Dim found As Boolean = True
         Dim showOnlyWithinTimeFrame As Boolean
+        Dim vorlagenShape As xlNS.Shape
+
 
 
         If tmpShowRangeLeft <= 0 Or _
@@ -11490,6 +11447,8 @@ Public Module Projekte
                                 ' nichts machen 
                             Else
                                 Dim zeilenoffset As Integer = 0
+                                vorlagenShape = MilestoneDefinitions.getShape(cResult.name, cphase.name)
+
                                 hproj.calculateResultCoord(cResult.getDate, zeilenoffset, top, left, width, height)
 
                                 shpName = projectboardShapes.calcMilestoneShapeName(hproj.name, cphase.name, r)
@@ -11506,8 +11465,12 @@ Public Module Projekte
                                     If report Then
                                         top = top - boxWidth
                                     End If
-                                    resultShape = .Shapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, _
+                                    'resultShape = .Shapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, _
+                                    '                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                    resultShape = .Shapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
                                                                     Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                    vorlagenShape.PickUp()
+                                    resultShape.Apply()
 
                                     With resultShape
                                         .Name = shpName
@@ -11516,12 +11479,12 @@ Public Module Projekte
                                     End With
 
                                     msNumber = msNumber + 1
-                                    If numberIt Then
-                                        Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung)
+                                    'If numberIt Then
+                                    '    Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung)
 
-                                    Else
-                                        Call defineResultAppearance(hproj, 0, resultShape, cBewertung)
-                                    End If
+                                    'Else
+                                    '    Call defineResultAppearance(hproj, 0, resultShape, cBewertung)
+                                    'End If
 
                                     ' jetzt der Liste der ProjectboardShapes hinzufügen
                                     projectboardShapes.add(resultShape)
@@ -11799,13 +11762,15 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Sub zeichnePhasenInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal numberIt As Boolean, ByRef msNumber As Integer)
 
-        Dim top1 As Double, left1 As Double, top2 As Double, left2 As Double
+        'Dim top1 As Double, left1 As Double, top2 As Double, left2 As Double
+        Dim top As Double, left As Double, width As Double, height As Double
         Dim nummer As Integer, gesamtZahl As Integer
         Dim phasenShape As Excel.Shape
         Dim worksheetShapes As Excel.Shapes
         Dim heute As Date = Date.Now
         Dim alreadyGroup As Boolean = False
         Dim shpElement As Excel.Shape
+        Dim vorlagenShape As xlNS.Shape
         Dim shpName As String
 
         Dim onlyFew As Boolean
@@ -11886,10 +11851,12 @@ Public Module Projekte
                     Else
 
                         linienDicke = boxHeight * 0.3
-
+                        vorlagenShape = PhaseDefinitions.getShape(cphase.name)
 
                         Try
-                            cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
+                            'cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
+                            cphase.CalculatePhaseShapeCoord(top, left, width, height)
+
                         Catch ex As Exception
                             Throw New ArgumentException(ex.Message)
                         End Try
@@ -11907,7 +11874,11 @@ Public Module Projekte
                         If shpElement Is Nothing Then
 
 
-                            phasenShape = .Shapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left1), CSng(top1), CSng(left2), CSng(top2))
+                            'phasenShape = .Shapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left1), CSng(top1), CSng(left2), CSng(top2))
+                            phasenShape = .Shapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
+                                                                    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                            vorlagenShape.PickUp()
+                            phasenShape.Apply()
 
                             With phasenShape
                                 .Name = shpName
@@ -11916,12 +11887,12 @@ Public Module Projekte
                             End With
 
                             msNumber = msNumber + 1
-                            If numberIt Then
-                                Call defineLineAppearance(hproj, cphase, msNumber, phasenShape, linienDicke)
+                            'If numberIt Then
+                            '    Call defineLineAppearance(hproj, cphase, msNumber, phasenShape, linienDicke)
 
-                            Else
-                                Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
-                            End If
+                            'Else
+                            '    Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
+                            'End If
 
                             ' jetzt der Liste der ProjectboardShapes hinzufügen
                             projectboardShapes.add(phasenShape)
@@ -12113,19 +12084,21 @@ Public Module Projekte
     Public Sub zeichnePhasenInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal vonMonth As Integer, ByVal bisMonth As Integer, _
                                                               ByVal numberIt As Boolean, ByRef msNumber As Integer)
 
-        Dim top1 As Double, left1 As Double, top2 As Double, left2 As Double
+        'Dim top1 As Double, left1 As Double, top2 As Double, left2 As Double
+        Dim top As Double, left As Double, width As Double, height As Double
         Dim nummer As Integer, gesamtZahl As Integer
-        Dim phasenShape As Excel.Shape
-        Dim worksheetShapes As Excel.Shapes
+        Dim phasenShape As xlNS.Shape
+        Dim worksheetShapes As xlNS.Shapes
         Dim heute As Date = Date.Now
         Dim alreadyGroup As Boolean = False
-        Dim shpElement As Excel.Shape
+        Dim shpElement As xlNS.Shape
+        Dim vorlagenshape As xlNS.Shape
         Dim shpName As String
         Dim todoListe As New Collection
 
         Dim onlyFew As Boolean
-        Dim projectShape As Excel.Shape
-        Dim shapeGruppe As Excel.ShapeRange
+        Dim projectShape As xlNS.Shape
+        Dim shapeGruppe As xlNS.ShapeRange
         Dim listOFShapes As New Collection
         Dim found As Boolean = True
 
@@ -12200,6 +12173,7 @@ Public Module Projekte
                     Dim phaseName As String = CStr(todoListe(p))
                     cphase = hproj.getPhase(phaseName)
 
+
                     Try
                         ' soll diese Phase überhaupt gezeigt werden ? 
                         nameIstInListe = namenListe.Contains(phaseName)
@@ -12214,10 +12188,12 @@ Public Module Projekte
                         ' nichts machen 
                     Else
 
+                        vorlagenshape = PhaseDefinitions.getShape(phaseName)
                         linienDicke = boxHeight * 0.3
 
                         Try
-                            cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
+                            'cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
+                            cphase.CalculatePhaseShapeCoord(top, left, width, height)
                         Catch ex As Exception
                             ok = False
                         End Try
@@ -12239,7 +12215,12 @@ Public Module Projekte
                             If shpElement Is Nothing Then
 
 
-                                phasenShape = .Shapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left1), CSng(top1), CSng(left2), CSng(top2))
+                                'phasenShape = .Shapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left1), CSng(top1), CSng(left2), CSng(top2))
+
+                                phasenShape = .Shapes.AddShape(Type:=vorlagenshape.AutoShapeType, _
+                                                                    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                vorlagenShape.PickUp()
+                                phasenShape.Apply()
 
                                 With phasenShape
                                     .Name = shpName
@@ -12248,12 +12229,12 @@ Public Module Projekte
                                 End With
 
                                 msNumber = msNumber + 1
-                                If numberIt Then
-                                    Call defineLineAppearance(hproj, cphase, msNumber, phasenShape, linienDicke)
+                                'If numberIt Then
+                                '    Call defineLineAppearance(hproj, cphase, msNumber, phasenShape, linienDicke)
 
-                                Else
-                                    Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
-                                End If
+                                'Else
+                                '    Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
+                                'End If
 
                                 ' jetzt der Liste der ProjectboardShapes hinzufügen
                                 projectboardShapes.add(phasenShape)
@@ -12338,149 +12319,161 @@ Public Module Projekte
 
             End With
 
+            Try
 
-            .TextFrame2.TextRange.Text = ""
-            If number > 0 And Not roentgenBlick.isOn Then
+                If .TextFrame2.HasText <> MsoTriState.msoFalse Then
+                    .TextFrame2.TextRange.Text = ""
+                End If
 
-                With .TextFrame2
-                    .MarginLeft = 0
-                    .MarginRight = 0
-                    .MarginBottom = 0
-                    .MarginTop = 0
-                    .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-                    .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                    .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
-                    .TextRange.Text = number.ToString
-                    .TextRange.Font.Size = awinSettings.fontsizeLegend
-                    .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-                End With
+                If number > 0 And Not roentgenBlick.isOn Then
 
-
-            End If
-
-
-
+                    With .TextFrame2
+                        .MarginLeft = 0
+                        .MarginRight = 0
+                        .MarginBottom = 0
+                        .MarginTop = 0
+                        .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
+                        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
+                        .TextRange.Text = number.ToString
+                        .TextRange.Font.Size = awinSettings.fontsizeLegend
+                        .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                    End With
 
 
+                End If
+            Catch ex As Exception
 
-
-        End With
-
-
-    End Sub
-
-    Public Sub defineLineAppearance(ByVal myproject As clsProjekt, ByVal myphase As clsPhase, ByVal lnumber As Integer, ByRef myShape As Excel.Shape, ByVal linienDicke As Double)
-        Dim pColor As Integer
-
-        With myphase
-
-            pColor = CInt(.Farbe)
-
-        End With
-
-        With myShape
-
-            With .Line
-                .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                .ForeColor.RGB = pColor
-                .Transparency = 0
-                .Weight = CSng(linienDicke)
-            End With
-
-
-            '.TextFrame2.TextRange.Text = ""
-            'If lnumber > 0 And Not roentgenBlick.isOn Then
-
-            '    With .TextFrame2
-            '        .MarginLeft = 0
-            '        .MarginRight = 0
-            '        .MarginBottom = 0
-            '        .MarginTop = 0
-            '        .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-            '        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-            '        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
-            '        .TextRange.Text = lnumber.ToString
-            '        .TextRange.Font.Size = awinSettings.fontsizeLegend
-            '        .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-            '    End With
-
-
-            'End If
+            End Try
+            
 
 
         End With
 
 
     End Sub
+
+    'Public Sub defineLineAppearance(ByVal myproject As clsProjekt, ByVal myphase As clsPhase, ByVal lnumber As Integer, ByRef myShape As Excel.Shape, ByVal linienDicke As Double)
+    '    'Dim pColor As Integer
+
+    '    'With myphase
+
+    '    '    pColor = CInt(.Farbe)
+
+    '    'End With
+
+    '    With myShape
+
+    '        'With .Line
+    '        '    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+    '        '    .ForeColor.RGB = pColor
+    '        '    .Transparency = 0
+    '        '    .Weight = CSng(linienDicke)
+    '        'End With
+
+
+    '        '.TextFrame2.TextRange.Text = ""
+    '        'If lnumber > 0 And Not roentgenBlick.isOn Then
+
+    '        '    With .TextFrame2
+    '        '        .MarginLeft = 0
+    '        '        .MarginRight = 0
+    '        '        .MarginBottom = 0
+    '        '        .MarginTop = 0
+    '        '        .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+    '        '        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
+    '        '        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
+    '        '        .TextRange.Text = lnumber.ToString
+    '        '        .TextRange.Font.Size = awinSettings.fontsizeLegend
+    '        '        .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    '        '    End With
+
+
+    '        'End If
+
+
+    '    End With
+
+
+    'End Sub
 
 
     Public Sub defineResultAppearance(ByVal myproject As clsProjekt, ByVal number As Integer, ByRef resultShape As Excel.Shape, ByVal bewertung As clsBewertung)
-        Dim pcolor As Object
-        Dim status As String
+        'Dim pcolor As Object
+        'Dim status As String
 
-        With myproject
-            pcolor = .farbe
-            status = .Status
-        End With
+        'With myproject
+        '    pcolor = .farbe
+        '    status = .Status
+        'End With
 
 
         With resultShape
 
-            With .Line
-                '.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                .Visible = MsoTriState.msoTrue
-                .ForeColor.RGB = RGB(255, 255, 255)
-                '.ForeColor.RGB = bewertung.color
-                '.Transparency = 0
-            End With
+            'With .Line
+            '    '.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+            '    .Visible = MsoTriState.msoTrue
+            '    .ForeColor.RGB = RGB(255, 255, 255)
+            '    '.ForeColor.RGB = bewertung.color
+            '    '.Transparency = 0
+            'End With
 
-            With .Fill
-                .ForeColor.RGB = CInt(bewertung.color)
-                .ForeColor.TintAndShade = 0
-                '.ForeColor.Brightness = 0.25
-                .Transparency = 0.0
+            'With .Fill
+            '    .ForeColor.RGB = CInt(bewertung.color)
+            '    .ForeColor.TintAndShade = 0
+            '    '.ForeColor.Brightness = 0.25
+            '    .Transparency = 0.0
 
-                'If roentgenBlick.isOn Then
-                '    .Transparency = 0.8
-                'Else
-                '    If status = ProjektStatus(0) Then
-                '        .Transparency = 0.35
-                '    Else
-                '        .Transparency = 0.0
-                '    End If
-                'End If
+            '    'If roentgenBlick.isOn Then
+            '    '    .Transparency = 0.8
+            '    'Else
+            '    '    If status = ProjektStatus(0) Then
+            '    '        .Transparency = 0.35
+            '    '    Else
+            '    '        .Transparency = 0.0
+            '    '    End If
+            '    'End If
 
-                .Solid()
+            '    .Solid()
 
-            End With
-
-            .TextFrame2.TextRange.Text = ""
-            If number > 0 And Not roentgenBlick.isOn Then
-
-                With .TextFrame2
-                    .MarginLeft = 0
-                    .MarginRight = 0
-                    .MarginBottom = 0
-                    .MarginTop = 0
-                    .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-                    .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                    .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
-                    .TextRange.Text = number.ToString
-                    .TextRange.Font.Size = awinSettings.fontsizeLegend
-                    .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-                End With
+            'End With
 
 
-            End If
+            Try
+                If .TextFrame2.HasText <> MsoTriState.msoFalse Then
+                    .TextFrame2.TextRange.Text = ""
+                End If
 
+                If number > 0 And Not roentgenBlick.isOn Then
+
+                    With .TextFrame2
+                        .MarginLeft = 0
+                        .MarginRight = 0
+                        .MarginBottom = 0
+                        .MarginTop = 0
+                        .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+                        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
+                        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
+                        .TextRange.Text = number.ToString
+                        .TextRange.Font.Size = awinSettings.fontsizeLegend
+                        .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                    End With
+
+
+                End If
+
+            Catch ex As Exception
+
+            End Try
+            
 
         End With
 
     End Sub
 
     Public Sub defineShapeAppearance(ByRef myproject As clsProjekt, ByRef projectShape As Excel.Shape)
-        Dim pcolor As Object
-        Dim status As String
+        Dim pcolor As Object = XlRgbColor.rgbAqua
+        Dim status As String = ""
         Dim pMarge As Double
         Dim pname As String
         Dim diffToPrev As Boolean
@@ -12501,78 +12494,111 @@ Public Module Projekte
         End Try
 
 
-        With myproject
-            pcolor = .farbe
-            status = .Status
-            pMarge = .ProjectMarge
-            pname = .name
-            ampel = .ampelStatus
-            diffToPrev = .diffToPrev
-        End With
+        Try
+            With myproject
+                pcolor = .farbe
+                status = .Status
+                pMarge = .ProjectMarge
+                pname = .name
+                ampel = .ampelStatus
+                diffToPrev = .diffToPrev
+            End With
+        Catch ex As Exception
+
+        End Try
+        
 
         With myshape
 
-            If status = ProjektStatus(2) Or diffToPrev Then
-                ' beauftragt, aber noch nicht wieder freigegeben ... 
+            Try
+                If status = ProjektStatus(2) Or diffToPrev Then
+                    ' beauftragt, aber noch nicht wieder freigegeben ... 
 
-                .Glow.Color.RGB = CInt(awinSettings.glowColor)
-                .Glow.Color.TintAndShade = 0
-                .Glow.Color.Brightness = 0
-                .Glow.Transparency = 0.4
-                .Glow.Radius = 10
+                    .Glow.Color.RGB = CInt(awinSettings.glowColor)
+                    .Glow.Color.TintAndShade = 0
+                    .Glow.Color.Brightness = 0
+                    .Glow.Transparency = 0.4
+                    .Glow.Radius = 10
 
-            Else
-                .Glow.Color.RGB = RGB(255, 255, 255)
-                .Glow.Transparency = 1.0
-            End If
+                Else
+                    .Glow.Color.RGB = RGB(255, 255, 255)
+                    .Glow.Transparency = 1.0
+                End If
+            Catch ex As Exception
 
-            With .Line
-                .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                'If pMarge < 0 Then
-                '    .ForeColor.RGB = RGB(255, 0, 0)
-                '    .Weight = 2.0
-                'Else
-                '    .ForeColor.RGB = pcolor
-                'End If
-                .ForeColor.RGB = CInt(pcolor)
-                .Transparency = 0
-            End With
+            End Try
+            
 
-            With .Fill
-                '.Visible = msoTrue
-                .ForeColor.RGB = CInt(pcolor)
-                .ForeColor.TintAndShade = 0
-                .ForeColor.Brightness = -0.25
+            'With .Line
+            '    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+            '    'If pMarge < 0 Then
+            '    '    .ForeColor.RGB = RGB(255, 0, 0)
+            '    '    .Weight = 2.0
+            '    'Else
+            '    '    .ForeColor.RGB = pcolor
+            '    'End If
+            '    .ForeColor.RGB = CInt(pcolor)
+            '    .Transparency = 0
+            'End With
+
+            Try
+                With .Fill
+                    '.Visible = msoTrue
+                    .ForeColor.RGB = CInt(pcolor)
+                    .ForeColor.TintAndShade = 0
+                    .ForeColor.Brightness = -0.25
+
+                    If roentgenBlick.isOn Then
+                        .Transparency = 0.8
+                    Else
+                        .Transparency = 0.0
+                    End If
+
+                    .Solid()
+
+                End With
+            Catch ex As Exception
+
+            End Try
+           
+
+            Try
+                With .TextFrame2
+                    .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
+                    .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
+                End With
 
                 If roentgenBlick.isOn Then
-                    .Transparency = 0.8
+
+                    .TextFrame2.TextRange.Text = ""
+
+
                 Else
-                    .Transparency = 0.0
+                    ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
+
+                    .TextFrame2.TextRange.Text = myproject.getShapeText
+
+                    ' Ende Änderung 13.10.14
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            ' nur verändern, wenn es auch veränderbar ist 
+            Try
+
+                If .Adjustments.Count > 0 Then
+                    If status = ProjektStatus(0) Then
+                        .Adjustments.Item(1) = 0.5
+                    Else
+                        .Adjustments.Item(1) = 0.25
+                    End If
                 End If
 
-                .Solid()
+            Catch ex As Exception
 
-            End With
-
-
-            With .TextFrame2
-                .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
-            End With
-
-            If roentgenBlick.isOn Then
-                .TextFrame2.TextRange.Text = ""
-            Else
-                ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
-                .TextFrame2.TextRange.Text = myproject.getShapeText
-                ' Ende Änderung 13.10.14
-            End If
-
-            If status = ProjektStatus(0) Then
-                .Adjustments.Item(1) = 0.5
-            Else
-                .Adjustments.Item(1) = 0.25
-            End If
+            End Try
+            
 
 
         End With
@@ -12581,9 +12607,9 @@ Public Module Projekte
     End Sub
 
     Public Sub defineShapeAppearance(ByRef myproject As clsProjekt, ByRef projectShape As Excel.Shape, ByVal phasenIndex As Integer)
-        Dim projectColor As Object, phaseColor As Object = RGB(255, 255, 255)
+        Dim projectColor As Object = Nothing, phaseColor As Object = RGB(255, 255, 255)
         Dim whiteColor As Object = RGB(255, 255, 255)
-        Dim status As String
+        Dim status As String = ""
         Dim pMarge As Double
         Dim pname As String
         Dim ampel As Integer
@@ -12596,12 +12622,7 @@ Public Module Projekte
         Try
             myphase = myproject.getPhase(phasenIndex)
 
-            Try
-                phaseColor = myphase.Farbe
-            Catch ex1 As Exception
-                phaseColor = myproject.farbe
-            End Try
-
+            
         Catch ex As Exception
             Throw New ArgumentException("Phase " & phasenIndex.ToString & _
                                         " existiert nicht ...")
@@ -12615,111 +12636,143 @@ Public Module Projekte
             myshape = projectShape
         End Try
 
+        Try
+            With myproject
+                projectColor = .farbe
+                status = .Status
+                pMarge = .ProjectMarge
+                pname = .name
+                ampel = .ampelStatus
+            End With
 
-        With myproject
-            projectColor = .farbe
-            status = .Status
-            pMarge = .ProjectMarge
-            pname = .name
-            ampel = .ampelStatus
-        End With
+        Catch ex As Exception
 
+        End Try
+        
+        
         With myshape
 
-            If status = ProjektStatus(2) Then
 
-                If phasenIndex = 1 Then
-                    ' beauftragt, aber noch nicht wieder freigegeben ... 
+            Try
+                If status = ProjektStatus(2) Then
 
-                    .Glow.Color.RGB = CInt(awinSettings.glowColor)
-                    .Glow.Color.TintAndShade = 0
-                    .Glow.Color.Brightness = 0
-                    .Glow.Transparency = 0.4
-                    .Glow.Radius = 10
+                    If phasenIndex = 1 Then
+                        ' beauftragt, aber noch nicht wieder freigegeben ... 
+
+                        .Glow.Color.RGB = CInt(awinSettings.glowColor)
+                        .Glow.Color.TintAndShade = 0
+                        .Glow.Color.Brightness = 0
+                        .Glow.Transparency = 0.4
+                        .Glow.Radius = 10
+                    Else
+                        .Glow.Color.RGB = RGB(255, 255, 255)
+                        .Glow.Transparency = 1.0
+                    End If
                 Else
                     .Glow.Color.RGB = RGB(255, 255, 255)
                     .Glow.Transparency = 1.0
                 End If
-            Else
-                .Glow.Color.RGB = RGB(255, 255, 255)
-                .Glow.Transparency = 1.0
-            End If
+            Catch ex As Exception
 
-            With .Line
-                '.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                .Visible = Microsoft.Office.Core.MsoTriState.msoFalse
-                'If pMarge < 0 Then
-                '    .ForeColor.RGB = RGB(255, 0, 0)
-                '    .Weight = 2.0
-                'Else
-                '    .ForeColor.RGB = pcolor
-                'End If
-                'If phasenIndex = 1 Then
-                '    .ForeColor.RGB = projectColor
-                '    .Transparency = 0
-                'Else
-                '    .ForeColor.RGB = phaseColor
-                '    .Transparency = 0
-                'End If
+            End Try
 
-            End With
 
-            With .Fill
+            Try
+                With .Line
+                    '.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                    '.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+                    'If pMarge < 0 Then
+                    '    .ForeColor.RGB = RGB(255, 0, 0)
+                    '    .Weight = 2.0
+                    'Else
+                    '    .ForeColor.RGB = pcolor
+                    'End If
+                    If phasenIndex = 1 Then
+                        .ForeColor.RGB = CInt(projectColor)
+                        .Transparency = 0
+                    Else
+                        '.ForeColor.RGB = CInt(phaseColor)
+                        .Transparency = 0
+                    End If
+
+                End With
+            Catch ex As Exception
+
+            End Try
+            
+            Try
+                With .Fill
+
+                    ' geändert wegen Änder
+                    If phasenIndex = 1 Then
+                        .ForeColor.RGB = CInt(projectColor)
+                        'Else
+                        '    .ForeColor.RGB = CInt(phaseColor)
+                    End If
+
+                    '.ForeColor.TintAndShade = 0
+                    '.ForeColor.Brightness = -0.25
+
+                    If roentgenBlick.isOn Then
+                        .Transparency = 0.8
+                    Else
+                        .Transparency = 0.0
+                    End If
+
+                    If phasenIndex = 1 Then
+                        .Solid()
+                    End If
+
+
+                End With
+
+            Catch ex As Exception
+
+            End Try
+           
+
+            Try
 
                 If phasenIndex = 1 Then
-                    .ForeColor.RGB = CInt(projectColor)
-                Else
-                    .ForeColor.RGB = CInt(phaseColor)
+                    If roentgenBlick.isOn Then
+
+                        .TextFrame2.TextRange.Text = ""
+
+                    Else
+
+                        With .TextFrame2
+                            .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
+                            .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
+                            .WordWrap = MsoTriState.msoFalse
+                        End With
+
+                        .TextFrame2.TextRange.Text = myproject.getShapeText
+
+
+                    End If
                 End If
 
-                .ForeColor.TintAndShade = 0
-                .ForeColor.Brightness = -0.25
 
-                If roentgenBlick.isOn Then
-                    .Transparency = 0.8
-                Else
-                    .Transparency = 0.0
+            Catch ex As Exception
+
+            End Try
+
+
+            Try
+                If .Adjustments.Count > 0 Then
+
+                    If status = ProjektStatus(0) Then
+                        .Adjustments.Item(1) = 0.5
+                    Else
+                        .Adjustments.Item(1) = 0.25
+                    End If
+
                 End If
+            Catch ex As Exception
 
-                .Solid()
+            End Try
 
-            End With
-
-
-
-
-            If roentgenBlick.isOn Then
-                .TextFrame2.TextRange.Text = ""
-            Else
-                If phasenIndex = 1 Then
-                    With .TextFrame2
-                        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
-                        .WordWrap = MsoTriState.msoFalse
-                    End With
-                    ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
-                    .TextFrame2.TextRange.Text = myproject.getShapeText
-                    ' Ende Änderung 13.10.14
-
-                Else
-                    .TextFrame2.TextRange.Text = ""
-                End If
-            End If
-
-            If phasenIndex = 1 Then
-
-                If status = ProjektStatus(0) Then
-                    .Adjustments.Item(1) = 0.5
-                Else
-                    .Adjustments.Item(1) = 0.25
-                End If
-
-            Else
-                .Adjustments.Item(1) = 0.0
-            End If
-
-
-
+            
 
         End With
 
@@ -15571,8 +15624,8 @@ Public Module Projekte
         Dim ok As Boolean = True
         Dim hproj As New clsProjekt
 
-        Dim top1 As Double, top2 As Double, left1 As Double, left2 As Double
-        Dim ld As Double
+        'Dim top1 As Double, top2 As Double, left1 As Double, left2 As Double
+        'Dim ld As Double
 
         Dim phasenStart As Integer
         Dim phasenDauer As Integer
@@ -15673,10 +15726,11 @@ Public Module Projekte
 
 
                 Else
-                    Call cPhase.calculateLineCoord(hproj.tfZeile, 1, 1, top1, left1, top2, left2, ld)
-                    sollLeft = left1
-                    sollWidth = left2 - left1
-                    sollTop = top1 - boxHeight * 0.3 * 0.5
+                    'Call cPhase.calculateLineCoord(hproj.tfZeile, 1, 1, top1, left1, top2, left2, ld)
+                    Call cPhase.CalculatePhaseShapeCoord(sollTop, sollLeft, sollWidth, sollHeight)
+                    'sollLeft = left1
+                    'sollWidth = left2 - left1
+                    'sollTop = top1 - boxHeight * 0.3 * 0.5
                 End If
 
                 If System.Math.Abs(sollLeft - istLeft) > 0.5 Or _
@@ -15925,66 +15979,30 @@ Public Module Projekte
 
         With formPhase
 
-            If specialListofPhases.Contains(phaseName) And ok Then
+            
+            '.Height = 220
 
-                .Height = 530
-                .lessonsLearnedControl.Visible = True
                 '.projectName.Text = projectName
-                .projectName.Text = hproj.getShapeText
-                .phaseName.Text = phaseName
+            .projectName.Text = hproj.getShapeText
+            .phaseName.Text = phaseName
 
-                .erlaeuterung.Visible = True
-                .erlaeuterung.Text = " ... hier werden die Prämissen angezeigt bzw. verändert "
-                .explSonderabl.Text = "Sonderabläufe der Phase " & phaseName & _
-                    ", Projekt " & projectName
-                .explEnabler.Text = "Enabler der Phase " & phaseName & _
-                    ", Projekt " & projectName
-                .explRisiken.Text = "Zusatzrisiken der Phase " & phaseName & _
-                    ", Projekt " & projectName
+            .phaseStart.Text = startdateText
+            .phaseStart.TextAlign = HorizontalAlignment.Left
 
-                .phaseStart.Text = startdateText
-                .phaseStart.TextAlign = HorizontalAlignment.Left
+            .phaseEnde.Text = enddateText
+            .phaseEnde.TextAlign = HorizontalAlignment.Right
 
-                .phaseEnde.Text = enddateText
-                .phaseEnde.TextAlign = HorizontalAlignment.Right
+            .phaseDauer.Text = dauerText
+            .phaseDauer.TextAlign = HorizontalAlignment.Center
 
-                .phaseDauer.Text = dauerText
-                .phaseDauer.TextAlign = HorizontalAlignment.Center
-
-
-                If .Visible Then
-                Else
-                    .Visible = True
-                    .Show()
-                End If
-
-
+            If .Visible Then
             Else
-                .Height = 220
-                .lessonsLearnedControl.Visible = False
-                .erlaeuterung.Visible = False
-
-                '.projectName.Text = projectName
-                .projectName.Text = hproj.getShapeText
-                .phaseName.Text = phaseName
-
-                .phaseStart.Text = startdateText
-                .phaseStart.TextAlign = HorizontalAlignment.Left
-
-                .phaseEnde.Text = enddateText
-                .phaseEnde.TextAlign = HorizontalAlignment.Right
-
-                .phaseDauer.Text = dauerText
-                .phaseDauer.TextAlign = HorizontalAlignment.Center
-
-                If .Visible Then
-                Else
-                    .Visible = True
-                    .Show()
-                End If
-
-
+                .Visible = True
+                .Show()
             End If
+
+
+
 
 
         End With

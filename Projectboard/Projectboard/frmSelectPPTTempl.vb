@@ -148,7 +148,7 @@ Public Class frmSelectPPTTempl
         'Call createPPTSlidesFromConstellation(vorlagenDateiName, worker, e)
         Dim tmpCollection As New Collection
         Call createPPTSlidesFromConstellation(vorlagenDateiName, tmpCollection, tmpCollection, _
-                                              tmpCollection, tmpCollection, False, 4, True, worker, e)
+                                              tmpCollection, tmpCollection, False, 4, True, False, False, worker, e)
 
 
     End Sub

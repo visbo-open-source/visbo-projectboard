@@ -25,21 +25,22 @@ Public Module awinGeneralModules
         Dim phName As String, phColor As Long
         Dim lastrow As Excel.Range
 
-        appInstance.ScreenUpdating = False
-        appInstance.EnableEvents = False
+        'appInstance.ScreenUpdating = False
+        'appInstance.EnableEvents = False
 
 
 
         ' hier muss jetzt das File Projekt Tafel Definitions.xlsx aufgemacht werden ...
-        Try
-            appInstance.Workbooks.Open(awinPath & customizationFile)
+        ' das File 
+        'Try
+        '    appInstance.Workbooks.Open(awinPath & customizationFile)
 
-        Catch ex As Exception
-            Call MsgBox("Customization File nicht gefunden - Abbruch")
-            Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
-        End Try
+        'Catch ex As Exception
+        '    Call MsgBox("Customization File nicht gefunden - Abbruch")
+        '    Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
+        'End Try
 
-
+        appInstance.Workbooks(myCustomizationFile).Activate()
         Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
@@ -76,8 +77,8 @@ Public Module awinGeneralModules
 
 
         appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-        appInstance.ScreenUpdating = True
-        appInstance.EnableEvents = True
+        'appInstance.ScreenUpdating = True
+        'appInstance.EnableEvents = True
 
     End Sub
 
@@ -99,11 +100,13 @@ Public Module awinGeneralModules
         Dim hrole As clsRollenDefinition
         Dim hcost As clsKostenartDefinition
         Dim hphase As clsPhasenDefinition
+        Dim hMilestone As clsMeilensteinDefinition
         'Dim DifferenceInMonths As Long
         Dim dateiListe As New Collection
         Dim dateiName As String
         Dim tmpStr As String
         Dim d As Integer
+        Dim appDefinition As clsAppearance
 
 
 
@@ -174,9 +177,9 @@ Public Module awinGeneralModules
         arrWsNames(4) = "Einstellungen"
         arrWsNames(5) = "Tabelle2"
         arrWsNames(6) = "Edit Allgemein"
-        arrWsNames(7) = ""                          ' war Kosten ; ist nicht mehr notwendig
+        arrWsNames(7) = "Darstellungsklassen"                          ' war Kosten ; ist nicht mehr notwendig
         arrWsNames(8) = "Projekt iRessourcen"
-        arrWsNames(9) = "Projekt iKosten"
+        arrWsNames(9) = "Tabelle3"
         arrWsNames(10) = "Portfolio Übersicht"
         arrWsNames(11) = "Projekt editieren"
         arrWsNames(12) = "Projektdefinition Erloese"
@@ -240,7 +243,7 @@ Public Module awinGeneralModules
         ' hier muss jetzt das File Projekt Tafel Definitions.xlsx aufgemacht werden ...
         Try
             appInstance.Workbooks.Open(awinPath & customizationFile)
-
+            myCustomizationFile = appInstance.ActiveWorkbook.Name
         Catch ex As Exception
             Call MsgBox("Customization File nicht gefunden - Abbruch")
             appInstance.ScreenUpdating = formerSU
@@ -249,8 +252,50 @@ Public Module awinGeneralModules
         End Try
 
 
+
+
         Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
+        Dim wsName7 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+
+        ' hier muss jetzt das Worksheet Darstellungsklassen aufgemacht werden 
+        ' das ist in arrwsnames(7) abgelegt 
+        With wsName7
+
+            For Each shp As Excel.Shape In .Shapes
+                appDefinition = New clsAppearance
+                With appDefinition
+
+                    If shp.Title <> "" Then
+
+                        .name = shp.Title
+                        If shp.AlternativeText = "1" Then
+                            .isMilestone = True
+                        Else
+                            .isMilestone = False
+                        End If
+                        .form = shp
+
+                        Try
+                            appearanceDefinitions.Add(.name, appDefinition)
+                        Catch ex As Exception
+                            Call MsgBox("Mehrfach Definition in den Darstellungsklassen ... " & vbLf & _
+                                         "bitte korrigieren")
+                        End Try
+
+
+                    End If
+
+                End With
+
+
+            Next
+
+        End With
+
+
 
         With wsName4
 
@@ -288,6 +333,27 @@ Public Module awinGeneralModules
                         Catch ex As Exception
 
                         End Try
+
+                        ' hat die Phase eine Darstellungsklasse ? 
+                        Try
+                            Dim darstellungsklasse As String
+                            If Not IsNothing(c.Offset(0, 6).Value) Then
+
+                                If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
+                                    darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
+                                    If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
+                                        .darstellungsKlasse = darstellungsklasse
+                                    Else
+                                        .darstellungsKlasse = ""
+                                    End If
+                                End If
+
+                            End If
+
+                        Catch ex As Exception
+                            .darstellungsKlasse = ""
+                        End Try
+
                     End With
 
                     Try
@@ -300,6 +366,87 @@ Public Module awinGeneralModules
                 End If
 
             Next c
+
+            '
+            ' jetzt werden die Meilenstein Definitionen ausgelesen 
+            '
+            i = 0
+            For Each c In .Range("awin_Meilenstein_Definition")
+
+                ' hier muss das Aufbauen der MilestoneDefinitions gemacht werden  
+                If CStr(c.Value) <> "" Then
+                    i = i + 1
+                    tmpStr = CType(c.Value, String)
+                    ' das neue ...
+                    hMilestone = New clsMeilensteinDefinition
+                    With hMilestone
+                        .name = tmpStr.Trim
+                        .UID = i
+
+                        ' hat der Milestone einen Schwellwert ? 
+
+                        If IsNothing(c.Offset(0, 1).Value) Then
+                        ElseIf IsNumeric(c.Offset(0, 1).Value) Then
+                            If CInt(c.Offset(0, 1).Value) > 0 Then
+                                .schwellWert = CInt(c.Offset(0, 1).Value)
+                            End If
+                        End If
+
+
+                        ' hat der Milestone einen Bezug ? 
+                        Dim bezug As String = ""
+                        If Not IsNothing(c.Offset(0, 4).Value) Then
+
+                            bezug = CStr(c.Offset(0, 4).Value).Trim
+
+                            If PhaseDefinitions.Contains(bezug) Then
+                            Else
+                                bezug = ""
+                            End If
+
+                        End If
+
+                        .belongsTo = bezug
+
+                        ' hat der Milestone eine Abkürzung ? 
+                        Dim abbrev As String = ""
+                        If Not IsNothing(c.Offset(0, 5).Value) Then
+                            abbrev = CStr(c.Offset(0, 5).Value).Trim
+                        End If
+
+                        .shortName = abbrev
+
+
+                        ' hat der Milestone Phase eine Darstellungsklasse ? 
+
+                        Dim darstellungsklasse As String = ""
+                        If Not IsNothing(c.Offset(0, 6).Value) Then
+
+                            If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
+                                darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
+                                If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
+                                    .darstellungsKlasse = darstellungsklasse
+                                Else
+                                    .darstellungsKlasse = ""
+                                End If
+                            End If
+
+                        End If
+
+
+
+                    End With
+
+                    Try
+                        MilestoneDefinitions.Add(hMilestone)
+                    Catch ex As Exception
+
+                    End Try
+
+
+                End If
+
+            Next
 
 
             '
@@ -472,12 +619,16 @@ Public Module awinGeneralModules
             '
         End With
 
+        ' hier müssen die Shapes noch kopiert werden ...
+        ' 24.11.14
 
+        ' da die Shapes in der customization sind, darf das Excel File nicht geschlossen werden 
+        ' sonst sind die appearanceDefinitions.Shape Werte alle weg
 
         ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
-        appInstance.EnableEvents = False
-        appInstance.ActiveWorkbook.Close(SaveChanges:=False) ' ur: 6.5.2014 savechanges hinzugefügt
-        appInstance.EnableEvents = True
+        'appInstance.EnableEvents = False
+        'appInstance.ActiveWorkbook.Close(SaveChanges:=False) ' ur: 6.5.2014 savechanges hinzugefügt
+        'appInstance.EnableEvents = True
 
         showtimezone = True
 
@@ -540,6 +691,12 @@ Public Module awinGeneralModules
 
         ' bestimmen der Spaltenbreite und Spaltenhöhe ...
         Dim testCase As String = appInstance.ActiveWorkbook.Name
+
+        If testCase <> myProjektTafel Then
+
+            CType(appInstance.Workbooks(myProjektTafel), Excel.Workbook).Activate()
+
+        End If
         Dim wsName3 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(3)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
