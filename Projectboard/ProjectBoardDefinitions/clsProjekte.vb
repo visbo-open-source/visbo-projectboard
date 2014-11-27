@@ -229,76 +229,6 @@ Public Class clsProjekte
         End Get
     End Property
 
-    ''' <summary>
-    ''' gibt in earliestDate und latestDate das früheste und späteste Datum zurück, wo eine der angegebenen Phasen / Meilensteine 
-    ''' beginnt bzw. endet 
-    ''' </summary>
-    ''' <param name="selectedphases"></param>
-    ''' <param name="selectedMilestones"></param>
-    ''' <param name="von"></param>
-    ''' <param name="bis"></param>
-    ''' <param name="firstDate"></param>
-    ''' <param name="lastDate"></param>
-    ''' <remarks></remarks>
-    Public Sub calcFirstandLastDate(ByVal selectedphases As Collection, ByVal selectedMilestones As Collection, _
-                                        ByVal von As Integer, ByVal bis As Integer, _
-                                        ByRef firstDate As Date, ByRef lastDate As Date)
-
-        Dim tmpListe As New Collection
-        Dim cphase As clsPhase
-        Dim tmp1 As Date = StartofCalendar.AddYears(100), tmp2 As Date = StartofCalendar
-
-        Dim milestone As clsMeilenstein
-
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
-
-            Try
-                For p = 1 To kvp.Value.CountPhases
-
-                    cphase = kvp.Value.getPhase(p)
-
-                    If selectedMilestones.Count > 0 Then
-                        For r = 1 To cphase.CountResults
-
-                            milestone = cphase.getResult(r)
-                            If selectedMilestones.Contains(milestone.name) Then
-
-                                If DateDiff(DateInterval.Day, milestone.getDate, tmp1) > 0 Then
-                                    tmp1 = milestone.getDate
-                                End If
-
-                            End If
-
-                        Next
-                    End If
-
-                    If selectedphases.Count > 0 Then
-                        If selectedphases.Contains(cphase.name) Then
-                            If DateDiff(DateInterval.Day, cphase.getStartDate, tmp1) > 0 Then
-                                tmp1 = cphase.getStartDate
-                            End If
-
-                            If DateDiff(DateInterval.Day, cphase.getEndDate, tmp2) < 0 Then
-                                tmp2 = cphase.getEndDate
-                            End If
-
-                        End If
-                    End If
-
-
-                Next
-            Catch ex As Exception
-
-            End Try
-
-
-        Next
-
-        firstDate = tmp1
-        lastDate = tmp2
-
-    End Sub
-
 
 
     ''' <summary>
@@ -538,13 +468,14 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns>Collection of projectnames</returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property withinTimeFrame(ByVal suchTyp As Integer, ByVal selItems1 As Collection, ByVal selItems2 As Collection, ByVal von As Integer, ByVal bis As Integer) As Collection
+    Public ReadOnly Property withinTimeFrame(ByVal suchTyp As Integer, ByVal selItems1 As Collection, ByVal selItems2 As Collection, ByVal von As Integer, ByVal bis As Integer) As SortedList(Of Double, String)
         Get
-            Dim tmpListe As New Collection
+            Dim tmpListe As New SortedList(Of Double, String)
             Dim cphase As clsPhase
             Dim cmileStone As clsMeilenstein
             Dim projektstart As Integer
             Dim found As Boolean
+            Dim key As Double
             ' selection type wird aktuell noch ignoriert .... 
 
             suchTyp = 0
@@ -583,7 +514,7 @@ Public Class clsProjekte
                                         Exit For
                                     End If
                                 End If
-                                
+
                             Next
 
                             If found Then
@@ -619,7 +550,8 @@ Public Class clsProjekte
                 End With
 
                 If found Then
-                    tmpListe.Add(kvp.Value.name)
+                    key = kvp.Value.tfZeile + kvp.Value.anzahlRasterElemente / 10000
+                    tmpListe.Add(key, kvp.Value.name)
                 End If
 
             Next
@@ -628,6 +560,109 @@ Public Class clsProjekte
 
         End Get
     End Property
+
+    ''' <summary>
+    ''' bestimmt für den angegebenen Zeitraum die Projekte, die eine der angegeben Phasen oder Meilensteine im Zeitraum enthalten. 
+    ''' bestimmt darüber hinaus das minimale bzw. maximale Datum , das die Phasen der Projekte aufspannen , die den Zeitraum "berühren"  
+    ''' </summary>
+    ''' <param name="selectedPhases">die Phasen, nach denen gesúcht wird </param>
+    ''' <param name="selectedMilestones">die Meilensteine, nach denen gesucht wird</param>
+    ''' <param name="von">linker Rand des Zeitraums</param>
+    ''' <param name="bis">rechter Rand des zeitraums</param>
+    ''' <param name="projektListe">Ergebnis enthält alle Projekt-Namen die eine der Phasen oder einen der Meilensteine im angegebenen Zeitraum enthalten </param>
+    ''' <param name="minDate">das kleinste auftretende Start-Datum einer Phase</param>
+    ''' <param name="maxDate">das größte auftretende Ende-Datum einer Phase </param>
+    ''' <remarks></remarks>
+    Public Sub bestimmeProjekteAndMinMaxDates(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal von As Integer, ByVal bis As Integer, _
+                                                  ByRef projektListe As SortedList(Of Double, String), ByRef minDate As Date, ByRef maxDate As Date)
+
+        Dim tmpMinimum As Date = StartofCalendar.AddMonths(von - 1)
+        Dim tmpMaximum As Date = StartofCalendar.AddMonths(bis - 1)
+        Dim tmpDate As Date
+
+        Dim cphase As clsPhase
+        Dim projektstart As Integer
+        Dim found As Boolean
+        Dim key As Double
+        ' selection type wird aktuell noch ignoriert .... 
+
+
+        For Each kvp In Me.AllProjects
+
+            found = False
+
+            With kvp.Value
+
+                projektstart = .Start + .StartOffset
+
+                If (projektstart > bis) Or (projektstart + .anzahlRasterElemente - 1 < von) Then
+                    ' dann liegt das Projekt ausserhalb des Zeitraums und muss überhaupt nicht berücksichtig werden 
+
+                Else
+
+                    For Each phaseName As String In selectedPhases
+
+                        cphase = kvp.Value.getPhase(phaseName)
+
+                        If Not IsNothing(cphase) Then
+                            If (projektstart + cphase.relStart - 1 > bis) Or (projektstart + cphase.relEnde - 1 < von) Then
+                                ' dann liegt die Phase ausserhalb des betrachteten Zeitraums und muss nicht berücksichtigt werden 
+                            Else
+                                found = True
+                                If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                    tmpMinimum = cphase.getStartDate
+                                End If
+
+                                If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                    tmpMaximum = cphase.getEndDate
+                                End If
+
+                            End If
+                        End If
+
+                    Next
+
+                    For Each milestone As String In selectedMilestones
+
+                        tmpDate = kvp.Value.getMilestoneDate(milestone)
+
+                        If Not IsNothing(tmpDate) Then
+                            If getColumnOfDate(tmpDate) > bis Or getColumnOfDate(tmpDate) < von Then
+                                ' nichts tun 
+                            Else
+                                found = True
+                                ' diese Unterscheidung muss nicht gemacht werden, denn die Meilensteine müssen im betrachteten Zeitraum liegen 
+                                'If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
+                                '    tmpMinimum = tmpDate
+                                'End If
+
+                                'If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
+                                '    tmpMaximum = tmpDate
+                                'End If
+                            End If
+                        End If
+
+                    Next
+
+
+                End If
+
+
+            End With
+
+            If found Then
+                key = kvp.Value.tfZeile + kvp.Value.anzahlRasterElemente / 10000
+                projektListe.Add(key, kvp.Value.name)
+            End If
+
+        Next
+
+        ' jetzt muss die zweite Welle nachkommen .. bestimmen , welches die Min / Max Werte sind 
+        minDate = tmpMinimum
+        maxDate = tmpMaximum
+
+    End Sub
+
 
     ''' <summary>
     ''' gibt einen Array zurück, der angibt wie oft der übergebene Milestone im jeweiligen Monat vorkommt 

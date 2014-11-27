@@ -2057,8 +2057,17 @@ Public Module testModule
                                 legendAreaRight = legendLineShape.Left + legendLineShape.Width
                                 legendAreaBottom = containerBottom - (containerBottom - legendAreaTop) * 0.1
 
+
+
+                                ' bestimme die Projekte und bestimme das kleinste / resp größte auftretende Datum 
+                                Dim projCollection As New SortedList(Of Double, String)
+                                Dim minDate As Date, maxDate As Date
+                                Call ShowProjekte.bestimmeProjekteAndMinMaxDates(selectedPhases, selectedMilestones, _
+                                                                                 showRangeLeft, showRangeRight, projCollection, minDate, maxDate)
+
+
                                 ' bestimme das Start und Ende Datum des PPT Kalenders
-                                Call calcStartEndePPTKalender(selectedPhases, selectedMilestones, True, _
+                                Call calcStartEndePPTKalender(minDate, maxDate, True, _
                                                               pptStartofCalendar, pptEndOfCalendar)
 
 
@@ -2071,21 +2080,29 @@ Public Module testModule
                                 quarterMonthVorlagenShape.Delete()
                                 calendarStepShape.Delete()
 
-                                ' bestimme die Projekte, die im angegebenen Zeitraum die gewünschten Phasen und/oder Meilensteine enthalten
-                                Dim projCollection As Collection = ShowProjekte.withinTimeFrame(0, selectedPhases, selectedMilestones, _
-                                                                                               showRangeLeft, showRangeRight)
-
+                                
                                 showNames = True
                                 showDates = True
 
                                 ' zeichne die Projekte 
-                                Call zeichnePPTprojects(pptSlide, projCollection, _
+                                Try
+                                    Call zeichnePPTprojects(pptSlide, projCollection, _
                                                         pptStartofCalendar, pptEndOfCalendar, _
                                                         calendarLineShape, legendLineShape, _
                                                         selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
-                                                        elementDescVorlagenShape, elementDateVorlagenShape, _
+                                                        projectNameVorlagenShape, elementDescVorlagenShape, elementDateVorlagenShape, _
                                                         phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape,
                                                         showNames, showAmpeln, showDates, showProjectLine)
+
+                                    projectNameVorlagenShape.Delete()
+                                    projectVorlagenShape.Delete()
+                                    phaseVorlagenShape.Delete()
+
+
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                End Try
+                                
 
                                 ' zeichne die Legende 
                             Else
@@ -6923,27 +6940,42 @@ Public Module testModule
     ''' bestimmt für die angegebenen Phasen und Meilensteine den Kalender-Start und das Kalender-Ende für 
     ''' für den Kalender der PPT Multiprojekt sicht  
     ''' </summary>
-    ''' <param name="selectedPhases">betrachtete Phasen</param>
-    ''' <param name="selectedMilestones">betrachtete Meilensteine</param>
+    ''' <param name="minDate">erstes, linkes Datum</param>
+    ''' <param name="maxDate">zweites, rechtes Datum</param>
     ''' <param name="fullyContained">bestimmt ob das Element komplett gezeigt werden soll</param>
     ''' <param name="pptKalenderStart"></param>
     ''' <param name="pptKalenderEnde"></param>
     ''' <remarks></remarks>
-    Sub calcStartEndePPTKalender(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal fullyContained As Boolean, _
+    Sub calcStartEndePPTKalender(ByVal minDate As Date, ByVal maxDate As Date, ByVal fullyContained As Boolean, _
                                      ByRef pptKalenderStart As Date, ByRef pptKalenderEnde As Date)
 
-        Dim firstDate As Date = StartofCalendar
-        Dim lastdate As Date = StartofCalendar.AddYears(20)
+        Dim firstDate As Date = minDate
+        Dim lastdate As Date = maxDate
+        Dim linksDatum As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
+        Dim rechtsDatum As Date = StartofCalendar.AddMonths(showRangeRight - 1)
 
-        If fullyContained Then
-            Call ShowProjekte.calcFirstandLastDate(selectedPhases, selectedMilestones, showRangeLeft, showRangeRight, firstDate, lastdate)
-        Else
+        If Not fullyContained Then
             firstDate = StartofCalendar.AddMonths(showRangeLeft - 1 - 3)
             lastdate = StartofCalendar.AddMonths(showRangeRight - 1 + 3)
+        Else
+            firstDate = minDate
+            lastdate = maxDate
         End If
 
-        pptKalenderStart = firstDate.AddDays(-1 * firstDate.DayOfYear + 1)
-        pptKalenderEnde = lastdate.AddYears(1).AddDays(-1 * lastdate.AddYears(1).DayOfYear)
+        If DateDiff(DateInterval.Day, linksDatum, firstDate) < 0 Then
+            pptKalenderStart = firstDate.AddDays(-1 * firstDate.DayOfYear + 1)
+        Else
+            pptKalenderStart = linksDatum.AddDays(-1 * linksDatum.DayOfYear + 1)
+        End If
+
+
+        If DateDiff(DateInterval.Day, rechtsDatum, lastdate) > 0 Then
+            pptKalenderEnde = lastdate.AddYears(1).AddDays(-1 * lastdate.AddYears(1).DayOfYear)
+        Else
+            pptKalenderEnde = rechtsDatum.AddDays(-1 * rechtsDatum.DayOfYear + 1)
+        End If
+
+
 
     End Sub
 
@@ -7152,9 +7184,12 @@ Public Module testModule
     ''' erstellt die Multiprojekt Sicht 
     ''' </summary>
     ''' <param name="pptslide">Powerpoint Folie</param>
+    ''' <param name="projectCollection">enthält die nach der Position des Projekts auf der Projekttafel von oben nach unten, links nach rechts 
+    ''' sortierte Liste an Projekten, die auf der Multiprojekt-Sicht ausgegeben werden sollen </param>
     ''' <param name="StartofPPTCalendar">Beginn des Powerpoint Kalenders</param>
     ''' <param name="endOFPPTCalendar">Ende des Powerpoint Kalenders</param>
     ''' <param name="calendarLineShape">Linie, die width und Top für dei Zeichenfläche bestimmt</param>
+    ''' <param name="legendlineShape">Linie, die das Ende der Zeichenfläche und den Beginn der Legende markiert </param>
     ''' <param name="selectedPhases">welche Phasen sollen dargestellt werden; auch mehrere Phasen werden alle in eine Zeile gezeichnet</param>
     ''' <param name="selectedMilestones">welche Meilensteine sollen gezeichnet werden </param>
     ''' <param name="selectedRoles">welche Rollen sollen dargestellt werden; wenn mehrere Rollen ausgewählt sind, wird die Summe dargestellt</param>
@@ -7168,39 +7203,211 @@ Public Module testModule
     ''' <param name="showAmpeln">gibt an, ob die Ampeln der Projekte neben den Projekt-Namen gezeichnet werden sollen </param>
     ''' <param name="showDates">gibt an, ob das Datum gezeigt werden soll</param>
     ''' <param name="showProjectLine">gibt an, ob die Linie als Projekt-Repräsentant gezeigt werden soll </param>
-    ''' <remarks></remarks>
-    Sub zeichnePPTprojects(ByRef pptslide As pptNS.Slide, ByVal projectCollection As Collection, _
+    ''' <remarks>wenn ein Fehler auftritt wird eine Exception geworfen und im aufrufenden Programm eine entsprechende Fehlermeldung in das Shape eingetragen </remarks>
+    Sub zeichnePPTprojects(ByRef pptslide As pptNS.Slide, ByRef projectCollection As SortedList(Of Double, String), _
                            ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
                            ByVal calendarLineShape As pptNS.Shape, ByVal legendlineShape As pptNS.Shape, _
                                ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
-                               ByVal elementDescVorlagenShape As pptNS.Shape, ByVal elementDateVorlagenShape As pptNS.Shape, _
+                               ByVal projectNameVorlagenShape As pptNS.Shape, ByVal elementDescVorlagenShape As pptNS.Shape, ByVal elementDateVorlagenShape As pptNS.Shape, _
                                ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, ByVal projectVorlagenForm As pptNS.Shape, _
                                ByVal showNames As Boolean, ByVal showAmpeln As Boolean, ByVal showDates As Boolean, ByVal showProjectLine As Boolean)
 
         ' Bestimmen der Zeichenfläche
         Dim drawingAreaWidth As Double = calendarLineShape.Width
         Dim drawingAreaLEft As Double = calendarLineShape.Left
-        Dim drawingAreaHeight As Double = 0.8 * (legendlineShape.Top - calendarLineShape.Top)
-        Dim drawingAreaTop = calendarLineShape.Top + 0.1 * (legendlineShape.Top - calendarLineShape.Top)
-        Dim drawingAreaBottom = legendlineShape.Top - 0.1 * (legendlineShape.Top - calendarLineShape.Top)
+        Dim drawingAreaHeight As Double = 0.9 * (legendlineShape.Top - calendarLineShape.Top)
+        Dim drawingAreaTop = calendarLineShape.Top + 0.05 * (legendlineShape.Top - calendarLineShape.Top)
+        Dim drawingAreaBottom = legendlineShape.Top - 0.05 * (legendlineShape.Top - calendarLineShape.Top)
         Dim tagesEinheit As Double = drawingAreaWidth / (DateDiff(DateInterval.Day, StartofPPTCalendar, endOFPPTCalendar) + 1)
+        Dim projectsToDraw As Integer
+        Dim projectsDrawn As Integer
+        Dim copiedShape As pptNS.ShapeRange
+        Dim pName As String
+        Dim hproj As clsProjekt
+        Dim phaseShape As xlNS.Shape
+        Dim milestoneshape As xlNS.Shape
+
+        Dim versatzFaktor As Double = 0.87
+
+
+        ' Bestimmen der Position für den Projekt-Namen
+        Dim projektNamenXPos As Double = projectNameVorlagenShape.Left
+        Dim projektNamenYPos As Double
+        Dim x1 As Double
+        Dim x2 As Double
+        Dim projektGrafikYPos As Double
+        Dim phasenGrafikYPos As Double
+        Dim milestoneGrafikYPos As Double
 
         ' Festlegung: Phase und Milestone werden zunächst immer zentriert dargestellt ; der Beschriftungstext kommt oben, zentriert hin, das Datum zentriert unten
         ' Bestimmen, wieviele Projekte mit den gegebenen Einstellungen gezeichnet werden können
         Dim projekthoehe As Double = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
 
         If showNames Then
-            projekthoehe = projekthoehe + 0.87 * elementDescVorlagenShape.Height
+            projekthoehe = projekthoehe + versatzFaktor * elementDescVorlagenShape.Height
         End If
 
         If showDates Then
-            projekthoehe = projekthoehe + 0.87 * elementDateVorlagenShape.Height
+            projekthoehe = projekthoehe + versatzFaktor * elementDateVorlagenShape.Height
         End If
+
+        If projekthoehe < projectNameVorlagenShape.Height Then
+            projekthoehe = projectNameVorlagenShape.Height
+        End If
+
+
+        ' bestimme jetzt Y Start-Position für den Text bzw. die Grafik
+        projektNamenYPos = drawingAreaTop + 0.5 * (projekthoehe - projectNameVorlagenShape.Height)
+        projektGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - projectVorlagenForm.Height)
+        phasenGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - phaseVorlagenShape.Height)
+        milestoneGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - milestoneVorlagenShape.Height)
 
         Dim maxAnzahlProjekte As Integer = CInt(drawingAreaHeight / projekthoehe)
 
+        projectsToDraw = projectCollection.Count
+        projectsDrawn = System.Math.Min(projectsToDraw, maxAnzahlProjekte)
+
+
+        For i = 1 To projectsDrawn
+
+            pName = projectCollection.ElementAt(i - 1).Value
+            hproj = ShowProjekte.getProject(pName)
+
+            '
+            ' zeichne den Projekt-Namen
+            projectNameVorlagenShape.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+
+            With copiedShape(1)
+                .Top = CSng(projektNamenYPos)
+                .Left = CSng(projektNamenXPos)
+                .TextFrame2.TextRange.Text = pName
+                '.TextFrame2.HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
+            End With
+
+            projektNamenYPos = projektNamenYPos + projekthoehe
+
+            '
+            ' zeichne jetzt das Projekt 
+
+            Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, hproj.startDate, hproj.endeDate, _
+                                    drawingAreaLEft, drawingAreaWidth, tagesEinheit, x1, x2)
+
+            projectVorlagenForm.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+            With copiedShape(1)
+                .Top = CSng(projektGrafikYPos)
+                .Left = CSng(x1)
+                .Width = CSng(x2 - x1)
+            End With
+
+            projektGrafikYPos = projektGrafikYPos + projekthoehe
+
+            ' zeichne jetzt die Phasen 
+            For Each phaseName As String In selectedPhases
+
+                Dim cphase As clsPhase = hproj.getPhase(phaseName)
+                If Not IsNothing(cphase) Then
+
+                    ' erst noch prüfen , ob diese Phase tatsächlich im Zeitraum enthalten ist 
+                    If True Then ' ersetzen durch die Prüfung 
+                        phaseShape = PhaseDefinitions.getShape(phaseName)
+
+                        Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, cphase.getStartDate, cphase.getEndDate, _
+                                            drawingAreaLEft, drawingAreaWidth, tagesEinheit, x1, x2)
+
+
+                        phaseShape.Copy()
+                        copiedShape = pptslide.Shapes.Paste()
+                        With copiedShape(1)
+                            .Top = CSng(phasenGrafikYPos)
+                            .Left = CSng(x1)
+                            .Width = CSng(x2 - x1)
+                            .Height = phaseVorlagenShape.Height
+                        End With
+                    End If
+                    
+                End If
+
+            Next
+
+            phasenGrafikYPos = phasenGrafikYPos + projekthoehe
+
+            ' zeichne jetzt die Meilensteine
+
+
+            For Each milestoneName As String In selectedMilestones
+
+                Dim msDate As Date = hproj.getMilestoneDate(milestoneName)
+
+                If Not IsNothing(msDate) Then
+
+                    ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+
+                    milestoneshape = MilestoneDefinitions.getShape(milestoneName, "")
+
+                    Dim seitenverhaeltnis As Double
+                    With milestoneshape
+                        seitenverhaeltnis = .Height / .Width
+                    End With
+
+
+                    Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, msDate, msDate, _
+                                        drawingAreaLEft, drawingAreaWidth, tagesEinheit, x1, x2)
+
+
+                    milestoneshape.Copy()
+                    copiedShape = pptslide.Shapes.Paste()
+                    With copiedShape(1)
+                        .Top = CSng(milestoneGrafikYPos)
+                        .Left = CSng(x1) - .Width / 2
+                        .Height = milestoneVorlagenShape.Height
+                        .Width = .Height / seitenverhaeltnis
+                    End With
+                End If
+
+            Next
+
+            milestoneGrafikYPos = milestoneGrafikYPos + projekthoehe
+
+
+
+        Next
+
+
+        If projectsToDraw < projectCollection.Count Then
+            Throw New ArgumentException("es konnten nur " & _
+                                        projectsDrawn.ToString & " von " & projectsToDraw.ToString & _
+                                        " Projekten gezeichnet werden ... " & vbLf & _
+                                        "bitte verwenden Sie ein anderes Vorlagen-Format.")
+        End If
+
+
 
     End Sub
+
+    Private Sub calculatePPTx1x2(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date, _
+                                 ByVal startdate As Date, ByVal enddate As Date, _
+                                 ByVal linkerRand As Double, ByVal breite As Double, ByVal tagesEinheit As Double, _
+                                 ByRef x1Pos As Double, ByRef x2Pos As Double)
+
+
+        Dim offsetPPTStartToStart As Integer = DateDiff(DateInterval.Day, pptStartOfCalendar, startdate)
+        If offsetPPTStartToStart < 0 Then
+            offsetPPTStartToStart = 0
+        End If
+
+        x1Pos = linkerRand + tagesEinheit * offsetPPTStartToStart
+
+        Dim offsetPPTEndToEnd As Integer = DateDiff(DateInterval.Day, enddate, pptEndOfCalendar, )
+        If offsetPPTEndToEnd < 0 Then
+            offsetPPTEndToEnd = 0
+        End If
+
+        x2Pos = linkerRand + breite - tagesEinheit * offsetPPTEndToEnd
+
+    End Sub
+
 
 
 End Module
