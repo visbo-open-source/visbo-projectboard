@@ -608,7 +608,7 @@ Public Class clsProjekt
             Dim found As Boolean = False
             Dim cphase As clsPhase
             Dim cresult As clsMeilenstein
-            Dim tmpDate As Date
+            Dim tmpDate As Date = Nothing
             Dim p As Integer = 1
             Dim colorIndex As Integer
 

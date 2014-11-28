@@ -169,6 +169,60 @@ Public Class clsMeilensteine
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt die Abkürzung, den Shortname für den Meilenstein zurück
+    ''' wenn er nicht gefunden wird: "n.a."
+    ''' </summary>
+    ''' <param name="name">Langname Meilenstein</param>
+    ''' <param name="belongsTo">Phasen-Name (nur wichtig, wenn Meilenstein Namen mehrfach vorkommen</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAbbrev(ByVal name As String, ByVal belongsTo As String) As String
+        Get
+            Dim msAbbrev As String = "n.a."
+
+            Dim key As String = calcKey(name, belongsTo)
+
+            If allMilestones.ContainsKey(key) Then
+                msAbbrev = allMilestones.Item(key).shortName
+            End If
+
+            getAbbrev = msAbbrev
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Abkürzung zu einem gegebenen Meilenstein zurück; eine Phase muss nicht angegegen werden; er sucht und findet das erste Vorkommen
+    ''' diese Vorgehensweise liefert nur korrekte Ergebnisse, wenn sichergestellt ist, daß keine Duplikate in den Namen vorkommen 
+    ''' </summary>
+    ''' <param name="msName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAbbrev(ByVal msName As String) As String
+        Get
+            Dim msAbbrev As String = "n.a."
+            Dim i As Integer = 0
+            Dim anzahl As Integer = allMilestones.Count - 1
+            Dim found As Boolean = False
+            Dim msDefinition As clsMeilensteinDefinition
+
+            While i <= anzahl And Not found
+                msDefinition = allMilestones.ElementAt(i).Value
+                If msDefinition.name = msName Then
+                    found = True
+                    msAbbrev = msDefinition.shortName
+                End If
+                i = i + 1
+            End While
+
+            getAbbrev = msAbbrev
+
+        End Get
+    End Property
+
     Public Sub New()
         allMilestones = New SortedList(Of String, clsMeilensteinDefinition)
     End Sub

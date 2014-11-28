@@ -234,63 +234,6 @@ Imports System.Drawing
 
     End Sub
 
-    Sub awinSetPropAnpass(control As IRibbonControl, ByRef pressed As Boolean)
-
-        If pressed Then
-            awinSettings.propAnpassRess = True
-        Else
-            awinSettings.propAnpassRess = False
-        End If
-
-    End Sub
-
-
-    Sub awinSetShowSelObj(control As IRibbonControl, ByRef pressed As Boolean)
-
-        If pressed Then
-            awinSettings.showValuesOfSelected = True
-        Else
-            awinSettings.showValuesOfSelected = False
-        End If
-
-    End Sub
-
-    Sub awinSetModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
-
-        Dim demoModusDate As New frmdemoModusDate
-        Dim returnValue As DialogResult
-
-        Call projektTafelInit()
-
-        If pressed Then
-
-            demoModusHistory = True
-
-            returnValue = demoModusDate.ShowDialog
-
-            If returnValue = DialogResult.OK Then
-
-                If demoModusHistory Then
-                    Call MsgBox("Demo Modus History: Ein" & vbLf & "neues Datum: " & historicDate)
-                Else
-                    Call MsgBox("Demo Modus History: Aus")
-                End If
-
-            Else
-                If demoModusHistory Then
-                    Call MsgBox("Demo Modus History: Ein" & vbLf & "altes Datum: " & historicDate)
-                Else
-                    Call MsgBox("Demo Modus History: Aus")
-                End If
-
-            End If
-        Else
-            demoModusHistory = False
-            'Call MsgBox("Demo Modus History: Aus")
-        End If
-
-
-    End Sub
 
     Sub PT5StoreProjects(control As IRibbonControl)
 
@@ -2416,11 +2359,6 @@ Imports System.Drawing
 
     End Sub
 
-    Public Sub PT5phasenZeichnenInit(control As IRibbonControl, ByRef pressed As Boolean)
-
-        pressed = awinSettings.drawphases
-
-    End Sub
     Sub PTDemoModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
 
         demoModusHistory = Not demoModusHistory
@@ -2428,21 +2366,51 @@ Imports System.Drawing
 
     End Sub
 
-    Sub PTPropAnpassen(control As IRibbonControl, ByRef pressed As Boolean)
+    Sub awinSetModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
 
-        awinSettings.propAnpassRess = Not awinSettings.propAnpassRess
-        pressed = awinSettings.showValuesOfSelected
+        Dim demoModusDate As New frmdemoModusDate
+        Dim returnValue As DialogResult
+
+        Call projektTafelInit()
+
+        If pressed Then
+
+            demoModusHistory = True
+
+            returnValue = demoModusDate.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+
+                If demoModusHistory Then
+                    Call MsgBox("Demo Modus History: Ein" & vbLf & "neues Datum: " & historicDate)
+                Else
+                    Call MsgBox("Demo Modus History: Aus")
+                End If
+
+            Else
+                If demoModusHistory Then
+                    Call MsgBox("Demo Modus History: Ein" & vbLf & "altes Datum: " & historicDate)
+                Else
+                    Call MsgBox("Demo Modus History: Aus")
+                End If
+
+            End If
+        Else
+            demoModusHistory = False
+            'Call MsgBox("Demo Modus History: Aus")
+        End If
+
 
     End Sub
 
-    Sub PTShowSelectedObjects(control As IRibbonControl, ByRef pressed As Boolean)
 
-        awinSettings.showValuesOfSelected = Not awinSettings.showValuesOfSelected
-        pressed = awinSettings.showValuesOfSelected
+    Public Sub PT5phasenZeichnenInit(control As IRibbonControl, ByRef pressed As Boolean)
+
+        pressed = awinSettings.drawphases
 
     End Sub
 
-    Public Sub PT5phasenZeichnen(control As IRibbonControl, pressed As Boolean)
+    Public Sub PT5phasenZeichnen(control As IRibbonControl, ByRef pressed As Boolean)
 
         Call projektTafelInit()
 
@@ -2460,6 +2428,137 @@ Imports System.Drawing
         End If
 
     End Sub
+
+    Sub PTShowSelectedObjects(control As IRibbonControl, ByRef pressed As Boolean)
+
+        awinSettings.showValuesOfSelected = Not awinSettings.showValuesOfSelected
+        pressed = awinSettings.showValuesOfSelected
+
+    End Sub
+
+    Sub awinSetShowSelObj(control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.showValuesOfSelected = True
+        Else
+            awinSettings.showValuesOfSelected = False
+        End If
+
+    End Sub
+
+
+    Sub PTPropAnpassen(control As IRibbonControl, ByRef pressed As Boolean)
+
+        awinSettings.propAnpassRess = Not awinSettings.propAnpassRess
+        pressed = awinSettings.propAnpassRess
+
+    End Sub
+
+    Sub awinSetPropAnpass(control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.propAnpassRess = True
+        Else
+            awinSettings.propAnpassRess = False
+        End If
+
+    End Sub
+
+
+    Public Sub PT6StriktPressed(control As IRibbonControl, ByRef pressed As Boolean)
+
+        pressed = awinSettings.mppStrict
+
+    End Sub
+
+    Public Sub PT6SetStrict(control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.mppStrict = True
+        Else
+            awinSettings.mppStrict = False
+        End If
+
+    End Sub
+
+    Public Sub PT6fullyContainedPressed(control As IRibbonControl, ByRef pressed As Boolean)
+
+        pressed = awinSettings.mppFullyContained
+
+    End Sub
+
+    Public Sub PT6SetfullyContained(control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.mppFullyContained = True
+        Else
+            awinSettings.mppFullyContained = False
+        End If
+
+    End Sub
+
+
+    Public Sub PT6DateTextPressed(control As IRibbonControl, ByRef pressed As Boolean)
+        pressed = awinSettings.mppShowDate
+    End Sub
+
+
+    Public Sub PT6SetShowDate(Control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.mppShowDate = True
+        Else
+            awinSettings.mppShowDate = False
+        End If
+
+    End Sub
+
+
+    Public Sub PT6NameTextPressed(control As IRibbonControl, ByRef pressed As Boolean)
+        pressed = awinSettings.mppShowName
+    End Sub
+
+
+    Public Sub PT6SetShowName(Control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.mppShowName = True
+        Else
+            awinSettings.mppShowName = False
+        End If
+
+    End Sub
+
+    Public Sub PT6ProjectLinePressed(control As IRibbonControl, ByRef pressed As Boolean)
+        pressed = awinSettings.mppShowProjectLine
+    End Sub
+
+
+    Public Sub PT6SetShowProjectLine(Control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.mppShowProjectLine = True
+        Else
+            awinSettings.mppShowProjectLine = False
+        End If
+
+    End Sub
+
+    Public Sub PT6AmpelnPressed(control As IRibbonControl, ByRef pressed As Boolean)
+        pressed = awinSettings.mppShowAmpel
+    End Sub
+
+
+    Public Sub PT6SetShowAmpeln(Control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.mppShowAmpel = True
+        Else
+            awinSettings.mppShowAmpel = False
+        End If
+
+    End Sub
+
 
     ''' <summary>
     ''' lädt die gewählten Projekte und gewählten Varianten in die Session
@@ -4094,13 +4193,13 @@ Imports System.Drawing
 
             ' jetzt die Aktion durchführen ...
 
-            For Each singleShp In awinSelection
+            For Each singleshp In awinSelection
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleshp.Name)
                     selektierteProjekte.Add(hproj)
                 Catch ex As Exception
-                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                    Call MsgBox("Projekt " & singleshp.Name & " nicht gefunden ...")
                 End Try
 
             Next
@@ -5442,7 +5541,7 @@ Imports System.Drawing
                 Catch ex As Exception
                     Call MsgBox("Fehler bei Beauftragung " & vbLf & ex.Message)
                 End Try
-                
+
 
                 'Call awinCompareProject(pname1:=singleShp.Name, pname2:=" ", compareType:=0)
 
@@ -6008,7 +6107,7 @@ Imports System.Drawing
                 Catch ex As Exception
                     Call MsgBox("Fehler bei Compare" & vbLf & ex.Message)
                 End Try
-                
+
             Else
                 Call MsgBox("bitte zwei Projekte selektieren")
                 'For Each singleShp In awinSelection

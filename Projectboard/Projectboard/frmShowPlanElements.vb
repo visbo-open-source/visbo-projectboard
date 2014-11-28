@@ -778,10 +778,14 @@ Public Class frmShowPlanElements
         Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
         Dim vorlagenDateiName As String = CType(e.Argument, String)
 
-        'Call MsgBox("Anzahl Phasen = " & selectedPhases.Count)
 
-        Call createPPTSlidesFromConstellation(vorlagenDateiName, selectedPhases, selectedMilestones, _
-                                              selectedRoles, selectedCosts, False, 4, True, False, False, worker, e)
+        With awinSettings
+            Call createPPTSlidesFromConstellation(vorlagenDateiName, _
+                                                  selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                                  .mppShowName, .mppShowProjectLine, .mppShowAmpel, .mppShowDate, .mppStrict, _
+                                                  worker, e)
+        End With
+        
 
     End Sub
 

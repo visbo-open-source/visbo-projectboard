@@ -573,13 +573,15 @@ Public Class clsProjekte
     ''' <param name="minDate">das kleinste auftretende Start-Datum einer Phase</param>
     ''' <param name="maxDate">das größte auftretende Ende-Datum einer Phase </param>
     ''' <remarks></remarks>
-    Public Sub bestimmeProjekteAndMinMaxDates(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal von As Integer, ByVal bis As Integer, _
+    Public Sub bestimmeProjekteAndMinMaxDates(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+                                              ByVal von As Integer, ByVal bis As Integer, ByVal strict As Boolean, _
                                                   ByRef projektListe As SortedList(Of Double, String), ByRef minDate As Date, ByRef maxDate As Date)
 
         Dim tmpMinimum As Date = StartofCalendar.AddMonths(von - 1)
         Dim tmpMaximum As Date = StartofCalendar.AddMonths(bis - 1)
         Dim tmpDate As Date
 
+        Dim hproj As clsProjekt
         Dim cphase As clsPhase
         Dim projektstart As Integer
         Dim found As Boolean
@@ -609,40 +611,40 @@ Public Class clsProjekte
                                 ' dann liegt die Phase ausserhalb des betrachteten Zeitraums und muss nicht berücksichtigt werden 
                             Else
                                 found = True
-                                If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
-                                    tmpMinimum = cphase.getStartDate
-                                End If
+                                If strict Then
+                                    If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                        tmpMinimum = cphase.getStartDate
+                                    End If
 
-                                If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
-                                    tmpMaximum = cphase.getEndDate
+                                    If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                        tmpMaximum = cphase.getEndDate
+                                    End If
                                 End If
+                                
 
                             End If
                         End If
 
                     Next
 
-                    For Each milestone As String In selectedMilestones
+                    ' das muss nur gemacht werden, wenn found <> true
+                    If Not found Then
+                        For Each milestone As String In selectedMilestones
 
-                        tmpDate = kvp.Value.getMilestoneDate(milestone)
+                            tmpDate = kvp.Value.getMilestoneDate(milestone)
 
-                        If Not IsNothing(tmpDate) Then
-                            If getColumnOfDate(tmpDate) > bis Or getColumnOfDate(tmpDate) < von Then
-                                ' nichts tun 
-                            Else
-                                found = True
-                                ' diese Unterscheidung muss nicht gemacht werden, denn die Meilensteine müssen im betrachteten Zeitraum liegen 
-                                'If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
-                                '    tmpMinimum = tmpDate
-                                'End If
-
-                                'If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
-                                '    tmpMaximum = tmpDate
-                                'End If
+                            If Not IsNothing(tmpDate) Then
+                                If getColumnOfDate(tmpDate) > bis Or getColumnOfDate(tmpDate) < von Then
+                                    ' nichts tun 
+                                Else
+                                    found = True
+                                    
+                                End If
                             End If
-                        End If
 
-                    Next
+                        Next
+
+                    End If
 
 
                 End If
@@ -657,7 +659,52 @@ Public Class clsProjekte
 
         Next
 
-        ' jetzt muss die zweite Welle nachkommen .. bestimmen , welches die Min / Max Werte sind 
+        ' jetzt muss die zweite Welle nachkommen .. bestimmen , welches die erweiterten Min / Max Werte sind, falls not strict 
+        ' hier jetzt für alle Projekte in projektliste für jedes Element aus selectedphases und selectedmilestones das Minimum / Maximum bestimmen
+        If Not strict Then
+
+            For Each kvp As KeyValuePair(Of Double, String) In projektListe
+
+                hproj = Me.getProject(kvp.Value)
+
+                ' Phasen checken 
+                For Each phaseName As String In selectedPhases
+
+                    cphase = hproj.getPhase(phaseName)
+
+                    If Not IsNothing(cphase) Then
+                        If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                            tmpMinimum = cphase.getStartDate
+                        End If
+
+                        If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                            tmpMaximum = cphase.getEndDate
+                        End If
+                    End If
+
+                Next
+
+                ' Meilensteine checken 
+                For Each msName As String In selectedMilestones
+
+                    tmpDate = hproj.getMilestoneDate(msName)
+
+                    If Not IsNothing(tmpDate) Then
+                        If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
+                            tmpMinimum = tmpDate
+                        End If
+
+                        If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
+                            tmpMaximum = tmpDate
+                        End If
+                    End If
+
+                Next
+
+            Next
+
+        End If
+        
         minDate = tmpMinimum
         maxDate = tmpMaximum
 

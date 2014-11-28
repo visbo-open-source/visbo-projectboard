@@ -69,6 +69,14 @@
     Property costToleranzRel As Double
     Property costToleranzAbs As Double
 
+    ' Settings für Multiprojekt-Sichten
+    Property mppStrict As Boolean
+    Property mppFullyContained As Boolean
+    Property mppShowDate As Boolean
+    Property mppShowName As Boolean
+    Property mppShowAmpel As Boolean
+    Property mppShowProjectLine As Boolean
+
 
     Sub New()
 
@@ -121,6 +129,15 @@
         _timeToleranzAbs = 3
         _costToleranzRel = 0.02
         _costToleranzAbs = 2
+
+        ' Settings für Multiprojekt Sichten 
+        _mppStrict = True
+        _mppFullyContained = True
+        _mppShowDate = False
+        _mppShowName = True
+        _mppShowAmpel = False
+        _mppShowProjectLine = True
+
 
     End Sub
 End Class
