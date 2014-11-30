@@ -2559,6 +2559,21 @@ Imports System.Drawing
 
     End Sub
 
+    Public Sub PT6RasterPressed(control As IRibbonControl, ByRef pressed As Boolean)
+        pressed = awinSettings.mppVertikalesRaster
+    End Sub
+
+
+    Public Sub PT6SetRaster(Control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.mppVertikalesRaster = True
+        Else
+            awinSettings.mppVertikalesRaster = False
+        End If
+
+    End Sub
+
 
     ''' <summary>
     ''' lädt die gewählten Projekte und gewählten Varianten in die Session

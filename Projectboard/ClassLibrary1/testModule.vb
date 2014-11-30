@@ -1630,6 +1630,8 @@ Public Module testModule
         Dim calenderHeightShape As pptNS.Shape = Nothing
         Dim calendarStepShape As pptNS.Shape = Nothing
         Dim calendarMarkShape As pptNS.Shape = Nothing
+        Dim calendarYearSeparator As pptNS.Shape = Nothing
+        Dim calendarQuartalSeparator As pptNS.Shape = Nothing
 
         Dim quarterMonthVorlagenShape As pptNS.Shape = Nothing
         Dim quarterMonthShape As pptNS.Shape = Nothing
@@ -1639,19 +1641,12 @@ Public Module testModule
 
         ' Wichtig für Zeichenfläche
         Dim elementDescVorlagenShape As pptNS.Shape = Nothing
-        'Dim elementDescriptionShape As pptNS.Shape = Nothing
         Dim elementDateVorlagenShape As pptNS.Shape = Nothing
-
         Dim projectNameVorlagenShape As pptNS.Shape = Nothing
-        'Dim projectNameShape As pptNS.Shape = Nothing
-
         Dim projectVorlagenShape As pptNS.Shape = Nothing
-        'Dim projectShape As pptNS.Shape = Nothing
-
         Dim phaseVorlagenShape As pptNS.Shape = Nothing
-
-
         Dim milestoneVorlagenShape As pptNS.Shape = Nothing
+        Dim ampelVorlagenShape As pptNS.Shape = Nothing
 
 
         ' Wichtig für Legende
@@ -1721,7 +1716,7 @@ Public Module testModule
 
         ' mit completeDefinition wird überprüft , ob alle Informationen/Shapes vorhanden sind
         Dim completeDefinition() As Integer
-        ReDim completeDefinition(15)
+        ReDim completeDefinition(16)
 
 
         Try
@@ -1892,37 +1887,47 @@ Public Module testModule
                                 milestoneVorlagenShape = pptShape
                                 completeDefinition(7) = 1
 
-                            Case "LegendLine"
-                                legendLineShape = pptShape
+                            Case "Ampel"
+                                ampelVorlagenShape = pptShape
                                 completeDefinition(8) = 1
 
-                            Case "LegendStart"
+                            Case "Jahres-Trennstrich"
+                                calendarYearSeparator = pptShape
+
+                            Case "Quartals-Trennstrich"
+                                calendarQuartalSeparator = pptShape
+
+                            Case "LegendLine"
                                 legendLineShape = pptShape
                                 completeDefinition(9) = 1
 
+                            Case "LegendStart"
+                                legendLineShape = pptShape
+                                completeDefinition(10) = 1
+
                             Case "LegendText"
                                 legendTextShape = pptShape
-                                completeDefinition(10) = 1
+                                completeDefinition(11) = 1
 
                             Case "LegendPhase"
                                 legendPhaseShape = pptShape
-                                completeDefinition(11) = 1
+                                completeDefinition(12) = 1
 
                             Case "LegendMilestone"
                                 legendMilestoneHeight = .Height
-                                completeDefinition(12) = 1
+                                completeDefinition(13) = 1
 
                             Case "Multiprojektsicht"
                                 multiprojektContainerShape = pptShape
-                                completeDefinition(13) = 1
+                                completeDefinition(14) = 1
 
                             Case "CalendarHeight"
                                 calenderHeightShape = pptShape
-                                completeDefinition(14) = 1
+                                completeDefinition(15) = 1
 
                             Case "ElementDate"
                                 elementDateVorlagenShape = pptShape
-                                completeDefinition(15) = 1
+                                completeDefinition(16) = 1
 
                             Case "CalendarStep"
                                 ' optional
@@ -2074,11 +2079,13 @@ Public Module testModule
                                 ' zeichne den Kalender
                                 Call zeichnePPTCalendar(pptSlide, pptStartofCalendar, pptEndOfCalendar, _
                                                calendarLineShape, calenderHeightShape, calendarStepShape, calendarMarkShape, _
-                                               yearVorlagenShape, quarterMonthVorlagenShape)
+                                               yearVorlagenShape, quarterMonthVorlagenShape, calendarYearSeparator, calendarQuartalSeparator, drawingAreaBottom)
 
                                 yearVorlagenShape.Delete()
                                 quarterMonthVorlagenShape.Delete()
                                 calendarStepShape.Delete()
+                                calendarYearSeparator.Delete()
+                                calendarQuartalSeparator.Delete()
 
 
                                 showNames = True
@@ -2091,7 +2098,7 @@ Public Module testModule
                                                         calendarLineShape, legendLineShape, _
                                                         selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
                                                         projectNameVorlagenShape, elementDescVorlagenShape, elementDateVorlagenShape, _
-                                                        phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape)
+                                                        phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape)
 
 
                                     projectNameVorlagenShape.Delete()
@@ -2100,6 +2107,7 @@ Public Module testModule
                                     milestoneVorlagenShape.Delete()
                                     elementDescVorlagenShape.Delete()
                                     elementDateVorlagenShape.Delete()
+                                    ampelVorlagenShape.Delete()
 
 
 
@@ -7000,7 +7008,8 @@ Public Module testModule
     Sub zeichnePPTCalendar(ByRef pptslide As pptNS.Slide, ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
                                ByVal calendarLineShape As pptNS.Shape, ByVal calendarHeightShape As pptNS.Shape, _
                                ByVal calendarStepShape As pptNS.Shape, ByVal calendarMark As pptNS.Shape, _
-                               ByVal yearShape As pptNS.Shape, ByVal qmShape As pptNS.Shape)
+                               ByVal yearShape As pptNS.Shape, ByVal qmShape As pptNS.Shape, _
+                               ByVal yearSeparatorLine As pptNS.Shape, ByVal quartalSeparatorLine As pptNS.Shape, ByVal drawingAreaBottom As Double)
 
         Dim drawItem As Integer  ' 0: Monat, 1: Quartal, 2: Jahr
         Dim anzQMs As Integer = DateDiff(DateInterval.Month, StartofPPTCalendar, endOFPPTCalendar) + 1
@@ -7048,7 +7057,7 @@ Public Module testModule
             ' jetzt die Zwischenlinien zeichnen , wenn gewünscht 
             If Not IsNothing(calendarStepShape) Then
                 xPosition = calendarLineShape.Left
-                yPosition = calendarLineShape.Top - calendarStepShape.Height 
+                yPosition = calendarLineShape.Top - calendarStepShape.Height
 
                 For i = 1 To anzQMs - 1
 
@@ -7057,7 +7066,7 @@ Public Module testModule
                         calendarStepShape.Copy()
                         newShapes = pptslide.Shapes.Paste
                         With newShapes.Item(1)
-                            .Left = xPosition + monthWidth
+                            .Left = xPosition + monthWidth - 0.5 * .Width
                             If i Mod 3 = 0 Then
                                 .Top = yPosition
                             Else
@@ -7065,12 +7074,13 @@ Public Module testModule
                                 .Height = calendarStepShape.Height * 0.5
                             End If
                         End With
-
+                    Else
+                        ' hier ggf die Year Separator Linien zeichnen 
                     End If
 
                     xPosition = xPosition + monthWidth
 
-                    
+
                 Next
 
             End If
@@ -7181,6 +7191,64 @@ Public Module testModule
             .Top = calendarLineShape.Top - calendarHeightShape.Height
         End With
 
+        ' jetzt ggf die vertikalen Raster in der Zeichenfläche zeichnen 
+        If awinSettings.mppVertikalesRaster And _
+            Not IsNothing(yearSeparatorLine) And Not IsNothing(quartalSeparatorLine) Then
+
+            xPosition = calendarLineShape.Left
+            ' es muss auch der erste Year Separator
+            ' gezeichnet werden; deswegen beginnt i bei 0 
+
+
+
+            ' zeichnen der Year Separators
+            For i = 0 To anzQMs / 12
+
+                yearSeparatorLine.Copy()
+                newShapes = pptslide.Shapes.Paste
+                With newShapes.Item(1)
+                    .Left = xPosition - .Width * 0.5
+                    .Top = calendarLineShape.Top
+                    .Height = drawingAreaBottom - calendarLineShape.Top
+                End With
+
+                xPosition = xPosition + yearWidth
+
+            Next
+
+            xPosition = calendarLineShape.Left
+
+            ' zeichnen der Q- oder M  Separators
+            Dim divisor As Integer
+
+
+            If drawItem = 0 Then
+                divisor = 1
+            ElseIf drawItem = 1 Then
+                divisor = 3
+            End If
+
+            For i = 1 To anzQMs / divisor
+
+                If i Mod CInt(12 / divisor) = 0 Then
+                    ' nichts tun
+                Else
+                    quartalSeparatorLine.Copy()
+                    newShapes = pptslide.Shapes.Paste
+                    With newShapes.Item(1)
+                        .Left = xPosition + qmWidth - .Width * 0.5
+                        .Top = calendarLineShape.Top
+                        .Height = drawingAreaBottom - calendarLineShape.Top
+                    End With
+                End If
+                
+
+                xPosition = xPosition + qmWidth
+
+            Next
+
+        End If
+
 
     End Sub
 
@@ -7209,7 +7277,8 @@ Public Module testModule
                            ByVal calendarLineShape As pptNS.Shape, ByVal legendlineShape As pptNS.Shape, _
                                ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                ByVal projectNameVorlagenShape As pptNS.Shape, ByVal elementDescVorlagenShape As pptNS.Shape, ByVal elementDateVorlagenShape As pptNS.Shape, _
-                               ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, ByVal projectVorlagenForm As pptNS.Shape)
+                               ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, ByVal projectVorlagenForm As pptNS.Shape, _
+                               ByVal ampelVorlagenShape As pptNS.Shape)
 
         ' Bestimmen der Zeichenfläche
         Dim drawingAreaWidth As Double = calendarLineShape.Width
@@ -7225,8 +7294,6 @@ Public Module testModule
         Dim hproj As clsProjekt
         Dim phaseShape As xlNS.Shape
         Dim milestoneTypShape As xlNS.Shape
-        Dim msDateShape As pptNS.Shape
-        Dim msNameShape As pptNS.Shape
 
         Dim yOffsetMsToText As Double = elementDescVorlagenShape.Top - milestoneVorlagenShape.Top
         Dim yOffsetMsToDate As Double = elementDateVorlagenShape.Top - milestoneVorlagenShape.Top
@@ -7242,6 +7309,7 @@ Public Module testModule
         Dim projektGrafikYPos As Double
         Dim phasenGrafikYPos As Double
         Dim milestoneGrafikYPos As Double
+        Dim ampelGrafikYPos As Double
 
         ' Festlegung: Phase und Milestone werden zunächst immer zentriert dargestellt ; der Beschriftungstext kommt oben, zentriert hin, das Datum zentriert unten
         ' Bestimmen, wieviele Projekte mit den gegebenen Einstellungen gezeichnet werden können
@@ -7265,7 +7333,7 @@ Public Module testModule
         projektGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - projectVorlagenForm.Height)
         phasenGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - phaseVorlagenShape.Height)
         milestoneGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - milestoneVorlagenShape.Height)
-
+        ampelGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - ampelVorlagenShape.Height)
         Dim maxAnzahlProjekte As Integer = CInt(drawingAreaHeight / projekthoehe)
 
         projectsToDraw = projectCollection.Count
@@ -7285,27 +7353,61 @@ Public Module testModule
             With copiedShape(1)
                 .Top = CSng(projektNamenYPos)
                 .Left = CSng(projektNamenXPos)
-                .TextFrame2.TextRange.Text = pName
+                .TextFrame2.TextRange.Text = hproj.getShapeText
                 '.TextFrame2.HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
             End With
 
             projektNamenYPos = projektNamenYPos + projekthoehe
 
+
+            ' zeichne jetzt ggf die Projekt-Ampel 
+            If awinSettings.mppShowAmpel And Not IsNothing(ampelVorlagenShape) Then
+                Dim statusColor As Long
+                With hproj
+                    If .ampelStatus = 0 Then
+                        statusColor = awinSettings.AmpelNichtBewertet
+                    ElseIf .ampelStatus = 1 Then
+                        statusColor = awinSettings.AmpelGruen
+                    ElseIf .ampelStatus = 2 Then
+                        statusColor = awinSettings.AmpelGelb
+                    Else
+                        statusColor = awinSettings.AmpelRot
+                    End If
+                End With
+
+                ' zeichne den Projekt-Namen
+                ampelVorlagenShape.Copy()
+                copiedShape = pptslide.Shapes.Paste()
+
+                With copiedShape(1)
+                    .Top = CSng(ampelGrafikYPos)
+                    .Left = CSng(calendarLineShape.Left - (.Width + 3))
+                    .Line.ForeColor.RGB = CInt(statusColor)
+                    .Fill.ForeColor.RGB = CInt(statusColor)
+                End With
+
+                ampelGrafikYPos = ampelGrafikYPos + projekthoehe
+
+            End If
+
             '
             ' zeichne jetzt das Projekt 
-
             Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, hproj.startDate, hproj.endeDate, _
                                     drawingAreaLEft, drawingAreaWidth, tagesEinheit, x1, x2)
 
-            projectVorlagenForm.Copy()
-            copiedShape = pptslide.Shapes.Paste()
-            With copiedShape(1)
-                .Top = CSng(projektGrafikYPos)
-                .Left = CSng(x1)
-                .Width = CSng(x2 - x1)
-            End With
+            If awinSettings.mppShowProjectLine Then
 
-            projektGrafikYPos = projektGrafikYPos + projekthoehe
+                projectVorlagenForm.Copy()
+                copiedShape = pptslide.Shapes.Paste()
+                With copiedShape(1)
+                    .Top = CSng(projektGrafikYPos)
+                    .Left = CSng(x1)
+                    .Width = CSng(x2 - x1)
+                End With
+
+                projektGrafikYPos = projektGrafikYPos + projekthoehe
+            End If
+
 
             ' zeichne jetzt die Phasen 
             For Each phaseName As String In selectedPhases
@@ -7369,6 +7471,11 @@ Public Module testModule
                     If zeichnen Then
                         milestoneTypShape = MilestoneDefinitions.getShape(milestoneName, "")
 
+                        Dim curMeilenstein As clsMeilenstein = Nothing
+                        curMeilenstein = hproj.getMilestone(milestoneName)
+
+
+
                         Dim seitenverhaeltnis As Double
                         With milestoneTypShape
                             seitenverhaeltnis = .Height / .Width
@@ -7379,16 +7486,9 @@ Public Module testModule
                                             drawingAreaLEft, drawingAreaWidth, tagesEinheit, x1, x2)
 
 
-                        milestoneTypShape.Copy()
-                        copiedShape = pptslide.Shapes.Paste()
-                        With copiedShape(1)
-                            .Top = CSng(milestoneGrafikYPos)
-                            .Left = CSng(x1) - .Width / 2
-                            .Height = milestoneVorlagenShape.Height
-                            .Width = .Height / seitenverhaeltnis
-                        End With
-
                         ' jetzt muss ggf die Beschriftung angebracht werden 
+                        ' die muss vor dem Meilenstein angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
+                        ' überdeckt werden soll 
                         If awinSettings.mppShowName Then
 
                             Dim msShortname As String = MilestoneDefinitions.getAbbrev(milestoneName)
@@ -7396,13 +7496,16 @@ Public Module testModule
                             elementDescVorlagenShape.Copy()
                             copiedShape = pptslide.Shapes.Paste()
                             With copiedShape(1)
+
+                                .TextFrame2.TextRange.Text = msShortname
                                 .Top = CSng(milestoneGrafikYPos) + yOffsetMsToText
                                 .Left = CSng(x1) - .Width / 2
-                                .TextFrame2.TextRange.Text = msShortname
+
                             End With
 
 
                         End If
+
 
 
                         ' jetzt muss ggf das Datum angebracht werden 
@@ -7412,14 +7515,31 @@ Public Module testModule
                             elementDateVorlagenShape.Copy()
                             copiedShape = pptslide.Shapes.Paste()
                             With copiedShape(1)
+
+                                .TextFrame2.TextRange.Text = msDateText
                                 .Top = CSng(milestoneGrafikYPos) + yOffsetMsToDate
                                 .Left = CSng(x1) - .Width / 2
-                                .TextFrame2.TextRange.Text = msDateText
+
                             End With
 
                         End If
 
 
+                        ' Erst jetzt wird der Meilenstein gezeichnet 
+                        milestoneTypShape.Copy()
+                        copiedShape = pptslide.Shapes.Paste()
+                        With copiedShape(1)
+                            .Top = CSng(milestoneGrafikYPos)
+                            .Left = CSng(x1) - .Width / 2
+                            .Height = milestoneVorlagenShape.Height
+                            .Width = .Height / seitenverhaeltnis
+                            If awinSettings.mppShowAmpel Then
+                                .Glow.Color.RGB = CInt(curMeilenstein.getBewertung(1).color)
+                                If .Glow.Radius = 0 Then
+                                    .Glow.Radius = 5
+                                End If
+                            End If
+                        End With
 
                     End If
 

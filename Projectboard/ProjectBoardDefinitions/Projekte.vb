@@ -15529,7 +15529,7 @@ Public Module Projekte
         End Try
 
         Try
-            cResult = hproj.getResult(resultName)
+            cResult = hproj.getMilestone(resultName)
             cPhase = cResult.Parent
             phaseName = cPhase.name
             msNR = cPhase.getlfdNr(resultName)

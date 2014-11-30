@@ -255,6 +255,7 @@
           <checkBox id="PT6G4B4" label="Meilenstein Kurzname anzeigen" getPressed="PT6NameTextPressed" onAction ="PT6SetShowName"/>
           <checkBox id="PT6G4B5" label="Projekt-Linie anzeigen" getPressed="PT6ProjectLinePressed" onAction ="PT6SetShowProjectLine"/>
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
+          <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
         </group>
         <!--<group id ="PT6G4" label ="Testfunktionen">
           <button id="Pt6G4B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />

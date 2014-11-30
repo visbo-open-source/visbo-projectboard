@@ -76,6 +76,7 @@
     Property mppShowName As Boolean
     Property mppShowAmpel As Boolean
     Property mppShowProjectLine As Boolean
+    Property mppVertikalesRaster As Boolean
 
 
     Sub New()
@@ -137,6 +138,7 @@
         _mppShowName = True
         _mppShowAmpel = False
         _mppShowProjectLine = True
+        _mppVertikalesRaster = True
 
 
     End Sub

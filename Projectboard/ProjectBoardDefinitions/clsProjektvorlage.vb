@@ -73,7 +73,7 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getResult(ByVal msName As String) As clsMeilenstein
+    Public ReadOnly Property getMilestone(ByVal msName As String) As clsMeilenstein
         Get
             Dim tmpResult As clsMeilenstein = Nothing
             Dim p As Integer
@@ -89,7 +89,7 @@
                 End If
             End While
 
-            getResult = tmpResult
+            getMilestone = tmpResult
 
         End Get
     End Property
