@@ -1647,20 +1647,17 @@ Public Module testModule
         Dim phaseVorlagenShape As pptNS.Shape = Nothing
         Dim milestoneVorlagenShape As pptNS.Shape = Nothing
         Dim ampelVorlagenShape As pptNS.Shape = Nothing
+        Dim errorVorlagenShape As pptNS.Shape = Nothing
+        Dim errorShape As pptNS.ShapeRange = Nothing
 
 
         ' Wichtig für Legende
         Dim legendLineShape As pptNS.Shape = Nothing
         Dim legendStartShape As pptNS.Shape = Nothing
         Dim legendTextVorlagenShape As pptNS.Shape = Nothing
-        Dim legendTextShape As pptNS.Shape = Nothing
 
-        Dim legendPhaseShape As pptNS.Shape = Nothing
-        Dim legendPhaseHeight As Double = 0.1
-        Dim legendPhaseWidth As Double = 0.1
-
-        Dim legendMilestoneShape As pptNS.Shape = Nothing
-        Dim legendMilestoneHeight As Double = 0.1
+        Dim legendPhaseVorlagenShape As pptNS.Shape = Nothing
+        Dim legendMilestoneVorlagenShape As pptNS.Shape = Nothing
 
         '
         ' Wichtige Variable, um den Kalender zeichnen zu können 
@@ -1716,7 +1713,7 @@ Public Module testModule
 
         ' mit completeDefinition wird überprüft , ob alle Informationen/Shapes vorhanden sind
         Dim completeDefinition() As Integer
-        ReDim completeDefinition(16)
+        ReDim completeDefinition(17)
 
 
         Try
@@ -1747,7 +1744,12 @@ Public Module testModule
         Else
             pptPresentation = pptApp.ActivePresentation
         End If
-        ' wieviel Slides sind in der aktuellen Präsentataion
+
+
+        'pptPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+        'pptPresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal
+
+        ' wieviel Slides sind in der aktuellen Präsentation
         Dim anzahlSlides As Integer
         ' wieviel Slides wurden aus der Vorlage hinzugefügt 
         Dim AnzAdded As Integer
@@ -1902,19 +1904,19 @@ Public Module testModule
                                 completeDefinition(9) = 1
 
                             Case "LegendStart"
-                                legendLineShape = pptShape
+                                legendStartShape = pptShape
                                 completeDefinition(10) = 1
 
                             Case "LegendText"
-                                legendTextShape = pptShape
+                                legendTextVorlagenShape = pptShape
                                 completeDefinition(11) = 1
 
                             Case "LegendPhase"
-                                legendPhaseShape = pptShape
+                                legendPhaseVorlagenShape = pptShape
                                 completeDefinition(12) = 1
 
                             Case "LegendMilestone"
-                                legendMilestoneHeight = .Height
+                                legendMilestoneVorlagenShape = pptShape
                                 completeDefinition(13) = 1
 
                             Case "Multiprojektsicht"
@@ -1936,6 +1938,11 @@ Public Module testModule
                             Case "CalendarMark"
                                 ' optional 
                                 calendarMarkShape = pptShape
+
+                            Case "Fehlermeldung"
+                                ' optional 
+                                errorVorlagenShape = pptShape
+                                completeDefinition(17) = 1
 
                             Case Else
 
@@ -2052,15 +2059,11 @@ Public Module testModule
                                 projectListLeft = projectNameVorlagenShape.Left
 
                                 ' bestimme Legend Drawing Area 
-                                With legendPhaseShape
-                                    legendPhaseHeight = .Height
-                                    legendPhaseWidth = .Width
-                                    legendAreaLeft = .Left
-                                End With
-
-                                legendAreaTop = legendTextShape.Top
-                                legendAreaRight = legendLineShape.Left + legendLineShape.Width
-                                legendAreaBottom = containerBottom - (containerBottom - legendAreaTop) * 0.1
+                                legendAreaTop = legendLineShape.Top + (containerBottom - legendLineShape.Top) * 0.05
+                                'legendAreaTop = legendStartShape.Top + legendStartShape.Height / 2
+                                legendAreaLeft = System.Math.Max(legendStartShape.Left + legendStartShape.Width + 5, calendarLineShape.Left)
+                                legendAreaRight = System.Math.Min(legendLineShape.Left + legendLineShape.Width, containerRight - 5)
+                                legendAreaBottom = containerBottom - (containerBottom - legendLineShape.Top) * 0.1
 
 
 
@@ -2101,25 +2104,57 @@ Public Module testModule
                                                         phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape)
 
 
-                                    projectNameVorlagenShape.Delete()
-                                    projectVorlagenShape.Delete()
-                                    phaseVorlagenShape.Delete()
-                                    milestoneVorlagenShape.Delete()
-                                    elementDescVorlagenShape.Delete()
-                                    elementDateVorlagenShape.Delete()
-                                    ampelVorlagenShape.Delete()
+                                Catch ex As Exception
 
+                                    errorVorlagenShape.Copy()
+                                    errorShape = pptSlide.Shapes.Paste
+                                    With errorShape(1)
+                                        .TextFrame2.TextRange.Text = ex.Message
+                                    End With
+
+                                End Try
+
+                                projectNameVorlagenShape.Delete()
+                                phaseVorlagenShape.Delete()
+                                milestoneVorlagenShape.Delete()
+                                elementDescVorlagenShape.Delete()
+                                elementDateVorlagenShape.Delete()
+
+                                ' zeichne die Legende 
+
+                                Try
+                                    Call zeichnePPTlegende(pptSlide, _
+                                                        selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                                        legendAreaTop, legendAreaLeft, legendAreaRight, legendAreaBottom, _
+                                                        legendTextVorlagenShape, legendPhaseVorlagenShape, legendMilestoneVorlagenShape, _
+                                                        projectVorlagenShape, ampelVorlagenShape)
 
 
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = ex.Message
+                                    errorVorlagenShape.Copy()
+                                    errorShape = pptSlide.Shapes.Paste
+                                    With errorShape(1)
+                                        .TextFrame2.TextRange.Text = ex.Message
+                                    End With
                                 End Try
 
+                                legendTextVorlagenShape.Delete()
+                                legendPhaseVorlagenShape.Delete()
+                                legendMilestoneVorlagenShape.Delete()
+                                ampelVorlagenShape.Delete()
+                                projectVorlagenShape.Delete()
 
-                                ' zeichne die Legende 
+
+
                             Else
-                                .TextFrame2.TextRange.Text = "Unvollständige Vorlage"
+                                errorVorlagenShape.Copy()
+                                errorShape = pptSlide.Shapes.Paste
+                                With errorShape(1)
+                                    .TextFrame2.TextRange.Text = "Unvollständige Vorlage"
+                                End With
                             End If
+
+                            errorVorlagenShape.Delete()
 
                         Case "Portfolio-Name"
                             .TextFrame2.TextRange.Text = portfolioName
@@ -6964,7 +6999,7 @@ Public Module testModule
         Dim firstDate As Date = minDate
         Dim lastdate As Date = maxDate
         Dim linksDatum As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
-        Dim rechtsDatum As Date = StartofCalendar.AddMonths(showRangeRight - 1)
+        Dim rechtsDatum As Date = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
 
         If Not fullyContained Then
             firstDate = StartofCalendar.AddMonths(showRangeLeft - 1 - 3)
@@ -6984,7 +7019,7 @@ Public Module testModule
         If DateDiff(DateInterval.Day, rechtsDatum, lastdate) > 0 Then
             pptKalenderEnde = lastdate.AddYears(1).AddDays(-1 * lastdate.AddYears(1).DayOfYear)
         Else
-            pptKalenderEnde = rechtsDatum.AddDays(-1 * rechtsDatum.DayOfYear + 1)
+            pptKalenderEnde = rechtsDatum.AddYears(1).AddDays(-1 * lastdate.AddYears(1).DayOfYear)
         End If
 
 
@@ -7294,6 +7329,8 @@ Public Module testModule
         Dim hproj As clsProjekt
         Dim phaseShape As xlNS.Shape
         Dim milestoneTypShape As xlNS.Shape
+        
+
 
         Dim yOffsetMsToText As Double = elementDescVorlagenShape.Top - milestoneVorlagenShape.Top
         Dim yOffsetMsToDate As Double = elementDateVorlagenShape.Top - milestoneVorlagenShape.Top
@@ -7311,9 +7348,15 @@ Public Module testModule
         Dim milestoneGrafikYPos As Double
         Dim ampelGrafikYPos As Double
 
+        Dim arrayOfNames() As String
+        Dim phShapeNames As New Collection
+        Dim msShapeNames As New Collection
+
+
         ' Festlegung: Phase und Milestone werden zunächst immer zentriert dargestellt ; der Beschriftungstext kommt oben, zentriert hin, das Datum zentriert unten
         ' Bestimmen, wieviele Projekte mit den gegebenen Einstellungen gezeichnet werden können
-        Dim projekthoehe As Double = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
+        Dim mindestNettoHoehe As Double = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
+        Dim projekthoehe As Double = mindestNettoHoehe
 
         If awinSettings.mppShowName Then
             projekthoehe = projekthoehe + versatzFaktor * elementDescVorlagenShape.Height
@@ -7327,6 +7370,9 @@ Public Module testModule
             projekthoehe = projectNameVorlagenShape.Height
         End If
 
+        If projekthoehe <= mindestNettoHoehe Then
+            projekthoehe = mindestNettoHoehe * 1.1
+        End If
 
         ' bestimme jetzt Y Start-Position für den Text bzw. die Grafik
         projektNamenYPos = drawingAreaTop + 0.5 * (projekthoehe - projectNameVorlagenShape.Height)
@@ -7375,7 +7421,6 @@ Public Module testModule
                     End If
                 End With
 
-                ' zeichne den Projekt-Namen
                 ampelVorlagenShape.Copy()
                 copiedShape = pptslide.Shapes.Paste()
 
@@ -7403,6 +7448,15 @@ Public Module testModule
                     .Top = CSng(projektGrafikYPos)
                     .Left = CSng(x1)
                     .Width = CSng(x2 - x1)
+                    ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
+                    If DateDiff(DateInterval.Day, hproj.startDate, StartofPPTCalendar) > 0 Then
+                        .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+                    End If
+
+                    ' wenn Projektende nach dem Kalender-Ende liegt: kein Projektende Symbol zeichnen
+                    If DateDiff(DateInterval.Day, hproj.endeDate, endOFPPTCalendar) < 0 Then
+                        .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+                    End If
                 End With
 
                 projektGrafikYPos = projektGrafikYPos + projekthoehe
@@ -7410,6 +7464,8 @@ Public Module testModule
 
 
             ' zeichne jetzt die Phasen 
+
+
             For Each phaseName As String In selectedPhases
 
                 Dim cphase As clsPhase = hproj.getPhase(phaseName)
@@ -7425,6 +7481,7 @@ Public Module testModule
                     End If
 
 
+
                     If zeichnen Then ' ersetzen durch die Prüfung 
                         phaseShape = PhaseDefinitions.getShape(phaseName)
 
@@ -7434,6 +7491,9 @@ Public Module testModule
 
                         phaseShape.Copy()
                         copiedShape = pptslide.Shapes.Paste()
+
+                        phShapeNames.Add(copiedShape.Name)
+
                         With copiedShape(1)
                             .Top = CSng(phasenGrafikYPos)
                             .Left = CSng(x1)
@@ -7450,6 +7510,7 @@ Public Module testModule
 
             ' zeichne jetzt die Meilensteine
 
+            Dim firstMilestone As Boolean = True
 
             For Each milestoneName As String In selectedMilestones
 
@@ -7524,10 +7585,14 @@ Public Module testModule
 
                         End If
 
+                        ' jetzt ggf die vorhin gezeichneten Phasen in den Vordergrund bringen, damit die Texte die Phasen nicht teilweise überdecken  
 
                         ' Erst jetzt wird der Meilenstein gezeichnet 
                         milestoneTypShape.Copy()
                         copiedShape = pptslide.Shapes.Paste()
+
+                        msShapeNames.Add(copiedShape.Name)
+
                         With copiedShape(1)
                             .Top = CSng(milestoneGrafikYPos)
                             .Left = CSng(x1) - .Width / 2
@@ -7549,12 +7614,51 @@ Public Module testModule
 
             milestoneGrafikYPos = milestoneGrafikYPos + projekthoehe
 
-
-
         Next
 
 
-        If projectsToDraw < projectCollection.Count Then
+        '
+        ' wenn Texte gezeichnet wurden, müssen jetzt die Phasen, dann die Meilensteine in den Vordergrund geholt werden 
+        If awinSettings.mppShowDate Or awinSettings.mppShowName Then
+            ' Phasen vorholen 
+            Dim anzElements As Integer
+            anzElements = phShapeNames.Count
+
+            If anzElements > 0 Then
+
+                ReDim arrayOfNames(anzElements - 1)
+                For ix = 1 To anzElements
+                    arrayOfNames(ix - 1) = CStr(phShapeNames.Item(ix))
+                Next
+
+                Try
+                    CType(pptslide.Shapes.Range(arrayOfNames), pptNS.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
+            anzElements = msShapeNames.Count
+
+            If anzElements > 0 Then
+
+                ReDim arrayOfNames(anzElements - 1)
+                For ix = 1 To anzElements
+                    arrayOfNames(ix - 1) = CStr(msShapeNames.Item(ix))
+                Next
+
+                Try
+                    CType(pptslide.Shapes.Range(arrayOfNames), pptNS.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
+                Catch ex As Exception
+
+                End Try
+
+            End If
+
+        End If
+
+        If projectsDrawn < projectCollection.Count Then
             Throw New ArgumentException("es konnten nur " & _
                                         projectsDrawn.ToString & " von " & projectsToDraw.ToString & _
                                         " Projekten gezeichnet werden ... " & vbLf & _
@@ -7564,6 +7668,274 @@ Public Module testModule
 
 
     End Sub
+
+    ''' <summary>
+    ''' zeichnet die Legende zu einer Multiprojekt-Sicht 
+    ''' </summary>
+    ''' <param name="pptslide">ppt slide, in die gezeichnet werden soll</param>
+    ''' <param name="selectedPhases">Phasen, die gezeichnet werden sollen</param>
+    ''' <param name="selectedMilestones">Meilensteine, die gezeichnet werden sollen</param>
+    ''' <param name="selectedRoles">Rollen, zu denen die Info ausgegeben werden soll</param>
+    ''' <param name="selectedCosts">Kostenarten, zu denen die Info ausgegeben werden soll </param>
+    ''' <param name="legendAreaTop">Oberer Rand der Legenden Zeichenfläche </param>
+    ''' <param name="legendAreaLeft">linker Rand der Legenden Zeichenfläche</param>
+    ''' <param name="legendAreaRight">rechter Rand der Legenden Zeichenfläche</param>
+    ''' <param name="legendAreaBottom">unterer Rand der Legenden Zeichenfläche</param>
+    ''' <param name="legendTextVorlagenShape">Legenden Schriftvorlage</param>
+    ''' <param name="legendPhaseVorlagenShape">Legenden Phasen Vorlage (bestimmt die Höhe und Breite)</param>
+    ''' <param name="legendMilestoneVorlagenShape">Legenden Meilenstein Vorlage; betimmt Höhe und Höhen / Breitenverhältnis </param>
+    ''' <param name="projectVorlagenShape">Vorlagen Shape zur Darstellung des Projekts</param>
+    ''' <param name="ampelVorlagenShape">Vorlagen Shape zur Darstellung der Projekt-Ampel</param>
+    ''' <remarks></remarks>
+    Sub zeichnePPTlegende(ByRef pptslide As pptNS.Slide, _
+                                ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                                ByVal legendAreaTop As Double, ByVal legendAreaLeft As Double, legendAreaRight As Double, legendAreaBottom As Double, _
+                                ByVal legendTextVorlagenShape As pptNS.Shape, ByVal legendPhaseVorlagenShape As pptNS.Shape, ByVal legendMilestoneVorlagenShape As pptNS.Shape, _
+                                ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape)
+
+        Dim maxZeilen As Integer
+        Dim mindestNettoHoehe As Double = System.Math.Max(legendMilestoneVorlagenShape.Height, legendPhaseVorlagenShape.Height)
+        Dim zeilenHoehe As Double = System.Math.Max(legendTextVorlagenShape.Height, mindestNettoHoehe)
+        Dim xCursor As Double, yCursor As Double
+        Dim copiedShape As pptNS.ShapeRange
+
+        If zeilenHoehe = mindestNettoHoehe Then
+            zeilenHoehe = zeilenHoehe * 1.1
+        End If
+
+        maxZeilen = (legendAreaBottom - legendAreaTop) / zeilenHoehe
+
+        xCursor = legendAreaLeft
+        yCursor = legendAreaTop
+
+        ' jetzt ggf die Legende für das Projekt zeichnen 
+        If awinSettings.mppShowProjectLine Then
+
+            ' Grafik
+            projectVorlagenShape.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+            With copiedShape(1)
+
+                .Height = System.Math.Min(projectVorlagenShape.Height, legendPhaseVorlagenShape.Height)
+                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                .Left = xCursor
+                .Width = legendPhaseVorlagenShape.Width
+
+            End With
+
+            ' Text
+            legendTextVorlagenShape.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+            With copiedShape(1)
+                .TextFrame2.TextRange.Text = "Projekt, ggf. mit" & vbLf & "Anfangs- und Ende-Markierung"
+                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                .Left = xCursor + legendPhaseVorlagenShape.Width + 3
+                xCursor = .Left + copiedShape(1).Width + 15
+            End With
+
+
+
+        End If
+
+        yCursor = legendAreaTop
+
+        ' jetzt ggf die Phasen-Legende zeichnen 
+        Dim phaseShape As xlNS.Shape
+        Dim phaseName As String
+        Dim maxBreite As Double = 0.0
+
+        For i = 1 To selectedPhases.Count
+
+            phaseName = selectedPhases.Item(i)
+            phaseShape = PhaseDefinitions.getShape(phaseName)
+
+            ' Phasen-Shape 
+            phaseShape.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+            With copiedShape(1)
+
+                .Height = legendPhaseVorlagenShape.Height
+                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                .Left = xCursor
+                .Width = legendPhaseVorlagenShape.Width
+
+            End With
+
+            ' Phasen-Text
+            legendTextVorlagenShape.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+            With copiedShape(1)
+
+                .TextFrame2.TextRange.Text = phaseName
+                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                .Left = xCursor + legendPhaseVorlagenShape.Width + 3
+
+
+                If maxBreite < legendPhaseVorlagenShape.Width + 3 + .Width Then
+                    maxBreite = legendPhaseVorlagenShape.Width + 3 + .Width
+                End If
+            End With
+
+            If i Mod maxZeilen = 0 And i < selectedPhases.Count Then
+                xCursor = xCursor + maxBreite + 10
+                maxBreite = 0.0
+            End If
+
+            yCursor = yCursor + zeilenHoehe
+
+        Next
+
+        If selectedPhases.Count > 0 Then
+            xCursor = xCursor + maxBreite + 15
+        End If
+        yCursor = legendAreaTop
+
+        ' jetzt ggf die Meilenstein-Legende zeichnen 
+        Dim meilensteinShape As xlNS.Shape
+        Dim msName As String
+        Dim msShortname As String
+        maxBreite = 0.0
+
+        For i = 1 To selectedMilestones.Count
+
+            msName = selectedMilestones.Item(i)
+            msShortname = MilestoneDefinitions.getAbbrev(msName)
+            meilensteinShape = MilestoneDefinitions.getShape(msName, "")
+
+
+            ' Meilenstein-Shape 
+            meilensteinShape.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+            With copiedShape(1)
+                .Left = xCursor
+                .Height = legendMilestoneVorlagenShape.Height
+                .Width = legendMilestoneVorlagenShape.Width / legendMilestoneVorlagenShape.Height * .Height
+                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+            End With
+
+            ' Meilenstein-Text
+            legendTextVorlagenShape.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+            With copiedShape(1)
+
+                .TextFrame2.TextRange.Text = msShortname & " (=" & msName & ")"
+                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                .Left = xCursor + legendMilestoneVorlagenShape.Width + 3
+
+                If maxBreite < legendMilestoneVorlagenShape.Width + 3 + .Width Then
+                    maxBreite = legendMilestoneVorlagenShape.Width + 3 + .Width
+                End If
+            End With
+
+            If i Mod maxZeilen = 0 And i < selectedMilestones.Count Then
+                xCursor = xCursor + maxBreite + 10
+                yCursor = legendAreaTop
+                maxBreite = 0.0
+            Else
+                yCursor = yCursor + zeilenHoehe
+            End If
+
+
+
+        Next
+
+        If selectedMilestones.Count > 0 Then
+            xCursor = xCursor + maxBreite + 15
+        End If
+        yCursor = legendAreaTop
+
+        ' jetzt ggf die Ampel Legende zeichnen 
+
+
+        If awinSettings.mppShowAmpel Then
+
+            ' Ampel-Shape 
+           
+            For i = 1 To 4
+
+                ampelVorlagenShape.Copy()
+                copiedShape = pptslide.Shapes.Paste()
+
+                With copiedShape(1)
+
+                    .Height = legendMilestoneVorlagenShape.Height
+                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                    .Width = legendMilestoneVorlagenShape.Height
+                    .Left = xCursor + (i - 1) * (.Width + 4)
+
+                    If i = 1 Then
+                        .Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
+                    ElseIf i = 2 Then
+                        .Fill.ForeColor.RGB = CInt(awinSettings.AmpelGruen)
+                    ElseIf i = 3 Then
+                        .Fill.ForeColor.RGB = CInt(awinSettings.AmpelGelb)
+                    Else
+                        .Fill.ForeColor.RGB = CInt(awinSettings.AmpelRot)
+                    End If
+
+                End With
+            Next
+            
+
+            ' Projekt-Ampel-Text
+            legendTextVorlagenShape.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+            With copiedShape(1)
+
+                .TextFrame2.TextRange.Text = "Projekt unbewertet bzw. mit Ampelfarben"
+                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                .Left = xCursor + 4 * (legendMilestoneVorlagenShape.Height + 4)
+
+            End With
+
+            yCursor = yCursor + zeilenHoehe
+
+
+            For i = 1 To 4
+
+                legendMilestoneVorlagenShape.Copy()
+                copiedShape = pptslide.Shapes.Paste()
+
+                With copiedShape(1)
+                    .Height = legendMilestoneVorlagenShape.Height
+                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                    .Width = legendMilestoneVorlagenShape.Height
+                    .Glow.Radius = 3
+                    .Left = xCursor + (i - 1) * (.Width + 4)
+
+                    If i = 1 Then
+                        .Glow.Color.RGB = CInt(awinSettings.AmpelNichtBewertet)
+                    ElseIf i = 2 Then
+                        .Glow.Color.RGB = CInt(awinSettings.AmpelGruen)
+                    ElseIf i = 3 Then
+                        .Glow.Color.RGB = CInt(awinSettings.AmpelGelb)
+                    Else
+                        .Glow.Color.RGB = CInt(awinSettings.AmpelRot)
+                    End If
+
+                End With
+            Next
+
+
+            ' Projekt-Ampel-Text
+            legendTextVorlagenShape.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+            With copiedShape(1)
+
+                .TextFrame2.TextRange.Text = "Meilenstein unbewertet bzw. mit Ampelfarben"
+                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                .Left = xCursor + 4 * (legendMilestoneVorlagenShape.Height + 4)
+
+            End With
+
+
+        End If
+
+
+
+
+    End Sub
+
 
     Private Sub calculatePPTx1x2(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date, _
                                  ByVal startdate As Date, ByVal enddate As Date, _

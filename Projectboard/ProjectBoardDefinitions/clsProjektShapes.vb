@@ -134,6 +134,7 @@ Public Class clsProjektShapes
                     shapegruppe = worksheetShapes.Range(arrayOFNames)
                     groupShapes = shapegruppe.Group
 
+
                 End If
 
                 If anzElements > 0 Then

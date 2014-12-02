@@ -578,7 +578,7 @@ Public Class clsProjekte
                                                   ByRef projektListe As SortedList(Of Double, String), ByRef minDate As Date, ByRef maxDate As Date)
 
         Dim tmpMinimum As Date = StartofCalendar.AddMonths(von - 1)
-        Dim tmpMaximum As Date = StartofCalendar.AddMonths(bis - 1)
+        Dim tmpMaximum As Date = StartofCalendar.AddMonths(bis).AddDays(-1)
         Dim tmpDate As Date
 
         Dim hproj As clsProjekt
