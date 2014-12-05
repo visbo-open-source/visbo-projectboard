@@ -201,7 +201,7 @@
       <tab id ="PT4" label="Austauschen">
         <group id="PT4G1" label=" ">
           <button id="PT4G1B1" label="Import Projekt-Inventur" onAction="Tom2G4B1InventurImport" />
-          <!--<button id="PT4G1B2" label="Import RPLAN Projekte" onAction="Tom2G4B1RPLANImport" />-->
+          <button id="PT4G1B2" label="Import RPLAN Projekte" onAction="Tom2G4B1RPLANImport" />
           <separator id="PT4G1s1"/>
           <menu id="PT4G1M1" label ="Projekt Steckbriefe">
             <button id="PT4G1B3" label="Importieren" onAction="Tom2G4M1Import" />

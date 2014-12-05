@@ -51,6 +51,10 @@ Public Module Module1
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes
 
+    ' hier werden die Mapping Informationen abgelegt 
+    Public phaseMappings As New clsNameMapping
+    Public milestoneMappings As New clsNameMapping
+
 
     ' hier wird die Projekt Historie eines Projektes aufgenommen 
     Public projekthistorie As New clsProjektHistorie

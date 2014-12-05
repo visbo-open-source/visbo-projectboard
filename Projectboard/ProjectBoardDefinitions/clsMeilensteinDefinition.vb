@@ -24,7 +24,7 @@
         _shortName = ""
         _belongsTo = ""
         _schwellWert = 0
-        _darstellungsKlasse = ""
+        _darstellungsKlasse = "Meilenstein Default"
         _UID = -1
     End Sub
 

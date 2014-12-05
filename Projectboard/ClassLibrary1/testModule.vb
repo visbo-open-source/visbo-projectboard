@@ -4941,6 +4941,7 @@ Public Module testModule
 
         ' aktueller stand vom  ... 
         Try
+
             title = CType(tabelle.Cell(tabellenzeile, 7), pptNS.Cell).Shape.TextFrame2.TextRange.Text
             tmpstr = title.Trim.Split(New Char() {CChar("#")}, 4)
             If Not IsNothing(cproj) Then

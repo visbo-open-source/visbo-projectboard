@@ -24,7 +24,7 @@
 
     Public Sub New()
         _name = ""
-        _darstellungsKlasse = ""
+        _darstellungsKlasse = "Phasen Default"
         _schwellWert = 0
         _farbe = RGB(120, 120, 120)
     End Sub
