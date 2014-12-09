@@ -241,6 +241,7 @@
     <Compile Include="frmStoreCockpit.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="BMWItOModul.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Ribbon1.vb" />
     <Compile Include="Tabelle1.Designer.vb">

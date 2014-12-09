@@ -25,7 +25,7 @@ Public Class clsImportFileHierarchy
             While Not found And ix > 0
 
                 tmpstr = phaseHierarchy.ElementAt(ix - 1).Value.name.Trim.Split(New Char() {CChar(" ")}, 30)
-                For i = 1 To tmpstr.Count
+                For i = 1 To tmpstr.Length
                     If i = 1 Then
                         vgl1 = tmpstr(i - 1)
                     Else
@@ -34,7 +34,7 @@ Public Class clsImportFileHierarchy
                 Next
 
                 tmpstr = phaseName.Trim.Split(New Char() {CChar(" ")}, 30)
-                For i = 1 To tmpstr.Count
+                For i = 1 To tmpstr.Length
                     If i = 1 Then
                         vgl2 = tmpstr(i - 1)
                     Else
@@ -155,6 +155,7 @@ Public Class clsImportFileHierarchy
     ''' <remarks></remarks>
     Public ReadOnly Property getPhaseBeforeLevel(ByVal level As Integer) As clsPhase
         Get
+
             Dim ix As Integer = phaseHierarchy.Count - 1
 
             If phaseHierarchy.Count = 0 Then

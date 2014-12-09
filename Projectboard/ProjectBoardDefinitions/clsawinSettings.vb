@@ -49,6 +49,9 @@
     ' sollen Bedarfe proportional zur Streckung oder Stauchung eines Projekt angepasst werden
     Property propAnpassRess As Boolean
 
+    ' soll bei der Leistbarkeit der Phasen anteilig gerechnet werden oder drin = 1
+    Property phasesProzentual As Boolean = False
+
     ' sollen die Werte der selektierten Projekte in PRC Summencharts angezeigt werden ? 
     Property showValuesOfSelected As Boolean
 
@@ -115,6 +118,7 @@
         _milestoneFreeFloat = False
         _autoCorrectBedarfe = True
         _propAnpassRess = False
+        _phasesProzentual = False
         _drawphases = False
         _showValuesOfSelected = False
         _loadProjectsOnChange = False
@@ -132,13 +136,13 @@
         _costToleranzAbs = 2
 
         ' Settings für Multiprojekt Sichten 
-        _mppStrict = True
+        _mppStrict = False
         _mppFullyContained = True
         _mppShowDate = False
         _mppShowName = True
         _mppShowAmpel = False
         _mppShowProjectLine = True
-        _mppVertikalesRaster = True
+        _mppVertikalesRaster = False
 
 
     End Sub

@@ -748,7 +748,7 @@ Public Module awinGUI
             isSingleProject = True
             Dim komplett As String = tmpstr(2)
             tmpstr = komplett.Split(New Char() {CChar("("), CChar(")")}, 4)
-            If tmpstr.Count > 1 Then
+            If tmpstr.Length > 1 Then
                 projektListe.Add(tmpstr(0))
             Else
                 projektListe.Add(komplett)

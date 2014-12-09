@@ -125,22 +125,24 @@ Public Class clsNameMapping
 
             ' erster Check: kommt itemName in Synonym Liste vor ? 
             If Me.synonyms.ContainsKey(itemName.Trim) Then
-                itemName = Me.synonyms(itemName).Trim
+                itemName = Me.synonyms(itemName.Trim).Trim
             Else
                 itemName = itemName.Trim
                 ' check auf reduction Names
                 For Each kvp As KeyValuePair(Of String, String) In coreNames
-                    If itemName.Contains(kvp.Key) Then
+
+                    If itemName.StartsWith(kvp.Key) Then
                         itemName = kvp.Key.Trim
                         Exit For
                     End If
+
                 Next
 
             End If
 
             ' check jetzt auf Hierarchie Names
             If Me.namesToComplement.ContainsKey(itemName) Then
-                itemName = parentPhaseName & "#" & itemName
+                itemName = parentPhaseName & "+" & itemName
             End If
 
             mapToRealName = itemName

@@ -107,7 +107,7 @@
             ' jetzt muss der Datenbank Name aufgesplittet werden in name und variant-Name
             If Me.variantName <> "" And Me.variantName.Trim.Length > 0 Then
                 tmpstr = Me.name.Split(New Char() {CChar("#")}, 3)
-                If tmpstr.Count > 1 Then
+                If tmpstr.Length > 1 Then
                     If tmpstr(1) = Me.variantName Then
                         .name = tmpstr(0)
                     Else

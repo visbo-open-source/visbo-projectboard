@@ -146,7 +146,7 @@ Public Class clsProjekt
         Get
             If Not IsNothing(Me.variantName) Then
                 If Me.variantName.Length > 0 Then
-                    getShapeText = Me.name & "( " & Me.variantName & " )"
+                    getShapeText = Me.name & "[ " & Me.variantName & " ]"
                 Else
                     getShapeText = Me.name
                 End If
@@ -672,7 +672,23 @@ Public Class clsProjekt
             Dim phase As clsPhase
             Dim phaseStart As Date, phaseEnd As Date
             'Dim numberOfDays As Integer
-            'Dim anteil As Double
+            Dim anteil As Double
+            Dim daysPMonth(12) As Integer
+
+            daysPMonth(0) = 0
+            daysPMonth(1) = 31
+            daysPMonth(2) = 28
+            daysPMonth(3) = 31
+            daysPMonth(4) = 30
+            daysPMonth(5) = 31
+            daysPMonth(6) = 30
+            daysPMonth(7) = 31
+            daysPMonth(8) = 31
+            daysPMonth(9) = 30
+            daysPMonth(10) = 31
+            daysPMonth(11) = 30
+            daysPMonth(12) = 31
+
 
 
             ReDim phaseValues(_Dauer - 1)
@@ -700,20 +716,23 @@ Public Class clsProjekt
 
                                     If i = 0 Then
 
-                                        'numberOfDays = CInt(Max(0.0, DateDiff(DateInterval.Day, phaseStart, StartofCalendar.AddMonths(Me.Start + .relStart - 1).AddDays(-1))))
-                                        'anteil = numberOfDays / 365 * 12
-                                        'phaseValues(.relStart - 1 + i) = Min(1.0, anteil)
-                                        ' Änderung: immer erst mal nur die Anzahl Projekte zählen, die in diesem Monat in dieser Phase sind 
-                                        phaseValues(.relStart - 1 + i) = 1
-
+                                        If awinSettings.phasesProzentual Then
+                                            anteil = (daysPMonth(phaseStart.Month) - phaseStart.Day + 1) / daysPMonth(phaseStart.Month)
+                                            phaseValues(.relStart - 1 + i) = anteil
+                                        Else
+                                            phaseValues(.relStart - 1 + i) = 1
+                                        End If
 
                                     ElseIf i = .relEnde - .relStart Then
 
-                                        'numberOfDays = CInt(Max(0.0, DateDiff(DateInterval.Day, StartofCalendar.AddMonths(Me.Start + .relEnde - 2), phaseEnd)))
-                                        'anteil = numberOfDays / 365 * 12
-                                        'phaseValues(.relStart - 1 + i) = Min(1.0, anteil)
-                                        ' Änderung: immer erst mal nur die Anzahl Projekte zählen, die in diesem Monat in dieser Phase sind 
-                                        phaseValues(.relStart - 1 + i) = 1
+                                        If awinSettings.phasesProzentual Then
+                                            anteil = phaseEnd.Day / daysPMonth(phaseEnd.Month)
+                                            phaseValues(.relStart - 1 + i) = anteil
+                                        Else
+                                            phaseValues(.relStart - 1 + i) = 1
+                                        End If
+
+
 
                                     Else
 

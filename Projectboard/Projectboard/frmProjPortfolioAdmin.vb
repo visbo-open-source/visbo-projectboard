@@ -427,7 +427,7 @@ Public Class frmProjPortfolioAdmin
         Dim vName As String = ""
 
         tmpstr = nodeText.Split(New Char() {CChar("("), CChar(")")}, 3)
-        If tmpstr.Count = 3 Then
+        If tmpstr.Length = 3 Then
             vName = tmpstr(1)
         End If
 

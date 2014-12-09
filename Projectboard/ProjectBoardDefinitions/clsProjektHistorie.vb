@@ -172,10 +172,10 @@
                     ElseIf DateDiff(DateInterval.Month, tmpDate, currentproj.timeStamp) = 0 Then
                         ' in diesem Fall wurde ein Planungs-Stand im gesuchten Monat gefunden ...
                         
-                            milestoneDate = currentproj.getMilestoneDate(milestoneName)
-                            If IsNothing(milestoneDate) Then
-                                milestoneDate = awinSettings.nullDatum
-                            End If
+                        milestoneDate = currentproj.getMilestoneDate(milestoneName)
+                        If DateDiff(DateInterval.Day, StartofCalendar, milestoneDate) < 0 Then
+                            milestoneDate = awinSettings.nullDatum
+                        End If
 
                         
                     Else

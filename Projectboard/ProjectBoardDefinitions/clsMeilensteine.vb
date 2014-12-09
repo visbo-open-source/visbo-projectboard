@@ -10,7 +10,8 @@ Public Class clsMeilensteine
     ''' <remarks></remarks>
     Public Sub Add(milestone As clsMeilensteinDefinition)
 
-        Dim key As String = calcKey(milestone.name, milestone.belongsTo)
+        'Dim key As String = calcKey(milestone.name, milestone.belongsTo)
+        Dim key As String = milestone.name
 
         If allMilestones.ContainsKey(key) Then
             Throw New ArgumentException("Identifier " & milestone.UID.ToString & _
@@ -37,6 +38,23 @@ Public Class clsMeilensteine
 
     End Property
 
+    ''' <summary>
+    ''' gibt die Meilenstein Definition an der Position "Index" zurück 
+    ''' Nothing, wenn index kleiner Null oder größer Anzahl Elemente-^1
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property elementAt(ByVal index As Integer) As clsMeilensteinDefinition
+        Get
+            If index >= 0 And index <= Me.allMilestones.Count - 1 Then
+                elementAt = Me.allMilestones.ElementAt(index).Value
+            Else
+                elementAt = Nothing
+            End If
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt zurück, ob der angegebene Meilenstein in der Liste vorkommt 
@@ -46,12 +64,13 @@ Public Class clsMeilensteine
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property Contains(ByVal name As String, ByVal belongsTo As String) As Boolean
+    Public ReadOnly Property Contains(ByVal name As String) As Boolean
 
         Get
-            Dim key As String = calcKey(name, belongsTo)
+            'Dim key As String = calcKey(name, belongsTo)
+            'Dim key As String = name
 
-            Contains = allMilestones.ContainsKey(key)
+            Contains = allMilestones.ContainsKey(name)
 
 
         End Get
@@ -78,47 +97,46 @@ Public Class clsMeilensteine
         End Get
     End Property
 
+    ' ''' <summary>
+    ' ''' gibt eine Collection von Elementen zurück, die alle den übergebenen Meilenstein als Meilenstein Namen haben  
+    ' ''' </summary>
+    ' ''' <param name="name"></param>
+    ' ''' <value></value>
+    ' ''' <returns></returns>
+    ' ''' <remarks></remarks>
+    'Public ReadOnly Property getNameCollection(ByVal name As String) As Collection
+
+    '    Get
+    '        Dim tmpCollection As New Collection
+    '        Dim key As String
+    '        For Each ms As KeyValuePair(Of String, clsMeilensteinDefinition) In allMilestones
+    '            If ms.Value.name = name Then
+    '                key = calcKey(ms.Value.name, ms.Value.belongsTo)
+    '                tmpCollection.Add(key)
+    '            End If
+    '        Next
+
+    '        getNameCollection = tmpCollection
+
+    '    End Get
+
+    'End Property
+
     ''' <summary>
-    ''' gibt eine Collection von Elementen zurück, die alle den übergebenen Meilenstein als Meilenstein Namen haben  
-    ''' </summary>
-    ''' <param name="name"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getNameCollection(ByVal name As String) As Collection
-
-        Get
-            Dim tmpCollection As New Collection
-            Dim key As String
-            For Each ms As KeyValuePair(Of String, clsMeilensteinDefinition) In allMilestones
-                If ms.Value.name = name Then
-                    key = calcKey(ms.Value.name, ms.Value.belongsTo)
-                    tmpCollection.Add(key)
-                End If
-            Next
-
-            getNameCollection = tmpCollection
-
-        End Get
-
-    End Property
-
-    ''' <summary>
-    ''' gibt den Meilenstein zurück, der den übergebenen Name und Kennzeichnung "belongsTo" hat 
+    ''' gibt den Meilenstein zurück, der den übergebenen Name hat 
     ''' 
     ''' </summary>
     ''' <param name="name"></param>
-    ''' <param name="belongsTo"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMilestoneDef(ByVal name As String, ByVal belongsTo As String) As clsMeilensteinDefinition
+    Public ReadOnly Property getMilestoneDef(ByVal name As String) As clsMeilensteinDefinition
 
         Get
-            Dim key As String = calcKey(name, belongsTo)
+            'Dim key As String = calcKey(name, belongsTo)
 
-            If allMilestones.ContainsKey(key) Then
-                getMilestoneDef = allMilestones.Item(key)
+            If allMilestones.ContainsKey(name) Then
+                getMilestoneDef = allMilestones.Item(name)
             Else
                 getMilestoneDef = Nothing
             End If
@@ -140,27 +158,17 @@ Public Class clsMeilensteine
     Public ReadOnly Property getShape(ByVal name As String, ByVal belongsTo As String) As xlNS.Shape
         Get
             Dim appearanceID As String
-            Dim tmpCollection As Collection
             Dim defaultMilestoneAppearance As String = "Meilenstein Default"
 
-            Dim key As String = calcKey(name, belongsTo)
+            'Dim key As String = calcKey(name, belongsTo)
 
-            If allMilestones.ContainsKey(key) Then
-                appearanceID = allMilestones.Item(key).darstellungsKlasse
+            If allMilestones.ContainsKey(name) Then
+                appearanceID = allMilestones.Item(name).darstellungsKlasse
                 If appearanceID = "" Then
                     appearanceID = defaultMilestoneAppearance
                 End If
             Else
-
-                tmpCollection = Me.getNameCollection(name)
-                If tmpCollection.Count = 0 Then
-                    appearanceID = defaultMilestoneAppearance
-                Else
-                    appearanceID = allMilestones.Item(CStr(tmpCollection.Item(1))).darstellungsKlasse
-                    If appearanceID = "" Then
-                        appearanceID = defaultMilestoneAppearance
-                    End If
-                End If
+                appearanceID = defaultMilestoneAppearance
             End If
 
             ' jetzt ist in der AppearanceID was drin ... 
@@ -174,18 +182,17 @@ Public Class clsMeilensteine
     ''' wenn er nicht gefunden wird: "n.a."
     ''' </summary>
     ''' <param name="name">Langname Meilenstein</param>
-    ''' <param name="belongsTo">Phasen-Name (nur wichtig, wenn Meilenstein Namen mehrfach vorkommen</param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAbbrev(ByVal name As String, ByVal belongsTo As String) As String
+    Public ReadOnly Property getAbbrev(ByVal name As String) As String
         Get
             Dim msAbbrev As String = "n.a."
 
-            Dim key As String = calcKey(name, belongsTo)
+            'Dim key As String = calcKey(name, belongsTo)
 
-            If allMilestones.ContainsKey(key) Then
-                msAbbrev = allMilestones.Item(key).shortName
+            If allMilestones.ContainsKey(name) Then
+                msAbbrev = allMilestones.Item(name).shortName
             End If
 
             getAbbrev = msAbbrev
@@ -193,55 +200,55 @@ Public Class clsMeilensteine
         End Get
     End Property
 
-    ''' <summary>
-    ''' gibt die Abkürzung zu einem gegebenen Meilenstein zurück; eine Phase muss nicht angegegen werden; er sucht und findet das erste Vorkommen
-    ''' diese Vorgehensweise liefert nur korrekte Ergebnisse, wenn sichergestellt ist, daß keine Duplikate in den Namen vorkommen 
-    ''' </summary>
-    ''' <param name="msName"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property getAbbrev(ByVal msName As String) As String
-        Get
-            Dim msAbbrev As String = "n.a."
-            Dim i As Integer = 0
-            Dim anzahl As Integer = allMilestones.Count - 1
-            Dim found As Boolean = False
-            Dim msDefinition As clsMeilensteinDefinition
+    ' ''' <summary>
+    ' ''' gibt die Abkürzung zu einem gegebenen Meilenstein zurück; eine Phase muss nicht angegegen werden; er sucht und findet das erste Vorkommen
+    ' ''' diese Vorgehensweise liefert nur korrekte Ergebnisse, wenn sichergestellt ist, daß keine Duplikate in den Namen vorkommen 
+    ' ''' </summary>
+    ' ''' <param name="msName"></param>
+    ' ''' <value></value>
+    ' ''' <returns></returns>
+    ' ''' <remarks></remarks>
+    'Public ReadOnly Property getAbbrev(ByVal msName As String) As String
+    '    Get
+    '        Dim msAbbrev As String = "n.a."
+    '        Dim i As Integer = 0
+    '        Dim anzahl As Integer = allMilestones.Count - 1
+    '        Dim found As Boolean = False
+    '        Dim msDefinition As clsMeilensteinDefinition
 
-            While i <= anzahl And Not found
-                msDefinition = allMilestones.ElementAt(i).Value
-                If msDefinition.name = msName Then
-                    found = True
-                    msAbbrev = msDefinition.shortName
-                End If
-                i = i + 1
-            End While
+    '        While i <= anzahl And Not found
+    '            msDefinition = allMilestones.ElementAt(i).Value
+    '            If msDefinition.name = msName Then
+    '                found = True
+    '                msAbbrev = msDefinition.shortName
+    '            End If
+    '            i = i + 1
+    '        End While
 
-            getAbbrev = msAbbrev
+    '        getAbbrev = msAbbrev
 
-        End Get
-    End Property
+    '    End Get
+    'End Property
 
     Public Sub New()
         allMilestones = New SortedList(Of String, clsMeilensteinDefinition)
     End Sub
 
-    Private Function calcKey(ByVal name As String, ByVal belongsTo As String) As String
+    'Private Function calcKey(ByVal name As String, ByVal belongsTo As String) As String
 
 
-        If IsNothing(belongsTo) Then
-            belongsTo = ""
-        End If
+    '    If IsNothing(belongsTo) Then
+    '        belongsTo = ""
+    '    End If
 
-        If belongsTo = "" Then
-            calcKey = name
-        Else
-            calcKey = belongsTo & "#" & name
-        End If
+    '    If belongsTo = "" Then
+    '        calcKey = name
+    '    Else
+    '        calcKey = belongsTo & "+" & name
+    '    End If
 
 
-    End Function
+    'End Function
 
 
 

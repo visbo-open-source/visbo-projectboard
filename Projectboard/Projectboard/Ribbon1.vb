@@ -53,7 +53,7 @@ Imports System.Drawing
 
         Dim storeConstellationFrm As New frmStoreConstellation
         Dim returnValue As DialogResult
-        'Dim constellationName As String
+        Dim constellationName As String
         Dim speichernDatenbank As String = "Pt5G2B1"
         Dim request As New Request(awinSettings.databaseName)
 
@@ -63,60 +63,60 @@ Imports System.Drawing
 
         Call projektTafelInit()
 
-        If control.Id = speichernDatenbank Then
-            ' Wenn das Speichern eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
+        'If control.Id = speichernDatenbank Then
+        '    ' Wenn das Speichern eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
 
-            If request.pingMongoDb() Then
-                projectConstellations = request.retrieveConstellationsFromDB()
-            Else
-                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
-            End If
-        End If
+        '    If request.pingMongoDb() Then
+        '        projectConstellations = request.retrieveConstellationsFromDB()
+        '    Else
+        '        Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+        '    End If
+        'End If
 
-        Try
+        'Try
 
-            With newConstellationForm
-                .Text = "Portfolio erstellen bzw. ändern"
-                .portfolioName.Text = currentConstellation
-                .portfolioName.Visible = True
-                .Label1.Visible = True
-                .aKtionskennung = PTtvactions.definePortfolioSE
-            End With
+        '    With newConstellationForm
+        '        .Text = "Portfolio erstellen bzw. ändern"
+        '        .portfolioName.Text = currentConstellation
+        '        .portfolioName.Visible = True
+        '        .Label1.Visible = True
+        '        .aKtionskennung = PTtvactions.definePortfolioSE
+        '    End With
 
-            returnValue = newConstellationForm.ShowDialog
+        '    returnValue = newConstellationForm.ShowDialog
 
-            If returnValue = DialogResult.OK Then
-                'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+        '    If returnValue = DialogResult.OK Then
+        '        'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
-            Else
-                ' returnValue = DialogResult.Cancel
+        '    Else
+        '        ' returnValue = DialogResult.Cancel
 
-            End If
+        '    End If
 
-        Catch ex As Exception
+        'Catch ex As Exception
 
-            Call MsgBox(ex.Message)
-        End Try
+        '    Call MsgBox(ex.Message)
+        'End Try
 
 
         '
         ' alte Version ; vor dem 26.10.14
         '
-        'If AlleProjekte.Count > 0 Then
-        '    returnValue = storeConstellationFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Portfolios
+        If AlleProjekte.Count > 0 Then
+            returnValue = storeConstellationFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Portfolios
 
-        '    If returnValue = DialogResult.OK Then
-        '        constellationName = storeConstellationFrm.ComboBox1.Text
+            If returnValue = DialogResult.OK Then
+                constellationName = storeConstellationFrm.ComboBox1.Text
 
-        '        Call awinStoreConstellation(constellationName)
+                Call awinStoreConstellation(constellationName)
 
-        '        ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
-        '        currentConstellation = constellationName
+                ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
+                currentConstellation = constellationName
 
-        '    End If
-        'Else
-        '    Call MsgBox("Es sind keine Projekte in der Projekt-Tafel geladen!")
-        'End If
+            End If
+        Else
+            Call MsgBox("Es sind keine Projekte in der Projekt-Tafel geladen!")
+        End If
         ' 
         ' Ende alte Version; vor dem 26.10.14
         '
@@ -635,7 +635,7 @@ Imports System.Drawing
                                     tmpstr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
 
                                     newPname = tmpstr(0)
-                                    If tmpstr.Count > 1 Then
+                                    If tmpstr.Length > 1 Then
                                         newVname = tmpstr(1)
                                     End If
 
@@ -1959,7 +1959,7 @@ Imports System.Drawing
                 ImportProjekte.Clear()
                 'Call bmwImportProjektInventur(myCollection)
                 Call bmwImportProjekteITO15(myCollection)
-                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                appInstance.ActiveWorkbook.Close(SaveChanges:=True)
                 Call importProjekteEintragen(myCollection, importDate)
 
             Catch ex As Exception
@@ -2461,6 +2461,23 @@ Imports System.Drawing
             awinSettings.propAnpassRess = True
         Else
             awinSettings.propAnpassRess = False
+        End If
+
+    End Sub
+
+    Sub PTPhaseAnteilig(control As IRibbonControl, ByRef pressed As Boolean)
+
+        awinSettings.phasesProzentual = Not awinSettings.phasesProzentual
+        pressed = awinSettings.phasesProzentual
+
+    End Sub
+
+    Sub awinSetPhaseAnteilig(control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.phasesProzentual = True
+        Else
+            awinSettings.phasesProzentual = False
         End If
 
     End Sub

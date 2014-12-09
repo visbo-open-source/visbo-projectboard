@@ -358,12 +358,12 @@ Public Module testModule
                             End Try
 
                             Try
-                                If tmpStr.Count < 2 Then
+                                If tmpStr.Length < 2 Then
                                     qualifier = ""
                                     qualifier2 = ""
-                                ElseIf tmpStr.Count = 2 Then
+                                ElseIf tmpStr.Length = 2 Then
                                     qualifier = tmpStr(1).Trim
-                                ElseIf tmpStr.Count >= 3 Then
+                                ElseIf tmpStr.Length >= 3 Then
                                     qualifier = tmpStr(1).Trim
                                     qualifier2 = tmpStr(2).Trim
                                 End If
@@ -449,7 +449,7 @@ Public Module testModule
 
                                         End Try
 
-                                        For i = 1 To tmpStr.Count
+                                        For i = 1 To tmpStr.Length
                                             listOfItems.Add(tmpStr(i - 1).Trim)
                                         Next
 
@@ -1821,6 +1821,7 @@ Public Module testModule
                     End Try
 
                     If kennzeichnung = "Portfolio-Name" Or _
+                        kennzeichnung = "Szenario-Projekt-Tabelle" Or _
                         kennzeichnung = "Multiprojektsicht" Or _
                         kennzeichnung = "Projekt-Tafel" Or _
                         kennzeichnung = "Projekt-Tafel Phasen" Or _
@@ -1978,7 +1979,7 @@ Public Module testModule
                             tmpStr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
                             kennzeichnung = tmpStr(0).Trim
                             boxName = .TextFrame2.TextRange.Text
-                            If tmpStr.Count > 1 Then
+                            If tmpStr.Length > 1 Then
                                 Try
                                     qualifier = tmpStr(1)
                                 Catch ex2 As Exception
@@ -2155,6 +2156,14 @@ Public Module testModule
                             End If
 
                             errorVorlagenShape.Delete()
+
+                        Case "Szenario-Projekt-Tabelle"
+
+                            Try
+                                Call zeichneSzenarioTabelle(pptShape, pptSlide)
+                            Catch ex As Exception
+
+                            End Try
 
                         Case "Portfolio-Name"
                             .TextFrame2.TextRange.Text = portfolioName
@@ -4647,6 +4656,82 @@ Public Module testModule
 
     End Sub
 
+    ''' <summary>
+    ''' zeichnet die Tabelle mit den Namen der Projekt [inkl Varianten Name] im betrachteten Portfolio 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="pptslide"></param>
+    ''' <remarks></remarks>
+    Sub zeichneSzenarioTabelle(ByRef pptShape As pptNS.Shape, ByVal pptslide As pptNS.Slide)
+        Dim tabelle As pptNS.Table
+        Dim anzZeilen As Integer
+        Dim anzMaxZeilen As Integer
+        Dim anzSpalten As Integer
+        Dim zeilenHoehe As Double
+        Dim zeilenHoeheTitel As Double
+        Dim pName As String
+        Dim toDraw As Integer
+
+
+        Dim curZeile As Integer = 2
+        Dim curSpalte As Integer = 1
+
+        Try
+            tabelle = pptShape.Table
+        Catch ex As Exception
+            Throw New Exception("Shape für Szenario-Liste hat keine Tabelle")
+        End Try
+
+        anzSpalten = tabelle.Columns.Count
+        anzZeilen = tabelle.Rows.Count
+
+
+        zeilenHoehe = tabelle.Rows(tabelle.Rows.Count).Height
+        zeilenHoeheTitel = tabelle.Rows(1).Height
+        anzMaxZeilen = (pptslide.CustomLayout.Height - (pptShape.Top + zeilenHoeheTitel)) / zeilenHoehe - 1
+
+        toDraw = ShowProjekte.Count
+        If toDraw > anzMaxZeilen * anzSpalten Then
+
+            Throw New ArgumentException("in die Tabelle können nicht " & toDraw.ToString & " Elemente gezeichnet werden")
+        Else
+
+            With tabelle
+
+                If currentConstellation.Trim.Length > 0 Then
+                    CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                    CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " " & currentConstellation
+                Else
+                    CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                        CType(.Cell(1, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text & " <nicht benannt>"
+                End If
+
+
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                    pName = kvp.Value.getShapeText
+
+                    CType(.Cell(curZeile, curSpalte), pptNS.Cell).Shape.TextFrame2.TextRange.Text = pName
+
+                    curSpalte = curSpalte + 1
+
+                    If curSpalte > anzSpalten Then
+                        curSpalte = 1
+                        curZeile = curZeile + 1
+                        If curZeile > anzZeilen Then
+                            .Rows.Add()
+                            anzZeilen = anzZeilen + 1
+                        End If
+                    End If
+
+
+                Next
+
+            End With
+
+        End If
+
+    End Sub
+
     Sub zeichneTabelleZielErreichung(ByRef pptShape As pptNS.Shape, ByVal farbtyp As Integer)
 
         Dim heute As Date = Date.Now
@@ -4686,7 +4771,7 @@ Public Module testModule
             Catch ex As Exception
 
             End Try
-            
+
         Next
 
 
@@ -7517,7 +7602,7 @@ Public Module testModule
 
                 Dim msDate As Date = hproj.getMilestoneDate(milestoneName)
 
-                If Not IsNothing(msDate) Then
+                If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
 
                     ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
                     Dim zeichnen As Boolean = True

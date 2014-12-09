@@ -166,11 +166,10 @@
         </group>-->
       </tab>
       <!--
-      
       -->
-      <tab id ="PT3" label="Vergleichen">
+      <!--<tab id ="PT3" label="Vergleichen">
         <group id="PT3G1" label="Projekt">
-          <!--<button id="PT3G1B0" label="Phasen vergleichen in 1 Chart" onAction="Tom2G3M1B1PhasenVgl" />-->
+          --><!--<button id="PT3G1B0" label="Phasen vergleichen in 1 Chart" onAction="Tom2G3M1B1PhasenVgl" />--><!--
           <button id="PT3G1B1" label="mit Projekt bzw. Vorlage vergleichen" onAction="Tom2G3M1B2PhasenVgl" />
           <button id="PT3G1B2" label="mit letztem Stand vergleichen" onAction="PT3G1B2PhasenVgl" />
           <button id="PT3G1B3" label="mit Beauftragung vergleichen" onAction="PT3G1B3PhasenVgl" />
@@ -190,11 +189,11 @@
             <button id="PT3G1M2B2" label="Kennzahlen" onAction="awinShowTrendKPI"/>
           </menu>
         </group>
-        <!---->
+        --><!----><!--
         <group id="PT3G2" label="Portfolio">
           <button id="PT3G2B1" label="Vergleichen" onAction="awinSetModusHistory" enabled="false" />
         </group>
-      </tab>
+      </tab>-->
       <!--
       
       -->
@@ -233,9 +232,10 @@
         <group id ="PT6G1" label ="Projekt-Form">
           <!--<toggleButton id="PT5G1B1" label="Phasen zeichnen" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen"/>-->
           <checkBox id="PT6G1B1" label="Extended Drawing Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen"/>
-          <checkBox id="PT6G1B2" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>
+          <!--<checkBox id="PT6G1B2" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>-->
           <checkBox id="PT6G1B3" label="Anzeigen selekt. Objekte im Summenchart" getPressed="PTShowSelectedObjects" onAction ="awinSetShowSelObj"/>
           <checkBox id="PT6G1B4" label="Bei Dehnen/Stauchen proportional anpassen" getPressed="PTPropAnpassen" onAction ="awinSetPropAnpass"/>
+          <checkBox id="PT6G1B5" label="Phasenhäufigkeit anteilig berechnen" getPressed="PTPhaseAnteilig" onAction ="awinSetPhaseAnteilig"/>
         </group>
         <group id ="PT6G2" label ="Zeitraum">
           <!--<toggleButton id="PT5G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>-->

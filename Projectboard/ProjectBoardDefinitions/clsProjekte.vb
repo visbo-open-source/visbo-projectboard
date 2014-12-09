@@ -633,12 +633,12 @@ Public Class clsProjekte
 
                             tmpDate = kvp.Value.getMilestoneDate(milestone)
 
-                            If Not IsNothing(tmpDate) Then
+                            If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
                                 If getColumnOfDate(tmpDate) > bis Or getColumnOfDate(tmpDate) < von Then
                                     ' nichts tun 
                                 Else
                                     found = True
-                                    
+
                                 End If
                             End If
 
@@ -675,10 +675,12 @@ Public Class clsProjekte
                     If Not IsNothing(cphase) Then
                         If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
                             tmpMinimum = cphase.getStartDate
+                            
                         End If
 
                         If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
                             tmpMaximum = cphase.getEndDate
+
                         End If
                     End If
 
@@ -689,9 +691,10 @@ Public Class clsProjekte
 
                     tmpDate = hproj.getMilestoneDate(msName)
 
-                    If Not IsNothing(tmpDate) Then
+                    If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
                         If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
                             tmpMinimum = tmpDate
+
                         End If
 
                         If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
