@@ -436,4 +436,92 @@ Module BMWItOModul
 
 
     End Sub
+
+    ''' <summary>
+    ''' exportiert das angegebene Projekt in die bereits geöffnete Datei 
+    ''' Das Schreiben beginnt ab "zeile"
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="zeile"></param>
+    ''' <remarks></remarks>
+    Public Sub bmwExportProject(ByVal hproj As clsProjekt, ByRef zeile As Integer)
+
+        Dim ip As Integer, im As Integer
+        Dim startdate As Date, endDate As Date
+        Dim curName As String
+        Dim color As Long
+        Dim ws As Excel.Worksheet
+        Dim spalte As Integer = 1
+        Dim cphase As clsPhase
+        Dim cmilestone As clsMeilenstein
+
+        ' diese Datei muss offen sein und das aktive Workbook
+        ' wenn nein, dann aktivieren ! 
+        Try
+            If appInstance.ActiveWorkbook.Name <> bmwExportVorlage Then
+                appInstance.Workbooks(bmwExportVorlage).Activate()
+            End If
+        Catch ex As Exception
+            Throw New ArgumentException("Export Vorlage ist nicht die aktive Excel Datei")
+        End Try
+
+        ' bestimme die Farbe - sie steht im Excel Ausgabe File in der Zeile 2, Spalte 1 
+        ws = CType(appInstance.ActiveWorkbook.Worksheets("Export VISBO Projekttafel"), Excel.Worksheet)
+
+
+        color = CLng(CType(ws.Cells(2, 1), Excel.Range).Interior.Color)
+
+        ' jetzt wird das Projekt geschrieben 
+        CType(ws.Cells(zeile, spalte), Excel.Range).Value = hproj.getShapeText
+        CType(ws.Cells(zeile, spalte).offset(0, 1), Excel.Range).Value = hproj.startDate.ToShortDateString
+        CType(ws.Cells(zeile, spalte).offset(0, 2), Excel.Range).Value = hproj.endeDate.ToShortDateString
+
+        Dim indentPhase As Integer = 3
+        Dim indentMS As Integer = 6
+
+
+
+        For ip = 2 To hproj.AllPhases.Count
+            zeile = zeile + 1
+            cphase = hproj.getPhase(ip)
+            startdate = cphase.getStartDate
+            endDate = cphase.getEndDate
+            curName = indentPhase & cphase.name
+
+            CType(ws.Cells(zeile, spalte), Excel.Range).Value = curName
+
+            If DateDiff(DateInterval.Day, StartofCalendar, startdate) > 0 Then
+                CType(ws.Cells(zeile, spalte).offset(0, 1), Excel.Range).Value = startdate.ToShortDateString
+            Else
+                CType(ws.Cells(zeile, spalte).offset(0, 1), Excel.Range).Value = "Fehler !"
+            End If
+
+            If DateDiff(DateInterval.Day, StartofCalendar, endDate) > 0 Then
+                CType(ws.Cells(zeile, spalte).offset(0, 2), Excel.Range).Value = endDate.ToShortDateString
+            Else
+                CType(ws.Cells(zeile, spalte).offset(0, 2), Excel.Range).Value = "Fehler !"
+            End If
+
+            For im = 1 To cphase.CountResults
+                zeile = zeile + 1
+                cmilestone = cphase.getResult(im)
+                startdate = cmilestone.getDate
+                If cmilestone.name.Contains(cphase.name & "+") Then
+                    ' hier den Original Name verwenden !? 
+                    ' und den VISBO - Name in die Spalte "Visbo" schreben !? 
+                Else
+                    curName = cmilestone.name
+                End If
+                If DateDiff(DateInterval.Day, StartofCalendar, startdate) > 0 Then
+                    CType(ws.Cells(zeile, spalte).offset(0, 1), Excel.Range).Value = startdate.ToShortDateString
+                Else
+                    CType(ws.Cells(zeile, spalte).offset(0, 1), Excel.Range).Value = "Fehler !"
+                End If
+            Next
+
+        Next
+
+
+
+    End Sub
 End Module

@@ -2084,14 +2084,135 @@ Imports System.Drawing
 
     End Sub
 
+    ''' <summary>
+    ''' exportiert selektierte/alle Files in eine Excel Datei, die genauso aufgebaut ist , wie die BMW Import Datei  
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Public Sub bmwExcelExport(control As IRibbonControl)
 
+        Dim singleShp As Excel.Shape
+        Dim hproj As clsProjekt
+        Dim outputString As String = ""
+        Dim fileListe As New SortedList(Of String, String)
+        Dim exportFileName As String = "Export" & Date.Now.ToShortDateString & ".xlsx"
+
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+                
+                ' hier muss jetzt die todo Liste aufgebaut werden 
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
+                With singleShp
+                    If isProjectType(shapeArt) Then
+
+                        Try
+
+                            hproj = ShowProjekte.getProject(singleShp.Name)
+                            fileListe.Add(hproj.name, hproj.name)
+
+                        Catch ex As Exception
+
+                            Call MsgBox(singleShp.Name & ": Fehler bei Aufbau todo Liste für Export ...")
+
+                        End Try
+
+                    End If
+                End With
+
+            Next
+
+        Else
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                fileListe.Add(kvp.Key, kvp.Key)
+            Next
+        End If
+
+        ' hier muss jetzt das File Projekt Detail aufgemacht werden ...
+        appInstance.Workbooks.Open(awinPath & bmwExportVorlage)
+
+        Dim zeile As Integer = 2
+        For Each kvp As KeyValuePair(Of String, String) In fileListe
+
+            Try
+                hproj = ShowProjekte.getProject(kvp.Key)
+
+                ' jetzt wird dieses Projekt exportiert ... 
+                Try
+                    Call bmwExportProject(hproj, zeile)
+                    outputString = outputString & hproj.name & " erfolgreich .." & vbLf
+                Catch ex As Exception
+                    outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf & _
+                                    ex.Message & vbLf & vbLf
+                End Try
+
+
+
+            Catch ex As Exception
+
+                Call MsgBox(ex.Message)
+
+            End Try
+
+        Next
+
+        Try
+            ' Schließen der Export Datei unter neuem Namen, original Zustand bleibt erhalten
+            appInstance.ActiveWorkbook.Close(SaveChanges:=True, Filename:=awinPath & bmwExportFilesOrdner & "\" & _
+                                             exportFileName)
+            Call MsgBox(outputString & "exportiert !")
+        Catch ex As Exception
+
+            Call MsgBox("Fehler beim Speichern der Export Datei")
+
+        End Try
+
+
+        Call awinDeSelect()
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' exportiert selektierte / alle Files in eine Excel Datei; 
+    ''' verwendet dabei die Vorlage in Requirements bmwFC52Vorlage.xlsx
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Public Sub bmwFC52Export(control As IRibbonControl)
+
+    End Sub
 
     Public Sub Tom2G4M1Export(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName)
+
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
-        Dim vglName As String = " "
         Dim outputString As String = ""
 
 
