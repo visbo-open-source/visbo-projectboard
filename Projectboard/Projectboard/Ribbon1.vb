@@ -156,25 +156,32 @@ Imports System.Drawing
 
         If returnValue = DialogResult.OK Then
 
-            constellationName = loadConstellationFrm.ListBox1.Text
-            Call awinLoadConstellation(constellationName, successMessage)
-
-            appInstance.ScreenUpdating = False
-            'Call diagramsVisible(False)
-            Call awinClearPlanTafel()
-            Call awinZeichnePlanTafel()
-            Call awinNeuZeichnenDiagramme(2)
-            'Call diagramsVisible(True)
-            appInstance.ScreenUpdating = True
-
-            If successMessage.Length > initMessage.Length Then
-                Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
+            If loadConstellationFrm.addToSession.Checked = True Then
+                constellationName = loadConstellationFrm.ListBox1.Text
+                Call awinAddConstellation(constellationName, successMessage)
             Else
-                'Call MsgBox(constellationName & " wurde geladen ...")
+                constellationName = loadConstellationFrm.ListBox1.Text
+                Call awinLoadConstellation(constellationName, successMessage)
+
+                appInstance.ScreenUpdating = False
+                'Call diagramsVisible(False)
+                Call awinClearPlanTafel()
+                Call awinZeichnePlanTafel()
+                Call awinNeuZeichnenDiagramme(2)
+                'Call diagramsVisible(True)
+                appInstance.ScreenUpdating = True
+
+                If successMessage.Length > initMessage.Length Then
+                    Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
+                Else
+                    'Call MsgBox(constellationName & " wurde geladen ...")
+                End If
+
+                ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
+                currentConstellation = constellationName
             End If
 
-            ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
-            currentConstellation = constellationName
+            
 
         End If
         enableOnUpdate = True
@@ -1965,7 +1972,6 @@ Imports System.Drawing
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                 Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
-                Exit Sub
             End Try
         Else
             Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")

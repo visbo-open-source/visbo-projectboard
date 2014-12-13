@@ -7225,7 +7225,7 @@ Public Module Projekte
                                        ByVal volume As Double, ByVal complexity As Double, ByVal businessUnit As String, ByVal description As String)
 
         Dim newprojekt As Boolean
-        Dim pStatus As String = ProjektStatus(0)
+        Dim pStatus As String = ProjektStatus(1) ' jedes Projekt soll zu Beginn als beauftragtes Projekt importiert werden 
         Dim zeile As Integer = tafelZeile
         Dim spalte As Integer = getColumnOfDate(startdate)
         'Dim plen As Integer
@@ -7256,7 +7256,8 @@ Public Module Projekte
                 .startDate = startdate
                 .earliestStartDate = .startDate.AddMonths(.earliestStart)
                 .latestStartDate = .startDate.AddMonths(.latestStart)
-                .Status = ProjektStatus(0)
+                ' jedes Projekt zu Beginn als beauftragtes Projekt importieren
+                .Status = ProjektStatus(1) 
                 .StrategicFit = sfit
                 .Risiko = risk
                 .volume = 0         ' in Projekt-Inventur Spalte "Volume" nicht mehr enthalten
@@ -9186,7 +9187,7 @@ Public Module Projekte
 
                 If ShowProjekte.contains(hproj.name) Then
                     With hproj
-                        Call replaceProjectVariant(.name, .variantName, False, True)
+                        Call replaceProjectVariant(.name, .variantName, False, True, 0)
                         projectDidNotExistYet = False
                     End With
                 ElseIf kvp.Value.show = True Then
@@ -9573,7 +9574,7 @@ Public Module Projekte
                     hproj = AlleProjekte.getProject(CStr(moreThanOne.Item(i)), indexvalue(i - 1))
                     'currentSzenario.Add(hproj)
 
-                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, False)
+                    Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, 0)
 
                 Next
 
@@ -10467,7 +10468,7 @@ Public Module Projekte
             ' hier wird der vorher bestimmte Wert gesetzt, wo das Shape gezeichnet werden kann 
             hproj.tfZeile = zeile
 
-            If drawphases And (hproj.CountPhases > 1 Or hproj.getMilestones.Count > 0) Then
+            If drawphases And (hproj.CountPhases > 1) Then
                 ' stelle das Projekt im Extended Mode dar  
                 'Dim shapeGroupListe() As Object
                 Dim shapeGroupListe() As String
@@ -16145,14 +16146,17 @@ Public Module Projekte
     ''' <param name="selectIT" >gibt an, ob das Shape gleich selektiert werden soll</param>
     ''' <param name="replaceAnyhow">gibt an, ob die Ersetzung auf alle Fälle erfolgen soll oder nur wenn nicht diese Variante 
     ''' bereits in Showprojekte geladen ist </param>
+    ''' <param name="tfzeile">gibt an, ab welcher Zeile auf der Projekttafel versucht werden soll, zu zeichnen
+    ''' </param>
     ''' <remarks></remarks>
     Sub replaceProjectVariant(ByVal pname As String, ByVal newVariant As String, _
-                              ByVal selectIT As Boolean, ByVal replaceAnyhow As Boolean)
+                              ByVal selectIT As Boolean, ByVal replaceAnyhow As Boolean, _
+                              ByVal tfzeile As Integer)
 
         Dim newProj As clsProjekt
         Dim hproj As clsProjekt
         Dim key As String = calcProjektKey(pname, newVariant)
-        Dim tfzeile As Integer = 0
+        'Dim tfzeile As Integer = 0
         'Dim projectshape As Excel.ShapeRange
 
         Dim phaseList As New Collection
@@ -16441,11 +16445,16 @@ Public Module Projekte
                             .shpUID = ""
                             .StartOffset = 0
 
-                            If DateDiff(DateInterval.Month, .startDate, Date.Now) < -1 Then
-                                .Status = ProjektStatus(0)
-                            Else
-                                .Status = ProjektStatus(1)
-                            End If
+                            ' ein importiertes Projekt soll immer erst mal auf "beauftrag" gesetzt werden; 
+                            ' wenn es denn verändert werden soll, dann muss eine Variante erzeugt werden oder 
+                            ' der Status auf 0 gesetzt werden 
+                            .Status = ProjektStatus(1)
+
+                            'If DateDiff(DateInterval.Month, .startDate, Date.Now) < -1 Then
+                            '    .Status = ProjektStatus(0)
+                            'Else
+                            '    .Status = ProjektStatus(1)
+                            'End If
 
                             '.tfSpalte = 0
                             .tfZeile = tafelZeile

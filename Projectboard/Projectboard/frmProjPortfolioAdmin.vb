@@ -227,7 +227,7 @@ Public Class frmProjPortfolioAdmin
 
                     If aKtionskennung = PTtvactions.activateV Then
                         ' jetzt die Variante aktivieren 
-                        Call replaceProjectVariant(pName, selectedVariantName, True, True)
+                        Call replaceProjectVariant(pName, selectedVariantName, True, True, 0)
                         Call awinNeuZeichnenDiagramme(2)
                     End If
 

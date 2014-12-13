@@ -1302,11 +1302,13 @@ Public Module awinGeneralModules
                         hproj.startDate = startDate
                         hproj.earliestStartDate = hproj.startDate.AddMonths(hproj.earliestStart)
                         hproj.latestStartDate = hproj.startDate.AddMonths(hproj.latestStart)
-                        If DateDiff(DateInterval.Month, startDate, Date.Now) <= 0 Then
-                            hproj.Status = ProjektStatus(0)
-                        Else
-                            hproj.Status = ProjektStatus(1)
-                        End If
+                        ' immer als beauftragtes PRojekt importieren 
+                        hproj.Status = ProjektStatus(1)
+                        'If DateDiff(DateInterval.Month, startDate, Date.Now) <= 0 Then
+                        '    hproj.Status = ProjektStatus(0)
+                        'Else
+                        '    hproj.Status = ProjektStatus(1)
+                        'End If
 
                         hproj.StrategicFit = zufall.NextDouble * 10
                         hproj.Risiko = zufall.NextDouble * 10
@@ -1723,6 +1725,7 @@ Public Module awinGeneralModules
                     End Try
 
                     ' Status    ist ein read-only Feld
+                    hproj.Status = ProjektStatus(1)
                     ' hproj.Status = .Range("Status").Value
 
                     ' Risiko
@@ -2675,6 +2678,87 @@ Public Module awinGeneralModules
 
 
     End Sub
+
+    ''' <summary>
+    ''' fügt die in der Konstellation aufgeführten Projekte hinzu; 
+    ''' wenn Sie bereits geladen sind, wird nachgesehen, ob die richtige Variante aktiviert ist 
+    ''' ggf. wird diese Variante dann aktiviert 
+    ''' </summary>
+    ''' <param name="constellationName"></param>
+    ''' <param name="successMessage"></param>
+    ''' <remarks></remarks>
+    Public Sub awinAddConstellation(ByVal constellationName As String, ByRef successMessage As String)
+
+        Dim activeConstellation As New clsConstellation
+        Dim hproj As New clsProjekt
+        Dim request As New Request(awinSettings.databaseName)
+        Dim anzErrDB As Integer = 0
+        Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
+        Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
+                                        "   Das Projekt wurde bereits beauftragt."
+
+        ' ab diesem Wert soll neu gezeichnet werden 
+        Dim freieZeile As Integer = projectboardShapes.getMaxZeile
+
+        ' prüfen, ob diese Constellation bereits existiert ..
+        Try
+            activeConstellation = projectConstellations.getConstellation(constellationName)
+        Catch ex As Exception
+            Call MsgBox(" Projekt-Konstellation " & constellationName & " existiert nicht ")
+            Exit Sub
+        End Try
+
+        ' die aktuelle Konstellation in "Last" speichern 
+        Call storeSessionConstellation(ShowProjekte, "Last")
+
+        ' jetzt werden die einzelnen Projekte dazugeholt 
+
+        For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
+
+            If AlleProjekte.Containskey(kvp.Key) Then
+                ' Projekt ist bereits im Hauptspeicher geladen
+                hproj = AlleProjekte.getProject(kvp.Key)
+
+                ' jetzt die Variante aktivieren 
+                Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, hproj.tfZeile)
+
+            Else
+                If request.pingMongoDb() Then
+
+                    If request.projectNameAlreadyExists(kvp.Value.projectName, kvp.Value.variantName) Then
+
+                        ' Projekt ist noch nicht im Hauptspeicher geladen, es muss aus der Datenbank geholt werden.
+                        hproj = request.retrieveOneProjectfromDB(kvp.Value.projectName, kvp.Value.variantName)
+
+                        ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
+                        AlleProjekte.Add(kvp.Key, hproj)
+                        ' jetzt die Variante aktivieren 
+                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, freieZeile + kvp.Value.zeile)
+
+                    Else
+                        anzErrDB = anzErrDB + 1
+                        If anzErrDB = 1 Then
+                            successMessage = successMessage & loadErrorMessage & vbLf & _
+                                                   "        " & kvp.Value.projectName
+                        Else
+                            successMessage = successMessage & vbLf & _
+                                                   "        " & kvp.Value.projectName
+                        End If
+
+                        'Call MsgBox("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+                        'Throw New ArgumentException("Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+                    End If
+                Else
+                    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekt '" & kvp.Value.projectName & "'konnte nicht geladen werden")
+                End If
+            End If
+
+        Next
+
+
+
+    End Sub
+
     ''' <summary>
     ''' löscht ein bestimmtes Portfolio aus der Datenbank und der Liste der Portfolios im Hauptspeicher
     ''' 
@@ -2736,6 +2820,9 @@ Public Module awinGeneralModules
         Dim hproj As clsProjekt
         Dim key As String = calcProjektKey(pName, vName)
 
+        ' ab diesem Wert soll neu gezeichnet werden 
+        Dim freieZeile As Integer = projectboardShapes.getMaxZeile
+
         hproj = request.retrieveOneProjectfromDB(pName, vName)
 
         ' prüfen, ob AlleProjekte das Projekt bereits enthält 
@@ -2751,7 +2838,7 @@ Public Module awinGeneralModules
             ' diese Prüfung und die entsprechenden Aktionen erfolgen im 
             ' replaceProjectVariant
 
-            Call replaceProjectVariant(pName, vName, False, True)
+            Call replaceProjectVariant(pName, vName, False, True, freieZeile)
 
         End If
 

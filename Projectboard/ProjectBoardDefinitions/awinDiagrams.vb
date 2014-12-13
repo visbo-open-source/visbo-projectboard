@@ -1087,32 +1087,56 @@ Public Module awinDiagrams
                     Else
                         If prcTyp = DiagrammTypen(5) Then
 
-                            For c = 0 To 3
 
-                                For i = 0 To bis - von
-                                    datenreihe(i) = msdatenreihe(c, i)
-                                    seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
+                            ' Änderung 8.10.14 die Zahl der MEilensteine insgesamt anzeigen 
+                            ' nicht aufgeschlüsselt nach welcher MEilenstein , welche Farbe
+
+                            For i = 0 To bis - von
+                                datenreihe(i) = 0
+                                For c = 0 To 3
+                                    datenreihe(i) = datenreihe(i) + msdatenreihe(c, i)
                                 Next
-
-                                With .SeriesCollection.NewSeries
-                                    If c = 0 Then
-                                        .name = prcName & ", ohne Ampel"
-                                    ElseIf c = 1 Then
-                                        .name = prcName & ", grüne Ampel"
-                                    ElseIf c = 2 Then
-                                        .name = prcName & ", gelbe Ampel"
-                                    Else
-                                        .name = prcName & ", rote Ampel"
-                                    End If
-                                    .Interior.color = ampelfarbe(c)
-                                    .Values = datenreihe
-                                    .XValues = Xdatenreihe
-                                    .ChartType = Excel.XlChartType.xlColumnStacked
-                                    .HasDataLabels = False
-                                End With
-
-
                             Next
+
+                            With .SeriesCollection.NewSeries
+                                .name = prcName
+                                .Interior.color = ampelfarbe(0)
+                                .Values = datenreihe
+                                .XValues = Xdatenreihe
+                                .ChartType = Excel.XlChartType.xlColumnStacked
+                                .HasDataLabels = False
+                            End With
+
+
+
+
+                            ' Alt: jetzt werden die Summe der Meilensteine angezeigt 
+                            'For c = 0 To 3
+
+                            '    For i = 0 To bis - von
+                            '        datenreihe(i) = msdatenreihe(c, i)
+                            '        seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
+                            '    Next
+
+                            '    With .SeriesCollection.NewSeries
+                            '        If c = 0 Then
+                            '            .name = prcName & ", ohne Ampel"
+                            '        ElseIf c = 1 Then
+                            '            .name = prcName & ", grüne Ampel"
+                            '        ElseIf c = 2 Then
+                            '            .name = prcName & ", gelbe Ampel"
+                            '        Else
+                            '            .name = prcName & ", rote Ampel"
+                            '        End If
+                            '        .Interior.color = ampelfarbe(c)
+                            '        .Values = datenreihe
+                            '        .XValues = Xdatenreihe
+                            '        .ChartType = Excel.XlChartType.xlColumnStacked
+                            '        .HasDataLabels = False
+                            '    End With
+
+
+                            'Next
 
                         Else
 
