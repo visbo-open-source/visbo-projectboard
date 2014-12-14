@@ -427,6 +427,31 @@ Public Module awinGeneralModules
 
         End With
 
+        ' hier werden jetzt die Business Unit Informationen ausgelesen 
+        businessUnit = New List(Of String)
+        With wsName4
+            '
+            ' Business Unit Definitionen auslesen - im bereich awin_BusinessUnit_Definitions
+            '
+            For Each c In .Range("awin_BusinessUnit_Definitions")
+
+                Try
+                    tmpStr = CType(c.Value, String).Trim
+                    If tmpStr.Length > 0 Then
+
+                        If Not businessUnit.Contains(tmpStr) Then
+                            businessUnit.Add(tmpStr)
+                        End If
+
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+        End With
+
 
 
         With wsName4

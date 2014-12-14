@@ -9,6 +9,7 @@ Module BMWItOModul
         Ende = 2
         Beschreibung = 3
         Vorgangsklasse = 4
+        Produktlinie = 5
     End Enum
 
     ''' <summary>
@@ -39,7 +40,7 @@ Module BMWItOModul
         Dim tmpStr(20) As String
         Dim completeName As String
         Dim nameSopTyp As String = " "
-        Dim nameBU As String = ""
+        Dim nameProduktlinie As String = ""
 
         Dim startDate As Date, endDate As Date
         Dim startoffset As Long, duration As Long
@@ -65,19 +66,13 @@ Module BMWItOModul
         Dim colVorgangsKlasse As Integer = -1
         Dim firstZeile As Excel.Range
 
-        Dim suchstr(4) As String
+        Dim suchstr(5) As String
         suchstr(ptNamen.Name) = "Name"
         suchstr(ptNamen.Anfang) = "Anfang"
         suchstr(ptNamen.Ende) = "Ende"
         suchstr(ptNamen.Beschreibung) = "Beschreibung"
         suchstr(ptNamen.Vorgangsklasse) = "Vorgangsklasse"
-
-        Dim productLine(4) As String
-        productLine(0) = "LG"
-        productLine(1) = "LI"
-        productLine(2) = "LK"
-        productLine(3) = "LR"
-        productLine(4) = "LU"
+        suchstr(ptNamen.Produktlinie) = "Spalte A"
 
 
         zeile = 2
@@ -280,14 +275,31 @@ Module BMWItOModul
 
                             Try
                                 itemName = CStr(CType(.Cells(curZeile, colName), Excel.Range).Value)
+
+
+                                If itemName.Trim = "Projektphasen" Then
+                                    Try
+                                        Dim tmpBU As String = CStr(CType(.Cells(curZeile, colName), Excel.Range).Value).Trim
+                                        If tmpBU.Length > 0 Then
+                                            If businessUnit.Contains(tmpBU) Then
+                                                hproj.businessUnit = tmpBU
+                                                CType(activeWSListe.Cells(curZeile, protocolColumn), Excel.Range).Value = _
+                                                "Wert für Business Unit erkannt: " & tmpBU
+                                            End If
+                                        End If
+                                    Catch ex1 As Exception
+
+                                    End Try
+                                End If
+
                                 ' jetzt prüfen, ob es sich um ein grundsätzlich zu ignorierendes Element handelt .. 
-                                'If itemName.Trim = "Projektphasen" Then
-                                '    CType(activeWSListe.Cells(curZeile, protocolColumn), Excel.Range).Value = _
-                                '                "Phase wird ignoriert: " & itemName.Trim
-                                '    ok = False
-                                'Else
-                                '    ok = True
-                                'End If
+                                If itemName.Trim = "Monate vor Serie" Then
+                                    CType(activeWSListe.Cells(curZeile, protocolColumn), Excel.Range).Value = _
+                                                "Phase wird ignoriert: " & itemName.Trim
+                                    ok = False
+                                Else
+                                    ok = True
+                                End If
 
                             Catch ex As Exception
                                 itemName = ""

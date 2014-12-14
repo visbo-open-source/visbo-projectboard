@@ -118,6 +118,11 @@ Public Module Module1
     Public Const summentitel11 As String = "Details zur Unter-Auslastung"
     Public Const maxProjektdauer As Integer = 60
 
+
+    ' Welche Business-Units gibt es ? 
+    Public businessUnit As List(Of String)
+
+
     Public Enum PTbubble
         strategicFit = 0
         depencencies = 1

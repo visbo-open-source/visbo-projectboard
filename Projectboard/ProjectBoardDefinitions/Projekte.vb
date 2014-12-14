@@ -11480,12 +11480,12 @@ Public Module Projekte
                                     End With
 
                                     msNumber = msNumber + 1
-                                    'If numberIt Then
-                                    '    Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung)
+                                    If numberIt Then
+                                        Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung)
 
-                                    'Else
-                                    '    Call defineResultAppearance(hproj, 0, resultShape, cBewertung)
-                                    'End If
+                                    Else
+                                        Call defineResultAppearance(hproj, 0, resultShape, cBewertung)
+                                    End If
 
                                     ' jetzt der Liste der ProjectboardShapes hinzufügen
                                     projectboardShapes.add(resultShape)
@@ -12409,7 +12409,14 @@ Public Module Projekte
         'End With
 
 
+       
+
         With resultShape
+
+            If awinSettings.mppShowAmpel = True Then
+                .Glow.Radius = 5
+                .Glow.Color.RGB = CInt(bewertung.color)
+            End If
 
             'With .Line
             '    '.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
@@ -12466,7 +12473,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-            
+
 
         End With
 

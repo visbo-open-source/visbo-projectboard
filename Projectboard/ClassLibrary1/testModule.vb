@@ -2062,7 +2062,8 @@ Public Module testModule
                                 ' bestimme Legend Drawing Area 
                                 legendAreaTop = legendLineShape.Top + (containerBottom - legendLineShape.Top) * 0.05
                                 'legendAreaTop = legendStartShape.Top + legendStartShape.Height / 2
-                                legendAreaLeft = System.Math.Max(legendStartShape.Left + legendStartShape.Width + 5, calendarLineShape.Left)
+                                'legendAreaLeft = System.Math.Max(legendStartShape.Left + legendStartShape.Width + 5, calendarLineShape.Left)
+                                legendAreaLeft = legendStartShape.Left + legendStartShape.Width + 5
                                 legendAreaRight = System.Math.Min(legendLineShape.Left + legendLineShape.Width, containerRight - 5)
                                 legendAreaBottom = containerBottom - (containerBottom - legendLineShape.Top) * 0.1
 
@@ -7968,7 +7969,7 @@ Public Module testModule
             copiedShape = pptslide.Shapes.Paste()
             With copiedShape(1)
 
-                .TextFrame2.TextRange.Text = "Projekt unbewertet bzw. mit Ampelfarben"
+                .TextFrame2.TextRange.Text = "Projekt-Ampeln"
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor + 4 * (legendMilestoneVorlagenShape.Height + 4)
 
@@ -8008,7 +8009,7 @@ Public Module testModule
             copiedShape = pptslide.Shapes.Paste()
             With copiedShape(1)
 
-                .TextFrame2.TextRange.Text = "Meilenstein unbewertet bzw. mit Ampelfarben"
+                .TextFrame2.TextRange.Text = "Meilenstein-Ampeln"
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor + 4 * (legendMilestoneVorlagenShape.Height + 4)
 

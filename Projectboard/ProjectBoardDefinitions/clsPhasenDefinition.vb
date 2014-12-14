@@ -8,6 +8,9 @@
     ' Name der Phase
     Public Property name As String
 
+    ' Abkürzung, die in Reports für diese Phase verwendet werden soll 
+    Public Property shortName As String
+
 
     'Public Property farbe As Object
     Public Property schwellWert As Integer
@@ -76,6 +79,7 @@
     Public Sub New()
 
         _name = ""
+        _shortName = ""
         _darstellungsKlasse = defaultName
         _schwellWert = 0
 
