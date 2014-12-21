@@ -47,6 +47,29 @@ Public Class clsPhasen
     End Property
 
     ''' <summary>
+    ''' gibt die Abkürzung, den Shortname für den Meilenstein zurück
+    ''' wenn er nicht gefunden wird: "n.a."
+    ''' </summary>
+    ''' <param name="name">Langname Meilenstein</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAbbrev(ByVal name As String) As String
+        Get
+            Dim msAbbrev As String = "n.a."
+
+            'Dim key As String = calcKey(name, belongsTo)
+
+            If AllPhasen.Contains(name) Then
+                msAbbrev = CType(AllPhasen.Item(name), clsPhasenDefinition).shortName
+            End If
+
+            getAbbrev = msAbbrev
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt die Shape Definition für die angegebene Phase zurück
     ''' wenn es die Definition für name nicht gibt, wird die Default Phasen Klasse verwendet   
     ''' </summary>

@@ -123,6 +123,12 @@
     <Compile Include="clsRollenDefinition.vb" />
     <Compile Include="clsShpChart.vb" />
     <Compile Include="clsVerknuepfung.vb" />
+    <Compile Include="frmMppSettings.Designer.vb">
+      <DependentUpon>frmMppSettings.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmMppSettings.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmEarliestLatestStart.Designer.vb">
       <DependentUpon>frmEarliestLatestStart.vb</DependentUpon>
     </Compile>
@@ -247,6 +253,9 @@
   <ItemGroup>
     <EmbeddedResource Include="frmEarliestLatestStart.resx">
       <DependentUpon>frmEarliestLatestStart.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmMppSettings.resx">
+      <DependentUpon>frmMppSettings.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmOptimizeKPI.resx">
       <DependentUpon>frmOptimizeKPI.vb</DependentUpon>

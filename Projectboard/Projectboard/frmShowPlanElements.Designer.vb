@@ -44,6 +44,7 @@ Partial Class frmShowPlanElements
         Me.labelPPTVorlage = New System.Windows.Forms.Label()
         Me.statusLabel = New System.Windows.Forms.Label()
         Me.BackgroundWorker1 = New System.ComponentModel.BackgroundWorker()
+        Me.einstellungen = New System.Windows.Forms.Label()
         CType(Me.pictureZoom, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.pictureRoles, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -65,7 +66,7 @@ Partial Class frmShowPlanElements
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(76, 384)
+        Me.OKButton.Location = New System.Drawing.Point(91, 384)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(75, 23)
         Me.OKButton.TabIndex = 9
@@ -75,7 +76,7 @@ Partial Class frmShowPlanElements
         'AbbrButton
         '
         Me.AbbrButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.AbbrButton.Location = New System.Drawing.Point(201, 384)
+        Me.AbbrButton.Location = New System.Drawing.Point(192, 384)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(75, 23)
         Me.AbbrButton.TabIndex = 10
@@ -252,11 +253,24 @@ Partial Class frmShowPlanElements
         Me.BackgroundWorker1.WorkerReportsProgress = True
         Me.BackgroundWorker1.WorkerSupportsCancellation = True
         '
+        'einstellungen
+        '
+        Me.einstellungen.AutoSize = True
+        Me.einstellungen.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, CType((System.Drawing.FontStyle.Italic Or System.Drawing.FontStyle.Underline), System.Drawing.FontStyle), System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.einstellungen.ForeColor = System.Drawing.SystemColors.MenuHighlight
+        Me.einstellungen.Location = New System.Drawing.Point(289, 389)
+        Me.einstellungen.Name = "einstellungen"
+        Me.einstellungen.Size = New System.Drawing.Size(70, 13)
+        Me.einstellungen.TabIndex = 22
+        Me.einstellungen.Text = "Einstellungen"
+        Me.einstellungen.Visible = False
+        '
         'frmShowPlanElements
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(375, 439)
+        Me.Controls.Add(Me.einstellungen)
         Me.Controls.Add(Me.pictureMilestones)
         Me.Controls.Add(Me.chkbxOneChart)
         Me.Controls.Add(Me.picturePhasen)
@@ -310,4 +324,5 @@ Partial Class frmShowPlanElements
     Friend WithEvents labelPPTVorlage As System.Windows.Forms.Label
     Friend WithEvents statusLabel As System.Windows.Forms.Label
     Friend WithEvents BackgroundWorker1 As System.ComponentModel.BackgroundWorker
+    Friend WithEvents einstellungen As System.Windows.Forms.Label
 End Class

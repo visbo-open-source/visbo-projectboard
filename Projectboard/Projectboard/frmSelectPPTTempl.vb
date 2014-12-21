@@ -151,7 +151,7 @@ Public Class frmSelectPPTTempl
         With awinSettings
             Call createPPTSlidesFromConstellation(vorlagenDateiName, _
                                                   tmpCollection, tmpCollection, tmpCollection, tmpCollection, _
-                                                  .mppShowName, .mppShowProjectLine, .mppShowAmpel, .mppShowDate, .mppStrict, _
+                                                  .mppShowMsName, .mppShowProjectLine, .mppShowAmpel, .mppShowMsDate, .mppStrict, _
                                                   worker, e)
         End With
         

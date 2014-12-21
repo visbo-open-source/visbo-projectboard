@@ -1499,6 +1499,8 @@ Imports System.Drawing
             appInstance.ScreenUpdating = False
 
             With auswahlFormular
+
+                .einstellungen.Visible = True
                 .Text = "Multiprojekt Reports erzeugen"
                 .rdbPhases.Checked = True
 
@@ -2644,32 +2646,32 @@ Imports System.Drawing
 
 
     Public Sub PT6DateTextPressed(control As IRibbonControl, ByRef pressed As Boolean)
-        pressed = awinSettings.mppShowDate
+        pressed = awinSettings.mppShowMsDate
     End Sub
 
 
     Public Sub PT6SetShowDate(Control As IRibbonControl, ByRef pressed As Boolean)
 
         If pressed Then
-            awinSettings.mppShowDate = True
+            awinSettings.mppShowMsDate = True
         Else
-            awinSettings.mppShowDate = False
+            awinSettings.mppShowMsDate = False
         End If
 
     End Sub
 
 
     Public Sub PT6NameTextPressed(control As IRibbonControl, ByRef pressed As Boolean)
-        pressed = awinSettings.mppShowName
+        pressed = awinSettings.mppShowMsName
     End Sub
 
 
     Public Sub PT6SetShowName(Control As IRibbonControl, ByRef pressed As Boolean)
 
         If pressed Then
-            awinSettings.mppShowName = True
+            awinSettings.mppShowMsName = True
         Else
-            awinSettings.mppShowName = False
+            awinSettings.mppShowMsName = False
         End If
 
     End Sub

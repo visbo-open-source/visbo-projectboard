@@ -782,7 +782,7 @@ Public Class frmShowPlanElements
         With awinSettings
             Call createPPTSlidesFromConstellation(vorlagenDateiName, _
                                                   selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
-                                                  .mppShowName, .mppShowProjectLine, .mppShowAmpel, .mppShowDate, .mppStrict, _
+                                                  .mppShowMsName, .mppShowProjectLine, .mppShowAmpel, .mppShowMsDate, .mppStrict, _
                                                   worker, e)
         End With
         
@@ -813,5 +813,13 @@ Public Class frmShowPlanElements
     End Sub
 
     
-   
+    Private Sub einstellungen_Click(sender As Object, e As EventArgs) Handles einstellungen.Click
+
+        Dim mppFrm As New frmMppSettings
+        Dim dialogreturn As DialogResult
+
+        dialogreturn = mppFrm.ShowDialog
+
+
+    End Sub
 End Class

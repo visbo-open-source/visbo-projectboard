@@ -2202,4 +2202,34 @@ Public Module Module1
         inProjektliste = found
 
     End Function
+
+    ''' <summary>
+    ''' übersetzt den im Import File angegebenen String auf die Standard Darstellungsklassen 
+    ''' wenn nicht gemappt werden kann, wird "" zurückgegeben 
+    ''' </summary>
+    ''' <param name="completeText">die Bezeichnung für die Darstellungsklasse aus RPLAN</param>
+    ''' <returns>den Standard Namen</returns>
+    ''' <remarks></remarks>
+    Public Function mapToAppearance(ByVal completeText As String, isMilestone As Boolean) As String
+        Dim ergebnis As String = ""
+        Dim found As Boolean = False
+        Dim index As Integer = 0
+        Dim anzElements As Integer = appearanceDefinitions.Count
+
+
+        Do While Not found And index <= anzElements - 1
+
+            If completeText.Contains(appearanceDefinitions.ElementAt(index).Key) And _
+                    isMilestone = appearanceDefinitions.ElementAt(index).Value.isMilestone Then
+                found = True
+                ergebnis = appearanceDefinitions.ElementAt(index).Key
+            Else
+                index = index + 1
+            End If
+
+        Loop
+
+        mapToAppearance = ergebnis
+
+    End Function
 End Module

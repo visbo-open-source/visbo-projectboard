@@ -270,8 +270,14 @@ Module BMWItOModul
                         Dim ok As Boolean = True
 
                         Dim curZeile As Integer
+                        Dim txtVorgangsKlasse As String
+                        Dim txtAbbrev As String
 
+                        ' hier werden jetzt die einzelnen Zeilen = Phasen oder Meilensteine ausgelesen 
                         For curZeile = anfang To ende
+
+                            txtVorgangsKlasse = ""
+                            txtAbbrev = ""
 
                             Try
                                 itemName = CStr(CType(.Cells(curZeile, colName), Excel.Range).Value)
@@ -308,10 +314,47 @@ Module BMWItOModul
 
                             If ok Then
 
+
                                 pStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
                                 pEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
+
+
                                 startoffset = DateDiff(DateInterval.Day, hproj.startDate, pStartDate)
                                 duration = DateDiff(DateInterval.Day, pStartDate, pEndDate) + 1
+
+
+                                ' jetzt werden vorgangsklasse und Abkürzung rausgelesen 
+                                Try
+
+                                    txtVorgangsKlasse = CStr((CType(.Cells(curZeile, colVorgangsKlasse), Excel.Range).Value)).Trim
+                                    If duration > 1 Then
+                                        txtVorgangsKlasse = mapToAppearance(txtVorgangsKlasse, False)
+                                        CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
+                                                "auf folgende Phasen Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
+                                    Else
+                                        txtVorgangsKlasse = mapToAppearance(txtVorgangsKlasse, True)
+                                        CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
+                                                "auf folgende Meilenstein Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
+                                    End If
+
+
+                                    
+
+                                Catch ex As Exception
+
+                                    CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
+                                                "Fehler bei Abbildung auf Darstellungsklasse ... " & txtVorgangsKlasse.Trim
+
+                                End Try
+
+                                ' jetzt wird die Abkürzung rausgelesen 
+                                Try
+
+                                    txtAbbrev = CStr((CType(.Cells(curZeile, colAbbrev), Excel.Range).Value)).Trim
+
+                                Catch ex As Exception
+
+                                End Try
 
                                 Dim realName As String
 
@@ -362,7 +405,9 @@ Module BMWItOModul
                                             Dim hphase As clsPhasenDefinition
                                             hphase = New clsPhasenDefinition
 
-                                            hphase.farbe = CLng(CType(.Cells(curZeile, 1), Excel.Range).Interior.Color)
+                                            'hphase.farbe = CLng(CType(.Cells(curZeile, 1), Excel.Range).Interior.Color)
+                                            hphase.darstellungsKlasse = txtVorgangsKlasse
+                                            hphase.shortName = txtAbbrev
                                             hphase.name = realName
                                             hphase.UID = phaseIX
                                             phaseIX = phaseIX + 1
@@ -466,8 +511,8 @@ Module BMWItOModul
                                                 With hMilestone
                                                     .name = realName
                                                     .belongsTo = parentPhaseName
-                                                    .shortName = ""
-                                                    .darstellungsKlasse = ""
+                                                    .shortName = txtAbbrev
+                                                    .darstellungsKlasse = txtVorgangsKlasse
                                                     .UID = milestoneIX
                                                 End With
 
@@ -496,7 +541,7 @@ Module BMWItOModul
 
                                     End If
 
-                                    
+
 
 
 

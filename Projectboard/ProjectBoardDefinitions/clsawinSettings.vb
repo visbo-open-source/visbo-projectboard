@@ -75,11 +75,14 @@
     ' Settings für Multiprojekt-Sichten
     Property mppStrict As Boolean
     Property mppFullyContained As Boolean
-    Property mppShowDate As Boolean
-    Property mppShowName As Boolean
+    Property mppShowMsDate As Boolean
+    Property mppShowMsName As Boolean
+    Property mppShowPhDate As Boolean
+    Property mppShowPhName As Boolean
     Property mppShowAmpel As Boolean
     Property mppShowProjectLine As Boolean
     Property mppVertikalesRaster As Boolean
+    Property mppShowLegend As Boolean
 
 
     Sub New()
@@ -138,11 +141,14 @@
         ' Settings für Multiprojekt Sichten 
         _mppStrict = False
         _mppFullyContained = True
-        _mppShowDate = False
-        _mppShowName = True
+        _mppShowMsDate = False
+        _mppShowMsName = True
+        _mppShowPhDate = False
+        _mppShowPhName = True
         _mppShowAmpel = False
         _mppShowProjectLine = True
         _mppVertikalesRaster = False
+        _mppShowLegend = True
 
 
     End Sub
