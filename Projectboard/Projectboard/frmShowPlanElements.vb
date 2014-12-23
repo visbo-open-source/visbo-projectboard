@@ -782,8 +782,8 @@ Public Class frmShowPlanElements
         With awinSettings
             Call createPPTSlidesFromConstellation(vorlagenDateiName, _
                                                   selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
-                                                  .mppShowMsName, .mppShowProjectLine, .mppShowAmpel, .mppShowMsDate, .mppStrict, _
                                                   worker, e)
+
         End With
         
 
