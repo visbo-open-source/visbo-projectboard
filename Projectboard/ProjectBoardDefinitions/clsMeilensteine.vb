@@ -4,7 +4,7 @@ Public Class clsMeilensteine
     Private allMilestones As SortedList(Of String, clsMeilensteinDefinition)
 
     ''' <summary>
-    ''' fügt der nach key=name+belongsTO sortierten Liste einen weiteren Eintrag hinzu 
+    ''' fügt der nach key=name sortierten Liste einen weiteren Eintrag hinzu 
     ''' </summary>
     ''' <param name="milestone"></param>
     ''' <remarks></remarks>
@@ -14,7 +14,7 @@ Public Class clsMeilensteine
         Dim key As String = milestone.name
 
         If allMilestones.ContainsKey(key) Then
-            Throw New ArgumentException("Identifier " & milestone.UID.ToString & _
+            Throw New ArgumentException("Identifier " & key & _
                                         " existiert bereits!")
         Else
             allMilestones.Add(key, milestone)

@@ -299,9 +299,9 @@ Module BMWItOModul
                                 End If
 
                                 ' jetzt prüfen, ob es sich um ein grundsätzlich zu ignorierendes Element handelt .. 
-                                If itemName.Trim = "Monate vor Serie" Then
+                                If phaseMappings.tobeIgnored(itemName) Or milestoneMappings.tobeIgnored(itemName) Then
                                     CType(activeWSListe.Cells(curZeile, protocolColumn), Excel.Range).Value = _
-                                                "Phase wird ignoriert: " & itemName.Trim
+                                                    "Element wird ignoriert: " & itemName.Trim
                                     ok = False
                                 Else
                                     ok = True
@@ -381,9 +381,14 @@ Module BMWItOModul
                                         Dim parentPhaseName As String = pHierarchy.getPhaseBeforeLevel(indentLevel).name
 
                                         ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
-
                                         Try
-                                            realName = phaseMappings.mapToRealName(parentPhaseName, itemName)
+
+                                            If Not PhaseDefinitions.Contains(itemName) Then
+                                                realName = phaseMappings.mapToRealName(parentPhaseName, itemName)
+                                            Else
+                                                realName = itemName.Trim
+                                            End If
+
                                         Catch ex As Exception
                                             realName = itemName.Trim
                                         End Try
@@ -394,13 +399,12 @@ Module BMWItOModul
                                                     itemName.Trim & " --> " & realName.Trim
                                         End If
 
-                                        cphase = New clsPhase(parent:=hproj)
-                                        cphase.name = realName
 
                                         If PhaseDefinitions.Contains(realName) Then
                                             ' nichts tun 
                                         Else
                                             ' in die Phase-Definitions aufnehmen 
+
 
                                             Dim hphase As clsPhasenDefinition
                                             hphase = New clsPhasenDefinition
@@ -419,6 +423,9 @@ Module BMWItOModul
                                             End Try
 
                                         End If
+
+                                        cphase = New clsPhase(parent:=hproj)
+                                        cphase.name = realName
 
                                         cphase.changeStartandDauer(startoffset, duration)
 
@@ -481,7 +488,12 @@ Module BMWItOModul
                                             ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
 
                                             Try
-                                                realName = milestoneMappings.mapToRealName(parentPhaseName, itemName)
+                                                If Not MilestoneDefinitions.Contains(itemName) Then
+                                                    realName = milestoneMappings.mapToRealName(parentPhaseName, itemName)
+                                                Else
+                                                    realName = itemName
+                                                End If
+
                                             Catch ex As Exception
                                                 realName = itemName.Trim
                                             End Try

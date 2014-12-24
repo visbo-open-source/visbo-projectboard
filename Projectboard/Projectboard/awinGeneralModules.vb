@@ -372,7 +372,7 @@ Public Module awinGeneralModules
         ' With listOfWorkSheets(arrWsNames(4))
 
 
-        ' hier muss jetzt das File Projekt Tafel Definitions.xlsx aufgemacht werden ...
+        ' hier muss jetzt das Customization File aufgemacht werden ...
         Try
             appInstance.Workbooks.Open(awinPath & customizationFile)
             myCustomizationFile = appInstance.ActiveWorkbook.Name
@@ -3969,7 +3969,7 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
-    ''' liest die Name MApping Definition der Phasen bzw Meilensteine ein
+    ''' liest die Name-Mapping Definitionen der Phasen bzw Meilensteine ein
     ''' </summary>
     ''' <param name="ws">Worksheet, in dem die Mappings stehen </param>
     ''' <param name="mappings">Klassen-Instanz, die die Mappings aufnimmt</param>
@@ -3980,7 +3980,7 @@ Public Module awinGeneralModules
 
         With ws
 
-            ' auslesen der Phasen-Synonyme in Spalte 1, beginnend mit Zeile 3
+            ' auslesen der Synonyme und Regular Expressions in Spalte 1, beginnend mit Zeile 3
             Dim ok As Boolean = False
             zeile = 3
             spalte = 1
@@ -3998,10 +3998,23 @@ Public Module awinGeneralModules
                 syn = CStr(.Cells(zeile, spalte).Value).Trim
                 stdName = CStr(.Cells(zeile, spalte).offset(0, 1).Value).Trim
 
+                Dim regExpression As String = ""
+                Dim isRegExpression As Boolean = False
+
+                If syn.StartsWith("[") And syn.EndsWith("]") Then
+                    isRegExpression = True
+                    For i As Integer = 1 To syn.Length - 2
+                        regExpression = regExpression & syn.Chars(i)
+                    Next
+                End If
 
                 Try
+                    If isRegExpression Then
+                        mappings.addRegExpressName(regExpression, stdName)
+                    Else
+                        mappings.addSynonym(syn, stdName)
+                    End If
 
-                    mappings.addSynonym(syn, stdName)
 
                 Catch ex As Exception
 
@@ -4021,45 +4034,10 @@ Public Module awinGeneralModules
             Loop
 
 
-            ' auslesen der Reduced Names in Spalte 4, beginnend mit Zeile 3
+            ' auslesen der Hierarchies Namens in Spalte 4, beginnend mit Zeile 3
             ok = False
             zeile = 3
             spalte = 4
-            If Not IsNothing(CType(.Cells(zeile, spalte), Excel.Range).Value) Then
-                If CStr(.Cells(zeile, spalte).Value).Trim.Length > 0 Then
-                    ok = True
-                End If
-            End If
-
-            Dim coreName As String
-            Do While ok
-
-                coreName = CStr(.Cells(zeile, spalte).Value).Trim
-
-                Try
-
-                    mappings.addcoreName(coreName)
-
-                Catch ex As Exception
-
-                End Try
-
-
-                zeile = zeile + 1
-                ok = False
-
-                If Not IsNothing(CType(.Cells(zeile, spalte), Excel.Range).Value) Then
-                    If CStr(.Cells(zeile, spalte).Value).Trim.Length > 0 Then
-                        ok = True
-                    End If
-                End If
-
-            Loop
-
-            ' auslesen der Reduced Names in Spalte 4, beginnend mit Zeile 3
-            ok = False
-            zeile = 3
-            spalte = 6
             If Not IsNothing(CType(.Cells(zeile, spalte), Excel.Range).Value) Then
                 If CStr(.Cells(zeile, spalte).Value).Trim.Length > 0 Then
                     ok = True
@@ -4091,7 +4069,40 @@ Public Module awinGeneralModules
 
             Loop
 
+            ' auslesen der To-Ignore-Names in Spalte 6, beginnend mit Zeile 3
+            ok = False
+            zeile = 3
+            spalte = 6
+            If Not IsNothing(CType(.Cells(zeile, spalte), Excel.Range).Value) Then
+                If CStr(.Cells(zeile, spalte).Value).Trim.Length > 0 Then
+                    ok = True
+                End If
+            End If
 
+            Dim ignoreName As String
+            Do While ok
+
+                ignoreName = CStr(.Cells(zeile, spalte).Value).Trim
+
+                Try
+
+                    mappings.addIgnoreName(ignoreName)
+
+                Catch ex As Exception
+
+                End Try
+
+
+                zeile = zeile + 1
+                ok = False
+
+                If Not IsNothing(CType(.Cells(zeile, spalte), Excel.Range).Value) Then
+                    If CStr(.Cells(zeile, spalte).Value).Trim.Length > 0 Then
+                        ok = True
+                    End If
+                End If
+
+            Loop
 
         End With
 
