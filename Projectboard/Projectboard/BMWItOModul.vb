@@ -19,7 +19,7 @@ Module BMWItOModul
     ''' <param name="myCollection">gibt die Namen der importierten Fahrzeug Projekt zurück</param>
     ''' <remarks></remarks>
     ''' 
-    Public Sub bmwImportProjekteITO15(ByRef myCollection As Collection)
+    Public Sub bmwImportProjekteITO15(ByRef myCollection As Collection, ByVal isVorlage As Boolean)
 
         Dim phaseHierarhy(9) As String
         Dim currentHierarchy As Integer = 0
@@ -49,6 +49,9 @@ Module BMWItOModul
         Dim itemName As String
         Dim zufall As New Random(10)
         Dim protocolColumn As Integer = 20
+
+        Dim schriftGroesse As Integer
+        Dim schriftfarbe As Long
 
 
         Dim milestoneIX As Integer = MilestoneDefinitions.Count + 1
@@ -116,6 +119,10 @@ Module BMWItOModul
 
                 Try
                     projektFarbe = CType(activeWSListe.Cells(zeile, 1), Excel.Range).Interior.Color
+                    ' das Folgende wird nur für die Projekt-Vorlagen benötigt (isVorlage = true) 
+                    schriftfarbe = CLng(CType(activeWSListe.Cells(zeile, 1), Excel.Range).Font.Color)
+                    schriftGroesse = CInt(CType(activeWSListe.Cells(zeile, 1), Excel.Range).Font.Size)
+
                 Catch ex As Exception
                     projektFarbe = CType(activeWSListe.Cells(zeile, 1), Excel.Range).Interior.ColorIndex
                 End Try
@@ -164,22 +171,21 @@ Module BMWItOModul
                         pName = tmpStr(0).Trim
                     End If
 
-
-                    If tmpStr(0).Trim.EndsWith("eA") Then
-                        vorlagenName = "enge Ableitung"
-                    ElseIf tmpStr(0).Trim.EndsWith("wA") Then
-                        vorlagenName = "weite Ableitung"
-                    ElseIf tmpStr(0).Trim.EndsWith("E") Then
-                        vorlagenName = "Erstanläufer"
+                    If Not isVorlage Then
+                        If tmpStr(0).Trim.EndsWith("eA") Then
+                            vorlagenName = "enge Ableitung"
+                        ElseIf tmpStr(0).Trim.EndsWith("wA") Then
+                            vorlagenName = "weite Ableitung"
+                        ElseIf tmpStr(0).Trim.EndsWith("E") Then
+                            vorlagenName = "Erstanläufer"
+                        Else
+                            vorlagenName = ""
+                        End If
                     Else
-                        vorlagenName = "Erstanläufer"
+                        vorlagenName = ""
                     End If
+                    
 
-
-                    If tmpStr.Length > 1 Then
-                        ' hier könnte ggf die Produktlinie rausgelesen werden 
-
-                    End If
 
                     ' prüfen, ob das Projekt überhaupt vollständig im Kalender liegt 
                     ' wenn nein, dann nicht importieren 
@@ -194,21 +200,26 @@ Module BMWItOModul
                         hproj = New clsProjekt
 
                         Try
-                            vproj = Projektvorlagen.getProject(vorlagenName)
+                            If isVorlage Then
+                                hproj.farbe = projektFarbe
+                                hproj.Schrift = schriftGroesse
+                                hproj.Schriftfarbe = schriftfarbe
+                            Else
+                                vproj = Projektvorlagen.getProject(vorlagenName)
+                                hproj.farbe = vproj.farbe
+                                hproj.Schrift = vproj.Schrift
+                                hproj.Schriftfarbe = vproj.Schriftfarbe
+                                hproj.name = ""
+                                hproj.VorlagenName = vorlagenName
+                                hproj.earliestStart = vproj.earliestStart
+                                hproj.latestStart = vproj.latestStart
+                                hproj.ampelStatus = PTfarbe.none
+                                hproj.leadPerson = ""
+                                hproj.businessUnit = ""
+                            End If
 
 
-                            hproj.farbe = vproj.farbe
-                            hproj.Schrift = vproj.Schrift
-                            hproj.Schriftfarbe = vproj.Schriftfarbe
-                            hproj.name = ""
-                            hproj.VorlagenName = vorlagenName
-                            hproj.earliestStart = vproj.earliestStart
-                            hproj.latestStart = vproj.latestStart
-                            hproj.ampelStatus = PTfarbe.none
-                            hproj.leadPerson = ""
-                            hproj.businessUnit = ""
-                            'hproj.ampelStatus = farbKennung
-                            'hproj.leadPerson = responsible
+
 
                         Catch ex As Exception
                             Throw New Exception("es gibt keine entsprechende Vorlage ..  " & vbLf & ex.Message)
@@ -338,7 +349,7 @@ Module BMWItOModul
                                     End If
 
 
-                                    
+
 
                                 Catch ex As Exception
 
@@ -569,6 +580,14 @@ Module BMWItOModul
 
 
                         Next
+
+                        '' wenn es sich um eine Vorlage handelt: 
+
+                        'If awinSettings.importTyp = 2 Then
+                        '    hproj.farbe = 0
+                        '    hproj.Schrift = schriftGroesse
+                        '    hproj.Schriftfarbe = schriftfarbe
+                        'End If
 
 
                         ' jetzt muss das Projekt eingetragen werden 

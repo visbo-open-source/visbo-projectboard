@@ -85,6 +85,8 @@
     Property mppShowLegend As Boolean
 
 
+    Property importTyp As Integer
+
     Sub New()
 
         ' Chart Settings
@@ -149,6 +151,7 @@
         _mppShowProjectLine = True
         _mppVertikalesRaster = False
         _mppShowLegend = True
+        _importTyp = 1
 
 
     End Sub

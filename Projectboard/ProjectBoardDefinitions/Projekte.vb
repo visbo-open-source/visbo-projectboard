@@ -12481,6 +12481,8 @@ Public Module Projekte
 
     Public Sub defineShapeAppearance(ByRef myproject As clsProjekt, ByRef projectShape As Excel.Shape)
         Dim pcolor As Object = XlRgbColor.rgbAqua
+        Dim schriftFarbe As Long
+        Dim schriftGroesse As Integer
         Dim status As String = ""
         Dim pMarge As Double
         Dim pname As String
@@ -12505,6 +12507,8 @@ Public Module Projekte
         Try
             With myproject
                 pcolor = .farbe
+                schriftFarbe = CLng(.Schriftfarbe)
+                schriftGroesse = .Schrift
                 status = .Status
                 pMarge = .ProjectMarge
                 pname = .name
@@ -12574,6 +12578,8 @@ Public Module Projekte
                 With .TextFrame2
                     .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
                     .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
+                    .TextRange.Font.Size = schriftGroesse
+                    .TextRange.Font.Fill.ForeColor.RGB = CInt(schriftFarbe)
                 End With
 
                 If roentgenBlick.isOn Then

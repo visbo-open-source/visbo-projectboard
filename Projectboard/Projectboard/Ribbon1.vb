@@ -1967,7 +1967,7 @@ Imports System.Drawing
                 ' alle Import Projekte erstmal löschen
                 ImportProjekte.Clear()
                 'Call bmwImportProjektInventur(myCollection)
-                Call bmwImportProjekteITO15(myCollection)
+                Call bmwImportProjekteITO15(myCollection, False)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
                 Call importProjekteEintragen(myCollection, importDate)
 

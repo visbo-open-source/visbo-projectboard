@@ -770,6 +770,14 @@ Public Module awinGeneralModules
 
             historicDate = StartofCalendar
 
+            ' Import Typ regelt, um welche DateiFormate es sich bei dem Import handelt
+            ' 1: Standard
+            ' 2: BMW Rplan Export in Excel 
+            Try
+                awinSettings.importTyp = CInt(.Range("Import_Typ").Value)
+            Catch ex As Exception
+                awinSettings.importTyp = 1
+            End Try
 
             '
             ' ende Auslesen Einstellungen in Sheet "Einstellungen"
@@ -827,18 +835,72 @@ Public Module awinGeneralModules
         Dim dirName As String = awinPath & projektVorlagenOrdner
         Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
 
+
         For i = 1 To listOfFiles.Count
             dateiName = listOfFiles.Item(i - 1)
 
             Try
-                appInstance.Workbooks.Open(dateiName)
-                Dim hproj As New clsProjektvorlage
-                Call awinImportProject (Nothing, hproj, True, Date.Now)
-                ' Auslesen der Projektvorlage wird wie das Importieren eines Projekts behandelt, nur am Ende in die Liste der Projektvorlagen eingehängt
-                ' Kennzeichen für Projektvorlage ist der 3.Parameter im Aufruf (isTemplate)
 
-                Projektvorlagen.Add(hproj)
+                appInstance.Workbooks.Open(dateiName)
+
+                If awinSettings.importTyp = 1 Then
+
+
+
+                    Dim projVorlage As New clsProjektvorlage
+                    Call awinImportProject(Nothing, projVorlage, True, Date.Now)
+                    ' Auslesen der Projektvorlage wird wie das Importieren eines Projekts behandelt, nur am Ende in die Liste der Projektvorlagen eingehängt
+                    ' Kennzeichen für Projektvorlage ist der 3.Parameter im Aufruf (isTemplate)
+
+                    Projektvorlagen.Add(projVorlage)
+
+
+                ElseIf awinSettings.importTyp = 2 Then
+
+                    ' hier muss die Datei ausgelesen werden
+                    Dim myCollection As New Collection
+                    Dim ok As Boolean
+                    Dim hproj As clsProjekt = Nothing
+
+                    Call bmwImportProjekteITO15(myCollection, True)
+
+                    ' jetzt muss für jeden Eintrag in ImportProjekte eine Vorlage erstellt werden  
+                    For Each pName As String In myCollection
+
+                        ok = True
+
+                        Try
+
+                            hproj = ImportProjekte.getProject(pName)
+
+                        Catch ex As Exception
+                            Call MsgBox("Projekt " & pName & " ist kein gültiges Projekt ... es wird ignoriert ...")
+                            ok = False
+                        End Try
+
+                        If ok Then
+
+                            ' hier müssen die Werte für die Vorlage übergeben werden.
+                            Dim projVorlage As New clsProjektvorlage
+                            projVorlage.VorlagenName = hproj.name
+                            projVorlage.Schrift = hproj.Schrift
+                            projVorlage.Schriftfarbe = hproj.Schriftfarbe
+                            projVorlage.farbe = hproj.farbe
+                            projVorlage.earliestStart = -6
+                            projVorlage.latestStart = 6
+                            projVorlage.AllPhases = hproj.AllPhases
+
+                            Projektvorlagen.Add(projVorlage)
+
+                        End If
+
+                    Next
+
+
+                End If
+
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
