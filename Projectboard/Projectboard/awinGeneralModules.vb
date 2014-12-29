@@ -27,19 +27,19 @@ Public Module awinGeneralModules
         Dim lastrow As Excel.Range
 
         'appInstance.ScreenUpdating = False
-        'appInstance.EnableEvents = False
+        appInstance.EnableEvents = False
 
 
 
         ' hier muss jetzt das File Projekt Tafel Definitions.xlsx aufgemacht werden ...
         ' das File 
-        'Try
-        '    appInstance.Workbooks.Open(awinPath & customizationFile)
+        Try
+            appInstance.Workbooks.Open(awinPath & customizationFile)
 
-        'Catch ex As Exception
-        '    Call MsgBox("Customization File nicht gefunden - Abbruch")
-        '    Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
-        'End Try
+        Catch ex As Exception
+            Call MsgBox("Customization File nicht gefunden - Abbruch")
+            Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
+        End Try
 
         appInstance.Workbooks(myCustomizationFile).Activate()
         Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
@@ -209,7 +209,7 @@ Public Module awinGeneralModules
 
         appInstance.ActiveWorkbook.Close(SaveChanges:=True)
         'appInstance.ScreenUpdating = True
-        'appInstance.EnableEvents = True
+        appInstance.EnableEvents = True
 
     End Sub
 
@@ -237,7 +237,6 @@ Public Module awinGeneralModules
         Dim dateiName As String
         Dim tmpStr As String
         Dim d As Integer
-        Dim appDefinition As clsAppearance
 
 
 
@@ -333,6 +332,12 @@ Public Module awinGeneralModules
         appInstance.ScreenUpdating = False
 
 
+        ' um dahinter temporär die Darstellungsklassen kopieren zu können  
+        Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+        
+
         With appInstance.ActiveWindow
 
 
@@ -388,44 +393,50 @@ Public Module awinGeneralModules
 
         Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
+        
+
+
+
         Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
+        Call aufbauenAppearanceDefinitions(wsName7810)
 
         ' hier muss jetzt das Worksheet Darstellungsklassen aufgemacht werden 
         ' das ist in arrwsnames(7) abgelegt 
-        With wsName7810
+        ' das wird jetzt durch die obige Sub erledigt 
+        'With wsName7810
 
-            For Each shp As Excel.Shape In .Shapes
-                appDefinition = New clsAppearance
-                With appDefinition
+        '    For Each shp As Excel.Shape In .Shapes
+        '        appDefinition = New clsAppearance
+        '        With appDefinition
 
-                    If shp.Title <> "" Then
+        '            If shp.Title <> "" Then
 
-                        .name = shp.Title
-                        If shp.AlternativeText = "1" Then
-                            .isMilestone = True
-                        Else
-                            .isMilestone = False
-                        End If
-                        .form = shp
+        '                .name = shp.Title
+        '                If shp.AlternativeText = "1" Then
+        '                    .isMilestone = True
+        '                Else
+        '                    .isMilestone = False
+        '                End If
+        '                .form = shp
 
-                        Try
-                            appearanceDefinitions.Add(.name, appDefinition)
-                        Catch ex As Exception
-                            Call MsgBox("Mehrfach Definition in den Darstellungsklassen ... " & vbLf & _
-                                         "bitte korrigieren")
-                        End Try
-
-
-                    End If
-
-                End With
+        '                Try
+        '                    appearanceDefinitions.Add(.name, appDefinition)
+        '                Catch ex As Exception
+        '                    Call MsgBox("Mehrfach Definition in den Darstellungsklassen ... " & vbLf & _
+        '                                 "bitte korrigieren")
+        '                End Try
 
 
-            Next
+        '            End If
 
-        End With
+        '        End With
+
+
+        '    Next
+
+        'End With
 
         ' hier werden jetzt die Business Unit Informationen ausgelesen 
         businessUnit = New List(Of String)
@@ -804,13 +815,34 @@ Public Module awinGeneralModules
         ' hier müssen die Shapes noch kopiert werden ...
         ' 24.11.14
 
+
+
+
         ' da die Shapes in der customization sind, darf das Excel File nicht geschlossen werden 
         ' sonst sind die appearanceDefinitions.Shape Werte alle weg
+
+        ' jetzt muss die Seite mit den Shapes kopiert werden 
+        appInstance.EnableEvents = False
+        CType(appInstance.Worksheets(arrWsNames(7)), _
+        Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
 
         ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
         'appInstance.EnableEvents = False
         'appInstance.ActiveWorkbook.Close(SaveChanges:=False) ' ur: 6.5.2014 savechanges hinzugefügt
-        'appInstance.EnableEvents = True
+        appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False) ' ur: 6.5.2014 savechanges hinzugefügt
+        appInstance.EnableEvents = True
+
+
+        ' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
+        appearanceDefinitions.Clear()
+
+        wsName7810 = CType(appInstance.Worksheets(arrWsNames(7)), _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+        Call aufbauenAppearanceDefinitions(wsName7810)
+
+
+
 
         showtimezone = True
 
@@ -1071,10 +1103,7 @@ Public Module awinGeneralModules
         End Try
 
 
-
-
-        ' hier werden die neuen bzw. geänderten Projekte in ImportProjekte eingelesen ...
-        'Call awinImportProjects()
+        projectBoardSheet.Activate()
         appInstance.EnableEvents = True
 
 
@@ -4165,6 +4194,51 @@ Public Module awinGeneralModules
                 End If
 
             Loop
+
+        End With
+
+    End Sub
+
+    ''' <summary>
+    ''' baut die Liste der Darstellungsklassen auf 
+    ''' übergeben wird das Excel Worksheet 
+    ''' </summary>
+    ''' <param name="ws"></param>
+    ''' <remarks></remarks>
+    Friend Sub aufbauenAppearanceDefinitions(ByVal ws As Excel.Worksheet)
+
+        Dim appDefinition As clsAppearance
+
+        With ws
+
+            For Each shp As Excel.Shape In .Shapes
+                appDefinition = New clsAppearance
+                With appDefinition
+
+                    If shp.Title <> "" Then
+
+                        .name = shp.Title
+                        If shp.AlternativeText = "1" Then
+                            .isMilestone = True
+                        Else
+                            .isMilestone = False
+                        End If
+                        .form = shp
+
+                        Try
+                            appearanceDefinitions.Add(.name, appDefinition)
+                        Catch ex As Exception
+                            Call MsgBox("Mehrfach Definition in den Darstellungsklassen ... " & vbLf & _
+                                         "bitte korrigieren")
+                        End Try
+
+
+                    End If
+
+                End With
+
+
+            Next
 
         End With
 

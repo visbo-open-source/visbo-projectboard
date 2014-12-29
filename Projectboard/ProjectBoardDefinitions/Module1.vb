@@ -2216,10 +2216,10 @@ Public Module Module1
         Dim index As Integer = 0
         Dim anzElements As Integer = appearanceDefinitions.Count
 
-
+        
         Do While Not found And index <= anzElements - 1
 
-            If completeText.Contains(appearanceDefinitions.ElementAt(index).Key) And _
+            If completeText.Contains(appearanceDefinitions.ElementAt(index).Key.Trim) And _
                     isMilestone = appearanceDefinitions.ElementAt(index).Value.isMilestone Then
                 found = True
                 ergebnis = appearanceDefinitions.ElementAt(index).Key

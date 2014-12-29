@@ -241,17 +241,14 @@
           <checkBox id="PT6G1B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
         </group>
         <group id ="PT6G2" label ="Zeitraum">
-          <!--<toggleButton id="PT5G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>-->
           <checkBox id="PT6G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>
           <button id="Pt6G2B2" label="Zeitraum ändern" onAction="PT5changeTimeSpan" />
         </group>
         <group id ="PT6G3" label ="Symbole, Charts und Grafiken löschen">
-          <!--<toggleButton id="PT5G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>-->
           <button id="Pt6G3B0" label="Meilensteine, Phasen, Stati"  onAction="Tom2G2M5B3NoShowSymbols" />
           <button id="Pt6G3B1" label="Charts"  onAction="PT6DeleteCharts" />
         </group>
         <!--<group id ="PT6G4" label ="Multiprojekt Sichten">
-          --><!--<toggleButton id="PT5G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>--><!--
           <checkBox id="PT6G4B1" label="Strikte Zeitraum-Orientierung" getPressed="PT6StriktPressed" onAction ="PT6SetStrict"/>
           <checkBox id="PT6G4B2" label="Phasen komplett darstellen" getPressed="PT6fullyContainedPressed" onAction ="PT6SetfullyContained"/>
           <checkBox id="PT6G4B3" label="Meilenstein Datum anzeigen" getPressed="PT6DateTextPressed" onAction ="PT6SetShowDate"/>
@@ -259,8 +256,8 @@
           <checkBox id="PT6G4B5" label="Projekt-Linie anzeigen" getPressed="PT6ProjectLinePressed" onAction ="PT6SetShowProjectLine"/>
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
-        </group>-->
-        <!--<group id ="PT6G4" label ="Testfunktionen">
+        </group>
+        <group id ="PT6G4" label ="Testfunktionen">
           <button id="Pt6G4B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
           <button id="Pt6G4B1" label="Aufbau Histories"  onAction="PTTestFunktion2" />
         </group>-->

@@ -11347,6 +11347,7 @@ Public Module Projekte
         Dim onlyFew As Boolean
         Dim projectShape As Excel.Shape
         Dim shapeGruppe As Excel.ShapeRange
+        Dim newShape As Excel.ShapeRange = Nothing
         Dim listOFShapes As New Collection
         Dim found As Boolean = True
         Dim showOnlyWithinTimeFrame As Boolean
@@ -11466,18 +11467,42 @@ Public Module Projekte
                                     If report Then
                                         top = top - boxWidth
                                     End If
-                                    'resultShape = .Shapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeDiamond, _
+
+                                    ' Alt - Start 
+                                    'resultShape = .Shapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
                                     '                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                                    resultShape = .Shapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
-                                                                    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                                    vorlagenShape.PickUp()
-                                    resultShape.Apply()
+                                    'vorlagenShape.PickUp()
+                                    'resultShape.Apply()
+
+                                    'With resultShape
+                                    '    .Name = shpName
+                                    '    .Title = cResult.name
+                                    '    .AlternativeText = CInt(PTshty.milestoneN).ToString
+                                    'End With
+                                    ' Alt - Ende
+
+
+                                    ' neu Start 
+                                    vorlagenShape.Copy()
+                                    Dim ws As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+
+
+                                    ws.Paste()
+                                    Dim ix As Integer = ws.Shapes.Count
+                                    resultShape = ws.Shapes.Item(ix)
 
                                     With resultShape
+                                        .Left = CSng(left)
+                                        .Top = CSng(top)
+                                        .Width = CSng(width)
+                                        .Height = CSng(height)
+
                                         .Name = shpName
                                         .Title = cResult.name
                                         .AlternativeText = CInt(PTshty.milestoneN).ToString
                                     End With
+
+                                    ' neu Ende
 
                                     msNumber = msNumber + 1
                                     If numberIt Then

@@ -2612,84 +2612,84 @@ Imports System.Drawing
     End Sub
 
 
-    Public Sub PT6StriktPressed(control As IRibbonControl, ByRef pressed As Boolean)
+    'Public Sub PT6StriktPressed(control As IRibbonControl, ByRef pressed As Boolean)
 
-        pressed = awinSettings.mppStrict
+    '    pressed = awinSettings.mppStrict
 
-    End Sub
+    'End Sub
 
-    Public Sub PT6SetStrict(control As IRibbonControl, ByRef pressed As Boolean)
+    'Public Sub PT6SetStrict(control As IRibbonControl, ByRef pressed As Boolean)
 
-        If pressed Then
-            awinSettings.mppStrict = True
-        Else
-            awinSettings.mppStrict = False
-        End If
+    '    If pressed Then
+    '        awinSettings.mppStrict = True
+    '    Else
+    '        awinSettings.mppStrict = False
+    '    End If
 
-    End Sub
+    'End Sub
 
-    Public Sub PT6fullyContainedPressed(control As IRibbonControl, ByRef pressed As Boolean)
+    'Public Sub PT6fullyContainedPressed(control As IRibbonControl, ByRef pressed As Boolean)
 
-        pressed = awinSettings.mppFullyContained
+    '    pressed = awinSettings.mppFullyContained
 
-    End Sub
+    'End Sub
 
-    Public Sub PT6SetfullyContained(control As IRibbonControl, ByRef pressed As Boolean)
+    'Public Sub PT6SetfullyContained(control As IRibbonControl, ByRef pressed As Boolean)
 
-        If pressed Then
-            awinSettings.mppFullyContained = True
-        Else
-            awinSettings.mppFullyContained = False
-        End If
+    '    If pressed Then
+    '        awinSettings.mppFullyContained = True
+    '    Else
+    '        awinSettings.mppFullyContained = False
+    '    End If
 
-    End Sub
-
-
-    Public Sub PT6DateTextPressed(control As IRibbonControl, ByRef pressed As Boolean)
-        pressed = awinSettings.mppShowMsDate
-    End Sub
+    'End Sub
 
 
-    Public Sub PT6SetShowDate(Control As IRibbonControl, ByRef pressed As Boolean)
-
-        If pressed Then
-            awinSettings.mppShowMsDate = True
-        Else
-            awinSettings.mppShowMsDate = False
-        End If
-
-    End Sub
+    'Public Sub PT6DateTextPressed(control As IRibbonControl, ByRef pressed As Boolean)
+    '    pressed = awinSettings.mppShowMsDate
+    'End Sub
 
 
-    Public Sub PT6NameTextPressed(control As IRibbonControl, ByRef pressed As Boolean)
-        pressed = awinSettings.mppShowMsName
-    End Sub
+    'Public Sub PT6SetShowDate(Control As IRibbonControl, ByRef pressed As Boolean)
+
+    '    If pressed Then
+    '        awinSettings.mppShowMsDate = True
+    '    Else
+    '        awinSettings.mppShowMsDate = False
+    '    End If
+
+    'End Sub
 
 
-    Public Sub PT6SetShowName(Control As IRibbonControl, ByRef pressed As Boolean)
-
-        If pressed Then
-            awinSettings.mppShowMsName = True
-        Else
-            awinSettings.mppShowMsName = False
-        End If
-
-    End Sub
-
-    Public Sub PT6ProjectLinePressed(control As IRibbonControl, ByRef pressed As Boolean)
-        pressed = awinSettings.mppShowProjectLine
-    End Sub
+    'Public Sub PT6NameTextPressed(control As IRibbonControl, ByRef pressed As Boolean)
+    '    pressed = awinSettings.mppShowMsName
+    'End Sub
 
 
-    Public Sub PT6SetShowProjectLine(Control As IRibbonControl, ByRef pressed As Boolean)
+    'Public Sub PT6SetShowName(Control As IRibbonControl, ByRef pressed As Boolean)
 
-        If pressed Then
-            awinSettings.mppShowProjectLine = True
-        Else
-            awinSettings.mppShowProjectLine = False
-        End If
+    '    If pressed Then
+    '        awinSettings.mppShowMsName = True
+    '    Else
+    '        awinSettings.mppShowMsName = False
+    '    End If
 
-    End Sub
+    'End Sub
+
+    'Public Sub PT6ProjectLinePressed(control As IRibbonControl, ByRef pressed As Boolean)
+    '    pressed = awinSettings.mppShowProjectLine
+    'End Sub
+
+
+    'Public Sub PT6SetShowProjectLine(Control As IRibbonControl, ByRef pressed As Boolean)
+
+    '    If pressed Then
+    '        awinSettings.mppShowProjectLine = True
+    '    Else
+    '        awinSettings.mppShowProjectLine = False
+    '    End If
+
+    'End Sub
 
     Public Sub PT6AmpelnPressed(control As IRibbonControl, ByRef pressed As Boolean)
         pressed = awinSettings.mppShowAmpel
@@ -2706,20 +2706,20 @@ Imports System.Drawing
 
     End Sub
 
-    Public Sub PT6RasterPressed(control As IRibbonControl, ByRef pressed As Boolean)
-        pressed = awinSettings.mppVertikalesRaster
-    End Sub
+    'Public Sub PT6RasterPressed(control As IRibbonControl, ByRef pressed As Boolean)
+    '    pressed = awinSettings.mppVertikalesRaster
+    'End Sub
 
 
-    Public Sub PT6SetRaster(Control As IRibbonControl, ByRef pressed As Boolean)
+    'Public Sub PT6SetRaster(Control As IRibbonControl, ByRef pressed As Boolean)
 
-        If pressed Then
-            awinSettings.mppVertikalesRaster = True
-        Else
-            awinSettings.mppVertikalesRaster = False
-        End If
+    '    If pressed Then
+    '        awinSettings.mppVertikalesRaster = True
+    '    Else
+    '        awinSettings.mppVertikalesRaster = False
+    '    End If
 
-    End Sub
+    'End Sub
 
 
     ''' <summary>

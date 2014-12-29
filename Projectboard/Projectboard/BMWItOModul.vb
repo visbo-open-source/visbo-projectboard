@@ -173,11 +173,11 @@ Module BMWItOModul
 
                     If Not isVorlage Then
                         If tmpStr(0).Trim.EndsWith("eA") Then
-                            vorlagenName = "enge Ableitung"
+                            vorlagenName = "Rel 4 eA 07"
                         ElseIf tmpStr(0).Trim.EndsWith("wA") Then
-                            vorlagenName = "weite Ableitung"
+                            vorlagenName = "Rel 4 wA 07"
                         ElseIf tmpStr(0).Trim.EndsWith("E") Then
-                            vorlagenName = "Erstanläufer"
+                            vorlagenName = "Rel 4 E 07"
                         Else
                             vorlagenName = ""
                         End If
