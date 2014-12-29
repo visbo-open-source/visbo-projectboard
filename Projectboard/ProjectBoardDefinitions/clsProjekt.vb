@@ -1550,7 +1550,13 @@ Public Class clsProjekt
                 For r = 1 To cphase.CountResults
                     newresult = New clsMeilenstein(parent:=newphase)
                     cphase.getResult(r).CopyToWithoutBewertung(newresult)
-                    newphase.addresult(newresult)
+
+                    Try
+                        newphase.addresult(newresult)
+                    Catch ex As Exception
+
+                    End Try
+
                 Next
 
             Catch ex As Exception
@@ -1584,7 +1590,14 @@ Public Class clsProjekt
                 For r = 1 To cphase.CountResults
                     newresult = New clsMeilenstein(parent:=newphase)
                     cphase.getResult(r).CopyTo(newresult)
-                    newphase.addresult(newresult)
+
+                    Try
+                        newphase.addresult(newresult)
+                    Catch ex1 As Exception
+
+                    End Try
+
+
                 Next
 
             Catch ex As Exception

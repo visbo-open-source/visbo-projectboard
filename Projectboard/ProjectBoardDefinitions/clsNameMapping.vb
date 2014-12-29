@@ -227,10 +227,6 @@ Public Class clsNameMapping
 
             itemName = itemName.Trim
 
-            ' Test Bedingung
-            If itemName.Contains("A-TS") Then
-                Dim blabla = "jetzt"
-            End If
 
             Dim realName As String = itemName
 

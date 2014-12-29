@@ -700,26 +700,32 @@
 
     End Sub
 
+    ''' <summary>
+    ''' es wird überprüft, ob der Meilenstein-Name schon existiert 
+    ''' wenn er bereits existiert, wird eine ArgumentException geworfen  
+    ''' </summary>
+    ''' <param name="result"></param>
+    ''' <remarks></remarks>
     Public Sub addresult(ByVal result As clsMeilenstein)
 
-        ' in Abhängigkeit von milestoneFreeFloat: 
-        ' es wird geprüft, ob der Meilenstein innerhalb der Phasengrenze  ist 
-        ' wenn nein , wird entweder auf Phasen-Start oder auf Phasen-Ende gesetzt 
 
-        If awinSettings.milestoneFreeFloat Then
-            ' nichts verändern ....
-        Else
+        Dim anzElements As Integer = AllResults.Count - 1
+        Dim ix As Integer = 0
+        Dim found As Boolean = False
 
-            If result.offset > Me._dauerInDays - 1 Then
-                result.offset = Me._dauerInDays - 1
-            ElseIf result.offset < 0 Then
-                result.offset = 0
+        Do While ix <= anzElements And Not found
+            If AllResults.Item(ix).name = result.name Then
+                found = True
+            Else
+                ix = ix + 1
             End If
+        Loop
 
-
+        If found Then
+            Throw New ArgumentException("Meilenstein existiert bereits !" & result.name)
+        Else
+            AllResults.Add(result)
         End If
-
-        AllResults.Add(result)
 
 
     End Sub
@@ -817,7 +823,13 @@
             For r = 1 To Me.AllResults.Count
                 newresult = New clsMeilenstein(parent:=newphase)
                 Me.getResult(r).CopyTo(newresult)
-                .addresult(newresult)
+
+                Try
+                    .addresult(newresult)
+                Catch ex As Exception
+
+                End Try
+
             Next
 
         End With
@@ -913,7 +925,12 @@
                 ' korrigiert den Offset der Meilensteine 
                 newresult.offset = CLng(System.Math.Round(CLng(Me.getResult(r).offset * corrFactor)))
 
-                .addresult(newresult)
+                Try
+                    .addresult(newresult)
+                Catch ex As Exception
+
+                End Try
+
             Next
 
         End With

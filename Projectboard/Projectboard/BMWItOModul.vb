@@ -292,7 +292,14 @@ Module BMWItOModul
 
                             Try
                                 itemName = CStr(CType(.Cells(curZeile, colName), Excel.Range).Value)
-
+                                pStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
+                                pEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
+                                Dim isMilestone As Boolean
+                                If DateDiff(DateInterval.Day, pStartDate, pEndDate) = 0 Then
+                                    isMilestone = True
+                                Else
+                                    isMilestone = False
+                                End If
 
                                 If itemName.Trim = "Projektphasen" Then
                                     Try
@@ -310,13 +317,24 @@ Module BMWItOModul
                                 End If
 
                                 ' jetzt prüfen, ob es sich um ein grundsätzlich zu ignorierendes Element handelt .. 
-                                If phaseMappings.tobeIgnored(itemName) Or milestoneMappings.tobeIgnored(itemName) Then
-                                    CType(activeWSListe.Cells(curZeile, protocolColumn), Excel.Range).Value = _
-                                                    "Element wird ignoriert: " & itemName.Trim
-                                    ok = False
+                                If isMilestone Then
+                                    If milestoneMappings.tobeIgnored(itemName) Then
+                                        CType(activeWSListe.Cells(curZeile, protocolColumn), Excel.Range).Value = _
+                                                        "Element wird ignoriert: " & itemName.Trim
+                                        ok = False
+                                    Else
+                                        ok = True
+                                    End If
                                 Else
-                                    ok = True
+                                    If phaseMappings.tobeIgnored(itemName) Then
+                                        CType(activeWSListe.Cells(curZeile, protocolColumn), Excel.Range).Value = _
+                                                        "Element wird ignoriert: " & itemName.Trim
+                                        ok = False
+                                    Else
+                                        ok = True
+                                    End If
                                 End If
+                                
 
                             Catch ex As Exception
                                 itemName = ""
@@ -324,10 +342,6 @@ Module BMWItOModul
                             End Try
 
                             If ok Then
-
-
-                                pStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
-                                pEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
 
 
                                 startoffset = DateDiff(DateInterval.Day, hproj.startDate, pStartDate)
@@ -410,9 +424,15 @@ Module BMWItOModul
                                                     itemName.Trim & " --> " & realName.Trim
                                         End If
 
+                                        Dim ok1 As Boolean = True
 
                                         If PhaseDefinitions.Contains(realName) Then
                                             ' nichts tun 
+                                        ElseIf pHierarchy.dopplung(realName) Then
+                                            ' nichts tun - das Element soll ignoriert werden
+                                            CType(activeWSListe.Cells(curZeile, protocolColumn), Excel.Range).Value = _
+                                                    "Ignoriert wegen Dopplung: " & realName.Trim
+                                            ok1 = False
                                         Else
                                             ' in die Phase-Definitions aufnehmen 
 
@@ -435,26 +455,26 @@ Module BMWItOModul
 
                                         End If
 
-                                        cphase = New clsPhase(parent:=hproj)
-                                        cphase.name = realName
+                                        If ok1 Then
+                                            cphase = New clsPhase(parent:=hproj)
+                                            cphase.name = realName
 
-                                        cphase.changeStartandDauer(startoffset, duration)
+                                            cphase.changeStartandDauer(startoffset, duration)
 
-                                        hproj.AddPhase(cphase)
+                                            hproj.AddPhase(cphase)
 
 
 
-                                        Try
-                                            pHierarchy.add(cphase, indentLevel)
-                                        Catch ex As Exception
-                                            'Call MsgBox("Phase " & cphase.name & ", Level = " & indentLevel)
-                                        End Try
-                                        'lastPhaseName = cphase.name
+                                            Try
+                                                pHierarchy.add(cphase, indentLevel)
+                                            Catch ex As Exception
+                                                'Call MsgBox("Phase " & cphase.name & ", Level = " & indentLevel)
+                                            End Try
+                                            'lastPhaseName = cphase.name
+                                        End If
+
+                                        
                                     End If
-
-
-
-
 
 
                                 ElseIf duration = 1 Then
@@ -473,18 +493,11 @@ Module BMWItOModul
                                             Dim bewertungsAmpel As Integer = 0
                                             Dim explanation As String = ""
 
-                                            'bewertungsAmpel = CInt(CType(.Cells(curZeile, 12), Excel.Range).Value)
-                                            'explanation = CStr(CType(.Cells(curZeile, 1), Excel.Range).Value)
-
-                                            'cphase = hproj.getPhase(lastPhaseName)
+                                            
                                             cphase = pHierarchy.getPhaseBeforeLevel(indentLevel)
                                             cresult = New clsMeilenstein(parent:=cphase)
                                             cbewertung = New clsBewertung
 
-                                            'If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
-                                            '    ' es gibt keine Bewertung
-                                            '    bewertungsAmpel = 0
-                                            'End If
 
                                             ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
                                             With cbewertung
@@ -549,11 +562,22 @@ Module BMWItOModul
 
                                             End If
 
+                                            If IsNothing(cphase.getResult(cresult.name)) Then
 
+                                                With cphase
+                                                    .addresult(cresult)
+                                                End With
 
-                                            With cphase
-                                                .addresult(cresult)
-                                            End With
+                                            Else
+
+                                                ' Meilenstein existiert in dieser Phase bereits .... 
+                                                CType(activeWSListe.Cells(curZeile, protocolColumn), Excel.Range).Value = _
+                                                        realName.Trim & " existiert bereits: Datum 1: " & cphase.getResult(realName).getDate.ToShortDateString & _
+                                                        "   , Datum 2: " & cresult.getDate.ToShortDateString
+                                                
+                                            End If
+
+                                            
                                         Catch ex As Exception
 
                                         End Try

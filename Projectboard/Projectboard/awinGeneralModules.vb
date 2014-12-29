@@ -1456,7 +1456,12 @@ Public Module awinGeneralModules
                     cbewertung.description = " .. es wurde  keine Erläuterung abgegeben .. "
                     cresult.addBewertung(cbewertung)
 
-                    cphase.addresult(cresult)
+                    Try
+                        cphase.addresult(cresult)
+                    Catch ex As Exception
+
+                    End Try
+
 
                     hproj.AddPhase(cphase)
 
@@ -1555,9 +1560,14 @@ Public Module awinGeneralModules
                                         End If
                                     End With
 
-                                    With cphase
-                                        .addresult(cresult)
-                                    End With
+                                    Try
+                                        With cphase
+                                            .addresult(cresult)
+                                        End With
+                                    Catch ex As Exception
+
+                                    End Try
+                                    
                                 Catch ex As Exception
 
                                 End Try
@@ -2489,9 +2499,15 @@ Public Module awinGeneralModules
                                         End If
                                     End With
 
-                                    With hproj.getPhase(phaseName)
-                                        .addresult(cResult)
-                                    End With
+
+                                    Try
+                                        With hproj.getPhase(phaseName)
+                                            .addresult(cResult)
+                                        End With
+                                    Catch ex1 As Exception
+
+                                    End Try
+                                    
 
 
                                 End If
