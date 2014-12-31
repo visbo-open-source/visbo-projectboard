@@ -6,53 +6,53 @@ Public Class clsImportFileHierarchy
 
     Private phaseHierarchy As SortedList(Of Integer, clsPhase)
 
-    ''' <summary>
-    ''' liefert true zurück, wenn der übergebene Name bereits so in der Phasen Hierarchie vorhanden war 
-    ''' </summary>
-    ''' <param name="phaseName"></param>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property dopplung(ByVal phaseName As String) As Boolean
-        Get
-            Dim ix As Integer = phaseHierarchy.Count
-            Dim found As Boolean = False
-            Dim tmpstr(30) As String
-            Dim vgl1 As String = ""
-            Dim vgl2 As String = ""
+    ' ''' <summary>
+    ' ''' liefert true zurück, wenn der übergebene Name bereits so in der Phasen Hierarchie vorhanden war 
+    ' ''' </summary>
+    ' ''' <param name="phaseName"></param>
+    ' ''' <value></value>
+    ' ''' <returns></returns>
+    ' ''' <remarks></remarks>
+    'Public ReadOnly Property dopplung(ByVal phaseName As String) As Boolean
+    '    Get
+    '        Dim ix As Integer = phaseHierarchy.Count
+    '        Dim found As Boolean = False
+    '        Dim tmpstr(30) As String
+    '        Dim vgl1 As String = ""
+    '        Dim vgl2 As String = ""
 
 
-            While Not found And ix > 0
+    '        While Not found And ix > 0
 
-                tmpstr = phaseHierarchy.ElementAt(ix - 1).Value.name.Trim.Split(New Char() {CChar(" ")}, 30)
-                For i = 1 To tmpstr.Length
-                    If i = 1 Then
-                        vgl1 = tmpstr(i - 1)
-                    Else
-                        vgl1 = vgl1 & tmpstr(i - 1)
-                    End If
-                Next
+    '            tmpstr = phaseHierarchy.ElementAt(ix - 1).Value.name.Trim.Split(New Char() {CChar(" ")}, 30)
+    '            For i = 1 To tmpstr.Length
+    '                If i = 1 Then
+    '                    vgl1 = tmpstr(i - 1)
+    '                Else
+    '                    vgl1 = vgl1 & tmpstr(i - 1)
+    '                End If
+    '            Next
 
-                tmpstr = phaseName.Trim.Split(New Char() {CChar(" ")}, 30)
-                For i = 1 To tmpstr.Length
-                    If i = 1 Then
-                        vgl2 = tmpstr(i - 1)
-                    Else
-                        vgl2 = vgl2 & tmpstr(i - 1)
-                    End If
-                Next
+    '            tmpstr = phaseName.Trim.Split(New Char() {CChar(" ")}, 30)
+    '            For i = 1 To tmpstr.Length
+    '                If i = 1 Then
+    '                    vgl2 = tmpstr(i - 1)
+    '                Else
+    '                    vgl2 = vgl2 & tmpstr(i - 1)
+    '                End If
+    '            Next
 
-                If vgl1.Trim = vgl2.Trim Then
-                    found = True
-                Else
-                    ix = ix - 1
-                End If
-            End While
+    '            If vgl1.Trim = vgl2.Trim Then
+    '                found = True
+    '            Else
+    '                ix = ix - 1
+    '            End If
+    '        End While
 
-            dopplung = found
+    '        dopplung = found
 
-        End Get
-    End Property
+    '    End Get
+    'End Property
 
     ''' <summary>
     ''' normiert den Namen phaseName, d.h entfernt alle leading und trailing blanks 

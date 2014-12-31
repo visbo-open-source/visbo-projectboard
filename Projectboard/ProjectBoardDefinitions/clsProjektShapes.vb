@@ -723,7 +723,7 @@ Public Class clsProjektShapes
             End If
 
 
-            If Abs(shpElement.Rotation) > 15 Then
+            If Abs(shpElement.Rotation) > 15 And shapeType <> PTshty.milestoneE And shapeType <> PTshty.milestoneN Then
                 isdifferent = True
             End If
 
@@ -816,8 +816,8 @@ Public Class clsProjektShapes
         End With
 
 
-        ' Rotation ist überhaupt nicht zugelassen 
-        If shpElement.Rotation <> 0 Then
+        ' Rotation ist  nicht zugelassen, ausser bei Meilensteinen  
+        If shpElement.Rotation <> 0 And shapeType <> PTshty.milestoneE And shapeType <> PTshty.milestoneN Then
             shpElement.Rotation = 0
         End If
 

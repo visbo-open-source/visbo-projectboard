@@ -162,7 +162,8 @@ Public Class clsCommandBarEvents
                                     Call NoshowNeedsofProject(hproj.name)
                                 End If
 
-                                If zeile = 0 Or shpelement.Rotation <> 0 Then
+                                If zeile = 0 Or shpelement.Rotation <> 0 And _
+                                    (shapeType = PTshty.projektC Or shapeType = PTshty.projektE Or shapeType = PTshty.projektN) Then
                                     ' ins Noshow stecken ... 
                                     movedToNoshow = True
                                     enableOnUpdate = False
