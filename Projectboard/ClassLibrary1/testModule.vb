@@ -2138,7 +2138,8 @@ Public Module testModule
 
                                 ' bestimme das Format 
                                 ' bestimme die benötigte Höhe eines Projektes
-                                Dim projekthoehe As Double = bestimmeMppProjektHoehe(phaseVorlagenShape, milestoneVorlagenShape, _
+                                Dim projekthoehe As Double = bestimmeMppProjektHoehe(phaseVorlagenShape, milestoneVorlagenShape,
+                                                                                     selectedPhases.Count, selectedMilestones.Count, _
                                                                                         elementDescVorlagenShape, elementDateVorlagenShape, _
                                                                                         projectNameVorlagenShape)
 
@@ -2173,49 +2174,39 @@ Public Module testModule
                                         End If
                                     Loop
 
-                                    If formatFound Then
-
-                                        With pptPresentation
-
-                                            If ix = 4 Then
-
-                                                .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA4Paper
-
-                                            ElseIf ix = 3 Then
-
-                                                .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA3Paper
-
-                                            Else
-
-                                                .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
-                                                If .PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
-                                                    .PageSetup.SlideWidth = dinFormatA(ix, 0)
-                                                    .PageSetup.SlideHeight = dinFormatA(ix, 1)
-                                                Else
-                                                    .PageSetup.SlideWidth = dinFormatA(ix, 1)
-                                                    .PageSetup.SlideHeight = dinFormatA(ix, 0)
-                                                End If
-
-                                            End If
-
-
-                                        End With
-
-                                        ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
-                                        Call restoreSizesOfElements(sizeMemory, projectNameVorlagenShape, elementDescVorlagenShape, elementDateVorlagenShape, _
-                                                            phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape, _
-                                                            legendTextVorlagenShape, legendPhaseVorlagenShape, legendMilestoneVorlagenShape)
-
-
-                                        ' jetzt wieder die Koordinaten neu berechnen 
-                                        Call bestimmeZeichenKoordinaten(multiprojektContainerShape, _
-                                                                    calendarLineShape, legendLineShape, projectNameVorlagenShape, legendStartShape, _
-                                                                    containerLeft, containerRight, containerTop, containerBottom, _
-                                                                    calendarLeft, calendarRight, calendarTop, calendarBottom, _
-                                                                    drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
-                                                                    projectListLeft, _
-                                                                    legendAreaLeft, legendAreaRight, legendAreaTop, legendAreaBottom)
+                                    If ix < 0 Then
+                                        ix = 0
                                     End If
+
+
+
+                                    With pptPresentation
+
+                                        .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+                                        If .PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+                                            .PageSetup.SlideWidth = dinFormatA(ix, 0)
+                                            .PageSetup.SlideHeight = dinFormatA(ix, 1)
+                                        Else
+                                            .PageSetup.SlideWidth = dinFormatA(ix, 1)
+                                            .PageSetup.SlideHeight = dinFormatA(ix, 0)
+                                        End If
+
+                                    End With
+
+                                    ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
+                                    Call restoreSizesOfElements(sizeMemory, projectNameVorlagenShape, elementDescVorlagenShape, elementDateVorlagenShape, _
+                                                        phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape, _
+                                                        legendTextVorlagenShape, legendPhaseVorlagenShape, legendMilestoneVorlagenShape)
+
+
+                                    ' jetzt wieder die Koordinaten neu berechnen 
+                                    Call bestimmeZeichenKoordinaten(multiprojektContainerShape, _
+                                                                calendarLineShape, legendLineShape, projectNameVorlagenShape, legendStartShape, _
+                                                                containerLeft, containerRight, containerTop, containerBottom, _
+                                                                calendarLeft, calendarRight, calendarTop, calendarBottom, _
+                                                                drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
+                                                                projectListLeft, _
+                                                                legendAreaLeft, legendAreaRight, legendAreaTop, legendAreaBottom)
 
 
 
@@ -2234,7 +2225,7 @@ Public Module testModule
                                 calendarYearSeparator.Delete()
                                 calendarQuartalSeparator.Delete()
 
-                                
+
 
 
                                 ' zeichne die Projekte 
@@ -3248,23 +3239,25 @@ Public Module testModule
 
                             myCollection.Clear()
 
-                            Dim qstr(20) As String
-                            Dim phName As String = " "
-                            qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
+                            myCollection = buildNameCollection(PTpfdk.Phasen, qualifier, selectedPhases)
 
-                            ' Aufbau der Collection 
-                            For i = 0 To qstr.Length - 1
+                            'Dim qstr(20) As String
+                            'Dim phName As String = " "
+                            'qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
 
-                                Try
-                                    phName = qstr(i).Trim
-                                    If PhaseDefinitions.Contains(phName) Then
-                                        myCollection.Add(phName, phName)
-                                    End If
-                                Catch ex As Exception
-                                    Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
-                                End Try
+                            '' Aufbau der Collection 
+                            'For i = 0 To qstr.Length - 1
 
-                            Next
+                            '    Try
+                            '        phName = qstr(i).Trim
+                            '        If PhaseDefinitions.Contains(phName) Then
+                            '            myCollection.Add(phName, phName)
+                            '        End If
+                            '    Catch ex As Exception
+                            '        Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
+                            '    End Try
+
+                            'Next
 
 
                             If myCollection.Count > 0 Then
@@ -3284,6 +3277,8 @@ Public Module testModule
                                 With reportObj
                                     If myCollection.Count > 1 Then
                                         .Chart.ChartTitle.Text = "Phasen Übersicht"
+                                    ElseIf myCollection.Count = 1 Then
+                                        .Chart.ChartTitle.Text = "Phase " & CStr(myCollection.Item(1))
                                     Else
                                         .Chart.ChartTitle.Text = boxName
                                     End If
@@ -3320,26 +3315,28 @@ Public Module testModule
                         Case "Meilenstein"
 
                             myCollection.Clear()
-                            Dim MSnameList As New Collection
-                            MSnameList = ShowProjekte.getMilestoneNames
+                            myCollection = buildNameCollection(PTpfdk.Meilenstein, qualifier, selectedMilestones)
 
-                            Dim qstr(20) As String
-                            Dim msName As String = " "
-                            qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
+                            'Dim MSnameList As New Collection
+                            'MSnameList = ShowProjekte.getMilestoneNames
 
-                            ' Aufbau der Collection 
-                            For i = 0 To qstr.Length - 1
+                            'Dim qstr(20) As String
+                            'Dim msName As String = " "
+                            'qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
 
-                                Try
-                                    msName = qstr(i).Trim
-                                    If MSnameList.Contains(msName) Then
-                                        myCollection.Add(msName, msName)
-                                    End If
-                                Catch ex As Exception
-                                    Call MsgBox("Fehler: Phasen Name " & msName & " konnte nicht erkannt werden ...")
-                                End Try
+                            '' Aufbau der Collection 
+                            'For i = 0 To qstr.Length - 1
 
-                            Next
+                            '    Try
+                            '        msName = qstr(i).Trim
+                            '        If MSnameList.Contains(msName) Then
+                            '            myCollection.Add(msName, msName)
+                            '        End If
+                            '    Catch ex As Exception
+                            '        Call MsgBox("Fehler: Phasen Name " & msName & " konnte nicht erkannt werden ...")
+                            '    End Try
+
+                            'Next
 
 
                             If myCollection.Count > 0 Then
@@ -3359,6 +3356,8 @@ Public Module testModule
                                 With reportObj
                                     If myCollection.Count > 1 Then
                                         .Chart.ChartTitle.Text = "Meilenstein Übersicht"
+                                    ElseIf myCollection.Count = 1 Then
+                                        .Chart.ChartTitle.Text = "Meilenstein " & CStr(myCollection.Item(1))
                                     Else
                                         .Chart.ChartTitle.Text = boxName
                                     End If
@@ -3393,6 +3392,7 @@ Public Module testModule
 
 
                             myCollection.Clear()
+                            myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, selectedRoles)
 
                             Dim qstr(20) As String
                             Dim roleName As String = " "
@@ -3466,23 +3466,25 @@ Public Module testModule
 
 
                             myCollection.Clear()
-                            Dim qstr(20) As String
-                            Dim costName As String = " "
-                            qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
+                            myCollection = buildNameCollection(PTpfdk.Kosten, qualifier, selectedCosts)
 
-                            ' Aufbau der Collection 
-                            For i = 0 To qstr.Length - 1
+                            'Dim qstr(20) As String
+                            'Dim costName As String = " "
+                            'qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
 
-                                Try
-                                    costName = qstr(i).Trim
-                                    If CostDefinitions.Contains(costName) Then
-                                        myCollection.Add(costName, costName)
-                                    End If
-                                Catch ex As Exception
-                                    Call MsgBox("Fehler: Kostenart " & costName & " konnte nicht erkannt werden ...")
-                                End Try
+                            '' Aufbau der Collection 
+                            'For i = 0 To qstr.Length - 1
 
-                            Next
+                            '    Try
+                            '        costName = qstr(i).Trim
+                            '        If CostDefinitions.Contains(costName) Then
+                            '            myCollection.Add(costName, costName)
+                            '        End If
+                            '    Catch ex As Exception
+                            '        Call MsgBox("Fehler: Kostenart " & costName & " konnte nicht erkannt werden ...")
+                            '    End Try
+
+                            'Next
 
 
                             If myCollection.Count > 0 Then
@@ -7414,7 +7416,9 @@ Public Module testModule
                                ByVal yearSeparatorLine As pptNS.Shape, ByVal quartalSeparatorLine As pptNS.Shape, ByVal drawingAreaBottom As Double)
 
         Dim drawItem As Integer  ' 0: Monat, 1: Quartal, 2: Jahr
-        Dim anzQMs As Integer = DateDiff(DateInterval.Month, StartofPPTCalendar, endOFPPTCalendar) + 1
+        'Dim anzQMs As Integer = DateDiff(DateInterval.Month, StartofPPTCalendar, endOFPPTCalendar) + 1
+
+        Dim anzQMs As Integer
         Dim qmWidth As Double = qmShape.Width
         Dim yearWidth As Double
         Dim monthWidth As Double
@@ -7426,8 +7430,10 @@ Public Module testModule
 
         Dim lfdNr As Integer = 1
 
-        yearWidth = 12 * calendarLineShape.Width / anzQMs
-        monthWidth = calendarLineShape.Width / anzQMs
+        Call calculateYMAeinheiten(StartofPPTCalendar, endOFPPTCalendar, calendarLineShape.Width, _
+                                  yearWidth, monthWidth, anzQMs)
+        'yearWidth = 12 * calendarLineShape.Width / anzQMs
+        'monthWidth = calendarLineShape.Width / anzQMs
 
         If Not IsNothing(calendarMark) Then
             With calendarMark
@@ -7688,7 +7694,7 @@ Public Module testModule
         Dim drawingAreaHeight As Double = 0.9 * (legendlineShape.Top - calendarLineShape.Top)
         Dim drawingAreaTop = calendarLineShape.Top + 0.05 * (legendlineShape.Top - calendarLineShape.Top)
         Dim drawingAreaBottom = legendlineShape.Top - 0.05 * (legendlineShape.Top - calendarLineShape.Top)
-        Dim tagesEinheit As Double = drawingAreaWidth / (DateDiff(DateInterval.Day, StartofPPTCalendar, endOFPPTCalendar) + 1)
+        'Dim tagesEinheit As Double
         Dim projectsToDraw As Integer
         Dim projectsDrawn As Integer
         Dim copiedShape As pptNS.ShapeRange
@@ -7698,6 +7704,12 @@ Public Module testModule
         Dim milestoneTypShape As xlNS.Shape
 
 
+        Dim anzahlTage As Integer = DateDiff(DateInterval.Day, StartofPPTCalendar, endOFPPTCalendar) + 1
+        If anzahlTage <= 0 Then
+            Throw New ArgumentException("Kalender Start bis Ende kann nicht 0 oder kleiner sein ..")
+        End If
+
+        'tagesEinheit = drawingAreaWidth / anzahlTage
 
         Dim yOffsetMsToText As Double = elementDescVorlagenShape.Top - milestoneVorlagenShape.Top
         Dim yOffsetMsToDate As Double = elementDateVorlagenShape.Top - milestoneVorlagenShape.Top
@@ -7719,6 +7731,7 @@ Public Module testModule
 
 
         Dim projekthoehe As Double = bestimmeMppProjektHoehe(phaseVorlagenShape, milestoneVorlagenShape, _
+                                                             selectedPhases.Count, selectedMilestones.Count, _
                                                                 elementDescVorlagenShape, elementDateVorlagenShape, _
                                                                 projectNameVorlagenShape)
 
@@ -7787,7 +7800,7 @@ Public Module testModule
             '
             ' zeichne jetzt das Projekt 
             Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, hproj.startDate, hproj.endeDate, _
-                                    drawingAreaLEft, drawingAreaWidth, tagesEinheit, x1, x2)
+                                    drawingAreaLEft, drawingAreaWidth, x1, x2)
 
             If awinSettings.mppShowProjectLine Then
 
@@ -7836,7 +7849,7 @@ Public Module testModule
                         Dim phaseEnd As Date = cphase.getEndDate
 
                         Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, phaseStart, phaseEnd, _
-                                            drawingAreaLEft, drawingAreaWidth, tagesEinheit, x1, x2)
+                                            drawingAreaLEft, drawingAreaWidth, x1, x2)
 
 
                         ' jetzt müssen ggf der Phasen Name und das  Datum angebracht werden 
@@ -7957,7 +7970,7 @@ Public Module testModule
 
 
                         Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, msDate, msDate, _
-                                            drawingAreaLEft, drawingAreaWidth, tagesEinheit, x1, x2)
+                                            drawingAreaLEft, drawingAreaWidth, x1, x2)
 
 
                         ' jetzt muss ggf die Beschriftung angebracht werden 
@@ -7972,7 +7985,8 @@ Public Module testModule
                             With copiedShape(1)
 
                                 .TextFrame2.TextRange.Text = msShortname
-                                .Top = CSng(milestoneGrafikYPos) + yOffsetMsToText
+                                .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
+                                '.Left = CSng(x1) - .Width / 2
                                 .Left = CSng(x1) - .Width / 2
 
                             End With
@@ -8008,9 +8022,9 @@ Public Module testModule
 
                         With copiedShape(1)
                             .Top = CSng(milestoneGrafikYPos)
-                            .Left = CSng(x1) - .Width / 2
                             .Height = milestoneVorlagenShape.Height
                             .Width = .Height / seitenverhaeltnis
+                            .Left = CSng(x1) - .Width / 2
                             If awinSettings.mppShowAmpel Then
                                 .Glow.Color.RGB = CInt(curMeilenstein.getBewertung(1).color)
                                 If .Glow.Radius = 0 Then
@@ -8096,6 +8110,7 @@ Public Module testModule
     ''' <returns></returns>
     ''' <remarks></remarks>
     Private Function bestimmeMppProjektHoehe(ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, _
+                                                 ByVal anzPhasen As Integer, ByVal anzMilestones As Integer, _
                                                  ByVal elementDescVorlagenShape As pptNS.Shape, ByVal elementDateVorlagenShape As pptNS.Shape, _
                                                  ByVal projectNameVorlagenShape As pptNS.Shape) As Double
 
@@ -8103,27 +8118,42 @@ Public Module testModule
 
         ' Festlegung: Phase und Milestone werden zunächst immer zentriert dargestellt ; der Beschriftungstext kommt oben, zentriert hin, das Datum zentriert unten
         ' Bestimmen, wieviele Projekte mit den gegebenen Einstellungen gezeichnet werden können
+        Dim mindestNettoHoehe As Double
 
-        Dim mindestNettoHoehe As Double = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
+        If anzPhasen > 0 And anzMilestones > 0 Then
+            mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
+        ElseIf anzPhasen > 0 Then
+            mindestNettoHoehe = phaseVorlagenShape.Height
+        ElseIf anzMilestones > 0 Then
+            mindestNettoHoehe = milestoneVorlagenShape.Height
+        Else
+            mindestNettoHoehe = projectNameVorlagenShape.Height
+        End If
+
+
         Dim projekthoehe As Double = mindestNettoHoehe
 
-        If awinSettings.mppShowMsName Then
-            projekthoehe = projekthoehe + versatzFaktor * elementDescVorlagenShape.Height
+        If anzMilestones > 0 Then
+            If awinSettings.mppShowMsName Then
+                projekthoehe = projekthoehe + versatzFaktor * elementDescVorlagenShape.Height
+            End If
+
+            If awinSettings.mppShowMsDate Then
+                projekthoehe = projekthoehe + versatzFaktor * elementDateVorlagenShape.Height
+            End If
+        End If
+        
+        If anzPhasen > 0 And anzMilestones = 0 Then
+            If awinSettings.mppShowPhName Then
+                projekthoehe = mindestNettoHoehe + versatzFaktor * elementDescVorlagenShape.Height
+            End If
+
+            If awinSettings.mppShowPhDate Then
+                projekthoehe = projekthoehe + versatzFaktor * elementDateVorlagenShape.Height
+            End If
         End If
 
-        If awinSettings.mppShowMsDate Then
-            projekthoehe = projekthoehe + versatzFaktor * elementDateVorlagenShape.Height
-        End If
-
-        If awinSettings.mppShowPhName And Not awinSettings.mppShowMsName Then
-            projekthoehe = System.Math.Max(mindestNettoHoehe + versatzFaktor * elementDescVorlagenShape.Height, _
-                                           mindestNettoHoehe + 0.5 * elementDescVorlagenShape.Height + 1)
-        End If
-
-        If awinSettings.mppShowPhDate And Not awinSettings.mppShowMsDate Then
-            projekthoehe = System.Math.Max(mindestNettoHoehe + versatzFaktor * elementDateVorlagenShape.Height, _
-                                           mindestNettoHoehe + 0.5 * elementDateVorlagenShape.Height + 1)
-        End If
+        
 
         If projekthoehe < projectNameVorlagenShape.Height Then
             projekthoehe = projectNameVorlagenShape.Height
@@ -8419,29 +8449,53 @@ Public Module testModule
     ''' <param name="enddate">Endedatum des Elements, wenn es nach dem Ende-Datum des Kalenders liegt, wird es auf das Ende -Datum gesetzt</param>
     ''' <param name="linkerRand">linker Rand in x-Koordinaten</param>
     ''' <param name="breite">Breite zwischen Kalender-Start und Ende in x-Koordinaten</param>
-    ''' <param name="tagesEinheit"></param>
     ''' <param name="x1Pos">Rückgabe Wert Start</param>
     ''' <param name="x2Pos">Rückgabe Wert Ende</param>
     ''' <remarks></remarks>
     Private Sub calculatePPTx1x2(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date, _
                                      ByVal startdate As Date, ByVal enddate As Date, _
-                                     ByVal linkerRand As Double, ByVal breite As Double, ByVal tagesEinheit As Double, _
+                                     ByVal linkerRand As Double, ByVal breite As Double, _
                                      ByRef x1Pos As Double, ByRef x2Pos As Double)
 
+        Dim tageProMonat(12) As Integer
+        tageProMonat(0) = 30 ' dummy
+        tageProMonat(1) = 31
+        tageProMonat(2) = 28
+        tageProMonat(3) = 31
+        tageProMonat(4) = 30
+        tageProMonat(5) = 31
+        tageProMonat(6) = 30
+        tageProMonat(7) = 31
+        tageProMonat(8) = 31
+        tageProMonat(9) = 30
+        tageProMonat(10) = 31
+        tageProMonat(11) = 30
+        tageProMonat(12) = 31
 
-        Dim offsetPPTStartToStart As Integer = DateDiff(DateInterval.Day, pptStartOfCalendar, startdate)
-        If offsetPPTStartToStart < 0 Then
-            offsetPPTStartToStart = 0
+
+
+        Dim anzQMs As Integer
+
+        Dim yWidth As Double, mWidth As Double
+        Call calculateYMAeinheiten(pptStartOfCalendar, pptEndOfCalendar, breite, yWidth, mWidth, anzQMs)
+
+
+        Dim offset1 As Integer = DateDiff(DateInterval.Month, pptStartOfCalendar, startdate)
+        If offset1 < 0 Then
+            x1Pos = linkerRand
+        Else
+            x1Pos = linkerRand + _
+                    (offset1 + startdate.Day / tageProMonat(startdate.Month)) * mWidth
         End If
 
-        x1Pos = linkerRand + tagesEinheit * offsetPPTStartToStart
 
-        Dim offsetPPTEndToEnd As Integer = DateDiff(DateInterval.Day, enddate, pptEndOfCalendar, )
-        If offsetPPTEndToEnd < 0 Then
-            offsetPPTEndToEnd = 0
+        Dim offset2 As Integer = DateDiff(DateInterval.Month, pptStartOfCalendar, enddate)
+        If offset2 >= anzQMs Then
+            x2Pos = linkerRand + breite
+        Else
+            x2Pos = linkerRand + _
+                    (offset2 + enddate.Day / tageProMonat(enddate.Month)) * mWidth
         End If
-
-        x2Pos = linkerRand + breite - tagesEinheit * offsetPPTEndToEnd
 
     End Sub
 
@@ -8597,5 +8651,135 @@ Public Module testModule
 
 
     End Sub
+
+    ''' <summary>
+    ''' berechnet die "Breite" für ein Jahr, für einen Monat, sowie die Anzahl Monate m Kalender 
+    ''' </summary>
+    ''' <param name="startOfPPTCalendar"></param>
+    ''' <param name="endOfPPTCalendar"></param>
+    ''' <param name="breite"></param>
+    ''' <param name="yWidth"></param>
+    ''' <param name="mWidth"></param>
+    ''' <remarks></remarks>
+    Private Sub calculateYMAeinheiten(ByVal startOfPPTCalendar As Date, ByVal endOfPPTCalendar As Date, _
+                                          ByVal breite As Double, _
+                                          ByRef yWidth As Double, ByRef mWidth As Double, ByRef anzahlM As Integer)
+
+        Dim anzQMs As Integer = DateDiff(DateInterval.Month, startOfPPTCalendar, endOfPPTCalendar) + 1
+        Dim anzahlTage As Integer = DateDiff(DateInterval.Day, startOfPPTCalendar, endOfPPTCalendar) + 1
+
+        yWidth = 12 * breite / anzQMs
+        mWidth = breite / anzQMs
+        anzahlM = anzQMs
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt eine Collection zurück; der Typ der collection kann sein: Phase, Meilenstein, Rolle, Kostenart 
+    ''' der Qualifier ist entweder aufgebaut mit expliziten Bezeichnern, getrennt durch #
+    ''' oder durch die Variablen-Nummer, getrennt durch %
+    ''' </summary>
+    ''' <param name="type"></param>
+    ''' <param name="qualifier"></param>
+    ''' <remarks></remarks>
+    Private Function buildNameCollection(ByVal type As Integer, ByVal qualifier As String, _
+                                        ByVal selectedItems As Collection) As Collection
+
+        Dim qstr(30) As String
+        Dim tmpCollection As New Collection
+        Dim tmpName As String = " "
+        Dim explicit As Boolean = True
+        Dim trennzeichen As Char = "#"
+
+        If qualifier.Contains("#") Then
+            explicit = True
+            trennzeichen = "#"
+        ElseIf qualifier.Contains("%") Then
+            explicit = False
+            trennzeichen = "%"
+        ElseIf IsNumeric(qualifier) Then
+            explicit = False
+            trennzeichen = "%"
+        Else
+            explicit = True
+            trennzeichen = "#"
+        End If
+
+        qstr = qualifier.Trim.Split(New Char() {CChar(trennzeichen)}, 30)
+
+        ' Aufbau der Collection 
+        For i = 0 To qstr.Length - 1
+
+            tmpName = ""
+            Try
+                If Not explicit Then
+                    Dim ix As Integer
+
+                    If qstr(i).Length > 0 Then
+                        If qstr(i).Trim = "Alle" Then
+                            tmpCollection.Clear()
+                            For ii As Integer = 1 To selectedItems.Count
+                                tmpCollection.Add(selectedItems.Item(ii), selectedItems.Item(ii))
+                            Next
+                            Exit For
+                        Else
+                            Try
+                                If IsNumeric(qstr(i)) Then
+                                    ix = CInt(qstr(i))
+                                    If ix >= 1 And ix <= selectedItems.Count Then
+                                        tmpName = CStr(selectedItems.Item(ix)).Trim
+                                    Else
+                                        tmpName = ""
+                                    End If
+                                End If
+                                
+
+                            Catch ex As Exception
+
+                            End Try
+                        End If
+                    End If
+                    
+                Else
+                    tmpName = qstr(i).Trim
+                End If
+
+                If tmpName.Length > 0 Then
+                    Select Case type
+
+                        Case PTpfdk.Phasen
+                            If PhaseDefinitions.Contains(tmpName) Then
+                                tmpCollection.Add(tmpName, tmpName)
+                            End If
+
+                        Case PTpfdk.Meilenstein
+                            If MilestoneDefinitions.Contains(tmpName) Then
+                                tmpCollection.Add(tmpName, tmpName)
+                            End If
+
+                        Case PTpfdk.Rollen
+                            If RoleDefinitions.Contains(tmpName) Then
+                                tmpCollection.Add(tmpName, tmpName)
+                            End If
+
+                        Case PTpfdk.Kosten
+                            If CostDefinitions.Contains(tmpName) Then
+                                tmpCollection.Add(tmpName, tmpName)
+                            End If
+
+                    End Select
+                End If
+
+
+
+            Catch ex As Exception
+                Call MsgBox("Fehler: Phasen Name " & tmpName & " konnte nicht erkannt werden ...")
+            End Try
+
+        Next
+
+        buildNameCollection = tmpCollection
+
+    End Function
 
 End Module

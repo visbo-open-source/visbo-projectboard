@@ -179,7 +179,7 @@ Module BMWItOModul
                         ElseIf tmpStr(0).Trim.EndsWith("E") Then
                             vorlagenName = "Rel 4 E 07"
                         Else
-                            vorlagenName = ""
+                            vorlagenName = "unknown"
                         End If
                     Else
                         vorlagenName = ""
@@ -471,18 +471,6 @@ Module BMWItOModul
                                         End If
 
 
-                                        ' das muss auf alle Fälle gemacht werden 
-                                        cphase = New clsPhase(parent:=hproj)
-                                        cphase.name = realName
-
-                                        cphase.changeStartandDauer(startoffset, duration)
-
-                                        Try
-                                            pHierarchy.add(cphase, indentLevel)
-                                        Catch ex As Exception
-
-                                        End Try
-
                                         If ok1 Then
 
                                             If realName <> itemName Then
@@ -514,9 +502,17 @@ Module BMWItOModul
 
                                             End If
 
+                                            ' das muss auf alle Fälle gemacht werden 
+                                            cphase = New clsPhase(parent:=hproj)
+                                            cphase.name = realName
+
+                                            cphase.changeStartandDauer(startoffset, duration)
+
                                             hproj.AddPhase(cphase)
 
                                         Else
+
+                                            cphase = hproj.getPhase(realName)
 
                                             CType(activeWSListe.Cells(curZeile, protocolColumn), Excel.Range).Value = _
                                                     "Element ist doppelt und wird ignoriert "
@@ -526,9 +522,11 @@ Module BMWItOModul
                                                             realName & ", Parent: " & parentPhaseName
                                         End If
 
+                                        Try
+                                            pHierarchy.add(cphase, indentLevel)
+                                        Catch ex As Exception
 
-
-
+                                        End Try
 
                                     End If
 

@@ -10548,8 +10548,9 @@ Public Module Projekte
                             cBewertung = cResult.getBewertung(1)
 
                             vorlagenShape = MilestoneDefinitions.getShape(cResult.name, phasenName)
+                            Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
 
-                            hproj.calculateResultCoord(cResult.getDate, zeilenOffset, top, left, width, height)
+                            hproj.calculateResultCoord(cResult.getDate, zeilenOffset, factorB2H, top, left, width, height)
 
                             msName = projectboardShapes.calcMilestoneShapeName(hproj.name, .name, r)
                             'msName = hproj.name & "#" & .name & "#M" & r.ToString
@@ -11450,8 +11451,10 @@ Public Module Projekte
                             Else
                                 Dim zeilenoffset As Integer = 0
                                 vorlagenShape = MilestoneDefinitions.getShape(cResult.name, cphase.name)
+                                Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
 
-                                hproj.calculateResultCoord(cResult.getDate, zeilenoffset, top, left, width, height)
+                                hproj.calculateResultCoord(cResult.getDate, zeilenoffset, factorB2H, top, left, width, height)
+                                'hproj.calculateResultCoord(cResult.getDate, zeilenoffset, top, left, width, height)
 
                                 shpName = projectboardShapes.calcMilestoneShapeName(hproj.name, cphase.name, r)
                                 'shpName = hproj.name & "#" & cphase.name & "#M" & r.ToString
@@ -15152,7 +15155,12 @@ Public Module Projekte
 
                             For i = 1 To mycollection.Count
                                 cName = CStr(mycollection.Item(i))
-                                IDkennung = IDkennung & "#" & PhaseDefinitions.getPhaseDef(cName).UID.ToString
+                                Try
+                                    IDkennung = IDkennung & "#" & PhaseDefinitions.getPhaseDef(cName).UID.ToString
+                                Catch ex As Exception
+                                    IDkennung = IDkennung & "#"
+                                End Try
+
                             Next
 
                         End If

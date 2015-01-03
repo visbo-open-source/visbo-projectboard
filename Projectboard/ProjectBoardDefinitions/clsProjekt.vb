@@ -2368,14 +2368,31 @@ Public Class clsProjekt
 
     'End Sub
 
-    Public Sub calculateResultCoord(ByVal resultDate As Date, ByVal zeilenOffset As Integer, _
+    Public Sub calculateResultCoord(ByVal resultDate As Date, ByVal zeilenOffset As Integer, ByVal b2h As Double, _
                                     ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
 
 
         'Dim endDatum As Date = StartofCalendar.AddMonths(Me.Start - 1 + Dauer).AddDays(-1)
         Dim diffMonths As Integer = CInt(DateDiff(DateInterval.Month, StartofCalendar, resultDate))
-        Dim dayOfResult As Integer = resultDate.Day
+        Dim dayOfMilestone As Integer = resultDate.Day
+        Dim monthOfMilestone As Integer = resultDate.Month
         Dim msStart As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, resultDate))
+
+        Dim tageProMonat(12) As Integer
+        tageProMonat(0) = 30 ' dummy
+        tageProMonat(1) = 31
+        tageProMonat(2) = 28
+        tageProMonat(3) = 31
+        tageProMonat(4) = 30
+        tageProMonat(5) = 31
+        tageProMonat(6) = 30
+        tageProMonat(7) = 31
+        tageProMonat(8) = 31
+        tageProMonat(9) = 30
+        tageProMonat(10) = 31
+        tageProMonat(11) = 30
+        tageProMonat(12) = 31
+
 
         Dim faktor As Double = 0.6
 
@@ -2383,11 +2400,11 @@ Public Class clsProjekt
 
             ' Änderung 18.3.14 Zeilenoffset gibt an, in die wievielte Zeile das geschrieben werden soll 
             ' Änderung 26.11 eine Unterscheidung zeilenoffset ist nicht notwendig 
+            ' Änderung 3.1.15 es wird das Verhältnis Breite/Höhe = b2h mitübergeben, um die relative Größe der Vorlagenshapes zu erhalten 
             top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.5 * (0.8 - faktor) * boxHeight + (zeilenOffset) * boxHeight
-            left = (msStart / 365) * boxWidth * 12 - 0.5 * boxHeight * faktor
-            width = boxHeight * faktor
             height = boxHeight * faktor
-            
+            width = height * b2h
+            left = (diffMonths + dayOfMilestone / tageProMonat(monthOfMilestone)) * boxWidth - width / 2
 
         Else
             Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)

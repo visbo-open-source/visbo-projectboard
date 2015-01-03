@@ -143,14 +143,14 @@
         ' Settings für Multiprojekt Sichten 
         _mppStrict = False
         _mppFullyContained = True
-        _mppShowMsDate = False
+        _mppShowMsDate = True
         _mppShowMsName = True
-        _mppShowPhDate = False
+        _mppShowPhDate = True
         _mppShowPhName = True
         _mppShowAmpel = False
         _mppShowProjectLine = True
         _mppVertikalesRaster = False
-        _mppShowLegend = True
+        _mppShowLegend = False
         _importTyp = 1
 
 

@@ -1,18 +1,12 @@
 ﻿Imports xlNS = Microsoft.Office.Interop.Excel
 Public Class clsPhasen
 
-    Private AllPhasen As Collection
+    Private AllPhasen As SortedList(Of String, clsPhasenDefinition)
 
 
     Public Sub Add(phase As clsPhasenDefinition)
 
-        AllPhasen.Add(phase, phase.name)
-
-    End Sub
-
-    Public Sub Remove(myitem As Object)
-
-        AllPhasen.Remove(myitem)
+        AllPhasen.Add(phase.name, phase)
 
     End Sub
 
@@ -26,22 +20,32 @@ Public Class clsPhasen
 
     Public ReadOnly Property Contains(name As String) As Boolean
         Get
-            Contains = AllPhasen.Contains(name)
+            Contains = AllPhasen.ContainsKey(name)
         End Get
     End Property
 
     Public ReadOnly Property getPhaseDef(ByVal myitem As String) As clsPhasenDefinition
 
         Get
-            getPhaseDef = CType(AllPhasen.Item(myitem), clsPhasenDefinition)
+            If AllPhasen.ContainsKey(myitem) Then
+                getPhaseDef = CType(AllPhasen.Item(myitem), clsPhasenDefinition)
+            Else
+                getPhaseDef = AllPhasen.First.Value
+            End If
+
         End Get
 
     End Property
 
-    Public ReadOnly Property getPhaseDef(ByVal myitem As Integer) As clsPhasenDefinition
+    Public ReadOnly Property getPhaseDef(ByVal index As Integer) As clsPhasenDefinition
 
         Get
-            getPhaseDef = CType(AllPhasen.Item(myitem), clsPhasenDefinition)
+            If index < 1 Then
+                index = 1
+            ElseIf index > AllPhasen.Count Then
+                index = AllPhasen.Count
+            End If
+            getPhaseDef = CType(AllPhasen.ElementAt(index - 1).Value, clsPhasenDefinition)
         End Get
 
     End Property
@@ -60,7 +64,7 @@ Public Class clsPhasen
 
             'Dim key As String = calcKey(name, belongsTo)
 
-            If AllPhasen.Contains(name) Then
+            If AllPhasen.ContainsKey(name) Then
                 msAbbrev = CType(AllPhasen.Item(name), clsPhasenDefinition).shortName
             End If
 
@@ -83,9 +87,9 @@ Public Class clsPhasen
             Dim defaultPhaseAppearance As String = "Phasen Default"
 
 
-            If AllPhasen.Contains(name) Then
+            If AllPhasen.ContainsKey(name) Then
 
-                appearanceID = Me.getPhaseDef(name).darstellungsKlasse
+                appearanceID = CType(AllPhasen.Item(name), clsPhasenDefinition).darstellungsKlasse
                 If appearanceID = "" Then
                     appearanceID = defaultPhaseAppearance
                 End If
@@ -104,7 +108,7 @@ Public Class clsPhasen
 
     Public Sub New()
 
-        AllPhasen = New Collection
+        AllPhasen = New SortedList(Of String, clsPhasenDefinition)
 
     End Sub
 
