@@ -49,8 +49,14 @@
     ' sollen Bedarfe proportional zur Streckung oder Stauchung eines Projekt angepasst werden
     Property propAnpassRess As Boolean
 
+    ' soll bei der Leistbarkeit der Phasen anteilig gerechnet werden oder drin = 1
+    Property phasesProzentual As Boolean = False
+
     ' sollen die Werte der selektierten Projekte in PRC Summencharts angezeigt werden ? 
     Property showValuesOfSelected As Boolean
+
+    ' sollen Shapes aus den Update Informations-Forms heraus erzeugt werden, wenn sie noch nicht da sind 
+    Property createIfNotThere As Boolean
 
     ' Settings für die letzte User Selektion in der Tafel 
     Property selectedColumn As Integer
@@ -66,6 +72,20 @@
     Property costToleranzRel As Double
     Property costToleranzAbs As Double
 
+    ' Settings für Multiprojekt-Sichten
+    Property mppStrict As Boolean
+    Property mppFullyContained As Boolean
+    Property mppShowMsDate As Boolean
+    Property mppShowMsName As Boolean
+    Property mppShowPhDate As Boolean
+    Property mppShowPhName As Boolean
+    Property mppShowAmpel As Boolean
+    Property mppShowProjectLine As Boolean
+    Property mppVertikalesRaster As Boolean
+    Property mppShowLegend As Boolean
+
+
+    Property importTyp As Integer
 
     Sub New()
 
@@ -103,9 +123,11 @@
         _milestoneFreeFloat = False
         _autoCorrectBedarfe = True
         _propAnpassRess = False
+        _phasesProzentual = False
         _drawphases = False
         _showValuesOfSelected = False
         _loadProjectsOnChange = False
+        _createIfNotThere = True
 
         ' Settings für Import / Export 
         _EinzelRessExport = 0
@@ -117,6 +139,20 @@
         _timeToleranzAbs = 3
         _costToleranzRel = 0.02
         _costToleranzAbs = 2
+
+        ' Settings für Multiprojekt Sichten 
+        _mppStrict = False
+        _mppFullyContained = True
+        _mppShowMsDate = True
+        _mppShowMsName = True
+        _mppShowPhDate = True
+        _mppShowPhName = True
+        _mppShowAmpel = False
+        _mppShowProjectLine = True
+        _mppVertikalesRaster = False
+        _mppShowLegend = False
+        _importTyp = 1
+
 
     End Sub
 End Class

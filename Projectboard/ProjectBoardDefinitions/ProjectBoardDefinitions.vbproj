@@ -21,7 +21,7 @@
     <DefineTrace>true</DefineTrace>
     <OutputPath>bin\Debug\</OutputPath>
     <DocumentationFile>ProjectBoardDefinitions.xml</DocumentationFile>
-    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <NoWarn>42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,7 +30,7 @@
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DocumentationFile>ProjectBoardDefinitions.xml</DocumentationFile>
-    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <NoWarn>42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <OptionExplicit>On</OptionExplicit>
@@ -75,6 +75,14 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsFilter.vb" />
+    <Compile Include="clsImportFileHierarchy.vb" />
+    <Compile Include="clsNameMapping.vb" />
+    <Compile Include="clsAppearance.vb" />
+    <Compile Include="clsMeilensteine.vb" />
+    <Compile Include="clsMeilensteinDefinition.vb" />
+    <Compile Include="clsSynonyms.vb" />
+    <Compile Include="clsProjekteAlle.vb" />
     <Compile Include="clsProjektDBInfos.vb" />
     <Compile Include="clsProjektShapes.vb" />
     <Compile Include="clsDependenciesOfPDB.vb" />
@@ -83,9 +91,8 @@
     <Compile Include="clsDependency.vb" />
     <Compile Include="clsProjektHistorie.vb" />
     <Compile Include="clsWPFPieValues.vb" />
-    <Compile Include="clsMilestone.vb" />
     <Compile Include="clsBewertung.vb" />
-    <Compile Include="clsResult.vb" />
+    <Compile Include="clsMeilenstein.vb" />
     <Compile Include="clsConstellationDB.vb" />
     <Compile Include="clsAwinEvents.vb" />
     <Compile Include="clsawinSettings.vb" />
@@ -117,10 +124,22 @@
     <Compile Include="clsRollenDefinition.vb" />
     <Compile Include="clsShpChart.vb" />
     <Compile Include="clsVerknuepfung.vb" />
+    <Compile Include="frmMppSettings.Designer.vb">
+      <DependentUpon>frmMppSettings.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmMppSettings.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmEarliestLatestStart.Designer.vb">
       <DependentUpon>frmEarliestLatestStart.vb</DependentUpon>
     </Compile>
     <Compile Include="frmEarliestLatestStart.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmOptimizeKPI.Designer.vb">
+      <DependentUpon>frmOptimizeKPI.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmOptimizeKPI.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmPhaseInformation.Designer.vb">
@@ -236,6 +255,12 @@
     <EmbeddedResource Include="frmEarliestLatestStart.resx">
       <DependentUpon>frmEarliestLatestStart.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmMppSettings.resx">
+      <DependentUpon>frmMppSettings.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmOptimizeKPI.resx">
+      <DependentUpon>frmOptimizeKPI.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmPhaseInformation.resx">
       <DependentUpon>frmPhaseInformation.vb</DependentUpon>
     </EmbeddedResource>
@@ -292,6 +317,7 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="ClassDiagram1.cd" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>

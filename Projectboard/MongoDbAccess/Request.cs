@@ -56,13 +56,27 @@ namespace MongoDbAccess
         public bool projectNameAlreadyExists(string projectname, string variantname)
         {
             bool result;
-            if (variantname != null && variantname.Length > 0)
-                result = CollectionProjects.AsQueryable<clsProjektDB>()
-                        .Any(c => c.name == projectname && c.variantName == variantname);
-            else
-                result = CollectionProjects.AsQueryable<clsProjektDB>()
-                        .Any(c => c.name == projectname);
+            // in der Datenbank ist der Projektname abgespeichert als projectName#variantName, wenn es einen Varianten-Namen gibt
+            // nur projectname , sonst (hat historische Gründe .. weil sonst nach Einführung der Varianten alle bisherigen Projekt-Namen in der Datenbank
+            // Namen geändert werden müssten .. )
+
+            string searchstr = Projekte.calcProjektKeyDB(projectname, variantname);
+            result = CollectionProjects.AsQueryable<clsProjektDB>()
+                    .Any(c => c.name == searchstr);
+
+            
             return result;
+
+            //if (variantname != null && variantname.Length > 0)
+            //{
+            //    string searchstr = Projekte.calcProjektKey(projectname, variantname);
+            //    result = CollectionProjects.AsQueryable<clsProjektDB>()
+            //            .Any(c => c.name == searchstr);
+            //}
+            //else
+            //    result = CollectionProjects.AsQueryable<clsProjektDB>()
+            //            .Any(c => c.name == projectname);
+            
         }
 
         /** liest ein bestimmtes Projekt aus der DB (ggf. inkl. VariantName)
@@ -71,16 +85,22 @@ namespace MongoDbAccess
         public clsProjekt retrieveOneProjectfromDB(string projectname, string variantname)
         {
             var result = new clsProjektDB();
+            string searchstr = Projekte.calcProjektKeyDB(projectname, variantname);
+            result = CollectionProjects.AsQueryable<clsProjektDB>()
+                    .Where(c => c.name == searchstr)
+                    .Last();
 
-            if (variantname != null && variantname.Length > 0)
-            
-                result = CollectionProjects.AsQueryable<clsProjektDB>()
-                        .Where (c => c.name == projectname && c.variantName == variantname)
-                        .Last();
-            else
-                result = CollectionProjects.AsQueryable<clsProjektDB>()
-                        .Where (c => c.name == projectname)
-                        .Last();
+            //if (variantname != null && variantname.Length > 0)
+            //{
+            //    string searchstr = Projekte.calcProjektKey(projectname, variantname);
+            //    result = CollectionProjects.AsQueryable<clsProjektDB>()
+            //            .Where(c => c.name == searchstr )
+            //            .Last();
+            //}
+            //else
+            //    result = CollectionProjects.AsQueryable<clsProjektDB>()
+            //            .Where(c => c.name == projectname)
+            //            .Last();
                        
 
             //TODO: rückumwandeln
@@ -125,11 +145,15 @@ namespace MongoDbAccess
         //************************************/
         public bool deleteProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
         {
+            
             storedLatest = storedLatest.ToUniversalTime();
             storedEarliest = storedEarliest.ToUniversalTime();
+            string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
+            
 
             var query = Query < clsProjektDB >
-                .Where(p => (p.name == projectname && p.variantName == variantName && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
+                //.Where(p => (p.name == projectname && p.variantName == variantName && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
+                .Where(p => (p.name == searchstr && p.timestamp >= storedEarliest && p.timestamp <= storedLatest));
 
             var query2 = Query.And(
                     Query<clsProjektDB>.EQ(p => p.name, projectname),
@@ -137,13 +161,33 @@ namespace MongoDbAccess
                     Query<clsProjektDB>.GTE(p => p.timestamp, storedEarliest),
                     Query<clsProjektDB>.LTE(p => p.timestamp, storedLatest)
                 );
+            
             return CollectionProjects.Remove(query).Ok;
         }
-     
+
+        //************************************/
+        public bool deleteProjectTimestampFromDB(string projectname, string variantName, DateTime stored)
+        {
+
+            stored = stored.ToUniversalTime();
+            string searchstr = Projekte.calcProjektKeyDB(projectname, variantName);
+
+
+            var query = Query<clsProjektDB>
+                        .Where(p => (p.name == searchstr && p.timestamp == stored));
+
+            
+            return CollectionProjects.Remove(query).Ok;
+        }
 
         public SortedList<string, clsProjekt> retrieveProjectsFromDB(string projectname, string variantName, DateTime zeitraumStart, DateTime zeitraumEnde, DateTime storedEarliest, DateTime storedLatest, bool onlyLatest)
         {
             var result = new SortedList<string, clsProjekt>();
+            
+            // in der Datenbank sind die Zeiten als Universal time gespeichert .. 
+            // deshalb muss hier umgerechnet werden 
+            storedLatest = storedLatest.ToUniversalTime();
+            storedEarliest = storedEarliest.ToUniversalTime();
 
             if (onlyLatest)
             {
@@ -156,16 +200,51 @@ namespace MongoDbAccess
                             .Select(c => c.name)
                             .Distinct();
 
+                
                 foreach (string name in prequery)
                 {
+                    
+                    //// Ergänzt 15.10.14
+                    //// wieder zurückgenommen, weil jetzt in der Datenbank gespeichert wird, daß ein Projektname 
+                    //// pName#vName ist, sofern es einen variantName gibt 
+
+                    
+                    //var prequeryV = CollectionProjects.AsQueryable<clsProjektDB>()
+                    //    //.Where(c => c.tfSpalte >= startMonat-Module1.maxProjektdauer && c.startDate <= zeitraumEnde)
+                    //    //    .Where(c => c.startDate <= zeitraumEnde && c.endDate >= zeitraumStart)
+                    //        .Where(c => c.name == name)
+                    //        .Select(c => c.variantName)
+                    //        .Distinct();
+
+                    //foreach (string vName in prequeryV)
+                    //{
+                    //    var projektDB0 = CollectionProjects.AsQueryable<clsProjektDB>()
+                    //             .Where(c => c.name == name && c.variantName == vName)
+                    //             .OrderBy(c => c.timestamp)
+                    //             .Last();
+                    //    //TODO: rückumwandeln
+
+                    //    if (projektDB0.tfSpalte + projektDB0.Dauer >= startMonat)
+                    //    {
+                    //        var projekt = new clsProjekt();
+                    //        projektDB0.copyto(ref projekt);
+                    //        string schluessel = projekt.name + '#' + projekt.variantName;
+                    //        //result.Add(projekt.Id, projekt);
+                    //        result.Add(schluessel, projekt);
+                    //    }
+                    //}
+
+
+                    //// Ende Ergänzung 15.10.14
+                    
+                    // Start alter Code vor Ergänzung 15.10 - der ist jetzt (ab 16.10.14) wieder gültig 
                     var projektDB = CollectionProjects.AsQueryable<clsProjektDB>()
                                  .Where(c => c.name == name)
                                  .OrderBy(c => c.timestamp)
                                  .Last();
                     //TODO: rückumwandeln
-                    
-                    if (projektDB.tfSpalte + projektDB.Dauer >= startMonat  )
-                    
+
+                    if (projektDB.tfSpalte + projektDB.Dauer >= startMonat)
                     {
                         var projekt = new clsProjekt();
                         projektDB.copyto(ref projekt);
@@ -173,7 +252,8 @@ namespace MongoDbAccess
                         //result.Add(projekt.Id, projekt);
                         result.Add(schluessel, projekt);
                     }
-
+                    
+                    // Ende alter Code vor Ergänzung 15.10 - jetzt wieder der richtige Code
                    
                 }
             }
@@ -181,9 +261,22 @@ namespace MongoDbAccess
             else
             {
                 //gegeben: Projektname, Backupzeitraum (also storedEarliest, storedLatest)
+                
+                // in der Datenbank ist der Projektname als pName#vName gespeichert, wenn es eine Variante gibt
+                // pName, sonst
+                
+                string searchstr = Projekte.calcProjektKeyDB(projectname, variantName); 
+
+
+                //if (variantName != null && variantName.Length > 0)
+                //   searchstr = Projekte.calcProjektKey(projectname, variantName);
+                //else
+                //    searchstr = projectname;
+
+                
                 var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
-                               where e.name == projectname
-                               where e.variantName == variantName
+                               where e.name == searchstr
+                               // wird nicht mehr benötigt: where e.variantName == variantName
                                where e.timestamp >= storedEarliest && e.timestamp <= storedLatest
                                select e;
 
@@ -202,6 +295,38 @@ namespace MongoDbAccess
             return result;
         }
 
+
+        public Collection retrieveVariantNamesFromDB(string projectName)
+        {
+            var result = new Collection();
+
+            string trennzeichen = "#";
+            string searchstr = string.Concat(projectName, trennzeichen);
+                        
+            //gegeben: Projektname, Backupzeitraum (also storedEarliest, storedLatest)
+            //var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
+            //               where e.name.Contains(searchstr)
+            //               select e.variantName
+            //               .Distinct();
+
+
+            var prequery = CollectionProjects.AsQueryable<clsProjektDB>()
+                            .Where(c => c.name.Contains(searchstr))
+                            .Select(c => c.variantName)
+                            .Distinct();
+
+            foreach (string vName in prequery)
+            {
+                result.Add(vName);
+            }
+
+            return result;
+        }
+
+        
+        //
+        // gibt die Projekthistorie innerhalb eines gegebenen Zeitraums zu einem gegebenen Projekt+Varianten-Namen zurück
+        //
         public SortedList<DateTime, clsProjekt> retrieveProjectHistoryFromDB(string projectname, string variantName, DateTime storedEarliest, DateTime storedLatest)
         {
             var result = new SortedList<DateTime, clsProjekt>();
@@ -209,21 +334,31 @@ namespace MongoDbAccess
             storedLatest = storedLatest.ToUniversalTime();
             storedEarliest = storedEarliest.ToUniversalTime();
 
-                //gegeben: Projektname, Backupzeitraum (also storedEarliest, storedLatest)
-                var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
-                               where e.name == projectname
-                               where e.variantName == variantName
+            // in der Datenbank ist der Projektname als pName#vName gespeichert, wenn es eine Variante gibt
+            // pName, sonst
+            
+            string searchstr = Projekte.calcProjektKeyDB(projectname, variantName); 
+
+
+            //if (variantName != null && variantName.Length > 0)
+            //    searchstr = Projekte.calcProjektKey(projectname, variantName);
+            //else
+            //    searchstr = projectname;
+
+            //gegeben: Projektname, Backupzeitraum (also storedEarliest, storedLatest)
+            var projects = from e in CollectionProjects.AsQueryable<clsProjektDB>()
+                               where e.name == searchstr
+                               // wird nicht mehr benötigt where e.variantName == variantName
                                where e.timestamp >= storedEarliest && e.timestamp <= storedLatest
                                select e;
 
-                foreach (clsProjektDB p in projects)
+            foreach (clsProjektDB p in projects)
                 {
                     //TODO: rückumwandeln
                     var projekt = new clsProjekt();
                     p.copyto(ref projekt);
-                    //string schluessel = p.timestamp.ToString();
+                    
                     DateTime schluessel = projekt.timeStamp;
-                    //result.Add(projekt.Id, projekt);
                     result.Add(schluessel, projekt);
                 }
             

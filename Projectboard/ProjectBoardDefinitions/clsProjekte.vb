@@ -1,4 +1,7 @@
-﻿Public Class clsProjekte
+﻿
+Imports xlNS = Microsoft.Office.Interop.Excel
+
+Public Class clsProjekte
 
     Private AllProjects As SortedList(Of String, clsProjekt)
     Private AllShapes As SortedList(Of String, String)
@@ -58,7 +61,7 @@
         Else
             Throw New ArgumentException("Shape kann nicht einem nicht-existierenden Projekt hinzugefügt werden - ")
         End If
-        
+
 
 
     End Sub
@@ -122,6 +125,23 @@
 
     End Sub
 
+    ''' <summary>
+    ''' gibt an, ob die Liste den angegebenen Schlüssel enthält oder nicht 
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property contains(ByVal key As String) As Boolean
+        Get
+            If AllProjects.ContainsKey(key) Then
+                contains = True
+            Else
+                contains = False
+            End If
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' gibt eine sortierte Liste der vorkommenden Phasen Namen in der Menge von Projekten zurück 
@@ -129,13 +149,13 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getPhaseNames() As SortedList(Of String, String)
+    Public ReadOnly Property getPhaseNames() As Collection
 
         Get
 
-            Dim tmpListe As New SortedList(Of String, String)
+            Dim tmpListe As New Collection
             Dim cphase As clsPhase
-            
+
             For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
 
                 Try
@@ -144,7 +164,7 @@
 
                         cphase = kvp.Value.getPhase(p)
 
-                        If tmpListe.ContainsKey(cphase.name) Then
+                        If tmpListe.Contains(cphase.name) Then
                             ' nichts tun 
                         Else
                             tmpListe.Add(cphase.name, cphase.name)
@@ -171,11 +191,11 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMilestoneNames() As SortedList(Of String, String)
+    Public ReadOnly Property getMilestoneNames() As Collection
 
         Get
 
-            Dim tmpListe As New SortedList(Of String, String)
+            Dim tmpListe As New Collection
             Dim cphase As clsPhase
 
             Dim msName As String
@@ -189,7 +209,7 @@
                         For r = 1 To cphase.CountResults
 
                             msName = cphase.getResult(r).name
-                            If tmpListe.ContainsKey(msName) Then
+                            If tmpListe.Contains(msName) Then
                             Else
                                 tmpListe.Add(msName, msName)
                             End If
@@ -208,6 +228,7 @@
 
         End Get
     End Property
+
 
 
     ''' <summary>
@@ -253,6 +274,34 @@
             Catch ex As Exception
                 Throw New ArgumentException("Index nicht vorhanden:" & index.ToString)
             End Try
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt das Shape Element zurück, das zum Projekt gehört
+    ''' </summary>
+    ''' <param name="pName">Name des Projektes 
+    ''' (ist auch gleichzeitig der NAme des Shapes)</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getShape(ByVal pName As String) As xlNS.Shape
+        Get
+            Dim shapes As xlNS.Shapes
+            Dim projectShape As xlNS.ShapeRange
+
+            With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                shapes = .Shapes
+                Try
+                    projectShape = shapes.Range(pName)
+                    getShape = projectShape.Item(1)
+                Catch ex As Exception
+                    getShape = Nothing
+                End Try
+            End With
+
+
         End Get
     End Property
 
@@ -352,7 +401,7 @@
             ' selection type wird aktuell noch ignoriert .... 
 
 
-            
+
             For Each kvp In Me.AllProjects
 
                 With kvp.Value
@@ -408,6 +457,264 @@
     End Property
 
     ''' <summary>
+    ''' gibt eine Liste von Projektnamen in der showprojekte zurück, die einen der übergebenen SelItems1 bzw. SelItems enthalten 
+    ''' 
+    ''' </summary>
+    ''' <param name="suchTyp">0: selItems1/selitems2 = Phasen/Meilensteine</param>
+    ''' <param name="selItems1">Phasen , Rollen Kosten</param>
+    ''' <param name="selItems2">Meilensteine</param>
+    ''' <param name="von">Start des betrachteten Zeitraums</param>
+    ''' <param name="bis">Ende des betrachteten Zeitraums</param>
+    ''' <value></value>
+    ''' <returns>Collection of projectnames</returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property withinTimeFrame(ByVal suchTyp As Integer, ByVal selItems1 As Collection, ByVal selItems2 As Collection, ByVal von As Integer, ByVal bis As Integer) As SortedList(Of Double, String)
+        Get
+            Dim tmpListe As New SortedList(Of Double, String)
+            Dim cphase As clsPhase
+            Dim cmileStone As clsMeilenstein
+            Dim projektstart As Integer
+            Dim found As Boolean
+            Dim key As Double
+            ' selection type wird aktuell noch ignoriert .... 
+
+            suchTyp = 0
+
+            For Each kvp In Me.AllProjects
+
+                found = False
+                With kvp.Value
+
+                    projektstart = .Start + .StartOffset
+
+                    If (projektstart > bis) Or (projektstart + .anzahlRasterElemente - 1 < von) Then
+                        ' dann liegt das Projekt ausserhalb des Zeitraums und muss überhaupt nicht berücksichtig werden 
+
+                    Else
+
+                        For Each phaseName As String In selItems1
+
+                            cphase = kvp.Value.getPhase(phaseName)
+                            If Not IsNothing(cphase) Then
+                                If (projektstart + cphase.relStart - 1 > bis) Or (projektstart + cphase.relEnde - 1 < von) Then
+                                    ' dann liegt die Phase ausserhalb des betrachteten Zeitraums und muss nicht berücksichtigt werden 
+                                Else
+                                    found = True
+                                    Exit For
+                                End If
+                            End If
+
+                            For Each milestoneName As String In selItems2
+                                cmileStone = cphase.getResult(milestoneName)
+                                If Not IsNothing(cmileStone) Then
+                                    Dim msColumn As Integer = getColumnOfDate(cmileStone.getDate)
+                                    If msColumn > bis Or msColumn < von Then
+                                    Else
+                                        found = True
+                                        Exit For
+                                    End If
+                                End If
+
+                            Next
+
+                            If found Then
+                                Exit For
+                            End If
+
+                        Next
+
+                        If Not found And selItems1.Count = 0 Then
+                            For Each milestoneName As String In selItems2
+                                For Each hphase As clsPhase In kvp.Value.AllPhases
+                                    cmileStone = hphase.getResult(milestoneName)
+                                    If Not IsNothing(cmileStone) Then
+                                        Dim msColumn As Integer = getColumnOfDate(cmileStone.getDate)
+                                        If msColumn > bis Or msColumn < von Then
+                                        Else
+                                            found = True
+                                            Exit For
+                                        End If
+                                    End If
+                                Next
+
+                                If found Then
+                                    Exit For
+                                End If
+                            Next
+                        End If
+
+
+                    End If
+
+
+                End With
+
+                If found Then
+                    key = kvp.Value.tfZeile + kvp.Value.anzahlRasterElemente / 10000
+                    tmpListe.Add(key, kvp.Value.name)
+                End If
+
+            Next
+
+            withinTimeFrame = tmpListe
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' bestimmt für den angegebenen Zeitraum die Projekte, die eine der angegeben Phasen oder Meilensteine im Zeitraum enthalten. 
+    ''' bestimmt darüber hinaus das minimale bzw. maximale Datum , das die Phasen der Projekte aufspannen , die den Zeitraum "berühren"  
+    ''' </summary>
+    ''' <param name="selectedPhases">die Phasen, nach denen gesúcht wird </param>
+    ''' <param name="selectedMilestones">die Meilensteine, nach denen gesucht wird</param>
+    ''' <param name="von">linker Rand des Zeitraums</param>
+    ''' <param name="bis">rechter Rand des zeitraums</param>
+    ''' <param name="projektListe">Ergebnis enthält alle Projekt-Namen die eine der Phasen oder einen der Meilensteine im angegebenen Zeitraum enthalten </param>
+    ''' <param name="minDate">das kleinste auftretende Start-Datum einer Phase</param>
+    ''' <param name="maxDate">das größte auftretende Ende-Datum einer Phase </param>
+    ''' <remarks></remarks>
+    Public Sub bestimmeProjekteAndMinMaxDates(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+                                              ByVal von As Integer, ByVal bis As Integer, ByVal strict As Boolean, _
+                                                  ByRef projektListe As SortedList(Of Double, String), ByRef minDate As Date, ByRef maxDate As Date)
+
+        Dim tmpMinimum As Date = StartofCalendar.AddMonths(von - 1)
+        Dim tmpMaximum As Date = StartofCalendar.AddMonths(bis).AddDays(-1)
+        Dim tmpDate As Date
+
+        Dim hproj As clsProjekt
+        Dim cphase As clsPhase
+        Dim projektstart As Integer
+        Dim found As Boolean
+        Dim key As Double
+        ' selection type wird aktuell noch ignoriert .... 
+
+
+        For Each kvp In Me.AllProjects
+
+            found = False
+
+            With kvp.Value
+
+                projektstart = .Start + .StartOffset
+
+                If (projektstart > bis) Or (projektstart + .anzahlRasterElemente - 1 < von) Then
+                    ' dann liegt das Projekt ausserhalb des Zeitraums und muss überhaupt nicht berücksichtig werden 
+
+                Else
+
+                    For Each phaseName As String In selectedPhases
+
+                        cphase = kvp.Value.getPhase(phaseName)
+
+                        If Not IsNothing(cphase) Then
+                            If (projektstart + cphase.relStart - 1 > bis) Or (projektstart + cphase.relEnde - 1 < von) Then
+                                ' dann liegt die Phase ausserhalb des betrachteten Zeitraums und muss nicht berücksichtigt werden 
+                            Else
+                                found = True
+                                If strict Then
+                                    If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                        tmpMinimum = cphase.getStartDate
+                                    End If
+
+                                    If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                        tmpMaximum = cphase.getEndDate
+                                    End If
+                                End If
+                                
+
+                            End If
+                        End If
+
+                    Next
+
+                    ' das muss nur gemacht werden, wenn found <> true
+                    If Not found Then
+                        For Each milestone As String In selectedMilestones
+
+                            tmpDate = kvp.Value.getMilestoneDate(milestone)
+
+                            If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
+                                If getColumnOfDate(tmpDate) > bis Or getColumnOfDate(tmpDate) < von Then
+                                    ' nichts tun 
+                                Else
+                                    found = True
+
+                                End If
+                            End If
+
+                        Next
+
+                    End If
+
+
+                End If
+
+
+            End With
+
+            If found Then
+                key = kvp.Value.tfZeile + kvp.Value.anzahlRasterElemente / 10000
+                projektListe.Add(key, kvp.Value.name)
+            End If
+
+        Next
+
+        ' jetzt muss die zweite Welle nachkommen .. bestimmen , welches die erweiterten Min / Max Werte sind, falls not strict 
+        ' hier jetzt für alle Projekte in projektliste für jedes Element aus selectedphases und selectedmilestones das Minimum / Maximum bestimmen
+        If Not strict Then
+
+            For Each kvp As KeyValuePair(Of Double, String) In projektListe
+
+                hproj = Me.getProject(kvp.Value)
+
+                ' Phasen checken 
+                For Each phaseName As String In selectedPhases
+
+                    cphase = hproj.getPhase(phaseName)
+
+                    If Not IsNothing(cphase) Then
+                        If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                            tmpMinimum = cphase.getStartDate
+                            
+                        End If
+
+                        If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                            tmpMaximum = cphase.getEndDate
+
+                        End If
+                    End If
+
+                Next
+
+                ' Meilensteine checken 
+                For Each msName As String In selectedMilestones
+
+                    tmpDate = hproj.getMilestoneDate(msName)
+
+                    If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
+                        If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
+                            tmpMinimum = tmpDate
+
+                        End If
+
+                        If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
+                            tmpMaximum = tmpDate
+                        End If
+                    End If
+
+                Next
+
+            Next
+
+        End If
+        
+        minDate = tmpMinimum
+        maxDate = tmpMaximum
+
+    End Sub
+
+
+    ''' <summary>
     ''' gibt einen Array zurück, der angibt wie oft der übergebene Milestone im jeweiligen Monat vorkommt 
     ''' showrangeleft und showrangeright spannen den Betrachtungszeitraum auf
     ''' es wird ein Array der Dimension (3,zeitraum) zurückgegeben: 
@@ -425,7 +732,7 @@
             Dim anzProjekte As Integer
 
             Dim cphase As clsPhase
-            Dim cresult As clsResult
+            Dim cresult As clsMeilenstein
             Dim hproj As clsProjekt
             Dim ix As Integer
             Dim idFarbe As Integer
@@ -684,7 +991,7 @@
 
             For r = 1 To myCollection.Count
 
-                rname = myCollection.Item(r)
+                rname = CStr(myCollection.Item(r))
                 hkapa = PhaseDefinitions.getPhaseDef(rname).schwellWert
 
                 For m = 0 To zeitraum
@@ -735,7 +1042,7 @@
 
 
             For r = 1 To myCollection.Count
-                rname = myCollection.Item(r)
+                rname = CStr(myCollection.Item(r))
                 hkapa = RoleDefinitions.getRoledef(rname).Startkapa
 
                 For i = showRangeLeft To showRangeRight
@@ -1689,7 +1996,7 @@
             For i = 1 To roleCollection.Count
                 ReDim roleValues(zeitraum)
                 ReDim kapaValues(zeitraum)
-                roleName = roleCollection.Item(i)
+                roleName = CStr(roleCollection.Item(i))
 
                 tagessatzExtern = RoleDefinitions.getRoledef(roleName).tagessatzExtern
                 tagessatzIntern = RoleDefinitions.getRoledef(roleName).tagessatzIntern
@@ -1749,7 +2056,7 @@
             tmpSum = 0.0
 
             For i = 1 To myCollection.Count
-                rcName = myCollection.Item(i)
+                rcName = CStr(myCollection.Item(i))
 
                 ReDim tmpValues(zeitraum)
 
@@ -1797,7 +2104,7 @@
             tmpSum = 0.0
 
             For i = 1 To myCollection.Count
-                rcName = myCollection.Item(i)
+                rcName = CStr(myCollection.Item(i))
 
                 ReDim tmpValues(zeitraum)
 
@@ -1829,7 +2136,7 @@
 
         End Get
     End Property
-    
+
     ''' <summary>
     ''' gibt die Personalkosten zurück, die durch die internen Rollen entstehen, die in keinen Projekten gebunden sind 
     ''' </summary>

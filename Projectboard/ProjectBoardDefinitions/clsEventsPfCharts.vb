@@ -80,14 +80,14 @@ Public Class clsEventsPfCharts
             With Me.PfChartEvents.SeriesCollection(1)
                 If .ApplyDataLabels = Excel.XlDataLabelsType.xlDataLabelsShowNone Then
                     .ApplyDataLabels(Type:=Excel.XlDataLabelsType.xlDataLabelsShowNone)
-                    pt = .points(Arg2)
+                    pt = CType(.points(Arg2), Excel.Point)
                     pt.ApplyDataLabels(Type:=Excel.XlDataLabelsType.xlDataLabelsShowLabel)
                     pt.DataLabel.Text = pname
                 End If
             End With
 
-            Dim abstand As Integer
-            Call awinClkReset(abstand)
+            'Dim abstand As Integer
+            'Call awinClkReset(abstand)
             Dim calledFromPf As Boolean = True
             Call awinSelectProjectiST(pname, calledFromPf)
 

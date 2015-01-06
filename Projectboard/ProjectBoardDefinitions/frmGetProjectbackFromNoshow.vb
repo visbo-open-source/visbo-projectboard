@@ -13,11 +13,15 @@
         For Each selectString In ListBox1.SelectedItems
             If selectString <> "" Then
                 pname = selectString
-                If AlleProjekte.ContainsKey(pname) Then
+                If noShowProjekte.contains(pname) Then
 
                     Try
-                        hproj = AlleProjekte.Item(pname)
+                        hproj = noShowProjekte.getProject(pname)
+                        If ShowProjekte.contains(pname) Then
+                            ShowProjekte.Remove(pname)
+                        End If
                         ShowProjekte.Add(hproj)
+                        noShowProjekte.Remove(pname)
                     Catch ex As Exception
                         Call MsgBox(" Fehler - kann nicht in Show übernommen werden " & ex.Message)
                         Exit Sub
@@ -31,25 +35,17 @@
 
                     End With
 
-                    ' Änderung 26.7 wird jetzt in zeichneProjektinPlantafel gemacht 
-                    'If roentgenBlick.isOn Then
-                    '    With roentgenBlick
-                    '        Call awinShowNeedsofProject1(mycollection:=.myCollection, type:=.type, projektname:=pname)
-                    '    End With
 
-                    'End If
-
-                   
 
                     Try
-                        
+
                         toDoListe.Add(pname)
                         Dim shortName As String = hproj.name
 
                         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                         ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                         Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(tmpCollection, shortName, tfz)
+                        Call ZeichneProjektinPlanTafel(tmpCollection, shortName, tfz, tmpCollection, tmpCollection)
                     Catch ex As Exception
 
                     End Try
@@ -62,7 +58,7 @@
         Next
 
         For i = 1 To toDoListe.Count
-            pname = toDoListe.Item(i)
+            pname = CStr(toDoListe.Item(i))
             ListBox1.Items.Remove(pname)
         Next
 
@@ -87,17 +83,21 @@
 
     Private Sub frmGetProjectbackFromNoshow_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In noShowProjekte.Liste
 
-            If ShowProjekte.Liste.ContainsValue(kvp.Value) Then
-                ' nichts tun 
-            Else
-                ' in die Liste schreiben 
-                ListBox1.Items.Add(kvp.Key)
-            End If
-
+            ' in die Liste schreiben 
+            ListBox1.Items.Add(kvp.Key)
 
         Next
+
+    End Sub
+
+    Public Sub New()
+
+        ' This call is required by the designer.
+        InitializeComponent()
+
+        ' Add any initialization after the InitializeComponent() call.
 
     End Sub
 End Class

@@ -116,8 +116,8 @@ Public Class frmConfirmEditRess
 
             Try
 
-                With appInstance.Worksheets(arrWsNames(3))
-                    tmpShapes = .shapes
+                With CType(appInstance.Worksheets(arrWsNames(3)), Microsoft.Office.Interop.Excel.Worksheet)
+                    tmpShapes = .Shapes
                     shpElement = tmpShapes.Item(hproj.name)
                     shpElement.Select()
                 End With
@@ -170,8 +170,8 @@ Public Class frmConfirmEditRess
 
     Private Sub frmConfirmEditRess_Load(sender As Object, e As EventArgs) Handles Me.Load
 
-        Me.Top = frmCoord(PTfrm.editRess, PTpinfo.top)
-        Me.Left = frmCoord(PTfrm.editRess, PTpinfo.left)
+        Me.Top = CInt(frmCoord(PTfrm.editRess, PTpinfo.top))
+        Me.Left = CInt(frmCoord(PTfrm.editRess, PTpinfo.left))
 
         okButtonClicked = False
 

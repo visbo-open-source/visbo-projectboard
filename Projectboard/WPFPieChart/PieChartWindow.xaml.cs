@@ -91,7 +91,7 @@ namespace WPFPieChart
             if ((bool)checkbox.IsChecked)
             {
                 // Symbole löschen
-                Module1.awinDeleteMilestoneShapes(1);
+                Module1.awinDeleteProjectChildShapes(1);
             }
             
            

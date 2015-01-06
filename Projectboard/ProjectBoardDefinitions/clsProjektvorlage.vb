@@ -52,7 +52,7 @@
 
         If phaseEnde > 0 Then
 
-            maxM = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(phaseEnde)) + 1
+            maxM = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(phaseEnde)) + 1)
             If maxM <> _Dauer And maxM > 0 Then
                 _Dauer = maxM
                 ' hier muss jetzt die Dauer der Allgemeinen Phase angepasst werden ... 
@@ -64,6 +64,36 @@
 
 
     End Sub
+
+    ''' <summary>
+    ''' gibt zu einem gegebenen Meilenstein-Namen das clsResult Objekt zurück, sofern es existiert
+    ''' Nothing sonst
+    ''' </summary>
+    ''' <param name="msName">Name des Meilensteins</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestone(ByVal msName As String) As clsMeilenstein
+        Get
+            Dim tmpResult As clsMeilenstein = Nothing
+            Dim p As Integer
+            Dim found As Boolean = False
+
+            While (p <= AllPhases.Count - 1) And (Not found)
+
+                tmpResult = AllPhases.Item(p).getResult(msName)
+                If Not IsNothing(tmpResult) Then
+                    found = True
+                Else
+                    p = p + 1
+                End If
+            End While
+
+            getMilestone = tmpResult
+
+        End Get
+    End Property
+
 
     Public Property farbe() As Object
 
@@ -485,7 +515,7 @@
     Public ReadOnly Property getMilestoneColors() As Double()
         Get
             Dim cphase As clsPhase
-            Dim cresult As clsResult
+            Dim cresult As clsMeilenstein
             Dim tmpvalues() As Double
             Dim colorIndex As Integer
             Dim anzahlMilestones As Integer = 0
@@ -531,7 +561,7 @@
             Dim tmpValues As New SortedList(Of Date, String)
             Dim tmpDate As Date
             Dim cphase As clsPhase
-            Dim cresult As clsResult
+            Dim cresult As clsMeilenstein
 
             For p = 1 To Me.CountPhases
                 cphase = Me.getPhase(p)
@@ -719,7 +749,7 @@
                                         For i = phasenStart To phasenStart + dimension
 
                                             costValues(i) = costValues(i) + tempArray(i - phasenStart)
-                                            
+
 
                                         Next i
                                     End If
@@ -777,7 +807,7 @@
                                 'Catch ex As Exception
 
                                 'End Try
-                                
+
                             End If
                         Next k
                     End With
@@ -828,7 +858,7 @@
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
-                    costname = ErgebnisListe.Item(r)
+                    costname = CStr(ErgebnisListe.Item(r))
                     costValues = Me.getKostenBedarf(costname)
                     For i = 0 To _Dauer - 1
                         costSum = costSum + costValues(i)
@@ -888,7 +918,7 @@
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
-                    costname = ErgebnisListe.Item(r)
+                    costname = ErgebnisListe.Item(r).ToString
 
                     ReDim costValues(_Dauer - 1)
                     costValues = Me.getKostenBedarf(costname)
@@ -937,7 +967,7 @@
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
-                    costname = ErgebnisListe.Item(r)
+                    costname = CStr(ErgebnisListe.Item(r))
                     tmpValues = Me.getKostenBedarf(costname)
                     For i = 0 To _Dauer - 1
                         costValues(i) = costValues(i) + tmpValues(i)
@@ -976,7 +1006,7 @@
 
                 anzKostenarten = ErgebnisListe.Count
                 For r = 1 To anzKostenarten
-                    costname = ErgebnisListe.Item(r)
+                    costname = CStr(ErgebnisListe.Item(r))
                     tmpValues = Me.getKostenBedarf(costname)
                     For i = 0 To _Dauer - 1
                         costValues(i) = costValues(i) + tmpValues(i)
@@ -1017,7 +1047,7 @@
                 anzRollen = ErgebnisListe.Count
 
                 For r = 1 To anzRollen
-                    roleName = ErgebnisListe.Item(r)
+                    roleName = CStr(ErgebnisListe.Item(r))
                     roleValues = Me.getRessourcenBedarf(roleName)
                     For i = 0 To _Dauer - 1
                         roleSum = roleSum + roleValues(i)
@@ -1048,7 +1078,7 @@
             Dim i As Integer, r As Integer
             Dim roleName As String
 
-            
+
             If _Dauer > 0 Then
 
                 ReDim roleValues(_Dauer - 1)
@@ -1060,7 +1090,7 @@
                 anzRollen = ErgebnisListe.Count
 
                 For r = 1 To anzRollen
-                    roleName = ErgebnisListe.Item(r)
+                    roleName = CStr(ErgebnisListe.Item(r))
                     roleValues = Me.getRessourcenBedarf(roleName)
                     For i = 0 To _Dauer - 1
                         alleValues(i) = alleValues(i) + roleValues(i)
@@ -1080,7 +1110,7 @@
     End Property
 
 
-    
+
     ''' <summary>
     ''' gibt die Personalkosten des betreffenden Projektes zurück ; zugrundgelegt wird der interne Tagessatz 
     ''' </summary>

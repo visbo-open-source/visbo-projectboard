@@ -12,7 +12,7 @@ Public Class clsConstellationItem
         _projectName = ""
         _variantName = ""
         _Start = StartofCalendar.AddMonths(-1)
-        _show = False
+        _show = True
         _zeile = 0
 
     End Sub

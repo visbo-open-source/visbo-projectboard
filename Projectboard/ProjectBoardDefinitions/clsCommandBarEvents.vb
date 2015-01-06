@@ -47,7 +47,7 @@ Public Class clsCommandBarEvents
         ' awinSelection enthält alle selektierten Shapes 
         Dim awinSelection As Excel.ShapeRange
         Try
-            awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
             If awinSelection.Count > 0 Then
 
                 
@@ -59,7 +59,7 @@ Public Class clsCommandBarEvents
 
                     With shpelement
                         Try
-                            If .ID = ShowProjekte.getProject(.Name).shpUID Then
+                            If .ID = CInt(ShowProjekte.getProject(.Name).shpUID) Then
                                 selCollection.Add(.Name, .Name)
                             End If
                         Catch ex1 As Exception
@@ -110,8 +110,8 @@ Public Class clsCommandBarEvents
 
 
 
-        With appInstance.Worksheets(arrWsNames(3))
-            tmpShapes = .shapes
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            tmpShapes = .Shapes
             'tmpShapes = awinSelection
 
 
@@ -131,13 +131,13 @@ Public Class clsCommandBarEvents
                     ' Änderung 5.11: prüfung auf hasChart ist notwendig, um zusammengesetztes Projekt-Shape von Chart zu unterscheiden ...
                     ' Änderung 17.11: prüfung auf Connector ist notwendig, um zusammengesetztes Shape von Connector = Phasen-Shape zu unterscheiden
 
-                    If shapeType = PTshty.projektE Or shapeType = PTshty.projektN Then
+                    If isProjectType(shapeType) Then
 
 
                         SID = shpelement.ID.ToString
 
 
-                        laengeInMon = shpelement.Width / boxWidth
+                        laengeInMon = CInt(shpelement.Width / boxWidth)
 
 
                         '
@@ -145,7 +145,7 @@ Public Class clsCommandBarEvents
                         '
                         If ShowProjekte.shpListe.ContainsKey(SID) Then
 
-                            ' wenn es nur gerigfügige Änderugen waren, wird das Shape in dieser Funktion 
+                            ' wenn es nur gerigfügige Änderungen waren, wird das Shape in dieser Funktion 
                             ' wieder auf den alten Zustand eingerüttelt
                             somethingChanged = projectboardShapes.hasAchanged(shpelement)
                             hproj = ShowProjekte.getProjectS(SID)
@@ -162,7 +162,8 @@ Public Class clsCommandBarEvents
                                     Call NoshowNeedsofProject(hproj.name)
                                 End If
 
-                                If zeile = 0 Or shpelement.Rotation <> 0 Then
+                                If zeile = 0 Or shpelement.Rotation <> 0 And _
+                                    (shapeType = PTshty.projektC Or shapeType = PTshty.projektE Or shapeType = PTshty.projektN) Then
                                     ' ins Noshow stecken ... 
                                     movedToNoshow = True
                                     enableOnUpdate = False
@@ -197,7 +198,7 @@ Public Class clsCommandBarEvents
 
                                 End If
 
-                                
+
                             End If
 
                             Try
@@ -283,7 +284,9 @@ Public Class clsCommandBarEvents
                             Dim successful As Boolean = False
                             While Not successful
                                 Try
-                                    key = pname & "#"
+                                    ' Änderung 14.10.14
+                                    'key = pname & "#"
+                                    key = calcProjektKey(pname, "")
                                     AlleProjekte.Add(key, hproj)
                                     successful = True
                                 Catch ex As Exception
@@ -310,7 +313,7 @@ Public Class clsCommandBarEvents
                                 End With
                             End If
 
-                            If shapeType = PTshty.projektE Then
+                            If shapeType = PTshty.projektE Or shapeType = PTshty.projektC Then
                                 '
                                 ' zusammengesetztes Shape 
                                 '
@@ -324,7 +327,7 @@ Public Class clsCommandBarEvents
                                 ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                                 ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                                 Dim tmpCollection As New Collection
-                                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile)
+                                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, tmpCollection, tmpCollection)
 
                                 enableOnUpdate = True
 
@@ -334,11 +337,17 @@ Public Class clsCommandBarEvents
 
                                 With shpelement
                                     .Name = pname
-                                    .TextFrame2.TextRange.Text = pname
-                                    .Top = top
-                                    .Left = left
-                                    .Width = width
-                                    .Height = height
+                                    ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
+
+
+                                    .TextFrame2.TextRange.Text = hproj.getShapeText
+
+
+                                    ' Ende Änderung 13.10.14
+                                    .Top = CSng(top)
+                                    .Left = CSng(left)
+                                    .Width = CSng(width)
+                                    .Height = CSng(height)
                                     .Rotation = 0.0
                                 End With
 
@@ -355,12 +364,13 @@ Public Class clsCommandBarEvents
 
                         ' Änderung 8.6.14 hier werden jetzt die Projekt Charts aktualisiert, sofern welche da sind und die Time Machine nicht aktiv ist
                         If Not timeMachineIsOn Then
+                            Call aktualisierePMSForms(hproj)
                             Call aktualisiereCharts(hproj, True)
                         End If
 
 
 
-                    ElseIf shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Then
+                    ElseIf shapeType = PTshty.phaseE Or shapeType = PTshty.phaseN Or shapeType = PTshty.phase1 Then
 
 
                         ' es darf nur ein Shape von diesem Typ selektiert sein ... 
@@ -469,7 +479,7 @@ Public Class clsCommandBarEvents
                             Exit For
 
                         End If
-                        
+
 
                     ElseIf shapeType = PTshty.status Then
                         ' war vorher: 
@@ -479,17 +489,20 @@ Public Class clsCommandBarEvents
                         ' es darf nur ein Shape von diesem Typ selektiert sein ... 
                         If awinSelection.Count = 1 Then
 
+                            pname = extractName(shpelement.Name, PTshty.projektN)
+                            hproj = ShowProjekte.getProject(pname)
+
                             If formStatus Is Nothing Then
                                 formStatus = New frmStatusInformation
                             End If
 
-                            If Not formStatus.Visible Then
+                            If (Not formStatus.Visible) Then
                                 If formStatus.IsDisposed Then
                                     formStatus = New frmStatusInformation
                                 End If
                             End If
 
-                            Call updateStatusInformation(shpelement)
+                            Call updateStatusInformation(hproj)
 
                         Else
 
@@ -528,7 +541,7 @@ Public Class clsCommandBarEvents
                 updateKennung = 3
 
                 For i = 1 To tmpDelListe.Count
-                    pname = tmpDelListe.Item(i)
+                    pname = CStr(tmpDelListe.Item(i))
 
                     If roentgenBlick.isOn Then
                         Call NoshowNeedsofProject(pname)
@@ -544,7 +557,7 @@ Public Class clsCommandBarEvents
                         Try
                             ShowProjekte.Remove(pname)
                             AlleProjekte.Remove(key)
-                            DeletedProjekte.Add(hproj)
+                            'DeletedProjekte.Add(hproj)
                         Catch ex1 As Exception
 
                         End Try

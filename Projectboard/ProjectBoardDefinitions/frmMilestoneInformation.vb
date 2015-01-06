@@ -18,7 +18,7 @@
         frmCoord(PTfrm.msInfo, PTpinfo.top) = Me.Top
         frmCoord(PTfrm.msInfo, PTpinfo.left) = Me.Left
 
-        Call awinDeleteMilestoneShapes(1)
+        Call awinDeleteProjectChildShapes(1)
         Call awinDeSelect()
 
 
@@ -28,14 +28,14 @@
 
     Private Sub frmMilestoneInformation_Load(sender As Object, e As EventArgs) Handles Me.Load
 
-        Me.Top = frmCoord(PTfrm.msInfo, PTpinfo.top)
-        Me.Left = frmCoord(PTfrm.msInfo, PTpinfo.left)
+        Me.Top = CInt(frmCoord(PTfrm.msInfo, PTpinfo.top))
+        Me.Left = CInt(frmCoord(PTfrm.msInfo, PTpinfo.left))
 
 
         If bewertungsListe.Count > 0 Then
 
             With bewertungsListe.ElementAt(0).Value
-                Dim farbe As System.Drawing.Color = Drawing.Color.FromArgb(.color)
+                Dim farbe As System.Drawing.Color = Drawing.Color.FromArgb(CInt(.color))
 
                
                 bewertungsText.Text = .description
@@ -44,7 +44,7 @@
 
         Else
 
-            Dim farbe As System.Drawing.Color = Drawing.Color.FromArgb(awinSettings.AmpelNichtBewertet)
+            Dim farbe As System.Drawing.Color = Drawing.Color.FromArgb(CInt(awinSettings.AmpelNichtBewertet))
 
             
             bewertungsText.Text = "es existiert noch keine Bewertung ...."
@@ -114,4 +114,6 @@
     Private Sub prevButton_Click_1(sender As Object, e As EventArgs)
         Call MsgBox("noch nicht implementiert")
     End Sub
+
+    
 End Class
