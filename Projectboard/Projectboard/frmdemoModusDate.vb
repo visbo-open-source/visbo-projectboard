@@ -28,8 +28,13 @@ Public Class frmdemoModusDate
     End Sub
     Private Sub DateTimeHistory_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeHistory.ValueChanged
 
+        Dim hours As Integer, minutes As Integer
+        hours = Date.Now.Hour
+        minutes = Date.Now.Minute
+
         If DateDiff(DateInterval.Second, oldHistoryDate, DateTimeHistory.Value) >= 0 Then
-            historicDate = DateTimeHistory.Value
+            historicDate = DateTimeHistory.Value.AddHours(hours).AddMinutes(minutes)
+
         Else
             Call MsgBox("eingegebenes Datum muss später als '" & historicDate & " sein")
         End If

@@ -58,7 +58,7 @@
         Get
 
             Try
-                getRoledef = AllRollen.Item(myitem)
+                getRoledef = CType(AllRollen.Item(myitem), clsRollenDefinition)
             Catch ex As Exception
                 Throw New ArgumentException(myitem & " gibt es nicht als Rolle")
             End Try
@@ -72,7 +72,7 @@
         Get
 
             Try
-                getRoledef = AllRollen.Item(myitem)
+                getRoledef = CType(AllRollen.Item(myitem), clsRollenDefinition)
             Catch ex As Exception
                 Throw New ArgumentException(" es gibt keine Rolle mit Nummer " & myitem)
             End Try

@@ -6,7 +6,7 @@
     Public Sub Add(costdef As clsKostenartDefinition)
 
         Try
-            AllKostenarten.Add(costdef, costdef.name)
+            AllKostenarten.Add(Item:=costdef, Key:=costdef.name)
         Catch ex As Exception
             Throw New ArgumentException(costdef.name & " existiert bereits")
         End Try
@@ -19,7 +19,7 @@
         Try
             AllKostenarten.Remove(myitem)
         Catch ex As Exception
-            Throw New ArgumentException(myitem & " kann nicht als Kostenart entfernt werden")
+            Throw New ArgumentException("Fehler bei Kostenart entfernen")
         End Try
 
 
@@ -48,7 +48,7 @@
         Get
 
             Try
-                getCostdef = AllKostenarten.Item(myitem)
+                getCostdef = CType(AllKostenarten.Item(myitem), clsKostenartDefinition)
             Catch ex As Exception
                 Throw New ArgumentException(myitem & " ist keine Kostenart")
             End Try
@@ -59,7 +59,7 @@
     Public ReadOnly Property getCostdef(ByVal myitem As Integer) As clsKostenartDefinition
         Get
             Try
-                getCostdef = AllKostenarten.Item(myitem)
+                getCostdef = CType(AllKostenarten.Item(myitem), clsKostenartDefinition)
             Catch ex As Exception
                 Throw New ArgumentException(" es gibt keine Kostenart mit Nummer " & myitem)
             End Try

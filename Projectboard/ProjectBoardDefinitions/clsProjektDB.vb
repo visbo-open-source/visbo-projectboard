@@ -51,7 +51,12 @@
             If Not IsNothing(.Id) Then
                 Me.Id = .Id
             End If
-            Me.name = .name
+
+            ' wenn es einen Varianten-Namen gibt, wird als Datenbank Name 
+            ' .name = calcprojektkey(projekt) abgespeichert; das macht das Auslesen später effizienter 
+
+            Me.name = calcProjektKeyDB(projekt)
+
             Me.variantName = .variantName
             Me.Risiko = .Risiko
             Me.StrategicFit = .StrategicFit
@@ -92,12 +97,29 @@
 
     Public Sub copyto(ByRef projekt As clsProjekt)
         Dim i As Integer
+        Dim tmpstr(5) As String
 
 
         With projekt
             .timeStamp = Me.timestamp.ToLocalTime
             .Id = Me.Id
-            .name = Me.name
+
+            ' jetzt muss der Datenbank Name aufgesplittet werden in name und variant-Name
+            If Me.variantName <> "" And Me.variantName.Trim.Length > 0 Then
+                tmpstr = Me.name.Split(New Char() {CChar("#")}, 3)
+                If tmpstr.Length > 1 Then
+                    If tmpstr(1) = Me.variantName Then
+                        .name = tmpstr(0)
+                    Else
+                        .name = Me.name
+                    End If
+                Else
+                    .name = Me.name
+                End If
+            Else
+                .name = Me.name
+            End If
+
             .variantName = Me.variantName
             .Risiko = Me.Risiko
             .StrategicFit = Me.StrategicFit
@@ -141,7 +163,7 @@
             Catch ex As Exception
 
             End Try
-            
+
             '.Dauer = Me.Dauer
             For i = 1 To Me.AllPhases.Count
                 Dim newPhase As New clsPhase(projekt)
@@ -309,7 +331,7 @@
                 ' nicht aber der Wert für dauerindays oder startoffset
                 If Me.dauerInDays = 0 Then
                     ' nutze 
-                    startoffset = DateDiff(DateInterval.Day, .Parent.startDate, .Parent.startDate.AddMonths(Me.relStart - 1))
+                    startoffset = CInt(DateDiff(DateInterval.Day, .Parent.startDate, .Parent.startDate.AddMonths(Me.relStart - 1)))
                     'dauer = DateDiff(DateInterval.Day, .Parent.startDate.AddMonths(Me.relStart - 1), .Parent.startDate.AddMonths(Me.relEnde).AddDays(-1)) + 1
                     dauer = calcDauerIndays(.Parent.startDate.AddDays(startoffset), Me.relEnde - Me.relStart + 1, True)
                 Else
@@ -344,7 +366,7 @@
                     Dim tstAnzahl As Integer = Me.AllResults.Count
                     For r = 1 To tstAnzahl
 
-                        Dim newresult As New clsResult(parent:=phase)
+                        Dim newresult As New clsMeilenstein(parent:=phase)
 
                         Try
                             Me.getResult(r).CopyTo(newresult)
@@ -360,7 +382,7 @@
 
 
 
-                
+
 
             End With
 
@@ -390,7 +412,7 @@
                 Me.RollenTyp = .RollenTyp
                 Me.name = .name
                 Me.farbe = .farbe
-                Me.startkapa = .Startkapa
+                Me.startkapa = CInt(.Startkapa)
                 Me.tagessatzIntern = .tagessatzIntern
                 Me.tagessatzExtern = .tagessatzExtern
                 Bedarf = .Xwerte
@@ -403,11 +425,6 @@
 
             With role
                 .RollenTyp = Me.RollenTyp
-                '.name = Me.name
-                '.farbe = Me.farbe
-                '.Startkapa = Me.startkapa
-                '.tagessatzIntern = Me.tagessatzIntern
-                '.tagessatzExtern
                 .Xwerte = Me.Bedarf
                 .isCalculated = Me.isCalculated
             End With
@@ -449,8 +466,6 @@
 
             With cost
                 .KostenTyp = Me.KostenTyp
-                'Me.name = .name
-                'Me.farbe = .farbe
                 .Xwerte = Bedarf
             End With
 
@@ -494,7 +509,7 @@
         End Property
 
 
-        Friend Sub CopyTo(ByRef newResult As clsResult)
+        Friend Sub CopyTo(ByRef newResult As clsMeilenstein)
             Dim i As Integer
 
             Try
@@ -522,11 +537,11 @@
 
             End Try
 
-            
+
 
         End Sub
 
-        Friend Sub CopyFrom(ByVal newResult As clsResult)
+        Friend Sub CopyFrom(ByVal newResult As clsMeilenstein)
             Dim i As Integer
             Dim newb As New clsBewertungDB
 
@@ -544,7 +559,7 @@
                 Catch ex As Exception
 
                 End Try
-                
+
 
             End With
 

@@ -66,7 +66,7 @@
     <DocumentationFile>Projectboard.xml</DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
-    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
+    <NoWarn>42017,42018,42019,42032,42036</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
   </PropertyGroup>
@@ -81,7 +81,7 @@
     <DocumentationFile>Projectboard.xml</DocumentationFile>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
-    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
+    <NoWarn>42017,42018,42019,42032,42036</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
   </PropertyGroup>
@@ -151,16 +151,34 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
-    <Compile Include="frmDeleteProjects.Designer.vb">
-      <DependentUpon>frmDeleteProjects.vb</DependentUpon>
+    <Compile Include="frmProjPortfolioAdmin.Designer.vb">
+      <DependentUpon>frmProjPortfolioAdmin.vb</DependentUpon>
     </Compile>
-    <Compile Include="frmDeleteProjects.vb">
+    <Compile Include="frmProjPortfolioAdmin.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmCreateNewVariant.Designer.vb">
+      <DependentUpon>frmCreateNewVariant.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmCreateNewVariant.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmShowPlanElements.Designer.vb">
+      <DependentUpon>frmShowPlanElements.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmShowPlanElements.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmdemoModusDate.Designer.vb">
       <DependentUpon>frmdemoModusDate.vb</DependentUpon>
     </Compile>
     <Compile Include="frmdemoModusDate.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmLoadCockpit.Designer.vb">
+      <DependentUpon>frmLoadCockpit.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmLoadCockpit.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmProjekteSpeichern.Designer.vb">
@@ -217,6 +235,13 @@
     <Compile Include="frmShowProjCharacteristics.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmStoreCockpit.Designer.vb">
+      <DependentUpon>frmStoreCockpit.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmStoreCockpit.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BMWItOModul.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Ribbon1.vb" />
     <Compile Include="Tabelle1.Designer.vb">
@@ -243,11 +268,17 @@
     <Compile Include="ThisWorkbook.vb">
       <DependentUpon>Projectboard.xlsx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="frmDeleteProjects.resx">
-      <DependentUpon>frmDeleteProjects.vb</DependentUpon>
+    <EmbeddedResource Include="frmProjPortfolioAdmin.resx">
+      <DependentUpon>frmProjPortfolioAdmin.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmCreateNewVariant.resx">
+      <DependentUpon>frmCreateNewVariant.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmdemoModusDate.resx">
       <DependentUpon>frmdemoModusDate.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmLoadCockpit.resx">
+      <DependentUpon>frmLoadCockpit.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmProjekteSpeichern.resx">
       <DependentUpon>frmProjekteSpeichern.vb</DependentUpon>
@@ -273,8 +304,14 @@
     <EmbeddedResource Include="frmSelectRPlanImport.resx">
       <DependentUpon>frmSelectRPlanImport.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmShowPlanElements.resx">
+      <DependentUpon>frmShowPlanElements.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmShowProjCharacteristics.resx">
       <DependentUpon>frmShowProjCharacteristics.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmStoreCockpit.resx">
+      <DependentUpon>frmStoreCockpit.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
@@ -366,6 +403,25 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Pfeil rechts 32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\chart.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\businessmen.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\money2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\phasen_icon1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\zoom_in.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\milestones_icon1.png" />
+    <None Include="Resources\zoom_out.png" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

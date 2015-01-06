@@ -21,6 +21,9 @@ Public Module Module1
     Public iWertFarbe As Object
     'Public HoehePrcChart As Double
 
+    Public myProjektTafel As String = ""
+    Public myCustomizationFile As String
+
     Public vergleichsfarbe0 As Object
     Public vergleichsfarbe1 As Object
     Public vergleichsfarbe2 As Object
@@ -31,23 +34,30 @@ Public Module Module1
     ' wird immer dann auf false gesetzt , wenn in eigenen Routinen Projekte gesetzt, gelöscht oder ins Show/Noshow gestellt werden 
     Public enableOnUpdate As Boolean = True
 
-    ' MongoDB ist gestartet mongoDBaktiv = true; MongoDB ist unterbrochen mongoDBaktiv=false
-    Public mongoDBaktiv = False
+
+    '' MongoDB ist gestartet mongoDBaktiv = true; MongoDB ist unterbrochen mongoDBaktiv=false
+    'Public mongoDBaktiv = False
 
     Public Projektvorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte
+    Public noShowProjekte As New clsProjekte
     Public selectedProjekte As New clsProjekte
-    Public AlleProjekte As New SortedList(Of String, clsProjekt)
+    'Public AlleProjekte As New SortedList(Of String, clsProjekt)
+    Public AlleProjekte As New clsProjekteAlle
     Public ImportProjekte As New clsProjekte
-    Public DeletedProjekte As New clsProjekte
+    'Public DeletedProjekte As New clsProjekte
     Public projectConstellations As New clsConstellations
     Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes
 
+    ' hier werden die Mapping Informationen abgelegt 
+    Public phaseMappings As New clsNameMapping
+    Public milestoneMappings As New clsNameMapping
+
+
     ' hier wird die Projekt Historie eines Projektes aufgenommen 
     Public projekthistorie As New clsProjektHistorie
-    Public selectedToDelete As New clsProjektDBInfos
     Public specialListofPhases As New Collection
 
     Public feierTage As New SortedSet(Of Date)
@@ -57,8 +67,10 @@ Public Module Module1
 
     Public PfChartBubbleNames() As String
 
+    Public appearanceDefinitions As New SortedList(Of String, clsAppearance)
     Public RoleDefinitions As New clsRollen
     Public PhaseDefinitions As New clsPhasen
+    Public MilestoneDefinitions As New clsMeilensteine
     Public CostDefinitions As New clsKostenarten
     Public DiagramList As New clsDiagramme
     Public awinButtonEvents As New clsAwinEvents
@@ -105,6 +117,11 @@ Public Module Module1
     Public Const summentitel10 As String = "Details zur Über-Auslastung"
     Public Const summentitel11 As String = "Details zur Unter-Auslastung"
     Public Const maxProjektdauer As Integer = 60
+
+
+    ' Welche Business-Units gibt es ? 
+    Public businessUnit As List(Of String)
+
 
     Public Enum PTbubble
         strategicFit = 0
@@ -162,19 +179,16 @@ Public Module Module1
     ' Enumertaion, um in Onupdate, etc. den Typ des Shapes feststellen zu können 
     Public Enum PTshty
         projektN = 0
-        projektE = 1
-        phaseN = 2
-        phaseE = 3
-        milestoneN = 4
-        milestoneE = 5
-        status = 6
-        dependency = 7
+        projektC = 1
+        projektE = 2
+        phaseN = 3
+        phaseE = 4
+        phase1 = 5
+        milestoneN = 6
+        milestoneE = 7
+        status = 8
+        dependency = 9
     End Enum
-
-    ' wird in awinSetTypen dimensioniert und gesetzt 
-    Public portfolioDiagrammtitel() As String
-
-
 
     ' Enumeration History Change Criteria: um anzugeben, welche Veränderung man in der History eines Projektes sucht 
 
@@ -219,6 +233,20 @@ Public Module Module1
         inhalt = 1
     End Enum
 
+    Public Enum PTmenue
+        visualisieren = 0
+        leistbarkeitsAnalyse = 1
+        multiprojektReport = 2
+    End Enum
+
+
+    ' wird in awinSetTypen dimensioniert und gesetzt 
+    Public portfolioDiagrammtitel() As String
+
+    ' nimmt die Namen der im Zuge der Optimierung automatisch generierten Szenarios auf
+    Public autoSzenarioNamen(3) As String
+
+
     ' dieser array nimmt die Koordinaten der Formulare auf 
     ' die Koordinaten werden in der Reihenfolge gespeichert: top, left, width, height 
     Public frmCoord(19, 3) As Double
@@ -252,6 +280,17 @@ Public Module Module1
         left = 1
         width = 2
         height = 3
+    End Enum
+
+    ' wird in der Treeview für Laden, Löschen, Aktivieren von TreeView Formularen benötigt 
+    Public Enum PTtvactions
+        delFromDB = 0
+        delFromSession = 1
+        loadPVS = 2
+        activateV = 3
+        definePortfolioDB = 4
+        definePortfolioSE = 5
+        loadPV = 6
     End Enum
 
    
@@ -309,9 +348,15 @@ Public Module Module1
     Public awinPath As String
     Public requirementsOrdner As String = "requirements\"
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
+    Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
     Public projektFilesOrdner As String = "ProjectFiles"
     Public deletedFilesOrdner As String = "DeletedFiles"
     Public rplanimportFilesOrdner As String = "RPLANImport"
+    ' spezifisch für BMW Export 
+    Public bmwExportFilesOrdner As String = "Export Dateien"
+    Public bmwFC52Vorlage As String = requirementsOrdner & "FC52 Vorlage.xlsx"
+    Public bmwExportVorlage As String = requirementsOrdner & "export Vorlage.xlsx"
+
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"
     ' Public projektDetail As String = "Project Detail.xlsx"
     Public projektAustausch As String = requirementsOrdner & "Projekt-Steckbrief.xlsx"
@@ -319,7 +364,7 @@ Public Module Module1
     Public RepProjectVorOrdner As String = requirementsOrdner & "ReportTemplatesProject"
     Public RepPortfolioVorOrdner As String = requirementsOrdner & "ReportTemplatesPortfolio"
     Public demoModusHistory As Boolean = False
-    Public historicDate As Date = #6/6/2012#
+    Public historicDate As Date
 
     Public FirstX As Double = -1.0
     Public FirstY As Double = -1.0
@@ -333,28 +378,7 @@ Public Module Module1
 
 
 
-    '
-    ' Funktion prüft, ob der angegebene Name bereits Element der Projektliste ist
-    '
-    Function inProjektliste(strName As String) As Boolean
-
-        Dim found As Boolean
-        Dim foundinDatabase As Boolean = False
-
-        If Len(strName) < 2 Then
-            found = False
-        ElseIf AlleProjekte.ContainsKey(strName & "#") Then
-            found = True
-        ElseIf foundinDatabase Then
-            ' hier muss noch geprüft werden, ob das File in der Datenbank vorkommt 
-            found = True
-        Else
-            found = False
-        End If
-
-        inProjektliste = found
-
-    End Function
+ 
 
 
     ''' <summary>
@@ -396,7 +420,7 @@ Public Module Module1
 
 
         ' prüfen, ob es in der ShowProjektListe ist ...
-        If ShowProjekte.Liste.ContainsKey(pname) Then
+        If ShowProjekte.contains(pname) Then
 
             ' Shape wird gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
             Call clearProjektinPlantafel(pname)
@@ -405,11 +429,11 @@ Public Module Module1
             Try
                 hproj = ShowProjekte.getProject(pname)
                 key = calcProjektKey(hproj)
-                Try
-                    DeletedProjekte.Add(hproj)
-                Catch ex As Exception
-                    ' nichts tun, dann wurde das eben schon mal gelöscht ..
-                End Try
+                'Try
+                '    DeletedProjekte.Add(hproj)
+                'Catch ex As Exception
+                '    ' nichts tun, dann wurde das eben schon mal gelöscht ..
+                'End Try
 
             Catch ex As Exception
                 Call MsgBox(" Fehler in Delete " & pname & " , Modul: awinLoescheProjekt")
@@ -428,8 +452,8 @@ Public Module Module1
             AlleProjekte.Remove(key)
 
 
-            Dim abstand As Integer ' eigentlich nur Dummy Variable, wird aber in Tabelle2 benötigt ...
-            Call awinClkReset(abstand)
+            'Dim abstand As Integer ' eigentlich nur Dummy Variable, wird aber in Tabelle2 benötigt ...
+            'Call awinClkReset(abstand)
 
             ' ein Projekt wurde gelöscht bzw aus Showprojekte entfernt  - typus = 3
             Call awinNeuZeichnenDiagramme(3)
@@ -498,7 +522,7 @@ Public Module Module1
 
         Try
 
-            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
                 If CInt(tmpStr(1)) = PTpfdk.Rollen Then
@@ -567,7 +591,7 @@ Public Module Module1
 
         Try
 
-            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
 
@@ -606,7 +630,7 @@ Public Module Module1
 
         Try
 
-            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
                 If CInt(tmpStr(1)) = PTpfdk.Kosten Then
@@ -641,7 +665,7 @@ Public Module Module1
 
         Try
 
-            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
                 If CInt(tmpStr(1)) = PTpfdk.Phasen Then
@@ -677,7 +701,7 @@ Public Module Module1
 
         Try
 
-            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
                 If CInt(tmpStr(1)) = PTpfdk.Meilenstein Then
@@ -710,7 +734,7 @@ Public Module Module1
 
         Try
 
-            tmpStr = chtobjName.Split(New Char() {"#"}, 20)
+            tmpStr = chtobjName.Split(New Char() {CChar("#")}, 20)
             If tmpStr(0) = "pf" And tmpStr.Length >= 2 Then
 
                 If CInt(tmpStr(1)) = PTpfdk.FitRisiko Or _
@@ -950,40 +974,12 @@ Public Module Module1
 
     'End Sub
 
-    Sub awinClkReset(abstand As Integer)
-        'Dim hproj As clsProjekt
-        'Dim tfz As Integer, tfs As Integer
-        'Dim plaenge As Integer
-        'Dim pcolor As Object = 0
-        'Dim failfree As Boolean = True
+    'Sub awinClkReset(abstand As Integer)
+
+    '    abstand = 0
 
 
-        'Exit Sub
-
-        'Call DeleteStartMarkers()
-
-        'If selectedProjects(1) <> "" Then
-        '    ' jetzt muss das bisher selektierte Projekt zurückgesetzt werden 
-        '    Try
-        '        hproj = ShowProjekte.getProject(selectedProjects(1))
-        '        With hproj
-        '            tfz = .tfZeile
-        '            tfs = .tfSpalte
-        '            plaenge = .Dauer
-        '            pcolor = .farbe
-        '        End With
-
-        '    Catch ex As Exception
-        '        failfree = False
-        '    End Try
-
-        'End If
-
-
-        abstand = 0
-
-
-    End Sub
+    'End Sub
 
 
 
@@ -1019,7 +1015,7 @@ Public Module Module1
 
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Umbenennen"
             .Tag = "Umbenennen"
@@ -1033,7 +1029,7 @@ Public Module Module1
 
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Löschen"
             .Tag = "Loesche aus Portfolio"
@@ -1046,7 +1042,7 @@ Public Module Module1
         awinButtonEvents.Add(awinevent)
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Show / Noshow"
             .Tag = "Show / Noshow"
@@ -1059,7 +1055,7 @@ Public Module Module1
         awinButtonEvents.Add(awinevent)
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Bearbeiten Projekt-Attribute"
             .Tag = "Bearbeiten Projekt-Attribute"
@@ -1072,7 +1068,7 @@ Public Module Module1
         awinButtonEvents.Add(awinevent)
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Beauftragen"
             .Tag = "Beauftragen"
@@ -1118,7 +1114,7 @@ Public Module Module1
 
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Löschen"
             .Tag = "Löschen"
@@ -1132,7 +1128,7 @@ Public Module Module1
         awinButtonEvents.Add(awinevent)
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
             .Caption = "Röntgenblick ein/aus"
             .Tag = "Bedarf anzeigen"
@@ -1145,9 +1141,9 @@ Public Module Module1
         awinButtonEvents.Add(awinevent)
 
         ' Add a menu item
-        myitem = myBar.Controls.Add(Type:=MsoControlType.msoControlButton)
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
         With myitem
-            .Caption = "Optimieren"
+            .Caption = "nach Freiheitsgraden optimieren"
             .Tag = "Optimieren"
             '.OnAction = "awinOptimizeStartOfProjects"
         End With
@@ -1157,6 +1153,19 @@ Public Module Module1
         awinevent.PrcChartRightClick = myitem
         awinButtonEvents.Add(awinevent)
 
+        ' ergänzt am 2.11.2014
+        ' Add a menu item
+        myitem = CType(myBar.Controls.Add(Type:=MsoControlType.msoControlButton), Microsoft.Office.Core.CommandBarButton)
+        With myitem
+            .Caption = "nach Varianten optimieren"
+            .Tag = "Varianten optimieren"
+            '.OnAction = "awinOptimizeStartOfProjects"
+        End With
+        'awinevent = New clsAwinEvent
+        'awinevent.Button4Events = myitem
+        awinevent = New clsEventsPrcCharts
+        awinevent.PrcChartRightClick = myitem
+        awinButtonEvents.Add(awinevent)
 
     End Sub
 
@@ -1191,20 +1200,6 @@ Public Module Module1
 
 
     End Sub
-
-    Function awinRetrieveUniqueId(objekttyp As String) As Long
-        Dim nr As Long
-
-        With appInstance.Worksheets(arrWsNames(14))
-            nr = .Cells(1, 1).Value
-            .Cells(1, 1).Value = nr + 1
-            .Cells(2 + nr, 1).Value = nr
-            .Cells(2 + nr, 2).Value = objekttyp
-        End With
-
-        awinRetrieveUniqueId = nr
-
-    End Function
 
 
 
@@ -1249,11 +1244,11 @@ Public Module Module1
     '
     Sub awinLoescheCockpitCharts()
         Dim i As Integer
-        Dim chtobj As ChartObject
+        Dim chtobj As Excel.ChartObject
 
-        With appInstance.Worksheets(arrWsNames(3))
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
 
-            For Each chtobj In .ChartObjects
+            For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 If istCockpitDiagramm(chtobj) Then
                     chtobj.Delete()
                 End If
@@ -1281,14 +1276,14 @@ Public Module Module1
     ''' <remarks></remarks>
     Sub awinLoescheCockpitCharts(ByVal prctyp As Integer)
         Dim i As Integer
-        Dim chtobj As ChartObject
+        Dim chtobj As Excel.ChartObject
         Dim chtTitle As String
 
         ' finde alle Charts, die Cockpit Chart sind und vom Typ her diagrammtypen(prctyp)
 
         With appInstance.Worksheets(arrWsNames(3))
             Dim found As Boolean
-            For Each chtobj In .ChartObjects
+            For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
                 Try
                     chtTitle = chtobj.Chart.ChartTitle.Text
                 Catch ex As Exception
@@ -1320,7 +1315,7 @@ Public Module Module1
 
     Sub awinLoescheChartsAtPosition(ByVal left As Double)
 
-        Dim chtobj As ChartObject
+        Dim chtobj As Excel.ChartObject
         Dim tstLeft As Double
         Dim tmpArray() As String
 
@@ -1330,7 +1325,7 @@ Public Module Module1
 
         With appInstance.Worksheets(arrWsNames(3))
 
-            For Each chtobj In .ChartObjects
+            For Each chtobj In CType(.ChartObjects, Excel.ChartObjects)
 
                 tmpArray = chtobj.Name.Split(New Char() {CType("#", Char)}, 5)
 
@@ -1347,7 +1342,7 @@ Public Module Module1
                 Catch ex As Exception
 
                 End Try
-                
+
             Next chtobj
 
         End With
@@ -1447,7 +1442,7 @@ Public Module Module1
         '
         Try
             With appInstance.ActiveWindow
-                ziel = (.VisibleRange.Left + .VisibleRange.Width / 2) / boxWidth
+                ziel = CInt((.VisibleRange.Left + .VisibleRange.Width / 2) / boxWidth)
             End With
 
             With appInstance.ActiveSheet
@@ -1477,7 +1472,7 @@ Public Module Module1
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
                 With kvp.Value
-                    If zeile = .tfZeile Then
+                    If zeile >= .tfZeile And zeile < .tfZeile + getNeededSpace(kvp.Value) Then
                         istfrei = False
                         Exit For
                     End If
@@ -1531,42 +1526,48 @@ Public Module Module1
         Dim anzahlzeilen As Integer
 
 
-        Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
-        anzahlzeilen = getNeededSpace(hproj)
 
-        ' Konsistenzbedingung prüfen ... 
-        If zeile < 2 Then
-            zeile = 2
-        End If
+        Try
+            Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
+            anzahlzeilen = getNeededSpace(hproj)
 
-        'If mycollection.Count = 0 Then
-        '    mycollection.Add(pname, pname)
-        'End If
+            ' Konsistenzbedingung prüfen ... 
+            If zeile < 2 Then
+                zeile = 2
+            End If
 
-        If Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen) Then
-            tryoben = zeile - 1
-            tryunten = zeile + 1
+            'If mycollection.Count = 0 Then
+            '    mycollection.Add(pname, pname)
+            'End If
 
-            ' jetzt ggf eine neue Position für das Shape suchen - dabei iterierend unten bzw oben suchen
-            zeile = tryunten
-            lookDown = True
+            If Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen) Then
+                tryoben = zeile - 1
+                tryunten = zeile + 1
 
-            While Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen)
-                'lookDown = Not lookDown
-                If lookDown Then
-                    tryunten = tryunten + 1
-                    zeile = tryunten
-                Else
-                    tryoben = tryoben - 1
-                    If tryoben < 2 Then
+                ' jetzt ggf eine neue Position für das Shape suchen - dabei iterierend unten bzw oben suchen
+                zeile = tryunten
+                lookDown = True
+
+                While Not magicBoardIstFrei(mycollection, pname, zeile, spalte, laenge, anzahlzeilen)
+                    'lookDown = Not lookDown
+                    If lookDown Then
                         tryunten = tryunten + 1
                         zeile = tryunten
                     Else
-                        zeile = tryoben
+                        tryoben = tryoben - 1
+                        If tryoben < 2 Then
+                            tryunten = tryunten + 1
+                            zeile = tryunten
+                        Else
+                            zeile = tryoben
+                        End If
                     End If
-                End If
-            End While
-        End If
+                End While
+            End If
+        Catch ex As Exception
+
+        End Try
+        
 
         findeMagicBoardPosition = zeile
 
@@ -1589,145 +1590,64 @@ Public Module Module1
     ''' 2=nur Status
     ''' 3=nur Phasen</param>
     ''' <remarks></remarks>
-    Public Sub awinDeleteMilestoneShapes(ByVal auswahl As Integer)
+    Public Sub awinDeleteProjectChildShapes(ByVal auswahl As Integer)
 
         Dim worksheetShapes As Excel.Shapes
         Dim shpElement As Excel.Shape
-        Dim firstTime As Boolean = True
         Dim shapeType As Integer
+
+        Dim typCollection As New Collection
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formereO As Boolean = enableOnUpdate
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
+
+        Select Case auswahl
+            Case 0
+                formMilestone.Visible = False
+                formStatus.Visible = False
+                formPhase.Visible = False
+
+                typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+
+            Case 1
+                formMilestone.Visible = False
+                typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+
+            Case 2
+                formStatus.Visible = False
+
+            Case 3
+                formPhase.Visible = False
+                typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+
+            Case Else
+                appInstance.EnableEvents = formerEE
+                enableOnUpdate = formereO
+                Exit Sub
+        End Select
+
         Try
-            worksheetShapes = appInstance.Worksheets(arrWsNames(3)).shapes
+            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
             For Each shpElement In worksheetShapes
 
                 shapeType = kindOfShape(shpElement)
 
-                'With shpElement
+                ' neu 
 
-                '    Select Case auswahl
-                '        Case 0
-                '            If .AutoShapeType = MsoAutoShapeType.msoShapeDiamond Or _
-                '                .AutoShapeType = MsoAutoShapeType.msoShapeOval Or _
-                '                (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue) Or _
-                '                (.Connector = MsoTriState.msoTrue And .Title = "Dependency") Then
-                '                .Delete()
-                '            End If
+                If isProjectType(shapeType) And shpElement.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
 
-                '            If firstTime Then
-                '                ' Schließen der Status Anzeige Fenster
-                '                formMilestone.Visible = False
-                '                formStatus.Visible = False
-                '                formPhase.Visible = False
-                '            End If
+                    projectboardShapes.removeChildsOfType(shpElement, typCollection)
 
+                ElseIf shapeType = PTshty.status Then
+                    projectboardShapes.remove(shpElement)
+                End If
 
-                '        Case 1
-                '            If .AutoShapeType = MsoAutoShapeType.msoShapeDiamond Then
-                '                .Delete()
-                '            End If
-                '            If firstTime Then
-                '                formMilestone.Visible = False
-                '            End If
-
-                '        Case 2
-                '            If .AutoShapeType = MsoAutoShapeType.msoShapeOval Then
-                '                .Delete()
-                '            End If
-                '            If firstTime Then
-                '                formStatus.Visible = False
-                '            End If
-
-                '        Case 3
-                '            If (.AutoShapeType = MsoAutoShapeType.msoShapeMixed And .Connector = MsoTriState.msoTrue And .Title <> "Dependency") Then
-                '                .Delete()
-                '            End If
-
-                '            If firstTime Then
-                '                formPhase.Visible = False
-                '            End If
-
-
-                '        Case 4
-                '            If (.Connector = MsoTriState.msoTrue And .Title = "Dependency") Then
-                '                .Delete()
-                '            End If
-
-                '        Case Else
-
-                '    End Select
-
-                'End With
-
-                With shpElement
-
-                    Select Case auswahl
-                        Case 0
-                            If shapeType = PTshty.milestoneN Or _
-                                shapeType = PTshty.status Or _
-                                shapeType = PTshty.phaseN Or _
-                                shapeType = PTshty.dependency Then
-
-                                projectboardShapes.remove(.Name)
-                                .Delete()
-
-                            End If
-
-                            If firstTime Then
-                                ' Schließen der Status Anzeige Fenster
-                                formMilestone.Visible = False
-                                formStatus.Visible = False
-                                formPhase.Visible = False
-                            End If
-
-
-                        Case 1
-                            If shapeType = PTshty.milestoneN Then
-                                projectboardShapes.remove(.Name)
-                                .Delete()
-                            End If
-                            If firstTime Then
-                                formMilestone.Visible = False
-                            End If
-
-                        Case 2
-                            If shapeType = PTshty.status Then
-                                projectboardShapes.remove(.Name)
-                                .Delete()
-                            End If
-                            If firstTime Then
-                                formStatus.Visible = False
-                            End If
-
-                        Case 3
-                            If shapeType = PTshty.phaseN Then
-                                projectboardShapes.remove(.Name)
-                                .Delete()
-                            End If
-
-                            If firstTime Then
-                                formPhase.Visible = False
-                            End If
-
-
-                        Case 4
-                            If shapeType = PTshty.dependency Then
-                                projectboardShapes.remove(.Name)
-                                .Delete()
-                            End If
-
-                        Case Else
-
-                    End Select
-
-                End With
-
-                firstTime = False
+                ' Ende neu 
 
             Next
         Catch ex As Exception
@@ -1739,6 +1659,76 @@ Public Module Module1
 
     End Sub
 
+
+    ''' <summary>
+    ''' löscht zu dem angegebenen Shape die Child Shapes Milestone, Phase oder Status 
+    ''' </summary>
+    ''' <param name="pShape"></param>
+    ''' <param name="auswahl">
+    ''' 0=alle
+    ''' 1=nur meilensteine
+    ''' 2=nur Status
+    ''' 3=nur Phasen</param>
+    ''' <remarks></remarks>
+    Public Sub awinDeleteProjectChildShapes(ByVal pShape As Excel.Shape, ByVal auswahl As Integer)
+
+        Dim shapeType As Integer
+        Dim typCollection As New Collection
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formereO As Boolean = enableOnUpdate
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+
+        Select Case auswahl
+            Case 0
+
+                typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+
+            Case 1
+
+                typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+
+            Case 2
+
+            Case 3
+
+                typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+
+            Case Else
+                appInstance.EnableEvents = formerEE
+                enableOnUpdate = formereO
+                Exit Sub
+        End Select
+
+        Try
+            
+
+            shapeType = kindOfShape(pShape)
+
+                ' neu 
+
+            If isProjectType(shapeType) And pShape.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
+
+                projectboardShapes.removeChildsOfType(pShape, typCollection)
+
+            ElseIf shapeType = PTshty.status Then
+                projectboardShapes.remove(pShape)
+            End If
+
+                ' Ende neu 
+
+
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = formerEE
+        enableOnUpdate = formereO
+
+    End Sub
 
 
     ''' <summary>
@@ -1833,7 +1823,7 @@ Public Module Module1
                 Case 2
                     ' gleich bzw Buckel Funktion - aktuell wie aufsteigend, aber beginnend in der Mitte  
                     ix = 0
-                    ixi = newLength / 2
+                    ixi = CInt(newLength / 2)
                     Do While ix <= newSum
 
                         newValues(ixi) = newValues(ixi) + 1
@@ -1848,7 +1838,7 @@ Public Module Module1
                     Loop
 
                     If ix < newSum Then
-                        newValues(newLength / 2) = newValues(newLength / 2) + newSum - ix
+                        newValues(CInt(newLength / 2)) = newValues(CInt(newLength / 2)) + newSum - ix
                     End If
 
 
@@ -1904,7 +1894,7 @@ Public Module Module1
             min = Bedarf.Min
             max = Bedarf.Max
             avg = Bedarf.Sum / Bedarf.Length
-            bereich = Bedarf.Length / 4
+            bereich = CInt(Bedarf.Length / 4)
         Catch ex As Exception
             Throw New ArgumentException("Fehler ... Bedarf kein Arraey von zahlen ? ")
         End Try
@@ -1948,9 +1938,9 @@ Public Module Module1
     Public Function calcDauerIndays(ByVal startDatum As Date, ByVal endeDatum As Date) As Integer
 
         If startDatum.Date > endeDatum.Date Then
-            calcDauerIndays = DateDiff(DateInterval.Day, startDatum, endeDatum) - 1
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) - 1)
         Else
-            calcDauerIndays = DateDiff(DateInterval.Day, startDatum, endeDatum) + 1
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) + 1)
         End If
 
     End Function
@@ -1985,9 +1975,9 @@ Public Module Module1
         End If
 
         If startDatum.Date > endeDatum.Date Then
-            calcDauerIndays = DateDiff(DateInterval.Day, startDatum, endeDatum) - 1
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) - 1)
         Else
-            calcDauerIndays = DateDiff(DateInterval.Day, startDatum, endeDatum) + 1
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) + 1)
         End If
 
 
@@ -2148,7 +2138,7 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Function calcXCoordToTage(ByVal refDate As Date, ByVal XCoord As Double) As Integer
         Dim tmpValue As Integer
-        tmpValue = CInt(365 * XCoord / (12 * boxWidth)) - DateDiff(DateInterval.Day, StartofCalendar, refDate)
+        tmpValue = CInt(365 * XCoord / (12 * boxWidth)) - CInt(DateDiff(DateInterval.Day, StartofCalendar, refDate))
 
         calcXCoordToTage = tmpValue
 
@@ -2175,7 +2165,7 @@ Public Module Module1
 
         Dim tmpValue As Double
         Dim anzahlTage As Integer
-        anzahlTage = DateDiff(DateInterval.Day, StartofCalendar, datum)
+        anzahlTage = CInt(DateDiff(DateInterval.Day, StartofCalendar, datum))
         If anzahlTage < 0 Then
             Throw New ArgumentException("Datum kann nicht vor Start des Kalenders liegen")
         End If
@@ -2186,5 +2176,60 @@ Public Module Module1
 
 
     End Function
+    '
+    ' Funktion prüft, ob der angegebene Name bereits Element der Projektliste ist
+    '
+    Function inProjektliste(strName As String) As Boolean
 
+        Dim found As Boolean = False
+        Dim foundinDatabase As Boolean = False
+        Dim key As String = calcProjektKey(strName, "")
+        'Dim request As New Request(awinSettings.databaseName)
+
+        If Len(strName) < 2 Then
+            ' ProjektName soll mehr als 1 Zeichen haben
+            found = True
+        ElseIf AlleProjekte.ContainsKey(key) Then
+            found = True
+            'ElseIf request.pingMongoDb() Then
+
+            '    found = request.projectNameAlreadyExists(strName, "")
+            'Else
+            '    Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+            '    found = False
+        End If
+
+        inProjektliste = found
+
+    End Function
+
+    ''' <summary>
+    ''' übersetzt den im Import File angegebenen String auf die Standard Darstellungsklassen 
+    ''' wenn nicht gemappt werden kann, wird "" zurückgegeben 
+    ''' </summary>
+    ''' <param name="completeText">die Bezeichnung für die Darstellungsklasse aus RPLAN</param>
+    ''' <returns>den Standard Namen</returns>
+    ''' <remarks></remarks>
+    Public Function mapToAppearance(ByVal completeText As String, isMilestone As Boolean) As String
+        Dim ergebnis As String = ""
+        Dim found As Boolean = False
+        Dim index As Integer = 0
+        Dim anzElements As Integer = appearanceDefinitions.Count
+
+        
+        Do While Not found And index <= anzElements - 1
+
+            If completeText.Contains(appearanceDefinitions.ElementAt(index).Key.Trim) And _
+                    isMilestone = appearanceDefinitions.ElementAt(index).Value.isMilestone Then
+                found = True
+                ergebnis = appearanceDefinitions.ElementAt(index).Key
+            Else
+                index = index + 1
+            End If
+
+        Loop
+
+        mapToAppearance = ergebnis
+
+    End Function
 End Module

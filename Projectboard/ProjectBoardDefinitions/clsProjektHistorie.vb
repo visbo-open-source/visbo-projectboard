@@ -171,15 +171,13 @@
 
                     ElseIf DateDiff(DateInterval.Month, tmpDate, currentproj.timeStamp) = 0 Then
                         ' in diesem Fall wurde ein Planungs-Stand im gesuchten Monat gefunden ...
-                        Try
-
-                            milestoneDate = currentproj.getMilestoneDate(milestoneName)
-
-                        Catch ex As Exception
-
+                        
+                        milestoneDate = currentproj.getMilestoneDate(milestoneName)
+                        If DateDiff(DateInterval.Day, StartofCalendar, milestoneDate) < 0 Then
                             milestoneDate = awinSettings.nullDatum
+                        End If
 
-                        End Try
+                        
                     Else
                         ' in diesem Fall wurde kein Planungs-Stand im gesuchten Monat gefunden ...
                         If i > 0 Then
@@ -603,45 +601,73 @@
 
         Get
 
+            ' die Ausschlusskriterien vorher prüfen
+            If suchDatum < _liste.First.Key Then
 
-            ' die Ausschlusskriterien vorher prüfen 
-            If suchDatum < _liste.First.Value.timeStamp Then
-                Throw New ArgumentException("es gibt keinen Projekt-Stand vor diesem Datum")
-            ElseIf suchDatum > _liste.Last.Value.timeStamp Then
-                _currentIndex = _liste.Count - 1
-                ElementAtorBefore = _liste.Last.Value
-            Else
-                ' das Suchdatum liegt zwischen erstem und letztem Element
-
-                Dim found As Boolean = False
-                Dim lg As Integer = 0, rg As Integer = _liste.Count - 1
-                Dim suchindex As Integer = (rg - lg) / 2
-
-                Do While suchindex > lg And suchindex < rg And Not found
-
-                    If _liste.ElementAt(suchindex).Key = suchDatum Then
-                        found = True
-                    ElseIf _liste.ElementAt(suchindex).Key > suchDatum Then
-                        ' links suchen 
-                        rg = suchindex
-                        suchindex = lg + (rg - lg) / 2
-                    Else
-                        ' rechts suchen
-                        lg = suchindex
-                        suchindex = lg + (rg - lg) / 2
-
-                    End If
-
-                Loop
-
-                If found Then
-                    _currentIndex = suchindex
-                    ElementAtorBefore = _liste.ElementAt(suchindex).Value
+                If DateDiff(DateInterval.Second, _liste.First.Key, suchDatum) = 0 Then
+                    _currentIndex = 0
+                    ElementAtorBefore = _liste.First.Value
                 Else
-                    _currentIndex = lg
-                    ElementAtorBefore = _liste.ElementAt(lg).Value
+                    ElementAtorBefore = Nothing
                 End If
 
+            ElseIf suchDatum > _liste.Last.Key Then
+
+                _currentIndex = _liste.Count - 1
+                ElementAtorBefore = _liste.Last.Value
+
+            Else
+                ' das Suchdatum liegt zwischen erstem und letztem Element
+                Dim found As Boolean = False
+
+                Dim i As Integer = 0
+
+                While i <= _liste.Count - 1 And Not found
+
+                    If DateDiff(DateInterval.Second, _liste.ElementAt(i).Key, suchDatum) = 0 Then
+                        found = True
+                    ElseIf suchDatum > _liste.ElementAt(i).Key Then
+                        i = i + 1
+                    Else
+                        ' es gibt keinen exakten Match, aber das Abbruch Kriterium ist erfüllt 
+                        found = True
+                    End If
+
+                End While
+
+
+                ' alte Version: war fehlerhaft 
+                'Dim lg As Integer = 0, rg As Integer = _liste.Count - 1
+                'Dim suchindex As Integer = CInt((rg - lg) / 2)
+                'Dim oldindex As Integer = -1
+
+                'Do While lg < rg And Not found
+
+                '    oldindex = suchindex
+                '    If DateDiff(DateInterval.Second, _liste.ElementAt(suchindex).Key, suchDatum) = 0 Then
+                '        found = True
+                '    ElseIf _liste.ElementAt(suchindex).Key > suchDatum Then
+                '        ' links suchen 
+                '        rg = suchindex
+                '        suchindex = CInt(lg + (rg - lg) / 2)
+
+                '    Else
+                '        ' rechts suchen
+                '        lg = suchindex
+                '        suchindex = CInt(lg + (rg - lg) / 2)
+
+                '    End If
+
+                'Loop
+                ' Ende alte Version 
+
+                If found Then
+                    _currentIndex = i
+                Else
+                    _currentIndex = _liste.Count - 1
+                End If
+
+                ElementAtorBefore = _liste.ElementAt(_currentIndex).Value
 
             End If
 

@@ -8,7 +8,9 @@ Public Class frmShowProjCharacteristics
     Dim necessary(6) As Boolean
     Dim hproj As clsProjekt
     Dim showAll As Boolean = False
-    
+    Dim phaseList As Collection
+    Dim milestoneList As Collection
+    Dim typCollection As New Collection
     Dim lastAmpel As Integer
 
     Private Sub timeSlider_MouseUp(sender As Object, e As MouseEventArgs) Handles timeSlider.MouseUp
@@ -18,7 +20,7 @@ Public Class frmShowProjCharacteristics
         'Dim formerSU As Boolean = appInstance.ScreenUpdating
         'appInstance.ScreenUpdating = False
 
-        Call aktualisiereCharts(hproj, False)
+        'Call aktualisiereCharts(hproj, False)
 
         'With appInstance.Worksheets(arrWsNames(3))
         '    Dim tmpArray() As String
@@ -99,13 +101,9 @@ Public Class frmShowProjCharacteristics
 
     Private Sub timeSlider_Scroll(sender As Object, e As EventArgs) Handles timeSlider.Scroll
 
-        'Dim grueneAmpel As String = awinPath & "gruen.gif"
-        'Dim gelbeAmpel As String = awinPath & "gelb.gif"
-        'Dim roteAmpel As String = awinPath & "rot.gif"
-        'Dim graueAmpel As String = awinPath & "grau.gif"
-        'Dim zE As String = " (" & awinSettings.zeitEinheit & ")"
-        ' in ProjektHistorie sind die Projekt-Snapshots in aufsteigender Reihenfolge sortiert 
+
         hproj = projekthistorie.ElementAt(nrSnapshots - timeSlider.Value)
+
 
 
 
@@ -138,9 +136,33 @@ Public Class frmShowProjCharacteristics
         frmCoord(PTfrm.timeMachine, PTpinfo.left) = Me.Left
 
         Dim vglName As String = projekthistorie.Last.name.Trim
-        hproj = ShowProjekte.getProject(vglName)
+        ' Änderung 140717
+        'hproj = ShowProjekte.getProject(vglName)
+
+        ' Änderung-Ergänzung 140717 tk: Neuzeichnen des Shapes inkl der gezeigten Phasen/Meilensteine
+        hproj = projekthistorie.Last
 
 
+        Call clearProjektinPlantafel(hproj.name)
+        ' jetzt muss das aktuelle Shape rausgenommen werden und mit dem TimeSlider Shape ersetzt werden
+
+        Try
+            ShowProjekte.Remove(hproj.name)
+            ShowProjekte.Add(hproj)
+
+        Catch ex As Exception
+
+        End Try
+
+        Dim tmpCollection As New Collection
+        Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=hproj.name, tryzeile:=hproj.tfZeile, _
+                                       drawPhaseList:=phaseList, drawMilestoneList:=milestoneList)
+
+
+        ' Ende Änderung-Ergänzung 140717
+
+
+        Call aktualisierePMSForms(hproj)
         Call aktualisiereCharts(hproj, False)
         timeMachineIsOn = False
 
@@ -149,7 +171,7 @@ Public Class frmShowProjCharacteristics
     
 
     Private Sub frmShowProjCharacteristics_Load(sender As Object, e As EventArgs) Handles Me.Load
-
+        'Dim pShape As Excel.Shape
 
         Me.Top = CInt(frmCoord(PTfrm.timeMachine, PTpinfo.top))
         Me.Left = CInt(frmCoord(PTfrm.timeMachine, PTpinfo.left))
@@ -198,6 +220,21 @@ Public Class frmShowProjCharacteristics
 
         Dim vglName As String = projekthistorie.Last.name.Trim
 
+        ' Änderung 140717
+        ' jetzt werden die Settings für das Neuzeichnen der Shapes gesetzt 
+        'pShape = ShowProjekte.getShape(vglName)
+        'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+        'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+        'phaseList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+        phaseList = projectboardShapes.getPhaseList(vglName)
+
+        'typCollection.Clear()
+        'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+        'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+        'milestoneList = projectboardShapes.getAllChildswithType(pShape, typCollection)
+        milestoneList = projectboardShapes.getMilestoneList(vglName)
+
+        ' Ende Änderung 140717
 
         ' hier wird der Index für die Beauftragung bestimmt 
 
@@ -501,12 +538,19 @@ Public Class frmShowProjCharacteristics
         ' in ProjektHistorie sind die Projekt-Snapshots in aufsteigender Reihenfolge sortiert 
 
         Dim pname As String = hproj.name
-        Dim cproj As clsProjekt = ShowProjekte.getProject(pname)
-        Dim top As Double = Me.Top + Me.Height + 5
-        Dim left As Double = Me.Left + Me.Width * 0.6
+        Dim cproj As clsProjekt
+
+        Try
+            cproj = ShowProjekte.getProject(pname)
+            Dim top As Double = Me.Top + Me.Height + 5
+            Dim left As Double = Me.Left + Me.Width * 0.6
 
 
-        Call awinCompareProject(hproj, cproj, 4, top, left)
+            Call awinCompareProject(hproj, cproj, 4, top, left)
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Compare " & hproj.name & vbLf & ex.Message)
+        End Try
+       
 
     End Sub
 
@@ -530,8 +574,28 @@ Public Class frmShowProjCharacteristics
 
     Private Sub timeSlider_ValueChanged(sender As Object, e As EventArgs) Handles timeSlider.ValueChanged
 
+
         hproj = projekthistorie.ElementAt(nrSnapshots - timeSlider.Value)
 
+        ' Änderung-Ergänzung 140717 tk: Neuzeichnen des Shapes inkl der gezeigten Phasen/Meilensteine
+
+        Call clearProjektinPlantafel(hproj.name)
+        ' jetzt muss das aktuelle Shape rausgenommen werden und mit dem TimeSlider Shape ersetzt werden
+
+        Try
+            ShowProjekte.Remove(hproj.name)
+            ShowProjekte.Add(hproj)
+
+        Catch ex As Exception
+
+        End Try
+
+        Dim tmpCollection As New Collection
+        Call ZeichneProjektinPlanTafel(noCollection:=tmpCollection, pname:=hproj.name, tryzeile:=hproj.tfZeile, _
+                                       drawPhaseList:=phaseList, drawMilestoneList:=milestoneList)
+
+
+        ' Ende Änderung-Ergänzung 140717
 
         With hproj
 
@@ -542,9 +606,10 @@ Public Class frmShowProjCharacteristics
             Else
                 snapshotDate.Text = .timeStamp.ToString
             End If
-            
+
         End With
 
+        Call aktualisierePMSForms(hproj)
         Call aktualisiereCharts(hproj, False)
 
     End Sub

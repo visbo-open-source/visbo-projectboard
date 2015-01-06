@@ -73,7 +73,14 @@ Public Class clsProjektDBInfos
     ''' <remarks></remarks>
     Public ReadOnly Property getTimeStamps(ByVal projektKey As String) As SortedList(Of Date, String)
         Get
-            getTimeStamps = _pliste.Item(projektKey)
+
+            Dim ergebnis As New SortedList(Of Date, String)
+
+            If _pliste.ContainsKey(projektKey) Then
+                ergebnis = _pliste.Item(projektKey)
+            End If
+            getTimeStamps = ergebnis
+
         End Get
 
     End Property

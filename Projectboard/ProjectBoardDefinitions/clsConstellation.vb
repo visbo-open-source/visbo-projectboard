@@ -11,13 +11,6 @@
         End Get
 
     End Property
-    Public ReadOnly Property getItem(index As Integer) As clsConstellationItem
-
-        Get
-            getItem = allItems(index)
-        End Get
-
-    End Property
 
 
     Public ReadOnly Property getItem(key As String) As clsConstellationItem
@@ -44,17 +37,14 @@
 
     End Sub
 
-    Public Sub Remove(index As Integer)
-
-        allItems.Remove(index)
-
-    End Sub
 
     Public Sub Remove(key As String)
 
         allItems.Remove(key)
 
     End Sub
+
+
 
     Sub New()
 

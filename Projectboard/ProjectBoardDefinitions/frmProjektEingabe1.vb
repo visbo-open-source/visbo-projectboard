@@ -2,8 +2,10 @@
 
 Public Class frmProjektEingabe1
 
+
     ' notwendig, weil sonst eine Fehlermeldung kommt bezgl ValueChanged und zugelassenen Werten 
     Private vorlagenDauer As Integer = 365
+
     Public calcProjektStart As Date
     Public calcProjektEnde As Date
 
@@ -39,8 +41,8 @@ Public Class frmProjektEingabe1
                 '
                 ' Voreinstellungg auf Projekt-Typ 1
                 '
-                vorlagenDropbox.Text = vorlagenDropbox.Items(1)
-                awinSettings.lastProjektTyp = vorlagenDropbox.Items(1)
+                vorlagenDropbox.Text = CStr(vorlagenDropbox.Items(1))
+                awinSettings.lastProjektTyp = CStr(vorlagenDropbox.Items(1))
             End If
 
             ' jetzt die Vorlagen dauer bestimmen 
@@ -77,8 +79,8 @@ Public Class frmProjektEingabe1
 
 
 
-            .Top = frmCoord(PTfrm.eingabeProj, PTpinfo.top)
-            .Left = frmCoord(PTfrm.eingabeProj, PTpinfo.left)
+            .Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
+            .Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
 
             '.selectedMonth.Value = DateDiff(DateInterval.Month, StartofCalendar, Date.Now) + 2
 
@@ -131,6 +133,7 @@ Public Class frmProjektEingabe1
 
         With projectName
 
+
             ' Änderung tk 1.7.14: andernfalls kann ein Blank am Ende angehängt sein - dann kommt es im Nachgang zu einem Fehler 
             Try
                 .Text = .Text.Trim
@@ -140,6 +143,7 @@ Public Class frmProjektEingabe1
 
 
             If Len(.Text) < 2 Then
+
 
                 MsgBox("Projektname muss mindestens zwei Zeichen haben!")
                 .Text = ""
@@ -375,6 +379,22 @@ Public Class frmProjektEingabe1
             'DateTimeEnde.Value = DateTimeEnde.Value
 
         End If
+
+    
+    End Sub
+
+    Public Sub New()
+
+        ' This call is required by the designer.
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        InitializeComponent()
+
+        appInstance.EnableEvents = formerEE
+
+        ' Add any initialization after the InitializeComponent() call.
+
     End Sub
 
 

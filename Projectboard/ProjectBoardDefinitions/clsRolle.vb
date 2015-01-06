@@ -659,8 +659,8 @@ Public Class clsRolle
 
                         korrfaktor = appInstance.WorksheetFunction.Round(abzug - diff * avg, 0)
                         Dim lx As Integer, rx As Integer
-                        lx = appInstance.WorksheetFunction.Round(newLength - 1 / 4, 0)
-                        rx = appInstance.WorksheetFunction.Round(3 * newLength - 1 / 4, 0)
+                        lx = CInt(appInstance.WorksheetFunction.Round(newLength - 1 / 4, 0))
+                        rx = CInt(appInstance.WorksheetFunction.Round(3 * newLength - 1 / 4, 0))
                         lefthand = True
 
                         Dim Vorzeichen As Integer
@@ -672,7 +672,7 @@ Public Class clsRolle
 
                         Dim leftvalue As Integer, rightvalue As Integer
                         If korrfaktor * Vorzeichen > 2 Then
-                            leftvalue = appInstance.WorksheetFunction.Round(korrfaktor / 2, 0)
+                            leftvalue = CInt(appInstance.WorksheetFunction.Round(korrfaktor / 2, 0))
                             rightvalue = leftvalue
                             newValues(lx) = newValues(lx) + leftvalue
                             newValues(rx) = newValues(rx) + rightvalue
@@ -831,7 +831,7 @@ Public Class clsRolle
     ''' </summary>
     Private Function definecharacteristics(min As Double, max As Double, avg As Double) As Integer
 
-        Dim bereich As Integer = UBound(Bedarf) / 4
+        Dim bereich As Integer = CInt(UBound(Bedarf) / 4)
         Dim i As Integer
         Dim minvorne As Boolean = False, minhinten As Boolean = False, _
             maxvorne As Boolean = False, maxhinten As Boolean = False

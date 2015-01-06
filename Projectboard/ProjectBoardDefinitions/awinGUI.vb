@@ -4,50 +4,7 @@ Imports Microsoft.Office.Interop.Excel
 Public Module awinGUI
 
 
-    Sub awinDeletePortfolioDiagram()
-        Dim diagramTitle As String = "strategischer Fit, Risiko & Marge"
-        Dim anzdiagrams As Integer
-        Dim found As Boolean
-        Dim i As Integer
-        Dim chttitle As String = " "
-
-
-        With appInstance.Worksheets(arrWsNames(3))
-            anzdiagrams = .ChartObjects.Count
-            '
-            ' um welches Diagramm handelt es sich ...
-            '
-            i = 1
-            found = False
-            While i <= anzdiagrams And Not found
-                Try
-                    chttitle = .ChartObjects(i).Chart.ChartTitle.text
-                Catch ex As Exception
-                    chttitle = " "
-                End Try
-
-                If chttitle Like ("*" & diagramTitle & "*") Then
-                    found = True
-                Else
-                    i = i + 1
-                End If
-            End While
-
-            If found Then
-                .ChartObjects(i).delete()
-            End If
-
-            Try
-                DiagramList.Remove(diagramTitle)
-            Catch ex As Exception
-
-            End Try
-
-        End With
-
-    End Sub
-
-
+   
  
    
 
@@ -71,7 +28,7 @@ Public Module awinGUI
     ''' <param name="width"></param>
     ''' <param name="height"></param>
     ''' <remarks></remarks>
-    Sub awinCreatePortfolioDiagrams(ByRef ProjektListe As Collection, ByRef repChart As Object, isProjektCharakteristik As Boolean, _
+    Sub awinCreatePortfolioDiagrams(ByRef ProjektListe As Collection, ByRef repChart As Excel.ChartObject, isProjektCharakteristik As Boolean, _
                                          charttype As Integer, bubbleColor As Integer, showNegativeValues As Boolean, showLabels As Boolean, chartBorderVisible As Boolean, _
                                          top As Double, left As Double, width As Double, height As Double)
 
@@ -125,11 +82,12 @@ Public Module awinGUI
 
 
         If isProjektCharakteristik And ProjektListe.Count = 1 Then
-            pname = ProjektListe.Item(1)
-            tmpCollection.Add(pname & "#0")
-            kennung = getKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
+            pname = CStr(ProjektListe.Item(1))
+            hproj = ShowProjekte.getProject(pname)
+            tmpCollection.Add(hproj.getShapeText & "#0")
+            kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
         Else
-            kennung = getKennung("pf", charttype, ProjektListe)
+            kennung = calcChartKennung("pf", charttype, ProjektListe)
         End If
 
         Select Case charttype
@@ -137,7 +95,7 @@ Public Module awinGUI
 
                 If isProjektCharakteristik Then
                     If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisiko) & " " & pname & vbLf
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisiko) & " " & hproj.getShapeText & vbLf
                         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
                     Else
@@ -154,7 +112,7 @@ Public Module awinGUI
 
                 If isProjektCharakteristik Then
                     If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & " " & pname & vbLf
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ZeitRisiko) & " " & hproj.getShapeText & vbLf
                         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
                     Else
@@ -171,7 +129,7 @@ Public Module awinGUI
 
                 If isProjektCharakteristik Then
                     If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & " " & pname & vbLf
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.ComplexRisiko) & " " & hproj.getShapeText & vbLf
                         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
                     Else
@@ -187,7 +145,7 @@ Public Module awinGUI
             Case PTpfdk.FitRisikoVol
                 If isProjektCharakteristik Then
                     If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & " " & pname & vbLf
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.FitRisikoVol) & " " & hproj.getShapeText & vbLf
                         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
                     Else
@@ -204,7 +162,7 @@ Public Module awinGUI
                 ' neuer Typ: 8.3.14 Abhängigkeiten
                 If isProjektCharakteristik Then
                     If ProjektListe.Count = 1 Then
-                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Dependencies) & " " & pname & vbLf
+                        titelTeile(0) = portfolioDiagrammtitel(PTpfdk.Dependencies) & " " & hproj.getShapeText & vbLf
                         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
                     Else
@@ -252,7 +210,7 @@ Public Module awinGUI
         Dim passiveMax As Integer = 0
 
         For i = 1 To ProjektListe.Count
-            pname = ProjektListe.Item(i)
+            pname = CStr(ProjektListe.Item(i))
             Try
                 hproj = ShowProjekte.getProject(pname)
                 With hproj
@@ -379,17 +337,17 @@ Public Module awinGUI
 
 
 
-        With appInstance.Worksheets(arrWsNames(3))
-            anzDiagrams = .ChartObjects.Count
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
             '
             ' um welches Diagramm handelt es sich ...
             '
             i = 1
             found = False
             While i <= anzDiagrams And Not found
-                If chtobjName = .chartObjects(i).name Then
+                If chtobjName = .ChartObjects(i).name Then
                     found = True
-                    repChart = .ChartObjects(i)
+                    repChart = CType(.ChartObjects(i), Excel.ChartObject)
                     Exit Sub
                 Else
                     i = i + 1
@@ -719,13 +677,13 @@ Public Module awinGUI
                 pfDiagram = New clsDiagramm
 
                 pfChart = New clsEventsPfCharts
-                pfChart.PfChartEvents = .ChartObjects(anzDiagrams + 1).Chart
+                pfChart.PfChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
 
                 pfDiagram.setDiagramEvent = pfChart
 
                 With pfDiagram
 
-                    .kennung = getKennung("pf", charttype, ProjektListe)
+                    .kennung = calcChartKennung("pf", charttype, ProjektListe)
                     .DiagrammTitel = diagramTitle
                     .diagrammTyp = DiagrammTypen(3)                     ' Portfolio
                     .gsCollection = ProjektListe
@@ -736,7 +694,7 @@ Public Module awinGUI
                 DiagramList.Add(pfDiagram)
             End If
 
-            repChart = .ChartObjects(anzDiagrams + 1)
+            repChart = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
 
         End With
 
@@ -772,6 +730,10 @@ Public Module awinGUI
         Dim charttype As Integer
         Dim tmpstr(5) As String
         Dim isSingleProject As Boolean = False
+        Dim datalabelSize As Integer = 0
+        Dim datalabelColor As Double = 0
+        Dim datalabelFont As Excel.Font
+        Dim datalabel As Excel.DataLabel = Nothing
 
         'Dim pfDiagram As clsDiagramm
         'Dim pfChart As clsEventsPfCharts
@@ -781,16 +743,23 @@ Public Module awinGUI
         ' hier wird in der Objektkennung nachgesehen, von welchem Typ dieses Portfolio-Diagramm ist
         ' PTpfdk.FitRisiko oder PTpfdk.ZeitRisiko oder PTpfdk.ComplexRisiko
 
-        tmpstr = chtobj.Name.Trim.Split(New Char() {"#"}, 4)
+        tmpstr = chtobj.Name.Trim.Split(New Char() {CChar("#")}, 4)
         If tmpstr(0) = "pr" Then
             isSingleProject = True
-            projektListe.Add(tmpstr(2))
+            Dim komplett As String = tmpstr(2)
+            tmpstr = komplett.Split(New Char() {CChar("("), CChar(")")}, 4)
+            If tmpstr.Length > 1 Then
+                projektListe.Add(tmpstr(0))
+            Else
+                projektListe.Add(komplett)
+            End If
+
         Else
             isSingleProject = False
             Dim selectionType As Integer = -1 ' keine Einschränkung
             projektListe = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
         End If
-        charttype = tmpstr(1)
+        charttype = CInt(tmpstr(1))
 
         'foundDiagramm = DiagramList.getDiagramm(chtobj.Name)
         ' event. für eine Erweiterung benötigt
@@ -818,14 +787,12 @@ Public Module awinGUI
 
         anzBubbles = 0
 
-
-
         ' Änderung 8.3 : hier muss die Unterscheidung gemacht werden, welche Projekte im Zeitraum denn überhaupt Abhängigkeiten haben  
 
         If charttype = PTpfdk.Dependencies Then
             Dim deleteList As New Collection
             For i = 1 To projektListe.Count
-                pname = projektListe.Item(i)
+                pname = CStr(projektListe.Item(i))
                 Try
                     hproj = ShowProjekte.getProject(pname)
                     activeNumber = allDependencies.activeNumber(pname, PTdpndncyType.inhalt)
@@ -840,7 +807,7 @@ Public Module awinGUI
 
             ' jetzt müssen die Projekte rausgenommen werden, die keine Abhängigkeiten haben 
             For i = 1 To deleteList.Count
-                pname = deleteList.Item(i)
+                pname = CStr(deleteList.Item(i))
                 Try
                     projektListe.Remove(pname)
                 Catch ex As Exception
@@ -850,12 +817,8 @@ Public Module awinGUI
         End If
 
 
-
-
-
-
         For i = 1 To projektListe.Count
-            pname = projektListe.Item(i)
+            pname = CStr(projektListe.Item(i))
             Try
                 hproj = ShowProjekte.getProject(pname)
                 With hproj
@@ -979,7 +942,6 @@ Public Module awinGUI
         End Select
 
 
-
         ' bestimmen der besten Position für die Werte ...
         Dim labelPosition(4) As String
         labelPosition(0) = "oben"
@@ -1000,20 +962,69 @@ Public Module awinGUI
         Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
 
-
-
         With chtobj.Chart
 
             showLabels = True
 
-            ' remove old series
-            Do Until .SeriesCollection.Count = 0
-                .SeriesCollection(1).Delete()
-            Loop
-
-            ' nur dann neue Series-Collection aufbauen, wenn auch tatsächlich was in der Projektliste ist ..
-
             If projektListe.Count > 0 Then
+
+                ' Einstellungen der vorhandenen SeriesCollection merken
+
+                Dim pts As Excel.Points = CType(.SeriesCollection(1).Points, Excel.Points)
+                Dim dlFontSize As Double
+                Dim dlFontBackground As Double
+                Dim dlFontBold As Boolean
+                Dim dlFontColorIndex As Integer
+                Dim dlFontColor As Integer
+                Dim dlFontFontStyle As String = ""
+                Dim dlFontItalic As Boolean
+                Dim dlFontStrikethrough As Boolean
+                Dim dlFontSuperscript As Boolean
+                Dim dlFontSubscript As Boolean
+                Dim dlFontUnderline As Double
+
+                For i = 1 To pts.Count
+
+                    With CType(.SeriesCollection(1).Points(i), Excel.Point)
+
+                        Try
+                            If .HasDataLabel = True Then
+                                datalabel = .DataLabel
+                                With .DataLabel
+                                    datalabelFont = .Font
+                                    dlFontSize = CDbl(.Font.Size)
+                                    dlFontBackground = CDbl(.Font.Background)
+                                    dlFontBold = CBool(.Font.Bold)
+                                    dlFontColorIndex = CInt(.Font.ColorIndex)
+                                    dlFontFontStyle = CStr(.Font.FontStyle)
+                                    dlFontItalic = CBool(.Font.Italic)
+                                    dlFontStrikethrough = CBool(.Font.Strikethrough)
+                                    dlFontSubscript = CBool(.Font.Subscript)
+                                    dlFontSuperscript = CBool(.Font.Superscript)
+                                    dlFontUnderline = CDbl(.Font.Underline)
+                                    dlFontSize = CDbl(.Font.Size)
+                                    If .Font.Color <> awinSettings.AmpelRot Then
+                                        dlFontColor = CInt(.Font.Color)
+                                    End If
+
+                                End With
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
+                    End With
+
+                Next i
+
+                ' remove old series
+                Do Until .SeriesCollection.Count = 0
+                    .SeriesCollection(1).Delete()
+                Loop
+
+                ' nur dann neue Series-Collection aufbauen, wenn auch tatsächlich was in der Projektliste ist ..
+
+
 
                 .SeriesCollection.NewSeries()
                 .SeriesCollection(1).name = diagramTitle
@@ -1050,20 +1061,41 @@ Public Module awinGUI
                             CType(series1.Points(1), Excel.Point)
 
                 'Dim testName As String
+
+                Dim bubblePoint As Excel.Point
                 For i = 1 To anzBubbles
+
+                    bubblePoint = CType(.SeriesCollection(1).Points(i), Excel.Point)
 
                     With CType(.SeriesCollection(1).Points(i), Excel.Point)
 
                         If showLabels Then
                             Try
                                 .HasDataLabel = True
+
                                 With .DataLabel
                                     .Text = PfChartBubbleNames(i - 1)
-                                    .Font.Size = awinSettings.CPfontsizeItems
+                                    .Font.Size = dlFontSize
+                                    .Font.Background = dlFontBackground
+                                    .Font.Bold = dlFontBold
+                                    .Font.Color = dlFontColor
+                                    .Font.ColorIndex = dlFontColorIndex
+                                    .Font.FontStyle = dlFontFontStyle
+                                    .Font.Italic = dlFontItalic
+                                    .Font.Size = dlFontSize
+                                    .Font.Strikethrough = dlFontStrikethrough
+                                    .Font.Subscript = dlFontSubscript
+                                    .Font.Superscript = dlFontSuperscript
+                                    .Font.Underline = dlFontUnderline
+
+                                    'ur: 17.7.2014: fontsize kommt vom existierenden Chart
+                                    '.Font.Size = awinSettings.CPfontsizeItems
 
                                     ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
+
                                     If bubbleValues(i - 1) < 0 Then
                                         .Font.Color = awinSettings.AmpelRot
+
                                     End If
 
                                     Select Case positionValues(i - 1)
@@ -1117,7 +1149,7 @@ Public Module awinGUI
             .ChartTitle.Text = diagramTitle
         End With
 
-        appInstance.EnableEvents = formerEE
+                appInstance.EnableEvents = formerEE
 
 
 
@@ -1221,24 +1253,6 @@ Public Module awinGUI
 
         Next
 
-        'With appInstance.Worksheets(arrWsNames(3))
-        '    suchfeld = .Range("Projekteingabebereich")
-        '    lastrow = suchfeld.Rows.Count
-        '    lastcolumn = suchfeld.Columns.Count
-        '    max = 0
-
-        '    For spalte = 1 To lastcolumn
-        '        current = .Cells(lastrow, spalte).End(XlDirection.xlUp).row
-        '        If current > max Then
-        '            max = current
-        '        End If
-        '    Next spalte
-
-        'End With
-
-
-        ''zeile = appInstance.ActiveSheet.UsedRange.Rows.Count
-        'zeile = max
         WertfuerTop = lastrow * boxHeight + 60   ' starte oben
 
 
@@ -1248,139 +1262,6 @@ Public Module awinGUI
         WertfuerTop = 1000 + diagrammTyp * 100
 
     End Function
-
-    'Function WertfuerletzteZeile() As Integer
-    '    Dim spalte As Integer
-    '    Dim max As Integer
-    '    Dim current As Integer
-    '    Dim lastrow As Integer, lastcolumn As Integer
-    '    Dim suchfeld As Range
-
-
-    '    With appInstance.Worksheets(arrWsNames(3))
-    '        suchfeld = .Range("Projekteingabebereich")
-    '        lastrow = suchfeld.Rows.Count
-    '        lastcolumn = suchfeld.Columns.Count
-    '        max = 0
-
-    '        For spalte = 1 To lastcolumn
-    '            current = .Cells(lastrow, spalte).End(XlDirection.xlUp).row
-    '            If current > max Then
-    '                max = current
-    '            End If
-    '        Next spalte
-
-    '    End With
-
-
-    '    WertfuerletzteZeile = max
-
-
-    'End Function
-
-    '
-    '
-    '
-    '    Sub awinMoveChartUp()
-    '        Dim chtobj As ChartObject
-
-
-
-    '        On Error GoTo End_of_sub
-
-    '        With appInstance.ActiveChart
-    '            chtobj = .Parent
-    '        End With
-
-    '        With chtobj
-    '            If .top < HoehePrcChart Then
-    '                .top = 0
-    '            Else
-    '                .top = .top - HoehePrcChart
-    '            End If
-    '        End With
-
-    'End_of_sub:
-
-
-    '    End Sub
-
-    '
-    '
-    '
-    '    Sub awinMoveChartDown()
-    '        Dim chtobj As ChartObject
-
-
-    '        On Error GoTo End_of_sub
-
-    '        With appInstance.ActiveChart
-    '            chtobj = .Parent
-    '        End With
-
-    '        With chtobj
-    '            .top = .top + HoehePrcChart
-    '        End With
-
-    'End_of_sub:
-
-
-    '    End Sub
-
-    '
-    '
-    '
-    Sub ProjektEdit_DelKey()
-        Dim anz_zeilen As Integer, anz_spalten As Integer
-        Dim zeile As Integer, spalte As Integer
-        Dim i As Integer
-        Dim psel As Excel.Range
-
-
-        appInstance.EnableEvents = False
-
-        psel = appInstance.ActiveWindow.RangeSelection
-
-        With appInstance.Worksheets(arrWsNames(11))
-            .Unprotect()
-            anz_zeilen = psel.Rows.Count
-            anz_spalten = psel.Columns.Count
-            zeile = psel.Row
-            spalte = psel.Column
-            If psel.Rows(1).Interior.color = iProjektFarbe Then
-                ' ein ganzes Paket wurde selektiert
-                psel.Clear()
-                If .Rows(zeile).Interior.ColorIndex = Excel.Constants.xlNone Then
-                    ' dann können die kompletten Zeilen gelöscht werden ...
-                    For i = 1 To anz_zeilen + 1
-                        .Rows(zeile).EntireRow.Delete()
-                    Next i
-                End If
-            ElseIf spalte = 1 And psel(1, 1).Value <> "" Then
-                ' die Zeile mit der Rolle soll gelöscht werden ...
-                .Rows(zeile).EntireRow.Delete()
-
-            End If
-            .Protect()
-        End With
-
-        appInstance.EnableEvents = True
-
-    End Sub
-
-    '
-    '
-    '
-    Sub ProjektEdit_InsKey()
-
-        'anz_zeilen = psel.Rows.Count
-        'anz_spalten = psel.Columns.Count
-        'Application.EnableEvents = False
-
-
-        'Application.EnableEvents = True
-
-    End Sub
 
 
 

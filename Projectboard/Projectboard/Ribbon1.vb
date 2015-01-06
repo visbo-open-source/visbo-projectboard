@@ -6,6 +6,9 @@ Imports WPFPieChart
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
+Imports System.Security.Principal
+Imports System.Diagnostics
+Imports System.Drawing
 
 
 
@@ -54,19 +57,51 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim speichernDatenbank As String = "Pt5G2B1"
         Dim request As New Request(awinSettings.databaseName)
 
+        Dim newConstellationForm As New frmProjPortfolioAdmin
+        
+
 
         Call projektTafelInit()
 
-        If control.Id = speichernDatenbank Then
-            ' Wenn das Speichern eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
+        'If control.Id = speichernDatenbank Then
+        '    ' Wenn das Speichern eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
 
-            If request.pingMongoDb() Then
-                projectConstellations = request.retrieveConstellationsFromDB()
-            Else
-                Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
-            End If
-        End If
+        '    If request.pingMongoDb() Then
+        '        projectConstellations = request.retrieveConstellationsFromDB()
+        '    Else
+        '        Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+        '    End If
+        'End If
 
+        'Try
+
+        '    With newConstellationForm
+        '        .Text = "Portfolio erstellen bzw. ändern"
+        '        .portfolioName.Text = currentConstellation
+        '        .portfolioName.Visible = True
+        '        .Label1.Visible = True
+        '        .aKtionskennung = PTtvactions.definePortfolioSE
+        '    End With
+
+        '    returnValue = newConstellationForm.ShowDialog
+
+        '    If returnValue = DialogResult.OK Then
+        '        'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+
+        '    Else
+        '        ' returnValue = DialogResult.Cancel
+
+        '    End If
+
+        'Catch ex As Exception
+
+        '    Call MsgBox(ex.Message)
+        'End Try
+
+
+        '
+        ' alte Version ; vor dem 26.10.14
+        '
         If AlleProjekte.Count > 0 Then
             returnValue = storeConstellationFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Portfolios
 
@@ -82,7 +117,9 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Else
             Call MsgBox("Es sind keine Projekte in der Projekt-Tafel geladen!")
         End If
-
+        ' 
+        ' Ende alte Version; vor dem 26.10.14
+        '
         enableOnUpdate = True
 
     End Sub
@@ -91,6 +128,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim loadFromDatenbank As String = "PT5G1B1"
         Dim loadConstellationFrm As New frmLoadConstellation
+
         Dim constellationName As String
         Dim request As New Request(awinSettings.databaseName)
 
@@ -118,25 +156,32 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         If returnValue = DialogResult.OK Then
 
-            constellationName = loadConstellationFrm.ListBox1.Text
-            Call awinLoadConstellation(constellationName, successMessage)
-
-            appInstance.ScreenUpdating = False
-            'Call diagramsVisible(False)
-            Call awinClearPlanTafel()
-            Call awinZeichnePlanTafel()
-            Call awinNeuZeichnenDiagramme(2)
-            'Call diagramsVisible(True)
-            appInstance.ScreenUpdating = True
-
-            If successMessage.Length > initMessage.Length Then
-                Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
+            If loadConstellationFrm.addToSession.Checked = True Then
+                constellationName = loadConstellationFrm.ListBox1.Text
+                Call awinAddConstellation(constellationName, successMessage)
             Else
-                'Call MsgBox(constellationName & " wurde geladen ...")
+                constellationName = loadConstellationFrm.ListBox1.Text
+                Call awinLoadConstellation(constellationName, successMessage)
+
+                appInstance.ScreenUpdating = False
+                'Call diagramsVisible(False)
+                Call awinClearPlanTafel()
+                Call awinZeichnePlanTafel()
+                Call awinNeuZeichnenDiagramme(2)
+                'Call diagramsVisible(True)
+                appInstance.ScreenUpdating = True
+
+                If successMessage.Length > initMessage.Length Then
+                    Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
+                Else
+                    'Call MsgBox(constellationName & " wurde geladen ...")
+                End If
+
+                ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
+                currentConstellation = constellationName
             End If
 
-            ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
-            currentConstellation = constellationName
+            
 
         End If
         enableOnUpdate = True
@@ -184,7 +229,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             If constellationName = currentConstellation Then
 
                 ' aktuelle Konstellation unter dem Namen 'Last' speichern
-                Call awinStoreConstellation("Last")
+                Call storeSessionConstellation(ShowProjekte, "Last")
                 currentConstellation = "Last"
             Else
                 ' aktuelle Konstellation bleibt unverändert
@@ -196,63 +241,6 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
     End Sub
 
-    Sub awinSetPropAnpass(control As IRibbonControl, ByRef pressed As Boolean)
-
-        If pressed Then
-            awinSettings.propAnpassRess = True
-        Else
-            awinSettings.propAnpassRess = False
-        End If
-
-    End Sub
-
-
-    Sub awinSetShowSelObj(control As IRibbonControl, ByRef pressed As Boolean)
-
-        If pressed Then
-            awinSettings.showValuesOfSelected = True
-        Else
-            awinSettings.showValuesOfSelected = False
-        End If
-
-    End Sub
-
-    Sub awinSetModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
-
-        Dim demoModusDate As New frmdemoModusDate
-        Dim returnValue As DialogResult
-
-        Call projektTafelInit()
-
-        If pressed Then
-
-            demoModusHistory = True
-
-            returnValue = demoModusDate.ShowDialog
-
-            If returnValue = DialogResult.OK Then
-
-                If demoModusHistory Then
-                    Call MsgBox("Demo Modus History: Ein" & vbLf & "neues Datum: " & historicDate)
-                Else
-                    Call MsgBox("Demo Modus History: Aus")
-                End If
-
-            Else
-                If demoModusHistory Then
-                    Call MsgBox("Demo Modus History: Ein" & vbLf & "altes Datum: " & historicDate)
-                Else
-                    Call MsgBox("Demo Modus History: Aus")
-                End If
-
-            End If
-        Else
-            demoModusHistory = False
-            'Call MsgBox("Demo Modus History: Aus")
-        End If
-
-
-    End Sub
 
     Sub PT5StoreProjects(control As IRibbonControl)
 
@@ -290,25 +278,25 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim deletedProj As Integer = 0
         Dim returnValue As DialogResult
-
-        Dim DeleteProjects As New frmDeleteProjects
+        
+        'Dim deleteProjects As New frmDeleteProjects
+        Dim deleteProjects As New frmProjPortfolioAdmin
 
         Try
 
+            With deleteProjects
+                .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
+                .aKtionskennung = PTtvactions.delFromDB
+                .OKButton.Text = "Löschen"
+                .portfolioName.Visible = False
+                .Label1.Visible = False
+            End With
 
-            returnValue = DeleteProjects.ShowDialog
+            returnValue = deleteProjects.ShowDialog
 
             If returnValue = DialogResult.OK Then
-                deletedProj = RemoveSelectedProjectsfromDB()    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+                'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
-                If selectedToDelete.Count = 0 Then
-                    Call MsgBox("Es wurde kein Projekt/TimeStamp zum Löschen ausgewählt " & vbLf & "Alle Projekte löschen?", MsgBoxStyle.OkCancel)
-                    If CBool(MsgBoxResult.Ok) Then
-                        'Call removeAllProjectsfromDB()
-                    End If
-                Else
-                    'Call MsgBox("Es wurden " & deletedProj & " Projekte gelöscht!")
-                End If
             Else
                 ' returnValue = DialogResult.Cancel
 
@@ -319,17 +307,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             Call MsgBox(ex.Message)
         End Try
 
-        Call awinDeSelect()
-        selectedToDelete.Liste.Clear()
-
-
-        appInstance.ScreenUpdating = False
-        'Call diagramsVisible(False)
-        Call awinClearPlanTafel()
-        Call awinZeichnePlanTafel()
-        Call awinNeuZeichnenDiagramme(2)
-        'Call diagramsVisible(True)
-        appInstance.ScreenUpdating = True
+        
 
     End Sub
 
@@ -337,7 +315,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim anzDiagrams As Integer
         Dim chtobj As Excel.ChartObject
-        Dim i As Integer = 0
+        Dim i As Integer = 1
 
         Call projektTafelInit()
 
@@ -345,7 +323,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             anzDiagrams = CInt(CType(.ChartObjects, Excel.ChartObjects).Count)
 
-            While i < anzDiagrams
+            While i <= anzDiagrams
 
                 chtobj = CType(.ChartObjects(1), Excel.ChartObject)
                 Call awinDeleteChart(chtobj)
@@ -358,6 +336,147 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
 
     End Sub
+    Sub PT0SaveCockpit(control As IRibbonControl)
+
+
+        Dim i As Integer = 1
+        Dim storeCockpitFrm As New frmStoreCockpit
+        Dim returnValue As DialogResult
+        Dim cockpitName As String
+        Try
+
+            Call projektTafelInit()
+
+            Call awinDeSelect()
+
+            Dim anzDiagrams As Integer = CType(appInstance.Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
+          
+            If anzDiagrams > 0 Then
+
+           
+                ' hier muss die Auswahl des Names für das Cockpit erfolgen
+
+                returnValue = storeCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
+
+                If returnValue = DialogResult.OK Then
+
+                    cockpitName = storeCockpitFrm.ComboBox1.Text
+
+                    appInstance.ScreenUpdating = False
+
+                    enableOnUpdate = False
+
+                    Call awinStoreCockpit(cockpitName)
+
+                    enableOnUpdate = True
+
+                    appInstance.ScreenUpdating = True
+                Else
+
+
+                End If
+                ' hier muss eventuell ein Neuzeichnen erfolgen
+            Else
+                Call MsgBox("Es ist kein Chart angezeigt")
+            End If
+
+        Catch ex As Exception
+            Throw New ArgumentException("PT0SaveCockpit: Fehler:  ", ex.Message)
+        End Try
+
+    End Sub
+
+    Sub PT0ShowCockpit(control As IRibbonControl)
+
+
+        Dim i As Integer = 1
+        Dim loadCockpitFrm As New frmLoadCockpit
+        Dim returnValue As DialogResult
+        Dim cockpitName As String
+
+        Call projektTafelInit()
+
+        If ShowProjekte.Count > 0 Then
+
+            If showRangeRight - showRangeLeft > 5 Then
+
+                Dim awinSelection As Excel.ShapeRange
+
+                Try
+                    'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                Catch ex As Exception
+                    awinSelection = Nothing
+                End Try
+
+                appInstance.EnableEvents = False
+                enableOnUpdate = False
+
+                ' hier muss die Auswahl des Names für das Cockpit erfolgen
+
+                returnValue = loadCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
+
+                If returnValue = DialogResult.OK Then
+
+                    cockpitName = loadCockpitFrm.ListBox1.Text
+
+                    appInstance.ScreenUpdating = False
+
+                    Try
+                        Call awinLoadCockpit(cockpitName)
+
+                        ' nur wenn ein Projekt selektiert wurde, werden die Projekt-Charts aktualisiert
+                        If Not awinSelection Is Nothing Then
+
+
+                            If awinSelection.Count = 1 Then
+                                Dim singleShp As Excel.Shape
+                                Dim hproj As clsProjekt
+
+                                ' jetzt die Aktion durchführen ...
+                                singleShp = awinSelection.Item(1)
+
+                                Try
+                                    hproj = ShowProjekte.getProject(singleShp.Name)
+                                Catch ex As Exception
+                                    Call MsgBox("Projekt nicht gefunden ..." & singleShp.Name)
+                                    Exit Sub
+                                End Try
+
+                                Call aktualisiereCharts(hproj, True)
+
+                                Call awinDeSelect()
+                            End If
+
+                        End If
+
+                        Call awinNeuZeichnenDiagramme(9)
+
+                    Catch ex As Exception
+                        Call MsgBox("Fehler beim Laden ..")
+                    End Try
+
+
+                   
+                    
+                    appInstance.ScreenUpdating = True
+
+                Else
+                    appInstance.ScreenUpdating = True
+
+                End If
+            Else
+                Call MsgBox("Bitte wählen Sie einen Zeitraum aus!")
+            End If
+        Else
+            Call MsgBox("Es sind noch keine Projekte geladen!")
+        End If
+
+        ' hier muss eventuell ein Neuzeichnen erfolgen
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+    End Sub
+
 
     ''' <summary>
     ''' wird aktuell verwendet , um eine Stelle für Testen bestimmter Funktionalitäten zu haben
@@ -467,11 +586,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim singleShp As Excel.Shape
         Dim request As New Request(awinSettings.databaseName)
+        'Dim pName As String, variantName As String
+        'Dim shapeText As String
 
         Dim tmpshapes As Excel.Shapes
         Dim oldKey As String, newKey As String
         Dim erg As String = ""
         Dim atleastOne As Boolean = False
+        Dim hproj As clsProjekt
 
         Call projektTafelInit()
 
@@ -498,60 +620,81 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                     With singleShp
 
-                        If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
-
-                            If .Name <> .TextFrame2.TextRange.Text Then
-                                ' das Shape wurde vom Nutzer umbenannt 
-                                atleastOne = True
 
 
-                                Dim oldName As String = .Name
-                                Dim newName As String = .TextFrame2.TextRange.Text
+                        If isProjectType(shapeArt) Then
 
-                                Try
-                                    Dim hproj As clsProjekt = ShowProjekte.getProject(oldName)
+                            ' jetzt muss Pname und Variant-Name ermittel werde 
+                            Try
+                                hproj = ShowProjekte.getProject(.Name)
+                                
 
-                                    If request.pingMongoDb() Then
+                                If hproj.getShapeText <> .TextFrame2.TextRange.Text Then
+                                    ' das Shape wurde vom Nutzer umbenannt 
+                                    atleastOne = True
 
-                                        If ShowProjekte.Liste.ContainsKey(newName) Or request.projectNameAlreadyExists(newName, hproj.variantName) Or Len(newName.Trim) = 0 Or IsNumeric(newName) Then
 
-                                            ' ungültiger Name - alten Namen wiederherstellen 
-                                            .TextFrame2.TextRange.Text = oldName
-                                            erg = erg & oldName & " bleibt, " & newName & " ungültig oder existiert bereits in DB" & vbLf
-                                        Else
-                                            ' der neue Name ist gültig 
-                                            .Name = newName
+                                    Dim oldPname As String = hproj.name
+                                    Dim oldVname As String = hproj.variantName
+                                    Dim tmpstr(5) As String
+                                    Dim newPname As String = ""
+                                    Dim newVname As String = ""
+                                    tmpstr = .TextFrame2.TextRange.Text.Trim.Split(New Char() {CChar("("), CChar(")")}, 3)
 
-                                            oldKey = calcProjektKey(hproj)
-                                            newKey = calcProjektKey(newName, hproj.variantName)
-                                            With hproj
-                                                .name = newName
-                                            End With
-
-                                            ShowProjekte.Remove(oldName)
-                                            hproj.timeStamp = Date.Now
-                                            ShowProjekte.Add(hproj)
-                                            AlleProjekte.Remove(oldKey)
-                                            AlleProjekte.Add(newKey, hproj)
-
-                                            erg = erg & oldName & " -> " & newName & vbLf
-
-                                        End If
-                                    Else
-                                        'Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
-                                        .TextFrame2.TextRange.Text = oldName
-                                        erg = erg & oldName & " bleibt, " & newName & " ungültig, DB ist nicht aktiv" & vbLf
+                                    newPname = tmpstr(0)
+                                    If tmpstr.Length > 1 Then
+                                        newVname = tmpstr(1)
                                     End If
 
-                                Catch ex As Exception
-                                    Call MsgBox(ex.Message)
-                                    .TextFrame2.TextRange.Text = oldName
-                                    erg = erg & oldName & " bleibt, " & newName & " ungültig" & vbLf
-                                End Try
+                                    Try
 
-                            End If
 
-                            End If
+                                        If request.pingMongoDb() Then
+
+                                            If ShowProjekte.contains(newPname) Or request.projectNameAlreadyExists(newPname, hproj.variantName) Or Len(newPname.Trim) = 0 Or IsNumeric(newPname) Then
+
+                                                ' ungültiger Name - alten Namen wiederherstellen 
+                                                .TextFrame2.TextRange.Text = hproj.getShapeText
+                                                erg = erg & oldPname & " bleibt, " & newPname & " ungültig oder existiert bereits in DB" & vbLf
+                                            Else
+                                                ' der neue Name ist gültig 
+                                                .Name = newPname
+
+                                                oldKey = calcProjektKey(hproj)
+                                                newKey = calcProjektKey(newPname, hproj.variantName)
+                                                With hproj
+                                                    .name = newPname
+                                                End With
+
+                                                ShowProjekte.Remove(oldPname)
+                                                hproj.timeStamp = Date.Now
+                                                ShowProjekte.Add(hproj)
+                                                AlleProjekte.Remove(oldKey)
+                                                AlleProjekte.Add(newKey, hproj)
+
+                                                erg = erg & oldPname & " -> " & newPname & vbLf
+
+                                            End If
+                                        Else
+                                            'Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
+                                            .TextFrame2.TextRange.Text = oldPname
+                                            erg = erg & oldPname & " bleibt, " & newPname & " ungültig, DB ist nicht aktiv" & vbLf
+                                        End If
+
+                                    Catch ex1 As Exception
+                                        Call MsgBox(ex1.Message)
+                                        .TextFrame2.TextRange.Text = oldPname
+                                        erg = erg & oldPname & " bleibt, " & newPname & " ungültig" & vbLf
+                                    End Try
+
+                                End If
+                            Catch ex As Exception
+                                Call MsgBox("Fehler : zu Shape mit Namen " & .Name & " gibt es kein Projekt!")
+                            End Try
+
+
+
+                        End If
                     End With
                 Next
             Catch ex As Exception
@@ -603,7 +746,6 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 Else
 
-                    mongoDBaktiv = False
                     Call MsgBox("Datenbank- Verbindung ist unterbrochen !")
                     appInstance.ScreenUpdating = True
 
@@ -619,6 +761,163 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
 
         enableOnUpdate = True
+
+    End Sub
+
+    ''' <summary>
+    ''' eine neue Variante anlegen 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT2VarianteNeu(control As IRibbonControl)
+
+        Dim singleShp As Excel.Shape
+        Dim hproj As clsProjekt
+        Dim awinSelection As Excel.ShapeRange
+        Dim neueVariante As New frmCreateNewVariant
+        Dim resultat As DialogResult
+        Dim request As New Request(awinSettings.databaseName)
+        Dim newproj As clsProjekt
+        Dim key As String
+        Dim phaseList As New Collection
+        Dim milestoneList As New Collection
+
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            If awinSelection.Count = 1 Then
+                ' jetzt die Aktion durchführen ...
+                singleShp = awinSelection.Item(1)
+
+                Try
+                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    phaseList = projectboardShapes.getPhaseList(hproj.name)
+                    milestoneList = projectboardShapes.getMilestoneList(hproj.name)
+                Catch ex As Exception
+                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                    enableOnUpdate = True
+                    Exit Sub
+                End Try
+
+                ' enableevents wird hier nicht false gesetzt; wenn dann wird das im Formular gemacht 
+                ' screenupdating wird hier ebenso nicht auf false gesetzt 
+
+                ' jetzt wird hier das Formular aufgerufen, wo eine neue Variante eingegeben werden kann 
+                With neueVariante
+                    .projektName.Text = hproj.name
+                    .variantenName.Text = hproj.variantName
+                    .newVariant.Text = ""
+                End With
+
+                resultat = neueVariante.ShowDialog
+                If resultat = DialogResult.OK Then
+
+                    newproj = New clsProjekt
+                    hproj.CopyTo(newproj)
+
+                    With newproj
+                        .name = hproj.name
+                        .variantName = neueVariante.newVariant.Text
+                        .ampelErlaeuterung = hproj.ampelErlaeuterung
+                        .ampelStatus = hproj.ampelStatus
+                        .timeStamp = Date.Now
+                        .shpUID = hproj.shpUID
+                        .tfZeile = hproj.tfZeile
+                        .Status = ProjektStatus(0)
+                        If Not IsNothing(hproj.budgetWerte) Then
+                            .budgetWerte = hproj.budgetWerte
+                        End If
+
+                    End With
+
+                    ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
+                    ShowProjekte.Remove(hproj.name)
+
+                    ' die neue Variante wird aufgenommen
+                    key = calcProjektKey(newproj)
+                    AlleProjekte.Add(key, newproj)
+                    ShowProjekte.Add(newproj)
+
+                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                    Try
+
+                        Dim tmpCollection As New Collection
+                        Call ZeichneProjektinPlanTafel(tmpCollection, newproj.name, newproj.tfZeile, phaseList, milestoneList)
+
+                    Catch ex As Exception
+
+                        Call MsgBox("Fehler bei Zeichnen Projekt: " & ex.Message)
+
+                    End Try
+                    
+
+                End If
+                
+            Else
+                Call MsgBox("bitte nur ein Projekt selektieren")
+
+            End If
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' aktiviert die selektierte Variante 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT2VarianteAktiv(control As IRibbonControl)
+
+        Dim deletedProj As Integer = 0
+        'Dim returnValue As DialogResult
+
+        'Dim activateVariant As New frmDeleteProjects
+        Dim activateVariant As New frmProjPortfolioAdmin
+
+        Try
+
+            With activateVariant
+                .Text = "Variante aktivieren"
+                .aKtionskennung = PTtvactions.activateV
+                .OKButton.Visible = False
+                '.OKButton.Text = "Löschen"
+                .portfolioName.Visible = False
+                .Label1.Visible = False
+            End With
+
+            'returnValue = activateVariant.ShowDialog
+            activateVariant.Show()
+
+            'If returnValue = DialogResult.OK Then
+            '    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+
+            'Else
+            '    ' returnValue = DialogResult.Cancel
+
+            'End If
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
 
     End Sub
 
@@ -1051,7 +1350,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         Call awinShowNoShowProject(pname:=.Name)
 
@@ -1065,6 +1364,189 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
+    End Sub
+
+    ''' <summary>
+    ''' neues Formular zur Auswahl Phasen/Meilensteine/Rollen/Kosten anzeigen
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub VisPlanObjects001(control As IRibbonControl)
+
+        Dim auswahlFormular As New frmShowPlanElements
+
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = False
+
+
+        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
+        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+
+            With auswahlFormular
+                .Text = "Plan-Elemente visualisieren"
+                .rdbPhases.Checked = True
+
+                .chkbxShowObjects.Checked = True
+                .chkbxShowObjects.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .chkbxCreateCharts.Checked = False
+                .chkbxCreateCharts.Visible = False
+
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                .showModePortfolio = True
+                .menuOption = PTmenue.visualisieren
+
+                .Show()
+            End With
+
+
+        ElseIf ShowProjekte.Count = 0 Then
+
+            Call MsgBox("Es sind keine Projekte sichtbar!  ")
+
+        ElseIf showRangeRight - showRangeLeft <= 5 Then
+
+            Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
+
+        End If
+
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
+
+    End Sub
+
+
+    Sub AnalyseLeistbarkeit(ByVal control As IRibbonControl)
+
+        Dim auswahlFormular As New frmShowPlanElements
+
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = False
+
+        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
+        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+
+            With auswahlFormular
+                .Text = "Leistbarkeit analysieren"
+                .rdbPhases.Checked = True
+
+                .chkbxShowObjects.Checked = False
+                .chkbxShowObjects.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = True
+
+                .chkbxCreateCharts.Checked = True
+                .chkbxCreateCharts.Visible = False
+
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                .showModePortfolio = True
+
+                .menuOption = PTmenue.leistbarkeitsAnalyse
+
+                .Show()
+            End With
+
+
+        ElseIf ShowProjekte.Count = 0 Then
+
+            Call MsgBox("Es sind keine Projekte geladen!  ")
+
+        ElseIf showRangeRight - showRangeLeft <= 5 Then
+
+            Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
+
+        End If
+
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
+
+
+    End Sub
+
+    Sub MultiprojektReport(ByVal control As IRibbonControl)
+
+        Dim auswahlFormular As New frmShowPlanElements
+        Dim returnValue As DialogResult
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = False
+
+        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
+        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+
+            appInstance.ScreenUpdating = False
+
+            With auswahlFormular
+
+                .einstellungen.Visible = True
+                .Text = "Multiprojekt Reports erzeugen"
+                .rdbPhases.Checked = True
+
+                .chkbxShowObjects.Checked = False
+                .chkbxShowObjects.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .chkbxCreateCharts.Checked = False
+                .chkbxCreateCharts.Visible = False
+
+                .showModePortfolio = True
+
+                .repVorlagenDropbox.Visible = True
+                .labelPPTVorlage.Visible = True
+
+                .rdbRoles.Enabled = False
+                .rdbCosts.Enabled = False
+
+                .menuOption = PTmenue.multiprojektReport
+                .statusLabel.Text = ""
+
+                '.Show()
+                returnValue = .ShowDialog
+            End With
+
+            appInstance.ScreenUpdating = True
+
+        ElseIf ShowProjekte.Count = 0 Then
+
+            Call MsgBox("Es sind keine Projekte geladen!  ")
+
+        ElseIf showRangeRight - showRangeLeft <= 5 Then
+
+            Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
+
+        End If
+
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
+
+
     End Sub
 
     ''' <summary>
@@ -1135,7 +1617,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
                         Call awinBeauftragung(pname:=.Name, type:=0)
                     End If
                 End With
@@ -1186,7 +1668,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
                         Call awinBeauftragung(pname:=.Name, type:=1)
                     End If
                 End With
@@ -1234,7 +1716,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
                         Call awinCancelBeauftragung(pname:=.Name)
                     End If
                 End With
@@ -1261,6 +1743,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim bestaetigeLoeschen As New frmconfirmDeletePrj
         Dim singleShp As Excel.Shape
         Dim awinSelection As Excel.ShapeRange
+        Dim returnValue As DialogResult
 
         Call projektTafelInit()
 
@@ -1278,8 +1761,21 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         If Not awinSelection Is Nothing Then
 
+
+            returnValue = bestaetigeLoeschen.ShowDialog
+
+            If returnValue = DialogResult.Cancel Then
+
+                enableOnUpdate = True
+                Exit Sub
+
+            End If
+
+
+
             ' jetzt die Aktion durchführen ...
-            Dim firstCall As Boolean = True
+
+
             For Each singleShp In awinSelection
 
 
@@ -1287,11 +1783,11 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         Try
-                            Call awinDeleteChartorProject(vprojektname:=.Name, firstCall:=firstCall)
-                            firstCall = False
+                            Call awinDeleteProjectInSession(pName:=.Name)
+
                         Catch ex As Exception
                             Exit For
                         End Try
@@ -1302,8 +1798,49 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             Next
 
+            ' ein oder mehrere Projekte wurden gelöscht  - typus = 3
+            Call awinNeuZeichnenDiagramme(3)
+
         Else
-            Call MsgBox("vorher Projekt selektieren ...")
+
+            Dim deletedProj As Integer = 0
+
+            If AlleProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte geladen !")
+            Else
+
+                'Dim deleteProjects As New frmDeleteProjects
+                Dim deleteProjects As New frmProjPortfolioAdmin
+                Try
+
+                    With deleteProjects
+                        .Text = "Projekte, Varianten aus der Session löschen"
+                        .aKtionskennung = PTtvactions.delFromSession
+                        .OKButton.Text = "Löschen"
+                        .portfolioName.Visible = False
+                        .Label1.Visible = False
+                    End With
+
+                    returnValue = deleteProjects.ShowDialog
+
+                    If returnValue = DialogResult.OK Then
+
+                        'Call MsgBox("ok, aus Session gelöscht  !")
+
+                    Else
+                        ' returnValue = DialogResult.Cancel
+
+                    End If
+
+                Catch ex As Exception
+
+                    Call MsgBox(ex.Message)
+                End Try
+
+            End If
+
+            
+
         End If
 
         Call awinDeSelect()
@@ -1429,14 +1966,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 ' alle Import Projekte erstmal löschen
                 ImportProjekte.Clear()
-                Call bmwImportProjektInventur(myCollection)
-                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                'Call bmwImportProjektInventur(myCollection)
+                Call bmwImportProjekteITO15(myCollection, False)
+                appInstance.ActiveWorkbook.Close(SaveChanges:=True)
                 Call importProjekteEintragen(myCollection, importDate)
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                 Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
-                Exit Sub
             End Try
         Else
             Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
@@ -1555,14 +2092,135 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
     End Sub
 
+    ''' <summary>
+    ''' exportiert selektierte/alle Files in eine Excel Datei, die genauso aufgebaut ist , wie die BMW Import Datei  
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Public Sub bmwExcelExport(control As IRibbonControl)
 
+        Dim singleShp As Excel.Shape
+        Dim hproj As clsProjekt
+        Dim outputString As String = ""
+        Dim fileListe As New SortedList(Of String, String)
+        Dim exportFileName As String = "Export" & Date.Now.ToShortDateString & ".xlsx"
+
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+                
+                ' hier muss jetzt die todo Liste aufgebaut werden 
+
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
+                With singleShp
+                    If isProjectType(shapeArt) Then
+
+                        Try
+
+                            hproj = ShowProjekte.getProject(singleShp.Name)
+                            fileListe.Add(hproj.name, hproj.name)
+
+                        Catch ex As Exception
+
+                            Call MsgBox(singleShp.Name & ": Fehler bei Aufbau todo Liste für Export ...")
+
+                        End Try
+
+                    End If
+                End With
+
+            Next
+
+        Else
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                fileListe.Add(kvp.Key, kvp.Key)
+            Next
+        End If
+
+        ' hier muss jetzt das File Projekt Detail aufgemacht werden ...
+        appInstance.Workbooks.Open(awinPath & bmwExportVorlage)
+
+        Dim zeile As Integer = 2
+        For Each kvp As KeyValuePair(Of String, String) In fileListe
+
+            Try
+                hproj = ShowProjekte.getProject(kvp.Key)
+
+                ' jetzt wird dieses Projekt exportiert ... 
+                Try
+                    Call bmwExportProject(hproj, zeile)
+                    outputString = outputString & hproj.name & " erfolgreich .." & vbLf
+                Catch ex As Exception
+                    outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf & _
+                                    ex.Message & vbLf & vbLf
+                End Try
+
+
+
+            Catch ex As Exception
+
+                Call MsgBox(ex.Message)
+
+            End Try
+
+        Next
+
+        Try
+            ' Schließen der Export Datei unter neuem Namen, original Zustand bleibt erhalten
+            appInstance.ActiveWorkbook.Close(SaveChanges:=True, Filename:=awinPath & bmwExportFilesOrdner & "\" & _
+                                             exportFileName)
+            Call MsgBox(outputString & "exportiert !")
+        Catch ex As Exception
+
+            Call MsgBox("Fehler beim Speichern der Export Datei")
+
+        End Try
+
+
+        Call awinDeSelect()
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' exportiert selektierte / alle Files in eine Excel Datei; 
+    ''' verwendet dabei die Vorlage in Requirements bmwFC52Vorlage.xlsx
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Public Sub bmwFC52Export(control As IRibbonControl)
+
+    End Sub
 
     Public Sub Tom2G4M1Export(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName)
+
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
-        Dim vglName As String = " "
         Dim outputString As String = ""
 
 
@@ -1595,7 +2253,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     shapeArt = kindOfShape(singleShp)
 
                     With singleShp
-                        If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                        If isProjectType(shapeArt) Then
 
                             Try
                                 hproj = ShowProjekte.getProject(singleShp.Name)
@@ -1831,11 +2489,6 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
     End Sub
 
-    Public Sub PT5phasenZeichnenInit(control As IRibbonControl, ByRef pressed As Boolean)
-
-        pressed = awinSettings.drawphases
-
-    End Sub
     Sub PTDemoModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
 
         demoModusHistory = Not demoModusHistory
@@ -1843,21 +2496,51 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
     End Sub
 
-    Sub PTPropAnpassen(control As IRibbonControl, ByRef pressed As Boolean)
+    Sub awinSetModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
 
-        awinSettings.propAnpassRess = Not awinSettings.propAnpassRess
-        pressed = awinSettings.showValuesOfSelected
+        Dim demoModusDate As New frmdemoModusDate
+        Dim returnValue As DialogResult
+
+        Call projektTafelInit()
+
+        If pressed Then
+
+            demoModusHistory = True
+
+            returnValue = demoModusDate.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+
+                If demoModusHistory Then
+                    Call MsgBox("Demo Modus History: Ein" & vbLf & "neues Datum: " & historicDate)
+                Else
+                    Call MsgBox("Demo Modus History: Aus")
+                End If
+
+            Else
+                If demoModusHistory Then
+                    Call MsgBox("Demo Modus History: Ein" & vbLf & "altes Datum: " & historicDate)
+                Else
+                    Call MsgBox("Demo Modus History: Aus")
+                End If
+
+            End If
+        Else
+            demoModusHistory = False
+            'Call MsgBox("Demo Modus History: Aus")
+        End If
+
 
     End Sub
 
-    Sub PTShowSelectedObjects(control As IRibbonControl, ByRef pressed As Boolean)
 
-        awinSettings.showValuesOfSelected = Not awinSettings.showValuesOfSelected
-        pressed = awinSettings.showValuesOfSelected
+    Public Sub PT5phasenZeichnenInit(control As IRibbonControl, ByRef pressed As Boolean)
+
+        pressed = awinSettings.drawphases
 
     End Sub
 
-    Public Sub PT5phasenZeichnen(control As IRibbonControl, pressed As Boolean)
+    Public Sub PT5phasenZeichnen(control As IRibbonControl, ByRef pressed As Boolean)
 
         Call projektTafelInit()
 
@@ -1875,6 +2558,213 @@ Imports Excel = Microsoft.Office.Interop.Excel
         End If
 
     End Sub
+
+    Sub PTShowSelectedObjects(control As IRibbonControl, ByRef pressed As Boolean)
+
+        awinSettings.showValuesOfSelected = Not awinSettings.showValuesOfSelected
+        pressed = awinSettings.showValuesOfSelected
+
+    End Sub
+
+    Sub awinSetShowSelObj(control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.showValuesOfSelected = True
+        Else
+            awinSettings.showValuesOfSelected = False
+        End If
+
+    End Sub
+
+
+    Sub PTPropAnpassen(control As IRibbonControl, ByRef pressed As Boolean)
+
+        awinSettings.propAnpassRess = Not awinSettings.propAnpassRess
+        pressed = awinSettings.propAnpassRess
+
+    End Sub
+
+    Sub awinSetPropAnpass(control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.propAnpassRess = True
+        Else
+            awinSettings.propAnpassRess = False
+        End If
+
+    End Sub
+
+    Sub PTPhaseAnteilig(control As IRibbonControl, ByRef pressed As Boolean)
+
+        awinSettings.phasesProzentual = Not awinSettings.phasesProzentual
+        pressed = awinSettings.phasesProzentual
+
+    End Sub
+
+    Sub awinSetPhaseAnteilig(control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.phasesProzentual = True
+        Else
+            awinSettings.phasesProzentual = False
+        End If
+
+    End Sub
+
+
+    'Public Sub PT6StriktPressed(control As IRibbonControl, ByRef pressed As Boolean)
+
+    '    pressed = awinSettings.mppStrict
+
+    'End Sub
+
+    'Public Sub PT6SetStrict(control As IRibbonControl, ByRef pressed As Boolean)
+
+    '    If pressed Then
+    '        awinSettings.mppStrict = True
+    '    Else
+    '        awinSettings.mppStrict = False
+    '    End If
+
+    'End Sub
+
+    'Public Sub PT6fullyContainedPressed(control As IRibbonControl, ByRef pressed As Boolean)
+
+    '    pressed = awinSettings.mppFullyContained
+
+    'End Sub
+
+    'Public Sub PT6SetfullyContained(control As IRibbonControl, ByRef pressed As Boolean)
+
+    '    If pressed Then
+    '        awinSettings.mppFullyContained = True
+    '    Else
+    '        awinSettings.mppFullyContained = False
+    '    End If
+
+    'End Sub
+
+
+    'Public Sub PT6DateTextPressed(control As IRibbonControl, ByRef pressed As Boolean)
+    '    pressed = awinSettings.mppShowMsDate
+    'End Sub
+
+
+    'Public Sub PT6SetShowDate(Control As IRibbonControl, ByRef pressed As Boolean)
+
+    '    If pressed Then
+    '        awinSettings.mppShowMsDate = True
+    '    Else
+    '        awinSettings.mppShowMsDate = False
+    '    End If
+
+    'End Sub
+
+
+    'Public Sub PT6NameTextPressed(control As IRibbonControl, ByRef pressed As Boolean)
+    '    pressed = awinSettings.mppShowMsName
+    'End Sub
+
+
+    'Public Sub PT6SetShowName(Control As IRibbonControl, ByRef pressed As Boolean)
+
+    '    If pressed Then
+    '        awinSettings.mppShowMsName = True
+    '    Else
+    '        awinSettings.mppShowMsName = False
+    '    End If
+
+    'End Sub
+
+    'Public Sub PT6ProjectLinePressed(control As IRibbonControl, ByRef pressed As Boolean)
+    '    pressed = awinSettings.mppShowProjectLine
+    'End Sub
+
+
+    'Public Sub PT6SetShowProjectLine(Control As IRibbonControl, ByRef pressed As Boolean)
+
+    '    If pressed Then
+    '        awinSettings.mppShowProjectLine = True
+    '    Else
+    '        awinSettings.mppShowProjectLine = False
+    '    End If
+
+    'End Sub
+
+    Public Sub PT6AmpelnPressed(control As IRibbonControl, ByRef pressed As Boolean)
+        pressed = awinSettings.mppShowAmpel
+    End Sub
+
+
+    Public Sub PT6SetShowAmpeln(Control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.mppShowAmpel = True
+        Else
+            awinSettings.mppShowAmpel = False
+        End If
+
+    End Sub
+
+    'Public Sub PT6RasterPressed(control As IRibbonControl, ByRef pressed As Boolean)
+    '    pressed = awinSettings.mppVertikalesRaster
+    'End Sub
+
+
+    'Public Sub PT6SetRaster(Control As IRibbonControl, ByRef pressed As Boolean)
+
+    '    If pressed Then
+    '        awinSettings.mppVertikalesRaster = True
+    '    Else
+    '        awinSettings.mppVertikalesRaster = False
+    '    End If
+
+    'End Sub
+
+
+    ''' <summary>
+    ''' lädt die gewählten Projekte und gewählten Varianten in die Session
+    ''' </summary>
+    ''' <param name="Control"></param>
+    ''' <remarks></remarks>
+    Public Sub PT5DatenbankLoadProjekte(Control As IRibbonControl)
+
+        Dim deletedProj As Integer = 0
+        Dim returnValue As DialogResult
+
+        'Dim deleteProjects As New frmDeleteProjects
+        Dim loadProjectsForm As New frmProjPortfolioAdmin
+
+        Try
+
+            With loadProjectsForm
+                .Text = "Projekte und Varianten in die Session laden "
+                .aKtionskennung = PTtvactions.loadPV
+                .OKButton.Text = "Laden"
+                .portfolioName.Visible = False
+                .Label1.Visible = False
+            End With
+
+            returnValue = loadProjectsForm.ShowDialog
+
+            If returnValue = DialogResult.OK Then
+                'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+
+            Else
+                ' returnValue = DialogResult.Cancel
+
+            End If
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
+
+
+
+    End Sub
+
 
     Public Sub PT5loadprojectsInit(control As IRibbonControl, ByRef pressed As Boolean)
 
@@ -2027,8 +2917,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 Dim tmpCollection As New Collection
                 Call moveShapesDown(tmpCollection, hproj.tfZeile + 1, anzahlZeilen, 0)
                 'Call ZeichneProjektinPlanTafel2(pname, hproj.tfZeile)
-
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile)
+                Dim listCollection As New Collection
+                Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, listCollection, listCollection)
 
 
                 appInstance.EnableEvents = True
@@ -2095,7 +2985,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     Exit Sub
                 End Try
 
-                Dim repObj As Object
+                Dim repObj As Excel.ChartObject
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
 
@@ -2182,7 +3072,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
-                Dim repObj As Object = Nothing
+                Dim repObj As Excel.ChartObject = Nothing
 
                 Try
                     Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)
@@ -2261,7 +3151,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 width = hproj.anzahlRasterElemente * boxWidth + 10
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
-                Dim repObj As Object = Nothing
+                Dim repObj As Excel.ChartObject = Nothing
 
                 Call createCostBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)
 
@@ -2340,7 +3230,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
-                Dim repObj As Object = Nothing
+                Dim repObj As Excel.ChartObject = Nothing
 
 
                 Try
@@ -2412,7 +3302,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         myCollection.Add(.Name)
                         top = .Top + boxHeight + 2
@@ -2423,7 +3313,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     End If
                 End With
             Next
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
             Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
@@ -2467,7 +3357,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         myCollection.Add(.Name)
                         top = .Top + boxHeight + 2
@@ -2478,7 +3368,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     End If
                 End With
             Next
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
             'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
@@ -2530,7 +3420,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         myCollection.Add(.Name, .Name)
                         top = .Top + boxHeight + 2
@@ -2568,7 +3458,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             Next
 
             If myCollection.Count > 0 Then
-                Dim obj As New Object
+                Dim obj As Excel.ChartObject = Nothing
                 Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.Dependencies, 0, False, True, True, top, left, width, height)
             Else
                 Call MsgBox("diese Projekte haben keine Abhängigkeiten")
@@ -2620,7 +3510,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         myCollection.Add(.Name)
                         top = .Top + boxHeight + 2
@@ -2644,7 +3534,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 height = 450
             End If
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
@@ -2803,8 +3693,10 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 If Not projekthistorie Is Nothing Then
                     If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.name
+                        vglName = projekthistorie.First.getShapeText
                     End If
+                Else
+                    projekthistorie = New clsProjektHistorie
                 End If
 
                 With hproj
@@ -2812,7 +3704,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     variantName = .variantName
                 End With
 
-                If vglName.Trim <> pName.Trim Then
+                If vglName <> hproj.getShapeText Then
                     If request.pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -2924,7 +3816,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If shapeArt = PTshty.projektN Or shapeArt = PTshty.projektE Then
+                    If isProjectType(shapeArt) Then
 
                         Try
                             hproj = ShowProjekte.getProject(.Name)
@@ -2964,7 +3856,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 reportObj = Nothing
 
 
-                Dim tmpObj As Object = Nothing
+                Dim tmpObj As Excel.ChartObject = Nothing
                 Call awinCreateStatusDiagram1(projektliste, tmpObj, compareTyp, auswahl, qualifier, True, True, _
                                                top, left, width, height)
 
@@ -2988,113 +3880,20 @@ Imports Excel = Microsoft.Office.Interop.Excel
     End Sub
 
 
-    ''' <summary>
-    ''' zeige die grünen Milestones für die ausgewählten Projekte an 
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub Tom2G2M5M2B1ShowMilestones(control As IRibbonControl)
-
-
-        Dim farbTyp As Integer = 1
-        Dim numberIt As Boolean = False
-        Dim namelist As New SortedList(Of String, String)
-
-        Call projektTafelInit()
-
-        appInstance.EnableEvents = False
-        'appInstance.ScreenUpdating = False
-        enableOnUpdate = False
-
-        Call awinZeichneMilestones(namelist, farbTyp, numberIt)
-
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
-        'appInstance.ScreenUpdating = formerSU
-
-
-    End Sub
-
-    Sub Tom2G2M5M2B2ShowMilestones(control As IRibbonControl)
-
-
-        Dim farbTyp As Integer = 2
-        Dim numberIt As Boolean = False
-        Dim namelist As New SortedList(Of String, String)
-
-        Call projektTafelInit()
-
-        Dim formerSU As Boolean = appInstance.ScreenUpdating
-        Dim formerEE As Boolean = appInstance.EnableEvents
-
-
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        Call awinZeichneMilestones(namelist, farbTyp, numberIt)
-
-        enableOnUpdate = True
-        appInstance.EnableEvents = formerEE
-
-
-    End Sub
-
-    Sub Tom2G2M5M2B3ShowMilestones(control As IRibbonControl)
-
-
-        Dim farbTyp As Integer = 3
-        Dim numberIt As Boolean = False
-        Dim namelist As New SortedList(Of String, String)
-
-        Call projektTafelInit()
-
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        Call awinZeichneMilestones(namelist, farbTyp, numberIt)
-
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
-
-
-
-
-    End Sub
-
-    Sub Tom2G2M5M2B4ShowMilestones(control As IRibbonControl)
-
-
-        Dim farbTyp As Integer = 0
-        Dim numberIt As Boolean = False
-        Dim namelist As New SortedList(Of String, String)
-
-        Call projektTafelInit()
-
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        Call awinZeichneMilestones(namelist, farbTyp, numberIt)
-
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
-
-
-
-    End Sub
 
     Sub Tom2G2M5M2B5ShowMilestones(control As IRibbonControl)
 
 
         Dim farbTyp As Integer = 4
         Dim numberIt As Boolean = False
-        Dim namelist As New SortedList(Of String, String)
+        Dim namelist As New Collection
 
         Call projektTafelInit()
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        Call awinZeichneMilestones(namelist, farbTyp, numberIt)
+        Call awinZeichneMilestones(namelist, farbTyp, numberIt, False)
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
@@ -3116,7 +3915,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
 
         Dim listOfItems As New Collection
-        Dim nameList As New SortedList(Of String, String)
+        Dim nameList As New Collection
         Dim title As String = "Meilensteine visualisieren"
 
         Dim repObj As Object = Nothing
@@ -3154,12 +3953,12 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             If nameList.Count > 0 Then
 
-                For Each kvp As KeyValuePair(Of String, String) In nameList
-                    listOfItems.Add(kvp.Key)
+                For Each tmpName As String In nameList
+                    listOfItems.Add(tmpName)
                 Next
 
                 ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
 
 
                 With auswahlFenster
@@ -3198,7 +3997,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
     Public Sub PTShowAllMilestonesByName(Control As IRibbonControl)
 
         Dim listOfItems As New Collection
-        Dim nameList As New SortedList(Of String, String)
+        Dim nameList As New Collection
         Dim title As String = "Meilensteine visualisieren"
 
         Dim repObj As Object = Nothing
@@ -3213,8 +4012,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 If nameList.Count > 0 Then
 
-                    For Each kvp As KeyValuePair(Of String, String) In nameList
-                        listOfItems.Add(kvp.Key)
+                    For Each tmpName As String In nameList
+                        listOfItems.Add(tmpName)
                     Next
 
                     ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
@@ -3295,11 +4094,13 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                         If Not projekthistorie Is Nothing Then
                             If projekthistorie.Count > 0 Then
-                                vglName = projekthistorie.First.name
+                                vglName = projekthistorie.First.getShapeText
                             End If
+                        Else
+                            projekthistorie = New clsProjektHistorie
                         End If
 
-                        If vglName.Trim <> pName.Trim Then
+                        If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                             projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -3472,7 +4273,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             ' erst noch alle Connectoren löschen ... 
 
-            Call awinDeleteMilestoneShapes(4)
+            Call awinDeleteProjectChildShapes(4)
 
             For Each singleShp In awinSelection
 
@@ -3503,7 +4304,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
     Sub Tom2G2M5B3NoShowSymbols(control As IRibbonControl)
         Call projektTafelInit()
-        Call awinDeleteMilestoneShapes(0)
+        Call awinDeleteProjectChildShapes(0)
     End Sub
 
 
@@ -3515,7 +4316,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
     Sub Tom2G2M5B3NoShowMilestones(control As IRibbonControl)
 
         Call projektTafelInit()
-        Call awinDeleteMilestoneShapes(1)
+        Call awinDeleteProjectChildShapes(1)
 
     End Sub
 
@@ -3525,9 +4326,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim von As Integer, bis As Integer
 
         Dim listOfItems As New Collection
-        Dim existingNames As New SortedList(Of String, String)
+        Dim existingNames As New Collection
 
-        Dim repObj As Object = Nothing
         Dim title As String = "Phasen visualisieren"
         Dim phaseName As String
         Dim hproj As clsProjekt
@@ -3548,17 +4348,20 @@ Imports Excel = Microsoft.Office.Interop.Excel
             awinSelection = Nothing
         End Try
 
+
+        Dim anzElem As Integer = selektierteProjekte.Count
+
         If Not awinSelection Is Nothing Then
 
             ' jetzt die Aktion durchführen ...
 
-            For Each singleShp In awinSelection
+            For Each singleshp In awinSelection
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleshp.Name)
                     selektierteProjekte.Add(hproj)
                 Catch ex As Exception
-                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                    Call MsgBox("Projekt " & singleshp.Name & " nicht gefunden ...")
                 End Try
 
             Next
@@ -3573,14 +4376,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 For i = 1 To PhaseDefinitions.Count
                     phaseName = PhaseDefinitions.getPhaseDef(i).name
 
-                    If existingNames.ContainsKey(phaseName) Then
+                    If existingNames.Contains(phaseName) Then
                         listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
                     End If
 
                 Next
 
                 ' jetzt stehen in der listOfItems die Namen der Phasen 
-                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+                Dim auswahlFenster As New ListSelectionWindow(listOfItems, title, "andere löschen")
 
                 von = showRangeLeft
                 bis = showRangeRight
@@ -3620,9 +4423,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim von As Integer, bis As Integer
 
         Dim listOfItems As New Collection
-        Dim existingNames As New SortedList(Of String, String)
+        Dim existingNames As New Collection
 
-        Dim repObj As Object = Nothing
         Dim title As String = "Phasen visualisieren"
         Dim phaseName As String
 
@@ -3641,7 +4443,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 For i = 1 To PhaseDefinitions.Count
                     phaseName = PhaseDefinitions.getPhaseDef(i).name
 
-                    If existingNames.ContainsKey(phaseName) Then
+                    If existingNames.Contains(phaseName) Then
                         listOfItems.Add(PhaseDefinitions.getPhaseDef(i).name)
                     End If
 
@@ -3678,7 +4480,6 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim listOfItems As New Collection
         'Dim left As Double, top As Double, height As Double, width As Double
 
-        Dim repObj As Object = Nothing
         Dim phaseName As String
 
         Call projektTafelInit()
@@ -3724,8 +4525,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         Dim listOfItems As New Collection
 
-        Dim repObj As Object = Nothing
-        Dim nameList As New SortedList(Of String, String)
+        Dim nameList As New Collection
 
         Call projektTafelInit()
 
@@ -3736,8 +4536,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 If nameList.Count > 0 Then
 
-                    For Each kvp As KeyValuePair(Of String, String) In nameList
-                        listOfItems.Add(kvp.Key)
+                    For Each tmpName As String In nameList
+                        listOfItems.Add(tmpName)
                     Next
 
                     ' jetzt stehen in der listOfItems die Namen der Rollen 
@@ -3845,7 +4645,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Dim engpassValue As Double = -100000.0
         Dim curValue As Double
 
-        Dim repObj As Object = Nothing
+        Dim repObj As Excel.ChartObject = Nothing
 
         Call projektTafelInit()
 
@@ -4123,7 +4923,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             width = 600
             height = 450
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
@@ -4185,7 +4985,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             width = 600
             height = 450
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
@@ -4280,7 +5080,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             width = 600
             height = 450
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 If myCollection.Count > 0 Then
@@ -4343,10 +5143,12 @@ Imports Excel = Microsoft.Office.Interop.Excel
         If myCollection.Count > 0 Then
 
             With appInstance.ActiveWindow
+
                 sichtbarerBereich = .VisibleRange
                 left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
                 If left < CDbl(sichtbarerBereich.Left) Then
                     left = CDbl(sichtbarerBereich.Left) + 2
+
                 End If
 
                 top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
@@ -4359,7 +5161,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             width = 600
             height = 450
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 If myCollection.Count > 0 Then
@@ -4442,7 +5244,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             width = 600
             height = 450
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 If myCollection.Count > 0 Then
@@ -4521,7 +5323,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             height = 450
 
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
@@ -4585,7 +5387,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
             height = 450
 
 
-            Dim obj As New Object
+            Dim obj As Excel.ChartObject = Nothing
 
             Try
                 Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ZeitRisiko, 0, False, True, True, top, left, width, height)
@@ -4614,6 +5416,27 @@ Imports Excel = Microsoft.Office.Interop.Excel
         Call awinDeSelect()
 
     End Sub
+
+    Sub PTOPTVariantenOptimieren(control As IRibbonControl)
+
+
+        Dim optmierungsFenster As New frmOptimizeKPI
+        Dim returnValue As DialogResult
+
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        returnValue = optmierungsFenster.ShowDialog
+        'optmierungsFenster.Show()
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
+    End Sub
+
 
     Sub PT0ShowPortfolioBudgetCost(control As IRibbonControl)
         Dim selectionType As Integer = -1 ' keine Einschränkung
@@ -4648,7 +5471,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             End With
 
-            Dim obj As Object = Nothing
+            Dim obj As Excel.ChartObject = Nothing
             Call awinCreateBudgetErgebnisDiagramm(obj, top, left, width, height, False, False)
 
         Else
@@ -4708,7 +5531,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
 
 
-            Dim obj As Object = Nothing
+            Dim obj As Excel.ChartObject = Nothing
             Call awinCreateErgebnisDiagramm(obj, top, left, width, height, False, False)
 
 
@@ -4804,7 +5627,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 appInstance.ScreenUpdating = False
                 appInstance.EnableEvents = False
 
-                Dim dummyObj As New Object
+                Dim dummyObj As Excel.ChartObject = Nothing
                 Dim hproj As clsProjekt
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name)
@@ -4865,14 +5688,23 @@ Imports Excel = Microsoft.Office.Interop.Excel
             If awinSelection.Count = 1 Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
-                Dim hproj As clsProjekt = ShowProjekte.getProject(singleShp.Name)
-                Dim cproj As New clsProjekt
-                Dim top As Double = singleShp.Top + boxHeight + 2
-                Dim left As Double = singleShp.Left - boxWidth
-                If left <= 0 Then
-                    left = 1
-                End If
-                Call awinCompareProject(hproj, cproj, 0, top, left)
+                Dim hproj As clsProjekt
+
+                Try
+                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    Dim cproj As New clsProjekt
+                    Dim top As Double = singleShp.Top + boxHeight + 2
+                    Dim left As Double = singleShp.Left - boxWidth
+                    If left <= 0 Then
+                        left = 1
+                    End If
+                    Call awinCompareProject(hproj, cproj, 0, top, left)
+
+                Catch ex As Exception
+                    Call MsgBox("Fehler bei Beauftragung " & vbLf & ex.Message)
+                End Try
+
+
                 'Call awinCompareProject(pname1:=singleShp.Name, pname2:=" ", compareType:=0)
 
             Else
@@ -5166,8 +5998,10 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                         If Not projekthistorie Is Nothing Then
                             If projekthistorie.Count > 0 Then
-                                vglName = projekthistorie.First.name
+                                vglName = projekthistorie.First.getShapeText
                             End If
+                        Else
+                            projekthistorie = New clsProjektHistorie
                         End If
 
                         With hproj
@@ -5175,7 +6009,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                             variantName = .variantName
                         End With
 
-                        If vglName.Trim <> pName.Trim Then
+                        If vglName <> hproj.getShapeText Then
 
                             ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                             projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -5306,8 +6140,10 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                     If Not projekthistorie Is Nothing Then
                         If projekthistorie.Count > 0 Then
-                            vglName = projekthistorie.First.name
+                            vglName = projekthistorie.First.getShapeText
                         End If
+                    Else
+                        projekthistorie = New clsProjektHistorie
                     End If
 
                     With hproj
@@ -5315,7 +6151,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                         variantName = .variantName
                     End With
 
-                    If vglName.Trim <> pName.Trim Then
+                    If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -5418,14 +6254,22 @@ Imports Excel = Microsoft.Office.Interop.Excel
                 ' jetzt die Aktion durchführen ...
                 singleShp1 = awinSelection.Item(1)
                 singleShp2 = awinSelection.Item(2)
-                Dim hproj As clsProjekt = ShowProjekte.getProject(singleShp1.Name)
-                Dim cproj As clsProjekt = ShowProjekte.getProject(singleShp2.Name)
-                Dim top As Double = singleShp1.Top + boxHeight + 2
-                Dim left As Double = singleShp1.Left - boxWidth
-                If left <= 0 Then
-                    left = 1
-                End If
-                Call awinCompareProject(hproj, cproj, 3, top, left)
+
+                Dim hproj As clsProjekt
+                Dim cproj As clsProjekt
+                Try
+                    hproj = ShowProjekte.getProject(singleShp1.Name)
+                    cproj = ShowProjekte.getProject(singleShp2.Name)
+                    Dim top As Double = singleShp1.Top + boxHeight + 2
+                    Dim left As Double = singleShp1.Left - boxWidth
+                    If left <= 0 Then
+                        left = 1
+                    End If
+                    Call awinCompareProject(hproj, cproj, 3, top, left)
+                Catch ex As Exception
+                    Call MsgBox("Fehler bei Compare" & vbLf & ex.Message)
+                End Try
+
             Else
                 Call MsgBox("bitte zwei Projekte selektieren")
                 'For Each singleShp In awinSelection
@@ -5475,7 +6319,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
             If Not awinSelection Is Nothing Then
 
-                If awinSelection.Count = 1 Then
+                If awinSelection.Count = 1 And isProjectType(kindOfShape(awinSelection.Item(1))) Then
                     ' jetzt die Aktion durchführen ...
                     singleShp = awinSelection.Item(1)
 
@@ -5488,11 +6332,13 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                     If Not projekthistorie Is Nothing Then
                         If projekthistorie.Count > 0 Then
-                            vglName = projekthistorie.First.name
+                            vglName = projekthistorie.First.getShapeText
                         End If
+                    Else
+                        projekthistorie = New clsProjektHistorie
                     End If
 
-                    If vglName.Trim <> pName.Trim Then
+                    If vglName <> hproj.getShapeText Then
 
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -5516,7 +6362,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                         width = System.Math.Max(nrSnapshots * boxWidth * 0.65, 300)
 
                         height = 16 * boxHeight
-                        Dim repObj As Object = Nothing
+                        Dim repObj As Excel.ChartObject = Nothing
                         Call createTrendSfit(repObj, top, left, height, width)
 
                     Else
@@ -5579,7 +6425,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
         If Not awinSelection Is Nothing Then
 
-            If awinSelection.Count = 1 Then
+            If awinSelection.Count = 1 And isProjectType(kindOfShape(awinSelection.Item(1))) Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
 
@@ -5592,11 +6438,13 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 If Not projekthistorie Is Nothing Then
                     If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.name
+                        vglName = projekthistorie.First.getShapeText
                     End If
+                Else
+                    projekthistorie = New clsProjektHistorie
                 End If
 
-                If vglName.Trim <> pName.Trim Then
+                If vglName <> hproj.getShapeText Then
                     If request.pingMongoDb() Then
                         ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
                         projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
@@ -5624,7 +6472,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
                     width = System.Math.Max(nrSnapshots * boxWidth * 0.65, 300)
 
                     height = 16 * boxHeight
-                    Dim repObj As Object = Nothing
+                    Dim repObj As Excel.ChartObject = Nothing
                     Call createTrendKPI(repObj, top, left, height, width)
 
                 Else
@@ -5687,7 +6535,7 @@ Imports Excel = Microsoft.Office.Interop.Excel
         If Not awinSelection Is Nothing Then
 
 
-            If awinSelection.Count = 1 Then
+            If awinSelection.Count = 1 And isProjectType(kindOfShape(awinSelection.Item(1))) Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
                 hproj = ShowProjekte.getProject(singleShp.Name)
@@ -5704,11 +6552,14 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                 If Not projekthistorie Is Nothing Then
                     If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.name
+                        vglName = projekthistorie.First.getShapeText
                     End If
+
+                Else
+                    projekthistorie = New clsProjektHistorie
                 End If
 
-                If vglName.Trim <> pName.Trim Then
+                If vglName <> hproj.getShapeText Then
 
                     If request.pingMongoDb() Then
                         ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
@@ -5739,7 +6590,8 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
                     With showCharacteristics
 
-                        .Text = "Historie für Projekt " & pName.Trim
+                        .Text = "Historie für Projekt " & pName.Trim & vbLf & _
+                                "( " & projekthistorie.getZeitraum & " )"
                         .timeSlider.Minimum = 0
                         .timeSlider.Maximum = nrSnapshots - 1
 

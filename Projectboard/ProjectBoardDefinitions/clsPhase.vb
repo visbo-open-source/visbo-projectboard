@@ -3,7 +3,7 @@
     ' earliestStart und latestStart sind absolute Werte im "koordinaten-System" des Projektes
     ' von daher ist es anders gelöst als in clsProjekt, wo earlieststart und latestStart relative Angaben sind 
 
-    Private AllResults As List(Of clsResult)
+    Private AllResults As List(Of clsMeilenstein)
     Private AllRoles As List(Of clsRolle)
     Private AllCosts As List(Of clsKostenart)
     Private _Offset As Integer
@@ -91,7 +91,7 @@
             If dauer = 0 And _relEnde > 0 Then
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
-                _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
+                _startOffsetinDays = CInt(DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1)))
                 _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
 
 
@@ -108,8 +108,8 @@
                 End If
 
 
-                _startOffsetinDays = startOffset
-                _dauerInDays = dauer
+                _startOffsetinDays = CInt(startOffset)
+                _dauerInDays = CInt(dauer)
 
 
 
@@ -176,7 +176,7 @@
 
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
-                _startOffsetinDays = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1))
+                _startOffsetinDays = CInt(DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1)))
                 '_dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
                 '                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
                 _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
@@ -184,11 +184,11 @@
 
             Else
                 '  
-                _startOffsetinDays = startOffset
-                _dauerInDays = dauer
+                _startOffsetinDays = CInt(startOffset)
+                _dauerInDays = CInt(dauer)
 
-                _relStart = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1
-                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1
+                _relStart = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1)
+                _relEnde = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1)
 
 
             End If
@@ -229,7 +229,7 @@
             If dauer = 0 And _relEnde > 0 Then
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
-                _startOffsetinDays = DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1))
+                _startOffsetinDays = CInt(DateDiff(DateInterval.Day, projektStartdate, projektStartdate.AddMonths(_relStart - 1)))
                 _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
 
 
@@ -292,7 +292,7 @@
 
 
                 ' dann sind die Werte initial noch nicht gesetzt worden 
-                _startOffsetinDays = DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1))
+                _startOffsetinDays = CInt(DateDiff(DateInterval.Day, StartofCalendar, StartofCalendar.AddMonths(_relStart - 1)))
                 '_dauerInDays = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(_relStart - 1), _
                 '                        StartofCalendar.AddMonths(_relEnde).AddDays(-1)) + 1
                 _dauerInDays = calcDauerIndays(projektStartdate.AddDays(_startOffsetinDays), _relEnde - _relStart + 1, True)
@@ -303,8 +303,8 @@
                 _startOffsetinDays = startOffset
                 _dauerInDays = dauer
 
-                _relStart = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1
-                _relEnde = DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1
+                _relStart = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset)) + 1)
+                _relEnde = CInt(DateDiff(DateInterval.Month, StartofCalendar, StartofCalendar.AddDays(startOffset + _dauerInDays - 1)) + 1)
 
 
             End If
@@ -585,97 +585,147 @@
         End Set
     End Property
 
-
-    Public Sub calculateLineCoord(ByVal zeile As Integer, ByVal nummer As Integer, ByVal gesamtZahl As Integer, _
-                                  ByRef top1 As Double, ByRef left1 As Double, ByRef top2 As Double, ByRef left2 As Double, ByVal linienDicke As Double)
+    ''' <summary>
+    ''' berechnet die Shape Koordinaten dieser Phase 
+    ''' </summary>
+    ''' <param name="top"></param>
+    ''' <param name="left"></param>
+    ''' <param name="width"></param>
+    ''' <param name="height"></param>
+    ''' <remarks></remarks>
+    Public Sub CalculatePhaseShapeCoord(ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
 
         Try
 
             Dim projektStartdate As Date = Me.Parent.startDate
+            Dim tfzeile As Integer = Me.Parent.tfZeile
+            Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
 
-            Dim korrPosition As Double = nummer / gesamtZahl
-            Dim faktor As Double = linienDicke / boxHeight
-            Dim startpunkt As Integer = DateDiff(DateInterval.Day, StartofCalendar, projektStartdate)
 
             If startpunkt < 0 Then
-                Throw New Exception("calculate Line Coord: Projektstart liegt vor Start of Calendar ...")
+                Throw New Exception("calculate Shape Coord für Phase: Projektstart liegt vor Start of Calendar ...")
             End If
 
             Dim phasenStart As Integer = startpunkt + Me.startOffsetinDays
             Dim phasenDauer As Integer = Me.dauerInDays
 
-            ' absolute Setzung - dadurch wird verhindert, daß die Linien sehr schmal gezeichnet werden ... 
-            ' es soll immer gleich groß gezeichnet werden - einfach überschreiben - das ist rvtl besser;
-            ' das muss einfach noch herausgefunden werden 
-            gesamtZahl = 1
-            nummer = 1
 
 
-            If gesamtZahl <= 0 Then
-                Throw New ArgumentException("unzulässige Gesamtzahl" & gesamtZahl)
-            End If
-
-            ' korrigiere, aber breche nicht ab wenn die Nummer der Line größer als die Gesamtzahl ist ... 
-            If nummer > gesamtZahl Then
-                nummer = gesamtZahl
-            End If
-
-            ' ausrechnen des Korrekturfaktors
-
-            korrPosition = nummer / (gesamtZahl + 1)
+            If tfzeile > 1 And phasenStart >= 1 And phasenDauer > 0 Then
 
 
-            If phasenStart >= 0 And phasenDauer > 0 Then
-
-                ' das folgende ist mühsam ausprobiert - um die Linien in unterschiedicher Stärke in der Projekt Form zu platzieren - möglichst auch jeweils mittig
-                If gesamtZahl <= 3 Then
-                    top1 = topOfMagicBoard + (zeile - 0.95) * boxHeight + korrPosition * boxHeight - linienDicke / 2
-                Else
-                    top1 = topOfMagicBoard + (zeile - 1.06) * boxHeight + korrPosition * boxHeight - linienDicke / 2
-                End If
-
-                top2 = top1
-
-                left1 = (phasenStart / 365) * boxWidth * 12
-                left2 = ((phasenStart + phasenDauer) / 365) * boxWidth * 12
+                top = topOfMagicBoard + (tfzeile - 1) * boxHeight + 0.5 * (0.8 - 0.23) * boxHeight
+                left = (phasenStart / 365) * boxWidth * 12
+                width = ((phasenDauer) / 365) * boxWidth * 12
+                height = 0.23 * boxHeight
 
             Else
-                Throw New ArgumentException("es kann keine Line berechnet werden für : " & Me.name)
+                Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("es kann keine Line berechnet werden für : " & Me.name)
+            Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
         End Try
 
 
-
     End Sub
+
+    'Public Sub calculateLineCoord(ByVal zeile As Integer, ByVal nummer As Integer, ByVal gesamtZahl As Integer, _
+    '                              ByRef top1 As Double, ByRef left1 As Double, ByRef top2 As Double, ByRef left2 As Double, ByVal linienDicke As Double)
+
+    '    Try
+
+    '        Dim projektStartdate As Date = Me.Parent.startDate
+
+    '        Dim korrPosition As Double = nummer / gesamtZahl
+    '        Dim faktor As Double = linienDicke / boxHeight
+    '        Dim startpunkt As Integer = CInt(DateDiff(DateInterval.Day, StartofCalendar, projektStartdate))
+
+    '        If startpunkt < 0 Then
+    '            Throw New Exception("calculate Line Coord: Projektstart liegt vor Start of Calendar ...")
+    '        End If
+
+    '        Dim phasenStart As Integer = startpunkt + Me.startOffsetinDays
+    '        Dim phasenDauer As Integer = Me.dauerInDays
+
+    '        ' absolute Setzung - dadurch wird verhindert, daß die Linien sehr schmal gezeichnet werden ... 
+    '        ' es soll immer gleich groß gezeichnet werden - einfach überschreiben - das ist rvtl besser;
+    '        ' das muss einfach noch herausgefunden werden 
+    '        gesamtZahl = 1
+    '        nummer = 1
+
+
+    '        If gesamtZahl <= 0 Then
+    '            Throw New ArgumentException("unzulässige Gesamtzahl" & gesamtZahl)
+    '        End If
+
+    '        ' korrigiere, aber breche nicht ab wenn die Nummer der Line größer als die Gesamtzahl ist ... 
+    '        If nummer > gesamtZahl Then
+    '            nummer = gesamtZahl
+    '        End If
+
+    '        ' ausrechnen des Korrekturfaktors
+
+    '        korrPosition = nummer / (gesamtZahl + 1)
+
+
+    '        If phasenStart >= 0 And phasenDauer > 0 Then
+
+    '            ' das folgende ist mühsam ausprobiert - um die Linien in unterschiedicher Stärke in der Projekt Form zu platzieren - möglichst auch jeweils mittig
+    '            If gesamtZahl <= 3 Then
+    '                top1 = topOfMagicBoard + (zeile - 0.95) * boxHeight + korrPosition * boxHeight - linienDicke / 2
+    '            Else
+    '                top1 = topOfMagicBoard + (zeile - 1.06) * boxHeight + korrPosition * boxHeight - linienDicke / 2
+    '            End If
+
+    '            top2 = top1
+
+    '            left1 = (phasenStart / 365) * boxWidth * 12
+    '            left2 = ((phasenStart + phasenDauer) / 365) * boxWidth * 12
+
+    '        Else
+    '            Throw New ArgumentException("es kann keine Line berechnet werden für : " & Me.name)
+    '        End If
+
+    '    Catch ex As Exception
+    '        Throw New ArgumentException("es kann keine Line berechnet werden für : " & Me.name)
+    '    End Try
+
+
+
+    'End Sub
     Public Sub AddRole(ByVal role As clsRolle)
 
         AllRoles.Add(role)
 
     End Sub
 
-    Public Sub addresult(ByVal result As clsResult)
+    ''' <summary>
+    ''' es wird überprüft, ob der Meilenstein-Name schon existiert 
+    ''' wenn er bereits existiert, wird eine ArgumentException geworfen  
+    ''' </summary>
+    ''' <param name="result"></param>
+    ''' <remarks></remarks>
+    Public Sub addresult(ByVal result As clsMeilenstein)
 
-        ' in Abhängigkeit von milestoneFreeFloat: 
-        ' es wird geprüft, ob der Meilenstein innerhalb der Phasengrenze  ist 
-        ' wenn nein , wird entweder auf Phasen-Start oder auf Phasen-Ende gesetzt 
 
-        If awinSettings.milestoneFreeFloat Then
-            ' nichts verändern ....
-        Else
+        Dim anzElements As Integer = AllResults.Count - 1
+        Dim ix As Integer = 0
+        Dim found As Boolean = False
 
-            If result.offset > Me._dauerInDays - 1 Then
-                result.offset = Me._dauerInDays - 1
-            ElseIf result.offset < 0 Then
-                result.offset = 0
+        Do While ix <= anzElements And Not found
+            If AllResults.Item(ix).name = result.name Then
+                found = True
+            Else
+                ix = ix + 1
             End If
+        Loop
 
-        
+        If found Then
+            Throw New ArgumentException("Meilenstein existiert bereits !" & result.name)
+        Else
+            AllResults.Add(result)
         End If
-
-        AllResults.Add(result)
 
 
     End Sub
@@ -688,7 +738,7 @@
 
     End Property
 
-    Public ReadOnly Property ResultListe() As List(Of clsResult)
+    Public ReadOnly Property ResultListe() As List(Of clsMeilenstein)
 
         Get
             ResultListe = AllResults
@@ -727,7 +777,7 @@
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle
         Dim newcost As clsKostenart
-        Dim newresult As clsResult
+        Dim newresult As clsMeilenstein
         ' Dimension ist die Länge des Arrays , der kopiert werden soll; 
         ' mit der eingeführten Unschärfe ist nicht mehr gewährleistet, 
         ' daß relende-relstart die tatsächliche Dimension des Arrays wiedergibt 
@@ -771,9 +821,15 @@
             .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
             For r = 1 To Me.AllResults.Count
-                newresult = New clsResult(parent:=newphase)
+                newresult = New clsMeilenstein(parent:=newphase)
                 Me.getResult(r).CopyTo(newresult)
-                .AddResult(newresult)
+
+                Try
+                    .addresult(newresult)
+                Catch ex As Exception
+
+                End Try
+
             Next
 
         End With
@@ -783,7 +839,7 @@
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle, oldrole As clsRolle
         Dim newcost As clsKostenart, oldcost As clsKostenart
-        Dim newresult As clsResult
+        Dim newresult As clsMeilenstein
         ' Dimension ist die Länge des Arrays , der kopiert werden soll; 
         ' mit der eingeführten Unschärfe ist nicht mehr gewährleistet, 
         ' daß relende-relstart die tatsächliche Dimension des Arrays wiedergibt 
@@ -864,12 +920,17 @@
             ' alt .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
             For r = 1 To Me.AllResults.Count
-                newresult = New clsResult(parent:=newphase)
+                newresult = New clsMeilenstein(parent:=newphase)
                 Me.getResult(r).CopyTo(newresult)
                 ' korrigiert den Offset der Meilensteine 
-                newresult.offset = System.Math.Round(CLng(Me.getResult(r).offset * corrFactor))
+                newresult.offset = CLng(System.Math.Round(CLng(Me.getResult(r).offset * corrFactor)))
 
-                .addresult(newresult)
+                Try
+                    .addresult(newresult)
+                Catch ex As Exception
+
+                End Try
+
             Next
 
         End With
@@ -885,9 +946,9 @@
     Public Sub adjustMilestones(ByVal faktor As Double)
         Dim newOffset As Integer
         For r = 1 To Me.AllResults.Count
-            
+
             ' korrigiert den Offset der Meilensteine 
-            newOffset = System.Math.Round(CLng(Me.getResult(r).offset * faktor))
+            newOffset = CInt(System.Math.Round(CLng(Me.getResult(r).offset * faktor)))
 
             If newOffset < 0 Then
                 newOffset = 0
@@ -930,7 +991,7 @@
 
     End Property
 
-    Public ReadOnly Property getResult(ByVal index As Integer) As clsResult
+    Public ReadOnly Property getResult(ByVal index As Integer) As clsMeilenstein
 
         Get
             getResult = AllResults.Item(index - 1)
@@ -947,10 +1008,10 @@
     ''' <returns>Objekt vom Typ Result</returns>
     ''' <remarks>
     ''' Rückgabe von Nothing ist schneller als über Throw Exception zu arbeiten</remarks>
-    Public ReadOnly Property getResult(ByVal key As String) As clsResult
+    Public ReadOnly Property getResult(ByVal key As String) As clsMeilenstein
 
         Get
-            Dim tmpResult As clsResult = Nothing
+            Dim tmpResult As clsMeilenstein = Nothing
             Dim found As Boolean = False
             Dim r As Integer = 1
 
@@ -970,6 +1031,34 @@
 
         End Get
 
+    End Property
+
+    ''' <summary>
+    ''' gibt die laufende Nummer des Meilensteins in der Phase zurück
+    ''' 0: wenn nicht gefunden
+    ''' </summary>
+    ''' <param name="msName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getlfdNr(ByVal msName As String) As Integer
+        Get
+            Dim r As Integer = 1
+            Dim found As Boolean = False
+            Dim tmpValue As Integer = 0
+
+            While r <= Me.CountResults And Not found
+                If Me.getResult(r).name = msName Then
+                    found = True
+                    tmpValue = r
+                Else
+                    r = r + 1
+                End If
+            End While
+
+            getlfdNr = tmpValue
+
+        End Get
     End Property
 
     Public Sub AddCost(ByVal cost As clsKostenart)
@@ -1012,7 +1101,7 @@
 
         AllRoles = New List(Of clsRolle)
         AllCosts = New List(Of clsKostenart)
-        AllResults = New List(Of clsResult)
+        AllResults = New List(Of clsMeilenstein)
         _minDauer = 1
         _maxDauer = 60
         _Offset = 0
@@ -1031,7 +1120,7 @@
 
         AllRoles = New List(Of clsRolle)
         AllCosts = New List(Of clsKostenart)
-        AllResults = New List(Of clsResult)
+        AllResults = New List(Of clsMeilenstein)
         _minDauer = 1
         _maxDauer = 60
         _Offset = 0

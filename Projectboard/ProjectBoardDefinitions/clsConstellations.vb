@@ -23,6 +23,8 @@
         End Get
     End Property
 
+    
+
     Public ReadOnly Property Contains(name As String) As Boolean
         Get
             Contains = allConstellations.ContainsKey(name)

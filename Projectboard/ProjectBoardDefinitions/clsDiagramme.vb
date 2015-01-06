@@ -111,4 +111,17 @@
 
     End Property
 
+    ''' <summary>
+    ''' gibt zurück, ob die Diagramm-Liste ein Diagramm mit Schlüssel key enthält
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property contains(ByVal key As String) As Boolean
+        Get
+            contains = AllDiagrams.ContainsKey(key)
+        End Get
+    End Property
+
 End Class

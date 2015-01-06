@@ -34,9 +34,10 @@ Partial Class frmSelectPPTTempl
         'createReport
         '
         Me.createReport.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.createReport.Location = New System.Drawing.Point(25, 99)
+        Me.createReport.Location = New System.Drawing.Point(20, 79)
+        Me.createReport.Margin = New System.Windows.Forms.Padding(2)
         Me.createReport.Name = "createReport"
-        Me.createReport.Size = New System.Drawing.Size(110, 31)
+        Me.createReport.Size = New System.Drawing.Size(88, 25)
         Me.createReport.TabIndex = 1
         Me.createReport.Text = "OK"
         Me.createReport.UseVisualStyleBackColor = True
@@ -44,9 +45,10 @@ Partial Class frmSelectPPTTempl
         'SelectAbbruch
         '
         Me.SelectAbbruch.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.SelectAbbruch.Location = New System.Drawing.Point(232, 99)
+        Me.SelectAbbruch.Location = New System.Drawing.Point(186, 79)
+        Me.SelectAbbruch.Margin = New System.Windows.Forms.Padding(2)
         Me.SelectAbbruch.Name = "SelectAbbruch"
-        Me.SelectAbbruch.Size = New System.Drawing.Size(151, 31)
+        Me.SelectAbbruch.Size = New System.Drawing.Size(121, 25)
         Me.SelectAbbruch.TabIndex = 2
         Me.SelectAbbruch.Text = "Abbrechen"
         Me.SelectAbbruch.UseVisualStyleBackColor = True
@@ -55,9 +57,10 @@ Partial Class frmSelectPPTTempl
         '
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.Location = New System.Drawing.Point(25, 44)
+        Me.Label1.Location = New System.Drawing.Point(20, 35)
+        Me.Label1.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(112, 18)
+        Me.Label1.Size = New System.Drawing.Size(93, 15)
         Me.Label1.TabIndex = 3
         Me.Label1.Text = "Report-Vorlage:"
         '
@@ -67,10 +70,11 @@ Partial Class frmSelectPPTTempl
         Me.RepVorlagenDropbox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.RepVorlagenDropbox.FormattingEnabled = True
         Me.RepVorlagenDropbox.IntegralHeight = False
-        Me.RepVorlagenDropbox.ItemHeight = 18
-        Me.RepVorlagenDropbox.Location = New System.Drawing.Point(144, 44)
+        Me.RepVorlagenDropbox.ItemHeight = 15
+        Me.RepVorlagenDropbox.Location = New System.Drawing.Point(115, 35)
+        Me.RepVorlagenDropbox.Margin = New System.Windows.Forms.Padding(2)
         Me.RepVorlagenDropbox.Name = "RepVorlagenDropbox"
-        Me.RepVorlagenDropbox.Size = New System.Drawing.Size(239, 26)
+        Me.RepVorlagenDropbox.Size = New System.Drawing.Size(192, 23)
         Me.RepVorlagenDropbox.TabIndex = 20
         '
         'BackgroundWorker1
@@ -80,9 +84,10 @@ Partial Class frmSelectPPTTempl
         '
         'statusNotification
         '
-        Me.statusNotification.Location = New System.Drawing.Point(25, 148)
+        Me.statusNotification.Location = New System.Drawing.Point(20, 118)
+        Me.statusNotification.Margin = New System.Windows.Forms.Padding(2)
         Me.statusNotification.Name = "statusNotification"
-        Me.statusNotification.Size = New System.Drawing.Size(358, 22)
+        Me.statusNotification.Size = New System.Drawing.Size(287, 20)
         Me.statusNotification.TabIndex = 21
         Me.statusNotification.Text = "Status-Meldungen"
         '
@@ -93,15 +98,16 @@ Partial Class frmSelectPPTTempl
         '
         'frmSelectPPTTempl
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.Window
-        Me.ClientSize = New System.Drawing.Size(395, 182)
+        Me.ClientSize = New System.Drawing.Size(316, 146)
         Me.Controls.Add(Me.statusNotification)
         Me.Controls.Add(Me.RepVorlagenDropbox)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.SelectAbbruch)
         Me.Controls.Add(Me.createReport)
+        Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "frmSelectPPTTempl"
         Me.Text = "Auswählen Report-Vorlage"
         Me.TopMost = True

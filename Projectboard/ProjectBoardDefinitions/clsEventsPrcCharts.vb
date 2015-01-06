@@ -35,7 +35,7 @@ Public Class clsEventsPrcCharts
         Cancel = True
 
         Try
-            chtobj = Me.PrcChartEvents.Parent
+            chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
 
             IDKennung = chtobj.Name
             foundDiagram = DiagramList.getDiagramm(IDKennung)
@@ -181,7 +181,7 @@ Public Class clsEventsPrcCharts
         rcIdentifier = 0
 
         Try
-            chtobj = appInstance.ActiveChart.Parent
+            chtobj = CType(appInstance.ActiveChart.Parent, Microsoft.Office.Interop.Excel.ChartObject)
             IDkennung = chtobj.Name
             foundDiagramm = DiagramList.getDiagramm(IDkennung)
             found = True
@@ -199,7 +199,7 @@ Public Class clsEventsPrcCharts
                 If myCollection.Count < 1 Then
                     name = ""
                 ElseIf myCollection.Count = 1 Then
-                    name = myCollection.Item(1)
+                    name = CStr(myCollection.Item(1))
                 ElseIf myCollection.Count > 1 Then
                     name = "Collection"
                 End If
@@ -299,15 +299,22 @@ Public Class clsEventsPrcCharts
                     Call MsgBox("für dieses Diagramm ist der Röntgenblick nicht verfügbar")
                 End If
 
+            Case "Varianten optimieren"
+
+                enableOnUpdate = False
+                'Call awinCalcOptimizationVarianten(diagrammTyp, myCollection)
+                enableOnUpdate = False
+
 
             Case "Optimieren"
                 ' hier werden die Werte der Optimierung vermerkt: welche Projekte müssen verschoben werden , um welchen Offset 
 
                 Dim OptimierungsErgebnis As New SortedList(Of String, clsOptimizationObject)
+                'Dim shpElement As Microsoft.Office.Interop.Excel.Shape
 
                 enableOnUpdate = False
 
-                Call awinCalculateOptimization1(diagrammTyp, myCollection, OptimierungsErgebnis)
+                Call awinCalcOptimizationFreiheitsgrade(diagrammTyp, myCollection, OptimierungsErgebnis)
 
                 If OptimierungsErgebnis.Count > 0 Then
 
@@ -338,13 +345,28 @@ Public Class clsEventsPrcCharts
                                             Call .syncXWertePhases()
                                         End If
 
+                                        'shpElement = ShowProjekte.getShape(.name)
+
+                                        'Dim typCollection As New Collection
+                                        'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                                        'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                                        'Dim phaseList As Collection = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+                                        Dim phaseList As Collection = projectboardShapes.getPhaseList(.name)
+
+                                        'typCollection.Clear()
+                                        'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                                        'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                                        Dim milestoneList As Collection = projectboardShapes.getMilestoneList(.name)
+
+
+
                                         ' jetzt wird das Shape in der Plantafel gelöscht 
                                         Call clearProjektinPlantafel(.name)
 
                                         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                                         ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                                         Dim tmpCollection As New Collection
-                                        Call ZeichneProjektinPlanTafel(tmpCollection, .name, .tfZeile)
+                                        Call ZeichneProjektinPlanTafel(tmpCollection, .name, .tfZeile, phaseList, milestoneList)
                                     End If
 
                                 End With
@@ -398,9 +420,9 @@ Public Class clsEventsPrcCharts
 
 
         Try
-            chtobj = Me.PrcChartEvents.Parent
+            chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
             Try
-                chtobj1 = appInstance.ActiveChart.Parent
+                chtobj1 = CType(appInstance.ActiveChart.Parent, Microsoft.Office.Interop.Excel.ChartObject)
             Catch ex As Exception
 
             End Try
@@ -478,11 +500,12 @@ Public Class clsEventsPrcCharts
 
         ' in ARG2 steht, das wievielte Element selektiert wurde ...
 
-        If (ElementID = xlNS.XlChartItem.xlSeries) And Arg1 = 1 And Arg2 > 0 Then
+        'If (ElementID = xlNS.XlChartItem.xlSeries) And Arg1 = 1 And Arg2 > 0 Then
+        If (ElementID = xlNS.XlChartItem.xlSeries) And Arg2 > 0 Then
             'Dim i As Integer
             Dim chtobjname As String
             Dim diagOBJ As clsDiagramm
-            Dim msNumber As Integer
+            Dim msNumber As Integer = 1
             Dim selMonth As Integer = showRangeLeft + Arg2 - 1
             Dim chtobj As xlNS.ChartObject
 
@@ -492,12 +515,12 @@ Public Class clsEventsPrcCharts
             'Jetzt muss bestimmt werden , um welches Chart es sich handelt 
 
 
-            Call awinDeleteMilestoneShapes(3)
+
 
             Try
-                chtobjname = Me.PrcChartEvents.Parent.Name
+                chtobjname = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject).Name
 
-                chtobj = Me.PrcChartEvents.Parent
+                chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
                 Dim IDKennung As String
                 IDKennung = chtobj.Name
 
@@ -512,6 +535,7 @@ Public Class clsEventsPrcCharts
                 '
                 If diagOBJ.diagrammTyp = DiagrammTypen(0) And diagOBJ.gsCollection.Count > 0 Then
 
+                    Call awinDeleteProjectChildShapes(3)
 
                     For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
@@ -519,9 +543,19 @@ Public Class clsEventsPrcCharts
 
                     Next
 
+                ElseIf diagOBJ.diagrammTyp = DiagrammTypen(5) And diagOBJ.gsCollection.Count > 0 Then
+
+                    Call awinDeleteProjectChildShapes(1)
+
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                        Call zeichneResultMilestonesInProjekt(kvp.Value, diagOBJ.gsCollection, 4, selMonth, selMonth, False, msNumber, False)
+
+                    Next
+
                 End If
 
-                
+
 
             Catch ex As Exception
 
