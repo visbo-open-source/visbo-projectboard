@@ -2214,6 +2214,19 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Public Sub bmwFC52Export(control As IRibbonControl)
 
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        Call awinWriteFC52()
+
+        Call awinDeSelect()
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
     End Sub
 
     Public Sub Tom2G4M1Export(control As IRibbonControl)

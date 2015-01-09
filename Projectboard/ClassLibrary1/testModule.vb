@@ -2144,6 +2144,9 @@ Public Module testModule
                                                                                         projectNameVorlagenShape)
 
                                 Dim verhaeltnis As Double
+                                Dim yOffsetMsToText As Double = elementDescVorlagenShape.Top - milestoneVorlagenShape.Top
+                                Dim yOffsetMsToDate As Double = elementDateVorlagenShape.Top - milestoneVorlagenShape.Top
+
                                 If projCollection.Count > 0 Then
                                     verhaeltnis = ((drawingAreaBottom - drawingAreaTop) / projekthoehe) / CDbl(projCollection.Count)
                                 Else
@@ -2235,7 +2238,8 @@ Public Module testModule
                                                         calendarLineShape, legendLineShape, _
                                                         selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
                                                         projectNameVorlagenShape, elementDescVorlagenShape, elementDateVorlagenShape, _
-                                                        phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape)
+                                                        phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape, _
+                                                        yOffsetMsToText, yOffsetMsToDate)
 
 
                                 Catch ex As Exception
@@ -7686,7 +7690,8 @@ Public Module testModule
                                ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                ByVal projectNameVorlagenShape As pptNS.Shape, ByVal elementDescVorlagenShape As pptNS.Shape, ByVal elementDateVorlagenShape As pptNS.Shape, _
                                ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, ByVal projectVorlagenForm As pptNS.Shape, _
-                               ByVal ampelVorlagenShape As pptNS.Shape)
+                               ByVal ampelVorlagenShape As pptNS.Shape, _
+                               ByVal yOffsetMsToText As Double, ByVal yOffsetMsToDate As Double)
 
         ' Bestimmen der Zeichenfläche
         Dim drawingAreaWidth As Double = calendarLineShape.Width
@@ -7709,10 +7714,10 @@ Public Module testModule
             Throw New ArgumentException("Kalender Start bis Ende kann nicht 0 oder kleiner sein ..")
         End If
 
-        'tagesEinheit = drawingAreaWidth / anzahlTage
+        ''tagesEinheit = drawingAreaWidth / anzahlTage
 
-        Dim yOffsetMsToText As Double = elementDescVorlagenShape.Top - milestoneVorlagenShape.Top
-        Dim yOffsetMsToDate As Double = elementDateVorlagenShape.Top - milestoneVorlagenShape.Top
+        'Dim yOffsetMsToText As Double = elementDescVorlagenShape.Top - milestoneVorlagenShape.Top
+        'Dim yOffsetMsToDate As Double = elementDateVorlagenShape.Top - milestoneVorlagenShape.Top
 
 
         ' Bestimmen der Position für den Projekt-Namen

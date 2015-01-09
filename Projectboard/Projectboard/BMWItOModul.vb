@@ -1,7 +1,7 @@
 ﻿Imports ProjectBoardDefinitions
 Imports Excel = Microsoft.Office.Interop.Excel
 Module BMWItOModul
-    
+
 
     Private Enum ptNamen
         Name = 0
@@ -11,6 +11,12 @@ Module BMWItOModul
         Vorgangsklasse = 4
         Produktlinie = 5
     End Enum
+
+
+    ' spezifisch für BMW Export 
+    Friend bmwExportFilesOrdner As String = "Export Dateien"
+    Friend bmwFC52Vorlage As String = requirementsOrdner & "FC52 Vorlage.xlsx"
+    Friend bmwExportVorlage As String = requirementsOrdner & "export Vorlage.xlsx"
 
     ''' <summary>
     ''' speziell auf BMW Mpp Anforderungen angepasstes BMW Import File
@@ -184,7 +190,7 @@ Module BMWItOModul
                     Else
                         vorlagenName = ""
                     End If
-                    
+
 
 
                     ' prüfen, ob das Projekt überhaupt vollständig im Kalender liegt 
@@ -301,6 +307,7 @@ Module BMWItOModul
 
                                 origItem = CStr(CType(.Cells(curZeile, colName), Excel.Range).Value)
                                 itemName = origItem.Trim
+
                                 itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
                                 itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
                                 Dim isMilestone As Boolean
@@ -312,11 +319,11 @@ Module BMWItOModul
 
                                 If itemName = "Projektphasen" Then
                                     Try
-                                        Dim tmpBU As String = CStr(CType(.Cells(curZeile, colName), Excel.Range).Value).Trim
+                                        Dim tmpBU As String = CStr(CType(.Cells(curZeile, colName - 1), Excel.Range).Value).Trim
                                         If tmpBU.Length > 0 Then
                                             If businessUnit.Contains(tmpBU) Then
                                                 hproj.businessUnit = tmpBU
-                                                CType(activeWSListe.Cells(curZeile, protocolColumn), Excel.Range).Value = _
+                                                CType(activeWSListe.Cells(curZeile, protocolColumn + 4), Excel.Range).Value = _
                                                 "Wert für Business Unit erkannt: " & tmpBU
                                             End If
                                         End If
@@ -394,7 +401,7 @@ Module BMWItOModul
 
                                 If duration > 1 Then
                                     ' es handelt sich um eine Phase 
-                                    
+
                                     If itemName.Length = 0 Then
 
                                         CType(activeWSListe.Cells(curZeile, protocolColumn), Excel.Range).Value = _
@@ -456,7 +463,7 @@ Module BMWItOModul
                                                 Else
                                                     ok1 = False
                                                 End If
-                                                
+
 
                                             Else
                                                 ' in diesem Fall ist die Phase wirklich doppelt und soll nicht weiter berücksichtigt werden ...
@@ -600,7 +607,7 @@ Module BMWItOModul
                                                         Else
                                                             found = True
                                                         End If
-                                                        
+
 
                                                     Loop
 
@@ -611,7 +618,7 @@ Module BMWItOModul
                                                     Else
                                                         ok1 = False
                                                     End If
-                                                    
+
                                                 Else
                                                     ' es ist ein Duplikat 
                                                     ok1 = False
@@ -877,6 +884,105 @@ Module BMWItOModul
         Next
 
 
+
+    End Sub
+
+    ''' <summary>
+    ''' schreibt gemäß der FC-52 Vorlage die aktuell geladenen Projekte in eine Datei im Export Directory
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub awinWriteFC52()
+
+
+        appInstance.EnableEvents = False
+
+
+        ' hier muss jetzt das File Projekt Tafel Definitions.xlsx aufgemacht werden ...
+        ' das File 
+        Try
+            appInstance.Workbooks.Open(awinPath & bmwFC52Vorlage)
+
+        Catch ex As Exception
+            Call MsgBox("FC52 Vorlage nicht gefunden - Abbruch")
+            Throw New ArgumentException("FC52 Vorlage nicht gefunden - Abbruch")
+        End Try
+
+        'appInstance.Workbooks(myCustomizationFile).Activate()
+        Dim wsName As Excel.Worksheet = CType(appInstance.Worksheets("Report"), _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+
+        Dim zeile As Integer = 2
+        Dim spalte As Integer = 1
+        Dim tmpdate As Date
+
+
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            With wsName
+                ' Business Unit und Name schreiben
+                CType(.Cells(zeile, spalte), Excel.Range).value = kvp.Value.businessUnit
+                CType(.Cells(zeile, spalte + 1), Excel.Range).Value = kvp.Value.name
+
+                ' Zielvereinbarung schreiben 
+                Try
+
+                    tmpdate = kvp.Value.getMilestone("Zielvereinbarung").getDate
+                    If Not IsNothing(tmpdate) Then
+                        CType(.Cells(zeile, spalte + 2), Excel.Range).Value = tmpdate.ToShortDateString
+                    Else
+                        CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "-"
+                    End If
+
+                Catch ex As Exception
+                    CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "-"
+                End Try
+
+                'SOP schreiben
+                Try
+
+                    tmpdate = kvp.Value.getMilestone("SOP").getDate
+                    If Not IsNothing(tmpdate) Then
+                        CType(.Cells(zeile, spalte + 3), Excel.Range).Value = tmpdate.ToShortDateString
+                    Else
+                        CType(.Cells(zeile, spalte + 3), Excel.Range).Value = "-"
+                    End If
+
+                Catch ex As Exception
+                    CType(.Cells(zeile, spalte + 3), Excel.Range).Value = "-"
+                End Try
+
+                ' MEPS schreiben ?
+                CType(.Cells(zeile, spalte + 4), Excel.Range).Value = "-"
+
+                ' EOP schreiben VPBG bis EOP
+                Try
+                    tmpdate = kvp.Value.getPhase("VPBG bis EOP").getEndDate
+                    If Not IsNothing(tmpdate) Then
+                        CType(.Cells(zeile, spalte + 5), Excel.Range).Value = tmpdate.ToShortDateString
+                    Else
+                        CType(.Cells(zeile, spalte + 5), Excel.Range).Value = "-"
+                    End If
+                Catch ex As Exception
+                    CType(.Cells(zeile, spalte + 5), Excel.Range).Value = "-"
+                End Try
+                
+
+            End With
+
+            zeile = zeile + 1
+
+        Next
+
+        Dim expFName As String = awinPath & bmwExportFilesOrdner & "/Report_" & Date.Now.ToShortDateString & ".xlsx"
+
+        appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+
+        appInstance.EnableEvents = True
+
+        Call MsgBox("ok, Report exportiert")
 
     End Sub
 End Module

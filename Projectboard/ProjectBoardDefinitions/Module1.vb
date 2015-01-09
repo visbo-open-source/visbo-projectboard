@@ -352,10 +352,6 @@ Public Module Module1
     Public projektFilesOrdner As String = "ProjectFiles"
     Public deletedFilesOrdner As String = "DeletedFiles"
     Public rplanimportFilesOrdner As String = "RPLANImport"
-    ' spezifisch für BMW Export 
-    Public bmwExportFilesOrdner As String = "Export Dateien"
-    Public bmwFC52Vorlage As String = requirementsOrdner & "FC52 Vorlage.xlsx"
-    Public bmwExportVorlage As String = requirementsOrdner & "export Vorlage.xlsx"
 
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"
     ' Public projektDetail As String = "Project Detail.xlsx"

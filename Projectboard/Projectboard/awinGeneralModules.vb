@@ -88,7 +88,7 @@ Public Module awinGeneralModules
                 ' eintragen 
                 lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
                 CType(lastrow.EntireRow, Excel.Range).Insert(XlInsertShiftDirection.xlShiftDown)
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName
+                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = phColor
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
 
