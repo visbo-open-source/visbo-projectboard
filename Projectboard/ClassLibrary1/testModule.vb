@@ -1621,7 +1621,7 @@ Public Module testModule
         Dim multiprojektContainerShape As pptNS.Shape = Nothing
 
         ' Wichtig für Kalendar 
-        Dim pptStartofCalendar As Date, pptEndOfCalendar As Date
+        Dim pptStartofCalendar As Date = Nothing, pptEndOfCalendar As Date = Nothing
         Dim calendarLineShape As pptNS.Shape = Nothing
         Dim calenderHeightShape As pptNS.Shape = Nothing
         Dim calendarStepShape As pptNS.Shape = Nothing
@@ -1699,7 +1699,7 @@ Public Module testModule
         Dim drawingAreaBottom As Double = 0.0
 
         ' Koordinaten Projekt-NamenListe 
-        Dim projectListLeft As Double
+        Dim projectListLeft As Double = 0.0
 
         ' Koordinaten Legende
         Dim legendAreaLeft As Double = 0.0
@@ -2110,7 +2110,7 @@ Public Module testModule
                                     legendLineShape.Width = 0.9 * (containerRight - legendLineShape.Left)
                                 End If
 
-
+                                
                                 Call bestimmeZeichenKoordinaten(multiprojektContainerShape, _
                                                                     calendarLineShape, legendLineShape, projectNameVorlagenShape, legendStartShape, _
                                                                     containerLeft, containerRight, containerTop, containerBottom, _
@@ -2123,7 +2123,6 @@ Public Module testModule
                                 ' bestimme die Projekte und bestimme das kleinste / resp größte auftretende Datum 
                                 Dim projCollection As New SortedList(Of Double, String)
                                 Dim minDate As Date, maxDate As Date
-
                                 Dim strict As Boolean = awinSettings.mppStrict
                                 Call ShowProjekte.bestimmeProjekteAndMinMaxDates(selectedPhases, selectedMilestones, _
                                                                                  showRangeLeft, showRangeRight, strict, projCollection, minDate, maxDate)
@@ -2132,42 +2131,75 @@ Public Module testModule
 
 
                                 ' bestimme das Start und Ende Datum des PPT Kalenders
+
                                 Call calcStartEndePPTKalender(minDate, maxDate, True, _
                                                               pptStartofCalendar, pptEndOfCalendar)
 
 
+                                ' zeichne den Kalender
+                                Dim calendargroup As pptNS.Shape = Nothing
+                                Call zeichnePPTCalendar(pptSlide, calendargroup, _
+                                                        pptStartofCalendar, pptEndOfCalendar, _
+                                               calendarLineShape, calenderHeightShape, calendarStepShape, calendarMarkShape, _
+                                               yearVorlagenShape, quarterMonthVorlagenShape, calendarYearSeparator, calendarQuartalSeparator, drawingAreaBottom)
+
+                                yearVorlagenShape.Delete()
+                                quarterMonthVorlagenShape.Delete()
+                                calendarStepShape.Delete()
+                                calendarYearSeparator.Delete()
+                                calendarQuartalSeparator.Delete()
+
+                                calendargroup.Top = containerTop + 5
+                                ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
+                                Call bestimmeZeichenKoordinaten(multiprojektContainerShape, _
+                                                                    calendargroup, legendLineShape, projectNameVorlagenShape, legendStartShape, _
+                                                                    containerLeft, containerRight, containerTop, containerBottom, _
+                                                                    calendarLeft, calendarRight, calendarTop, calendarBottom, _
+                                                                    drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
+                                                                    projectListLeft, _
+                                                                    legendAreaLeft, legendAreaRight, legendAreaTop, legendAreaBottom)
+
+
                                 ' bestimme das Format 
                                 ' bestimme die benötigte Höhe eines Projektes
-                                Dim projekthoehe As Double = bestimmeMppProjektHoehe(phaseVorlagenShape, milestoneVorlagenShape,
+                                Dim projekthoehe As Double = 0.0
+                                projekthoehe = bestimmeMppProjektHoehe(phaseVorlagenShape, milestoneVorlagenShape,
                                                                                      selectedPhases.Count, selectedMilestones.Count, _
                                                                                         elementDescVorlagenShape, elementDateVorlagenShape, _
                                                                                         projectNameVorlagenShape)
 
-                                Dim verhaeltnis As Double
-                                Dim yOffsetMsToText As Double = elementDescVorlagenShape.Top - milestoneVorlagenShape.Top
-                                Dim yOffsetMsToDate As Double = elementDateVorlagenShape.Top - milestoneVorlagenShape.Top
+                                Dim yOffsetMsToText As Double
+                                Dim yOffsetMsToDate As Double
+                                yOffsetMsToText = elementDescVorlagenShape.Top - milestoneVorlagenShape.Top
+                                yOffsetMsToDate = elementDateVorlagenShape.Top - milestoneVorlagenShape.Top
 
+                                Dim verhaeltnis As Double = 1.0
                                 If projCollection.Count > 0 Then
-                                    verhaeltnis = ((drawingAreaBottom - drawingAreaTop) / projekthoehe) / CDbl(projCollection.Count)
+                                    verhaeltnis = (((drawingAreaBottom - drawingAreaTop) / projekthoehe) - 1) / CDbl(projCollection.Count)
                                 Else
                                     verhaeltnis = 1.0
                                 End If
 
                                 If verhaeltnis < 1.0 Then
 
-                                    Dim sizeMemory() As Single
+
                                     ' dann muss ein anderes Format gewählt werden 
 
                                     ' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
+
+                                    Dim sizeMemory() As Single
                                     sizeMemory = saveSizesOfElements(projectNameVorlagenShape, elementDescVorlagenShape, elementDateVorlagenShape, _
                                                         phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape, _
                                                         legendTextVorlagenShape, legendPhaseVorlagenShape, legendMilestoneVorlagenShape)
 
 
                                     ' jetzt die Format Änderung vornehmen 
+                                    
+
                                     Dim ix As Integer = 4
                                     Dim formatFound As Boolean = False
-                                    Dim curHeight As Double = pptPresentation.PageSetup.SlideHeight
+                                    Dim curHeight As Double
+                                    curHeight = pptPresentation.PageSetup.SlideHeight
 
                                     Do While ix >= 0 And Not formatFound
                                         If curHeight / dinFormatA(ix, 1) < verhaeltnis Then
@@ -2185,7 +2217,6 @@ Public Module testModule
 
                                     With pptPresentation
 
-                                        .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
                                         If .PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
                                             .PageSetup.SlideWidth = dinFormatA(ix, 0)
                                             .PageSetup.SlideHeight = dinFormatA(ix, 1)
@@ -2194,7 +2225,10 @@ Public Module testModule
                                             .PageSetup.SlideHeight = dinFormatA(ix, 0)
                                         End If
 
+                                        .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+
                                     End With
+
 
                                     ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
                                     Call restoreSizesOfElements(sizeMemory, projectNameVorlagenShape, elementDescVorlagenShape, elementDateVorlagenShape, _
@@ -2216,22 +2250,8 @@ Public Module testModule
                                 End If
 
 
-
-                                ' zeichne den Kalender
-                                Call zeichnePPTCalendar(pptSlide, pptStartofCalendar, pptEndOfCalendar, _
-                                               calendarLineShape, calenderHeightShape, calendarStepShape, calendarMarkShape, _
-                                               yearVorlagenShape, quarterMonthVorlagenShape, calendarYearSeparator, calendarQuartalSeparator, drawingAreaBottom)
-
-                                yearVorlagenShape.Delete()
-                                quarterMonthVorlagenShape.Delete()
-                                calendarStepShape.Delete()
-                                calendarYearSeparator.Delete()
-                                calendarQuartalSeparator.Delete()
-
-
-
-
                                 ' zeichne die Projekte 
+
                                 Try
                                     Call zeichnePPTprojects(pptSlide, projCollection, _
                                                         pptStartofCalendar, pptEndOfCalendar, _
@@ -7404,6 +7424,7 @@ Public Module testModule
     ''' zeichnet den PPT Kalender auf die übergebene Shape
     ''' </summary>
     ''' <param name="pptslide">PPT Slide, auf die gezeichnet wird</param>
+    ''' <param name="calendargroup">zusammengesetztes Shape, das dem fertigen Kalender entspricht</param>
     ''' <param name="StartofPPTCalendar">Start Datum PPT Kalender</param>
     ''' <param name="endOFPPTCalendar">End Datum PPT Kalender</param>
     ''' <param name="calendarLineShape">Line, die den unteren Rand des Kalenders markiert</param>
@@ -7413,7 +7434,8 @@ Public Module testModule
     ''' <param name="yearShape">Vorlage für das Jahr</param>
     ''' <param name="qmShape">Vorlage für Quartal / Monat </param>
     ''' <remarks></remarks>
-    Sub zeichnePPTCalendar(ByRef pptslide As pptNS.Slide, ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
+    Sub zeichnePPTCalendar(ByRef pptslide As pptNS.Slide, ByRef calendargroup As pptNS.Shape, _
+                           ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
                                ByVal calendarLineShape As pptNS.Shape, ByVal calendarHeightShape As pptNS.Shape, _
                                ByVal calendarStepShape As pptNS.Shape, ByVal calendarMark As pptNS.Shape, _
                                ByVal yearShape As pptNS.Shape, ByVal qmShape As pptNS.Shape, _
@@ -7430,23 +7452,16 @@ Public Module testModule
         Dim newShapes As pptNS.ShapeRange
         Dim startOfZeitraum As Integer = showRangeLeft - getColumnOfDate(StartofPPTCalendar)
         Dim zeitraumDauer As Integer = showRangeRight - showRangeLeft + 1
-
+        Dim shapeGruppe As pptNS.ShapeRange
+        Dim slideShapes As pptNS.Shapes = pptslide.Shapes
+        Dim nameCollection As New Collection
+        Dim arrayOFNames() As String
 
         Dim lfdNr As Integer = 1
 
         Call calculateYMAeinheiten(StartofPPTCalendar, endOFPPTCalendar, calendarLineShape.Width, _
                                   yearWidth, monthWidth, anzQMs)
-        'yearWidth = 12 * calendarLineShape.Width / anzQMs
-        'monthWidth = calendarLineShape.Width / anzQMs
 
-        If Not IsNothing(calendarMark) Then
-            With calendarMark
-                .Left = calendarLineShape.Left + startOfZeitraum * monthWidth
-                .Top = calendarLineShape.Top - calendarHeightShape.Height
-                .Width = zeitraumDauer * monthWidth
-                .Height = calendarHeightShape.Height
-            End With
-        End If
 
         If calendarLineShape.Width >= anzQMs * qmWidth Then
             qmWidth = calendarLineShape.Width / anzQMs
@@ -7460,6 +7475,19 @@ Public Module testModule
         Else
             Throw New ArgumentException("Zeitraum ist zu groß ...")
         End If
+
+        If Not IsNothing(calendarMark) Then
+            With calendarMark
+                .Left = calendarLineShape.Left + startOfZeitraum * monthWidth
+                .Top = calendarLineShape.Top - calendarHeightShape.Height
+                .Width = zeitraumDauer * monthWidth
+                .Height = calendarHeightShape.Height
+            End With
+        End If
+
+        nameCollection.Add(calendarLineShape.Name, calendarLineShape.Name)
+        nameCollection.Add(calendarHeightShape.Name, calendarHeightShape.Name)
+        nameCollection.Add(calendarMark.Name, calendarMark.Name)
 
         Dim qmHeightfaktor As Double = qmShape.Height / (qmShape.Height + yearShape.Height)
 
@@ -7485,6 +7513,7 @@ Public Module testModule
                                 .Top = yPosition + calendarStepShape.Height * 0.5
                                 .Height = calendarStepShape.Height * 0.5
                             End If
+                            nameCollection.Add(.Name, .Name)
                         End With
                     Else
                         ' hier ggf die Year Separator Linien zeichnen 
@@ -7514,6 +7543,7 @@ Public Module testModule
                         .TextFrame2.TextRange.Text = lfdNr.ToString
                         .Left = xPosition + (qmWidth - .Width) * 0.5
                         .Top = yPosition
+                        nameCollection.Add(.Name, .Name)
                     End With
 
                     lfdNr = lfdNr + 1
@@ -7533,6 +7563,7 @@ Public Module testModule
                         .TextFrame2.TextRange.Text = "Q" & lfdNr.ToString
                         .Left = xPosition + (qmWidth - .Width) * 0.5
                         .Top = yPosition
+                        nameCollection.Add(.Name, .Name)
                     End With
 
                     lfdNr = lfdNr + 1
@@ -7550,6 +7581,7 @@ Public Module testModule
             With newShapes.Item(1)
                 .Left = calendarLineShape.Left
                 .Top = calendarLineShape.Top - qmHeightfaktor * calendarHeightShape.Height
+                nameCollection.Add(.Name, .Name)
             End With
 
         End If
@@ -7579,6 +7611,7 @@ Public Module testModule
                 .TextFrame2.TextRange.Text = lfdNr.ToString
                 .Left = xPosition + (yearWidth - .Width) * 0.5
                 .Top = yPosition
+                nameCollection.Add(.Name, .Name)
             End With
 
             lfdNr = lfdNr + 1
@@ -7590,6 +7623,7 @@ Public Module testModule
 
                 .Left = calendarHeightShape.Left + i * yearWidth
                 .Top = calendarHeightShape.Top
+                nameCollection.Add(.Name, .Name)
 
             End With
 
@@ -7601,6 +7635,7 @@ Public Module testModule
         With newShapes.Item(1)
             .Left = calendarLineShape.Left
             .Top = calendarLineShape.Top - calendarHeightShape.Height
+            nameCollection.Add(.Name, .Name)
         End With
 
         ' jetzt ggf die vertikalen Raster in der Zeichenfläche zeichnen 
@@ -7622,6 +7657,7 @@ Public Module testModule
                     .Left = xPosition - .Width * 0.5
                     .Top = calendarLineShape.Top
                     .Height = drawingAreaBottom - calendarLineShape.Top
+                    nameCollection.Add(.Name, .Name)
                 End With
 
                 xPosition = xPosition + yearWidth
@@ -7651,6 +7687,7 @@ Public Module testModule
                         .Left = xPosition + qmWidth - .Width * 0.5
                         .Top = calendarLineShape.Top
                         .Height = drawingAreaBottom - calendarLineShape.Top
+                        nameCollection.Add(.Name, .Name)
                     End With
                 End If
 
@@ -7658,6 +7695,30 @@ Public Module testModule
                 xPosition = xPosition + qmWidth
 
             Next
+
+        End If
+
+        ' jetzt sollen alle gezeichneten Shapes gruppiert werden 
+        Dim anzElements As Integer = nameCollection.Count
+        If anzElements = 0 Then
+
+            calendarGroup = Nothing
+
+        ElseIf anzElements = 1 Then
+
+            calendarGroup = pptslide.Shapes.Item(nameCollection.Item(1))
+
+        Else
+
+            ReDim arrayOFNames(anzElements - 1)
+
+            For i = 1 To anzElements
+                arrayOFNames(i - 1) = CStr(nameCollection.Item(i))
+            Next
+
+            shapeGruppe = pptslide.Shapes.Range(arrayOFNames)
+            calendarGroup = shapeGruppe.Group
+
 
         End If
 
@@ -8619,14 +8680,14 @@ Public Module testModule
         ' bestimme KalenderArea
         calendarLeft = calendarLineShape.Left
         calendarRight = calendarLineShape.Left + calendarLineShape.Width
-        calendarTop = containerTop + 5
-        calendarBottom = calendarLineShape.Top
+        calendarTop = calendarLineShape.Top
+        calendarBottom = calendarLineShape.Top + calendarLineShape.Height
 
         ' bestimme Drawing Area
         With calendarLineShape
             drawingAreaLeft = .Left
             drawingAreaRight = .Left + .Width
-            drawingAreaTop = .Top + 10
+            drawingAreaTop = .Top + .Height + 5
         End With
 
         If awinSettings.mppShowLegend Then
