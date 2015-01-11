@@ -1636,8 +1636,10 @@ Public Module testModule
         Dim yearShape As pptNS.Shape = Nothing
 
         ' Wichtig für Zeichenfläche
-        Dim elementDescVorlagenShape As pptNS.Shape = Nothing
-        Dim elementDateVorlagenShape As pptNS.Shape = Nothing
+        Dim MsDescVorlagenShape As pptNS.Shape = Nothing
+        Dim MsDateVorlagenShape As pptNS.Shape = Nothing
+        Dim PhDescVorlagenShape As pptNS.Shape = Nothing
+        Dim PhDateVorlagenShape As pptNS.Shape = Nothing
         Dim projectNameVorlagenShape As pptNS.Shape = Nothing
         Dim projectVorlagenShape As pptNS.Shape = Nothing
         Dim phaseVorlagenShape As pptNS.Shape = Nothing
@@ -1729,7 +1731,7 @@ Public Module testModule
 
         ' mit completeMppDefinition wird überprüft , ob alle Informationen/Shapes für das Erstellen einer Multiprojektsicht vorhanden sind
         Dim completeMppDefinition() As Integer
-        ReDim completeMppDefinition(16)
+        ReDim completeMppDefinition(18)
 
         ' mit completeLegendDefinition wird überprüft , ob alle Informationen/Shapes für das Erstellen der Legenden Tabelle vorhanden sind
         Dim completeLegendDefinition() As Integer
@@ -1890,8 +1892,8 @@ Public Module testModule
                     ' jetzt muss geprüft werden, ob es sich um ein definierendes Element für die Multiprojekt-Sichten handelt
                     If .Title.Length > 0 Then
                         Select Case .Title
-                            Case "ElementDescription"
-                                elementDescVorlagenShape = pptShape
+                            Case "MilestoneDescription"
+                                MsDescVorlagenShape = pptShape
                                 completeMppDefinition(0) = 1
 
                             Case "ProjectName"
@@ -1962,9 +1964,17 @@ Public Module testModule
                                 calenderHeightShape = pptShape
                                 completeMppDefinition(15) = 1
 
-                            Case "ElementDate"
-                                elementDateVorlagenShape = pptShape
+                            Case "MilestoneDate"
+                                MsDateVorlagenShape = pptShape
                                 completeMppDefinition(16) = 1
+
+                            Case "PhaseDescription"
+                                PhDescVorlagenShape = pptShape
+                                completeMppDefinition(17) = 1
+
+                            Case "PhaseDate"
+                                PhDateVorlagenShape = pptShape
+                                completeMppDefinition(18) = 1
 
                             Case "CalendarStep"
                                 ' optional
@@ -2083,7 +2093,23 @@ Public Module testModule
 
                                 .TextFrame2.TextRange.Text = ""
 
+                                Dim format As Integer = 4
+                                ' Konsistenten Ausgangspunkt schaffen - Vorbedingung Vorlage sollte Din A4 sein  
+                                With pptPresentation
+
+                                    If .PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+                                        .PageSetup.SlideWidth = dinFormatA(format, 0)
+                                        .PageSetup.SlideHeight = dinFormatA(format, 1)
+                                    Else
+                                        .PageSetup.SlideWidth = dinFormatA(format, 1)
+                                        .PageSetup.SlideHeight = dinFormatA(format, 0)
+                                    End If
+
+                                    .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+
+                                End With
                                 
+
                                 ' Anfang bestimme Koordinaten der zeichenfelder
                                 ' bestimme Container Area
                                 With multiprojektContainerShape
@@ -2110,38 +2136,160 @@ Public Module testModule
                                     legendLineShape.Width = 0.9 * (containerRight - legendLineShape.Left)
                                 End If
 
-                                
+
                                 Call bestimmeZeichenKoordinaten(multiprojektContainerShape, _
-                                                                    calendarLineShape, legendLineShape, projectNameVorlagenShape, legendStartShape, _
-                                                                    containerLeft, containerRight, containerTop, containerBottom, _
-                                                                    calendarLeft, calendarRight, calendarTop, calendarBottom, _
-                                                                    drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
-                                                                    projectListLeft, _
-                                                                    legendAreaLeft, legendAreaRight, legendAreaTop, legendAreaBottom)
+                                                                        calendarLineShape, calenderHeightShape, legendLineShape, _
+                                                                        containerLeft, containerRight, containerTop, containerBottom, _
+                                                                        calendarLeft, calendarRight, calendarTop, calendarBottom, _
+                                                                        drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
+                                                                        projectListLeft, _
+                                                                        legendAreaLeft, legendAreaRight, legendAreaTop, legendAreaBottom)
 
 
-                                ' bestimme die Projekte und bestimme das kleinste / resp größte auftretende Datum 
+
                                 Dim projCollection As New SortedList(Of Double, String)
                                 Dim minDate As Date, maxDate As Date
-                                Dim strict As Boolean = awinSettings.mppStrict
+
+                                ' bestimme die Projekte, die gezeichnet werden sollen
+                                ' und bestimme das kleinste / resp größte auftretende Datum 
                                 Call ShowProjekte.bestimmeProjekteAndMinMaxDates(selectedPhases, selectedMilestones, _
-                                                                                 showRangeLeft, showRangeRight, strict, projCollection, minDate, maxDate)
+                                                                                 showRangeLeft, showRangeRight, projCollection, minDate, maxDate)
 
-
-
-
+                                '
                                 ' bestimme das Start und Ende Datum des PPT Kalenders
-
                                 Call calcStartEndePPTKalender(minDate, maxDate, True, _
                                                               pptStartofCalendar, pptEndOfCalendar)
+
+
+                                '
+                                ' bestimme die benötigte Höhe eines Projektes
+                                Dim projekthoehe As Double
+                                projekthoehe = bestimmeMppProjektHoehe(phaseVorlagenShape, milestoneVorlagenShape,
+                                                                        selectedPhases.Count, selectedMilestones.Count, _
+                                                                        MsDescVorlagenShape, MsDateVorlagenShape, _
+                                                                        PhDescVorlagenShape, PhDateVorlagenShape,
+                                                                        projectNameVorlagenShape)
+
+                                '
+                                ' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
+                                Dim yOffsetMsToText As Double
+                                Dim yOffsetMsToDate As Double
+                                yOffsetMsToText = MsDescVorlagenShape.Top - milestoneVorlagenShape.Top
+                                yOffsetMsToDate = MsDateVorlagenShape.Top - milestoneVorlagenShape.Top
+
+                                Dim yOffsetPhToText As Double
+                                Dim yOffsetPhToDate As Double
+                                yOffsetPhToText = PhDescVorlagenShape.Top - phaseVorlagenShape.Top
+                                yOffsetPhToDate = PhDateVorlagenShape.Top - phaseVorlagenShape.Top
+
+                                '
+                                ' bestimme das Format  
+
+                                Dim neededSpace As Double = (projCollection.Count + 1) * projekthoehe
+                                Dim availableSpace As Double
+
+                                Dim hoehe As Integer
+
+                                If querFormat Then
+                                    hoehe = 1
+                                Else
+                                    hoehe = 0
+                                End If
+
+                                availableSpace = drawingAreaBottom - drawingAreaTop
+
+                                Dim oldHeight As Double
+                                If querFormat Then
+                                    oldHeight = dinFormatA(format, 1)
+                                Else
+                                    oldHeight = dinFormatA(format, 0)
+                                End If
+
+                                Dim curHeight As Double
+
+                                If availableSpace < neededSpace Then
+                                    Dim ix As Integer = format
+                                    Dim ok As Boolean = True
+                                    ' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
+
+                                    Dim sizeMemory() As Single
+                                    sizeMemory = saveSizesOfElements(projectNameVorlagenShape, _
+                                                                     MsDescVorlagenShape, MsDateVorlagenShape, _
+                                                                     PhDescVorlagenShape, PhDateVorlagenShape, _
+                                                                     phaseVorlagenShape, milestoneVorlagenShape, _
+                                                                     projectVorlagenShape, ampelVorlagenShape)
+
+
+                                    Do While availableSpace < neededSpace And ix > 0
+
+                                        With pptPresentation
+
+                                            If querFormat Then
+                                                .PageSetup.SlideWidth = dinFormatA(ix - 1, 0)
+                                                .PageSetup.SlideHeight = dinFormatA(ix - 1, 1)
+                                            Else
+                                                .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
+                                                .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
+                                            End If
+
+                                            .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+
+                                        End With
+
+
+                                        ' jetzt wieder die Koordinaten neu berechnen 
+                                        Call bestimmeZeichenKoordinaten(multiprojektContainerShape, _
+                                                                        calendarLineShape, calenderHeightShape, legendLineShape, _
+                                                                        containerLeft, containerRight, containerTop, containerBottom, _
+                                                                        calendarLeft, calendarRight, calendarTop, calendarBottom, _
+                                                                        drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
+                                                                        projectListLeft, _
+                                                                        legendAreaLeft, legendAreaRight, legendAreaTop, legendAreaBottom)
+
+                                        availableSpace = drawingAreaBottom - drawingAreaTop
+
+                                        If availableSpace < neededSpace Then
+                                            ix = ix - 1
+                                        End If
+
+                                    Loop
+
+                                    ix = ix - 1
+                                    If ix < 0 Then
+                                        ix = 0
+                                    End If
+                                    ' bestimme die aktuelle Höhe 
+                                    If querFormat Then
+                                        curHeight = dinFormatA(ix, 1)
+                                    Else
+                                        curHeight = dinFormatA(ix, 0)
+                                    End If
+
+
+
+                                    ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
+                                    Call restoreSizesOfElements(sizeMemory, projectNameVorlagenShape, _
+                                                                MsDescVorlagenShape, MsDateVorlagenShape, _
+                                                                PhDescVorlagenShape, PhDateVorlagenShape, _
+                                                                phaseVorlagenShape, milestoneVorlagenShape, _
+                                                                projectVorlagenShape, ampelVorlagenShape)
+
+
+                                    ' jetzt alle Text Shapes, die auf der Folie ihre relative Größe behalten sollen 
+                                    ' entsprechend um den errechneten Faktor anpassen
+                                    Dim enlargeTxtFaktor As Double = curHeight / oldHeight
+                                    Call enlargeTxtShapes(enlargeTxtFaktor, pptSlide)
+
+                                End If
 
 
                                 ' zeichne den Kalender
                                 Dim calendargroup As pptNS.Shape = Nothing
                                 Call zeichnePPTCalendar(pptSlide, calendargroup, _
                                                         pptStartofCalendar, pptEndOfCalendar, _
-                                               calendarLineShape, calenderHeightShape, calendarStepShape, calendarMarkShape, _
-                                               yearVorlagenShape, quarterMonthVorlagenShape, calendarYearSeparator, calendarQuartalSeparator, drawingAreaBottom)
+                                                        calendarLineShape, calenderHeightShape, calendarStepShape, calendarMarkShape, _
+                                                        yearVorlagenShape, quarterMonthVorlagenShape, calendarYearSeparator, calendarQuartalSeparator, _
+                                                        drawingAreaBottom)
 
                                 yearVorlagenShape.Delete()
                                 quarterMonthVorlagenShape.Delete()
@@ -2151,115 +2299,19 @@ Public Module testModule
 
                                 calendargroup.Top = containerTop + 5
                                 ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
-                                Call bestimmeZeichenKoordinaten(multiprojektContainerShape, _
-                                                                    calendargroup, legendLineShape, projectNameVorlagenShape, legendStartShape, _
-                                                                    containerLeft, containerRight, containerTop, containerBottom, _
-                                                                    calendarLeft, calendarRight, calendarTop, calendarBottom, _
-                                                                    drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
-                                                                    projectListLeft, _
-                                                                    legendAreaLeft, legendAreaRight, legendAreaTop, legendAreaBottom)
-
-
-                                ' bestimme das Format 
-                                ' bestimme die benötigte Höhe eines Projektes
-                                Dim projekthoehe As Double = 0.0
-                                projekthoehe = bestimmeMppProjektHoehe(phaseVorlagenShape, milestoneVorlagenShape,
-                                                                                     selectedPhases.Count, selectedMilestones.Count, _
-                                                                                        elementDescVorlagenShape, elementDateVorlagenShape, _
-                                                                                        projectNameVorlagenShape)
-
-                                Dim yOffsetMsToText As Double
-                                Dim yOffsetMsToDate As Double
-                                yOffsetMsToText = elementDescVorlagenShape.Top - milestoneVorlagenShape.Top
-                                yOffsetMsToDate = elementDateVorlagenShape.Top - milestoneVorlagenShape.Top
-
-                                Dim verhaeltnis As Double = 1.0
-                                If projCollection.Count > 0 Then
-                                    verhaeltnis = (((drawingAreaBottom - drawingAreaTop) / projekthoehe) - 1) / CDbl(projCollection.Count)
-                                Else
-                                    verhaeltnis = 1.0
-                                End If
-
-                                If verhaeltnis < 1.0 Then
-
-
-                                    ' dann muss ein anderes Format gewählt werden 
-
-                                    ' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
-
-                                    Dim sizeMemory() As Single
-                                    sizeMemory = saveSizesOfElements(projectNameVorlagenShape, elementDescVorlagenShape, elementDateVorlagenShape, _
-                                                        phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape, _
-                                                        legendTextVorlagenShape, legendPhaseVorlagenShape, legendMilestoneVorlagenShape)
-
-
-                                    ' jetzt die Format Änderung vornehmen 
-                                    
-
-                                    Dim ix As Integer = 4
-                                    Dim formatFound As Boolean = False
-                                    Dim curHeight As Double
-                                    curHeight = pptPresentation.PageSetup.SlideHeight
-
-                                    Do While ix >= 0 And Not formatFound
-                                        If curHeight / dinFormatA(ix, 1) < verhaeltnis Then
-                                            formatFound = True
-                                        Else
-                                            ix = ix - 1
-                                        End If
-                                    Loop
-
-                                    If ix < 0 Then
-                                        ix = 0
-                                    End If
-
-
-
-                                    With pptPresentation
-
-                                        If .PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
-                                            .PageSetup.SlideWidth = dinFormatA(ix, 0)
-                                            .PageSetup.SlideHeight = dinFormatA(ix, 1)
-                                        Else
-                                            .PageSetup.SlideWidth = dinFormatA(ix, 1)
-                                            .PageSetup.SlideHeight = dinFormatA(ix, 0)
-                                        End If
-
-                                        .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
-
-                                    End With
-
-
-                                    ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
-                                    Call restoreSizesOfElements(sizeMemory, projectNameVorlagenShape, elementDescVorlagenShape, elementDateVorlagenShape, _
-                                                        phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape, _
-                                                        legendTextVorlagenShape, legendPhaseVorlagenShape, legendMilestoneVorlagenShape)
-
-
-                                    ' jetzt wieder die Koordinaten neu berechnen 
-                                    Call bestimmeZeichenKoordinaten(multiprojektContainerShape, _
-                                                                calendarLineShape, legendLineShape, projectNameVorlagenShape, legendStartShape, _
-                                                                containerLeft, containerRight, containerTop, containerBottom, _
-                                                                calendarLeft, calendarRight, calendarTop, calendarBottom, _
-                                                                drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
-                                                                projectListLeft, _
-                                                                legendAreaLeft, legendAreaRight, legendAreaTop, legendAreaBottom)
-
-
-
-                                End If
-
 
                                 ' zeichne die Projekte 
 
                                 Try
                                     Call zeichnePPTprojects(pptSlide, projCollection, _
                                                         pptStartofCalendar, pptEndOfCalendar, _
-                                                        calendarLineShape, legendLineShape, _
+                                                        drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
+                                                        projekthoehe, projectListLeft, _
                                                         selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
-                                                        projectNameVorlagenShape, elementDescVorlagenShape, elementDateVorlagenShape, _
+                                                        projectNameVorlagenShape, MsDescVorlagenShape, MsDateVorlagenShape, _
+                                                        PhDescVorlagenShape, PhDateVorlagenShape, _
                                                         phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape, _
-                                                        yOffsetMsToText, yOffsetMsToDate)
+                                                        yOffsetMsToText, yOffsetMsToDate, yOffsetPhToText, yOffsetPhToDate)
 
 
                                 Catch ex As Exception
@@ -2275,8 +2327,10 @@ Public Module testModule
                                 projectNameVorlagenShape.Delete()
                                 phaseVorlagenShape.Delete()
                                 milestoneVorlagenShape.Delete()
-                                elementDescVorlagenShape.Delete()
-                                elementDateVorlagenShape.Delete()
+                                MsDescVorlagenShape.Delete()
+                                MsDateVorlagenShape.Delete()
+                                PhDescVorlagenShape.Delete()
+                                PhDateVorlagenShape.Delete()
 
                                 ' zeichne die Legende 
                                 If awinSettings.mppShowLegend Then
@@ -7622,7 +7676,8 @@ Public Module testModule
             With newShapes.Item(1)
 
                 .Left = calendarHeightShape.Left + i * yearWidth
-                .Top = calendarHeightShape.Top
+                '.Top = calendarHeightShape.
+                .Top = calendarLineShape.Top - calendarHeightShape.Height
                 nameCollection.Add(.Name, .Name)
 
             End With
@@ -7725,6 +7780,7 @@ Public Module testModule
 
     End Sub
 
+
     ''' <summary>
     ''' erstellt die Multiprojekt Sicht 
     ''' </summary>
@@ -7733,41 +7789,57 @@ Public Module testModule
     ''' sortierte Liste an Projekten, die auf der Multiprojekt-Sicht ausgegeben werden sollen </param>
     ''' <param name="StartofPPTCalendar">Beginn des Powerpoint Kalenders</param>
     ''' <param name="endOFPPTCalendar">Ende des Powerpoint Kalenders</param>
-    ''' <param name="calendarLineShape">Linie, die width und Top für dei Zeichenfläche bestimmt</param>
-    ''' <param name="legendlineShape">Linie, die das Ende der Zeichenfläche und den Beginn der Legende markiert </param>
+    ''' <param name="drawingAreaLeft"></param>
+    ''' <param name="drawingAreaRight"></param>
+    ''' <param name="drawingAreaTop"></param>
+    ''' <param name="drawingAreaBottom"></param>
+    ''' <param name="projekthoehe"></param>
+    ''' <param name="projectListLeft"></param>
     ''' <param name="selectedPhases">welche Phasen sollen dargestellt werden; auch mehrere Phasen werden alle in eine Zeile gezeichnet</param>
     ''' <param name="selectedMilestones">welche Meilensteine sollen gezeichnet werden </param>
     ''' <param name="selectedRoles">welche Rollen sollen dargestellt werden; wenn mehrere Rollen ausgewählt sind, wird die Summe dargestellt</param>
     ''' <param name="selectedCosts">welche Kostenarten sollen dargestellt werden; wenn mehrere Kostenarten ausgewählt sind, wird die Summe dargestellt</param>
-    ''' <param name="elementDescVorlagenShape">Vorlage, d.h Schriftart, Größe und relative Lage zum Meilenstein für die Element-(Meilenstein) Beschriftung </param>
-    ''' <param name="elementDateVorlagenShape">Vorlage, d.h Schriftart, Größe und relative Lage zum Meilenstein für die Element-(Meilenstein) Beschriftung für das Meilenstein Datum </param>
+    ''' <param name="projectNameVorlagenShape"></param>
+    ''' <param name="MsDescVorlagenShape">Vorlage, d.h Schriftart, Größe und relative Lage zum Meilenstein für die Element-(Meilenstein) Beschriftung </param>
+    ''' <param name="MsDateVorlagenShape">Vorlage, d.h Schriftart, Größe und relative Lage zum Meilenstein für die Element-(Meilenstein) Beschriftung für das Meilenstein Datum </param>
+    ''' <param name="PhDescVorlagenShape"></param>
+    ''' <param name="PhDateVorlagenShape"></param>
     ''' <param name="phaseVorlagenShape">Vorlage für die Höhe der Phasen Shape; ale s Shape wird die entsprechende Darstellungsklasse verwendet </param>
     ''' <param name="milestoneVorlagenShape">Vorlage für die Höhe der Meilenstein Shape; als Shape wird die entsprechende Darstellungsklasse verwendet; dient auch zur relativen Einschätzung Meilenstein zu Phase</param>
     ''' <param name="projectVorlagenForm">Vorlage (Strichdicke, etc) für die Darstellung des Projekts; Farbe wird vom Projekt übernommen </param>
-    ''' <remarks>wenn ein Fehler auftritt wird eine Exception geworfen und im aufrufenden Programm eine entsprechende Fehlermeldung in das Shape eingetragen </remarks>
+    ''' <param name="ampelVorlagenShape"></param>
+    ''' <param name="yOffsetMsToText"></param>
+    ''' <param name="yOffsetMsToDate"></param>
+    ''' <param name="yOffsetPhToText"></param>
+    ''' <param name="yOffsetPhToDate"></param>
+    ''' <remarks>wenn ein Fehler auftritt wird eine Exception geworfen und im aufrufenden Programm eine entsprechende Fehlermeldung in das Shape</remarks>
     Sub zeichnePPTprojects(ByRef pptslide As pptNS.Slide, ByRef projectCollection As SortedList(Of Double, String), _
-                           ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
-                           ByVal calendarLineShape As pptNS.Shape, ByVal legendlineShape As pptNS.Shape, _
-                               ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
-                               ByVal projectNameVorlagenShape As pptNS.Shape, ByVal elementDescVorlagenShape As pptNS.Shape, ByVal elementDateVorlagenShape As pptNS.Shape, _
-                               ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, ByVal projectVorlagenForm As pptNS.Shape, _
-                               ByVal ampelVorlagenShape As pptNS.Shape, _
-                               ByVal yOffsetMsToText As Double, ByVal yOffsetMsToDate As Double)
+                            ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
+                            ByVal drawingAreaLeft As Double, ByVal drawingAreaRight As Double, ByVal drawingAreaTop As Double, ByVal drawingAreaBottom As Double, _
+                            ByVal projekthoehe As Double, _
+                            ByVal projectListLeft As Double, _
+                            ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                            ByVal projectNameVorlagenShape As pptNS.Shape, _
+                            ByVal MsDescVorlagenShape As pptNS.Shape, ByVal MsDateVorlagenShape As pptNS.Shape, _
+                            ByVal PhDescVorlagenShape As pptNS.Shape, ByVal PhDateVorlagenShape As pptNS.Shape, _
+                            ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, ByVal projectVorlagenForm As pptNS.Shape, _
+                            ByVal ampelVorlagenShape As pptNS.Shape, _
+                            ByVal yOffsetMsToText As Double, ByVal yOffsetMsToDate As Double, _
+                            ByVal yOffsetPhToText As Double, ByVal yOffsetPhToDate As Double)
 
         ' Bestimmen der Zeichenfläche
-        Dim drawingAreaWidth As Double = calendarLineShape.Width
-        Dim drawingAreaLEft As Double = calendarLineShape.Left
-        Dim drawingAreaHeight As Double = 0.9 * (legendlineShape.Top - calendarLineShape.Top)
-        Dim drawingAreaTop = calendarLineShape.Top + 0.05 * (legendlineShape.Top - calendarLineShape.Top)
-        Dim drawingAreaBottom = legendlineShape.Top - 0.05 * (legendlineShape.Top - calendarLineShape.Top)
+        Dim drawingAreaWidth As Double = drawingAreaRight - drawingAreaLeft
+        Dim drawingAreaHeight As Double = drawingAreaBottom - drawingAreaTop
+
+
         'Dim tagesEinheit As Double
         Dim projectsToDraw As Integer
-        Dim projectsDrawn As Integer
         Dim copiedShape As pptNS.ShapeRange
         Dim pName As String
         Dim hproj As clsProjekt
         Dim phaseShape As xlNS.Shape
         Dim milestoneTypShape As xlNS.Shape
+        Dim currentProjektIndex As Integer
 
 
         Dim anzahlTage As Integer = DateDiff(DateInterval.Day, StartofPPTCalendar, endOFPPTCalendar) + 1
@@ -7775,14 +7847,10 @@ Public Module testModule
             Throw New ArgumentException("Kalender Start bis Ende kann nicht 0 oder kleiner sein ..")
         End If
 
-        ''tagesEinheit = drawingAreaWidth / anzahlTage
-
-        'Dim yOffsetMsToText As Double = elementDescVorlagenShape.Top - milestoneVorlagenShape.Top
-        'Dim yOffsetMsToDate As Double = elementDateVorlagenShape.Top - milestoneVorlagenShape.Top
 
 
         ' Bestimmen der Position für den Projekt-Namen
-        Dim projektNamenXPos As Double = projectNameVorlagenShape.Left
+        Dim projektNamenXPos As Double = projectListLeft
         Dim projektNamenYPos As Double
         Dim x1 As Double
         Dim x2 As Double
@@ -7796,10 +7864,11 @@ Public Module testModule
         Dim msShapeNames As New Collection
 
 
-        Dim projekthoehe As Double = bestimmeMppProjektHoehe(phaseVorlagenShape, milestoneVorlagenShape, _
-                                                             selectedPhases.Count, selectedMilestones.Count, _
-                                                                elementDescVorlagenShape, elementDateVorlagenShape, _
-                                                                projectNameVorlagenShape)
+        'Dim projekthoehe As Double = bestimmeMppProjektHoehe(phaseVorlagenShape, milestoneVorlagenShape, _
+        '                                                     selectedPhases.Count, selectedMilestones.Count, _
+        '                                                        MsDescVorlagenShape, MsDateVorlagenShape,
+        '                                                        PhDescVorlagenShape, PhDateVorlagenShape, _
+        '                                                        projectNameVorlagenShape)
 
 
         ' bestimme jetzt Y Start-Position für den Text bzw. die Grafik
@@ -7808,15 +7877,15 @@ Public Module testModule
         phasenGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - phaseVorlagenShape.Height)
         milestoneGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - milestoneVorlagenShape.Height)
         ampelGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - ampelVorlagenShape.Height)
-        Dim maxAnzahlProjekte As Integer = CInt(drawingAreaHeight / projekthoehe)
+
 
         projectsToDraw = projectCollection.Count
-        projectsDrawn = System.Math.Min(projectsToDraw, maxAnzahlProjekte)
 
 
-        For i = 1 To projectsDrawn
 
-            pName = projectCollection.ElementAt(i - 1).Value
+        For currentProjektIndex = 1 To projectsToDraw
+
+            pName = projectCollection.ElementAt(currentProjektIndex - 1).Value
             hproj = ShowProjekte.getProject(pName)
 
             '
@@ -7828,7 +7897,6 @@ Public Module testModule
                 .Top = CSng(projektNamenYPos)
                 .Left = CSng(projektNamenXPos)
                 .TextFrame2.TextRange.Text = hproj.getShapeText
-                '.TextFrame2.HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
             End With
 
             projektNamenYPos = projektNamenYPos + projekthoehe
@@ -7854,7 +7922,7 @@ Public Module testModule
 
                 With copiedShape(1)
                     .Top = CSng(ampelGrafikYPos)
-                    .Left = CSng(calendarLineShape.Left - (.Width + 3))
+                    .Left = CSng(drawingAreaLeft - (.Width + 3))
                     .Line.ForeColor.RGB = CInt(statusColor)
                     .Fill.ForeColor.RGB = CInt(statusColor)
                 End With
@@ -7866,7 +7934,7 @@ Public Module testModule
             '
             ' zeichne jetzt das Projekt 
             Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, hproj.startDate, hproj.endeDate, _
-                                    drawingAreaLEft, drawingAreaWidth, x1, x2)
+                                    drawingAreaLeft, drawingAreaWidth, x1, x2)
 
             If awinSettings.mppShowProjectLine Then
 
@@ -7896,26 +7964,31 @@ Public Module testModule
             For Each phaseName As String In selectedPhases
 
                 Dim cphase As clsPhase = hproj.getPhase(phaseName)
+                Dim projektstart As Integer = hproj.Start + hproj.StartOffset
+
                 If Not IsNothing(cphase) Then
 
                     Dim zeichnen As Boolean = True
                     ' erst noch prüfen , ob diese Phase tatsächlich im Zeitraum enthalten ist 
-                    If awinSettings.mppStrict Then
-                        If (hproj.Start + cphase.relStart - 1 > showRangeRight) Or (hproj.Start + cphase.relEnde - 1 < showRangeLeft) Then
-                            ' dann liegt die Phase ausserhalb des betrachteten Zeitraums und muss nicht berücksichtigt werden 
+                    If awinSettings.mppShowAllIfOne Then
+                        zeichnen = True
+                    Else
+                        If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, showRangeLeft, showRangeRight) Then
+                            zeichnen = True
+                        Else
                             zeichnen = False
                         End If
                     End If
 
 
 
-                    If zeichnen Then ' ersetzen durch die Prüfung 
+                    If zeichnen Then
                         phaseShape = PhaseDefinitions.getShape(phaseName)
                         Dim phaseStart As Date = cphase.getStartDate
                         Dim phaseEnd As Date = cphase.getEndDate
 
                         Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, phaseStart, phaseEnd, _
-                                            drawingAreaLEft, drawingAreaWidth, x1, x2)
+                                            drawingAreaLeft, drawingAreaWidth, x1, x2)
 
 
                         ' jetzt müssen ggf der Phasen Name und das  Datum angebracht werden 
@@ -7926,17 +7999,20 @@ Public Module testModule
                                 phShortname = phaseName
                             End If
 
-                            elementDescVorlagenShape.Copy()
+                            PhDescVorlagenShape.Copy()
                             copiedShape = pptslide.Shapes.Paste()
                             With copiedShape(1)
 
+
                                 .TextFrame2.TextRange.Text = phShortname
+                                .TextFrame2.MarginLeft = 0.0
+                                .TextFrame2.MarginRight = 0.0
                                 .Top = CSng(projektGrafikYPos) - .Height
-                                .Left = CSng(x1) - .Width
-                                If .Left < calendarLineShape.Left Then
-                                    .Left = CSng(calendarLineShape.Left + 1)
+                                .Left = CSng(x1)
+                                If .Left < drawingAreaLeft Then
+                                    .Left = CSng(drawingAreaLeft + 1)
                                 End If
-                                .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignRight
+                                .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
 
                             End With
 
@@ -7949,33 +8025,37 @@ Public Module testModule
                         If awinSettings.mppShowPhDate Then
                             Dim phDateText As String = phaseStart.ToShortDateString
 
-                            elementDateVorlagenShape.Copy()
+                            PhDateVorlagenShape.Copy()
                             copiedShape = pptslide.Shapes.Paste()
                             With copiedShape(1)
 
                                 .TextFrame2.TextRange.Text = phDateText
+                                .TextFrame2.MarginLeft = 0.0
+                                .TextFrame2.MarginRight = 0.0
                                 .Top = CSng(projektGrafikYPos)
-                                .Left = CSng(x1) - .Width
-                                If .Left < calendarLineShape.Left Then
-                                    .Left = CSng(calendarLineShape.Left + 1)
+                                .Left = CSng(x1)
+                                If .Left < drawingAreaLeft Then
+                                    .Left = CSng(drawingAreaLeft + 1)
                                 End If
-                                .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignRight
+                                .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
 
                             End With
 
                             phDateText = phaseEnd.ToShortDateString
 
-                            elementDateVorlagenShape.Copy()
+                            PhDateVorlagenShape.Copy()
                             copiedShape = pptslide.Shapes.Paste()
                             With copiedShape(1)
 
                                 .TextFrame2.TextRange.Text = phDateText
+                                .TextFrame2.MarginLeft = 0.0
+                                .TextFrame2.MarginRight = 0.0
                                 .Top = CSng(projektGrafikYPos)
-                                .Left = CSng(x2)
-                                If .Left + .Width > calendarLineShape.Left + calendarLineShape.Width Then
-                                    .Left = calendarLineShape.Left + calendarLineShape.Width - (.Width + 1)
+                                .Left = CSng(x2) - .Width
+                                If .Left + .Width > drawingAreaRight Then
+                                    .Left = drawingAreaRight - (.Width + 1)
                                 End If
-                                .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
+                                .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignRight
 
                             End With
 
@@ -8007,99 +8087,106 @@ Public Module testModule
             For Each milestoneName As String In selectedMilestones
 
                 Dim msDate As Date = hproj.getMilestoneDate(milestoneName)
+                Dim zeichnen As Boolean
 
-                If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
+                If IsNothing(msDate) Then
+                    zeichnen = False
+                Else
+                    If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
 
-                    ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
-                    Dim zeichnen As Boolean = True
-
-                    If awinSettings.mppStrict Then
-                        Dim tmpColumn As Integer = getColumnOfDate(msDate)
-                        If (tmpColumn > showRangeRight) Or (tmpColumn < showRangeLeft) Then
-                            ' dann liegt die Phase ausserhalb des betrachteten Zeitraums und muss nicht berücksichtigt werden 
-                            zeichnen = False
-                        End If
-                    End If
-
-                    If zeichnen Then
-                        milestoneTypShape = MilestoneDefinitions.getShape(milestoneName, "")
-
-                        Dim curMeilenstein As clsMeilenstein = Nothing
-                        curMeilenstein = hproj.getMilestone(milestoneName)
-
-
-
-                        Dim seitenverhaeltnis As Double
-                        With milestoneTypShape
-                            seitenverhaeltnis = .Height / .Width
-                        End With
-
-
-                        Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, msDate, msDate, _
-                                            drawingAreaLEft, drawingAreaWidth, x1, x2)
-
-
-                        ' jetzt muss ggf die Beschriftung angebracht werden 
-                        ' die muss vor dem Meilenstein angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
-                        ' überdeckt werden soll 
-                        If awinSettings.mppShowMsName Then
-
-                            Dim msShortname As String = MilestoneDefinitions.getAbbrev(milestoneName)
-
-                            elementDescVorlagenShape.Copy()
-                            copiedShape = pptslide.Shapes.Paste()
-                            With copiedShape(1)
-
-                                .TextFrame2.TextRange.Text = msShortname
-                                .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
-                                '.Left = CSng(x1) - .Width / 2
-                                .Left = CSng(x1) - .Width / 2
-
-                            End With
-
-
-                        End If
-
-
-
-                        ' jetzt muss ggf das Datum angebracht werden 
-                        If awinSettings.mppShowMsDate Then
-                            Dim msDateText As String = msDate.ToShortDateString
-
-                            elementDateVorlagenShape.Copy()
-                            copiedShape = pptslide.Shapes.Paste()
-                            With copiedShape(1)
-
-                                .TextFrame2.TextRange.Text = msDateText
-                                .Top = CSng(milestoneGrafikYPos) + yOffsetMsToDate
-                                .Left = CSng(x1) - .Width / 2
-
-                            End With
-
-                        End If
-
-                        ' jetzt ggf die vorhin gezeichneten Phasen in den Vordergrund bringen, damit die Texte die Phasen nicht teilweise überdecken  
-
-                        ' Erst jetzt wird der Meilenstein gezeichnet 
-                        milestoneTypShape.Copy()
-                        copiedShape = pptslide.Shapes.Paste()
-
-                        msShapeNames.Add(copiedShape.Name)
-
-                        With copiedShape(1)
-                            .Top = CSng(milestoneGrafikYPos)
-                            .Height = milestoneVorlagenShape.Height
-                            .Width = .Height / seitenverhaeltnis
-                            .Left = CSng(x1) - .Width / 2
-                            If awinSettings.mppShowAmpel Then
-                                .Glow.Color.RGB = CInt(curMeilenstein.getBewertung(1).color)
-                                If .Glow.Radius = 0 Then
-                                    .Glow.Radius = 5
-                                End If
+                        ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+                        If awinSettings.mppShowAllIfOne Then
+                            zeichnen = True
+                        Else
+                            If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
+                                zeichnen = True
+                            Else
+                                zeichnen = False
                             End If
+                        End If
+                    Else
+                        zeichnen = False
+                    End If
+                End If
+
+
+                If zeichnen Then
+                    milestoneTypShape = MilestoneDefinitions.getShape(milestoneName, "")
+
+                    Dim curMeilenstein As clsMeilenstein = Nothing
+                    curMeilenstein = hproj.getMilestone(milestoneName)
+
+
+
+                    Dim seitenverhaeltnis As Double
+                    With milestoneTypShape
+                        seitenverhaeltnis = .Height / .Width
+                    End With
+
+
+                    Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, msDate, msDate, _
+                                        drawingAreaLeft, drawingAreaWidth, x1, x2)
+
+
+                    ' jetzt muss ggf die Beschriftung angebracht werden 
+                    ' die muss vor dem Meilenstein angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
+                    ' überdeckt werden soll 
+                    If awinSettings.mppShowMsName Then
+
+                        Dim msShortname As String = MilestoneDefinitions.getAbbrev(milestoneName)
+
+                        MsDescVorlagenShape.Copy()
+                        copiedShape = pptslide.Shapes.Paste()
+                        With copiedShape(1)
+
+                            .TextFrame2.TextRange.Text = msShortname
+                            .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
+                            '.Left = CSng(x1) - .Width / 2
+                            .Left = CSng(x1) - .Width / 2
+
+                        End With
+
+
+                    End If
+
+
+
+                    ' jetzt muss ggf das Datum angebracht werden 
+                    If awinSettings.mppShowMsDate Then
+                        Dim msDateText As String = msDate.ToShortDateString
+
+                        MsDateVorlagenShape.Copy()
+                        copiedShape = pptslide.Shapes.Paste()
+                        With copiedShape(1)
+
+                            .TextFrame2.TextRange.Text = msDateText
+                            .Top = CSng(milestoneGrafikYPos) + yOffsetMsToDate
+                            .Left = CSng(x1) - .Width / 2
+
                         End With
 
                     End If
+
+                    ' jetzt ggf die vorhin gezeichneten Phasen in den Vordergrund bringen, damit die Texte die Phasen nicht teilweise überdecken  
+
+                    ' Erst jetzt wird der Meilenstein gezeichnet 
+                    milestoneTypShape.Copy()
+                    copiedShape = pptslide.Shapes.Paste()
+
+                    msShapeNames.Add(copiedShape.Name)
+
+                    With copiedShape(1)
+                        .Top = CSng(milestoneGrafikYPos)
+                        .Height = milestoneVorlagenShape.Height
+                        .Width = .Height / seitenverhaeltnis
+                        .Left = CSng(x1) - .Width / 2
+                        If awinSettings.mppShowAmpel Then
+                            .Glow.Color.RGB = CInt(curMeilenstein.getBewertung(1).color)
+                            If .Glow.Radius = 0 Then
+                                .Glow.Radius = 5
+                            End If
+                        End If
+                    End With
 
                 End If
 
@@ -8109,12 +8196,17 @@ Public Module testModule
             phasenGrafikYPos = phasenGrafikYPos + projekthoehe
             milestoneGrafikYPos = milestoneGrafikYPos + projekthoehe
 
+            If projektGrafikYPos > drawingAreaBottom Then
+                Exit For
+            End If
+
         Next
 
 
         '
         ' wenn Texte gezeichnet wurden, müssen jetzt die Phasen, dann die Meilensteine in den Vordergrund geholt werden 
-        If awinSettings.mppShowMsDate Or awinSettings.mppShowMsName Then
+        If awinSettings.mppShowMsDate Or awinSettings.mppShowMsName Or _
+            awinSettings.mppShowPhDate Or awinSettings.mppShowPhName Then
             ' Phasen vorholen 
             Dim anzElements As Integer
             anzElements = phShapeNames.Count
@@ -8153,11 +8245,11 @@ Public Module testModule
 
         End If
 
-        If projectsDrawn < projectCollection.Count Then
+        If currentProjektIndex < projectCollection.Count Then
             Throw New ArgumentException("es konnten nur " & _
-                                        projectsDrawn.ToString & " von " & projectsToDraw.ToString & _
+                                        currentProjektIndex.ToString & " von " & projectsToDraw.ToString & _
                                         " Projekten gezeichnet werden ... " & vbLf & _
-                                        "bitte verwenden Sie ein anderes Vorlagen-Format.")
+                                        "bitte verwenden Sie ein anderes Vorlagen-Format")
         End If
 
 
@@ -8170,21 +8262,24 @@ Public Module testModule
     ''' </summary>
     ''' <param name="phaseVorlagenShape"></param>
     ''' <param name="milestoneVorlagenShape"></param>
-    ''' <param name="elementDescVorlagenShape"></param>
-    ''' <param name="elementDateVorlagenShape"></param>
+    ''' <param name="MsDescVorlagenShape"></param>
+    ''' <param name="MsDateVorlagenShape"></param>
+    ''' <param name="PhDescVorlagenShape"></param>
+    ''' <param name="PhDateVorlagenShape" ></param>
     ''' <param name="projectNameVorlagenShape"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
     Private Function bestimmeMppProjektHoehe(ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, _
                                                  ByVal anzPhasen As Integer, ByVal anzMilestones As Integer, _
-                                                 ByVal elementDescVorlagenShape As pptNS.Shape, ByVal elementDateVorlagenShape As pptNS.Shape, _
+                                                 ByVal MsDescVorlagenShape As pptNS.Shape, ByVal MsDateVorlagenShape As pptNS.Shape, _
+                                                 ByVal PhDescVorlagenShape As pptNS.Shape, ByVal PhDateVorlagenShape As pptNS.Shape, _
                                                  ByVal projectNameVorlagenShape As pptNS.Shape) As Double
 
         Dim versatzFaktor As Double = 0.87
 
         ' Festlegung: Phase und Milestone werden zunächst immer zentriert dargestellt ; der Beschriftungstext kommt oben, zentriert hin, das Datum zentriert unten
         ' Bestimmen, wieviele Projekte mit den gegebenen Einstellungen gezeichnet werden können
-        Dim mindestNettoHoehe As Double
+        Dim mindestNettoHoehe As Double = 0.0
 
         If anzPhasen > 0 And anzMilestones > 0 Then
             mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
@@ -8201,25 +8296,25 @@ Public Module testModule
 
         If anzMilestones > 0 Then
             If awinSettings.mppShowMsName Then
-                projekthoehe = projekthoehe + versatzFaktor * elementDescVorlagenShape.Height
+                projekthoehe = projekthoehe + versatzFaktor * MsDescVorlagenShape.Height
             End If
 
             If awinSettings.mppShowMsDate Then
-                projekthoehe = projekthoehe + versatzFaktor * elementDateVorlagenShape.Height
+                projekthoehe = projekthoehe + versatzFaktor * MsDateVorlagenShape.Height
             End If
         End If
-        
+
         If anzPhasen > 0 And anzMilestones = 0 Then
             If awinSettings.mppShowPhName Then
-                projekthoehe = mindestNettoHoehe + versatzFaktor * elementDescVorlagenShape.Height
+                projekthoehe = mindestNettoHoehe + versatzFaktor * PhDescVorlagenShape.Height
             End If
 
             If awinSettings.mppShowPhDate Then
-                projekthoehe = projekthoehe + versatzFaktor * elementDateVorlagenShape.Height
+                projekthoehe = projekthoehe + versatzFaktor * PhDateVorlagenShape.Height
             End If
         End If
 
-        
+
 
         If projekthoehe < projectNameVorlagenShape.Height Then
             projekthoehe = projectNameVorlagenShape.Height
@@ -8569,36 +8664,60 @@ Public Module testModule
     ''' gibt einen Array of Single zurück, der all die Größen der übergebenen Shapes enthält (Schriftgröße bzw Liniendicke oder Weight)
     ''' </summary>
     ''' <param name="projectNameVorlagenShape"></param>
-    ''' <param name="elementDescVorlagenShape"></param>
-    ''' <param name="elementDateVorlagenShape"></param>
+    ''' <param name="MsDescVorlagenShape"></param>
+    ''' <param name="MsDateVorlagenShape"></param>
+    ''' <param name="PhDescVorlagenShape"></param>
+    ''' <param name="PhDateVorlagenShape"></param>
     ''' <param name="phaseVorlagenShape"></param>
     ''' <param name="milestoneVorlagenShape"></param>
     ''' <param name="projectVorlagenShape"></param>
     ''' <param name="ampelVorlagenShape"></param>
-    ''' <param name="legendTextVorlagenShape"></param>
-    ''' <param name="legendPhaseVorlagenShape"></param>
-    ''' <param name="legendMilestoneVorlagenShape"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Function saveSizesOfElements(ByVal projectNameVorlagenShape As pptNS.Shape, ByVal elementDescVorlagenShape As pptNS.Shape, ByVal elementDateVorlagenShape As pptNS.Shape, _
-                                                            ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape, _
-                                                            ByVal legendTextVorlagenShape As pptNS.Shape, ByVal legendPhaseVorlagenShape As pptNS.Shape, ByVal legendMilestoneVorlagenShape As pptNS.Shape) As Single()
+    Private Function saveSizesOfElements(ByVal projectNameVorlagenShape As pptNS.Shape, _
+                                         ByVal MsDescVorlagenShape As pptNS.Shape, ByVal MsDateVorlagenShape As pptNS.Shape, _
+                                         ByVal PhDescVorlagenShape As pptNS.Shape, ByVal PhDateVorlagenShape As pptNS.Shape, _
+                                         ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape) As Single()
 
-        Dim sizes(9) As Single
+
+        Dim sizes(8) As Single
 
         sizes(0) = projectNameVorlagenShape.TextFrame2.TextRange.Font.Size
-        sizes(1) = elementDescVorlagenShape.TextFrame2.TextRange.Font.Size
-        sizes(2) = elementDateVorlagenShape.TextFrame2.TextRange.Font.Size
-        sizes(3) = phaseVorlagenShape.Height
-        sizes(4) = milestoneVorlagenShape.Height
-        sizes(5) = projectVorlagenShape.Line.Weight
-        sizes(6) = ampelVorlagenShape.Height
-        sizes(7) = legendTextVorlagenShape.TextFrame2.TextRange.Font.Size
-        sizes(8) = legendPhaseVorlagenShape.Height
-        sizes(9) = legendMilestoneVorlagenShape.Height
+        sizes(1) = MsDescVorlagenShape.TextFrame2.TextRange.Font.Size
+        sizes(2) = MsDateVorlagenShape.TextFrame2.TextRange.Font.Size
+        sizes(3) = PhDescVorlagenShape.TextFrame2.TextRange.Font.Size
+        sizes(4) = PhDateVorlagenShape.TextFrame2.TextRange.Font.Size
+        sizes(5) = phaseVorlagenShape.Height
+        sizes(6) = milestoneVorlagenShape.Height
+        sizes(7) = projectVorlagenShape.Line.Weight
+        sizes(8) = ampelVorlagenShape.Height
 
         saveSizesOfElements = sizes
     End Function
+
+    ''' <summary>
+    ''' vergößert die Textshapes der Texte, die ihre relative Größe bei einer Format-Änderung behalten sollen
+    ''' alle Text Shapes, deren .Title nicht gleich noEnlarge ist, werden angepasst 
+    ''' </summary>
+    ''' <param name="enlargeFaktor"></param>
+    ''' <param name="pptSlide"></param>
+    ''' <remarks></remarks>
+    Private Sub enlargeTxtShapes(ByVal enlargeFaktor As Double, ByRef pptSlide As pptNS.Slide)
+
+        Dim allShapes As pptNS.Shapes = pptSlide.Shapes
+        'Dim korrektiv As Double = System.Math.Pow(0.9, enlargeFaktor)
+
+        For Each tmpShape As pptNS.Shape In allShapes
+
+            If tmpShape.AlternativeText.Trim = "Enlarge" And tmpShape.HasTextFrame Then
+                With tmpShape.TextFrame2.TextRange.Font
+                    .Size = .Size * enlargeFaktor
+                End With
+            End If
+            
+        Next
+
+    End Sub
 
 
     ''' <summary>
@@ -8606,42 +8725,41 @@ Public Module testModule
     ''' </summary>
     ''' <param name="sizes"></param>
     ''' <param name="projectNameVorlagenShape"></param>
-    ''' <param name="elementDescVorlagenShape"></param>
-    ''' <param name="elementDateVorlagenShape"></param>
+    ''' <param name="MsDescVorlagenShape"></param>
+    ''' <param name="MsDateVorlagenShape"></param>
+    ''' <param name="PhDescVorlagenShape"></param>
+    ''' <param name="PhDateVorlagenShape"></param>
     ''' <param name="phaseVorlagenShape"></param>
     ''' <param name="milestoneVorlagenShape"></param>
     ''' <param name="projectVorlagenShape"></param>
     ''' <param name="ampelVorlagenShape"></param>
-    ''' <param name="legendTextVorlagenShape"></param>
-    ''' <param name="legendPhaseVorlagenShape"></param>
-    ''' <param name="legendMilestoneVorlagenShape"></param>
     ''' <remarks></remarks>
     Private Sub restoreSizesOfElements(ByVal sizes() As Single, _
-                                           ByRef projectNameVorlagenShape As pptNS.Shape, ByRef elementDescVorlagenShape As pptNS.Shape, ByRef elementDateVorlagenShape As pptNS.Shape, _
-                                            ByRef phaseVorlagenShape As pptNS.Shape, ByRef milestoneVorlagenShape As pptNS.Shape, ByRef projectVorlagenShape As pptNS.Shape, ByRef ampelVorlagenShape As pptNS.Shape, _
-                                            ByRef legendTextVorlagenShape As pptNS.Shape, ByRef legendPhaseVorlagenShape As pptNS.Shape, ByRef legendMilestoneVorlagenShape As pptNS.Shape)
+                                           ByRef projectNameVorlagenShape As pptNS.Shape, _
+                                           ByRef MsDescVorlagenShape As pptNS.Shape, ByRef MsDateVorlagenShape As pptNS.Shape, _
+                                           ByRef PhDescVorlagenShape As pptNS.Shape, ByRef PhDateVorlagenShape As pptNS.Shape, _
+                                           ByRef phaseVorlagenShape As pptNS.Shape, ByRef milestoneVorlagenShape As pptNS.Shape, ByRef projectVorlagenShape As pptNS.Shape, ByRef ampelVorlagenShape As pptNS.Shape)
+
 
         projectNameVorlagenShape.TextFrame2.TextRange.Font.Size = sizes(0)
-        elementDescVorlagenShape.TextFrame2.TextRange.Font.Size = sizes(1)
-        elementDateVorlagenShape.TextFrame2.TextRange.Font.Size = sizes(2)
-        phaseVorlagenShape.Height = sizes(3)
-        milestoneVorlagenShape.Height = sizes(4)
-        projectVorlagenShape.Line.Weight = sizes(5)
-        ampelVorlagenShape.Height = sizes(6)
-        legendTextVorlagenShape.TextFrame2.TextRange.Font.Size = sizes(7)
-        legendPhaseVorlagenShape.Height = sizes(8)
-        legendMilestoneVorlagenShape.Height = sizes(9)
+        MsDescVorlagenShape.TextFrame2.TextRange.Font.Size = sizes(1)
+        MsDateVorlagenShape.TextFrame2.TextRange.Font.Size = sizes(2)
+        PhDescVorlagenShape.TextFrame2.TextRange.Font.Size = sizes(3)
+        PhDateVorlagenShape.TextFrame2.TextRange.Font.Size = sizes(4)
+        phaseVorlagenShape.Height = sizes(5)
+        milestoneVorlagenShape.Height = sizes(6)
+        projectVorlagenShape.Line.Weight = sizes(7)
+        ampelVorlagenShape.Height = sizes(8)
+
 
     End Sub
 
     ''' <summary>
-    ''' ermittelt die Koordinaten für Kalender, Projektbeschriftung, Projekt-Fläche, Legenden-Fläche
+    ''' ermittelt die Koordinaten für Kalender, linker Rand Projektbeschriftung, Projekt-Fläche, Legenden-Fläche
     ''' </summary>
     ''' <param name="multiprojektContainerShape"></param>
     ''' <param name="calendarLineShape"></param>
     ''' <param name="legendLineShape"></param>
-    ''' <param name="projectNameVorlagenShape"></param>
-    ''' <param name="legendStartShape"></param>
     ''' <param name="containerLeft"></param>
     ''' <param name="containerRight"></param>
     ''' <param name="containerTop"></param>
@@ -8661,44 +8779,42 @@ Public Module testModule
     ''' <param name="legendAreaBottom"></param>
     ''' <remarks></remarks>
     Private Sub bestimmeZeichenKoordinaten(ByVal multiprojektContainerShape As pptNS.Shape, _
-                                               ByVal calendarLineShape As pptNS.Shape, ByVal legendLineShape As pptNS.Shape, ByVal projectNameVorlagenShape As pptNS.Shape, _
-                                               ByVal legendStartShape As pptNS.Shape, _
+                                               ByVal calendarLineShape As pptNS.Shape, ByVal calendarHeightShape As pptNS.Shape, _
+                                               ByVal legendLineShape As pptNS.Shape, _
                                                ByRef containerLeft As Single, ByRef containerRight As Single, ByRef containerTop As Single, ByRef containerBottom As Single, _
                                                ByRef calendarLeft As Single, ByRef calendarRight As Single, ByRef calendarTop As Single, ByRef calendarBottom As Single, _
                                                ByRef drawingAreaLeft As Single, ByRef drawingAreaRight As Single, ByRef drawingAreaTop As Single, ByRef drawingAreaBottom As Single, _
                                                ByRef projectListLeft As Single, _
                                                ByRef legendAreaLeft As Single, ByRef legendAreaRight As Single, ByRef legendAreaTop As Single, ByRef legendAreaBottom As Single)
 
-        ' bestimme Container Area
+        ' bestimme Container Area ud linker Rand der Projektliste
         With multiprojektContainerShape
             containerLeft = .Left
             containerRight = .Left + .Width
             containerTop = .Top
             containerBottom = .Top + .Height
+            projectListLeft = .Left + 10
         End With
 
         ' bestimme KalenderArea
         calendarLeft = calendarLineShape.Left
         calendarRight = calendarLineShape.Left + calendarLineShape.Width
-        calendarTop = calendarLineShape.Top
-        calendarBottom = calendarLineShape.Top + calendarLineShape.Height
+        calendarTop = containerTop + 5
+        calendarBottom = calendarTop + calendarHeightShape.Height
 
         ' bestimme Drawing Area
-        With calendarLineShape
-            drawingAreaLeft = .Left
-            drawingAreaRight = .Left + .Width
-            drawingAreaTop = .Top + .Height + 5
-        End With
+        drawingAreaLeft = calendarLeft
+        drawingAreaRight = calendarRight
+        drawingAreaTop = calendarBottom + 15
+
 
         If awinSettings.mppShowLegend Then
-            drawingAreaBottom = legendLineShape.Top - 10
+            drawingAreaBottom = legendLineShape.Top - 5
         Else
-            drawingAreaBottom = containerBottom - 5
+            drawingAreaBottom = containerBottom - 10
         End If
 
 
-        ' bestimme Bereich ProjektListe 
-        projectListLeft = projectNameVorlagenShape.Left
 
         ' bestimme Legend Drawing Area 
         If awinSettings.mppShowLegend Then
@@ -8710,8 +8826,8 @@ Public Module testModule
             legendAreaBottom = containerBottom
         End If
 
-        
-        legendAreaLeft = legendStartShape.Left + legendStartShape.Width + 5
+
+        legendAreaLeft = drawingAreaLeft
         legendAreaRight = System.Math.Min(legendLineShape.Left + legendLineShape.Width, containerRight - 5)
 
 
@@ -8798,14 +8914,14 @@ Public Module testModule
                                         tmpName = ""
                                     End If
                                 End If
-                                
+
 
                             Catch ex As Exception
 
                             End Try
                         End If
                     End If
-                    
+
                 Else
                     tmpName = qstr(i).Trim
                 End If

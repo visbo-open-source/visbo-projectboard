@@ -24,7 +24,6 @@ Partial Class frmMppSettings
     Private Sub InitializeComponent()
         Me.shwPhaseText = New System.Windows.Forms.CheckBox()
         Me.shwPhaseDate = New System.Windows.Forms.CheckBox()
-        Me.phaseFullyContained = New System.Windows.Forms.CheckBox()
         Me.shwProjectLine = New System.Windows.Forms.CheckBox()
         Me.ShwMilestoneDate = New System.Windows.Forms.CheckBox()
         Me.ShwMilestoneText = New System.Windows.Forms.CheckBox()
@@ -54,16 +53,6 @@ Partial Class frmMppSettings
         Me.shwPhaseDate.TabIndex = 1
         Me.shwPhaseDate.Text = "Phasen Datum"
         Me.shwPhaseDate.UseVisualStyleBackColor = True
-        '
-        'phaseFullyContained
-        '
-        Me.phaseFullyContained.AutoSize = True
-        Me.phaseFullyContained.Location = New System.Drawing.Point(22, 134)
-        Me.phaseFullyContained.Name = "phaseFullyContained"
-        Me.phaseFullyContained.Size = New System.Drawing.Size(133, 17)
-        Me.phaseFullyContained.TabIndex = 2
-        Me.phaseFullyContained.Text = "Phase komplett zeigen"
-        Me.phaseFullyContained.UseVisualStyleBackColor = True
         '
         'shwProjectLine
         '
@@ -108,7 +97,7 @@ Partial Class frmMppSettings
         'shwLegend
         '
         Me.shwLegend.AutoSize = True
-        Me.shwLegend.Location = New System.Drawing.Point(22, 202)
+        Me.shwLegend.Location = New System.Drawing.Point(22, 180)
         Me.shwLegend.Name = "shwLegend"
         Me.shwLegend.Size = New System.Drawing.Size(114, 17)
         Me.shwLegend.TabIndex = 8
@@ -118,7 +107,7 @@ Partial Class frmMppSettings
         'shwVerticals
         '
         Me.shwVerticals.AutoSize = True
-        Me.shwVerticals.Location = New System.Drawing.Point(22, 179)
+        Me.shwVerticals.Location = New System.Drawing.Point(22, 157)
         Me.shwVerticals.Name = "shwVerticals"
         Me.shwVerticals.Size = New System.Drawing.Size(98, 17)
         Me.shwVerticals.TabIndex = 7
@@ -137,7 +126,7 @@ Partial Class frmMppSettings
         '
         'okButton
         '
-        Me.okButton.Location = New System.Drawing.Point(128, 248)
+        Me.okButton.Location = New System.Drawing.Point(128, 230)
         Me.okButton.Name = "okButton"
         Me.okButton.RightToLeft = System.Windows.Forms.RightToLeft.No
         Me.okButton.Size = New System.Drawing.Size(75, 23)
@@ -150,7 +139,7 @@ Partial Class frmMppSettings
         Me.AcceptButton = Me.okButton
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(337, 283)
+        Me.ClientSize = New System.Drawing.Size(337, 268)
         Me.Controls.Add(Me.okButton)
         Me.Controls.Add(Me.notStrictly)
         Me.Controls.Add(Me.shwLegend)
@@ -159,7 +148,6 @@ Partial Class frmMppSettings
         Me.Controls.Add(Me.ShwMilestoneDate)
         Me.Controls.Add(Me.ShwMilestoneText)
         Me.Controls.Add(Me.shwProjectLine)
-        Me.Controls.Add(Me.phaseFullyContained)
         Me.Controls.Add(Me.shwPhaseDate)
         Me.Controls.Add(Me.shwPhaseText)
         Me.Name = "frmMppSettings"
@@ -171,7 +159,6 @@ Partial Class frmMppSettings
     End Sub
     Friend WithEvents shwPhaseText As System.Windows.Forms.CheckBox
     Friend WithEvents shwPhaseDate As System.Windows.Forms.CheckBox
-    Friend WithEvents phaseFullyContained As System.Windows.Forms.CheckBox
     Friend WithEvents shwProjectLine As System.Windows.Forms.CheckBox
     Friend WithEvents ShwMilestoneDate As System.Windows.Forms.CheckBox
     Friend WithEvents ShwMilestoneText As System.Windows.Forms.CheckBox

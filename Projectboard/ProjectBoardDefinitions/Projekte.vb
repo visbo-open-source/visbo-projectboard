@@ -16810,4 +16810,59 @@ Public Module Projekte
 
     End Function
 
+    ''' <summary>
+    ''' gibt für die Phase zurück, ob Sie in dem angegebenen Zeitraum liegt oder nicht 
+    ''' </summary>
+    ''' <param name="projektstart">Monat, in dem das Projekt startet</param>
+    ''' <param name="relstart">Relativer Monats-Index Phasenstart</param>
+    ''' <param name="relEnde">Relative Monats-Index Phasenende</param>
+    ''' <param name="von">Monats-Index des linken Randes</param>
+    ''' <param name="bis">Monats-Index des rechten Randes</param>
+    ''' <returns>true: wenn die Phase diesen Zeitraum berührt
+    ''' false: wenn nicht</returns>
+    ''' <remarks></remarks>
+    Public Function phaseWithinTimeFrame(ByVal projektstart As Integer, ByVal relStart As Integer, ByVal relEnde As Integer, _
+                                             ByVal von As Integer, ByVal bis As Integer) As Boolean
+
+        Dim within As Boolean = False
+
+        If (projektstart + relStart - 1 > bis) Or (projektstart + relEnde - 1 < von) Then
+            ' dann liegt die Phase ausserhalb des betrachteten Zeitraums 
+            within = False
+        Else
+            within = True
+        End If
+        
+
+        phaseWithinTimeFrame = within
+
+    End Function
+
+    ''' <summary>
+    ''' gibt für das angegebene Datum zurück, ob es in dem angegebenen Zeitraum liegt oder nicht 
+    ''' </summary>
+    ''' <param name="msDate">Datum</param>
+    ''' <param name="von">Monats-Index des linken Randes</param>
+    ''' <param name="bis">Monats-Index des rechten Randes</param>
+    ''' <returns>true: wenn das Datum innerhalb liegt
+    ''' false: sonst</returns>
+    ''' <remarks></remarks>
+    Public Function milestoneWithinTimeFrame(ByVal msDate As Date, _
+                                                 ByVal von As Integer, ByVal bis As Integer) As Boolean
+
+        Dim within As Boolean = False
+
+        If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
+            If getColumnOfDate(msDate) > bis Or getColumnOfDate(msDate) < von Then
+                within = False
+            Else
+                within = True
+            End If
+        End If
+
+        milestoneWithinTimeFrame = within
+
+    End Function
+
+
 End Module

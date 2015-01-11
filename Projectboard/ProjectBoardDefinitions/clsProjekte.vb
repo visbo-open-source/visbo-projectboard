@@ -402,7 +402,7 @@ Public Class clsProjekte
 
 
 
-            For Each kvp In Me.AllProjects
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In Me.AllProjects
 
                 With kvp.Value
 
@@ -480,7 +480,7 @@ Public Class clsProjekte
 
             suchTyp = 0
 
-            For Each kvp In Me.AllProjects
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In Me.AllProjects
 
                 found = False
                 With kvp.Value
@@ -574,12 +574,13 @@ Public Class clsProjekte
     ''' <param name="maxDate">das größte auftretende Ende-Datum einer Phase </param>
     ''' <remarks></remarks>
     Public Sub bestimmeProjekteAndMinMaxDates(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
-                                              ByVal von As Integer, ByVal bis As Integer, ByVal strict As Boolean, _
+                                              ByVal von As Integer, ByVal bis As Integer, _
                                                   ByRef projektListe As SortedList(Of Double, String), ByRef minDate As Date, ByRef maxDate As Date)
 
         Dim tmpMinimum As Date = StartofCalendar.AddMonths(von - 1)
         Dim tmpMaximum As Date = StartofCalendar.AddMonths(bis).AddDays(-1)
         Dim tmpDate As Date
+
 
         Dim hproj As clsProjekt
         Dim cphase As clsPhase
@@ -588,8 +589,8 @@ Public Class clsProjekte
         Dim key As Double
         ' selection type wird aktuell noch ignoriert .... 
 
-
-        For Each kvp In Me.AllProjects
+        ' in der ersten Welle werden die Projektnamen aufgesammelt, die eine der Phasen oder Meilensteine enthalten  
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In Me.AllProjects
 
             found = False
 
@@ -597,52 +598,51 @@ Public Class clsProjekte
 
                 projektstart = .Start + .StartOffset
 
+
                 If (projektstart > bis) Or (projektstart + .anzahlRasterElemente - 1 < von) Then
                     ' dann liegt das Projekt ausserhalb des Zeitraums und muss überhaupt nicht berücksichtig werden 
 
                 Else
 
-                    For Each phaseName As String In selectedPhases
+                    Dim ix As Integer = 1
+                    Dim phaseName As String
+                    While ix <= selectedPhases.Count And Not found
 
+                        phaseName = CStr(selectedPhases.Item(ix))
                         cphase = kvp.Value.getPhase(phaseName)
 
                         If Not IsNothing(cphase) Then
-                            If (projektstart + cphase.relStart - 1 > bis) Or (projektstart + cphase.relEnde - 1 < von) Then
-                                ' dann liegt die Phase ausserhalb des betrachteten Zeitraums und muss nicht berücksichtigt werden 
-                            Else
+                            If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
                                 found = True
-                                If strict Then
-                                    If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
-                                        tmpMinimum = cphase.getStartDate
-                                    End If
-
-                                    If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
-                                        tmpMaximum = cphase.getEndDate
-                                    End If
-                                End If
-                                
-
+                            Else
+                                ix = ix + 1
                             End If
+                        Else
+                            ix = ix + 1
                         End If
+                        
 
-                    Next
+
+                    End While
 
                     ' das muss nur gemacht werden, wenn found <> true
                     If Not found Then
-                        For Each milestone As String In selectedMilestones
+                        ix = 1
+                        Dim milestoneName As String
 
-                            tmpDate = kvp.Value.getMilestoneDate(milestone)
+                        While ix <= selectedMilestones.Count And Not found
 
-                            If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
-                                If getColumnOfDate(tmpDate) > bis Or getColumnOfDate(tmpDate) < von Then
-                                    ' nichts tun 
-                                Else
-                                    found = True
+                            milestoneName = CStr(selectedMilestones.Item(ix))
+                            tmpDate = kvp.Value.getMilestoneDate(milestoneName)
 
-                                End If
+                            If milestoneWithinTimeFrame(tmpDate, von, bis) Then
+                                found = True
+                            Else
+                                ix = ix + 1
                             End If
 
-                        Next
+
+                        End While
 
                     End If
 
@@ -659,34 +659,52 @@ Public Class clsProjekte
 
         Next
 
-        ' jetzt muss die zweite Welle nachkommen .. bestimmen , welches die erweiterten Min / Max Werte sind, falls not strict 
+        ' jetzt muss die zweite Welle nachkommen .. bestimmen , welches die erweiterten Min / Max Werte sind, falls fullyContained bzw. showAllIfOne 
         ' hier jetzt für alle Projekte in projektliste für jedes Element aus selectedphases und selectedmilestones das Minimum / Maximum bestimmen
-        If Not strict Then
 
-            For Each kvp As KeyValuePair(Of Double, String) In projektListe
 
-                hproj = Me.getProject(kvp.Value)
+        For Each kvp As KeyValuePair(Of Double, String) In projektListe
 
-                ' Phasen checken 
-                For Each phaseName As String In selectedPhases
+            hproj = Me.getProject(kvp.Value)
+            projektstart = hproj.Start + hproj.StartOffset
 
-                    cphase = hproj.getPhase(phaseName)
+            ' Phasen checken 
+            For Each phaseName As String In selectedPhases
 
-                    If Not IsNothing(cphase) Then
+                cphase = hproj.getPhase(phaseName)
+                If Not IsNothing(cphase) Then
+                    If awinSettings.mppShowAllIfOne Then
+
                         If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
                             tmpMinimum = cphase.getStartDate
-                            
                         End If
 
                         If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
                             tmpMaximum = cphase.getEndDate
+                        End If
+
+
+                    Else
+                        If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
+
+                            If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                tmpMinimum = cphase.getStartDate
+                            End If
+
+                            If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                tmpMaximum = cphase.getEndDate
+                            End If
 
                         End If
                     End If
+                End If
 
-                Next
 
-                ' Meilensteine checken 
+            Next
+
+            ' Meilensteine 
+            ' das muss nur gemacht werden, wenn showAllIfOne=true 
+            If awinSettings.mppShowAllIfOne Then
                 For Each msName As String In selectedMilestones
 
                     tmpDate = hproj.getMilestoneDate(msName)
@@ -703,11 +721,11 @@ Public Class clsProjekte
                     End If
 
                 Next
+            End If
+            
 
-            Next
+        Next
 
-        End If
-        
         minDate = tmpMinimum
         maxDate = tmpMaximum
 
@@ -2198,10 +2216,10 @@ Public Class clsProjekte
 
     End Property
 
-    ''' <summary>
-    ''' Konstruktor: intilaisert die sortierte Liste der Projekte und Shapes   
-    ''' </summary>
-    ''' <remarks></remarks>
+    '' ''' <summary>
+    '' ''' Konstruktor: intilaisert die sortierte Liste der Projekte und Shapes   
+    '' ''' </summary>
+    '' ''' <remarks></remarks>
     Public Sub New()
 
         AllProjects = New SortedList(Of String, clsProjekt)

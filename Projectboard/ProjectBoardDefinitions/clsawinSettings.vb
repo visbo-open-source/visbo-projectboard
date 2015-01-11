@@ -73,8 +73,7 @@
     Property costToleranzAbs As Double
 
     ' Settings für Multiprojekt-Sichten
-    Property mppStrict As Boolean
-    Property mppFullyContained As Boolean
+    Property mppShowAllIfOne As Boolean
     Property mppShowMsDate As Boolean
     Property mppShowMsName As Boolean
     Property mppShowPhDate As Boolean
@@ -141,8 +140,7 @@
         _costToleranzAbs = 2
 
         ' Settings für Multiprojekt Sichten 
-        _mppStrict = False
-        _mppFullyContained = True
+        _mppShowAllIfOne = False
         _mppShowMsDate = True
         _mppShowMsName = True
         _mppShowPhDate = True

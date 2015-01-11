@@ -915,21 +915,25 @@ Module BMWItOModul
         Dim zeile As Integer = 2
         Dim spalte As Integer = 1
         Dim tmpdate As Date
+        Dim milestone As clsMeilenstein = Nothing
 
 
 
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
             With wsName
-                ' Business Unit und Name schreiben
-                CType(.Cells(zeile, spalte), Excel.Range).value = kvp.Value.businessUnit
+                ' Hauptkategorie nicht in RPLAN Export vorhanden  
+                CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+
+                ' Name schreiben 
                 CType(.Cells(zeile, spalte + 1), Excel.Range).Value = kvp.Value.name
 
                 ' Zielvereinbarung schreiben 
                 Try
 
-                    tmpdate = kvp.Value.getMilestone("Zielvereinbarung").getDate
-                    If Not IsNothing(tmpdate) Then
+                    milestone = kvp.Value.getMilestone("Zielvereinbarung")
+                    If Not IsNothing(milestone) Then
+                        tmpdate = milestone.getDate
                         CType(.Cells(zeile, spalte + 2), Excel.Range).Value = tmpdate.ToShortDateString
                     Else
                         CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "-"
@@ -942,8 +946,9 @@ Module BMWItOModul
                 'SOP schreiben
                 Try
 
-                    tmpdate = kvp.Value.getMilestone("SOP").getDate
-                    If Not IsNothing(tmpdate) Then
+                    milestone = kvp.Value.getMilestone("SOP")
+                    If Not IsNothing(milestone) Then
+                        tmpdate = milestone.getDate
                         CType(.Cells(zeile, spalte + 3), Excel.Range).Value = tmpdate.ToShortDateString
                     Else
                         CType(.Cells(zeile, spalte + 3), Excel.Range).Value = "-"
@@ -953,20 +958,26 @@ Module BMWItOModul
                     CType(.Cells(zeile, spalte + 3), Excel.Range).Value = "-"
                 End Try
 
-                ' MEPS schreiben ?
-                CType(.Cells(zeile, spalte + 4), Excel.Range).Value = "-"
+                ' MEPS schreiben - Markteinführung 
 
-                ' EOP schreiben VPBG bis EOP
                 Try
-                    tmpdate = kvp.Value.getPhase("VPBG bis EOP").getEndDate
-                    If Not IsNothing(tmpdate) Then
-                        CType(.Cells(zeile, spalte + 5), Excel.Range).Value = tmpdate.ToShortDateString
+
+                    milestone = kvp.Value.getMilestone("Bestätigung Markteinführung & Prozess-Sicherheit")
+                    If Not IsNothing(milestone) Then
+                        tmpdate = milestone.getDate
+                        CType(.Cells(zeile, spalte + 4), Excel.Range).Value = tmpdate.ToShortDateString
                     Else
-                        CType(.Cells(zeile, spalte + 5), Excel.Range).Value = "-"
+                        CType(.Cells(zeile, spalte + 4), Excel.Range).Value = "-"
                     End If
+
                 Catch ex As Exception
-                    CType(.Cells(zeile, spalte + 5), Excel.Range).Value = "-"
+                    CType(.Cells(zeile, spalte + 4), Excel.Range).Value = "-"
                 End Try
+
+
+                ' End of Production ist nicht im RPLAN abgelegt 
+                CType(.Cells(zeile, spalte + 5), Excel.Range).Value = "-"
+                
                 
 
             End With
@@ -977,8 +988,17 @@ Module BMWItOModul
 
         Dim expFName As String = awinPath & bmwExportFilesOrdner & "/Report_" & Date.Now.ToShortDateString & ".xlsx"
 
-        appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
-        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+        Try
+            appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+        Catch ex As Exception
+
+        End Try
 
         appInstance.EnableEvents = True
 
