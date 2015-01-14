@@ -1389,14 +1389,14 @@ Imports System.Drawing
                 .Text = "Plan-Elemente visualisieren"
                 .rdbPhases.Checked = True
 
-                .chkbxShowObjects.Checked = True
-                .chkbxShowObjects.Visible = False
+                .chkbxShowObjects = True
+
 
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
-                .chkbxCreateCharts.Checked = False
-                .chkbxCreateCharts.Visible = False
+                .chkbxCreateCharts = False
+
 
                 .repVorlagenDropbox.Visible = False
                 .labelPPTVorlage.Visible = False
@@ -1444,14 +1444,13 @@ Imports System.Drawing
                 .Text = "Leistbarkeit analysieren"
                 .rdbPhases.Checked = True
 
-                .chkbxShowObjects.Checked = False
-                .chkbxShowObjects.Visible = False
-
+                .chkbxShowObjects = False
+                
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = True
 
-                .chkbxCreateCharts.Checked = True
-                .chkbxCreateCharts.Visible = False
+                .chkbxCreateCharts = True
+
 
                 .repVorlagenDropbox.Visible = False
                 .labelPPTVorlage.Visible = False
@@ -1504,14 +1503,12 @@ Imports System.Drawing
                 .Text = "Multiprojekt Reports erzeugen"
                 .rdbPhases.Checked = True
 
-                .chkbxShowObjects.Checked = False
-                .chkbxShowObjects.Visible = False
+                .chkbxShowObjects = False
 
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
-                .chkbxCreateCharts.Checked = False
-                .chkbxCreateCharts.Visible = False
+                .chkbxCreateCharts = False
 
                 .showModePortfolio = True
 

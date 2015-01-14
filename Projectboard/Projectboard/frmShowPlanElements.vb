@@ -9,29 +9,32 @@ Public Class frmShowPlanElements
     ' oder nur die selektierten Projekte 
     Friend showModePortfolio As Boolean
     Friend menuOption As Integer
+    Friend chkbxShowObjects As Boolean
+    Friend chkbxCreateCharts As Boolean
+
     Private existingNames As New Collection
 
     Private selectedMilestones As New Collection
-    Private sKeyMilestones As String = ""
-
     Private selectedPhases As New Collection
-    Private sKeyPhases As String = ""
-
     Private selectedCosts As New Collection
-    Private sKeyCosts As String = ""
-
     Private selectedRoles As New Collection
-    Private sKeyRoles As String = ""
+    Private selectedBUs As New Collection
+    Private selectedTyps As New Collection
 
+    'Private sKeyMilestones As String = ""
+    'Private sKeyPhases As String = ""
+    'Private sKeyCosts As String = ""
+    'Private sKeyRoles As String = ""
 
     Private backgroundRunning As Boolean = False
-
 
     Private Enum PTauswahlTyp
         phase = 0
         meilenstein = 1
         Rolle = 2
         Kostenart = 3
+        BusinessUnit = 4
+        ProjektTyp = 5
     End Enum
 
 
@@ -44,6 +47,12 @@ Public Class frmShowPlanElements
 
     
 
+    ''' <summary>
+    ''' Koordinaten merken 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub frmShowPlanElements_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
 
         frmCoord(PTfrm.listselP, PTpinfo.top) = Me.Top
@@ -108,16 +117,17 @@ Public Class frmShowPlanElements
         If Me.rdbPhases.Checked = True Then
 
             selectedPhases.Clear()
-            For Each element As String In ListBox1.SelectedItems
+            For Each element As String In ListBox2.Items
                 If Not selectedPhases.Contains(element) Then
                     selectedPhases.Add(element, element)
                 End If
             Next
+            
 
         ElseIf Me.rdbMilestones.Checked = True Then
 
             selectedMilestones.Clear()
-            For Each element As String In ListBox1.SelectedItems
+            For Each element As String In ListBox2.Items
                 If Not selectedMilestones.Contains(element) Then
                     selectedMilestones.Add(element, element)
                 End If
@@ -126,7 +136,7 @@ Public Class frmShowPlanElements
         ElseIf rdbRoles.Checked = True Then
 
             selectedRoles.Clear()
-            For Each element As String In ListBox1.SelectedItems
+            For Each element As String In ListBox2.Items
                 If Not selectedRoles.Contains(element) Then
                     selectedRoles.Add(element, element)
                 End If
@@ -135,13 +145,32 @@ Public Class frmShowPlanElements
         ElseIf rdbCosts.Checked = True Then
 
             selectedCosts.Clear()
-            For Each element As String In ListBox1.SelectedItems
+            For Each element As String In ListBox2.Items
                 If Not selectedCosts.Contains(element) Then
                     selectedCosts.Add(element, element)
                 End If
             Next
 
+        ElseIf rdbBU.Checked = True Then
+
+            selectedBUs.Clear()
+            For Each element As String In ListBox2.Items
+                If Not selectedBUs.Contains(element) Then
+                    selectedBUs.Add(element, element)
+                End If
+            Next
+
+        ElseIf rdbTyp.Checked = True Then
+
+            selectedTyps.Clear()
+            For Each element As String In ListBox2.Items
+                If Not selectedTyps.Contains(element) Then
+                    selectedTyps.Add(element, element)
+                End If
+            Next
         End If
+
+
 
 
         ''''
@@ -152,11 +181,21 @@ Public Class frmShowPlanElements
         ''
         ''''
 
+        Dim validOption As Boolean
+        If Me.menuOption = PTmenue.visualisieren Then
+            validOption = True
+        ElseIf showRangeRight - showRangeLeft > 5 Then
+            validOption = True
+        Else
+            validOption = False
+        End If
+
+
         If Me.menuOption = PTmenue.multiprojektReport Then
 
             If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
                     Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
-                    And showRangeRight - showRangeLeft > 5 Then
+                    And validOption Then
 
                 Dim vorlagenDateiName As String
                 vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
@@ -194,13 +233,14 @@ Public Class frmShowPlanElements
 
         ElseIf Me.menuOption = PTmenue.leistbarkeitsAnalyse Or Me.menuOption = PTmenue.visualisieren Then
 
+
             If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
                     Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
-                    And showRangeRight - showRangeLeft > 5 Then
+                    And validOption Then
 
                 If Me.rdbPhases.Checked = True Then
 
-                    If chkbxShowObjects.Checked = True Then
+                    If chkbxShowObjects = True Then
 
                         ' Phasen anzeigen 
 
@@ -219,10 +259,11 @@ Public Class frmShowPlanElements
                     End If
 
 
-                    If chkbxCreateCharts.Checked = True Then
+                    If chkbxCreateCharts = True Then
 
                         Dim formerSU As Boolean = appInstance.ScreenUpdating
                         appInstance.ScreenUpdating = False
+
                         ' Window Position festlegen 
                         chtop = 50.0 + awinSettings.ChartHoehe1
                         chleft = (showRangeRight - 1) * boxWidth + 4
@@ -235,7 +276,7 @@ Public Class frmShowPlanElements
 
                             ' alles in einem Chart anzeigen 
                             myCollection = New Collection
-                            For Each element As String In ListBox1.SelectedItems
+                            For Each element As String In ListBox2.Items
                                 myCollection.Add(element, element)
                             Next
 
@@ -246,7 +287,7 @@ Public Class frmShowPlanElements
 
                         Else
                             ' für jedes ITEM ein eigenes Chart machen
-                            For Each element As String In ListBox1.SelectedItems
+                            For Each element As String In ListBox2.Items
                                 ' es muss jedesmal eine neue Collection erzeugt werden - die Collection wird in DiagramList gemerkt
                                 ' wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
                                 myCollection = New Collection
@@ -275,7 +316,7 @@ Public Class frmShowPlanElements
                     ' Alle bisher angezeigten Milestones löschen
                     Dim farbID As Integer = 4
 
-                    If chkbxShowObjects.Checked = True Then
+                    If chkbxShowObjects = True Then
 
                         If selectedPhases.Count > 0 Then
 
@@ -301,7 +342,7 @@ Public Class frmShowPlanElements
                     End If
 
 
-                    If chkbxCreateCharts.Checked = True Then
+                    If chkbxCreateCharts = True Then
 
                         ' Window Position festlegen 
                         chtop = 50.0 + awinSettings.ChartHoehe1
@@ -347,12 +388,12 @@ Public Class frmShowPlanElements
                     ' Rollen anzeigen 
 
 
-                    If chkbxShowObjects.Checked = True Then
+                    If chkbxShowObjects = True Then
 
 
                     End If
 
-                    If chkbxCreateCharts.Checked = True Then
+                    If chkbxCreateCharts = True Then
 
                         ' Window Position festlegen 
                         chtop = 50.0 + awinSettings.ChartHoehe1
@@ -421,7 +462,7 @@ Public Class frmShowPlanElements
         End If
 
 
-        Me.ListBox1.SelectedItems.Clear()
+        Me.ListBox2.Items.Clear()
         appInstance.EnableEvents = True
         enableOnUpdate = True
 
@@ -449,10 +490,10 @@ Public Class frmShowPlanElements
             ' clear Listbox1 
             headerLine.Text = "Phasen"
             ListBox1.Items.Clear()
+            ListBox2.Items.Clear()
             existingNames.Clear()
             filterBox.Text = ""
-            chkbxShowObjects.Text = "in Projekten anzeigen"
-            chkbxCreateCharts.Text = "Summen-Chart"
+            
             chkbxOneChart.Text = "Alles in einem Chart"
 
             ' showModePortfolio kann nur gesetzt sein, wenn es auch einen selektierten Zeitraum gibt 
@@ -462,11 +503,11 @@ Public Class frmShowPlanElements
 
         Else
             ' Merken, was ggf. das Filterkriterium war 
-            sKeyPhases = filterBox.Text
+            'sKeyPhases = filterBox.Text
 
             ' Merken welches die selektierten Phasen waren 
             selectedPhases.Clear()
-            For Each element As String In ListBox1.SelectedItems
+            For Each element As String In ListBox2.Items
                 selectedPhases.Add(element, element)
             Next
 
@@ -482,10 +523,10 @@ Public Class frmShowPlanElements
             ' clear Listbox1 
             headerLine.Text = "Meilensteine"
             ListBox1.Items.Clear()
+            ListBox2.Items.Clear()
             existingNames.Clear()
             filterBox.Text = ""
-            chkbxShowObjects.Text = "in Projekten anzeigen"
-            chkbxCreateCharts.Text = "Summen-Chart"
+            
             chkbxOneChart.Text = "Alles in einem Chart"
 
             existingNames = ShowProjekte.getMilestoneNames
@@ -495,11 +536,11 @@ Public Class frmShowPlanElements
 
         Else
             ' Merken, was ggf. das Filterkriterium war 
-            sKeyMilestones = filterBox.Text
+            'sKeyMilestones = filterBox.Text
 
             ' Merken welches die selektierten Phasen waren 
             selectedMilestones.Clear()
-            For Each element As String In ListBox1.SelectedItems
+            For Each element As String In ListBox2.Items
                 selectedMilestones.Add(element, element)
             Next
 
@@ -526,10 +567,9 @@ Public Class frmShowPlanElements
                 ' clear Listbox1 
                 headerLine.Text = "Rollen"
                 ListBox1.Items.Clear()
+                ListBox2.Items.Clear()
                 existingNames.Clear()
                 filterBox.Text = ""
-                chkbxShowObjects.Text = "Werte im Projekt anzeigen"
-                chkbxCreateCharts.Text = "Summen-Chart"
                 chkbxOneChart.Text = "Alles in einem Chart"
 
                 For i = 1 To RoleDefinitions.Count
@@ -542,11 +582,11 @@ Public Class frmShowPlanElements
 
             Else
                 ' Merken, was ggf. das Filterkriterium war 
-                sKeyRoles = filterBox.Text
+                'sKeyRoles = filterBox.Text
 
                 ' Merken welches die selektierten Phasen waren 
                 selectedRoles.Clear()
-                For Each element As String In ListBox1.SelectedItems
+                For Each element As String In ListBox2.Items
                     selectedRoles.Add(element, element)
                 Next
 
@@ -555,6 +595,12 @@ Public Class frmShowPlanElements
 
     End Sub
 
+    ''' <summary>
+    ''' wenn Radio-Button Kosten gedrückt wird 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub rdbCosts_CheckedChanged(sender As Object, e As EventArgs) Handles rdbCosts.CheckedChanged
         Dim i As Integer
 
@@ -567,10 +613,9 @@ Public Class frmShowPlanElements
                 ' clear Listbox1 
                 headerLine.Text = "Kostenarten"
                 ListBox1.Items.Clear()
+                ListBox2.Items.Clear()
                 existingNames.Clear()
                 filterBox.Text = ""
-                chkbxShowObjects.Text = "Werte im Projekt anzeigen"
-                chkbxCreateCharts.Text = "Summen-Chart"
                 chkbxOneChart.Text = "Alles in einem Chart"
 
                 For i = 1 To CostDefinitions.Count
@@ -581,16 +626,100 @@ Public Class frmShowPlanElements
 
             Else
                 ' Merken, was ggf. das Filterkriterium war 
-                sKeyCosts = filterBox.Text
+                'sKeyCosts = filterBox.Text
 
                 ' Merken welches die selektierten Phasen waren 
                 selectedCosts.Clear()
-                For Each element As String In ListBox1.SelectedItems
+                'For Each element As String In ListBox1.SelectedItems
+                For Each element As String In ListBox2.Items
                     selectedCosts.Add(element, element)
                 Next
 
             End If
         End If
+
+    End Sub
+
+    ''' <summary>
+    ''' Behandlung Radio Button Business Unit drücken 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub rdbBU_CheckedChanged(sender As Object, e As EventArgs) Handles rdbBU.CheckedChanged
+
+        Dim i As Integer
+
+        statusLabel.Text = ""
+
+        If businessUnit.Count = 0 Then
+            Call MsgBox("es sind keine Business Units definiert !")
+        Else
+            If Me.rdbBU.Checked Then
+                ' clear Listbox1 
+                headerLine.Text = "Business Units"
+                ListBox1.Items.Clear()
+                ListBox2.Items.Clear()
+                existingNames.Clear()
+                filterBox.Text = ""
+
+                For i = 1 To businessUnit.Count
+                    existingNames.Add(businessUnit.ElementAt(i - 1))
+                Next
+
+                Call rebuildFormerState(PTauswahlTyp.BusinessUnit, existingNames)
+
+            Else
+
+                ' Merken welches die selektierten Phasen waren 
+                selectedBUs.Clear()
+
+                For Each element As String In ListBox2.Items
+                    selectedBUs.Add(element, element)
+                Next
+
+            End If
+        End If
+
+
+    End Sub
+
+    Private Sub rdbTyp_CheckedChanged(sender As Object, e As EventArgs) Handles rdbTyp.CheckedChanged
+
+        Dim i As Integer
+
+        statusLabel.Text = ""
+
+        If Projektvorlagen.Count = 0 Then
+            Call MsgBox("es sind keine Projektvorlagen definiert !")
+        Else
+            If Me.rdbTyp.Checked Then
+                ' clear Listbox1 
+                headerLine.Text = "Projektvorlagen / Generik"
+                ListBox1.Items.Clear()
+                ListBox2.Items.Clear()
+                existingNames.Clear()
+                filterBox.Text = ""
+                chkbxOneChart.Text = "Alles in einem Chart"
+
+                For i = 1 To Projektvorlagen.Count
+                    existingNames.Add(Projektvorlagen.Liste.ElementAt(i - 1).Key)
+                Next
+
+                Call rebuildFormerState(PTauswahlTyp.ProjektTyp, existingNames)
+
+            Else
+
+                ' Merken welches die selektierten Phasen waren 
+                selectedTyps.Clear()
+
+                For Each element As String In ListBox2.Items
+                    selectedTyps.Add(element, element)
+                Next
+
+            End If
+        End If
+
 
     End Sub
 
@@ -621,6 +750,7 @@ Public Class frmShowPlanElements
 
         Else
             ListBox1.SelectedItems.Clear()
+            ListBox2.Items.Clear()
             filterBox.Text = ""
 
             If rdbPhases.Checked Then
@@ -629,8 +759,12 @@ Public Class frmShowPlanElements
                 selectedMilestones.Clear()
             ElseIf rdbRoles.Checked Then
                 selectedRoles.Clear()
-            Else
+            ElseIf rdbCosts.Checked Then
                 selectedCosts.Clear()
+            ElseIf rdbBU.Checked Then
+                selectedBUs.Clear()
+            Else
+                selectedTyps.Clear()
             End If
         End If
 
@@ -640,33 +774,12 @@ Public Class frmShowPlanElements
     End Sub
 
 
-
-    Private Sub chkbxCreateCharts_CheckedChanged(sender As Object, e As EventArgs) Handles chkbxCreateCharts.CheckedChanged
-
-        If chkbxCreateCharts.Checked = True Then
-            chkbxOneChart.Visible = True
-        Else
-            chkbxOneChart.Visible = False
-            If chkbxShowObjects.Checked = False Then
-                chkbxShowObjects.Checked = True
-            End If
-        End If
-
-
-    End Sub
-
-    Private Sub chkbxShowObjects_CheckedChanged(sender As Object, e As EventArgs) Handles chkbxShowObjects.CheckedChanged
-
-        If chkbxShowObjects.Checked = False Then
-
-            If chkbxCreateCharts.Checked = False Then
-                chkbxCreateCharts.Checked = True
-            End If
-
-        End If
-
-    End Sub
-
+    ''' <summary>
+    ''' wenn etwas in der Such-Maske eingegeben wird: prüfen, Listbox1 entsprechend ausdünnen
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub filterBox_TextChanged(sender As Object, e As EventArgs) Handles filterBox.TextChanged
 
         Dim suchstr As String = filterBox.Text
@@ -688,81 +801,141 @@ Public Class frmShowPlanElements
     End Sub
 
 
+    ''' <summary>
+    ''' Klick auf das Bild soll auch den Radiobutton setzen
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub pictureRoles_Click(sender As Object, e As EventArgs) Handles pictureRoles.Click
         If Me.rdbRoles.Checked = False Then
             rdbRoles.Checked = True
+        Else
+            rdbRoles.Checked = False
         End If
     End Sub
 
+    ''' <summary>
+    ''' Klick auf das Bild soll auch den Radiobutton setzen
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub picturePhasen_Click(sender As Object, e As EventArgs) Handles picturePhasen.Click
         If Me.rdbPhases.Checked = False Then
             rdbPhases.Checked = True
+        Else
+            rdbPhases.Checked = False
         End If
     End Sub
 
+    ''' <summary>
+    ''' Klick auf das Bild soll auch den Radiobutton setzen
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub pictureMilestones_Click(sender As Object, e As EventArgs) Handles pictureMilestones.Click
         If Me.rdbMilestones.Checked = False Then
             rdbMilestones.Checked = True
+        Else
+            rdbMilestones.Checked = False
         End If
     End Sub
 
+    ''' <summary>
+    ''' Klick auf das Bild soll auch den Radiobutton setzen
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub pictureCosts_Click(sender As Object, e As EventArgs) Handles pictureCosts.Click
         If Me.rdbCosts.Checked = False Then
             Me.rdbCosts.Checked = True
+        Else
+            Me.rdbCosts.Checked = False
         End If
     End Sub
 
-    Private Sub pictureZoom_Click(sender As Object, e As EventArgs) Handles pictureZoom.Click
-        filterBox.Text = ""
+    ''' <summary>
+    ''' Klick auf das Bild soll auch den Radiobutton setzen
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub pictureBU_Click(sender As Object, e As EventArgs) Handles pictureBU.Click
+
+        If Me.rdbBU.Checked = False Then
+            Me.rdbBU.Checked = True
+        Else
+            Me.rdbBU.Checked = False
+        End If
+
     End Sub
 
+    ''' <summary>
+    ''' stellt den vorherigen Zustand wieder her: welche Werte waren bereits für die betreffende 
+    ''' Kategorie ausgewählt 
+    ''' </summary>
+    ''' <param name="typ"></param>
+    ''' <param name="listOfNames"></param>
+    ''' <remarks></remarks>
     Private Sub rebuildFormerState(ByVal typ As Integer, ByVal listOfNames As Collection)
 
-        Dim searchkey As String = ""
+        'Dim searchkey As String = ""
         Dim tmpCollection As New Collection
         Dim i As Integer
 
         Select Case typ
             Case PTauswahlTyp.phase
-                searchkey = sKeyPhases
+                'searchkey = sKeyPhases
                 tmpCollection = selectedPhases
 
             Case PTauswahlTyp.meilenstein
-                searchkey = sKeyMilestones
+                'searchkey = sKeyMilestones
                 tmpCollection = selectedMilestones
 
             Case PTauswahlTyp.Rolle
-                searchkey = sKeyRoles
+                'searchkey = sKeyRoles
                 tmpCollection = selectedRoles
 
             Case PTauswahlTyp.Kostenart
-                searchkey = sKeyCosts
+                'searchkey = sKeyCosts
                 tmpCollection = selectedCosts
+
+            Case PTauswahlTyp.BusinessUnit
+                tmpCollection = selectedBUs
+
+            Case PTauswahlTyp.ProjektTyp
+                tmpCollection = selectedTyps
 
         End Select
 
-        If searchkey.Length > 0 Then
+        'If searchkey.Length > 0 Then
 
-            For Each s As String In listOfNames
-                If s.Contains(searchkey) Then
-                    ListBox1.Items.Add(s)
-                End If
-            Next
+        '    For Each s As String In listOfNames
+        '        If s.Contains(searchkey) Then
+        '            ListBox1.Items.Add(s)
+        '        End If
+        '    Next
 
-        Else
-            For i = 1 To listOfNames.Count
-                ListBox1.Items.Add(listOfNames.Item(i))
-            Next
-        End If
+        'Else
+        '    For i = 1 To listOfNames.Count
+        '        ListBox1.Items.Add(listOfNames.Item(i))
+        '    Next
+        'End If
 
         ' Filter Box Test setzen 
-
-        filterBox.Text = searchkey
+        For i = 1 To listOfNames.Count
+            ListBox1.Items.Add(listOfNames.Item(i))
+        Next
+        filterBox.Text = ""
 
         ' jetzt prüfen, ob selectedphases bereits etwas enthält
-        ' wenn ja, dann werden diese Items selektiert
+        ' wenn ja, dann werden diese Items in Listbox2 dargestellt 
         For Each element As String In tmpCollection
-            ListBox1.SelectedItem = element
+            ListBox2.Items.Add(element)
+            'ListBox1.SelectedItem = element
         Next
     End Sub
 
@@ -773,6 +946,12 @@ Public Class frmShowPlanElements
     End Sub
 
 
+    ''' <summary>
+    ''' Hintergrund Prozess - wird nur für die Report Erzeugung benötigt 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub BackgroundWorker1_DoWork(sender As Object, e As DoWorkEventArgs) Handles BackgroundWorker1.DoWork
 
         Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
@@ -785,7 +964,7 @@ Public Class frmShowPlanElements
                                                   worker, e)
 
         End With
-        
+
 
     End Sub
 
@@ -813,6 +992,12 @@ Public Class frmShowPlanElements
     End Sub
 
     
+    ''' <summary>
+    ''' ruft das Formular auf, um die Einstellungen für das Multireporting vorzunehmen  
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub einstellungen_Click(sender As Object, e As EventArgs) Handles einstellungen.Click
 
         Dim mppFrm As New frmMppSettings
@@ -822,4 +1007,46 @@ Public Class frmShowPlanElements
 
 
     End Sub
+
+    ''' <summary>
+    ''' fügt das selektierte Element der Listbox2 hinzu
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub addButton_Click(sender As Object, e As EventArgs) Handles addButton.Click
+
+        Dim i As Integer
+        Dim element As String
+
+        For i = 1 To ListBox1.SelectedItems.Count
+            element = CStr(ListBox1.SelectedItems.Item(i))
+            If ListBox2.Items.Contains(element) Then
+                ' nichts tun 
+            Else
+                ListBox2.Items.Add(element)
+            End If
+        Next
+
+        ListBox1.SelectedItems.Clear()
+
+    End Sub
+
+    ''' <summary>
+    ''' entfernt ein Item aus der Listbox2 - die ausgewöhlten Elemente 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub removeButton_Click(sender As Object, e As EventArgs) Handles removeButton.Click
+        Dim i As Integer
+        Dim element As Object
+
+        For i = 1 To ListBox2.SelectedItems.Count
+            element = ListBox1.SelectedItems.Item(i)
+            ListBox2.Items.Remove(element)
+        Next
+
+    End Sub
+
 End Class

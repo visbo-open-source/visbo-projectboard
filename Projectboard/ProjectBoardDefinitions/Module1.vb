@@ -72,6 +72,9 @@ Public Module Module1
     Public PhaseDefinitions As New clsPhasen
     Public MilestoneDefinitions As New clsMeilensteine
     Public CostDefinitions As New clsKostenarten
+    ' Welche Business-Units gibt es ? 
+    Public businessUnit As List(Of String)
+
     Public DiagramList As New clsDiagramme
     Public awinButtonEvents As New clsAwinEvents
 
@@ -119,8 +122,7 @@ Public Module Module1
     Public Const maxProjektdauer As Integer = 60
 
 
-    ' Welche Business-Units gibt es ? 
-    Public businessUnit As List(Of String)
+   
 
 
     Public Enum PTbubble

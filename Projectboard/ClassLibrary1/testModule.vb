@@ -2537,123 +2537,128 @@ Public Module testModule
 
                             von = showRangeLeft
                             bis = showRangeRight
-                            myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+                            If von < 0 Or bis < 0 Then
+                                .TextFrame2.TextRange.Text = " bitte geben Sie einen Zeitraum an ..."
+                            Else
+                                myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
 
-                            If myCollection.Count > 0 Then
-                                pptSize = .TextFrame2.TextRange.Font.Size
-                                .TextFrame2.TextRange.Text = " "
+                                If myCollection.Count > 0 Then
+                                    pptSize = .TextFrame2.TextRange.Font.Size
+                                    .TextFrame2.TextRange.Text = " "
 
-                                Dim minColumn As Integer = 10000, maxColumn As Integer = 0, maxzeile As Integer = 0
+                                    Dim minColumn As Integer = 10000, maxColumn As Integer = 0, maxzeile As Integer = 0
 
-                                Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, True)
+                                    Call calcPictureCoord(myCollection, minColumn, maxColumn, maxzeile, True)
 
 
-                                ' set Gridlines to white 
-                                With appInstance.ActiveWindow
-                                    .GridlineColor = RGB(255, 255, 255)
-                                End With
+                                    ' set Gridlines to white 
+                                    With appInstance.ActiveWindow
+                                        .GridlineColor = RGB(255, 255, 255)
+                                    End With
 
-                                With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
-                                    rng = CType(.Range(.Cells(1, minColumn), .Cells(maxzeile, maxColumn)), xlNS.Range)
-                                    colorrng = CType(.Range(.Cells(2, showRangeLeft), .Cells(maxzeile, showRangeRight)), xlNS.Range)
-
-                                    If Not awinSettings.showTimeSpanInPT Then
-
-                                        Try
-                                            colorrng.Interior.Color = showtimezone_color
-                                        Catch ex1 As Exception
-
-                                        End Try
-                                    End If
-
-                                    ' hier werden die Phasen gezeichnet 
-                                    Call awinDeleteProjectChildShapes(0)
-
-                                    Dim qstr(20) As String
-                                    Dim phNameCollection As New Collection
-                                    Dim phName As String = " "
-                                    qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
-
-                                    ' Aufbau der Collection 
-                                    For i = 0 To qstr.Length - 1
-
-                                        Try
-                                            phName = qstr(i).Trim
-                                            If PhaseDefinitions.Contains(phName) Then
-                                                phNameCollection.Add(phName, phName)
-                                            End If
-                                        Catch ex As Exception
-                                            Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
-                                        End Try
-
-                                    Next
-
-                                    Call awinDeSelect()
-
-                                    If phNameCollection.Count > 0 Then
-
-                                        Call awinZeichnePhasen(phNameCollection, False, True)
-                                        rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                    With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
+                                        rng = CType(.Range(.Cells(1, minColumn), .Cells(maxzeile, maxColumn)), xlNS.Range)
+                                        colorrng = CType(.Range(.Cells(2, showRangeLeft), .Cells(maxzeile, showRangeRight)), xlNS.Range)
 
                                         If Not awinSettings.showTimeSpanInPT Then
 
                                             Try
-                                                colorrng.Interior.ColorIndex = -4142
+                                                colorrng.Interior.Color = showtimezone_color
                                             Catch ex1 As Exception
 
                                             End Try
                                         End If
 
+                                        ' hier werden die Phasen gezeichnet 
+                                        Call awinDeleteProjectChildShapes(0)
 
-                                        ' lösche alle Phase Shapes wieder wieder 
-                                        If qualifier <> "" Then
-                                            Call awinDeleteProjectChildShapes(0)
-                                        End If
+                                        Dim qstr(20) As String
+                                        Dim phNameCollection As New Collection
+                                        Dim phName As String = " "
+                                        qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
 
-                                    Else
-                                        ok = False
-                                    End If
+                                        ' Aufbau der Collection 
+                                        For i = 0 To qstr.Length - 1
 
-                                End With
+                                            Try
+                                                phName = qstr(i).Trim
+                                                If PhaseDefinitions.Contains(phName) Then
+                                                    phNameCollection.Add(phName, phName)
+                                                End If
+                                            Catch ex As Exception
+                                                Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
+                                            End Try
 
-                                ' set back 
-                                With appInstance.ActiveWindow
-                                    .GridlineColor = RGB(220, 220, 220)
-                                End With
+                                        Next
 
-                                If ok Then
-                                    newShapeRange = pptSlide.Shapes.Paste
+                                        Call awinDeSelect()
 
-                                    Dim ratio As Double
-                                    ratio = height / width
+                                        If phNameCollection.Count > 0 Then
 
-                                    With newShapeRange.Item(1)
+                                            Call awinZeichnePhasen(phNameCollection, False, True)
+                                            rng.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
 
-                                        If ratio < .Height / .Width Then
-                                            ' orientieren an width 
-                                            .Width = CSng(width * 0.96)
-                                            .Height = CSng(ratio * .Width)
-                                            ' left anpassen
-                                            .Top = CSng(top + 0.02 * height)
-                                            .Left = CSng(left + 0.98 * (width - .Width) / 2)
+                                            If Not awinSettings.showTimeSpanInPT Then
+
+                                                Try
+                                                    colorrng.Interior.ColorIndex = -4142
+                                                Catch ex1 As Exception
+
+                                                End Try
+                                            End If
+
+
+                                            ' lösche alle Phase Shapes wieder wieder 
+                                            If qualifier <> "" Then
+                                                Call awinDeleteProjectChildShapes(0)
+                                            End If
 
                                         Else
-                                            .Height = CSng(height * 0.96)
-                                            .Width = CSng(.Height / ratio)
-                                            ' top anpassen 
-                                            .Left = CSng(left + 0.02 * width)
-                                            .Top = CSng(top + 0.98 * (height - .Height) / 2)
+                                            ok = False
                                         End If
 
                                     End With
+
+                                    ' set back 
+                                    With appInstance.ActiveWindow
+                                        .GridlineColor = RGB(220, 220, 220)
+                                    End With
+
+                                    If ok Then
+                                        newShapeRange = pptSlide.Shapes.Paste
+
+                                        Dim ratio As Double
+                                        ratio = height / width
+
+                                        With newShapeRange.Item(1)
+
+                                            If ratio < .Height / .Width Then
+                                                ' orientieren an width 
+                                                .Width = CSng(width * 0.96)
+                                                .Height = CSng(ratio * .Width)
+                                                ' left anpassen
+                                                .Top = CSng(top + 0.02 * height)
+                                                .Left = CSng(left + 0.98 * (width - .Width) / 2)
+
+                                            Else
+                                                .Height = CSng(height * 0.96)
+                                                .Width = CSng(.Height / ratio)
+                                                ' top anpassen 
+                                                .Left = CSng(left + 0.02 * width)
+                                                .Top = CSng(top + 0.98 * (height - .Height) / 2)
+                                            End If
+
+                                        End With
+                                    Else
+                                        .TextFrame2.TextRange.Text = "es konnten keine Phasen erkannt werden ... "
+                                    End If
+
+
                                 Else
-                                    .TextFrame2.TextRange.Text = "es konnten keine Phasen erkannt werden ... "
+                                    .TextFrame2.TextRange.Text = "Keine Projekte im angegebenen Zeitraum vorhanden"
                                 End If
-
-
-                            Else
-                                .TextFrame2.TextRange.Text = "Keine Projekte im angegebenen Zeitraum vorhanden"
                             End If
+
 
 
                         Case "Tabelle Zielerreichung"
@@ -5210,6 +5215,13 @@ Public Module testModule
 
     End Sub
 
+    ''' <summary>
+    ''' zeichnet die Projektgrafik mit den Meilensteinen 
+    ''' </summary>
+    ''' <param name="pptslide"></param>
+    ''' <param name="pptShape"></param>
+    ''' <param name="hproj"></param>
+    ''' <remarks></remarks>
     Sub zeichneProjektGrafik(ByRef pptslide As pptNS.Slide, ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt)
 
         Dim rng As xlNS.Range

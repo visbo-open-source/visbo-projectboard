@@ -421,6 +421,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\milestones_icon1.png" />
+    <None Include="Resources\package.png" />
+    <None Include="Resources\navigate_right.png" />
+    <None Include="Resources\navigate_left.png" />
+    <None Include="Resources\move_left.ico" />
     <None Include="Resources\zoom_out.png" />
   </ItemGroup>
   <PropertyGroup>

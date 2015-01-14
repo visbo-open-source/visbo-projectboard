@@ -9945,21 +9945,12 @@ Public Module Projekte
 
             For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
 
-                ' wenn ein Zeitraum gesetzt ist, dann nur anzeigen, was in diesem Zeitraum liegt 
-                If showRangeLeft < showRangeRight And showRangeLeft > 0 Then
-
-                    If deleteOtherShapes Then
-                        singleShp = ShowProjekte.getShape(kvp.Value.name)
-                        Call awinDeleteProjectChildShapes(singleShp, 3)
-                    End If
-
-                    Call zeichnePhasenInProjekt(kvp.Value, nameList, showRangeLeft, showRangeRight, False, msNumber)
-                Else
-                    Call MsgBox("Bitte wählen Sie zunächst einen Zeitraum aus !")
-                    ' von jedem Projekt die Phasen anzeigen 
-                    'Call zeichnePhasenInProjekt(kvp.Value, nameList, False, 0)
+                If deleteOtherShapes Then
+                    singleShp = ShowProjekte.getShape(kvp.Value.name)
+                    Call awinDeleteProjectChildShapes(singleShp, 3)
                 End If
 
+                Call zeichnePhasenInProjekt(kvp.Value, nameList, showRangeLeft, showRangeRight, False, msNumber)
 
             Next
 
@@ -10067,49 +10058,47 @@ Public Module Projekte
 
         Else
 
-            If showRangeRight - showRangeLeft > 0 Then
-                If ShowProjekte.Count > 0 Then
 
-                    ' tue es für alle Projekte in Showprojekte 
+            If ShowProjekte.Count > 0 Then
 
-
-                    Dim todoListe As New SortedList(Of Long, clsProjekt)
-                    Dim key As Long
-
-                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-                        key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
-                        todoListe.Add(key, kvp.Value)
-
-                    Next
+                ' tue es für alle Projekte in Showprojekte 
 
 
-                    For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
+                Dim todoListe As New SortedList(Of Long, clsProjekt)
+                Dim key As Long
 
-                        If deleteOtherShapes Then
-                            singleShp = ShowProjekte.getShape(kvp.Value.name)
-                            Call awinDeleteProjectChildShapes(singleShp, 1)
-                        End If
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                        Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
+                    key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+                    todoListe.Add(key, kvp.Value)
 
-                    Next
+                Next
 
 
-                    If msNumber = 1 Then
-                        If nameList.Count > 1 Then
-                            Call MsgBox("im gewählten Zeitraum gibt es diese Meilensteine nicht")
-                        ElseIf nameList.Count = 1 Then
-                            Call MsgBox("im gewählten Zeitraum gibt es keinen Meilenstein " & nameList.Item(1))
-                        End If
+                For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
+
+                    If deleteOtherShapes Then
+                        singleShp = ShowProjekte.getShape(kvp.Value.name)
+                        Call awinDeleteProjectChildShapes(singleShp, 1)
                     End If
 
-                Else
-                    Call MsgBox("Es sind keine Projekte geladen!")
+                    Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
+
+                Next
+
+
+                If msNumber = 1 Then
+                    If nameList.Count > 1 Then
+                        Call MsgBox("im gewählten Zeitraum gibt es diese Meilensteine nicht")
+                    ElseIf nameList.Count = 1 Then
+                        Call MsgBox("im gewählten Zeitraum gibt es keinen Meilenstein " & nameList.Item(1))
+                    End If
                 End If
+
             Else
-                Call MsgBox("Bitte wählen Sie zunächst einen Zeitraum aus !")
+                Call MsgBox("Es sind keine Projekte geladen!")
             End If
+            
 
         End If
 
@@ -10123,37 +10112,6 @@ Public Module Projekte
 
     End Sub
 
-    Public Sub zeichneMilestones(ByVal nameList As Collection, ByVal farbTyp As Integer, ByVal numberIt As Boolean)
-        ' tue es für alle Projekte in Showprojekte 
-
-
-        Dim todoListe As New SortedList(Of Long, clsProjekt)
-        Dim key As Long
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        Dim formereO As Boolean = enableOnUpdate
-
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-            key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
-            todoListe.Add(key, kvp.Value)
-
-        Next
-
-        Dim msNumber As Integer = 1
-
-        For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
-
-            Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
-
-        Next
-
-        appInstance.EnableEvents = formerEE
-        enableOnUpdate = formereO
-
-    End Sub
 
     ''' <summary>
     ''' bringt alle charts in den Vordergrund, so daß sie nicht von einem neu gezeichneten Projekt überdeckt werden 
@@ -11472,38 +11430,39 @@ Public Module Projekte
                                     End If
 
                                     ' Alt - Start 
-                                    'resultShape = .Shapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
-                                    '                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                                    'vorlagenShape.PickUp()
-                                    'resultShape.Apply()
-
-                                    'With resultShape
-                                    '    .Name = shpName
-                                    '    .Title = cResult.name
-                                    '    .AlternativeText = CInt(PTshty.milestoneN).ToString
-                                    'End With
-                                    ' Alt - Ende
-
-
-                                    ' neu Start 
-                                    vorlagenShape.Copy()
-                                    Dim ws As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
-
-
-                                    ws.Paste()
-                                    Dim ix As Integer = ws.Shapes.Count
-                                    resultShape = ws.Shapes.Item(ix)
+                                    resultShape = .Shapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
+                                                                    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                    vorlagenShape.PickUp()
+                                    resultShape.Apply()
 
                                     With resultShape
-                                        .Left = CSng(left)
-                                        .Top = CSng(top)
-                                        .Width = CSng(width)
-                                        .Height = CSng(height)
-
                                         .Name = shpName
                                         .Title = cResult.name
                                         .AlternativeText = CInt(PTshty.milestoneN).ToString
                                     End With
+                                    ' Alt - Ende
+
+
+                                    ' neu Start
+                                    ' auskommentiert, weil die neue Variante bei Ute zu massien Problemen geführt hat 
+                                    'vorlagenShape.Copy()
+                                    'Dim ws As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+
+
+                                    'ws.Paste()
+                                    'Dim ix As Integer = ws.Shapes.Count
+                                    'resultShape = ws.Shapes.Item(ix)
+
+                                    'With resultShape
+                                    '    .Left = CSng(left)
+                                    '    .Top = CSng(top)
+                                    '    .Width = CSng(width)
+                                    '    .Height = CSng(height)
+
+                                    '    .Name = shpName
+                                    '    .Title = cResult.name
+                                    '    .AlternativeText = CInt(PTshty.milestoneN).ToString
+                                    'End With
 
                                     ' neu Ende
 
