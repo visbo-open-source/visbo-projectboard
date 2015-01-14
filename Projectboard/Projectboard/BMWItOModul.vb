@@ -923,7 +923,13 @@ Module BMWItOModul
 
             With wsName
                 ' Hauptkategorie nicht in RPLAN Export vorhanden  
-                CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+
+                If kvp.Value.businessUnit.Length > 0 Then
+                    CType(.Cells(zeile, spalte), Excel.Range).Value = kvp.Value.businessUnit
+                Else
+                    CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+                End If
+
 
                 ' Name schreiben 
                 CType(.Cells(zeile, spalte + 1), Excel.Range).Value = kvp.Value.name
