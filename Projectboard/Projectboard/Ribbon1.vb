@@ -2261,9 +2261,9 @@ Imports System.Drawing
                                 ' jetzt wird dieses Projekt exportiert ... 
                                 Try
                                     Call awinExportProject(hproj)
-                                    outputString = outputString & hproj.name & " erfolgreich .." & vbLf
+                                    outputString = outputString & hproj.getShapeText & " erfolgreich .." & vbLf
                                 Catch ex As Exception
-                                    outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf & _
+                                    outputString = outputString & hproj.getShapeText & " nicht erfolgreich .." & vbLf & _
                                                     ex.Message & vbLf & vbLf
                                 End Try
 
