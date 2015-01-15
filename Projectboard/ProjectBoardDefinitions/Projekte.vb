@@ -11270,6 +11270,45 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' wird von der WPFPIE Vorage aufgerufen !
+    ''' </summary>
+    ''' <param name="nameList"></param>
+    ''' <param name="farbTyp"></param>
+    ''' <param name="numberIt"></param>
+    ''' <remarks></remarks>
+    Public Sub zeichneMilestones(ByVal nameList As Collection, ByVal farbTyp As Integer, ByVal numberIt As Boolean)
+        ' tue es für alle Projekte in Showprojekte 
+
+
+        Dim todoListe As New SortedList(Of Long, clsProjekt)
+        Dim key As Long
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formereO As Boolean = enableOnUpdate
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+            todoListe.Add(key, kvp.Value)
+
+        Next
+
+        Dim msNumber As Integer = 1
+
+        For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
+
+            Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
+
+        Next
+
+        appInstance.EnableEvents = formerEE
+        enableOnUpdate = formereO
+
+    End Sub
+
 
     ''' <summary>
     ''' zeichnet die Meilensteine eines Projektes
@@ -11434,6 +11473,8 @@ Public Module Projekte
                                                                     Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
                                     vorlagenShape.PickUp()
                                     resultShape.Apply()
+
+                                    resultShape.Rotation = vorlagenShape.Rotation
 
                                     With resultShape
                                         .Name = shpName

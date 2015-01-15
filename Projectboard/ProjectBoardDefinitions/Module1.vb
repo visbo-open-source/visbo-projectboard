@@ -75,6 +75,9 @@ Public Module Module1
     ' Welche Business-Units gibt es ? 
     Public businessUnit As List(Of String)
 
+    ' diese Collection nimmt alle Filter Definitionen auf 
+    Public filterDefinitions As New clsFilterDefinitions
+
     Public DiagramList As New clsDiagramme
     Public awinButtonEvents As New clsAwinEvents
 

@@ -1383,11 +1383,10 @@ Imports System.Drawing
 
 
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
-        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
-
+        'If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+        If ShowProjekte.Count > 0 Then
             With auswahlFormular
                 .Text = "Plan-Elemente visualisieren"
-                .rdbPhases.Checked = True
 
                 .chkbxShowObjects = True
 
@@ -1408,13 +1407,13 @@ Imports System.Drawing
             End With
 
 
-        ElseIf ShowProjekte.Count = 0 Then
+        Else
 
             Call MsgBox("Es sind keine Projekte sichtbar!  ")
 
-        ElseIf showRangeRight - showRangeLeft <= 5 Then
+            'ElseIf showRangeRight - showRangeLeft <= 5 Then
 
-            Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
+            '    Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
 
         End If
 
@@ -1442,7 +1441,6 @@ Imports System.Drawing
 
             With auswahlFormular
                 .Text = "Leistbarkeit analysieren"
-                .rdbPhases.Checked = True
 
                 .chkbxShowObjects = False
                 
@@ -1501,7 +1499,6 @@ Imports System.Drawing
 
                 .einstellungen.Visible = True
                 .Text = "Multiprojekt Reports erzeugen"
-                .rdbPhases.Checked = True
 
                 .chkbxShowObjects = False
 

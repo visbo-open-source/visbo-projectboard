@@ -1032,7 +1032,7 @@ Public Class clsProjekt
             Dim cphase As clsPhase
             Dim noTimeFrame As Boolean
 
-            If von < 0 Or bis < 0 Then
+            If von <= 0 Or bis <= 0 Then
                 noTimeFrame = True
             Else
                 noTimeFrame = False

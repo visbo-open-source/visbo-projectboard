@@ -1,11 +1,105 @@
 ﻿Public Class clsFilter
 
-    Private filterBU As SortedList(Of String, String)
-    Private filterPhase As SortedList(Of String, String)
-    Private filterMilestone As SortedList(Of String, String)
-    Private filterTyp As SortedList(Of String, String)
+
+    Private filterPhase As Collection
+    Private filterMilestone As Collection
+    Private filterRolle As Collection
+    Private filterCost As Collection
+    Private filterTyp As Collection
+    Private filterBU As Collection
     Private _name As String
-    Private _isActive As Boolean
+
+
+    ''' <summary>
+    ''' schreibt/liest die Filter Collection der BUs
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property BUs() As Collection
+        Get
+            BUs = filterBU
+        End Get
+        Set(value As Collection)
+            filterBU = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' schreibt/liest die Filter Collection der Typen
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property Typs() As Collection
+        Get
+            Typs = filterTyp
+        End Get
+        Set(value As Collection)
+            filterTyp = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' schreibt/liest die Filter Collection der Phasen
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property Phases() As Collection
+        Get
+            Phases = filterPhase
+        End Get
+        Set(value As Collection)
+            filterPhase = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' schreibt/liest die Filter Collection der Meilensteine
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property Milestones() As Collection
+        Get
+            Milestones = filterMilestone
+        End Get
+        Set(value As Collection)
+            filterMilestone = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' schreibt/liest die Filter Collection der Rolle
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property Roles() As Collection
+        Get
+            Roles = filterRolle
+        End Get
+        Set(value As Collection)
+            filterRolle = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' schreibt/liest die Filter Collection der Kostenart
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property Costs() As Collection
+        Get
+            Costs = filterCost
+        End Get
+        Set(value As Collection)
+            filterCost = value
+        End Set
+    End Property
+
 
     ''' <summary>
     ''' liest bzw. schreibt den Namen des filters 
@@ -28,14 +122,7 @@
         End Set
     End Property
 
-    Public Property isActive As Boolean
-        Get
-            isActive = _isActive
-        End Get
-        Set(value As Boolean)
-            _isActive = value
-        End Set
-    End Property
+    
 
     ''' <summary>
     ''' fügt dem Business Unit Filter einen Eintrag hinzu
@@ -46,7 +133,7 @@
     ''' <remarks></remarks>
     Public Sub addBU(ByVal businessUnit As String)
 
-        If filterBU.ContainsKey(businessUnit) Then
+        If filterBU.Contains(businessUnit) Then
             ' nichts tun ..
         Else
             filterBU.Add(businessUnit, businessUnit)
@@ -63,7 +150,7 @@
     ''' <remarks></remarks>
     Public Sub removeBU(ByVal businessUnit As String)
 
-        If filterBU.ContainsKey(businessUnit) Then
+        If filterBU.Contains(businessUnit) Then
             filterBU.Remove(businessUnit)
         Else
             ' nichts tun ..
@@ -94,75 +181,119 @@
             Dim ix As Integer
 
 
-            If _isActive Then
 
-                ' Überprüfe BU 
-                If filterBU.Count > 0 Then
-                    If hproj.businessUnit.Trim.Length > 0 Then
-                        If filterBU.ContainsKey(hproj.businessUnit.Trim) Then
-                            containsBU = True
-                        Else
-                            containsBU = False
-                        End If
+            ' Überprüfe BU 
+            If filterBU.Count > 0 Then
+                If hproj.businessUnit.Trim.Length > 0 Then
+                    If filterBU.Contains(hproj.businessUnit.Trim) Then
+                        containsBU = True
                     Else
                         containsBU = False
                     End If
                 Else
-                    containsBU = True
+                    containsBU = False
                 End If
+            Else
+                containsBU = True
+            End If
 
-                stillOK = containsBU
+            stillOK = containsBU
 
-                If stillOK Then
-                    If filterTyp.Count > 0 Then
-                        If hproj.VorlagenName.Trim.Length > 0 Then
-                            If filterTyp.ContainsKey(hproj.VorlagenName.Trim) Then
-                                containsTyp = True
-                            Else
-                                containsTyp = False
-                            End If
+            If stillOK Then
+                If filterTyp.Count > 0 Then
+                    If hproj.VorlagenName.Trim.Length > 0 Then
+                        If filterTyp.Contains(hproj.VorlagenName.Trim) Then
+                            containsTyp = True
                         Else
                             containsTyp = False
                         End If
                     Else
-                        containsTyp = True
+                        containsTyp = False
                     End If
-                    stillOK = containsTyp
+                Else
+                    containsTyp = True
                 End If
+                stillOK = containsTyp
+            End If
 
-                If stillOK Then
-                    ' Überprüfen Meilensteine und Phasen
-                    If filterMilestone.Count = 0 Then
+            If stillOK Then
+                ' Überprüfen Meilensteine und Phasen
+                If filterMilestone.Count = 0 Then
 
-                        If filterPhase.Count = 0 Then
-                            containsMS = True
-                        Else
-                            containsMS = False
-                        End If
-
+                    If filterPhase.Count = 0 Then
+                        containsMS = True
                     Else
                         containsMS = False
+                    End If
+
+                Else
+                    containsMS = False
+                    ix = 1
+
+                    While ix <= filterMilestone.Count And Not containsMS
+                        tmpMilestone = hproj.getMilestone(CStr(filterMilestone.Item(ix)))
+
+                        If IsNothing(tmpMilestone) Then
+
+                            ix = ix + 1
+
+                        Else
+
+                            If showRangeLeft > 0 And showRangeRight > 0 Then
+                                ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
+                                Dim tmpMsDate As Integer = getColumnOfDate(tmpMilestone.getDate)
+                                If tmpMsDate >= showRangeLeft And tmpMsDate <= showRangeRight Then
+                                    containsMS = True
+                                Else
+                                    ix = ix + 1
+                                End If
+                            Else
+                                containsMS = True
+                            End If
+
+                        End If
+
+                    End While
+
+                End If
+
+                ' jetzt werden die Phasen überprüft, aber nur , wenn nicht containsMS bereits true ist 
+                containsPH = False
+
+                If Not containsMS Then
+                    ' prüfe Phasen ; das wird mit Not Stillok geprüft, da es um Meilensteine oder Phasen geht 
+                    ' wenn es bereits einen der Meilensteine enthält, ist nicht mehr auf Phasen zu prüfen 
+                    If filterPhase.Count = 0 Then
+                        containsPH = False
+                    Else
                         ix = 1
 
-                        While ix <= filterMilestone.Count And Not containsMS
-                            tmpMilestone = hproj.getMilestone(filterMilestone.ElementAt(ix - 1).Key)
+                        While ix <= filterPhase.Count And Not containsPH
+                            tmpPhase = hproj.getPhase(CStr(filterPhase.Item(ix)))
 
-                            If IsNothing(tmpMilestone) Then
+                            If IsNothing(tmpPhase) Then
 
                                 ix = ix + 1
 
                             Else
 
                                 If showRangeLeft > 0 And showRangeRight > 0 Then
-                                    ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
-                                    Dim tmpMsDate As Integer = getColumnOfDate(tmpMilestone.getDate)
-                                    If tmpMsDate >= showRangeLeft And tmpMsDate <= showRangeRight Then
-                                        containsMS = True
+
+                                    Dim leftDate As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                    Dim rightdate As Date = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
+                                    Dim tmpPhStart As Date = tmpPhase.getStartDate
+                                    Dim tmpPhEnde As Date = tmpPhase.getEndDate
+
+                                    If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or _
+                                        DateDiff(DateInterval.Day, tmpPhStart, rightdate) < 0 Then
+                                        containsPH = False
                                     Else
-                                        ix = ix + 1
+                                        containsPH = True
                                     End If
+                                    ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
+
                                 Else
-                                    containsMS = True
+                                    containsPH = True
                                 End If
 
                             End If
@@ -170,60 +301,11 @@
                         End While
 
                     End If
-
-                    ' jetzt werden die Phasen überprüft, aber nur , wenn nicht containsMS bereits true ist 
-                    containsPH = False
-
-                    If Not containsMS Then
-                        ' prüfe Phasen ; das wird mit Not Stillok geprüft, da es um Meilensteine oder Phasen geht 
-                        ' wenn es bereits einen der Meilensteine enthält, ist nicht mehr auf Phasen zu prüfen 
-                        If filterPhase.Count = 0 Then
-                            containsPH = False
-                        Else
-                            ix = 1
-
-                            While ix <= filterPhase.Count And Not containsPH
-                                tmpPhase = hproj.getPhase(filterPhase.ElementAt(ix - 1).Key)
-
-                                If IsNothing(tmpPhase) Then
-
-                                    ix = ix + 1
-
-                                Else
-
-                                    If showRangeLeft > 0 And showRangeRight > 0 Then
-
-                                        Dim leftDate As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
-                                        Dim rightdate As Date = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
-                                        Dim tmpPhStart As Date = tmpPhase.getStartDate
-                                        Dim tmpPhEnde As Date = tmpPhase.getEndDate
-
-                                        If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or _
-                                            DateDiff(DateInterval.Day, tmpPhStart, rightdate) < 0 Then
-                                            containsPH = False
-                                        Else
-                                            containsPH = True
-                                        End If
-                                        ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
-
-                                    Else
-                                        containsPH = True
-                                    End If
-
-                                End If
-
-                            End While
-
-                        End If
-                    End If
-
-
-                    stillOK = containsMS Or containsPH
-
                 End If
 
-            Else
-                stillOK = True
+
+                stillOK = containsMS Or containsPH
+
             End If
 
 
@@ -232,10 +314,69 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' kopiert eine Collection 
+    ''' </summary>
+    ''' <param name="original"></param>
+    ''' <param name="kopie"></param>
+    ''' <remarks></remarks>
+    Private Sub copyCollections(ByVal original As Collection, ByRef kopie As Collection)
+        Dim i As Integer
+        Dim element As String
+        If Not IsNothing(original) Then
+            For i = 1 To original.Count
+                element = CStr(original.Item(i))
+                kopie.Add(element, element)
+            Next
+        End If
+
+    End Sub
+
     Sub New()
-        filterBU = New SortedList(Of String, String)
-        filterPhase = New SortedList(Of String, String)
-        filterMilestone = New SortedList(Of String, String)
-        filterTyp = New SortedList(Of String, String)
+        filterBU = New Collection
+        filterPhase = New Collection
+        filterMilestone = New Collection
+        filterTyp = New Collection
+        _name = "XXX"
+    End Sub
+
+    ''' <summary>
+    ''' legt einen neuen filter an unter Angabe der bekannten Filter Collections
+    ''' Eingabe Parameter kann auch Nothing sein 
+    ''' </summary>
+    ''' <param name="kennung">Name des Filters</param>
+    ''' <param name="fBU">filter BU</param>
+    ''' <param name="fTyp">filter Typ</param>
+    ''' <param name="fPhase">filter Phase</param>
+    ''' <param name="fMilestone">filter Meilenstein</param>
+    ''' <param name="fRolle">filter Rolle</param>
+    ''' <param name="fCost">filter Cost</param>
+    ''' <remarks></remarks>
+    Sub New(ByVal kennung As String, _
+                ByVal fBU As Collection, ByVal fTyp As Collection, _
+                ByVal fPhase As Collection, ByVal fMilestone As Collection, _
+                ByVal fRolle As Collection, ByVal fCost As Collection)
+
+        filterPhase = New Collection
+        Call copyCollections(fPhase, filterPhase)
+
+        filterMilestone = New Collection
+        Call copyCollections(fMilestone, filterMilestone)
+
+        filterRolle = New Collection
+        Call copyCollections(fRolle, filterRolle)
+        
+        filterCost = New Collection
+        Call copyCollections(fCost, filterCost)
+
+        filterBU = New Collection
+        Call copyCollections(fBU, filterBU)
+        
+        filterTyp = New Collection
+        Call copyCollections(fTyp, filterTyp)
+        
+
+        name = kennung
+
     End Sub
 End Class
