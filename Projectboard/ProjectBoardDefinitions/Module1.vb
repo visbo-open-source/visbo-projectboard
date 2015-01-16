@@ -44,7 +44,7 @@ Public Module Module1
     Public selectedProjekte As New clsProjekte
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
-    Public ImportProjekte As New clsProjekte
+    Public ImportProjekte As New clsProjekteAlle
     'Public DeletedProjekte As New clsProjekte
     Public projectConstellations As New clsConstellations
     Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 

@@ -10046,7 +10046,7 @@ Public Module Projekte
                                 pName = hproj.name
                                 Call zeichneResultMilestonesInProjekt(hproj, nameList, farbTyp, 0, 0, False, msNumber, False)
                             Catch ex As Exception
-
+                                Dim a As Integer = 0
                             End Try
 
 
@@ -11472,43 +11472,48 @@ Public Module Projekte
                                     End If
 
                                     ' Alt - Start 
-                                    'resultShape = .Shapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
-                                    '                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                                    'vorlagenShape.PickUp()
-                                    'resultShape.Apply()
-
-                                    'With resultShape
-                                    '    .Name = shpName
-                                    '    .Title = cResult.name
-                                    '    .AlternativeText = CInt(PTshty.milestoneN).ToString
-                                    'End With
-                                    ' Alt - Ende
-
-
-                                    ' neu Start 
-                                    vorlagenShape.Copy()
-                                    Dim ws As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
-
-
-                                    ws.Paste()
-                                    Dim ix As Integer = ws.Shapes.Count
-                                    resultShape = ws.Shapes.Item(ix)
-
-                                    ' ur: 14.01.2015 Versuch Absturz zu vermeiden
-                                    ' vorlagenShape.Delete()
+                                    resultShape = .Shapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
+                                                                    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                    vorlagenShape.PickUp()
+                                    resultShape.Apply()
 
                                     With resultShape
-                                        .Left = CSng(left)
-                                        .Top = CSng(top)
-                                        .Width = CSng(width)
-                                        .Height = CSng(height)
-
                                         .Name = shpName
                                         .Title = cResult.name
                                         .AlternativeText = CInt(PTshty.milestoneN).ToString
                                     End With
+                                    ' Alt - Ende
 
-                                    ' neu Ende
+                                    ' Neu - Anfang: gibt aber Fehler auf Ute's Laptop
+                                    ' '' ''Call My.Computer.Clipboard.Clear()
+                                    '' '' '' neu Start 
+                                    ' '' ''vorlagenShape.Copy()
+                                    ' '' ''Dim ws As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+
+                                    ' '' ''Try
+                                    ' '' ''    ws.Paste()
+                                    ' '' ''Catch ex As Exception
+                                    ' '' ''    Dim a As Integer = 0
+                                    ' '' ''End Try
+
+                                    ' '' ''Dim ix As Integer = ws.Shapes.Count
+                                    ' '' ''resultShape = ws.Shapes.Item(ix)
+
+                                    '' '' '' ur: 14.01.2015 Versuch Absturz zu vermeiden
+                                    '' '' '' vorlagenShape.Delete()
+
+                                    ' '' ''With resultShape
+                                    ' '' ''    .Left = CSng(left)
+                                    ' '' ''    .Top = CSng(top)
+                                    ' '' ''    .Width = CSng(width)
+                                    ' '' ''    .Height = CSng(height)
+
+                                    ' '' ''    .Name = shpName
+                                    ' '' ''    .Title = cResult.name
+                                    ' '' ''    .AlternativeText = CInt(PTshty.milestoneN).ToString
+                                    ' '' ''End With
+
+                                    ' Neu - Ende: gibt aber Fehler auf Ute's Laptop
 
                                     msNumber = msNumber + 1
                                     If numberIt Then
@@ -16331,7 +16336,9 @@ Public Module Projekte
     Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date)
 
         Dim hproj As New clsProjekt, cproj As New clsProjekt
-        Dim pname As String, vglName As String
+        Dim fullName As String, vglName As String
+        Dim pname As String
+
 
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
@@ -16352,16 +16359,18 @@ Public Module Projekte
 
         Dim ok As Boolean = True
         ' jetzt werden alle importierten Projekte bearbeitet 
-        For Each pname In myCollection
+        For Each fullName In myCollection
+
 
             ok = True
 
             Try
-                hproj = ImportProjekte.getProject(pname)
+                hproj = ImportProjekte.getProject(fullName)
                 pname = hproj.name
 
             Catch ex As Exception
-                Call MsgBox("Projekt " & pname & " ist kein gültiges Projekt ... es wird ignoriert ...")
+                Call MsgBox("Projekt " & fullName & " ist kein gültiges Projekt ... es wird ignoriert ...")
+                pname = ""
                 ok = False
             End Try
 
@@ -16577,8 +16586,9 @@ Public Module Projekte
                 If ok Then
 
                     Try
-                        ShowProjekte.Add(hproj)
+
                         AlleProjekte.Add(vglName, hproj)
+                        ShowProjekte.Add(hproj)
 
                         ' ggf Bedarfe anzeigen 
                         If roentgenBlick.isOn Then
@@ -16598,7 +16608,8 @@ Public Module Projekte
                         Call awinNeuZeichnenDiagramme(2)
 
                     Catch ex As Exception
-                        Call MsgBox("Fehler bei Eintrag Showprojekte / Import " & hproj.name)
+                        'ur:16.1.2015: Dies ist kein Fehler sondern gewollt: 
+                        'Call MsgBox("Fehler bei Eintrag Showprojekte / Import " & hproj.name)
                     End Try
 
                 End If

@@ -2047,8 +2047,9 @@ Imports System.Drawing
                         Call awinImportProject(hproj, Nothing, False, importDate)
 
                         Try
-                            ImportProjekte.Add(hproj)
-                            myCollection.Add(hproj.name)
+                            Dim keyStr As String = calcProjektKey(hproj)
+                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                            myCollection.Add(calcProjektKey(hproj))
                         Catch ex2 As Exception
                             Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
                         End Try

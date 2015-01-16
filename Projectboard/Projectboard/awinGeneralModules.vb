@@ -1590,7 +1590,7 @@ Public Module awinGeneralModules
 
 
                     ' jetzt muss das Projekt eingetragen werden 
-                    ImportProjekte.Add(hproj)
+                    ImportProjekte.Add(calcProjektKey(hproj), hproj)
                     myCollection.Add(hproj.name)
 
 
@@ -1697,8 +1697,8 @@ Public Module awinGeneralModules
                                                          0, 0, businessUnit, description)
                             If Not hproj Is Nothing Then
                                 Try
-                                    ImportProjekte.Add(hproj)
-                                    myCollection.Add(hproj.name)
+                                    ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                                    myCollection.Add(calcProjektKey(hproj))
                                 Catch ex As Exception
 
                                 End Try
