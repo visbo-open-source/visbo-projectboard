@@ -67,7 +67,7 @@ Partial Class frmShowPlanElements
         Me.ListBox1.ItemHeight = 16
         Me.ListBox1.Location = New System.Drawing.Point(12, 109)
         Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple
+        Me.ListBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
         Me.ListBox1.Size = New System.Drawing.Size(275, 196)
         Me.ListBox1.Sorted = True
         Me.ListBox1.TabIndex = 0
@@ -76,7 +76,7 @@ Partial Class frmShowPlanElements
         '
         Me.OKButton.Location = New System.Drawing.Point(162, 384)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(75, 23)
+        Me.OKButton.Size = New System.Drawing.Size(113, 23)
         Me.OKButton.TabIndex = 9
         Me.OKButton.Text = "Anzeigen"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -84,11 +84,11 @@ Partial Class frmShowPlanElements
         'AbbrButton
         '
         Me.AbbrButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.AbbrButton.Location = New System.Drawing.Point(351, 384)
+        Me.AbbrButton.Location = New System.Drawing.Point(315, 384)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(75, 23)
+        Me.AbbrButton.Size = New System.Drawing.Size(113, 23)
         Me.AbbrButton.TabIndex = 10
-        Me.AbbrButton.Text = "Abbrechen"
+        Me.AbbrButton.Text = "Zurücksetzen"
         Me.AbbrButton.UseVisualStyleBackColor = True
         '
         'filterBox
@@ -249,7 +249,7 @@ Partial Class frmShowPlanElements
         Me.ListBox2.ItemHeight = 16
         Me.ListBox2.Location = New System.Drawing.Point(312, 109)
         Me.ListBox2.Name = "ListBox2"
-        Me.ListBox2.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple
+        Me.ListBox2.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
         Me.ListBox2.Size = New System.Drawing.Size(275, 196)
         Me.ListBox2.Sorted = True
         Me.ListBox2.TabIndex = 23

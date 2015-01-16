@@ -45,7 +45,7 @@ Public Module Module1
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
     Public ImportProjekte As New clsProjekte
-    'Public DeletedProjekte As New clsProjekte
+
     Public projectConstellations As New clsConstellations
     Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
@@ -81,8 +81,7 @@ Public Module Module1
     Public DiagramList As New clsDiagramme
     Public awinButtonEvents As New clsAwinEvents
 
-    ' Variable gibt ab, ob die Time Zone, die auf Diagramme wirkt, gezeigt werden soll oder nicht
-    Public showtimezone As Boolean
+   
 
 
     ' damit ist das Formular Milestone / Status / Phase überall verfügbar
@@ -242,6 +241,7 @@ Public Module Module1
         visualisieren = 0
         leistbarkeitsAnalyse = 1
         multiprojektReport = 2
+        filterdefinieren = 3
     End Enum
 
 
@@ -288,7 +288,7 @@ Public Module Module1
     End Enum
 
     ' wird in der Treeview für Laden, Löschen, Aktivieren von TreeView Formularen benötigt 
-    Public Enum PTtvactions
+    Public Enum PTTvActions
         delFromDB = 0
         delFromSession = 1
         loadPVS = 2
@@ -390,85 +390,78 @@ Public Module Module1
 
         With appInstance
             .EnableEvents = True
+            If .ScreenUpdating = False Then
+                'Call MsgBox ("Screen Update !")
+                .ScreenUpdating = True
+            End If
         End With
 
-        ' Konsistenzchecks durchführen
-
-        'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-        '    If Not kvp.Value.isConsistent Then
-        '        Call MsgBox("nicht konsistent: " & kvp.Value.name)
-        '    End If
-
-        'Next
-
-
     End Sub
 
 
 
-    Sub awinLoescheProjekt(pname As String)
-        '
-        'Prozedur löscht in Ws Ressourcen alle zeilen, die den Projektnamen enthalten
-        '
-        '
-        'Dim zeile As Integer, endpunkt As Integer
-        Dim hproj As clsProjekt
+    'Sub awinLoescheProjekt(pname As String)
+    '    '
+    '    'Prozedur löscht in Ws Ressourcen alle zeilen, die den Projektnamen enthalten
+    '    '
+    '    '
+    '    'Dim zeile As Integer, endpunkt As Integer
+    '    Dim hproj As clsProjekt
 
-        Dim tfz As Integer, tfs As Integer
-        Dim key As String
-
-
-
-        ' prüfen, ob es in der ShowProjektListe ist ...
-        If ShowProjekte.contains(pname) Then
-
-            ' Shape wird gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
-            Call clearProjektinPlantafel(pname)
-
-
-            Try
-                hproj = ShowProjekte.getProject(pname)
-                key = calcProjektKey(hproj)
-                'Try
-                '    DeletedProjekte.Add(hproj)
-                'Catch ex As Exception
-                '    ' nichts tun, dann wurde das eben schon mal gelöscht ..
-                'End Try
-
-            Catch ex As Exception
-                Call MsgBox(" Fehler in Delete " & pname & " , Modul: awinLoescheProjekt")
-                Exit Sub
-            End Try
+    '    Dim tfz As Integer, tfs As Integer
+    '    Dim key As String
 
 
 
-            With hproj
-                tfz = .tfZeile
-                tfs = .tfspalte
-            End With
+    '    ' prüfen, ob es in der ShowProjektListe ist ...
+    '    If ShowProjekte.contains(pname) Then
+
+    '        ' Shape wird gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
+    '        Call clearProjektinPlantafel(pname)
 
 
-            ShowProjekte.Remove(pname)
-            AlleProjekte.Remove(key)
+    '        Try
+    '            hproj = ShowProjekte.getProject(pname)
+    '            key = calcProjektKey(hproj)
+    '            'Try
+    '            '    DeletedProjekte.Add(hproj)
+    '            'Catch ex As Exception
+    '            '    ' nichts tun, dann wurde das eben schon mal gelöscht ..
+    '            'End Try
 
-
-            'Dim abstand As Integer ' eigentlich nur Dummy Variable, wird aber in Tabelle2 benötigt ...
-            'Call awinClkReset(abstand)
-
-            ' ein Projekt wurde gelöscht bzw aus Showprojekte entfernt  - typus = 3
-            Call awinNeuZeichnenDiagramme(3)
-
-
-
-        Else
-            Call MsgBox("Projekt " & pname & " wurde nicht gefunden")
-        End If
-
+    '        Catch ex As Exception
+    '            Call MsgBox(" Fehler in Delete " & pname & " , Modul: awinLoescheProjekt")
+    '            Exit Sub
+    '        End Try
 
 
 
-    End Sub
+    '        With hproj
+    '            tfz = .tfZeile
+    '            tfs = .tfspalte
+    '        End With
+
+
+    '        ShowProjekte.Remove(pname)
+    '        AlleProjekte.Remove(key)
+
+
+    '        'Dim abstand As Integer ' eigentlich nur Dummy Variable, wird aber in Tabelle2 benötigt ...
+    '        'Call awinClkReset(abstand)
+
+    '        ' ein Projekt wurde gelöscht bzw aus Showprojekte entfernt  - typus = 3
+    '        Call awinNeuZeichnenDiagramme(3)
+
+
+
+    '    Else
+    '        Call MsgBox("Projekt " & pname & " wurde nicht gefunden")
+    '    End If
+
+
+
+
+    'End Sub
 
     '
     ' prüft , ob übergebenes Diagramm ein Ergebnis Diagramm ist - in index steht ggf als Ergebnis die entsprechende Nummer; 0 wenn es kein Ergebnis Diagramm ist

@@ -12,7 +12,14 @@ Public Class frmShowPlanElements
     Friend chkbxShowObjects As Boolean
     Friend chkbxCreateCharts As Boolean
 
-    Private existingNames As New Collection
+
+    Private allMilestones As New Collection
+    Private allPhases As New Collection
+    Private allCosts As New Collection
+    Private allRoles As New Collection
+    Private allBUs As New Collection
+    Private allTyps As New Collection
+
 
     Private selectedMilestones As New Collection
     Private selectedPhases As New Collection
@@ -243,6 +250,7 @@ Public Class frmShowPlanElements
 
         ElseIf Me.menuOption = PTmenue.leistbarkeitsAnalyse Then
 
+            Dim myCollection As New Collection
 
             If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
                     Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
@@ -321,6 +329,8 @@ Public Class frmShowPlanElements
                 Call MsgBox("bitte mindestens ein Element aus einer der Kategorien selektieren  ")
             End If
 
+        ElseIf menuOption = PTmenue.filterdefinieren Then
+
         Else
 
             Call MsgBox("noch nicht unterstützt")
@@ -350,6 +360,7 @@ Public Class frmShowPlanElements
     ''' <remarks></remarks>
     Private Sub rdbPhases_CheckedChanged(sender As Object, e As EventArgs) Handles rdbPhases.CheckedChanged
 
+        Dim i As Integer
         statusLabel.Text = ""
 
         If Me.rdbPhases.Checked Then
@@ -357,14 +368,19 @@ Public Class frmShowPlanElements
             headerLine.Text = "Phasen"
             ListBox1.Items.Clear()
             ListBox2.Items.Clear()
-            existingNames.Clear()
             filterBox.Text = ""
 
             chkbxOneChart.Text = "Alles in einem Chart"
 
-            ' showModePortfolio kann nur gesetzt sein, wenn es auch einen selektierten Zeitraum gibt 
-            existingNames = ShowProjekte.getPhaseNames
-            Call rebuildFormerState(PTauswahlTyp.phase, existingNames)
+
+            If allPhases.Count = 0 Then
+                For i = 1 To PhaseDefinitions.Count
+                    allPhases.Add(CStr(PhaseDefinitions.getPhaseDef(i).name))
+                Next
+            End If
+
+
+            Call rebuildFormerState(PTauswahlTyp.phase)
 
 
         Else
@@ -390,20 +406,25 @@ Public Class frmShowPlanElements
             headerLine.Text = "Meilensteine"
             ListBox1.Items.Clear()
             ListBox2.Items.Clear()
-            existingNames.Clear()
+
             filterBox.Text = ""
 
             chkbxOneChart.Text = "Alles in einem Chart"
 
-            existingNames = ShowProjekte.getMilestoneNames
-            Call rebuildFormerState(PTauswahlTyp.meilenstein, existingNames)
+            If allMilestones.Count = 0 Then
+
+                For i As Integer = 1 To MilestoneDefinitions.Count
+                    allMilestones.Add(MilestoneDefinitions.elementAt(i - 1).name)
+                Next
+            End If
+
+            
+            Call rebuildFormerState(PTauswahlTyp.meilenstein)
 
 
 
         Else
-            ' Merken, was ggf. das Filterkriterium war 
-            'sKeyMilestones = filterBox.Text
-
+            
             ' Merken welches die selektierten Phasen waren 
             selectedMilestones.Clear()
             For Each element As String In ListBox2.Items
@@ -434,15 +455,18 @@ Public Class frmShowPlanElements
                 headerLine.Text = "Rollen"
                 ListBox1.Items.Clear()
                 ListBox2.Items.Clear()
-                existingNames.Clear()
                 filterBox.Text = ""
                 chkbxOneChart.Text = "Alles in einem Chart"
 
-                For i = 1 To RoleDefinitions.Count
-                    existingNames.Add(RoleDefinitions.getRoledef(i).name)
-                Next
 
-                Call rebuildFormerState(PTauswahlTyp.Rolle, existingNames)
+                If allRoles.Count = 0 Then
+                    For i = 1 To RoleDefinitions.Count
+                        allRoles.Add(RoleDefinitions.getRoledef(i).name)
+                    Next
+                End If
+
+
+                Call rebuildFormerState(PTauswahlTyp.Rolle)
 
 
 
@@ -480,20 +504,19 @@ Public Class frmShowPlanElements
                 headerLine.Text = "Kostenarten"
                 ListBox1.Items.Clear()
                 ListBox2.Items.Clear()
-                existingNames.Clear()
                 filterBox.Text = ""
                 chkbxOneChart.Text = "Alles in einem Chart"
 
-                For i = 1 To CostDefinitions.Count
-                    existingNames.Add(CostDefinitions.getCostdef(i).name)
-                Next
+                If allCosts.Count = 0 Then
+                    For i = 1 To CostDefinitions.Count
+                        allCosts.Add(CostDefinitions.getCostdef(i).name)
+                    Next
+                End If
 
-                Call rebuildFormerState(PTauswahlTyp.Kostenart, existingNames)
+                Call rebuildFormerState(PTauswahlTyp.Kostenart)
 
             Else
-                ' Merken, was ggf. das Filterkriterium war 
-                'sKeyCosts = filterBox.Text
-
+                
                 ' Merken welches die selektierten Phasen waren 
                 selectedCosts.Clear()
                 'For Each element As String In ListBox1.SelectedItems
@@ -526,14 +549,15 @@ Public Class frmShowPlanElements
                 headerLine.Text = "Business Units"
                 ListBox1.Items.Clear()
                 ListBox2.Items.Clear()
-                existingNames.Clear()
                 filterBox.Text = ""
 
-                For i = 1 To businessUnit.Count
-                    existingNames.Add(businessUnit.ElementAt(i - 1))
-                Next
-
-                Call rebuildFormerState(PTauswahlTyp.BusinessUnit, existingNames)
+                If allBUs.Count = 0 Then
+                    For i = 1 To businessUnit.Count
+                        allBUs.Add(businessUnit.ElementAt(i - 1))
+                    Next
+                End If
+                
+                Call rebuildFormerState(PTauswahlTyp.BusinessUnit)
 
             Else
 
@@ -564,15 +588,18 @@ Public Class frmShowPlanElements
                 headerLine.Text = "Projektvorlagen / Generik"
                 ListBox1.Items.Clear()
                 ListBox2.Items.Clear()
-                existingNames.Clear()
+
                 filterBox.Text = ""
                 chkbxOneChart.Text = "Alles in einem Chart"
 
-                For i = 1 To Projektvorlagen.Count
-                    existingNames.Add(Projektvorlagen.Liste.ElementAt(i - 1).Key)
-                Next
+                If allTyps.Count = 0 Then
+                    For i = 1 To Projektvorlagen.Count
+                        allTyps.Add(Projektvorlagen.Liste.ElementAt(i - 1).Key)
+                    Next
+                End If
+                
 
-                Call rebuildFormerState(PTauswahlTyp.ProjektTyp, existingNames)
+                Call rebuildFormerState(PTauswahlTyp.ProjektTyp)
 
             Else
 
@@ -649,15 +676,31 @@ Public Class frmShowPlanElements
     Private Sub filterBox_TextChanged(sender As Object, e As EventArgs) Handles filterBox.TextChanged
 
         Dim suchstr As String = filterBox.Text
+        Dim currentNames As New Collection
+
+        If rdbPhases.Checked Then
+            currentNames = allPhases
+        ElseIf rdbMilestones.Checked Then
+            currentNames = allMilestones
+        ElseIf rdbRoles.Checked Then
+            currentNames = allRoles
+        ElseIf rdbCosts.Checked Then
+            currentNames = allCosts
+        ElseIf rdbBU.Checked Then
+            currentNames = allBUs
+        ElseIf rdbTyp.Checked Then
+            currentNames = allTyps
+        End If
+
 
         If filterBox.Text = "" Then
             ListBox1.Items.Clear()
-            For Each s As String In existingNames
+            For Each s As String In currentNames
                 ListBox1.Items.Add(s)
             Next
         Else
             ListBox1.Items.Clear()
-            For Each s As String In existingNames
+            For Each s As String In currentNames
                 If s.Contains(suchstr) Then
                     ListBox1.Items.Add(s)
                 End If
@@ -741,55 +784,50 @@ Public Class frmShowPlanElements
 
     ''' <summary>
     ''' stellt den vorherigen Zustand wieder her: welche Werte waren bereits für die betreffende 
-    ''' Kategorie ausgewählt 
+    ''' Kategorie ausgewählt
+    ''' dabei wird auf die in dieser Klasse definierten Variablen selectedphases, allphases, ... zugegriffen 
     ''' </summary>
     ''' <param name="typ"></param>
-    ''' <param name="listOfNames"></param>
     ''' <remarks></remarks>
-    Private Sub rebuildFormerState(ByVal typ As Integer, ByVal listOfNames As Collection)
+    Private Sub rebuildFormerState(ByVal typ As Integer)
 
         'Dim searchkey As String = ""
         Dim tmpCollection As New Collection
         Dim i As Integer
+        Dim listOfNames As New Collection
 
         Select Case typ
             Case PTauswahlTyp.phase
                 'searchkey = sKeyPhases
                 tmpCollection = selectedPhases
+                listOfNames = allPhases
 
             Case PTauswahlTyp.meilenstein
                 'searchkey = sKeyMilestones
                 tmpCollection = selectedMilestones
+                listOfNames = allMilestones
 
             Case PTauswahlTyp.Rolle
                 'searchkey = sKeyRoles
                 tmpCollection = selectedRoles
+                listOfNames = allRoles
 
             Case PTauswahlTyp.Kostenart
                 'searchkey = sKeyCosts
                 tmpCollection = selectedCosts
+                listOfNames = allCosts
 
             Case PTauswahlTyp.BusinessUnit
                 tmpCollection = selectedBUs
+                listOfNames = allBUs
 
             Case PTauswahlTyp.ProjektTyp
                 tmpCollection = selectedTyps
+                listOfNames = allTyps
 
         End Select
 
-        'If searchkey.Length > 0 Then
 
-        '    For Each s As String In listOfNames
-        '        If s.Contains(searchkey) Then
-        '            ListBox1.Items.Add(s)
-        '        End If
-        '    Next
-
-        'Else
-        '    For i = 1 To listOfNames.Count
-        '        ListBox1.Items.Add(listOfNames.Item(i))
-        '    Next
-        'End If
 
         ' Filter Box Test setzen 
         For i = 1 To listOfNames.Count
@@ -801,7 +839,6 @@ Public Class frmShowPlanElements
         ' wenn ja, dann werden diese Items in Listbox2 dargestellt 
         For Each element As String In tmpCollection
             ListBox2.Items.Add(element)
-            'ListBox1.SelectedItem = element
         Next
     End Sub
 
@@ -918,9 +955,14 @@ Public Class frmShowPlanElements
     Private Sub removeButton_Click(sender As Object, e As EventArgs) Handles removeButton.Click
         Dim i As Integer
         Dim element As Object
+        Dim removeCollection As New Collection
 
         For i = 1 To ListBox2.SelectedItems.Count
             element = ListBox2.SelectedItems.Item(i - 1)
+            removeCollection.Add(element)
+        Next
+
+        For Each element In removeCollection
             ListBox2.Items.Remove(element)
         Next
 
@@ -952,17 +994,21 @@ Public Class frmShowPlanElements
         If chkbxOneChart.Checked = True Then
 
 
-            ' alles in einem Chart anzeigen 
+            ' alles in einem Chart anzeigen
+            myCollection = New Collection
+            For Each element As String In selCollection
+                myCollection.Add(element, element)
+            Next
 
             repObj = Nothing
-            Call awinCreateprcCollectionDiagram(selCollection, repObj, chtop, chleft,
+            Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
                                                               chWidth, chHeight, False, chTyp, False)
 
             chtop = chtop + 5
             chleft = chleft + 7
         Else
             ' für jedes ITEM ein eigenes Chart machen
-            For Each element As String In selectedPhases
+            For Each element As String In selCollection
                 ' es muss jedesmal eine neue Collection erzeugt werden - die Collection wird in DiagramList gemerkt
                 ' wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
                 myCollection = New Collection
@@ -1042,4 +1088,11 @@ Public Class frmShowPlanElements
 
     End Sub
 
+    Private Sub repVorlagenDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles repVorlagenDropbox.SelectedIndexChanged
+
+        If menuOption = PTmenue.filterdefinieren Then
+            ' es wurde ein anderer Filter gewählt ... 
+        End If
+
+    End Sub
 End Class

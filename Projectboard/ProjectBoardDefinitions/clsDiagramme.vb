@@ -24,6 +24,10 @@
 
     End Sub
 
+    Public Sub Clear()
+        AllDiagrams.Clear()
+    End Sub
+
     Public Sub Remove(myitem As Integer)
 
         AllDiagrams.RemoveAt(myitem - 1)

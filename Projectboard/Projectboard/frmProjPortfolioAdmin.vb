@@ -61,8 +61,8 @@ Public Class frmProjPortfolioAdmin
 
         ' hier wird jetzt sichergestellt, daß nur die nach der aktuellen Aktion gültigen Checks gesetzt werden können
 
-        If aKtionskennung = PTtvactions.delFromDB Or _
-            aKtionskennung = PTtvactions.loadPV Then
+        If aKtionskennung = PTTvActions.delFromDB Or _
+            aKtionskennung = PTTvActions.loadPV Then
 
             stopRecursion = True
 
@@ -128,7 +128,7 @@ Public Class frmProjPortfolioAdmin
             stopRecursion = False
 
 
-        ElseIf aKtionskennung = PTtvactions.delFromSession Then
+        ElseIf aKtionskennung = PTTvActions.delFromSession Then
             stopRecursion = True
 
             Select Case treeLevel
@@ -172,9 +172,9 @@ Public Class frmProjPortfolioAdmin
             End Select
 
             stopRecursion = False
-        ElseIf aKtionskennung = PTtvactions.activateV Or _
-            aKtionskennung = PTtvactions.definePortfolioDB Or _
-            aKtionskennung = PTtvactions.definePortfolioSE Then
+        ElseIf aKtionskennung = PTTvActions.activateV Or _
+            aKtionskennung = PTTvActions.definePortfolioDB Or _
+            aKtionskennung = PTTvActions.definePortfolioSE Then
 
             stopRecursion = True
 
@@ -225,7 +225,7 @@ Public Class frmProjPortfolioAdmin
 
                     End If
 
-                    If aKtionskennung = PTtvactions.activateV Then
+                    If aKtionskennung = PTTvActions.activateV Then
                         ' jetzt die Variante aktivieren 
                         Call replaceProjectVariant(pName, selectedVariantName, True, True, 0)
                         Call awinNeuZeichnenDiagramme(2)
@@ -280,7 +280,7 @@ Public Class frmProjPortfolioAdmin
                 variantListe = aktuelleGesamtListe.getVariantNames(projName)
 
                 ' hproj wird benötigt, um herauszufinden, welche Variante gerade aktiv ist
-                If aKtionskennung = PTtvactions.activateV Then
+                If aKtionskennung = PTTvActions.activateV Then
                     hproj = ShowProjekte.getProject(projName)
                 End If
 
@@ -293,7 +293,7 @@ Public Class frmProjPortfolioAdmin
                     nodeVariant = node.Nodes.Add(CType(variantName, String))
 
                     ' jetzt muss gecheckt werden , ob es sich um das Aktivieren handelt oder nicht
-                    If aKtionskennung = PTtvactions.activateV Then
+                    If aKtionskennung = PTTvActions.activateV Then
                         stopRecursion = True
                         If getVariantNameOf(variantName) = hproj.variantName Then
                             nodeVariant.Checked = True
@@ -302,7 +302,7 @@ Public Class frmProjPortfolioAdmin
                         End If
                         stopRecursion = False
 
-                    ElseIf aKtionskennung = PTtvactions.loadPV Then
+                    ElseIf aKtionskennung = PTTvActions.loadPV Then
 
                         key = calcProjektKey(pName:=projName, variantName:=variantName)
 
@@ -321,8 +321,8 @@ Public Class frmProjPortfolioAdmin
 
 
 
-                    If aKtionskennung = PTtvactions.delFromDB Or _
-                        aKtionskennung = PTtvactions.loadPVS Then
+                    If aKtionskennung = PTTvActions.delFromDB Or _
+                        aKtionskennung = PTTvActions.loadPVS Then
                         ' Einfügen eines Platzhalters macht nur Sinn bei Snapshots löschen bzw. Snapshots laden 
 
                         nodeVariant.Tag = "P"
@@ -335,14 +335,14 @@ Public Class frmProjPortfolioAdmin
 
                 node.Tag = "X"
 
-                
+
 
             End If
 
 
 
         ElseIf nodeLevel = 1 And _
-            (aKtionskennung = PTtvactions.delFromDB Or aKtionskennung = PTtvactions.loadPVS) Then
+            (aKtionskennung = PTTvActions.delFromDB Or aKtionskennung = PTTvActions.loadPVS) Then
 
 
             If node.Tag = "P" Then
@@ -390,7 +390,7 @@ Public Class frmProjPortfolioAdmin
                             nodeTimeStamp.Checked = node.Checked
                         Next kvp1
 
-                        
+
                     Else
 
                         If projekthistorie.Count = 0 Then
@@ -461,8 +461,8 @@ Public Class frmProjPortfolioAdmin
         '
         ' Aktivieren von Varianten erfordert überhaupt keinen Button; deswegen ist das jetzt hier nicht abgefragt 
         '
-        If aKtionskennung = PTtvactions.definePortfolioSE Or _
-            aKtionskennung = PTtvactions.definePortfolioDB Then
+        If aKtionskennung = PTTvActions.definePortfolioSE Or _
+            aKtionskennung = PTTvActions.definePortfolioDB Then
             '
             ' Portfolios definieren 
             '
@@ -569,7 +569,7 @@ Public Class frmProjPortfolioAdmin
                 End Try
 
                 ' Portfolio in die Datenbank speichern, falls Aktionskennung 
-                If aKtionskennung = PTtvactions.definePortfolioDB Then
+                If aKtionskennung = PTTvActions.definePortfolioDB Then
                     If request.pingMongoDb() Then
                         If Not request.storeConstellationToDB(newC) Then
                             Call MsgBox("Fehler beim Speichern der ProjektConstellation '" & newC.constellationName & "' in die Datenbank")
@@ -582,9 +582,9 @@ Public Class frmProjPortfolioAdmin
 
             End With
 
-        ElseIf aKtionskennung = PTtvactions.delFromDB Or _
-            aKtionskennung = PTtvactions.delFromSession Or _
-            aKtionskennung = PTtvactions.loadPV Then
+        ElseIf aKtionskennung = PTTvActions.delFromDB Or _
+            aKtionskennung = PTTvActions.delFromSession Or _
+            aKtionskennung = PTTvActions.loadPV Then
 
             ' alle anderen Aktionen wie Projekte aus Datenbank löschen , aus Session löschen, aus Datenbank laden  ... 
             With TreeViewProjekte
@@ -605,11 +605,11 @@ Public Class frmProjPortfolioAdmin
                         Dim variantListe As Collection = aktuelleGesamtListe.getVariantNames(pname)
                         anzahlVarianten = variantListe.Count
 
-                        If aKtionskennung = PTtvactions.delFromSession Then
+                        If aKtionskennung = PTTvActions.delFromSession Then
 
                             Call awinDeleteProjectInSession(pName:=pname)
 
-                        ElseIf aKtionskennung = PTtvactions.delFromDB Then
+                        ElseIf aKtionskennung = PTTvActions.delFromDB Then
 
                             If anzahlVarianten = 1 Then
                                 variantName = ""
@@ -627,7 +627,7 @@ Public Class frmProjPortfolioAdmin
                             End If
 
 
-                        ElseIf aKtionskennung = PTtvactions.loadPV Then
+                        ElseIf aKtionskennung = PTTvActions.loadPV Then
 
                             If anzahlVarianten = 1 Then
                                 variantName = ""
@@ -672,11 +672,11 @@ Public Class frmProjPortfolioAdmin
                                 ' Aktion auf allen Timestamps
                                 ' lösche in Datenbank das Objekt mit DB-Namen pname#vname
 
-                                If aKtionskennung = PTtvactions.delFromDB Or _
-                                    aKtionskennung = PTtvactions.delFromSession Then
+                                If aKtionskennung = PTTvActions.delFromDB Or _
+                                    aKtionskennung = PTTvActions.delFromSession Then
                                     Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
 
-                                ElseIf aKtionskennung = PTtvactions.loadPV Then
+                                ElseIf aKtionskennung = PTTvActions.loadPV Then
 
                                     Call loadProjectfromDB(pname, variantName, first)
                                     first = False
@@ -684,8 +684,8 @@ Public Class frmProjPortfolioAdmin
                                 End If
 
 
-                            ElseIf aKtionskennung = PTtvactions.delFromDB Or _
-                                    aKtionskennung = PTtvactions.loadPVS Then
+                            ElseIf aKtionskennung = PTTvActions.delFromDB Or _
+                                    aKtionskennung = PTTvActions.loadPVS Then
 
                                 anzahlTimeStamps = variantNode.Nodes.Count
                                 Dim firstTS As Boolean = True
@@ -696,7 +696,7 @@ Public Class frmProjPortfolioAdmin
                                         ' Aktion auf diesem timestamp
 
                                         timestamp = CType(timeStampNode.Text, Date)
-                                        If aKtionskennung = PTtvactions.delFromDB Then
+                                        If aKtionskennung = PTTvActions.delFromDB Then
                                             Call deleteProjectVariantTimeStamp(pname, variantName, timestamp, firstTS)
                                         Else
                                             ' Aktion für LoadPVS : aber hier gibt es wahrscheinlich gar keinen OK-Button
@@ -711,8 +711,8 @@ Public Class frmProjPortfolioAdmin
 
                 Next
 
-                If aKtionskennung = PTtvactions.loadPV Or _
-                    aKtionskennung = PTtvactions.delFromSession Then
+                If aKtionskennung = PTTvActions.loadPV Or _
+                    aKtionskennung = PTTvActions.delFromSession Then
                     Call awinNeuZeichnenDiagramme(2)
                 End If
 

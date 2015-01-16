@@ -844,7 +844,7 @@ Public Module awinGeneralModules
 
 
 
-        showtimezone = True
+
 
         ' jetzt werden  für die einzelnen Rollen in dem Directory Ressource Manager Dateien 
         ' die evtl vorhandenen Dateien für die genaue Bestimmung der Kapazität ausgelesen  
@@ -1146,9 +1146,10 @@ Public Module awinGeneralModules
 
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim noTimeFrame As Boolean = False
 
         appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
+
 
 
         If von < 1 Then
@@ -1156,9 +1157,17 @@ Public Module awinGeneralModules
         End If
 
         If bis < von + 5 Then
-            bis = von + 5
+            noTimeFrame = True
         End If
 
+        ' damit es nicht flackert, wenn zweimal hintereinander Zeitzone aufgehoben wird  
+        If noTimeFrame Then
+            If showRangeRight <> showRangeLeft Then
+                appInstance.ScreenUpdating = False
+            End If
+        Else
+            appInstance.ScreenUpdating = False
+        End If
 
 
         If showRangeLeft <> von Or showRangeRight <> bis Or _
@@ -1168,57 +1177,66 @@ Public Module awinGeneralModules
             '
             ' wenn roentgenblick.ison , werden Bedarfe angezeigt - die müssen hier ausgeblendet werden - nachher mit den neuen Werten eingeblendet werden
             '
-            If roentgenBlick.isOn Then
+            If roentgenBlick.isOn And ShowProjekte.Count > 0 Then
                 Call awinNoshowProjectNeeds()
             End If
 
-            If showtimezone Then
-                '
-                ' aktualisieren der Showtime zone, erst die alte ausblenden , dann die neue einblenden
-                '
-                Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+
+            '
+            ' aktualisieren der Showtime zone, erst die alte ausblenden , dann die neue einblenden
+            '
+            Call awinShowtimezone(showRangeLeft, showRangeRight, False)
+
+            If noTimeFrame Then
+
+                showRangeLeft = 0
+                showRangeRight = 0
+
+            Else
                 Call awinShowtimezone(von, bis, True)
-            End If
-
-            showRangeLeft = von
-            showRangeRight = bis
 
 
-            ' jetzt werden - falls nötig die Projekte nachgeladen ... 
-            Try
-                If awinSettings.loadProjectsOnChange Then
+                showRangeLeft = von
+                showRangeRight = bis
 
-                    Call awinProjekteImZeitraumLaden(awinSettings.databaseName)
 
-                    '' jetzt sind wieder alle Projekte des Zeitraums da - deswegen muss nicht ggf nachgeladen werden 
-                    'DeletedProjekte.Clear()
+                ' jetzt werden - falls nötig die Projekte nachgeladen ... 
+                Try
+                    If awinSettings.loadProjectsOnChange Then
 
-                    '
-                    '   wenn "selectedRoleNeeds" ungleich Null ist, werden Bedarfe angezeigt - die müssen hier wieder - mit den neuen Daten für show_range_lefet, .._right eingeblendet werden
-                    '
-                    If roentgenBlick.isOn Then
-                        With roentgenBlick
-                            Call awinShowProjectNeeds1(mycollection:=.myCollection, type:=.type)
-                        End With
+                        Call awinProjekteImZeitraumLaden(awinSettings.databaseName)
+
+                        '' jetzt sind wieder alle Projekte des Zeitraums da - deswegen muss nicht ggf nachgeladen werden 
+                        'DeletedProjekte.Clear()
+
+                        '
+                        '   wenn "selectedRoleNeeds" ungleich Null ist, werden Bedarfe angezeigt - die müssen hier wieder - mit den neuen Daten für show_range_lefet, .._right eingeblendet werden
+                        '
+                        If roentgenBlick.isOn Then
+                            With roentgenBlick
+                                Call awinShowProjectNeeds1(mycollection:=.myCollection, type:=.type)
+                            End With
+                        End If
+
+
+
+                        '
+                        ' wenn diagramme angezeigt sind - aktualisieren dieser Diagramme
+                        '
+
+
+
                     End If
 
+                    ' betrachteter Zeitraum wurde geändert - typus = 4
+                    Call awinNeuZeichnenDiagramme(4)
 
 
-                    '
-                    ' wenn diagramme angezeigt sind - aktualisieren dieser Diagramme
-                    '
-
-
-
-                End If
-
-                ' betrachteter Zeitraum wurde geändert - typus = 4
-                Call awinNeuZeichnenDiagramme(4)
-
-
-            Catch ex As Exception
-                Call MsgBox(ex.Message)
-            End Try
+                Catch ex As Exception
+                    Call MsgBox(ex.Message)
+                End Try
+            End If
+            
 
 
 
@@ -1229,7 +1247,10 @@ Public Module awinGeneralModules
 
 
         appInstance.EnableEvents = formerEE
-        appInstance.ScreenUpdating = formerSU
+        If appInstance.ScreenUpdating <> formerSU Then
+            appInstance.ScreenUpdating = formerSU
+        End If
+
 
 
     End Sub
@@ -2828,9 +2849,10 @@ Public Module awinGeneralModules
         Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
         Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
                                         "   Das Projekt wurde bereits beauftragt."
+        Dim tryZeile As Integer
 
         ' ab diesem Wert soll neu gezeichnet werden 
-        Dim freieZeile As Integer = projectboardShapes.getMaxZeile
+        Dim startOfFreeRows As Integer = projectboardShapes.getMaxZeile
 
         ' prüfen, ob diese Constellation bereits existiert ..
         Try
@@ -2851,8 +2873,9 @@ Public Module awinGeneralModules
                 ' Projekt ist bereits im Hauptspeicher geladen
                 hproj = AlleProjekte.getProject(kvp.Key)
 
+                tryZeile = hproj.tfZeile + startOfFreeRows - 1
                 ' jetzt die Variante aktivieren 
-                Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, hproj.tfZeile)
+                Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
 
             Else
                 If request.pingMongoDb() Then
@@ -2865,7 +2888,8 @@ Public Module awinGeneralModules
                         ' Projekt muss nun in die Liste der geladenen Projekte eingetragen werden
                         AlleProjekte.Add(kvp.Key, hproj)
                         ' jetzt die Variante aktivieren 
-                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, freieZeile + kvp.Value.zeile)
+                        tryZeile = kvp.Value.zeile + startOfFreeRows - 1
+                        Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
 
                     Else
                         anzErrDB = anzErrDB + 1
@@ -2988,7 +3012,7 @@ Public Module awinGeneralModules
     Public Sub deleteCompleteProjectVariant(ByVal pname As String, ByVal variantName As String, ByVal kennung As Integer)
 
 
-        If kennung = PTtvactions.delFromDB Then
+        If kennung = PTTvActions.delFromDB Then
 
             Dim request As New Request(awinSettings.databaseName)
             Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
@@ -3021,7 +3045,7 @@ Public Module awinGeneralModules
             End If
 
 
-        ElseIf kennung = PTtvactions.delFromSession Then
+        ElseIf kennung = PTTvActions.delFromSession Then
 
             ' eine einzelne Variante kann nur gelöscht werden, wenn 
             ' es sich weder um die variantName = "" noch um die aktuell gezeigte Variante handelt 
@@ -3084,7 +3108,7 @@ Public Module awinGeneralModules
 
     End Sub
 
-   
+
 
 
     ''' <summary>
@@ -3201,7 +3225,7 @@ Public Module awinGeneralModules
     End Sub
 
 
-    
+
 
     ''' <summary>
     ''' erzeugt die Excel Datei mit den Projekt-Ressourcen Zuordnungen 
@@ -3538,7 +3562,7 @@ Public Module awinGeneralModules
 
             ' jetzt muss es auf alle Fälle existieren 
             currentWS = CType(appInstance.Worksheets(blattName), Global.Microsoft.Office.Interop.Excel.Worksheet)
-            
+
 
 
             Try
@@ -3679,7 +3703,7 @@ Public Module awinGeneralModules
 
                         CType(currentWS.Cells(endZeile - startZeile + 7, 1), _
                                 Global.Microsoft.Office.Interop.Excel.Range).Value = "Extern"
-                        
+
                     Else
                         Call MsgBox("keine Werte für Folge-Monate von " & heute.ToShortDateString & " gefunden ...")
                         Exit Sub
@@ -3826,7 +3850,7 @@ Public Module awinGeneralModules
 
     End Sub
 
-   
+
 
     ''' <summary>
     ''' liest die im Diretory ../ressource manager liegenden detaillierten Kapa files zu den Rollen aus
@@ -3962,39 +3986,39 @@ Public Module awinGeneralModules
 
         Select Case aKtionskennung
 
-            Case PTtvactions.delFromDB
+            Case PTTvActions.delFromDB
                 pname = ""
                 variantName = ""
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
-            Case PTtvactions.delFromSession
+            Case PTTvActions.delFromSession
                 aktuelleGesamtListe = AlleProjekte
                 loadErrorMsg = "es sind keine Projekte geladen"
 
-            Case PTtvactions.loadPVS
+            Case PTTvActions.loadPVS
                 pname = ""
                 variantName = ""
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
-            Case PTtvactions.loadPV
+            Case PTTvActions.loadPV
                 pname = ""
                 variantName = ""
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
-            Case PTtvactions.activateV
+            Case PTTvActions.activateV
                 aktuelleGesamtListe = AlleProjekte
                 loadErrorMsg = "es sind keine Projekte geladen"
 
-            Case PTtvactions.definePortfolioDB
+            Case PTTvActions.definePortfolioDB
                 pname = ""
                 variantName = ""
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
-            Case PTtvactions.definePortfolioSE
+            Case PTTvActions.definePortfolioSE
                 pname = ""
                 variantName = ""
                 aktuelleGesamtListe = AlleProjekte
@@ -4018,7 +4042,7 @@ Public Module awinGeneralModules
                     listOfVariantNamesDB = request.retrieveVariantNamesFromDB(pname)
 
                     ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
-                    If aKtionskennung = PTtvactions.activateV then 
+                    If aKtionskennung = PTTvActions.activateV Then
                         If aktuelleGesamtListe.getVariantZahl(pname) = 0 Then
                             showPname = False
                         End If
@@ -4029,11 +4053,11 @@ Public Module awinGeneralModules
                         nodeLevel0 = .Nodes.Add(pname)
 
                         ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
-                        If aKtionskennung = PTtvactions.delFromSession Or _
-                            aKtionskennung = PTtvactions.activateV Or
-                            aKtionskennung = PTtvactions.loadPV Or _
-                            aKtionskennung = PTtvactions.definePortfolioDB Or _
-                            aKtionskennung = PTtvactions.definePortfolioSE Then
+                        If aKtionskennung = PTTvActions.delFromSession Or _
+                            aKtionskennung = PTTvActions.activateV Or
+                            aKtionskennung = PTTvActions.loadPV Or _
+                            aKtionskennung = PTTvActions.definePortfolioDB Or _
+                            aKtionskennung = PTTvActions.definePortfolioSE Then
                             If aktuelleGesamtListe.getVariantZahl(pname) > 0 Or _
                                 listOfVariantNamesDB.Count > 0 Then
 
@@ -4046,7 +4070,7 @@ Public Module awinGeneralModules
                             End If
 
                             ' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 
-                            If aKtionskennung = PTtvactions.definePortfolioSE Then
+                            If aKtionskennung = PTTvActions.definePortfolioSE Then
                                 If ShowProjekte.contains(pname) Then
                                     ' im aufrufenden Teil wird stopRecursion auf true gesetzt ... 
                                     nodeLevel0.Checked = True

@@ -6,6 +6,15 @@ Public Class clsDependencies
 
     Private listOfProjDependencies As SortedList(Of String, clsDependenciesOfP)
 
+
+    ''' <summary>
+    ''' zurücksetzen der Abhängigkeiten 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub Clear()
+        listOfProjDependencies.Clear()
+    End Sub
+
     ''' <summary>
     ''' fügt die Liste der Projekt-Abhängigkeiten eines Projektes hinzu, bei Overwrite = true wird überschrieben , falls es diese Liste bereits gibt
     ''' </summary>

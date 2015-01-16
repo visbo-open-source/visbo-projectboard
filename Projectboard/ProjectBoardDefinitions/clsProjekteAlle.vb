@@ -22,6 +22,14 @@ Public Class clsProjekteAlle
 
     End Sub
 
+    ''' <summary>
+    ''' setzt die Liste der Projekte und die Liste der Shapes zurück 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub Clear()
+        _allProjects.Clear()
+    End Sub
+
 
     ''' <summary>
     ''' gets or sets the sortedlist of (string, clsprojekt)

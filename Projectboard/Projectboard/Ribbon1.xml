@@ -9,7 +9,7 @@
     </contextualTabs>
     <!---->
     <tabs>
-      <tab id="PTX" label ="Management-Info">
+      <tab id="PTX" label ="Gesamt-Übersichten">
         <group id="PTXG1" label ="Multiprojekt-Analyse">
           <button id="PTXG1B1" label="Projekt-Ampeln" onAction="Tom2G2M5M1B3ShowStatus" />
           <separator id="PTXG1s1"/>
@@ -132,6 +132,7 @@
             <button id="PT2G1M1B0" label="neue Variante anlegen" onAction="PT2VarianteNeu" />
             <button id="PT2G1M1B1" label="Variante aktivieren" onAction="PT2VarianteAktiv" />
             <button id="PT2G1M1B2" label="Variante löschen" onAction="PT2VarianteLoeschen" />
+            <button id="PT2G1M1B3" label="Variante übernehmen" onAction="PT2VarianteUebernehmen" />
           </menu>
           <separator id="PT2G1s1"/>
           <menu id="PT2G1M2" label="Editieren">
@@ -141,13 +142,13 @@
           </menu>
           <separator id="PT2G1s2"/>
           <!--<button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />-->
-          <button id="PT2G1B2" label="Beauftragen" onAction="Tom2G1Beauftragen" />
-          <button id="PT2G1B3" label="Beauftragung aufheben" onAction="Tom2GXBeauftragen" />
+          <button id="PT2G1B2" label="Fixieren" onAction="Tom2G1Beauftragen" />
+          <button id="PT2G1B3" label="Fixierung aufheben" onAction="Tom2GXBeauftragen" />
           <!--<separator id="PT2G1s3"/>
           <button id="PT2G1B4" label="in Warteschlange stellen" onAction="Tom2G1NoShow" />
           <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />-->
-          <separator id="PT2G1s4"/>
-          <button id="PT2G1B6" label="Umbenennen" onAction="Tom2G1Rename" />
+          <!--<separator id="PT2G1s4"/>
+          <button id="PT2G1B6" label="Umbenennen" onAction="Tom2G1Rename" />-->
           <separator id="PT2G1s5"/>
           <button id="PT2G1B7" label="Löschen" onAction="Tom2G1Loeschen" />
         </group>
@@ -227,7 +228,7 @@
         <group id ="PT5G3" label ="Löschen">
           <button id="Pt5G3B1" label="Portfolio" onAction="PTRemoveKonstellation" />
           <!--<button id="Pt5G3B2" label="Programm " onAction="PT5DeleteProgramme" enabled="false"/>-->
-          <button id="Pt5G3B3" label="Projekte " onAction="PT5DeleteProjects" />  
+          <button id="Pt5G3B3" label="Projekte " onAction="PT5DeleteProjectsInDB" />  
         </group>
       </tab>
       <tab id ="PT6" label ="Einstellungen">
@@ -241,12 +242,14 @@
           <checkBox id="PT6G1B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
         </group>
         <group id ="PT6G2" label ="Zeitraum">
-          <checkBox id="PT6G2B1" label="bei Veränderung Projekte nachladen" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>
-          <button id="Pt6G2B2" label="Zeitraum ändern" onAction="PT5changeTimeSpan" />
+          <checkBox id="PT6G2B1" label="Filter ist aktiv" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>
+          <button id="Pt6G2B2" label="Filter definieren" onAction="PT5defineFilter" />
+          <button id="Pt6G2B3" label="Zeitraum ändern" onAction="PT5changeTimeSpan" />
         </group>
-        <group id ="PT6G3" label ="Symbole, Charts und Grafiken löschen">
-          <button id="Pt6G3B0" label="Meilensteine, Phasen, Stati"  onAction="Tom2G2M5B3NoShowSymbols" />
-          <button id="Pt6G3B1" label="Charts"  onAction="PT6DeleteCharts" />
+        <group id ="PT6G3" label ="Elemente aus der Session löschen">
+          <button id="Pt6G3B0" label="Projekte"  onAction="PT6G3ClearSession" />
+          <button id="Pt6G3B1" label="Meilensteine, Phasen, Stati"  onAction="Tom2G2M5B3NoShowSymbols" />
+          <button id="Pt6G3B2" label="Charts"  onAction="PT6DeleteCharts" />
         </group>
         <!--<group id ="PT6G4" label ="Multiprojekt Sichten">
           <checkBox id="PT6G4B1" label="Strikte Zeitraum-Orientierung" getPressed="PT6StriktPressed" onAction ="PT6SetStrict"/>

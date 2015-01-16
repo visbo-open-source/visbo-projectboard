@@ -7885,20 +7885,27 @@ Public Module Projekte
 
             Try
                 hproj = ShowProjekte.getProject(pname)
-                With hproj
-                    zeile = .tfZeile
-                    .Status = ProjektStatus(0)
-                    .timeStamp = Date.Now
-                End With
+
+                If hproj.variantName = "" Then
+                    Call MsgBox("die Fixierung der Standard Variante kann nicht aufgehoben werden ..." & vbLf & _
+                                "bitte erstellen Sie zu diesem Zweck eine Variante ...")
+                Else
+                    With hproj
+                        zeile = .tfZeile
+                        .Status = ProjektStatus(0)
+                        .timeStamp = Date.Now
+                    End With
 
 
-                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                Dim tmpCollection As New Collection
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
+                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
+                End If
+                
             Catch ex As Exception
-                Call MsgBox(" Fehler in Zurücknahme Beauftragung " & pname & " , Modul: awinCancelBeauftragung")
+                Call MsgBox(" Fehler in Fixierung aufheben " & pname & " , Modul: awinCancelBeauftragung")
                 Exit Sub
             End Try
 
