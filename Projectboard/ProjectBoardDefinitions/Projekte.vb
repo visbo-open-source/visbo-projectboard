@@ -9007,7 +9007,7 @@ Public Module Projekte
             kvp.Value.shpUID = ""
         Next
 
-        ' jetzt wird die Zuordnung Projektname und Shapge ID gelöscht ... 
+        ' jetzt wird die Zuordnung Projektname und Shape ID gelöscht ... 
         ShowProjekte.shpListe.Clear()
 
         appInstance.EnableEvents = formerEE
@@ -9247,7 +9247,7 @@ Public Module Projekte
             'appInstance.ScreenUpdating = False
             'Call diagramsVisible(False)
             Call awinClearPlanTafel()
-            Call awinZeichnePlanTafel()
+            Call awinZeichnePlanTafel(False)
             Call awinNeuZeichnenDiagramme(2)
             'Call diagramsVisible(True)
             'appInstance.ScreenUpdating = True
@@ -10158,107 +10158,160 @@ Public Module Projekte
 
     ''' <summary>
     ''' zeichnet die Plantafel mit den Projekten neu; 
-    ''' versucht dabei immer die alte Position der Projekte zu übernehmen 
+    ''' zeichnet bei FromScrtach = true: zuerst in Reihenfolge der Business Units, 
+    ''' dann sortiert nach Anfangsdatum, dann sortiert nach Projektdauer
+    ''' im fall fromScratch = false: versucht dabei immer die alte Position der Projekte zu übernehmen 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub awinZeichnePlanTafel()
+    Public Sub awinZeichnePlanTafel(ByVal fromScratch As Boolean)
 
         Dim todoListe As New SortedList(Of Double, String)
         Dim key As Double
         Dim pname As String
-        Dim zeile As Integer, lastZeile As Integer, curZeile As Integer, max As Integer
+
         Dim lastZeileOld As Integer
         Dim hproj As clsProjekt
+        Dim positionsKennzahl As Double
+
+        Dim notOK As Boolean = True
 
 
 
 
-        ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        If fromScratch Then
+            Dim zeile As Integer
+            Dim lastBU As String = ""
 
-            With kvp.Value
-                key = 10000 * .tfZeile + kvp.Value.Start
-                todoListe.Add(key, .name)
-            End With
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-        Next
+                notOK = True
 
-        zeile = 2
-        lastZeile = 0
+                With kvp.Value
 
+                    positionsKennzahl = calcKennziffer(kvp.Value)
 
-        'If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
-        ' dann sollen die Projekte im extended mode gezeichnet werden 
-        ' jetzt erst mal die Konstellation "last" speichern
-        ' 3.11.14 Auskommentiert: Zeichnen sollte nichts zu tun haben mit dem Verwalten von Konstellationen 
-        ' Call storeSessionConstellation(ShowProjekte, "Last")
+                    Do While notOK
+                        Try
+                            todoListe.Add(positionsKennzahl, .name)
+                            notOK = False
+                        Catch ex As Exception
+                            positionsKennzahl = positionsKennzahl + 0.01
+                        End Try
+                    Loop
+                    
 
-        ' jetzt die todoListe abarbeiten
-        Dim i As Integer
-        For i = 1 To todoListe.Count
-            pname = todoListe.ElementAt(i - 1).Value
+                End With
 
-            Try
-                hproj = ShowProjekte.getProject(pname)
+            Next
 
-                If i = 1 Then
-                    curZeile = hproj.tfZeile
-                    lastZeileOld = hproj.tfZeile
-                    lastZeile = curZeile
-                    max = curZeile
-                Else
-                    If lastZeileOld = hproj.tfZeile Then
-                        curZeile = lastZeile
-                    Else
-                        lastZeile = max
-                        lastZeileOld = hproj.tfZeile
+            zeile = 2
+            Dim i As Integer
+
+            For i = 1 To todoListe.Count
+
+                pname = todoListe.ElementAt(i - 1).Value
+
+                Try
+                    hproj = ShowProjekte.getProject(pname)
+
+                    If i = 1 Then
+                        lastBU = hproj.businessUnit
+                    ElseIf lastBU <> hproj.businessUnit Then
+                        lastBU = hproj.businessUnit
+                        zeile = zeile + 1
                     End If
 
-                End If
+                    hproj.tfZeile = zeile
 
-                ' Änderung 9.10.14, damit die Spaces in einer 
-                If hproj.tfZeile >= curZeile + 1 Then
-                    curZeile = curZeile + 1
-                End If
-                ' Ende Änderung
-                hproj.tfZeile = curZeile
-                lastZeile = curZeile
-                'Call ZeichneProjektinPlanTafel2(pname, curZeile)
-                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                Dim tmpCollection As New Collection
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
-                curZeile = lastZeile + getNeededSpace(hproj)
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
+                    zeile = zeile + getNeededSpace(hproj)
 
-                If curZeile > max Then
-                    max = curZeile
-                End If
-            Catch ex As Exception
+                Catch ex As Exception
 
-            End Try
+                End Try
 
 
 
-        Next
-
-        'Else
+            Next
 
 
-        '    Dim tryzeile As Integer
-
-        '    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-        '        pname = kvp.Key
-        '        tryzeile = kvp.Value.tfZeile
-        '        If tryzeile <= 1 Then
-        '            tryzeile = -1
-        '        End If
-        '        Call ZeichneProjektinPlanTafel(pname, tryzeile) ' es wird versucht, an der alten Stelle zu zeichnen 
-        '    Next
 
 
-        'End If
+        Else
 
+            Dim zeile As Integer, lastzeile As Integer, curzeile As Integer, max As Integer
+            ' so wurde es bisher gemacht ... bis zum 17.1.15
+            ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                With kvp.Value
+                    key = 10000 * .tfZeile + kvp.Value.Start
+                    todoListe.Add(key, .name)
+                End With
+
+            Next
+
+            zeile = 2
+            lastZeile = 0
+
+
+            'If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
+            ' dann sollen die Projekte im extended mode gezeichnet werden 
+            ' jetzt erst mal die Konstellation "last" speichern
+            ' 3.11.14 Auskommentiert: Zeichnen sollte nichts zu tun haben mit dem Verwalten von Konstellationen 
+            ' Call storeSessionConstellation(ShowProjekte, "Last")
+
+            ' jetzt die todoListe abarbeiten
+            Dim i As Integer
+            For i = 1 To todoListe.Count
+                pname = todoListe.ElementAt(i - 1).Value
+
+                Try
+                    hproj = ShowProjekte.getProject(pname)
+
+                    If i = 1 Then
+                        curZeile = hproj.tfZeile
+                        lastZeileOld = hproj.tfZeile
+                        lastZeile = curZeile
+                        max = curZeile
+                    Else
+                        If lastZeileOld = hproj.tfZeile Then
+                            curZeile = lastZeile
+                        Else
+                            lastZeile = max
+                            lastZeileOld = hproj.tfZeile
+                        End If
+
+                    End If
+
+                    ' Änderung 9.10.14, damit die Spaces in einer 
+                    If hproj.tfZeile >= curZeile + 1 Then
+                        curZeile = curZeile + 1
+                    End If
+                    ' Ende Änderung
+                    hproj.tfZeile = curZeile
+                    lastZeile = curZeile
+                    'Call ZeichneProjektinPlanTafel2(pname, curZeile)
+                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
+                    curZeile = lastZeile + getNeededSpace(hproj)
+
+
+                    If curZeile > max Then
+                        max = curZeile
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+
+
+            Next
+        End If
 
 
 
@@ -16871,5 +16924,35 @@ Public Module Projekte
 
     End Function
 
+
+    ''' <summary>
+    ''' sorgt dafür. daß Projekte immer im gleichen Muster angezeigt werden 
+    ''' Erst sortiert nach BU, dann nach ProjektStart-Datum, dann nach Länge  
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcKennziffer(ByVal hproj As clsProjekt) As Double
+
+        Dim wertigkeitBU As Integer = 100000
+        Dim wertigkeitDate As Double = 100
+        Dim wertigkeitLaenge As Double = 0.1
+        Dim zwErg As Double = 0.0
+
+        If businessUnit.Contains(hproj.businessUnit) Then
+            zwErg = (businessUnit.IndexOf(hproj.businessUnit) + 1) * wertigkeitBU
+        Else
+            zwErg = (businessUnit.Count + 1) * wertigkeitBU
+        End If
+
+        ' Berücksichtigung ProjektstartDatum 
+        zwErg = zwErg + DateDiff(DateInterval.Day, StartofCalendar, hproj.startDate) / 30.4 * wertigkeitDate
+
+        ' Berücksichtigung Länge
+        zwErg = zwErg + hproj.dauerInDays / 30.4 * wertigkeitLaenge
+
+        calcKennziffer = zwErg
+
+    End Function
 
 End Module

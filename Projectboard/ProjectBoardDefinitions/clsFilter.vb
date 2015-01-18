@@ -11,6 +11,26 @@
 
 
     ''' <summary>
+    ''' prüft ob irgendein Filter gesetzt ist 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isEmpty As Boolean
+        Get
+            Dim sum As Integer = filterPhase.Count + filterMilestone.Count + _
+                                 filterRolle.Count + filterCost.Count + _
+                                 filterTyp.Count + filterBU.Count
+            If sum = 0 Then
+                isEmpty = True
+            Else
+                isEmpty = False
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' schreibt/liest die Filter Collection der BUs
     ''' </summary>
     ''' <value></value>
@@ -175,125 +195,82 @@
             Dim containsTyp As Boolean
             Dim containsMS As Boolean
             Dim containsPH As Boolean
+            Dim containsRole As Boolean
+            Dim containsCost As Boolean
             Dim stillOK As Boolean
             Dim tmpMilestone As clsMeilenstein
             Dim tmpPhase As clsPhase
             Dim ix As Integer
 
+            If Not IsNothing(Me) Then
 
-
-            ' Überprüfe BU 
-            If filterBU.Count > 0 Then
-                If hproj.businessUnit.Trim.Length > 0 Then
-                    If filterBU.Contains(hproj.businessUnit.Trim) Then
-                        containsBU = True
+                ' Überprüfe BU 
+                If filterBU.Count > 0 Then
+                    If hproj.businessUnit.Trim.Length > 0 Then
+                        If filterBU.Contains(hproj.businessUnit.Trim) Then
+                            containsBU = True
+                        Else
+                            containsBU = False
+                        End If
                     Else
                         containsBU = False
                     End If
                 Else
-                    containsBU = False
+                    containsBU = True
                 End If
-            Else
-                containsBU = True
-            End If
 
-            stillOK = containsBU
+                stillOK = containsBU
 
-            If stillOK Then
-                If filterTyp.Count > 0 Then
-                    If hproj.VorlagenName.Trim.Length > 0 Then
-                        If filterTyp.Contains(hproj.VorlagenName.Trim) Then
-                            containsTyp = True
+                If stillOK Then
+                    If filterTyp.Count > 0 Then
+                        If hproj.VorlagenName.Trim.Length > 0 Then
+                            If filterTyp.Contains(hproj.VorlagenName.Trim) Then
+                                containsTyp = True
+                            Else
+                                containsTyp = False
+                            End If
                         Else
                             containsTyp = False
                         End If
                     Else
-                        containsTyp = False
+                        containsTyp = True
                     End If
-                Else
-                    containsTyp = True
+                    stillOK = containsTyp
                 End If
-                stillOK = containsTyp
-            End If
 
-            If stillOK Then
-                ' Überprüfen Meilensteine und Phasen
-                If filterMilestone.Count = 0 Then
+                If stillOK Then
+                    ' Überprüfen Meilensteine und Phasen
+                    If filterMilestone.Count = 0 Then
 
-                    If filterPhase.Count = 0 Then
-                        containsMS = True
-                    Else
-                        containsMS = False
-                    End If
-
-                Else
-                    containsMS = False
-                    ix = 1
-
-                    While ix <= filterMilestone.Count And Not containsMS
-                        tmpMilestone = hproj.getMilestone(CStr(filterMilestone.Item(ix)))
-
-                        If IsNothing(tmpMilestone) Then
-
-                            ix = ix + 1
-
+                        If filterPhase.Count = 0 Then
+                            containsMS = True
                         Else
-
-                            If showRangeLeft > 0 And showRangeRight > 0 Then
-                                ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
-                                Dim tmpMsDate As Integer = getColumnOfDate(tmpMilestone.getDate)
-                                If tmpMsDate >= showRangeLeft And tmpMsDate <= showRangeRight Then
-                                    containsMS = True
-                                Else
-                                    ix = ix + 1
-                                End If
-                            Else
-                                containsMS = True
-                            End If
-
+                            containsMS = False
                         End If
 
-                    End While
-
-                End If
-
-                ' jetzt werden die Phasen überprüft, aber nur , wenn nicht containsMS bereits true ist 
-                containsPH = False
-
-                If Not containsMS Then
-                    ' prüfe Phasen ; das wird mit Not Stillok geprüft, da es um Meilensteine oder Phasen geht 
-                    ' wenn es bereits einen der Meilensteine enthält, ist nicht mehr auf Phasen zu prüfen 
-                    If filterPhase.Count = 0 Then
-                        containsPH = False
                     Else
+                        containsMS = False
                         ix = 1
 
-                        While ix <= filterPhase.Count And Not containsPH
-                            tmpPhase = hproj.getPhase(CStr(filterPhase.Item(ix)))
+                        While ix <= filterMilestone.Count And Not containsMS
+                            tmpMilestone = hproj.getMilestone(CStr(filterMilestone.Item(ix)))
 
-                            If IsNothing(tmpPhase) Then
+                            If IsNothing(tmpMilestone) Then
 
                                 ix = ix + 1
 
                             Else
 
                                 If showRangeLeft > 0 And showRangeRight > 0 Then
-
-                                    Dim leftDate As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
-                                    Dim rightdate As Date = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
-                                    Dim tmpPhStart As Date = tmpPhase.getStartDate
-                                    Dim tmpPhEnde As Date = tmpPhase.getEndDate
-
-                                    If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or _
-                                        DateDiff(DateInterval.Day, tmpPhStart, rightdate) < 0 Then
-                                        containsPH = False
-                                    Else
-                                        containsPH = True
-                                    End If
                                     ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
-
+                                    Dim tmpMsDate As Integer = getColumnOfDate(tmpMilestone.getDate)
+                                    If tmpMsDate >= showRangeLeft And tmpMsDate <= showRangeRight Then
+                                        containsMS = True
+                                    Else
+                                        ix = ix + 1
+                                    End If
                                 Else
-                                    containsPH = True
+                                    containsMS = True
                                 End If
 
                             End If
@@ -301,11 +278,143 @@
                         End While
 
                     End If
+
+                    ' jetzt werden die Phasen überprüft, aber nur , wenn nicht containsMS bereits true ist 
+                    containsPH = False
+
+                    If Not containsMS Then
+                        ' prüfe Phasen ; das wird mit Not Stillok geprüft, da es um Meilensteine oder Phasen geht 
+                        ' wenn es bereits einen der Meilensteine enthält, ist nicht mehr auf Phasen zu prüfen 
+                        If filterPhase.Count = 0 Then
+                            containsPH = False
+                        Else
+                            ix = 1
+
+                            While ix <= filterPhase.Count And Not containsPH
+                                tmpPhase = hproj.getPhase(CStr(filterPhase.Item(ix)))
+
+                                If IsNothing(tmpPhase) Then
+
+                                    ix = ix + 1
+
+                                Else
+
+                                    If showRangeLeft > 0 And showRangeRight > 0 Then
+
+                                        Dim leftDate As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                        Dim rightdate As Date = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
+                                        Dim tmpPhStart As Date = tmpPhase.getStartDate
+                                        Dim tmpPhEnde As Date = tmpPhase.getEndDate
+
+                                        If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or _
+                                            DateDiff(DateInterval.Day, tmpPhStart, rightdate) < 0 Then
+                                            ix = ix + 1
+                                        Else
+                                            containsPH = True
+                                        End If
+                                        ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
+
+                                    Else
+                                        containsPH = True
+                                    End If
+
+                                End If
+
+                            End While
+
+                        End If
+                    End If
+
+
+                    stillOK = containsMS Or containsPH
+
                 End If
 
+            Else
+                ' wenn der Filter = Nothing
+                stillOK = True
+            End If
 
-                stillOK = containsMS Or containsPH
+            ' Prüfen ob bestimmte Rollen vorkommen 
+            If stillOK Then
 
+                If filterRolle.Count > 0 Then
+
+                    Dim roleName As String
+                    Dim rollenBedarfe As Double = 0.0
+                    Dim myCollection As New Collection
+                    ' DiagrammTypen(1) = Rollen 
+                    Dim type As String = DiagrammTypen(1)
+                    ix = 1
+                    containsRole = False
+
+                    While ix <= filterRolle.Count And Not containsRole
+
+                        roleName = CStr(filterRolle.Item(ix))
+
+                        ' zurücksetzen
+                        myCollection.Clear()
+                        rollenBedarfe = 0.0
+
+                        ' berechnen
+                        myCollection.Add(roleName, roleName)
+                        rollenBedarfe = hproj.getBedarfeInMonths(myCollection, type).Sum
+
+                        ' entscheiden
+                        If rollenBedarfe > 0 Then
+                            containsRole = True
+                        Else
+                            ix = ix + 1
+                        End If
+
+
+                    End While
+
+                Else
+                    containsRole = True
+                End If
+                stillOK = containsRole
+            End If
+            
+            ' Prüfen ob bestimmte Kostenarten vorkommen 
+            If stillOK Then
+
+                If filterCost.Count > 0 Then
+
+                    Dim costName As String
+                    Dim costBedarfe As Double = 0.0
+                    Dim myCollection As New Collection
+                    ' DiagrammTypen(1) = Rollen 
+                    Dim type As String = DiagrammTypen(2)
+                    ix = 1
+                    containsCost = False
+
+                    While ix <= filterCost.Count And Not containsCost
+
+                        costName = CStr(filterCost.Item(ix))
+
+                        ' zurücksetzen
+                        myCollection.Clear()
+                        costBedarfe = 0.0
+
+                        ' berechnen
+                        myCollection.Add(costName, costName)
+                        costBedarfe = hproj.getBedarfeInMonths(myCollection, type).Sum
+
+                        ' entscheiden
+                        If costBedarfe > 0 Then
+                            containsCost = True
+                        Else
+                            ix = ix + 1
+                        End If
+
+
+                    End While
+
+                Else
+                    containsCost = True
+                End If
+                stillOK = containsCost
             End If
 
 

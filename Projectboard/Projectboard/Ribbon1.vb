@@ -166,7 +166,7 @@ Imports System.Drawing
                 appInstance.ScreenUpdating = False
                 'Call diagramsVisible(False)
                 Call awinClearPlanTafel()
-                Call awinZeichnePlanTafel()
+                Call awinZeichnePlanTafel(False)
                 Call awinNeuZeichnenDiagramme(2)
                 'Call diagramsVisible(True)
                 appInstance.ScreenUpdating = True
@@ -2771,13 +2771,13 @@ Imports System.Drawing
             ' jetzt werden die Projekt-Symbole inkl Phasen Darstellung gezeichnet
             awinSettings.drawphases = True
             Call awinClearPlanTafel()
-            Call awinZeichnePlanTafel()
+            Call awinZeichnePlanTafel(False)
         Else
             ' jetzt werden die Projekt-Symbole ohne Phasen Darstellung gezeichnet 
             awinSettings.drawphases = False
             'Call awinLoadConstellation("Last")
             Call awinClearPlanTafel()
-            Call awinZeichnePlanTafel()
+            Call awinZeichnePlanTafel(False)
         End If
 
     End Sub

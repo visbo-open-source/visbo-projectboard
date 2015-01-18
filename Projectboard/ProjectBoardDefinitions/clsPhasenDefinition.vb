@@ -52,7 +52,7 @@
                 End If
 
             Catch ex As Exception
-
+                _farbe = appearanceDefinitions.Item(defaultName).form.Fill.ForeColor.RGB
             End Try
 
             farbe = _farbe

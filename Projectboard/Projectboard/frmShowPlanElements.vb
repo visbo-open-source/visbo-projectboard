@@ -331,6 +331,9 @@ Public Class frmShowPlanElements
 
         ElseIf menuOption = PTmenue.filterdefinieren Then
 
+            Call storeFilterAndclearSelections("Last")
+            Call MsgBox("ok, Filter gespeichert")
+
         Else
 
             Call MsgBox("noch nicht unterstützt")

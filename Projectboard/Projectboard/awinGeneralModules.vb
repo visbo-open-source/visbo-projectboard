@@ -1204,7 +1204,9 @@ Public Module awinGeneralModules
                 Try
                     If awinSettings.loadProjectsOnChange Then
 
-                        Call awinProjekteImZeitraumLaden(awinSettings.databaseName)
+                        Dim filter As New clsFilter
+                        filter = filterDefinitions.retrieveFilter("Last")
+                        Call awinProjekteImZeitraumLaden(awinSettings.databaseName, filter)
 
                         '' jetzt sind wieder alle Projekte des Zeitraums da - deswegen muss nicht ggf nachgeladen werden 
                         'DeletedProjekte.Clear()
@@ -2635,7 +2637,7 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="databaseName"></param>
     ''' <remarks></remarks>
-    Sub awinProjekteImZeitraumLaden(ByVal databaseName As String)
+    Sub awinProjekteImZeitraumLaden(ByVal databaseName As String, ByVal filter As clsFilter)
 
         Dim zeitraumVon As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
         Dim zeitraumbis As Date = StartofCalendar.AddMonths(showRangeRight - 1)
@@ -2647,7 +2649,23 @@ Public Module awinGeneralModules
         Dim lastConstellation As New clsConstellation
         Dim projekteImZeitraum As New SortedList(Of String, clsProjekt)
         Dim projektHistorie As New clsProjektHistorie
-        Dim laengeInTagen As Integer
+
+
+        Dim ok As Boolean = True
+        Dim filterIsActive As Boolean
+        Dim toShowListe As New SortedList(Of Double, String)
+        
+
+        ' wurde ein definierter Filter mit übergeben ?
+        If IsNothing(filter) Then
+            filterIsActive = False
+        Else
+            If filter.isEmpty Then
+                filterIsActive = False
+            Else
+                filterIsActive = True
+            End If
+        End If
 
         If request.pingMongoDb() Then
 
@@ -2657,67 +2675,85 @@ Public Module awinGeneralModules
         End If
 
         If AlleProjekte.Count > 0 Then
-            ' prüfen, welche bereits geladen sind, welche nicht ...
+            ' es sind bereits PRojekte geladen 
+            Dim atleastOne As Boolean = False
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
 
-                Try
-                    laengeInTagen = kvp.Value.dauerInDays
+                If filterIsActive Then
+                    ok = filter.doesNotBlock(kvp.Value)
+                Else
+                    ok = True
+                End If
 
-                    'Dim keyStr As String = kvp.Value.name & "#" & kvp.Value.variantName
-                    Dim keyStr As String = calcProjektKey(kvp.Value)
-                    AlleProjekte.Add(keyStr, kvp.Value)
+                If ok Then
+                    ' Ist das Projekt bereits in AlleProjekte ? 
+                    If AlleProjekte.Containskey(kvp.Key) Then
+                        ' das Projekt soll nicht überschrieben werden ...
+                        ' also nichts tun 
+                    Else
+                        ' Workaround: 
+                        Dim tmpValue As Integer = kvp.Value.dauerInDays
+                        Call awinCreateBudgetWerte(kvp.Value)
 
-                    ShowProjekte.Add(kvp.Value)
+                        AlleProjekte.Add(kvp.Key, kvp.Value)
+                        If ShowProjekte.contains(kvp.Value.name) Then
+                            ' auch hier ist nichts zu tun, dann ist bereits eine andere Variante aktiv ...
+                        Else
+                            ShowProjekte.Add(kvp.Value)
+                            atleastOne = True
+                        End If
+                    End If
 
-                    ' Workaround: 
-                    Dim tmpValue As Integer = kvp.Value.dauerInDays
-                    Call awinCreateBudgetWerte(kvp.Value)
-
-                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                    Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, kvp.Value.name, kvp.Value.tfZeile, tmpCollection, tmpCollection)
-
-                Catch ex As Exception
-                    ' nichts tun - das Projekt ist einfach nur schon da .... 
-
-                End Try
+                End If
 
             Next
 
+            ' jetzt ist Showprojekte und AlleProjekte aufgebaut ... 
+            ' jetzt muss ClearPlanTafel kommen 
+            If atleastOne Then
+                Call awinClearPlanTafel()
+                Call awinZeichnePlanTafel(True)
+            End If
+
         Else
-            AlleProjekte.liste = projekteImZeitraum
+
             ShowProjekte.Clear()
             ' ShowProjekte aufbauen
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
 
-                Try
-                    ' bei Vorhandensein von mehreren Varianten, immer die Standard Variante laden
-                    If ShowProjekte.contains(kvp.Value.name) Then
-                        If kvp.Value.variantName = "" Then
-                            ShowProjekte.Remove(kvp.Value.name)
+                If filterIsActive Then
+                    ok = filter.doesNotBlock(kvp.Value)
+                Else
+                    ok = True
+                End If
+
+                If ok Then
+
+                    Dim tmpValue As Integer = kvp.Value.dauerInDays
+                    Call awinCreateBudgetWerte(kvp.Value)
+                    AlleProjekte.Add(kvp.Key, kvp.Value)
+
+                    Try
+                        ' bei Vorhandensein von mehreren Varianten, immer die Standard Variante laden
+                        If ShowProjekte.contains(kvp.Value.name) Then
+                            If kvp.Value.variantName = "" Then
+                                ShowProjekte.Remove(kvp.Value.name)
+                                ShowProjekte.Add(kvp.Value)
+                            End If
+                        Else
                             ShowProjekte.Add(kvp.Value)
                         End If
-                    Else
-                        ShowProjekte.Add(kvp.Value)
-                    End If
 
-                    ' Workaround: 
-                    laengeInTagen = kvp.Value.dauerInDays
-                    Call awinCreateBudgetWerte(kvp.Value)
-
-                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                    Dim tmpCollection As New Collection
-                    Call ZeichneProjektinPlanTafel(tmpCollection, kvp.Value.name, kvp.Value.tfZeile, tmpCollection, tmpCollection)
-
-                Catch ex As Exception
-                    Call MsgBox(ex.Message)
-                End Try
+                    Catch ex As Exception
+                        Call MsgBox(ex.Message)
+                    End Try
+                End If
 
             Next
+
+            Call awinZeichnePlanTafel(True)
 
         End If
 
@@ -2873,7 +2909,13 @@ Public Module awinGeneralModules
                 ' Projekt ist bereits im Hauptspeicher geladen
                 hproj = AlleProjekte.getProject(kvp.Key)
 
-                tryZeile = hproj.tfZeile + startOfFreeRows - 1
+                ' wenn es bereits in Showprojekte ist , gar nichts machen
+                If ShowProjekte.contains(hproj.name) Then
+                    tryZeile = ShowProjekte.getProject(hproj.name).tfZeile
+                Else
+                    tryZeile = kvp.Value.zeile + startOfFreeRows - 1
+                End If
+
                 ' jetzt die Variante aktivieren 
                 Call replaceProjectVariant(hproj.name, hproj.variantName, False, False, tryZeile)
 

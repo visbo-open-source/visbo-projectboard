@@ -2,6 +2,7 @@
 
     Private _darstellungsKlasse As String
     Private Const defaultName As String = "Meilenstein Default"
+    Private _farbe As Long
 
     ' Name des Meilensteine
     Public Property name As String
@@ -35,6 +36,35 @@
             Else
                 _darstellungsKlasse = value
             End If
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' liest die Farbe entsprechend der Definition der Darstellungsklasse 
+    ''' wenn es die nicht gibt, wird der Default für diese Phase verwendet  
+    ''' </summary>
+    ''' <value>setzt den Default Wert der Farbe für diese Phase, unabhängig von der Darstellungsklasse</value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property farbe As Long
+        Get
+            Try
+
+                If appearanceDefinitions.ContainsKey(_darstellungsKlasse) Then
+                    _farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
+                End If
+
+            Catch ex As Exception
+                _farbe = appearanceDefinitions.Item(defaultName).form.Fill.ForeColor.RGB
+            End Try
+
+            farbe = _farbe
+
+        End Get
+        Set(value As Long)
+
+            _farbe = value
+
         End Set
     End Property
 

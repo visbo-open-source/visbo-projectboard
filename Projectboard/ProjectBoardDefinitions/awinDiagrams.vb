@@ -373,6 +373,7 @@ Public Module awinDiagrams
                         ElseIf prcTyp = DiagrammTypen(5) Then
 
                             einheit = " "
+                            objektFarbe = MilestoneDefinitions.getMilestoneDef(prcName).farbe
                             msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName)
 
                         End If
@@ -417,7 +418,8 @@ Public Module awinDiagrams
 
                                 With .SeriesCollection.NewSeries
                                     .name = prcName
-                                    .Interior.color = ampelfarbe(0)
+                                    '.Interior.color = ampelfarbe(0)
+                                    .Interior.color = objektFarbe
                                     .Values = datenreihe
                                     .XValues = Xdatenreihe
                                     .ChartType = Excel.XlChartType.xlColumnStacked
@@ -606,7 +608,7 @@ Public Module awinDiagrams
                         With .SeriesCollection.NewSeries
                             .HasDataLabels = False
 
-                            If prcTyp = DiagrammTypen(0) Then
+                            If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                                 .name = "Schwellwert"
                             Else
                                 .name = "Interne Kapazität"
@@ -1057,6 +1059,7 @@ Public Module awinDiagrams
                     ElseIf prcTyp = DiagrammTypen(5) Then
 
                         einheit = " "
+                        objektFarbe = MilestoneDefinitions.getMilestoneDef(prcName).farbe
                         msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName)
                     End If
 
@@ -1100,7 +1103,8 @@ Public Module awinDiagrams
 
                             With .SeriesCollection.NewSeries
                                 .name = prcName
-                                .Interior.color = ampelfarbe(0)
+                                '.Interior.color = ampelfarbe(0)
+                                .Interior.color = objektFarbe
                                 .Values = datenreihe
                                 .XValues = Xdatenreihe
                                 .ChartType = Excel.XlChartType.xlColumnStacked
@@ -1308,7 +1312,7 @@ Public Module awinDiagrams
                     With .SeriesCollection.NewSeries
                         .HasDataLabels = False
 
-                        If prcTyp = DiagrammTypen(0) Then
+                        If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                             .name = "Schwellwert"
                         Else
                             .name = "Interne Kapazität"

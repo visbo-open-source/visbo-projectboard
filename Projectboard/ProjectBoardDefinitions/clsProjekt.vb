@@ -1174,7 +1174,7 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getBedarfeInMonths(mycollection As Collection, type As String) As Double()
+    Public ReadOnly Property getBedarfeInMonths(ByVal mycollection As Collection, ByVal type As String) As Double()
         Get
             Dim i As Integer, k As Integer, projektDauer As Integer = Me.anzahlRasterElemente
             Dim valueArray() As Double
