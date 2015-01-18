@@ -16415,7 +16415,8 @@ Public Module Projekte
                     Else
                         ok = filter.doesNotBlock(hproj)
                     End If
-
+                Else
+                    ok = True
                 End If
 
             Catch ex As Exception
@@ -16665,7 +16666,13 @@ Public Module Projekte
         If ImportProjekte.Count < 1 Then
             Call MsgBox(" es waren keine Projekte zu importieren ...")
         Else
-            Call MsgBox("es wurden " & ImportProjekte.Count & " Projekte importiert!" & vbLf & _
+            Dim filterText As String
+            If awinSettings.applyFilter Then
+                filterText = " (Filter aktiviert)"
+            Else
+                filterText = " (Filter nicht aktiviert)"
+            End If
+            Call MsgBox("es wurden " & ImportProjekte.Count & " Projekte bearbeitet!" & filterText & vbLf & vbLf & _
                         anzNeuProjekte.ToString & " neue Projekte" & vbLf & _
                         anzAktualisierungen.ToString & " Projekt-Aktualisierungen")
 
