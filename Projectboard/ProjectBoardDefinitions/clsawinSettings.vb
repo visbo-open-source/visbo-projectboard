@@ -119,7 +119,7 @@
         _databaseName = "projectboard"
         _selectedColumn = 1
         _offsetEinheit = "d"
-        _milestoneFreeFloat = False
+        _milestoneFreeFloat = True
         _autoCorrectBedarfe = True
         _propAnpassRess = False
         _phasesProzentual = False

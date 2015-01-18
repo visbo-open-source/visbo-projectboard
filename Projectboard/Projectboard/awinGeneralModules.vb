@@ -1613,7 +1613,7 @@ Public Module awinGeneralModules
 
 
                     ' jetzt muss das Projekt eingetragen werden 
-                    ImportProjekte.Add(hproj)
+                    ImportProjekte.Add(calcProjektKey(hproj), hproj)
                     myCollection.Add(hproj.name)
 
 
@@ -1720,8 +1720,8 @@ Public Module awinGeneralModules
                                                          0, 0, businessUnit, description)
                             If Not hproj Is Nothing Then
                                 Try
-                                    ImportProjekte.Add(hproj)
-                                    myCollection.Add(hproj.name)
+                                    ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                                    myCollection.Add(calcProjektKey(hproj))
                                 Catch ex As Exception
 
                                 End Try
@@ -2337,6 +2337,18 @@ Public Module awinGeneralModules
                                     bezug = Nothing
                                 End Try
 
+                                ' ur: 12.01.2015: Änderung, damit Meilensteine, die den gleichen Namen haben wie Phasen, trotzdem als Meilensteine erkannt werden.
+                                '                 gilt aktuell aber nur für den BMW-Import
+                                If awinSettings.importTyp = 2 Then
+                                    If PhaseDefinitions.Contains(objectName) _
+                                        And bezug <> "" _
+                                        And Not IsNothing(bezug) Then
+
+                                        isPhase = False
+                                        isMeilenstein = True
+                                    End If
+                                End If
+
                                 Try
                                     startDate = CDate(CType(.Cells(zeile, columnOffset + 3), Excel.Range).Value)
                                 Catch ex As Exception
@@ -2530,7 +2542,7 @@ Public Module awinGeneralModules
                                     Catch ex1 As Exception
 
                                     End Try
-                                    
+
 
 
                                 End If

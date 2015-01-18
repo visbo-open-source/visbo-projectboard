@@ -10044,7 +10044,7 @@ Public Module Projekte
                                 pName = hproj.name
                                 Call zeichneResultMilestonesInProjekt(hproj, nameList, farbTyp, 0, 0, False, msNumber, False)
                             Catch ex As Exception
-
+                                Dim a As Integer = 0
                             End Try
 
 
@@ -11544,28 +11544,6 @@ Public Module Projekte
                                     ' Alt - Ende
 
 
-                                    ' neu Start
-                                    ' auskommentiert, weil die neue Variante bei Ute zu massien Problemen geführt hat 
-                                    'vorlagenShape.Copy()
-                                    'Dim ws As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
-
-
-                                    'ws.Paste()
-                                    'Dim ix As Integer = ws.Shapes.Count
-                                    'resultShape = ws.Shapes.Item(ix)
-
-                                    'With resultShape
-                                    '    .Left = CSng(left)
-                                    '    .Top = CSng(top)
-                                    '    .Width = CSng(width)
-                                    '    .Height = CSng(height)
-
-                                    '    .Name = shpName
-                                    '    .Title = cResult.name
-                                    '    .AlternativeText = CInt(PTshty.milestoneN).ToString
-                                    'End With
-
-                                    ' neu Ende
 
                                     msNumber = msNumber + 1
                                     If numberIt Then
@@ -13355,7 +13333,16 @@ Public Module Projekte
         spalte = 1
 
         ' Dateiname des Projectfiles '
-        fileName = hproj.name & ".xlsx"
+        ' ur: 14.01.2015: Dateiname gleich dem Shape-Namen einschließlich VariantenNamen
+
+        fileName = hproj.getShapeText & ".xlsx"
+
+        'ur: 13.01.2015:  aus "fileName" werden die illegale Sonderzeichen eliminiert
+        fileName = cleanFileName(fileName)
+
+        ' fileName wird nun ergänzt mit dem passenden Pfad
+        fileName = awinPath & projektFilesOrdner & "\" & fileName
+
 
         ' -------------------------------------------------
         ' hier werden die einzelnen Stamm-Daten in das entsprechende File geschrieben 
@@ -14007,6 +13994,19 @@ Public Module Projekte
                     .WrapText = False
                 End With
 
+                ' ur: 13.01.2015: Varianten_Name wird hier in das Tabellenblatt Attribute des Projekt-Steckbriefes eingetragen
+
+                If Not IsNothing(hproj.variantName) And hproj.variantName <> "" Then
+
+                    .Range("Variant_Name").Value = hproj.variantName
+                    rng = .Range("Variant_Name")
+                    With rng
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                        .IndentLevel = 1
+                        .WrapText = False
+                    End With
+
+                End If
 
                 '' Blattschutz setzen
                 '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
@@ -14019,18 +14019,20 @@ Public Module Projekte
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Attribute")
         End Try
 
-
-        Dim newFileName As String = awinPath & projektFilesOrdner & "\" & fileName
+      
         Try
-            My.Computer.FileSystem.DeleteFile(newFileName)
+
+            My.Computer.FileSystem.DeleteFile(fileName)
         Catch ex As Exception
 
         End Try
 
         Try
-            appInstance.ActiveWorkbook.SaveAs(newFileName, _
+
+            appInstance.ActiveWorkbook.SaveAs(fileName, _
                                           ConflictResolution:=XlSaveConflictResolution.xlLocalSessionChanges
                                           )
+          
         Catch ex As Exception
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler beim Datei-Schreiben")
@@ -14041,6 +14043,28 @@ Public Module Projekte
 
 
     End Sub
+    '' '' '' ur: 13.01.2015: Funktion checkt ob ein String ein legaler DateiNamen ist( funktioniert aber nicht)
+    ' '' ''Function IsLegalFileName(ByVal str As String) As Boolean
+    ' '' ''    If (str Like "[/\:*?""<>]") Then
+    ' '' ''        IsLegalFileName = True
+    ' '' ''    Else
+    ' '' ''        IsLegalFileName = False
+    ' '' ''    End If
+    ' '' ''End Function
+
+
+    'ur: 13.01.2015: Funktion streicht die illegalen Zeigen heraus
+    'entnommen von folgendem Link: http://www.jpsoftwaretech.com/excel-vba/validate-filenames/
+
+    Function cleanFileName(stringToClean As String) As String
+        ' remove illegal characters from filenames
+        Dim newString As String
+
+        newString = Replace(Replace(Replace(Replace(Replace(Replace(Replace(Replace(Replace(Replace(Replace(stringToClean, "|", ""), "[", ""), "]", ""), ">", ""), "<", ""), Chr(34), ""), "?", ""), "*", ""), ":", ""), "/", ""), "\", "")
+
+        cleanFileName = newString
+
+    End Function
 
     ' Vorbedingung: das Active-workbook ist bereits das ProjektDetail File 
     Public Sub awinStoreProjForEditRess(hproj As clsProjekt)
@@ -16342,7 +16366,9 @@ Public Module Projekte
     Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date)
 
         Dim hproj As New clsProjekt, cproj As New clsProjekt
-        Dim pname As String, vglName As String
+        Dim fullName As String, vglName As String
+        Dim pname As String
+
 
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
@@ -16363,16 +16389,18 @@ Public Module Projekte
 
         Dim ok As Boolean = True
         ' jetzt werden alle importierten Projekte bearbeitet 
-        For Each pname In myCollection
+        For Each fullName In myCollection
+
 
             ok = True
 
             Try
-                hproj = ImportProjekte.getProject(pname)
+                hproj = ImportProjekte.getProject(fullName)
                 pname = hproj.name
 
             Catch ex As Exception
-                Call MsgBox("Projekt " & pname & " ist kein gültiges Projekt ... es wird ignoriert ...")
+                Call MsgBox("Projekt " & fullName & " ist kein gültiges Projekt ... es wird ignoriert ...")
+                pname = ""
                 ok = False
             End Try
 
@@ -16588,8 +16616,9 @@ Public Module Projekte
                 If ok Then
 
                     Try
-                        ShowProjekte.Add(hproj)
+
                         AlleProjekte.Add(vglName, hproj)
+                        ShowProjekte.Add(hproj)
 
                         ' ggf Bedarfe anzeigen 
                         If roentgenBlick.isOn Then
@@ -16609,7 +16638,8 @@ Public Module Projekte
                         Call awinNeuZeichnenDiagramme(2)
 
                     Catch ex As Exception
-                        Call MsgBox("Fehler bei Eintrag Showprojekte / Import " & hproj.name)
+                        'ur:16.1.2015: Dies ist kein Fehler sondern gewollt: 
+                        'Call MsgBox("Fehler bei Eintrag Showprojekte / Import " & hproj.name)
                     End Try
 
                 End If

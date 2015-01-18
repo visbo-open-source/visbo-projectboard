@@ -728,8 +728,8 @@ Module BMWItOModul
 
 
                         ' jetzt muss das Projekt eingetragen werden 
-                        ImportProjekte.Add(hproj)
-                        myCollection.Add(hproj.name)
+                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                        myCollection.Add(calcProjektKey(hproj))
 
                     End If
 
