@@ -319,7 +319,7 @@ Public Module awinGeneralModules
         arrWsNames(15) = "Portfolio Vorlage"
 
 
-        awinSettings.loadProjectsOnChange = False
+        awinSettings.applyFilter = False
 
         showRangeLeft = 0
         showRangeRight = 0
@@ -336,7 +336,7 @@ Public Module awinGeneralModules
         Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-        
+
 
         With appInstance.ActiveWindow
 
@@ -393,7 +393,7 @@ Public Module awinGeneralModules
 
         Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
-        
+
 
 
 
@@ -932,7 +932,7 @@ Public Module awinGeneralModules
                 End If
 
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                
+
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -1202,8 +1202,10 @@ Public Module awinGeneralModules
 
                 ' jetzt werden - falls nötig die Projekte nachgeladen ... 
                 Try
-                    If awinSettings.loadProjectsOnChange Then
-
+                    If awinSettings.applyFilter Then
+                        ' vorher hiess das loadprojectsonChange - jetzt ist es so: 
+                        ' wenn applyFilter = true, dann soll nachgeladen werden unter Anwendung 
+                        ' des Filters "Last"
                         Dim filter As New clsFilter
                         filter = filterDefinitions.retrieveFilter("Last")
                         Call awinProjekteImZeitraumLaden(awinSettings.databaseName, filter)
@@ -1238,7 +1240,7 @@ Public Module awinGeneralModules
                     Call MsgBox(ex.Message)
                 End Try
             End If
-            
+
 
 
 

@@ -39,7 +39,7 @@
     Property spaltenbreite As Double
     Property offsetEinheit As String
     Property drawphases As Boolean
-    Property loadProjectsOnChange As Boolean
+    Property applyFilter As Boolean
     ' sollen Meilensteine auch ausserhalb des Projekts liegen dürfen ? 
     Property milestoneFreeFloat As Boolean
     ' sollen Bedarfe automatisch in der Array Länge angepasst werden, wenn sich das Projekt verschiebt und in Folge die array Länge 
@@ -125,7 +125,7 @@
         _phasesProzentual = False
         _drawphases = False
         _showValuesOfSelected = False
-        _loadProjectsOnChange = False
+        _applyFilter = False
         _createIfNotThere = True
 
         ' Settings für Import / Export 

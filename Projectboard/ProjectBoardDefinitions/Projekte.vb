@@ -16375,6 +16375,13 @@ Public Module Projekte
         'Dim shpElement As Excel.Shape
         Dim phaseList As New Collection
         Dim milestoneList As New Collection
+        Dim wasNotEmpty As Boolean
+
+        If AlleProjekte.Count > 0 Then
+            wasNotEmpty = True
+        Else
+            wasNotEmpty = False
+        End If
 
 
         Dim differentToPrevious As Boolean = False
@@ -16397,6 +16404,19 @@ Public Module Projekte
             Try
                 hproj = ImportProjekte.getProject(fullName)
                 pname = hproj.name
+
+                ' Änderung tk: ist Filter aktiv ? wenn ja, muss der überprüft werden 
+                ' 18.1.15
+                If awinSettings.applyFilter Then
+
+                    Dim filter As clsFilter = filterDefinitions.retrieveFilter("Last")
+                    If IsNothing(filter) Then
+                        ok = True
+                    Else
+                        ok = filter.doesNotBlock(hproj)
+                    End If
+
+                End If
 
             Catch ex As Exception
                 Call MsgBox("Projekt " & fullName & " ist kein gültiges Projekt ... es wird ignoriert ...")
@@ -16508,31 +16528,20 @@ Public Module Projekte
 
 
                     Try
-                        If ShowProjekte.contains(pname) Then
+                        ' Änderung tk 18.1.15 nachher soll die Projekt-Tafel komplett gelöscht und neu aufgebaut werden, deshalb wird das hier rausgenomme
+                        '
+                        'If ShowProjekte.contains(pname) Then
+
+                        '    phaseList = projectboardShapes.getPhaseList(pname)
+                        '    milestoneList = projectboardShapes.getMilestoneList(pname)
+
+                        '    ' Shape wird auf der Plan-Tafel gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
+                        '    Call clearProjektinPlantafel(hproj.name)
+
+                        '    ShowProjekte.Remove(pname)
 
 
-                            'shpElement = ShowProjekte.getShape(pname)
-
-                            'Dim typCollection As New Collection
-                            'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                            'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                            'phaseList = projectboardShapes.getAllChildswithType(shpElement, typCollection)
-                            phaseList = projectboardShapes.getPhaseList(pname)
-
-
-                            'typCollection.Clear()
-                            'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                            'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                            'milestoneList = projectboardShapes.getAllChildswithType(shpElement, typCollection)
-                            milestoneList = projectboardShapes.getMilestoneList(pname)
-
-                            ' Shape wird auf der Plan-Tafel gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
-                            Call clearProjektinPlantafel(hproj.name)
-
-                            ShowProjekte.Remove(pname)
-
-
-                        End If
+                        'End If
 
                         AlleProjekte.Remove(vglName)
 
@@ -16628,14 +16637,18 @@ Public Module Projekte
 
                         End If
 
-                        ' zeichne das neue Shape in der Plan-Tafel 
-                        ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                        ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                        Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, phaseList, milestoneList)
+                        ' Änderung tk 18.1.15
+                        ' kein Zeichnen - das wird am Schluss komplett gemacht 
+                        '' zeichne das neue Shape in der Plan-Tafel 
+                        '' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                        '' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                        'Dim tmpCollection As New Collection
+                        'Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, phaseList, milestoneList)
 
-                        ' jetzt müssen die ggf aktuell gezeigten Diagramme neu gezeichnet werden 
-                        Call awinNeuZeichnenDiagramme(2)
+                        '' jetzt müssen die ggf aktuell gezeigten Diagramme neu gezeichnet werden 
+                        'Call awinNeuZeichnenDiagramme(2)
+                        ' Ende Änderung tk 18.1.15
+
 
                     Catch ex As Exception
                         'ur:16.1.2015: Dies ist kein Fehler sondern gewollt: 
@@ -16655,6 +16668,14 @@ Public Module Projekte
             Call MsgBox("es wurden " & ImportProjekte.Count & " Projekte importiert!" & vbLf & _
                         anzNeuProjekte.ToString & " neue Projekte" & vbLf & _
                         anzAktualisierungen.ToString & " Projekt-Aktualisierungen")
+
+            ' Änderung tk: jetzt wird das neu gezeichnet 
+
+            If wasNotEmpty Then
+                Call awinClearPlanTafel()
+            End If
+
+            Call awinZeichnePlanTafel(True)
 
         End If
 

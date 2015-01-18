@@ -2992,7 +2992,7 @@ Imports System.Drawing
 
     Public Sub PT5loadprojectsInit(control As IRibbonControl, ByRef pressed As Boolean)
 
-        pressed = awinSettings.loadProjectsOnChange
+        pressed = awinSettings.applyFilter
 
 
     End Sub
@@ -3003,13 +3003,13 @@ Imports System.Drawing
 
         If pressed Then
             ' jetzt sollen die Projekte gemäß Time Span geladen werden - auch bei Veränderung des TimeSpan 
-            awinSettings.loadProjectsOnChange = True
+            awinSettings.applyFilter = True
             ' noch zu tun 
             ' Call awinloadProjectsFromDB()
         Else
 
             ' jetzt werden bei TimeSpan Änderung keine Projekte nachgeladen 
-            awinSettings.loadProjectsOnChange = False
+            awinSettings.applyFilter = False
 
 
         End If
