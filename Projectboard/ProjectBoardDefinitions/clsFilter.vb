@@ -423,29 +423,15 @@
         End Get
     End Property
 
-    ''' <summary>
-    ''' kopiert eine Collection 
-    ''' </summary>
-    ''' <param name="original"></param>
-    ''' <param name="kopie"></param>
-    ''' <remarks></remarks>
-    Private Sub copyCollections(ByVal original As Collection, ByRef kopie As Collection)
-        Dim i As Integer
-        Dim element As String
-        If Not IsNothing(original) Then
-            For i = 1 To original.Count
-                element = CStr(original.Item(i))
-                kopie.Add(element, element)
-            Next
-        End If
-
-    End Sub
+    
 
     Sub New()
         filterBU = New Collection
         filterPhase = New Collection
         filterMilestone = New Collection
         filterTyp = New Collection
+        filterRolle = New Collection
+        filterCost = New Collection
         _name = "XXX"
     End Sub
 

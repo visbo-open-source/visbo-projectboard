@@ -1036,11 +1036,19 @@ Public Class frmShowPlanElements
     Private Sub storeFilterAndclearSelections(ByVal fName As String)
 
         Dim lastFilter As clsFilter
+
+
         lastFilter = New clsFilter(fName, selectedBUs, selectedTyps, _
                                   selectedPhases, selectedMilestones, _
                                  selectedRoles, selectedCosts)
 
-        filterDefinitions.storeFilter(fName, lastFilter)
+
+        If menuOption = PTmenue.filterdefinieren Then
+            filterDefinitions.storeFilter(fName, lastFilter)
+        Else
+            selFilterDefinitions.storeFilter(fName, lastFilter)
+        End If
+
 
         Me.selectedPhases.Clear()
         Me.selectedMilestones.Clear()
@@ -1070,7 +1078,16 @@ Public Class frmShowPlanElements
                                        ByRef selectedRoles As Collection, ByRef selectedCosts As Collection)
 
         Dim lastFilter As clsFilter
-        lastFilter = filterDefinitions.retrieveFilter(fName)
+
+        If menuOption = PTmenue.filterdefinieren Then
+            lastFilter = filterDefinitions.retrieveFilter(fName)
+        Else
+            lastFilter = selFilterDefinitions.retrieveFilter(fName)
+            If IsNothing(lastFilter) Then
+                lastFilter = filterDefinitions.retrieveFilter(fName)
+            End If
+        End If
+
 
         If Not IsNothing(lastFilter) Then
             selectedBUs = lastFilter.BUs

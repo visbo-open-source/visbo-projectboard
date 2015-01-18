@@ -16955,4 +16955,23 @@ Public Module Projekte
 
     End Function
 
+    ''' <summary>
+    ''' kopiert eine Collection , die Strings enthält 
+    ''' </summary>
+    ''' <param name="original"></param>
+    ''' <param name="kopie"></param>
+    ''' <remarks></remarks>
+    Public Sub copyCollections(ByVal original As Collection, ByRef kopie As Collection)
+        Dim i As Integer
+        Dim element As String
+
+        If Not IsNothing(original) Then
+            For i = 1 To original.Count
+                element = CStr(original.Item(i))
+                kopie.Add(element, element)
+            Next
+        End If
+
+    End Sub
+
 End Module
