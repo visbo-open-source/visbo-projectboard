@@ -1057,7 +1057,49 @@ Imports System.Drawing
 
         End If
 
-        
+    End Sub
+
+    ''' <summary>
+    ''' Es werden Projekte, die Varianten haben angezeigt in einem TreeView
+    ''' Hier können Varianten ausgewählt werden, die gelöscht werden sollen
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT2VarianteLoeschen(control As IRibbonControl)
+
+        Dim deletedProj As Integer = 0
+        'Dim returnValue As DialogResult
+
+        'Dim activateVariant As New frmDeleteProjects
+        Dim activateVariant As New frmProjPortfolioAdmin
+
+        Try
+
+            With activateVariant
+                .Text = "Variante löschen"
+                .aKtionskennung = PTtvactions.delFromSession
+                .OKButton.Visible = True
+                .OKButton.Text = "Löschen"
+                .portfolioName.Visible = False
+                .Label1.Visible = False
+            End With
+
+            'returnValue = activateVariant.ShowDialog
+            activateVariant.Show()
+
+            'If returnValue = DialogResult.OK Then
+            '    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+
+            'Else
+            '    ' returnValue = DialogResult.Cancel
+
+            'End If
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
 
     End Sub
 
