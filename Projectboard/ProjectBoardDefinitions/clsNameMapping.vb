@@ -221,25 +221,29 @@ Public Class clsNameMapping
         End Get
     End Property
 
-    Public ReadOnly Property mapToRealName(ByVal parentPhaseName As String, ByVal itemName As String) As String
+    Public ReadOnly Property mapToStdName(ByVal parentPhaseName As String, ByVal itemName As String) As String
         Get
 
 
             itemName = itemName.Trim
 
 
-            Dim realName As String = itemName
+            Dim stdName As String = itemName
+
+            'If itemName.Trim.StartsWith("ATS") Or itemName.Trim.StartsWith("A-TS") Then
+            '    Dim a As Integer = 0
+            'End If
 
             ' erster Check: kommt itemName in Synonym Liste vor ? 
             If Me.synonyms.ContainsKey(itemName) Then
-                realName = Me.synonyms(itemName).Trim
+                stdName = Me.synonyms(itemName).Trim
             Else
 
                 ' check auf regular Expressions
                 For Each kvp As KeyValuePair(Of String, String) In regExpressionNames
 
                     If regExpressionMatch(kvp.Key, itemName) Then
-                        realName = kvp.Value.Trim
+                        stdName = kvp.Value.Trim
                         Exit For
                     End If
 
@@ -248,11 +252,11 @@ Public Class clsNameMapping
             End If
 
             ' check jetzt auf Hierarchie Names
-            If Me.namesToComplement.ContainsKey(realName) Then
-                realName = parentPhaseName & "+" & realName
+            If Me.namesToComplement.ContainsKey(stdName) Then
+                stdName = parentPhaseName & "+" & stdName
             End If
 
-            mapToRealName = realName
+            mapToStdName = stdName
 
         End Get
     End Property

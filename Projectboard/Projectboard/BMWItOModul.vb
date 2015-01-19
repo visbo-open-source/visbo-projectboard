@@ -419,7 +419,7 @@ Module BMWItOModul
                                         Try
 
                                             If Not PhaseDefinitions.Contains(itemName) Then
-                                                realName = phaseMappings.mapToRealName(parentPhaseName, itemName)
+                                                realName = phaseMappings.mapToStdName(parentPhaseName, itemName)
                                             Else
                                                 realName = itemName
                                             End If
@@ -574,7 +574,7 @@ Module BMWItOModul
 
                                             Try
                                                 If Not MilestoneDefinitions.Contains(itemName) Then
-                                                    realName = milestoneMappings.mapToRealName(parentPhaseName, itemName)
+                                                    realName = milestoneMappings.mapToStdName(parentPhaseName, itemName)
                                                 Else
                                                     realName = itemName
                                                 End If
