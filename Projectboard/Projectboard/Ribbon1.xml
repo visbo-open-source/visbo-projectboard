@@ -36,8 +36,8 @@
         </group>
       </tab>
       
-      <tab id="PT0" label="Detail-Info">
-        <group id="PT0G1" label="Projekt Informationen">
+      <!--<tab id="PT0" label="Detail-Info">
+        <group id="PT0G1" label="Projekt Informationen">-->
           <!--<menu id="PT0G1M3" label="Chart-Cockpit">
             <button id="PT0G1M3B1" label="Cockpit visualisieren" onAction="PT0ShowCockpit" />
             <button id="PT0G1M3B2" label="Cockpit speichern" onAction="PT0SaveCockpit" />
@@ -47,11 +47,11 @@
           <separator id="PT0G1s1"/>
           <button id="PT0G1B1" label="Abhängigkeiten" onAction="PT0ShowDependencies" />
           <separator id="PT0G1s2"/>-->
-          <menu id="PT0G1M0" label="Phasen">
+          <!--<menu id="PT0G1M0" label="Phasen">
             <button id="PT0G1M0B1" label="Namen wählen" onAction="PT0VisualizePhases" />
-            <button id="PT0G1M0B2" label="Phasen Übersicht" onAction="Tom2G2M1B1Phasen" />
+            <button id="PT0G1M0B2" label="Phasen Übersicht" onAction="Tom2G2M1B1Phasen" />-->
             <!--<button id="PT0G1M0B3" label="Phasen Darstellung" onAction="Tom2G2M1B1Phasen2" />-->
-          </menu>
+          <!--</menu>
           <separator id="PT0G1s3"/>
           <menu id="PT0G1M1" label="Ressourcen">
             <button id="PT0G1M1B1" label="Personal Bedarfe" onAction="Tom2G2M1B2Resources" />
@@ -61,19 +61,19 @@
           <menu id="PT0G1M2" label="Meilensteine">
             <button id="PT0G1M2B5" label="Alle" onAction="Tom2G2M5M2B5ShowMilestones" />
             <button id="PT0G1M2B6" label="Meilenstein anzeigen" onAction="PTShowMilestonesByName" />
-            <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="PTShowMilestoneTrend" />
+            <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="PTShowMilestoneTrend" />-->
             <!--<button id="PT0G1M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />-->
-          </menu>
-          <!--<separator id="PT0G1s5"/>
+          <!--</menu>-->
+      <!--<separator id="PT0G1s5"/>
           <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
           <button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />
           <button id="PT0G1B5" label="Abhängigkeiten" onAction="Tom2G2M1B6Abhaengigkeit" />
           <button id="PT0G1B4" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />-->
-          <separator id="PT0G1s6"/>
+          <!--<separator id="PT0G1s6"/>
           <button id="PT0G1B6" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
-        </group>
-        
-        <!--<group id="PT0G2" label="Portfolio">
+        </group>-->
+
+      <!--<group id="PT0G2" label="Portfolio">
           <button id="PT0G2B1" label="Status" onAction="Tom2G2M5M1B3ShowStatus" />
           <separator id="PT0G2s1"/>
           <menu id="PT0G2M0" label="Phasen">
@@ -105,10 +105,7 @@
           <button id="PT0G2B10" label="Budget/Kosten" onAction="PT0ShowPortfolioBudgetCost" />
           <button id="PT0G2B11" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" />
         </group>-->
-      </tab>
-      <!--
-      
-      -->
+      <!--</tab>-->
       <tab id="PT1" label="Reports erstellen">
         <group id="PT1G1" label="Powerpoint">
           <button id="PT1G1B1" label="Einzelprojekt Bericht" onAction="Tom2G1Doku" />
@@ -125,7 +122,7 @@
         <group id="PT2G1" label="Projekt">
           <menu id="PT2G1M0" label ="Neues Projekt anlegen">
             <button id="PT2G1M0B0" label="Neu auf Basis Vorlage" onAction="PT2ProjektNeu" />
-            <button id="PT2G1M0B1" label="Neu auf Basis Projekt" onAction="PT2ProjektNeuBasisProjekt" />
+            <!--<button id="PT2G1M0B1" label="Neu auf Basis Projekt" onAction="PT2ProjektNeuBasisProjekt" />-->
           </menu>
           <separator id="PT2G1s0"/>
           <menu id ="PT2G1M1" label ="Varianten">
@@ -136,7 +133,7 @@
           </menu>
           <separator id="PT2G1s1"/>
           <menu id="PT2G1M2" label="Editieren">
-            <button id="PT2G1M2B1" label="Ressourcen Bedarfe" onAction="Tom2G1Resources" />
+            <!--<button id="PT2G1M2B1" label="Ressourcen Bedarfe" onAction="Tom2G1Resources" />-->
             <button id="PT2G1M2B2" label="Strategie/Risiko/Budget" onAction="Tom2G1Attribute" />
             <button id="PT2G1M2B3" label="Zeitspanne f. Projektstart" onAction="Tom2G1EarliestLatestStart" />
           </menu>
@@ -200,17 +197,17 @@
       -->
       <tab id ="PT4" label="Austauschen">
         <group id="PT4G1" label=" ">
-          <button id="PT4G1B1" label="Import Projekt-Inventur" onAction="Tom2G4B1InventurImport" />
+          <!--<button id="PT4G1B1" label="Import Projekt-Inventur" onAction="Tom2G4B1InventurImport" />-->
           <button id="PT4G1B2" label="Import RPLAN Projekte" onAction="Tom2G4B1RPLANImport" />
-          <button id="PT4G1B6" label="Exportieren Excel/RPLAN" onAction="bmwExcelExport" />
+          <!--<button id="PT4G1B6" label="Exportieren Excel/RPLAN" onAction="bmwExcelExport" />-->
           <button id="PT4G1B7" label="Exportieren Excel/FC-52" onAction="bmwFC52Export" />
           <separator id="PT4G1s1"/>
           <menu id="PT4G1M1" label ="Projekt Steckbriefe">
             <button id="PT4G1B3" label="Importieren" onAction="Tom2G4M1Import" />
             <button id="PT4G1B4" label="Exportieren" onAction="Tom2G4M1Export" />
           </menu>
-          <separator id="PT4G1s2"/>
-          <button id="PT4G1B5" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />
+          <!--<separator id="PT4G1s2"/>
+          <button id="PT4G1B5" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />-->
         </group>
 
       </tab>
