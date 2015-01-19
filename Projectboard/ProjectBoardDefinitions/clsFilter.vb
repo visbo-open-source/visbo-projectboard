@@ -41,7 +41,11 @@
             BUs = filterBU
         End Get
         Set(value As Collection)
-            filterBU = value
+
+            If Not IsNothing(value) Then
+                filterBU = value
+            End If
+
         End Set
     End Property
 
@@ -56,7 +60,11 @@
             Typs = filterTyp
         End Get
         Set(value As Collection)
-            filterTyp = value
+
+            If Not IsNothing(value) Then
+                filterTyp = value
+            End If
+
         End Set
     End Property
 
@@ -71,7 +79,11 @@
             Phases = filterPhase
         End Get
         Set(value As Collection)
-            filterPhase = value
+
+            If Not IsNothing(value) Then
+                filterPhase = value
+            End If
+
         End Set
     End Property
 
@@ -86,7 +98,11 @@
             Milestones = filterMilestone
         End Get
         Set(value As Collection)
-            filterMilestone = value
+
+            If Not IsNothing(value) Then
+                filterMilestone = value
+            End If
+
         End Set
     End Property
 
@@ -101,7 +117,11 @@
             Roles = filterRolle
         End Get
         Set(value As Collection)
-            filterRolle = value
+
+            If Not IsNothing(value) Then
+                filterRolle = value
+            End If
+
         End Set
     End Property
 
@@ -116,7 +136,11 @@
             Costs = filterCost
         End Get
         Set(value As Collection)
-            filterCost = value
+
+            If Not IsNothing(value) Then
+                filterCost = value
+            End If
+
         End Set
     End Property
 
@@ -133,8 +157,13 @@
             name = _name
         End Get
         Set(value As String)
-            If value.Trim.Length > 0 Then
-                _name = value
+
+            If Not IsNothing(value) Then
+                If value.Trim.Length > 0 Then
+                    _name = value
+                Else
+                    _name = "XXX"
+                End If
             Else
                 _name = "XXX"
             End If
@@ -156,7 +185,11 @@
         If filterBU.Contains(businessUnit) Then
             ' nichts tun ..
         Else
-            filterBU.Add(businessUnit, businessUnit)
+
+            If Not IsNothing(businessUnit) Then
+                filterBU.Add(businessUnit, businessUnit)
+            End If
+
         End If
 
     End Sub
@@ -170,10 +203,12 @@
     ''' <remarks></remarks>
     Public Sub removeBU(ByVal businessUnit As String)
 
-        If filterBU.Contains(businessUnit) Then
-            filterBU.Remove(businessUnit)
-        Else
-            ' nichts tun ..
+        If Not IsNothing(businessUnit) Then
+            If filterBU.Contains(businessUnit) Then
+                filterBU.Remove(businessUnit)
+            Else
+                ' nichts tun ..
+            End If
         End If
 
     End Sub
@@ -205,7 +240,7 @@
             If Not IsNothing(Me) Then
 
                 ' Überprüfe BU 
-                If filterBU.Count > 0 Then
+                If filterBU.Count > 0 And Not IsNothing(hproj.businessUnit) Then
                     If hproj.businessUnit.Trim.Length > 0 Then
                         If filterBU.Contains(hproj.businessUnit.Trim) Then
                             containsBU = True
@@ -215,14 +250,18 @@
                     Else
                         containsBU = False
                     End If
-                Else
-                    containsBU = True
+                ElseIf IsNothing(hproj.businessUnit) Then
+                    If filterBU.Count > 0 Then
+                        containsBU = False
+                    Else
+                        containsBU = True
+                    End If
                 End If
 
                 stillOK = containsBU
 
                 If stillOK Then
-                    If filterTyp.Count > 0 Then
+                    If filterTyp.Count > 0 And Not IsNothing(hproj.VorlagenName) Then
                         If hproj.VorlagenName.Trim.Length > 0 Then
                             If filterTyp.Contains(hproj.VorlagenName.Trim) Then
                                 containsTyp = True
@@ -232,6 +271,14 @@
                         Else
                             containsTyp = False
                         End If
+
+                    ElseIf IsNothing(hproj.VorlagenName) Then
+                        If filterTyp.Count > 0 Then
+                            containsTyp = False
+                        Else
+                            containsTyp = True
+                        End If
+
                     Else
                         containsTyp = True
                     End If

@@ -2514,7 +2514,14 @@ Public Class clsProjekt
         _shpUID = ""
         _variantName = ""   ' ur:25.6.2014: hinzugefügt, da sonst in der DB variantName mal "" und mal Nothing ist
         _timeStamp = Date.Now
+
         _variantName = ""
+
+        _description = ""
+        _businessUnit = ""
+        _complexity = 0.0
+        _volume = 0.0
+
 
     End Sub
 
@@ -2537,8 +2544,14 @@ Public Class clsProjekt
 
         _Status = ProjektStatus(0)
         _shpUID = ""
-        _variantName = ""
         _timeStamp = Date.Now
+
+        _variantName = ""
+
+        _description = ""
+        _businessUnit = ""
+        _complexity = 0.0
+        _volume = 0.0
 
     End Sub
 
@@ -2559,8 +2572,14 @@ Public Class clsProjekt
         _latestStart = CInt(DateDiff(DateInterval.Month, startDate, latestStartdate))
 
         _Status = ProjektStatus(0)
-        _variantName = ""
         _timeStamp = Date.Now
+
+        _variantName = ""
+
+        _description = ""
+        _businessUnit = ""
+        _complexity = 0.0
+        _volume = 0.0
 
     End Sub
 End Class
