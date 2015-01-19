@@ -1077,6 +1077,10 @@ Public Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' aktiviert die Right Clicks in den Charts 
+    ''' </summary>
+    ''' <remarks></remarks>
     Sub awinRightClickinPRCCharts()
         Dim myBar As CommandBar
         Dim myitem As CommandBarButton

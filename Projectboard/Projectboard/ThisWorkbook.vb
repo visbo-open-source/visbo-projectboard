@@ -82,7 +82,8 @@ Public Class ThisWorkbook
 
 
         'Call awinRightClickinPortfolioAendern()
-        Call awinRightClickinPRCCharts()
+        ' Änderung 19.1.15 Right Click in den Charts de-aktivieren für BMW 
+        'Call awinRightClickinPRCCharts()
 
     End Sub
 
