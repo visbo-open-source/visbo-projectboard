@@ -27,7 +27,9 @@ namespace MongoDbAccess
 
         public Request()
         {
-            Client = new MongoClient("mongodb://localhost");
+            var connectionString = "mongodb://localhost";
+            /**var connectionString = "mongodb://ute:Mopsi@localhost"; Aufruf mit MongoDB mit Authentication */
+            Client = new MongoClient(connectionString);
             Server = Client.GetServer();
             Database = Server.GetDatabase("projectboard");
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
@@ -37,7 +39,10 @@ namespace MongoDbAccess
 
         public Request(string databaseName)
         {
-            Client = new MongoClient("mongodb://localhost");
+            var connectionString = "mongodb://localhost";
+            /**var connectionString = "mongodb://ute:Mopsi@localhost";  Aufruf mit MongoDB mit Authentication  */
+            Client = new MongoClient(connectionString);
+            
             Server = Client.GetServer();
             Database = Server.GetDatabase(databaseName);
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");

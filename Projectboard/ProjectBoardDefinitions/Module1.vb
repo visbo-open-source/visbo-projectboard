@@ -297,6 +297,7 @@ Public Module Module1
         definePortfolioDB = 4
         definePortfolioSE = 5
         loadPV = 6
+        deleteV = 7
     End Enum
 
    

@@ -24,7 +24,7 @@ Public Class frmCreateNewVariant
                 ok = True
             Else
                 Call MsgBox(" Projekt (Variante) '" & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
-                            "existiert bereits !")
+                            "existiert bereits in DB!")
             End If
 
         Else

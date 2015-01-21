@@ -3101,7 +3101,8 @@ Public Module awinGeneralModules
             End If
 
 
-        ElseIf kennung = PTTvActions.delFromSession Then
+        ElseIf kennung = PTTvActions.delFromSession Or _
+            kennung = PTTvActions.deleteV Then
 
             ' eine einzelne Variante kann nur gelöscht werden, wenn 
             ' es sich weder um die variantName = "" noch um die aktuell gezeigte Variante handelt 
@@ -4068,6 +4069,10 @@ Public Module awinGeneralModules
                 aktuelleGesamtListe = AlleProjekte
                 loadErrorMsg = "es sind keine Projekte geladen"
 
+            Case PTTvActions.deleteV
+                aktuelleGesamtListe = AlleProjekte
+                loadErrorMsg = "es sind keine Projekte geladen"
+
             Case PTTvActions.definePortfolioDB
                 pname = ""
                 variantName = ""
@@ -4099,7 +4104,7 @@ Public Module awinGeneralModules
                     listOfVariantNamesDB = request.retrieveVariantNamesFromDB(pname)
 
                     ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
-                    If aKtionskennung = PTTvActions.activateV Then
+                    If aKtionskennung = PTTvActions.activateV or aKtionskennung = PTTvActions.deleteV Then
                         If aktuelleGesamtListe.getVariantZahl(pname) = 0 Then
                             showPname = False
                         End If
@@ -4111,7 +4116,8 @@ Public Module awinGeneralModules
 
                         ' Platzhalter einfügen; wird für alle Aktionskennungen benötigt
                         If aKtionskennung = PTTvActions.delFromSession Or _
-                            aKtionskennung = PTTvActions.activateV Or
+                            aKtionskennung = PTTvActions.activateV Or _
+                            aKtionskennung = PTTvActions.deleteV Or _
                             aKtionskennung = PTTvActions.loadPV Or _
                             aKtionskennung = PTTvActions.definePortfolioDB Or _
                             aKtionskennung = PTTvActions.definePortfolioSE Then

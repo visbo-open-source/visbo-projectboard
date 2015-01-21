@@ -58,7 +58,7 @@ Imports System.Drawing
         Dim request As New Request(awinSettings.databaseName)
 
         Dim newConstellationForm As New frmProjPortfolioAdmin
-        
+
 
 
         Call projektTafelInit()
@@ -181,7 +181,7 @@ Imports System.Drawing
                 currentConstellation = constellationName
             End If
 
-            
+
 
         End If
         enableOnUpdate = True
@@ -251,7 +251,8 @@ Imports System.Drawing
         Try
             If AlleProjekte.Count > 0 Then
 
-                storedProj = StoreSelectedProjectsinDB()    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+                storedProj = StoreSelectedProjectsinDB()    ' es werden die selektierten Projekte einschl. der geladenen Varianten 
+                ' in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
                 If storedProj = 0 Then
                     Call MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte speichern?", MsgBoxStyle.OkCancel)
@@ -1071,13 +1072,13 @@ Imports System.Drawing
         'Dim returnValue As DialogResult
 
         'Dim activateVariant As New frmDeleteProjects
-        Dim activateVariant As New frmProjPortfolioAdmin
+        Dim deleteVariant As New frmProjPortfolioAdmin
 
         Try
 
-            With activateVariant
+            With deleteVariant
                 .Text = "Variante löschen"
-                .aKtionskennung = PTtvactions.delFromSession
+                .aKtionskennung = PTTvActions.deleteV
                 .OKButton.Visible = True
                 .OKButton.Text = "Löschen"
                 .portfolioName.Visible = False
@@ -1085,7 +1086,7 @@ Imports System.Drawing
             End With
 
             'returnValue = activateVariant.ShowDialog
-            activateVariant.Show()
+            deleteVariant.Show()
 
             'If returnValue = DialogResult.OK Then
             '    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
@@ -6973,6 +6974,15 @@ Imports System.Drawing
         'enableOnUpdate = True
 
     End Sub
+    Sub PTShowVersions(control As IRibbonControl)
+
+        'Ermittlung der installierten Windows- und der Excelversion
+        Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
+        "Excel-Version: " & appInstance.Version, vbInformation, "Info")
+        'Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
+        '"Excel-Version: " & My.Settings.ExcelVersion, vbInformation, "Info")
+    End Sub
+
 
     Sub PTTestFunktion1(control As IRibbonControl)
 

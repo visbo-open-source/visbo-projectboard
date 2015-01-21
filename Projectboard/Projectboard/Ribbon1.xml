@@ -105,7 +105,7 @@
           <button id="PT0G2B10" label="Budget/Kosten" onAction="PT0ShowPortfolioBudgetCost" />
           <button id="PT0G2B11" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" />
         </group>-->
-      <!--</tab>-->
+      </tab>
       <tab id="PT1" label="Reports erstellen">
         <group id="PT1G1" label="Powerpoint">
           <button id="PT1G1B1" label="Einzelprojekt Bericht" onAction="Tom2G1Doku" />
@@ -215,17 +215,17 @@
         <group id ="PT5G1" label ="Laden">
           <button id="PT5G1B1" label="Portfolio" onAction="PTLadenKonstellation" />
           <!--<button id="PT5G1B2" label="Programme" onAction="PT5DatenbankLoadPrograms" enabled="false"/>-->
-          <button id="PT5G1B3" label="Projekte" onAction="PT5DatenbankLoadProjekte"/>
+          <button id="PT5G1B3" label="Projekte/Varianten" onAction="PT5DatenbankLoadProjekte"/>
         </group>
         <group id ="PT5G2" label ="Speichern">
           <button id="Pt5G2B1" label="Portfolio" onAction="PTNeueKonstellation" />
           <!--<button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" enabled="false"/>-->
-          <button id="Pt5G2B3" label="Projekte " onAction="PT5StoreProjects" />
+          <button id="Pt5G2B3" label="Projekte/Vatianten " onAction="PT5StoreProjects" />
         </group>
         <group id ="PT5G3" label ="Löschen">
           <button id="Pt5G3B1" label="Portfolio" onAction="PTRemoveKonstellation" />
           <!--<button id="Pt5G3B2" label="Programm " onAction="PT5DeleteProgramme" enabled="false"/>-->
-          <button id="Pt5G3B3" label="Projekte " onAction="PT5DeleteProjectsInDB" />  
+          <button id="Pt5G3B3" label="Projekte/Varianten " onAction="PT5DeleteProjectsInDB" />  
         </group>
       </tab>
       <tab id ="PT6" label ="Einstellungen">
@@ -237,6 +237,7 @@
           <checkBox id="PT6G1B4" label="Bei Dehnen/Stauchen proportional anpassen" getPressed="PTPropAnpassen" onAction ="awinSetPropAnpass"/>
           <checkBox id="PT6G1B5" label="Phasenhäufigkeit anteilig berechnen" getPressed="PTPhaseAnteilig" onAction ="awinSetPhaseAnteilig"/>
           <checkBox id="PT6G1B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
+          <!--<button id="PT6G1B7" label="Windows u. Excel-Version"  onAction ="PTShowVersions"/>-->
         </group>
         <group id ="PT6G2" label ="Zeitraum">
           <checkBox id="PT6G2B1" label="Filter ist aktiv" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange"/>
