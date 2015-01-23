@@ -203,11 +203,13 @@ Public Class clsNameMapping
     ''' <remarks></remarks>
     Public ReadOnly Property tobeIgnored(ByVal itemName As String) As Boolean
         Get
-
+            Dim ignoreItem1 As String = "Entfall"
             Dim ergebnis As Boolean
             itemName = itemName.Trim
             If itemName.Length > 0 Then
                 If ignoreNames.ContainsKey(itemName) Then
+                    ergebnis = True
+                ElseIf itemName.Contains(ignoreItem1) Then
                     ergebnis = True
                 Else
                     ergebnis = False
@@ -253,7 +255,7 @@ Public Class clsNameMapping
 
             ' check jetzt auf Hierarchie Names
             If Me.namesToComplement.ContainsKey(stdName) Then
-                stdName = parentPhaseName & "+" & stdName
+                stdName = stdName & " " & parentPhaseName
             End If
 
             mapToStdName = stdName

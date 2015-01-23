@@ -544,7 +544,7 @@ Public Class frmShowPlanElements
 
         statusLabel.Text = ""
 
-        If businessUnit.Count = 0 Then
+        If businessUnitDefinitions.Count = 0 Then
             Call MsgBox("es sind keine Business Units definiert !")
         Else
             If Me.rdbBU.Checked Then
@@ -555,11 +555,11 @@ Public Class frmShowPlanElements
                 filterBox.Text = ""
 
                 If allBUs.Count = 0 Then
-                    For i = 1 To businessUnit.Count
-                        allBUs.Add(businessUnit.ElementAt(i - 1))
+                    For i = 1 To businessUnitDefinitions.Count
+                        allBUs.Add(businessUnitDefinitions.ElementAt(i - 1))
                     Next
                 End If
-                
+
                 Call rebuildFormerState(PTauswahlTyp.BusinessUnit)
 
             Else

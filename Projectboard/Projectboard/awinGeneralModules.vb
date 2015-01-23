@@ -439,24 +439,28 @@ Public Module awinGeneralModules
         'End With
 
         ' hier werden jetzt die Business Unit Informationen ausgelesen 
-        businessUnit = New List(Of String)
+        businessUnitDefinitions = New SortedList(Of Integer, clsBusinessUnit)
         With wsName4
             '
             ' Business Unit Definitionen auslesen - im bereich awin_BusinessUnit_Definitions
             '
+            Dim index As Integer = 1
+            Dim tmpBU As clsBusinessUnit
+
             For Each c In .Range("awin_BusinessUnit_Definitions")
 
+                tmpBU = New clsBusinessUnit
+
                 Try
-                    tmpStr = CType(c.Value, String).Trim
-                    If tmpStr.Length > 0 Then
 
-                        If Not businessUnit.Contains(tmpStr) Then
-                            businessUnit.Add(tmpStr)
-                        End If
+                    tmpBU.name = CType(c.Value, String).Trim
+                    tmpBU.color = CLng(c.Interior.Color)
+                    businessUnitDefinitions.Add(index, tmpBU)
+                    index = index + 1
 
-                    End If
                 Catch ex As Exception
-
+                    ' nichts tun ...
+                    index = index + 1
                 End Try
 
             Next

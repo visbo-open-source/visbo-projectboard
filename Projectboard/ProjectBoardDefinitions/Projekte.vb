@@ -16997,11 +16997,20 @@ Public Module Projekte
         Dim wertigkeitLaenge As Double = 0.1
         Dim zwErg As Double = 0.0
 
-        If businessUnit.Contains(hproj.businessUnit) Then
-            zwErg = (businessUnit.IndexOf(hproj.businessUnit) + 1) * wertigkeitBU
-        Else
-            zwErg = (businessUnit.Count + 1) * wertigkeitBU
-        End If
+        Dim found As Boolean = False
+        Dim i As Integer = 1
+
+        While i <= businessUnitDefinitions.Count And Not found
+
+            If businessUnitDefinitions.ElementAt(i - 1).Value.name = hproj.businessUnit Then
+                found = True
+            Else
+                i = i + 1
+            End If
+
+        End While
+
+        zwErg = i * wertigkeitBU
 
         ' Berücksichtigung ProjektstartDatum 
         zwErg = zwErg + DateDiff(DateInterval.Day, StartofCalendar, hproj.startDate) / 30.4 * wertigkeitDate

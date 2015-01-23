@@ -726,8 +726,14 @@ Public Class clsProjekte
 
         Next
 
-        minDate = tmpMinimum
-        maxDate = tmpMaximum
+        If Not awinSettings.mppfullyContained Then
+            minDate = StartofCalendar.AddMonths(von - 1)
+            maxDate = StartofCalendar.AddMonths(bis).AddDays(-1)
+        Else
+            minDate = tmpMinimum
+            maxDate = tmpMaximum
+        End If
+        
 
     End Sub
 

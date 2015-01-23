@@ -73,7 +73,7 @@ Public Module Module1
     Public MilestoneDefinitions As New clsMeilensteine
     Public CostDefinitions As New clsKostenarten
     ' Welche Business-Units gibt es ? 
-    Public businessUnit As List(Of String)
+    Public businessUnitDefinitions As SortedList(Of Integer, clsBusinessUnit)
 
     ' diese Collection nimmt alle Filter Definitionen auf 
     Public filterDefinitions As New clsFilterDefinitions
@@ -2172,6 +2172,53 @@ Public Module Module1
         tmpValue = anzahlTage * 12 * boxWidth / 365
         
         calcDateToXCoord = tmpValue
+
+
+    End Function
+
+    ''' <summary>
+    ''' bestimmt den Prozentsatz der Überdeckung der beiden durch Start- und End-Datum angegebenen Phasen 
+    ''' </summary>
+    ''' <param name="startDate1">StartDatum Phase 1</param>
+    ''' <param name="endDate1">Ende Datum Phase 1</param>
+    ''' <param name="startDate2">Startdatum Phase 2</param>
+    ''' <param name="enddate2">Ende Datum Phase 2</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcPhaseUeberdeckung(ByVal startDate1 As Date, endDate1 As Date, _
+                                              ByVal startDate2 As Date, ByVal enddate2 As Date) As Double
+
+        Dim duration1 As Long = DateDiff(DateInterval.Day, startDate1, endDate1) + 1
+        Dim duration2 As Long = DateDiff(DateInterval.Day, startDate2, enddate2) + 1
+        Dim ueberdeckungsStart As Date, ueberdeckungsEnde As Date
+        Dim ueberdeckungsduration As Long
+        Dim ergebnis As Double
+
+
+        If DateDiff(DateInterval.Day, endDate1, startDate2) > 0 Or _
+            DateDiff(DateInterval.Day, enddate2, startDate1) > 0 Then
+            ' es gibt gar keine Überdeckung ...
+            ergebnis = 0.0
+        Else
+
+            If DateDiff(DateInterval.Day, startDate1, startDate2) >= 0 Then
+                ueberdeckungsStart = startDate2
+            Else
+                ueberdeckungsStart = startDate1
+            End If
+
+            If DateDiff(DateInterval.Day, endDate1, enddate2) >= 0 Then
+                ueberdeckungsEnde = endDate1
+            Else
+                ueberdeckungsEnde = enddate2
+            End If
+
+            ueberdeckungsduration = DateDiff(DateInterval.Day, ueberdeckungsStart, ueberdeckungsEnde) + 1
+            ergebnis = System.Math.Max(ueberdeckungsduration / duration1, ueberdeckungsduration / duration2)
+
+        End If
+
+        calcPhaseUeberdeckung = ergebnis
 
 
     End Function

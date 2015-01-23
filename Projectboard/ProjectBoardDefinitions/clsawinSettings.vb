@@ -1,87 +1,88 @@
 ﻿Public Class clsawinSettings
     ' Chart Settings 
-    Property fontsizeTitle As Integer
-    Property fontsizeLegend As Integer
-    Property fontsizeItems As Integer
-    Property CPfontsizeTitle As Integer
-    Property CPfontsizeItems As Integer
-    Property ChartHoehe1 As Double
-    Property ChartHoehe2 As Double
-    Property SollIstFarbeB As Long
-    Property SollIstFarbeL As Long
-    Property SollIstFarbeC As Long
-    Property SollIstFarbeArea As Long
-    Property timeSpanColor As Long
-    Property showTimeSpanInPT As Boolean
+    Public Property fontsizeTitle As Integer
+    Public Property fontsizeLegend As Integer
+    Public Property fontsizeItems As Integer
+    Public Property CPfontsizeTitle As Integer
+    Public Property CPfontsizeItems As Integer
+    Public Property ChartHoehe1 As Double
+    Public Property ChartHoehe2 As Double
+    Public Property SollIstFarbeB As Long
+    Public Property SollIstFarbeL As Long
+    Public Property SollIstFarbeC As Long
+    Public Property SollIstFarbeArea As Long
+    Public Property timeSpanColor As Long
+    Public Property showTimeSpanInPT As Boolean
 
-    Property AmpelGruen As Long
-    Property AmpelGelb As Long
-    Property AmpelRot As Long
-    Property AmpelNichtBewertet As Long
+    Public Property AmpelGruen As Long
+    Public Property AmpelGelb As Long
+    Public Property AmpelRot As Long
+    Public Property AmpelNichtBewertet As Long
 
-    Property glowColor As Long
+    Public Property glowColor As Long
 
     ' Settings für die Projekteingabe
-    Property lastProjektTyp As String
-    Property isEndDate As Boolean
-    Property tryBestFit As Boolean
-    Property selDate As Date
-    Property bestFit As clsBestFitObject
+    Public Property lastProjektTyp As String
+    Public Property isEndDate As Boolean
+    Public Property tryBestFit As Boolean
+    Public Property selDate As Date
+    Public Property bestFit As clsBestFitObject
 
     ' Settings für Grundeinstellungen 
-    Property nullDatum As Date
-    Property kalenderStart As Date
-    Property zeitEinheit As String
-    Property kapaEinheit As String
-    Property databaseName As String
-    Property zeilenhoehe1 As Double
-    Property zeilenhoehe2 As Double
-    Property spaltenbreite As Double
-    Property offsetEinheit As String
-    Property drawphases As Boolean
-    Property applyFilter As Boolean
+    Public Property nullDatum As Date
+    Public Property kalenderStart As Date
+    Public Property zeitEinheit As String
+    Public Property kapaEinheit As String
+    Public Property databaseName As String
+    Public Property zeilenhoehe1 As Double
+    Public Property zeilenhoehe2 As Double
+    Public Property spaltenbreite As Double
+    Public Property offsetEinheit As String
+    Public Property drawphases As Boolean
+    Public Property applyFilter As Boolean
     ' sollen Meilensteine auch ausserhalb des Projekts liegen dürfen ? 
-    Property milestoneFreeFloat As Boolean
+    Public Property milestoneFreeFloat As Boolean
     ' sollen Bedarfe automatisch in der Array Länge angepasst werden, wenn sich das Projekt verschiebt und in Folge die array Länge 
     ' nicht mehr ganz passt 
-    Property autoCorrectBedarfe As Boolean
+    Public Property autoCorrectBedarfe As Boolean
 
     ' sollen Bedarfe proportional zur Streckung oder Stauchung eines Projekt angepasst werden
-    Property propAnpassRess As Boolean
+    Public Property propAnpassRess As Boolean
 
     ' soll bei der Leistbarkeit der Phasen anteilig gerechnet werden oder drin = 1
-    Property phasesProzentual As Boolean = False
+    Public Property phasesProzentual As Boolean = False
 
     ' sollen die Werte der selektierten Projekte in PRC Summencharts angezeigt werden ? 
-    Property showValuesOfSelected As Boolean
+    Public Property showValuesOfSelected As Boolean
 
     ' sollen Shapes aus den Update Informations-Forms heraus erzeugt werden, wenn sie noch nicht da sind 
-    Property createIfNotThere As Boolean
+    Public Property createIfNotThere As Boolean
 
     ' Settings für die letzte User Selektion in der Tafel 
-    Property selectedColumn As Integer
-    Property selectedRow As Integer
+    Public Property selectedColumn As Integer
+    Public Property selectedRow As Integer
 
     ' Settings für Import / Export
-    Property EinzelRessExport As Integer
+    Public Property EinzelRessExport As Integer
 
     ' Settings für ToleranzKorridor TimeCost
-    Property timeToleranzRel As Double
-    Property timeToleranzAbs As Double
+    Public Property timeToleranzRel As Double
+    Public Property timeToleranzAbs As Double
 
-    Property costToleranzRel As Double
-    Property costToleranzAbs As Double
+    Public Property costToleranzRel As Double
+    Public Property costToleranzAbs As Double
 
     ' Settings für Multiprojekt-Sichten
-    Property mppShowAllIfOne As Boolean
-    Property mppShowMsDate As Boolean
-    Property mppShowMsName As Boolean
-    Property mppShowPhDate As Boolean
-    Property mppShowPhName As Boolean
-    Property mppShowAmpel As Boolean
-    Property mppShowProjectLine As Boolean
-    Property mppVertikalesRaster As Boolean
-    Property mppShowLegend As Boolean
+    Public Property mppShowAllIfOne As Boolean
+    Public Property mppShowMsDate As Boolean
+    Public Property mppShowMsName As Boolean
+    Public Property mppShowPhDate As Boolean
+    Public Property mppShowPhName As Boolean
+    Public Property mppShowAmpel As Boolean
+    Public Property mppShowProjectLine As Boolean
+    Public Property mppVertikalesRaster As Boolean
+    Public Property mppShowLegend As Boolean
+    Public Property mppFullyContained As Boolean
 
 
     Property importTyp As Integer
@@ -149,6 +150,7 @@
         _mppShowProjectLine = True
         _mppVertikalesRaster = False
         _mppShowLegend = False
+        _mppFullyContained = False
         _importTyp = 1
 
 

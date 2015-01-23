@@ -1647,6 +1647,11 @@ Public Module testModule
         Dim ampelVorlagenShape As pptNS.Shape = Nothing
         Dim errorVorlagenShape As pptNS.Shape = Nothing
         Dim errorShape As pptNS.ShapeRange = Nothing
+        Dim rowDifferentiatorShape As pptNS.Shape = Nothing
+        Dim buColorShape As pptNS.Shape = Nothing
+        Dim legendBuColorShape As pptNS.Shape = Nothing
+        Dim phaseDelimiterShape As pptNS.Shape = Nothing
+
 
 
         ' Wichtig für Legende
@@ -1751,6 +1756,7 @@ Public Module testModule
         If worker.WorkerReportsProgress Then
             worker.ReportProgress(0, e)
         End If
+
 
 
         ' entweder wird das template geöffnet ...
@@ -1988,7 +1994,24 @@ Public Module testModule
                                 ' optional 
                                 errorVorlagenShape = pptShape
 
+                            Case "LegendBuColor"
+                                ' optional
+                                legendBuColorShape = pptShape
+
+                            Case "buColorShape"
+                                ' optional
+                                buColorShape = pptShape
+
+                            Case "rowDifferentiator"
+                                ' optional
+                                rowDifferentiatorShape = pptShape
+
+                            Case "PhaseDelimiter"
+                                ' optional 
+                                phaseDelimiterShape = pptShape
+
                             Case Else
+
 
                         End Select
                     End If
@@ -2064,11 +2087,16 @@ Public Module testModule
                                 Try
                                     Call zeichneLegendenTabelle(pptShape, pptSlide, _
                                                                 selectedPhases, selectedMilestones, _
-                                                                legendPhaseVorlagenShape, legendMilestoneVorlagenShape)
+                                                                legendPhaseVorlagenShape, legendMilestoneVorlagenShape, _
+                                                                legendBuColorShape)
 
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                 End Try
+
+                                If Not IsNothing(legendBuColorShape) Then
+                                    legendBuColorShape.Delete()
+                                End If
 
                                 legendPhaseVorlagenShape.Delete()
                                 legendMilestoneVorlagenShape.Delete()
@@ -2083,9 +2111,14 @@ Public Module testModule
 
                             End If
 
-                            If Not IsNothing(errorVorlagenShape) Then
-                                errorVorlagenShape.Delete()
-                            End If
+                            Try
+                                If Not IsNothing(errorVorlagenShape) Then
+                                    errorVorlagenShape.Delete()
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+
 
                         Case "Multiprojektsicht"
 
@@ -2093,22 +2126,38 @@ Public Module testModule
 
                                 .TextFrame2.TextRange.Text = ""
 
+                                ' changefaktor wird benötigt, um bei PPT 2013 eine automatische Anpassung der Elemente zu machen 
+                                Dim widthFaktor As Double
+                                Dim heightFaktor As Double
                                 Dim format As Integer = 4
                                 ' Konsistenten Ausgangspunkt schaffen - Vorbedingung Vorlage sollte Din A4 sein  
                                 With pptPresentation
 
+
+                                    .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+
                                     If .PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+                                        heightFaktor = .PageSetup.SlideHeight / dinFormatA(format, 1)
+                                        widthFaktor = .PageSetup.SlideWidth / dinFormatA(format, 0)
                                         .PageSetup.SlideWidth = dinFormatA(format, 0)
                                         .PageSetup.SlideHeight = dinFormatA(format, 1)
                                     Else
+                                        heightFaktor = .PageSetup.SlideHeight / dinFormatA(format, 0)
+                                        widthFaktor = .PageSetup.SlideWidth / dinFormatA(format, 1)
                                         .PageSetup.SlideWidth = dinFormatA(format, 1)
                                         .PageSetup.SlideHeight = dinFormatA(format, 0)
                                     End If
 
-                                    .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
-
                                 End With
-                                
+
+                                ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
+                                ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
+                                If pptApp.Version = "14.0" Then
+                                    ' muss nichts machen
+                                Else
+                                    Call resizeShapesDuePPT13(heightFaktor, widthFaktor, pptSlide)
+                                End If
+
 
                                 ' Anfang bestimme Koordinaten der zeichenfelder
                                 ' bestimme Container Area
@@ -2157,7 +2206,7 @@ Public Module testModule
 
                                 '
                                 ' bestimme das Start und Ende Datum des PPT Kalenders
-                                Call calcStartEndePPTKalender(minDate, maxDate, True, _
+                                Call calcStartEndePPTKalender(minDate, maxDate, awinSettings.mppFullyContained, _
                                                               pptStartofCalendar, pptEndOfCalendar)
 
 
@@ -2168,7 +2217,7 @@ Public Module testModule
                                                                         selectedPhases.Count, selectedMilestones.Count, _
                                                                         MsDescVorlagenShape, MsDateVorlagenShape, _
                                                                         PhDescVorlagenShape, PhDateVorlagenShape,
-                                                                        projectNameVorlagenShape)
+                                                                        projectNameVorlagenShape, phaseDelimiterShape)
 
                                 '
                                 ' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
@@ -2188,13 +2237,13 @@ Public Module testModule
                                 Dim neededSpace As Double = (projCollection.Count + 1) * projekthoehe
                                 Dim availableSpace As Double
 
-                                Dim hoehe As Integer
+                                'Dim hoehe As Integer
 
-                                If querFormat Then
-                                    hoehe = 1
-                                Else
-                                    hoehe = 0
-                                End If
+                                'If querFormat Then
+                                '    hoehe = 1
+                                'Else
+                                '    hoehe = 0
+                                'End If
 
                                 availableSpace = drawingAreaBottom - drawingAreaTop
 
@@ -2224,18 +2273,31 @@ Public Module testModule
 
                                         With pptPresentation
 
+                                            .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+
                                             If querFormat Then
+                                                heightFaktor = .PageSetup.SlideHeight / dinFormatA(ix - 1, 1)
+                                                widthFaktor = .PageSetup.SlideWidth / dinFormatA(ix - 1, 0)
                                                 .PageSetup.SlideWidth = dinFormatA(ix - 1, 0)
                                                 .PageSetup.SlideHeight = dinFormatA(ix - 1, 1)
                                             Else
+                                                heightFaktor = .PageSetup.SlideHeight / dinFormatA(ix - 1, 0)
+                                                widthFaktor = .PageSetup.SlideWidth / dinFormatA(ix - 1, 1)
                                                 .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
                                                 .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
                                             End If
 
-                                            .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+
 
                                         End With
 
+                                        ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
+                                        ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
+                                        If pptApp.Version = "14.0" Then
+                                            ' muss nichts machen
+                                        Else
+                                            Call resizeShapesDuePPT13(heightFaktor, widthFaktor, pptSlide)
+                                        End If
 
                                         ' jetzt wieder die Koordinaten neu berechnen 
                                         Call bestimmeZeichenKoordinaten(multiprojektContainerShape, _
@@ -2285,11 +2347,17 @@ Public Module testModule
 
                                 ' zeichne den Kalender
                                 Dim calendargroup As pptNS.Shape = Nothing
-                                Call zeichnePPTCalendar(pptSlide, calendargroup, _
+
+                                Try
+                                    Call zeichnePPTCalendar(pptSlide, calendargroup, _
                                                         pptStartofCalendar, pptEndOfCalendar, _
                                                         calendarLineShape, calenderHeightShape, calendarStepShape, calendarMarkShape, _
                                                         yearVorlagenShape, quarterMonthVorlagenShape, calendarYearSeparator, calendarQuartalSeparator, _
                                                         drawingAreaBottom)
+                                Catch ex As Exception
+                                    Call MsgBox(ex.Message)
+                                End Try
+
 
                                 yearVorlagenShape.Delete()
                                 quarterMonthVorlagenShape.Delete()
@@ -2310,7 +2378,8 @@ Public Module testModule
                                                         selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
                                                         projectNameVorlagenShape, MsDescVorlagenShape, MsDateVorlagenShape, _
                                                         PhDescVorlagenShape, PhDateVorlagenShape, _
-                                                        phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape, _
+                                                        phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape,
+                                                        rowDifferentiatorShape, buColorShape, phaseDelimiterShape, _
                                                         yOffsetMsToText, yOffsetMsToDate, yOffsetPhToText, yOffsetPhToDate)
 
 
@@ -2323,6 +2392,18 @@ Public Module testModule
                                     End With
 
                                 End Try
+
+                                If Not IsNothing(rowDifferentiatorShape) Then
+                                    rowDifferentiatorShape.Delete()
+                                End If
+
+                                If Not IsNothing(buColorShape) Then
+                                    buColorShape.Delete()
+                                End If
+
+                                If Not IsNothing(phaseDelimiterShape) Then
+                                    phaseDelimiterShape.Delete()
+                                End If
 
                                 projectNameVorlagenShape.Delete()
                                 phaseVorlagenShape.Delete()
@@ -2339,7 +2420,7 @@ Public Module testModule
                                                             selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
                                                             legendAreaTop, legendAreaLeft, legendAreaRight, legendAreaBottom, _
                                                             legendTextVorlagenShape, legendPhaseVorlagenShape, legendMilestoneVorlagenShape, _
-                                                            projectVorlagenShape, ampelVorlagenShape)
+                                                            projectVorlagenShape, ampelVorlagenShape, legendBuColorShape)
 
 
                                     Catch ex As Exception
@@ -2354,7 +2435,9 @@ Public Module testModule
                                     legendLineShape.Delete()
                                 End If
 
-
+                                If Not IsNothing(legendBuColorShape) Then
+                                    legendBuColorShape.Delete()
+                                End If
                                 legendTextVorlagenShape.Delete()
                                 legendPhaseVorlagenShape.Delete()
                                 legendMilestoneVorlagenShape.Delete()
@@ -4903,7 +4986,8 @@ Public Module testModule
     ''' <remarks></remarks>
     Sub zeichneLegendenTabelle(ByRef pptShape As pptNS.Shape, ByVal pptslide As pptNS.Slide, _
                                    ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
-                                   ByVal legendPhaseVorlage As pptNS.Shape, ByVal legendMilestoneVorlage As pptNS.Shape)
+                                   ByVal legendPhaseVorlage As pptNS.Shape, ByVal legendMilestoneVorlage As pptNS.Shape, _
+                                   ByVal legendBuColorShape As pptNS.Shape)
 
         Dim tabelle As pptNS.Table
         Dim anzZeilen As Integer
@@ -4935,6 +5019,7 @@ Public Module testModule
         End If
 
 
+
         zeilenHoehe = tabelle.Rows(tabelle.Rows.Count).Height
         zeilenHoeheTitel = tabelle.Rows(1).Height
         anzMaxZeilen = (pptslide.CustomLayout.Height - (pptShape.Top + zeilenHoeheTitel)) / zeilenHoehe - 1
@@ -4951,6 +5036,54 @@ Public Module testModule
         Dim milestoneName As String
         Dim shortName As String
         Dim factor As Double
+        Dim tmpBU As clsBusinessUnit
+
+        ' jetzt werden ggf zunächst die BU Symbole gezeichnet 
+        If Not IsNothing(legendBuColorShape) Then
+
+            For i = 1 To businessUnitDefinitions.Count
+                tmpBU = businessUnitDefinitions.ElementAt(i - 1).Value
+                ' jetzt das Shape eintragen 
+                legendBuColorShape.Copy()
+                copiedShape = pptslide.Shapes.Paste()
+                With copiedShape(1)
+                    .Height = zeilenHoehe * 0.8
+                    .Top = tabelle.Cell(curZeile, curSpalte).Shape.Top + (tabelle.Cell(curZeile, curSpalte).Shape.Height - .Height) * 0.5
+                    .Left = tabelle.Cell(curZeile, curSpalte).Shape.Left + (tabelle.Cell(curZeile, curSpalte).Shape.Width - .Width) * 0.5
+                    .Fill.ForeColor.RGB = tmpBU.color
+                End With
+                ' jetzt den Business Unit Name eintragen 
+                CType(tabelle.Cell(curZeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie " & tmpBU.name
+
+                curZeile = curZeile + 1
+                If curZeile > anzZeilen Then
+                    tabelle.Rows.Add()
+                    anzZeilen = anzZeilen + 1
+                End If
+
+            Next
+
+            ' jetzt die undefinierte Produktlinie noch zeichnen ...
+
+            ' jetzt das Shape eintragen 
+            legendBuColorShape.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+            With copiedShape(1)
+                .Height = zeilenHoehe * 0.8
+                .Top = tabelle.Cell(curZeile, curSpalte).Shape.Top + (tabelle.Cell(curZeile, curSpalte).Shape.Height - .Height) * 0.5
+                .Left = tabelle.Cell(curZeile, curSpalte).Shape.Left + (tabelle.Cell(curZeile, curSpalte).Shape.Width - .Width) * 0.5
+                .Fill.ForeColor.RGB = awinSettings.AmpelNichtBewertet
+            End With
+            ' jetzt den Business Unit Name eintragen 
+            CType(tabelle.Cell(curZeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie ist undefiniert"
+
+            curZeile = curZeile + 1
+            If curZeile > anzZeilen Then
+                tabelle.Rows.Add()
+                anzZeilen = anzZeilen + 1
+            End If
+
+        End If
 
         For Each phaseName In selectedPhases
 
@@ -7835,7 +7968,8 @@ Public Module testModule
                             ByVal MsDescVorlagenShape As pptNS.Shape, ByVal MsDateVorlagenShape As pptNS.Shape, _
                             ByVal PhDescVorlagenShape As pptNS.Shape, ByVal PhDateVorlagenShape As pptNS.Shape, _
                             ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, ByVal projectVorlagenForm As pptNS.Shape, _
-                            ByVal ampelVorlagenShape As pptNS.Shape, _
+                            ByVal ampelVorlagenShape As pptNS.Shape, ByVal rowDifferentiatorShape As pptNS.Shape, ByVal buColorShape As pptNS.Shape, _
+                            ByVal phasedelimiterShape As pptNS.Shape, _
                             ByVal yOffsetMsToText As Double, ByVal yOffsetMsToDate As Double, _
                             ByVal yOffsetPhToText As Double, ByVal yOffsetPhToDate As Double)
 
@@ -7870,10 +8004,16 @@ Public Module testModule
         Dim phasenGrafikYPos As Double
         Dim milestoneGrafikYPos As Double
         Dim ampelGrafikYPos As Double
+        Dim rowYPos As Double
 
         Dim arrayOfNames() As String
         Dim phShapeNames As New Collection
         Dim msShapeNames As New Collection
+        Dim drawRowDifferentiator As Boolean
+        Dim toggleRowDifferentiator As Boolean
+        Dim drawBUShape As Boolean
+        Dim buFarbe As Long
+        Dim buName As String
 
 
         'Dim projekthoehe As Double = bestimmeMppProjektHoehe(phaseVorlagenShape, milestoneVorlagenShape, _
@@ -7884,6 +8024,7 @@ Public Module testModule
 
 
         ' bestimme jetzt Y Start-Position für den Text bzw. die Grafik
+        rowYPos = drawingAreaTop
         projektNamenYPos = drawingAreaTop + 0.5 * (projekthoehe - projectNameVorlagenShape.Height)
         projektGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - projectVorlagenForm.Height)
         phasenGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - phaseVorlagenShape.Height)
@@ -7893,12 +8034,68 @@ Public Module testModule
 
         projectsToDraw = projectCollection.Count
 
+        If Not IsNothing(rowDifferentiatorShape) Then
+            drawRowDifferentiator = True
+        Else
+            drawRowDifferentiator = False
+        End If
+        toggleRowDifferentiator = False
 
+        If Not IsNothing(buColorShape) Then
+            drawBUShape = True
+            projektNamenXPos = projektNamenXPos + buColorShape.Width + 3
+        Else
+            drawBUShape = False
+        End If
 
         For currentProjektIndex = 1 To projectsToDraw
 
             pName = projectCollection.ElementAt(currentProjektIndex - 1).Value
             hproj = ShowProjekte.getProject(pName)
+
+            ' optionales zeichnen der Zeilen-Markierung
+            If drawRowDifferentiator And toggleRowDifferentiator Then
+                ' zeichnen des RowDifferentiators 
+                rowDifferentiatorShape.Copy()
+                copiedShape = pptslide.Shapes.Paste()
+                With copiedShape(1)
+                    .Top = CSng(rowYPos)
+                    .Left = CSng(projectListLeft)
+                    .Height = projekthoehe
+                    .Width = drawingAreaRight + 5 - .Left
+                End With
+            End If
+
+            ' dadurch wird die Zeilen Markierung nur bei jedem zweiten Mal gezeichnet ... 
+            toggleRowDifferentiator = Not toggleRowDifferentiator
+
+            ' optionales zeichnen der BU Markierung 
+            If drawBUShape Then
+                buName = hproj.businessUnit
+                buFarbe = awinSettings.AmpelNichtBewertet
+                If buName.Length > 0 Then
+                    Dim found As Boolean = False
+                    Dim ix As Integer = 1
+                    While ix <= businessUnitDefinitions.Count And Not found
+                        If businessUnitDefinitions.ElementAt(ix - 1).Value.name = buName Then
+                            found = True
+                            buFarbe = businessUnitDefinitions.ElementAt(ix - 1).Value.color
+                        Else
+                            ix = ix + 1
+                        End If
+                    End While
+                End If
+                buColorShape.Copy()
+                copiedShape = pptslide.Shapes.Paste()
+                With copiedShape(1)
+                    .Top = CSng(rowYPos)
+                    .Left = CSng(projectListLeft)
+                    .Height = projekthoehe
+                    .Fill.ForeColor.RGB = CInt(buFarbe)
+                    ' width ist die in der Vorlage angegebene Width 
+                End With
+
+            End If
 
             '
             ' zeichne den Projekt-Namen
@@ -8020,7 +8217,7 @@ Public Module testModule
                                 .TextFrame2.MarginLeft = 0.0
                                 .TextFrame2.MarginRight = 0.0
                                 .Top = CSng(projektGrafikYPos) - .Height
-                                .Left = CSng(x1)
+                                .Left = CSng(x1) + 2
                                 If .Left < drawingAreaLeft Then
                                     .Left = CSng(drawingAreaLeft + 1)
                                 End If
@@ -8045,7 +8242,7 @@ Public Module testModule
                                 .TextFrame2.MarginLeft = 0.0
                                 .TextFrame2.MarginRight = 0.0
                                 .Top = CSng(projektGrafikYPos)
-                                .Left = CSng(x1)
+                                .Left = CSng(x1) + 2
                                 If .Left < drawingAreaLeft Then
                                     .Left = CSng(drawingAreaLeft + 1)
                                 End If
@@ -8063,7 +8260,7 @@ Public Module testModule
                                 .TextFrame2.MarginLeft = 0.0
                                 .TextFrame2.MarginRight = 0.0
                                 .Top = CSng(projektGrafikYPos)
-                                .Left = CSng(x2) - .Width
+                                .Left = CSng(x2) - .Width - 2
                                 If .Left + .Width > drawingAreaRight Then
                                     .Left = drawingAreaRight - (.Width + 1)
                                 End If
@@ -8073,7 +8270,36 @@ Public Module testModule
 
                         End If
 
+                        ' jetzt muss ggf das Phase Delimiter Shape angebracht werden 
+                        If Not IsNothing(phasedelimiterShape) And selectedPhases.Count > 1 Then
 
+                            ' linker Delimiter 
+                            phasedelimiterShape.Copy()
+                            copiedShape = pptslide.Shapes.Paste()
+
+                            With copiedShape(1)
+                                .Top = rowYPos + 0.5 * 0.7 * projekthoehe
+                                '.Top = CSng(phasenGrafikYPos) - 0.5 * (phasedelimiterShape.Height - phaseShape.Height)
+                                .Left = CSng(x1) - .Width * 0.5
+                                .Height = 0.7 * projekthoehe
+                            End With
+
+                            ' rechter Delimiter 
+                            phasedelimiterShape.Copy()
+                            copiedShape = pptslide.Shapes.Paste()
+
+                            With copiedShape(1)
+                                .Top = rowYPos + 0.5 * 0.7 * projekthoehe
+                                '.Top = CSng(phasenGrafikYPos) - 0.5 * (phasedelimiterShape.Height - phaseShape.Height)
+                                .Left = CSng(x2) + .Width * 0.5
+                                .Height = 0.7 * projekthoehe
+                            End With
+
+                        End If
+                        
+
+
+                        ' jetzt das Shape zeichnen 
                         phaseShape.Copy()
                         copiedShape = pptslide.Shapes.Paste()
 
@@ -8212,6 +8438,8 @@ Public Module testModule
                 Exit For
             End If
 
+            rowYPos = rowYPos + projekthoehe
+
         Next
 
 
@@ -8285,7 +8513,7 @@ Public Module testModule
                                                  ByVal anzPhasen As Integer, ByVal anzMilestones As Integer, _
                                                  ByVal MsDescVorlagenShape As pptNS.Shape, ByVal MsDateVorlagenShape As pptNS.Shape, _
                                                  ByVal PhDescVorlagenShape As pptNS.Shape, ByVal PhDateVorlagenShape As pptNS.Shape, _
-                                                 ByVal projectNameVorlagenShape As pptNS.Shape) As Double
+                                                 ByVal projectNameVorlagenShape As pptNS.Shape, ByVal phaseDelimiterShape As pptNS.Shape) As Double
 
         Dim versatzFaktor As Double = 0.87
 
@@ -8293,15 +8521,30 @@ Public Module testModule
         ' Bestimmen, wieviele Projekte mit den gegebenen Einstellungen gezeichnet werden können
         Dim mindestNettoHoehe As Double = 0.0
 
-        If anzPhasen > 0 And anzMilestones > 0 Then
-            mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
-        ElseIf anzPhasen > 0 Then
-            mindestNettoHoehe = phaseVorlagenShape.Height
-        ElseIf anzMilestones > 0 Then
-            mindestNettoHoehe = milestoneVorlagenShape.Height
+        Dim tmpDbl(3) As Double
+        tmpDbl(0) = phaseVorlagenShape.Height
+        tmpDbl(1) = milestoneVorlagenShape.Height
+        tmpDbl(2) = projectNameVorlagenShape.Height
+
+        If Not IsNothing(phaseDelimiterShape) Then
+            tmpDbl(3) = phaseDelimiterShape.Height
         Else
-            mindestNettoHoehe = projectNameVorlagenShape.Height
+            tmpDbl(3) = 0.0
         End If
+
+        mindestNettoHoehe = tmpDbl.Max
+
+        'tmpDbl(3) = phaseVorlagenShape.Height
+
+        'If anzPhasen > 0 And anzMilestones > 0 Then
+        '    mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
+        'ElseIf anzPhasen > 0 Then
+        '    mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, phaseDelimiterShape.Height)
+        'ElseIf anzMilestones > 0 Then
+        '    mindestNettoHoehe = milestoneVorlagenShape.Height
+        'Else
+        '    mindestNettoHoehe = projectNameVorlagenShape.Height
+        'End If
 
 
         Dim projekthoehe As Double = mindestNettoHoehe
@@ -8363,13 +8606,29 @@ Public Module testModule
                                 ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                 ByVal legendAreaTop As Double, ByVal legendAreaLeft As Double, legendAreaRight As Double, legendAreaBottom As Double, _
                                 ByVal legendTextVorlagenShape As pptNS.Shape, ByVal legendPhaseVorlagenShape As pptNS.Shape, ByVal legendMilestoneVorlagenShape As pptNS.Shape, _
-                                ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape)
+                                ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape, ByVal buColorVorlagenShape As pptNS.Shape)
 
         Dim maxZeilen As Integer
         Dim mindestNettoHoehe As Double = System.Math.Max(legendMilestoneVorlagenShape.Height, legendPhaseVorlagenShape.Height)
-        Dim zeilenHoehe As Double = System.Math.Max(legendTextVorlagenShape.Height, mindestNettoHoehe)
+        Dim zeilenHoehe As Double
         Dim xCursor As Double, yCursor As Double
         Dim copiedShape As pptNS.ShapeRange
+        Dim buName As String
+        Dim buColor As Long
+        Dim maxDelta As Double = 0.0
+
+        Dim tmpDbl(3) As Double
+        tmpDbl(0) = legendTextVorlagenShape.Height
+        tmpDbl(1) = legendMilestoneVorlagenShape.Height
+        tmpDbl(2) = legendPhaseVorlagenShape.Height
+
+        If Not IsNothing(buColorVorlagenShape) Then
+            tmpDbl(3) = buColorVorlagenShape.Height
+        Else
+            tmpDbl(3) = 0.0
+        End If
+
+        zeilenHoehe = tmpDbl.Max
 
         If zeilenHoehe = mindestNettoHoehe Then
             zeilenHoehe = zeilenHoehe * 1.1
@@ -8379,6 +8638,74 @@ Public Module testModule
 
         xCursor = legendAreaLeft
         yCursor = legendAreaTop
+
+
+        If Not IsNothing(buColorVorlagenShape) Then
+
+            For i = 1 To businessUnitDefinitions.Count
+                buName = businessUnitDefinitions.ElementAt(i - 1).Value.name
+                buColor = businessUnitDefinitions.ElementAt(i - 1).Value.color
+
+                ' jetzt das Shape eintragen 
+                buColorVorlagenShape.Copy()
+                copiedShape = pptslide.Shapes.Paste()
+                With copiedShape(1)
+                    .Top = yCursor
+                    .Height = zeilenHoehe
+                    .Left = xCursor
+                End With
+
+                ' jetzt den Business Unit Name eintragen 
+                ' Text
+                legendTextVorlagenShape.Copy()
+                copiedShape = pptslide.Shapes.Paste()
+                With copiedShape(1)
+                    .TextFrame2.TextRange.Text = buName
+                    .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                    .Left = xCursor + buColorVorlagenShape.Width + 3
+                    If maxDelta < .Width + 3 Then
+                        maxDelta = .Width + 3
+                    End If
+                End With
+
+                yCursor = yCursor + zeilenHoehe
+                If yCursor + zeilenHoehe > legendAreaBottom Then
+                    yCursor = legendAreaTop
+                    xCursor = xCursor + maxDelta
+                    maxDelta = 0.0
+                End If
+
+            Next
+            buName = "undefiniert"
+            buColor = awinSettings.AmpelNichtBewertet
+
+            ' jetzt das Shape eintragen 
+            buColorVorlagenShape.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+            With copiedShape(1)
+                .Top = yCursor
+                .Height = zeilenHoehe
+                .Left = xCursor
+            End With
+
+            ' jetzt den Business Unit Name eintragen 
+            ' Text
+            legendTextVorlagenShape.Copy()
+            copiedShape = pptslide.Shapes.Paste()
+            With copiedShape(1)
+                .TextFrame2.TextRange.Text = buName
+                .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
+                .Left = xCursor + buColorVorlagenShape.Width + 3
+                If maxDelta < .Width + 3 Then
+                    maxDelta = .Width + 3
+                End If
+            End With
+
+            xCursor = xCursor + maxDelta
+            maxDelta = 0.0
+            yCursor = legendAreaTop
+
+        End If
 
         ' jetzt ggf die Legende für das Projekt zeichnen 
         If awinSettings.mppShowProjectLine Then
@@ -8709,7 +9036,7 @@ Public Module testModule
 
     ''' <summary>
     ''' vergößert die Textshapes der Texte, die ihre relative Größe bei einer Format-Änderung behalten sollen
-    ''' alle Text Shapes, deren .Title nicht gleich noEnlarge ist, werden angepasst 
+    ''' alle Text Shapes, deren .Title  gleich Enlarge ist, werden angepasst 
     ''' </summary>
     ''' <param name="enlargeFaktor"></param>
     ''' <param name="pptSlide"></param>
@@ -8726,8 +9053,68 @@ Public Module testModule
                     .Size = .Size * enlargeFaktor
                 End With
             End If
-            
+
         Next
+
+    End Sub
+
+    ''' <summary>
+    ''' vergrößert alle shapes, die mit Enlarge13 
+    ''' </summary>
+    ''' <param name="heightFaktor"></param>
+    ''' <param name="widthFaktor"></param>
+    ''' <remarks></remarks>
+    Private Sub resizeShapesDuePPT13(ByVal heightFaktor As Double, ByVal widthFaktor As Double, ByRef pptslide As pptNS.Slide)
+
+        Dim allShapes As pptNS.Shapes = pptslide.Shapes
+
+        If heightFaktor = 0.0 Or widthFaktor = 0.0 Then
+            ' nichts tun 
+
+        Else
+
+            For Each tmpShape As pptNS.Shape In allShapes
+
+                With tmpShape
+
+                    If .AlternativeText.Trim = "Enlarge13" Then
+
+                        Select Case .Title
+                            Case "CalendarLine"
+                                .Left = .Left - 0.5 * (widthFaktor * .Width - .Width)
+                                .Line.Weight = .Line.Weight * heightFaktor
+                                .Width = .Width * widthFaktor
+                            Case "Multiprojektsicht"
+                                .Left = .Left - 0.5 * (widthFaktor * .Width - .Width)
+                                .Top = .Top - 0.5 * (heightFaktor * .Height - .Height)
+                                .Height = .Height * heightFaktor
+                                .Width = .Width * widthFaktor
+                            Case "LegendLine"
+                                .Left = .Left - 0.5 * (widthFaktor * .Width - .Width)
+                                .Line.Weight = .Line.Weight * heightFaktor
+                                .Width = .Width * widthFaktor
+                            Case "CalendarHeight"
+                                ' wird eh positioniert, deshalb ist es nur wichtig die Größe neu zu bestimmen 
+                                .Height = .Height * heightFaktor
+                                .Line.Weight = .Line.Weight * widthFaktor
+                            Case "CalendarStep"
+                                ' wird eh positioniert, deshalb ist es nur wichtig die Größe neu zu bestimmen 
+                                .Height = .Height * heightFaktor
+                                .Line.Weight = .Line.Weight * widthFaktor
+                            Case "Quartals-Trennstrich"
+                                .Line.Weight = .Line.Weight * widthFaktor
+                            Case "Jahres-Trennstrich"
+                                .Line.Weight = .Line.Weight * widthFaktor
+                        End Select
+
+                    End If
+
+                End With
+
+
+            Next
+        End If
+
 
     End Sub
 
