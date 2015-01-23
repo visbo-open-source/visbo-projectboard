@@ -256,7 +256,7 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub TreeViewProjekte_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles TreeViewProjekte.BeforeExpand
 
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim node As New TreeNode
         Dim nodeVariant As New TreeNode
         Dim nodeTimeStamp As New TreeNode
@@ -455,8 +455,8 @@ Public Class frmProjPortfolioAdmin
         Dim hproj As clsProjekt
         Dim portfolioZeile As Integer = 2
 
-        Dim request As New Request(awinSettings.databaseName)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
+        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", username, password)
 
         Dim p As Integer, v As Integer, t As Integer
 

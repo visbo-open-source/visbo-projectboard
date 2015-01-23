@@ -46,6 +46,7 @@ Public Class ThisWorkbook
 
         'Dim cbar As CommandBar
 
+
         appInstance = Application
 
         myProjektTafel = appInstance.ActiveWorkbook.Name
@@ -63,10 +64,12 @@ Public Class ThisWorkbook
 
         magicBoardCmdBar.cmdbars = appInstance.CommandBars
 
+      
+
         Try
+
             appInstance.ScreenUpdating = False
             Call awinsetTypen()
-
 
         Catch ex As Exception
 
@@ -96,7 +99,6 @@ Public Class ThisWorkbook
         Dim plantafel As Excel.Window
 
 
-        'Call MsgBox(" in Open")
         CType(Application.Workbooks(myProjektTafel), Excel.Workbook).Activate()
 
         CType(Application.Worksheets(arrWsNames(3)), Excel.Worksheet).Activate()
@@ -173,7 +175,7 @@ Public Class ThisWorkbook
 
         Dim projektespeichern As New frmProjekteSpeichern
         Dim returnValue As DialogResult
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, Password)
 
         'If roentgenBlick.isOn Then
         '    Call awinNoshowProjectNeeds()

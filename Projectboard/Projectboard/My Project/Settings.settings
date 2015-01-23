@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="ExcelVersion" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Office 2010, Version 14.00</Value>
+      <Value Profile="(Default)">Office 2010, Version 14.00 ute geändert</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -394,8 +394,17 @@ Public Module awinGeneralModules
         Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
+        ' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
+        Try
+            awinSettings.databaseName = CStr(wsName4.Range("Datenbank").Value)
+        Catch ex As Exception
+            appInstance.ScreenUpdating = formerSU
+            Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
+        End Try
 
 
+        ' Abfragen der Login-Informationen
+        Call loginProzedur()
 
         Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -1106,8 +1115,22 @@ Public Module awinGeneralModules
         projectBoardSheet.Activate()
         appInstance.EnableEvents = True
 
+        ' '' '' ur: 22.01.2015: hier muss eigentlich der Login-Dialog aufgerufen werden !!!
+        ' '' '' ur: 22.01.2015:  wird noch zu eigener Prozedur
 
-        Dim request As New Request(awinSettings.databaseName)
+        '' ''Dim loginDialog As New frmAuthentication
+        '' ''Dim returnValue As DialogResult
+
+        '' ''returnValue = DialogResult.Retry
+
+        '' ''While returnValue = DialogResult.Retry
+
+        '' ''    returnValue = loginDialog.ShowDialog
+
+        '' ''End While
+        ' '' '' ur. 22.01.2015: Ende
+
+        Dim request As New Request(awinSettings.databaseName, username, password)
 
         ' Datenbank ist gestartet
         If request.pingMongoDb() Then
@@ -2606,7 +2629,7 @@ Public Module awinGeneralModules
         Dim storedGestern As Date = storedHeute.AddDays(-1)
         Dim pname As String = ""
         Dim variantName As String = ""
-        Dim request As New Request(databaseName)
+        Dim request As New Request(databaseName, username, password)
         Dim lastConstellation As New clsConstellation
         Dim hproj As clsProjekt
 
@@ -2659,7 +2682,7 @@ Public Module awinGeneralModules
         Dim storedGestern As Date = storedHeute.AddDays(-1)
         Dim pname As String = ""
         Dim variantName As String = ""
-        Dim request As New Request(databaseName)
+        Dim request As New Request(databaseName, username, password)
         Dim lastConstellation As New clsConstellation
         Dim projekteImZeitraum As New SortedList(Of String, clsProjekt)
         Dim projektHistorie As New clsProjektHistorie
@@ -2787,7 +2810,7 @@ Public Module awinGeneralModules
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim anzErrDB As Integer = 0
         Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
         Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
@@ -2894,7 +2917,7 @@ Public Module awinGeneralModules
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim anzErrDB As Integer = 0
         Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
         Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
@@ -2984,7 +3007,7 @@ Public Module awinGeneralModules
 
         Dim returnValue As Boolean = True
         Dim activeConstellation As New clsConstellation
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
 
         ' prüfen, ob diese Constellation überhaupt existiert ..
         Try
@@ -3028,7 +3051,7 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub loadProjectfromDB(ByVal pName As String, vName As String, ByVal show As Boolean)
 
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim hproj As clsProjekt
         Dim key As String = calcProjektKey(pName, vName)
 
@@ -3070,8 +3093,8 @@ Public Module awinGeneralModules
 
         If kennung = PTTvActions.delFromDB Then
 
-            Dim request As New Request(awinSettings.databaseName)
-            Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
+            Dim request As New Request(awinSettings.databaseName, username, password)
+            Dim requestTrash As New Request(awinSettings.databaseName & "Trash", username, password)
 
             If Not projekthistorie Is Nothing Then
                 projekthistorie.clear() ' alte Historie löschen
@@ -3180,8 +3203,8 @@ Public Module awinGeneralModules
     Public Sub deleteProjectVariantTimeStamp(ByVal pname As String, ByVal variantName As String, _
                                                   ByVal timeStamp As Date, ByRef first As Boolean)
 
-        Dim request As New Request(awinSettings.databaseName)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
+        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", username, password)
         Dim hproj As clsProjekt
 
         If first Then
@@ -3232,7 +3255,7 @@ Public Module awinGeneralModules
     ' ''' <remarks></remarks>
     Public Sub awinStoreConstellation(ByVal constellationName As String)
 
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         ' prüfen, ob diese Constellation bereits existiert ..
         If projectConstellations.Contains(constellationName) Then
 
@@ -4028,8 +4051,8 @@ Public Module awinGeneralModules
         Dim deletedProj As Integer = 0
 
 
-        Dim request As New Request(awinSettings.databaseName)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
+        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", username, password)
 
         ' alles zurücksetzen 
         projektHistorien.clear()
@@ -4346,4 +4369,26 @@ Public Module awinGeneralModules
         End With
 
     End Sub
+
+    ''' <summary>
+    ''' Prozedur um Username und Passwort für die Datenbank-Benutzung abzufragen und auch zu testen.
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub loginProzedur()
+
+        appInstance.EnableEvents = True
+
+        Dim loginDialog As New frmAuthentication
+        Dim returnValue As DialogResult
+
+        returnValue = DialogResult.Retry
+
+        While returnValue = DialogResult.Retry
+
+            returnValue = loginDialog.ShowDialog
+
+        End While
+
+    End Sub
+
 End Module

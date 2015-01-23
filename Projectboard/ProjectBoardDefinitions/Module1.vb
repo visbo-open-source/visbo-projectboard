@@ -14,6 +14,10 @@ Public Module Module1
     ' awinSettings: für StartOfCalendar, linker Rand, rechter Rand, ...
     ' Laufzeit Parameter;
 
+    'login - Informationen
+    Public username As String = ""
+    Public password As String = ""
+
     Public awinSettings As New clsawinSettings
     Public magicBoardCmdBar As New clsCommandBarEvents
     Public anzahlCalls As Integer = 0

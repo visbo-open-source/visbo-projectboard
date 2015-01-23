@@ -55,7 +55,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.UserScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("Office 2010, Version 14.00")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Office 2010, Version 14.00 ute geändert")>  _
     Public Property ExcelVersion() As String
         Get
             Return CType(Me("ExcelVersion"),String)
