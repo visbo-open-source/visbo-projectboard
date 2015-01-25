@@ -15046,9 +15046,6 @@ Public Module Projekte
         If start <= 0 Then
             start = 1
         End If
-        If ende > 120 Then
-            ende = 120
-        End If
 
         Try
             With appInstance.Worksheets(arrWsNames(3))

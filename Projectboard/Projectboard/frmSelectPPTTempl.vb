@@ -145,14 +145,18 @@ Public Class frmSelectPPTTempl
 
         Dim vorlagenDateiName As String = CType(e.Argument, String)
 
-        'Call createPPTSlidesFromConstellation(vorlagenDateiName, worker, e)
         Dim tmpCollection As New Collection
 
-        With awinSettings
-            Call createPPTSlidesFromConstellation(vorlagenDateiName, _
-                                                  tmpCollection, tmpCollection, tmpCollection, tmpCollection, _
-                                                  worker, e)
-        End With
+        Try
+            With awinSettings
+                Call createPPTSlidesFromConstellation(vorlagenDateiName, _
+                                                      tmpCollection, tmpCollection, tmpCollection, tmpCollection, _
+                                                      worker, e)
+            End With
+        Catch ex As Exception
+            Call MsgBox("Fehler " & ex.Message)
+        End Try
+        
 
 
 

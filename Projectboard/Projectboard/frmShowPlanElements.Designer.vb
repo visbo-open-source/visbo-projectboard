@@ -83,7 +83,6 @@ Partial Class frmShowPlanElements
         '
         'AbbrButton
         '
-        Me.AbbrButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
         Me.AbbrButton.Location = New System.Drawing.Point(315, 384)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(113, 23)

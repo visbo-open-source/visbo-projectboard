@@ -556,7 +556,7 @@ Public Class frmShowPlanElements
 
                 If allBUs.Count = 0 Then
                     For i = 1 To businessUnitDefinitions.Count
-                        allBUs.Add(businessUnitDefinitions.ElementAt(i - 1))
+                        allBUs.Add(CStr(businessUnitDefinitions.ElementAt(i - 1).Value.name))
                     Next
                 End If
 
@@ -863,13 +863,18 @@ Public Class frmShowPlanElements
         Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
         Dim vorlagenDateiName As String = CType(e.Argument, String)
 
+        Try
+            With awinSettings
 
-        With awinSettings
-            Call createPPTSlidesFromConstellation(vorlagenDateiName, _
-                                                  selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
-                                                  worker, e)
+                Call createPPTSlidesFromConstellation(vorlagenDateiName, _
+                                                      selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                                      worker, e)
 
-        End With
+            End With
+        Catch ex As Exception
+            Call MsgBox("Fehler " & ex.Message)
+        End Try
+       
 
 
     End Sub

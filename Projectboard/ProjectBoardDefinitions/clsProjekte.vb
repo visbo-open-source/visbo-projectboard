@@ -674,6 +674,7 @@ Public Class clsProjekte
                 cphase = hproj.getPhase(phaseName)
                 If Not IsNothing(cphase) Then
                     If awinSettings.mppShowAllIfOne Then
+                        ' das umschliesst jetzt bereits fullyContained 
 
                         If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
                             tmpMinimum = cphase.getStartDate
@@ -685,17 +686,23 @@ Public Class clsProjekte
 
 
                     Else
-                        If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
+                        ' hier muss in Abhängigkeit von fullyContained als dem schwächeren Kriterium noch auf fullyContained geprüft werden 
+                        ' andernfalls muss nichts gemacht werden 
 
-                            If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
-                                tmpMinimum = cphase.getStartDate
+                        If awinSettings.mppFullyContained Then
+                            If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
+
+                                If DateDiff(DateInterval.Day, cphase.getStartDate, tmpMinimum) > 0 Then
+                                    tmpMinimum = cphase.getStartDate
+                                End If
+
+                                If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
+                                    tmpMaximum = cphase.getEndDate
+                                End If
+
                             End If
-
-                            If DateDiff(DateInterval.Day, cphase.getEndDate, tmpMaximum) < 0 Then
-                                tmpMaximum = cphase.getEndDate
-                            End If
-
                         End If
+
                     End If
                 End If
 
@@ -710,14 +717,15 @@ Public Class clsProjekte
                     tmpDate = hproj.getMilestoneDate(msName)
 
                     If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) >= 0 Then
+
                         If DateDiff(DateInterval.Day, tmpDate, tmpMinimum) > 0 Then
                             tmpMinimum = tmpDate
-
                         End If
 
                         If DateDiff(DateInterval.Day, tmpDate, tmpMaximum) < 0 Then
                             tmpMaximum = tmpDate
                         End If
+
                     End If
 
                 Next
@@ -726,14 +734,9 @@ Public Class clsProjekte
 
         Next
 
-        If Not awinSettings.mppfullyContained Then
-            minDate = StartofCalendar.AddMonths(von - 1)
-            maxDate = StartofCalendar.AddMonths(bis).AddDays(-1)
-        Else
-            minDate = tmpMinimum
-            maxDate = tmpMaximum
-        End If
         
+        minDate = tmpMinimum
+        maxDate = tmpMaximum
 
     End Sub
 

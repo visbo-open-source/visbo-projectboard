@@ -506,6 +506,15 @@ Public Module awinGeneralModules
 
                         End Try
 
+
+                        ' hat die Phase eine Abkürzung ? 
+                        Dim abbrev As String = ""
+                        If Not IsNothing(c.Offset(0, 5).Value) Then
+                            abbrev = CStr(c.Offset(0, 5).Value).Trim
+                        End If
+
+                        .shortName = abbrev
+
                         ' hat die Phase eine Darstellungsklasse ? 
                         Try
                             Dim darstellungsklasse As String

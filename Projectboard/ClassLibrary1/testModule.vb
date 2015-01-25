@@ -1582,7 +1582,7 @@ Public Module testModule
     ''' <summary>
     ''' erzeugt mit den übergebenen Daten den Report aus der übergebenen Report vorlage
     ''' </summary>
-    ''' <param name="pptTemplate">Name der PPT Vorlage</param>
+    ''' <param name="pptTemplateName">Name der PPT Vorlage</param>
     ''' <param name="selectedPhases">Liste mit den Phasen Namen</param>
     ''' <param name="selectedMilestones">Liste mit den Milestone Namen</param>
     ''' <param name="selectedRoles">Liste der Rollen</param>
@@ -1590,7 +1590,7 @@ Public Module testModule
     ''' <param name="worker">background Worker</param>
     ''' <param name="e">hier werden die Progress Meldungen zurückgegeben</param>
     ''' <remarks></remarks>
-    Public Sub createPPTSlidesFromConstellation(ByVal pptTemplate As String, _
+    Public Sub createPPTSlidesFromConstellation(ByVal pptTemplateName As String, _
                                                     ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                                     ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                                     ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
@@ -1598,10 +1598,12 @@ Public Module testModule
         'ByVal showAmpeln As Boolean, ByVal showDates As Boolean, ByVal strict As Boolean, _
 
         Dim pptApp As pptNS.Application = Nothing
-        Dim pptPresentation As pptNS.Presentation = Nothing
+        Dim pptCurrentPresentation As pptNS.Presentation = Nothing
+        Dim pptTemplatePresentation As pptNS.Presentation = Nothing
         Dim pptSlide As pptNS.Slide = Nothing
         Dim shapeRange As pptNS.ShapeRange = Nothing
         Dim presentationFile As String = awinPath & requirementsOrdner & "boarddossier.pptx"
+        Dim presentationFileH As String = awinPath & requirementsOrdner & "boarddossier_Hochformat.pptx"
         Dim pptShape As pptNS.Shape
         Dim portfolioName As String = currentConstellation
         Dim top As Double, left As Double, width As Double, height As Double
@@ -1614,8 +1616,7 @@ Public Module testModule
         Dim myCollection As New Collection
         Dim notYetDone As Boolean = False
         Dim listofShapes As New Collection
-        'Dim deleteStack As New Collection
-        'Look for existing instance
+        
 
         ' Vereinbarungen für Multiprojekt Sicht Erzeugung 
         Dim multiprojektContainerShape As pptNS.Shape = Nothing
@@ -1719,20 +1720,20 @@ Public Module testModule
         Dim curFormatSize(1) As Double
 
 
-        dinFormatA(0, 0) = 3370.75
-        dinFormatA(0, 1) = 2384.25
+        dinFormatA(0, 0) = 3120.0
+        dinFormatA(0, 1) = 2206.15
 
-        dinFormatA(1, 0) = 2384.25
-        dinFormatA(1, 1) = 1684.0
+        dinFormatA(1, 0) = 2206.15
+        dinFormatA(1, 1) = 1560.0
 
-        dinFormatA(2, 0) = 1684.0
-        dinFormatA(2, 1) = 1190.75
+        dinFormatA(2, 0) = 1560.0
+        dinFormatA(2, 1) = 1103.0
 
-        dinFormatA(3, 0) = 1190.75
-        dinFormatA(3, 1) = 842.0
+        dinFormatA(3, 0) = 1103.0
+        dinFormatA(3, 1) = 780.0
 
-        dinFormatA(4, 0) = 842.0
-        dinFormatA(4, 1) = 595.4
+        dinFormatA(4, 0) = 780.0
+        dinFormatA(4, 1) = 540.0
 
         ' mit completeMppDefinition wird überprüft , ob alle Informationen/Shapes für das Erstellen einer Multiprojektsicht vorhanden sind
         Dim completeMppDefinition() As Integer
@@ -1757,46 +1758,89 @@ Public Module testModule
             worker.ReportProgress(0, e)
         End If
 
+        ' jetzt wird das template geöffnet , um festzustellen , welches Format Quer oder Hoch die Vorlage hat 
+        ' und dann wird die entsprechende Titelblatt Präsentation geöffnet 
+        Try
+
+            If pptApp.Presentations.Count = 0 Then
+
+                pptTemplatePresentation = pptApp.Presentations.Open(pptTemplateName)
+                If pptTemplatePresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+                    pptCurrentPresentation = pptApp.Presentations.Open(presentationFile)
+                Else
+                    pptCurrentPresentation = pptApp.Presentations.Open(presentationFileH)
+                End If
+            Else
+                pptCurrentPresentation = pptApp.ActivePresentation
+                pptTemplatePresentation = pptApp.Presentations.Open(pptTemplateName)
+
+                If pptTemplatePresentation.PageSetup.SlideOrientation = _
+                    pptCurrentPresentation.PageSetup.SlideOrientation Then
+                    ' also in Ordnung, es kann weiter in die die Current Presentation geschreiben werden ... 
+                Else
+                    If pptTemplatePresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+                        pptCurrentPresentation = pptApp.Presentations.Open(presentationFile)
+                    Else
+                        pptCurrentPresentation = pptApp.Presentations.Open(presentationFileH)
+                    End If
+                End If
+            End If
 
 
-        ' entweder wird das template geöffnet ...
-        ' oder aber es wird in die aktive Presentation geschrieben 
-
-        If pptApp.Presentations.Count = 0 Then
-            Try
-                pptApp.Presentations.Open(presentationFile)
-                pptPresentation = pptApp.ActivePresentation
-            Catch ex As Exception
-                pptPresentation = pptApp.Presentations.Add()
-            End Try
-        Else
-            pptPresentation = pptApp.ActivePresentation
-        End If
+        Catch ex As Exception
+            Throw New Exception("Probleme mit Powerpoint Vorlagen, bitte prüfen Sie, ob die Vorlagen existieren" & vbLf & _
+                                "oder ob eine Datei bereits geöffnet ist")
+        End Try
 
 
-        ' wieviel Slides sind in der aktuellen Präsentation
-        Dim anzahlSlides As Integer
-        ' wieviel Slides wurden aus der Vorlage hinzugefügt 
-        Dim AnzAdded As Integer
+        ' jetzt ist sichergestellt, daß die Vorlage geöffnet ist: pptTemplatePresentation
+        ' und das Titelblatt: 
+
+        Dim anzSlidesToAdd As Integer
+        Dim anzahlCurrentSlides As Integer
+        Dim currentInsert As Integer = 1
 
         Try
-            anzahlSlides = pptPresentation.Slides.Count
-            AnzAdded = pptPresentation.Slides.InsertFromFile(pptTemplate, anzahlSlides)
+            anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
+            anzSlidesToAdd = pptTemplatePresentation.Slides.Count
+            pptTemplatePresentation.Saved = True
+            pptTemplatePresentation.Close()
+
         Catch ex As Exception
             Throw New Exception("Probleme mit Powerpoint Template")
         End Try
 
-        'pptPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
-        If pptPresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+
+        If pptCurrentPresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
             querFormat = True
         Else
             querFormat = False
         End If
 
 
-        curFormatSize(0) = pptPresentation.PageSetup.SlideWidth
-        curFormatSize(1) = pptPresentation.PageSetup.SlideHeight
+        curFormatSize(0) = pptCurrentPresentation.PageSetup.SlideWidth
+        curFormatSize(1) = pptCurrentPresentation.PageSetup.SlideHeight
 
+        ' jetzt werden die DinA Formate gesetzt 
+        ' Voraussetzung ist allerdings, dass es sich bei der Vorlage um DIN A4 handelt 
+        Dim paperSizeRatio As Double
+        If pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA4Paper Then
+
+            If querFormat Then
+                paperSizeRatio = curFormatSize(0) / curFormatSize(1)
+                dinFormatA(4, 0) = curFormatSize(0)
+                dinFormatA(4, 1) = curFormatSize(1)
+            Else
+                paperSizeRatio = curFormatSize(1) / curFormatSize(0)
+                dinFormatA(4, 1) = curFormatSize(0)
+                dinFormatA(4, 0) = curFormatSize(1)
+            End If
+        End If
+
+        For i = 3 To 0 Step -1
+            dinFormatA(i, 0) = dinFormatA(i + 1, 0) * paperSizeRatio
+            dinFormatA(i, 1) = dinFormatA(i + 1, 1) * paperSizeRatio
+        Next
 
 
 
@@ -1807,7 +1851,7 @@ Public Module testModule
         Dim anzShapes As Integer
         Dim tatsErstellt As Integer = 0
 
-        For j = 1 To AnzAdded
+        For j = 1 To anzSlidesToAdd
 
             tatsErstellt = tatsErstellt + 1
             If worker.WorkerSupportsCancellation Then
@@ -1820,6 +1864,12 @@ Public Module testModule
 
             End If
 
+            ' jetzt wird eine Seite aus der Vorlage ergänzt 
+            Dim tmpIX As Integer
+            tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides + j - 1, _
+                                                                          SlideStart:=j, SlideEnd:=j)
+
+
             'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
             e.Result = "Bericht Seite " & tatsErstellt & " wird aufgebaut ...."
 
@@ -1827,7 +1877,7 @@ Public Module testModule
                 worker.ReportProgress(0, e)
             End If
 
-            pptSlide = pptPresentation.Slides(anzahlSlides + j)
+            pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides + j)
 
 
             ' jetzt werden die Charts gezeichnet 
@@ -1900,10 +1950,18 @@ Public Module testModule
                         Select Case .Title
                             Case "MilestoneDescription"
                                 MsDescVorlagenShape = pptShape
+                                'With MsDescVorlagenShape.TextFrame2
+                                '    .MarginTop = 0.0
+                                '    .MarginBottom = 0.0
+                                'End With
                                 completeMppDefinition(0) = 1
 
                             Case "ProjectName"
                                 projectNameVorlagenShape = pptShape
+                                'With projectNameVorlagenShape.TextFrame2
+                                '    .MarginTop = 0.0
+                                '    .MarginBottom = 0.0
+                                'End With
                                 completeMppDefinition(1) = 1
 
                             Case "CalendarLine"
@@ -1950,6 +2008,10 @@ Public Module testModule
 
                             Case "LegendText"
                                 legendTextVorlagenShape = pptShape
+                                'With legendTextVorlagenShape.TextFrame2
+                                '    .MarginTop = 0.0
+                                '    .MarginBottom = 0.0
+                                'End With
                                 completeMppDefinition(11) = 1
 
                             Case "LegendPhase"
@@ -1972,14 +2034,26 @@ Public Module testModule
 
                             Case "MilestoneDate"
                                 MsDateVorlagenShape = pptShape
+                                'With MsDateVorlagenShape.TextFrame2
+                                '    .MarginTop = 0.0
+                                '    .MarginBottom = 0.0
+                                'End With
                                 completeMppDefinition(16) = 1
 
                             Case "PhaseDescription"
                                 PhDescVorlagenShape = pptShape
+                                'With PhDescVorlagenShape.TextFrame2
+                                '    .MarginTop = 0.0
+                                '    .MarginBottom = 0.0
+                                'End With
                                 completeMppDefinition(17) = 1
 
                             Case "PhaseDate"
                                 PhDateVorlagenShape = pptShape
+                                'With PhDateVorlagenShape.TextFrame2
+                                '    .MarginTop = 0.0
+                                '    .MarginBottom = 0.0
+                                'End With
                                 completeMppDefinition(18) = 1
 
                             Case "CalendarStep"
@@ -2131,32 +2205,34 @@ Public Module testModule
                                 Dim heightFaktor As Double
                                 Dim format As Integer = 4
                                 ' Konsistenten Ausgangspunkt schaffen - Vorbedingung Vorlage sollte Din A4 sein  
-                                With pptPresentation
+
+                                ' das muss jetzt nicht mehr gemacht werden , da man von einer DinA4 Vorlage ausgeht ... 
+                                'With pptCurrentPresentation
 
 
-                                    .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+                                '    .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
 
-                                    If .PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
-                                        heightFaktor = .PageSetup.SlideHeight / dinFormatA(format, 1)
-                                        widthFaktor = .PageSetup.SlideWidth / dinFormatA(format, 0)
-                                        .PageSetup.SlideWidth = dinFormatA(format, 0)
-                                        .PageSetup.SlideHeight = dinFormatA(format, 1)
-                                    Else
-                                        heightFaktor = .PageSetup.SlideHeight / dinFormatA(format, 0)
-                                        widthFaktor = .PageSetup.SlideWidth / dinFormatA(format, 1)
-                                        .PageSetup.SlideWidth = dinFormatA(format, 1)
-                                        .PageSetup.SlideHeight = dinFormatA(format, 0)
-                                    End If
+                                '    If .PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+                                '        heightFaktor = .PageSetup.SlideHeight / dinFormatA(format, 1)
+                                '        widthFaktor = .PageSetup.SlideWidth / dinFormatA(format, 0)
+                                '        .PageSetup.SlideWidth = dinFormatA(format, 0)
+                                '        .PageSetup.SlideHeight = dinFormatA(format, 1)
+                                '    Else
+                                '        heightFaktor = .PageSetup.SlideHeight / dinFormatA(format, 0)
+                                '        widthFaktor = .PageSetup.SlideWidth / dinFormatA(format, 1)
+                                '        .PageSetup.SlideWidth = dinFormatA(format, 1)
+                                '        .PageSetup.SlideHeight = dinFormatA(format, 0)
+                                '    End If
 
-                                End With
+                                'End With
 
-                                ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
-                                ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
-                                If pptApp.Version = "14.0" Then
-                                    ' muss nichts machen
-                                Else
-                                    Call resizeShapesDuePPT13(heightFaktor, widthFaktor, pptSlide)
-                                End If
+                                '' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
+                                '' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
+                                'If pptApp.Version = "14.0" Then
+                                '    ' muss nichts machen
+                                'Else
+                                '    Call resizeShapesDuePPT13(heightFaktor, widthFaktor, pptSlide)
+                                'End If
 
 
                                 ' Anfang bestimme Koordinaten der zeichenfelder
@@ -2206,14 +2282,14 @@ Public Module testModule
 
                                 '
                                 ' bestimme das Start und Ende Datum des PPT Kalenders
-                                Call calcStartEndePPTKalender(minDate, maxDate, awinSettings.mppFullyContained, _
+                                Call calcStartEndePPTKalender(minDate, maxDate, _
                                                               pptStartofCalendar, pptEndOfCalendar)
 
 
                                 '
                                 ' bestimme die benötigte Höhe eines Projektes
                                 Dim projekthoehe As Double
-                                projekthoehe = bestimmeMppProjektHoehe(phaseVorlagenShape, milestoneVorlagenShape,
+                                projekthoehe = bestimmeMppProjektHoehe(pptSlide, phaseVorlagenShape, milestoneVorlagenShape,
                                                                         selectedPhases.Count, selectedMilestones.Count, _
                                                                         MsDescVorlagenShape, MsDateVorlagenShape, _
                                                                         PhDescVorlagenShape, PhDateVorlagenShape,
@@ -2271,7 +2347,7 @@ Public Module testModule
 
                                     Do While availableSpace < neededSpace And ix > 0
 
-                                        With pptPresentation
+                                        With pptCurrentPresentation
 
                                             .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
 
@@ -3703,11 +3779,11 @@ Public Module testModule
 
 
                         Case "Stand:"
-                            .TextFrame2.TextRange.Text = boxName & " " & Date.Now.ToString("d")
+                            .TextFrame2.TextRange.Text = Date.Now.ToString("d")
 
 
                         Case "Zeitraum:"
-                            .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(showRangeLeft, showRangeRight)
+                            .TextFrame2.TextRange.Text = textZeitraum(showRangeLeft, showRangeRight)
 
                         Case Else
 
@@ -7581,11 +7657,10 @@ Public Module testModule
     ''' </summary>
     ''' <param name="minDate">erstes, linkes Datum</param>
     ''' <param name="maxDate">zweites, rechtes Datum</param>
-    ''' <param name="fullyContained">bestimmt ob das Element komplett gezeigt werden soll</param>
     ''' <param name="pptKalenderStart"></param>
     ''' <param name="pptKalenderEnde"></param>
     ''' <remarks></remarks>
-    Sub calcStartEndePPTKalender(ByVal minDate As Date, ByVal maxDate As Date, ByVal fullyContained As Boolean, _
+    Sub calcStartEndePPTKalender(ByVal minDate As Date, ByVal maxDate As Date, _
                                      ByRef pptKalenderStart As Date, ByRef pptKalenderEnde As Date)
 
         Dim firstDate As Date = minDate
@@ -7593,7 +7668,7 @@ Public Module testModule
         Dim linksDatum As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
         Dim rechtsDatum As Date = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
 
-        If Not fullyContained Then
+        If Not awinSettings.mppFullyContained And Not awinSettings.mppShowAllIfOne Then
             firstDate = StartofCalendar.AddMonths(showRangeLeft - 1 - 3)
             lastdate = StartofCalendar.AddMonths(showRangeRight - 1 + 3)
         Else
@@ -7672,8 +7747,28 @@ Public Module testModule
             qmWidth = 12 * calendarLineShape.Width / anzQMs
             drawItem = 2
         Else
-            Throw New ArgumentException("Zeitraum ist zu groß ...")
+            ' jetzt werden die YearShapes solange in der Schriftgröße verkleinert, bis es passt ...
+            Dim fitting As Boolean = False
+            Dim currentFontSize As Double = yearShape.TextFrame2.TextRange.Font.Size - 2
+
+            While Not fitting And currentFontSize > 6
+
+                yearShape.TextFrame2.TextRange.Font.Size = currentFontSize
+                If calendarLineShape.Width >= anzQMs / 12 * yearShape.Width Then
+                    fitting = True
+                Else
+                    currentFontSize = currentFontSize - 2
+                End If
+
+            End While
+
+            If fitting Then
+                drawItem = 2
+            Else
+                Throw New ArgumentException("Zeitraum ist zu groß ...")
+            End If
         End If
+
 
         If Not IsNothing(calendarMark) Then
             With calendarMark
@@ -8195,6 +8290,7 @@ Public Module testModule
                         phaseShape = PhaseDefinitions.getShape(phaseName)
                         Dim phaseStart As Date = cphase.getStartDate
                         Dim phaseEnd As Date = cphase.getEndDate
+                        Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName).Trim
 
                         Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, phaseStart, phaseEnd, _
                                             drawingAreaLeft, drawingAreaWidth, x1, x2)
@@ -8203,7 +8299,6 @@ Public Module testModule
                         ' jetzt müssen ggf der Phasen Name und das  Datum angebracht werden 
                         If awinSettings.mppShowPhName Then
 
-                            Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName).Trim
                             If phShortname.Trim.Length = 0 Then
                                 phShortname = phaseName
                             End If
@@ -8216,7 +8311,8 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = phShortname
                                 .TextFrame2.MarginLeft = 0.0
                                 .TextFrame2.MarginRight = 0.0
-                                .Top = CSng(projektGrafikYPos) - .Height
+                                '.Top = CSng(projektGrafikYPos) - .Height
+                                .Top = CSng(phasenGrafikYPos) + CSng(yOffsetPhToText) - 2
                                 .Left = CSng(x1) + 2
                                 If .Left < drawingAreaLeft Then
                                     .Left = CSng(drawingAreaLeft + 1)
@@ -8241,16 +8337,27 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = phDateText
                                 .TextFrame2.MarginLeft = 0.0
                                 .TextFrame2.MarginRight = 0.0
-                                .Top = CSng(projektGrafikYPos)
+                                '.Top = CSng(projektGrafikYPos)
+                                .Top = CSng(phasenGrafikYPos) + CSng(yOffsetPhToDate) + 1
                                 .Left = CSng(x1) + 2
                                 If .Left < drawingAreaLeft Then
-                                    .Left = CSng(drawingAreaLeft + 1)
+                                    .Left = CSng(drawingAreaLeft + 2)
                                 End If
                                 .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
 
                             End With
 
-                            phDateText = phaseEnd.ToShortDateString
+                            If phShortname.Length <= 7 Then
+                                phDateText = phShortname & ", " & phaseEnd.ToShortDateString
+                            Else
+                                Dim tmptxt As String = ""
+                                For i = 0 To 4
+                                    tmptxt = tmptxt & phShortname.Chars(i)
+                                Next
+                                tmptxt = tmptxt & ".."
+                                phDateText = tmptxt & ", " & phaseEnd.ToShortDateString
+                            End If
+
 
                             PhDateVorlagenShape.Copy()
                             copiedShape = pptslide.Shapes.Paste()
@@ -8259,10 +8366,11 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = phDateText
                                 .TextFrame2.MarginLeft = 0.0
                                 .TextFrame2.MarginRight = 0.0
-                                .Top = CSng(projektGrafikYPos)
+                                '.Top = CSng(projektGrafikYPos)
+                                .Top = CSng(phasenGrafikYPos) + CSng(yOffsetPhToDate) + 1
                                 .Left = CSng(x2) - .Width - 2
                                 If .Left + .Width > drawingAreaRight Then
-                                    .Left = drawingAreaRight - (.Width + 1)
+                                    .Left = drawingAreaRight - (.Width + 2)
                                 End If
                                 .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignRight
 
@@ -8278,10 +8386,11 @@ Public Module testModule
                             copiedShape = pptslide.Shapes.Paste()
 
                             With copiedShape(1)
-                                .Top = rowYPos + 0.5 * 0.7 * projekthoehe
-                                '.Top = CSng(phasenGrafikYPos) - 0.5 * (phasedelimiterShape.Height - phaseShape.Height)
-                                .Left = CSng(x1) - .Width * 0.5
+
                                 .Height = 0.7 * projekthoehe
+                                .Top = rowYPos + 0.5 * (projekthoehe - .Height)
+                                .Left = CSng(x1) - .Width * 0.5
+
                             End With
 
                             ' rechter Delimiter 
@@ -8289,10 +8398,11 @@ Public Module testModule
                             copiedShape = pptslide.Shapes.Paste()
 
                             With copiedShape(1)
-                                .Top = rowYPos + 0.5 * 0.7 * projekthoehe
-                                '.Top = CSng(phasenGrafikYPos) - 0.5 * (phasedelimiterShape.Height - phaseShape.Height)
-                                .Left = CSng(x2) + .Width * 0.5
+
                                 .Height = 0.7 * projekthoehe
+                                .Top = rowYPos + 0.5 * (projekthoehe - .Height)
+                                .Left = CSng(x2) + .Width * 0.5
+
                             End With
 
                         End If
@@ -8509,75 +8619,144 @@ Public Module testModule
     ''' <param name="projectNameVorlagenShape"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Function bestimmeMppProjektHoehe(ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, _
+    Private Function bestimmeMppProjektHoehe(ByVal pptSlide As pptNS.Slide, _
+                                             ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, _
                                                  ByVal anzPhasen As Integer, ByVal anzMilestones As Integer, _
                                                  ByVal MsDescVorlagenShape As pptNS.Shape, ByVal MsDateVorlagenShape As pptNS.Shape, _
                                                  ByVal PhDescVorlagenShape As pptNS.Shape, ByVal PhDateVorlagenShape As pptNS.Shape, _
                                                  ByVal projectNameVorlagenShape As pptNS.Shape, ByVal phaseDelimiterShape As pptNS.Shape) As Double
 
-        Dim versatzFaktor As Double = 0.87
+        'Dim versatzFaktor As Double = 0.87
 
-        ' Festlegung: Phase und Milestone werden zunächst immer zentriert dargestellt ; der Beschriftungstext kommt oben, zentriert hin, das Datum zentriert unten
-        ' Bestimmen, wieviele Projekte mit den gegebenen Einstellungen gezeichnet werden können
-        Dim mindestNettoHoehe As Double = 0.0
-
-        Dim tmpDbl(3) As Double
-        tmpDbl(0) = phaseVorlagenShape.Height
-        tmpDbl(1) = milestoneVorlagenShape.Height
-        tmpDbl(2) = projectNameVorlagenShape.Height
-
-        If Not IsNothing(phaseDelimiterShape) Then
-            tmpDbl(3) = phaseDelimiterShape.Height
-        Else
-            tmpDbl(3) = 0.0
-        End If
-
-        mindestNettoHoehe = tmpDbl.Max
-
-        'tmpDbl(3) = phaseVorlagenShape.Height
-
-        'If anzPhasen > 0 And anzMilestones > 0 Then
-        '    mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
-        'ElseIf anzPhasen > 0 Then
-        '    mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, phaseDelimiterShape.Height)
-        'ElseIf anzMilestones > 0 Then
-        '    mindestNettoHoehe = milestoneVorlagenShape.Height
-        'Else
-        '    mindestNettoHoehe = projectNameVorlagenShape.Height
-        'End If
+        Dim listOfShapes As New Collection
+        Dim shapeGruppe As pptNS.ShapeRange
+        Dim arrayOFNames() As String
+        Dim anzElements As Integer
+        Dim oneShape As pptNS.Shape
 
 
-        Dim projekthoehe As Double = mindestNettoHoehe
+        listOfShapes.Add(projectNameVorlagenShape.Name)
 
-        If anzMilestones > 0 Then
-            If awinSettings.mppShowMsName Then
-                projekthoehe = projekthoehe + versatzFaktor * MsDescVorlagenShape.Height
-            End If
+        If anzPhasen > 0 Then
+            listOfShapes.Add(phaseVorlagenShape.Name)
 
-            If awinSettings.mppShowMsDate Then
-                projekthoehe = projekthoehe + versatzFaktor * MsDateVorlagenShape.Height
-            End If
-        End If
-
-        If anzPhasen > 0 And anzMilestones = 0 Then
-            If awinSettings.mppShowPhName Then
-                projekthoehe = mindestNettoHoehe + versatzFaktor * PhDescVorlagenShape.Height
+            If Not IsNothing(phaseDelimiterShape) Then
+                listOfShapes.Add(phaseDelimiterShape.Name)
             End If
 
             If awinSettings.mppShowPhDate Then
-                projekthoehe = projekthoehe + versatzFaktor * PhDateVorlagenShape.Height
+                listOfShapes.Add(PhDateVorlagenShape.Name)
+            End If
+
+            If awinSettings.mppShowPhName Then
+                listOfShapes.Add(PhDescVorlagenShape.Name)
             End If
         End If
 
+        If anzMilestones > 0 Then
+            listOfShapes.Add(milestoneVorlagenShape.Name)
 
+            If awinSettings.mppShowMsDate Then
+                listOfShapes.Add(MsDateVorlagenShape.Name)
+            End If
 
-        If projekthoehe < projectNameVorlagenShape.Height Then
-            projekthoehe = projectNameVorlagenShape.Height
+            If awinSettings.mppShowMsName Then
+                listOfShapes.Add(MsDescVorlagenShape.Name)
+            End If
         End If
 
-        If projekthoehe <= mindestNettoHoehe Then
-            projekthoehe = mindestNettoHoehe * 1.1
-        End If
+        anzElements = listOfShapes.Count
+        ReDim arrayOFNames(anzElements - 1)
+
+        For i = 1 To anzElements
+            arrayOFNames(i - 1) = CStr(listOfShapes.Item(i))
+        Next
+
+        shapeGruppe = pptSlide.Shapes.Range(arrayOFNames)
+        oneShape = shapeGruppe.Group
+        Dim projekthoehe As Double = oneShape.Height * 13 / 15
+        oneShape.Ungroup()
+
+        ' jetzt die relativen Positionen zueinander bestimmen
+
+        '' Festlegung: Phase und Milestone werden zunächst immer zentriert dargestellt ; der Beschriftungstext kommt oben, zentriert hin, das Datum zentriert unten
+        '' Bestimmen, wieviele Projekte mit den gegebenen Einstellungen gezeichnet werden können
+        'Dim mindestNettoHoehe As Double = 0.0
+
+        'Dim tmpDbl(3) As Double
+        'tmpDbl(0) = phaseVorlagenShape.Height
+        'tmpDbl(1) = milestoneVorlagenShape.Height
+        'tmpDbl(2) = projectNameVorlagenShape.Height
+
+        'If Not IsNothing(phaseDelimiterShape) Then
+        '    tmpDbl(3) = phaseDelimiterShape.Height
+        'Else
+        '    tmpDbl(3) = 0.0
+        'End If
+
+        'mindestNettoHoehe = tmpDbl.Max
+        'NullLevel = mindestNettoHoehe / 2
+
+        ''tmpDbl(3) = phaseVorlagenShape.Height
+
+        ''If anzPhasen > 0 And anzMilestones > 0 Then
+        ''    mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
+        ''ElseIf anzPhasen > 0 Then
+        ''    mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, phaseDelimiterShape.Height)
+        ''ElseIf anzMilestones > 0 Then
+        ''    mindestNettoHoehe = milestoneVorlagenShape.Height
+        ''Else
+        ''    mindestNettoHoehe = projectNameVorlagenShape.Height
+        ''End If
+
+
+        'Dim projekthoehe As Double = mindestNettoHoehe
+
+        'If anzMilestones > 0 Then
+        '    If awinSettings.mppShowMsName Then
+        '        'projekthoehe = projekthoehe + versatzFaktor * MsDescVorlagenShape.Height
+        '        If milestoneVorlagenShape.Top > MsDescVorlagenShape.Top Then
+        '            projekthoehe = projekthoehe + (milestoneVorlagenShape.Top - MsDescVorlagenShape.Top)
+        '        Else
+        '            projekthoehe = projekthoehe + (MsDescVorlagenShape.Top - milestoneVorlagenShape.Top)
+        '        End If
+
+        '    End If
+
+        '    If awinSettings.mppShowMsDate Then
+        '        If milestoneVorlagenShape.Top > MsDateVorlagenShape.Top Then
+        '            projekthoehe = projekthoehe + (milestoneVorlagenShape.Top - MsDateVorlagenShape.Top)
+        '        Else
+        '            projekthoehe = projekthoehe + (MsDateVorlagenShape.Top - milestoneVorlagenShape.Top)
+        '        End If
+        '    End If
+        'End If
+
+        'If anzPhasen > 0 And anzMilestones = 0 Then
+        '    If awinSettings.mppShowPhName Then
+
+        '        If phaseVorlagenShape.Top > PhDateVorlagenShape.Top Then
+        '            projekthoehe = projekthoehe + (phaseVorlagenShape.Top - MsDateVorlagenShape.Top)
+        '        Else
+        '            projekthoehe = projekthoehe + (MsDateVorlagenShape.Top - milestoneVorlagenShape.Top)
+        '        End If
+
+        '    End If
+
+        '    If awinSettings.mppShowPhDate Then
+        '        projekthoehe = projekthoehe + versatzFaktor * PhDateVorlagenShape.Height
+        '    End If
+        'End If
+
+
+
+        'If projekthoehe < projectNameVorlagenShape.Height Then
+        '    projekthoehe = projectNameVorlagenShape.Height
+        'End If
+
+        'If projekthoehe <= mindestNettoHoehe Then
+        '    projekthoehe = mindestNettoHoehe * 1.1
+        'End If
 
         bestimmeMppProjektHoehe = projekthoehe
 

@@ -240,7 +240,9 @@
             If Not IsNothing(Me) Then
 
                 ' Überprüfe BU 
-                If filterBU.Count > 0 And Not IsNothing(hproj.businessUnit) Then
+                If filterBU.Count = 0 Then
+                    containsBU = True
+                ElseIf filterBU.Count > 0 And Not IsNothing(hproj.businessUnit) Then
                     If hproj.businessUnit.Trim.Length > 0 Then
                         If filterBU.Contains(hproj.businessUnit.Trim) Then
                             containsBU = True
@@ -258,10 +260,13 @@
                     End If
                 End If
 
+
                 stillOK = containsBU
 
                 If stillOK Then
-                    If filterTyp.Count > 0 And Not IsNothing(hproj.VorlagenName) Then
+                    If filterTyp.Count = 0 Then
+                        containsTyp = True
+                    ElseIf filterTyp.Count > 0 And Not IsNothing(hproj.VorlagenName) Then
                         If hproj.VorlagenName.Trim.Length > 0 Then
                             If filterTyp.Contains(hproj.VorlagenName.Trim) Then
                                 containsTyp = True
@@ -377,95 +382,95 @@
 
                 End If
 
-            Else
-                ' wenn der Filter = Nothing
-                stillOK = True
-            End If
-
-            ' Prüfen ob bestimmte Rollen vorkommen 
-            If stillOK Then
-
-                If filterRolle.Count > 0 Then
-
-                    Dim roleName As String
-                    Dim rollenBedarfe As Double = 0.0
-                    Dim myCollection As New Collection
-                    ' DiagrammTypen(1) = Rollen 
-                    Dim type As String = DiagrammTypen(1)
-                    ix = 1
-                    containsRole = False
-
-                    While ix <= filterRolle.Count And Not containsRole
-
-                        roleName = CStr(filterRolle.Item(ix))
-
-                        ' zurücksetzen
-                        myCollection.Clear()
-                        rollenBedarfe = 0.0
-
-                        ' berechnen
-                        myCollection.Add(roleName, roleName)
-                        rollenBedarfe = hproj.getBedarfeInMonths(myCollection, type).Sum
-
-                        ' entscheiden
-                        If rollenBedarfe > 0 Then
-                            containsRole = True
-                        Else
-                            ix = ix + 1
-                        End If
-
-
-                    End While
-
                 Else
-                    containsRole = True
+                    ' wenn der Filter = Nothing
+                    stillOK = True
                 End If
-                stillOK = containsRole
-            End If
-            
-            ' Prüfen ob bestimmte Kostenarten vorkommen 
-            If stillOK Then
 
-                If filterCost.Count > 0 Then
+                ' Prüfen ob bestimmte Rollen vorkommen 
+                If stillOK Then
 
-                    Dim costName As String
-                    Dim costBedarfe As Double = 0.0
-                    Dim myCollection As New Collection
-                    ' DiagrammTypen(1) = Rollen 
-                    Dim type As String = DiagrammTypen(2)
-                    ix = 1
-                    containsCost = False
+                    If filterRolle.Count > 0 Then
 
-                    While ix <= filterCost.Count And Not containsCost
+                        Dim roleName As String
+                        Dim rollenBedarfe As Double = 0.0
+                        Dim myCollection As New Collection
+                        ' DiagrammTypen(1) = Rollen 
+                        Dim type As String = DiagrammTypen(1)
+                        ix = 1
+                        containsRole = False
 
-                        costName = CStr(filterCost.Item(ix))
+                        While ix <= filterRolle.Count And Not containsRole
 
-                        ' zurücksetzen
-                        myCollection.Clear()
-                        costBedarfe = 0.0
+                            roleName = CStr(filterRolle.Item(ix))
 
-                        ' berechnen
-                        myCollection.Add(costName, costName)
-                        costBedarfe = hproj.getBedarfeInMonths(myCollection, type).Sum
+                            ' zurücksetzen
+                            myCollection.Clear()
+                            rollenBedarfe = 0.0
 
-                        ' entscheiden
-                        If costBedarfe > 0 Then
-                            containsCost = True
-                        Else
-                            ix = ix + 1
-                        End If
+                            ' berechnen
+                            myCollection.Add(roleName, roleName)
+                            rollenBedarfe = hproj.getBedarfeInMonths(myCollection, type).Sum
+
+                            ' entscheiden
+                            If rollenBedarfe > 0 Then
+                                containsRole = True
+                            Else
+                                ix = ix + 1
+                            End If
 
 
-                    End While
+                        End While
 
-                Else
-                    containsCost = True
+                    Else
+                        containsRole = True
+                    End If
+                    stillOK = containsRole
                 End If
-                stillOK = containsCost
-            End If
+
+                ' Prüfen ob bestimmte Kostenarten vorkommen 
+                If stillOK Then
+
+                    If filterCost.Count > 0 Then
+
+                        Dim costName As String
+                        Dim costBedarfe As Double = 0.0
+                        Dim myCollection As New Collection
+                        ' DiagrammTypen(1) = Rollen 
+                        Dim type As String = DiagrammTypen(2)
+                        ix = 1
+                        containsCost = False
+
+                        While ix <= filterCost.Count And Not containsCost
+
+                            costName = CStr(filterCost.Item(ix))
+
+                            ' zurücksetzen
+                            myCollection.Clear()
+                            costBedarfe = 0.0
+
+                            ' berechnen
+                            myCollection.Add(costName, costName)
+                            costBedarfe = hproj.getBedarfeInMonths(myCollection, type).Sum
+
+                            ' entscheiden
+                            If costBedarfe > 0 Then
+                                containsCost = True
+                            Else
+                                ix = ix + 1
+                            End If
 
 
-            doesNotBlock = stillOK
+                        End While
+
+                    Else
+                        containsCost = True
+                    End If
+                    stillOK = containsCost
+                End If
+
+
+                doesNotBlock = stillOK
 
         End Get
     End Property
