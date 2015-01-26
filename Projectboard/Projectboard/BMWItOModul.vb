@@ -31,6 +31,7 @@ Module BMWItOModul
         Dim currentHierarchy As Integer = 0
         Dim zeile As Integer, spalte As Integer
         Dim pName As String = " "
+        Dim currentDateiName As String
 
         Dim lastRow As Integer
 
@@ -47,6 +48,7 @@ Module BMWItOModul
         Dim completeName As String
         Dim nameSopTyp As String = " "
         Dim nameProduktlinie As String = ""
+        Dim defaultBU As String = ""
 
         Dim startDate As Date, endDate As Date
         Dim startoffset As Long, duration As Long
@@ -73,6 +75,7 @@ Module BMWItOModul
         Dim colName As Integer
         Dim colAnfang As Integer
         Dim colEnde As Integer
+        Dim colProduktlinie As Integer
         Dim colAbbrev As Integer = -1
         Dim colVorgangsKlasse As Integer = -1
         Dim firstZeile As Excel.Range
@@ -90,6 +93,26 @@ Module BMWItOModul
         spalte = 5
         geleseneProjekte = 0
 
+        ' wie lautet der aktuelle Dateiname ? 
+        currentDateiName = CType(appInstance.ActiveWorkbook, Excel.Workbook).Name
+
+        ' wie lautet ggf der Default Produktlinien Name ? 
+        Dim i As Integer
+        Dim found As Boolean = False
+        Dim tmpName As String
+        i = 1
+        While i <= businessUnitDefinitions.Count And Not found
+
+            tmpName = businessUnitDefinitions.ElementAt(i - 1).Value.name
+            If currentDateiName.Contains(tmpName) Then
+                defaultBU = tmpName
+                found = True
+            Else
+                i = i + 1
+            End If
+
+        End While
+        
 
         Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.ActiveSheet, _
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -104,6 +127,13 @@ Module BMWItOModul
             colEnde = firstZeile.Find(What:=suchstr(ptNamen.Ende)).Column
         Catch ex As Exception
             Throw New ArgumentException("Fehler im Datei Aufbau ..." & vbLf & ex.Message)
+        End Try
+
+
+        Try
+            colProduktlinie = firstZeile.Find(What:=suchstr(ptNamen.Produktlinie)).Column
+        Catch ex As Exception
+            colProduktlinie = -1
         End Try
 
         ' diese Daten können vorhanden sein - wenn nicht, weitermachen ...  
@@ -170,27 +200,43 @@ Module BMWItOModul
                     tmpStr = completeName.Trim.Split(New Char() {CChar("["), CChar("]")}, 5)
 
                     ' PT-71 Änderung 22.1.15 (tk) Der Projekt-Name soll der RPLAN Name sein 
-                    pName = tmpStr(0).Trim
+                    'pName = tmpStr(0).Trim
                     ' damit alt: 
-                    'If tmpStr(0).Contains("SOP") Then
-                    '    Dim positionIX As Integer = tmpStr(0).IndexOf("SOP") - 1
-                    '    pName = ""
-                    '    For ih As Integer = 0 To positionIX
-                    '        pName = pName & tmpStr(0).Chars(ih)
-                    '    Next
-                    '    pName = pName.Trim
-                    'Else
-                    '    pName = tmpStr(0).Trim
-                    'End If
+                    ' jetzt doch wieder hereingenommen, weil sich von einem Monat auf den anderen ein und dasselbe Projekte im SOP ändert .... 
+                    Dim doADD As Boolean = False
+
+                    If tmpStr(0).Contains("SOP") Then
+                        Dim positionIX As Integer = tmpStr(0).IndexOf("SOP") - 1
+                        pName = ""
+                        For ih As Integer = 0 To positionIX
+                            pName = pName & tmpStr(0).Chars(ih)
+                        Next
+                        pName = pName.Trim
+                        doADD = True
+                    Else
+                        pName = tmpStr(0).Trim
+                    End If
                     ' Ende Änderung PT-71 22.1.15 (tk)
 
                     If Not isVorlage Then
                         If tmpStr(0).Trim.EndsWith("eA") Then
                             vorlagenName = "Rel 4 eA 07"
+                            If doADD Then
+                                pName = pName & " eA"
+                            End If
+
                         ElseIf tmpStr(0).Trim.EndsWith("wA") Then
                             vorlagenName = "Rel 4 wA 07"
+                            If doADD Then
+                                pName = pName & " wA"
+                            End If
+
                         ElseIf tmpStr(0).Trim.EndsWith("E") Then
                             vorlagenName = "Rel 4 E 07"
+                            If doADD Then
+                                pName = pName & " E"
+                            End If
+
                         Else
                             vorlagenName = "unknown"
                         End If
@@ -228,7 +274,7 @@ Module BMWItOModul
                                 hproj.latestStart = vproj.latestStart
                                 hproj.ampelStatus = PTfarbe.none
                                 hproj.leadPerson = ""
-                                hproj.businessUnit = ""
+                                hproj.businessUnit = defaultBU
                             End If
 
 
@@ -259,7 +305,7 @@ Module BMWItOModul
                             hproj.Risiko = zufall.NextDouble * 10
                             hproj.volume = zufall.NextDouble * 1000000
                             hproj.complexity = zufall.NextDouble
-                            hproj.businessUnit = ""
+                            hproj.businessUnit = defaultBU
                             hproj.description = ""
 
                             hproj.Erloes = 0.0
@@ -315,6 +361,7 @@ Module BMWItOModul
                                 origItem = CStr(CType(.Cells(curZeile, colName), Excel.Range).Value)
                                 itemName = origItem.Trim
 
+                                ' Änderung 26.1.15 Ignorieren 
 
                                 itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
                                 itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
@@ -327,10 +374,16 @@ Module BMWItOModul
 
                                 If itemName = "Projektphasen" Then
                                     Try
-                                        Dim tmpBU As String = CStr(CType(.Cells(curZeile, colName - 1), Excel.Range).Value).Trim
+                                        Dim tmpBU As String
+                                        If colProduktlinie > 0 Then
+                                            tmpBU = CStr(CType(.Cells(curZeile, colProduktlinie), Excel.Range).Value).Trim
+                                        Else
+                                            tmpBU = ""
+                                        End If
+
 
                                         ' gibt es die Business Unit ? 
-                                        Dim found As Boolean = False
+                                        found = False
                                         Dim bix As Integer = 1
 
                                         If tmpBU.Length > 0 Then
@@ -347,6 +400,13 @@ Module BMWItOModul
                                                 End If
                                             End While
                                         End If
+
+                                        If Not found Then
+
+                                            CType(activeWSListe.Cells(curZeile, protocolColumn + 4), Excel.Range).Value = _
+                                                    "Default Wert für Business Unit aus Datei-Namen verwendet: " & hproj.businessUnit
+                                        End If
+
                                     Catch ex1 As Exception
 
                                     End Try
@@ -477,7 +537,7 @@ Module BMWItOModul
                                                 If ueberdeckung < 0.98 Then
                                                     Dim lfdNr As Integer = 2
                                                     Dim newName As String = stdName & " " & lfdNr.ToString
-                                                    Dim found As Boolean = False
+                                                    found = False
 
                                                     Do While listOfProjectPhases.ContainsKey(newName) And Not found
 
@@ -648,7 +708,7 @@ Module BMWItOModul
 
                                                         Dim lfdNr As Integer = 2
                                                         Dim newName As String = stdName & " " & lfdNr.ToString
-                                                        Dim found As Boolean = False
+                                                        found = False
 
                                                         Do While listOFProjectMilestones.ContainsKey(newName) And Not found
 
