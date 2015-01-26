@@ -6,14 +6,18 @@ Imports MongoDbAccess
 
 
 
-
 Public Class frmAuthentication
 
+    'Public loginResult As Integer = 0
 
     Private Sub benutzer_KeyDown(sender As Object, e As KeyEventArgs) Handles benutzer.KeyDown
         If e.KeyCode = Keys.Enter Or e.KeyCode = Keys.Tab Then
             maskedPwd.Focus()
         End If
+
+    End Sub
+
+    Private Sub maskedPwd_ContextMenuStripChanged(sender As Object, e As EventArgs) Handles maskedPwd.ContextMenuStripChanged
 
     End Sub
 
@@ -82,5 +86,14 @@ Public Class frmAuthentication
     End Sub
 
 
- 
+
+    Private Sub frmAuthentication_FormClosed(sender As Object, e As EventArgs) Handles MyBase.FormClosed
+
+
+    End Sub
+
+
+    Private Sub abbrButton_Click(sender As Object, e As EventArgs) Handles abbrButton.Click
+
+    End Sub
 End Class

@@ -28,12 +28,13 @@ Partial Class frmAuthentication
         Me.benutzer = New System.Windows.Forms.TextBox()
         Me.maskedPwd = New System.Windows.Forms.TextBox()
         Me.messageBox = New System.Windows.Forms.Label()
+        Me.abbrButton = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(21, 38)
+        Me.Label1.Location = New System.Drawing.Point(12, 37)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(40, 13)
         Me.Label1.TabIndex = 0
@@ -42,7 +43,7 @@ Partial Class frmAuthentication
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(21, 72)
+        Me.Label2.Location = New System.Drawing.Point(12, 77)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(55, 13)
         Me.Label2.TabIndex = 1
@@ -51,7 +52,7 @@ Partial Class frmAuthentication
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(21, 112)
+        Me.Label3.Location = New System.Drawing.Point(12, 114)
         Me.Label3.Name = "Label3"
         Me.Label3.Size = New System.Drawing.Size(50, 13)
         Me.Label3.TabIndex = 2
@@ -59,14 +60,14 @@ Partial Class frmAuthentication
         '
         'benutzer
         '
-        Me.benutzer.Location = New System.Drawing.Point(91, 65)
+        Me.benutzer.Location = New System.Drawing.Point(91, 74)
         Me.benutzer.Name = "benutzer"
         Me.benutzer.Size = New System.Drawing.Size(260, 20)
         Me.benutzer.TabIndex = 4
         '
         'maskedPwd
         '
-        Me.maskedPwd.Location = New System.Drawing.Point(91, 105)
+        Me.maskedPwd.Location = New System.Drawing.Point(91, 111)
         Me.maskedPwd.Name = "maskedPwd"
         Me.maskedPwd.PasswordChar = Global.Microsoft.VisualBasic.ChrW(42)
         Me.maskedPwd.Size = New System.Drawing.Size(260, 20)
@@ -78,17 +79,28 @@ Partial Class frmAuthentication
         Me.messageBox.BackColor = System.Drawing.SystemColors.ButtonHighlight
         Me.messageBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.messageBox.ForeColor = System.Drawing.Color.Red
-        Me.messageBox.Location = New System.Drawing.Point(21, 9)
+        Me.messageBox.Location = New System.Drawing.Point(12, 9)
         Me.messageBox.Name = "messageBox"
         Me.messageBox.Size = New System.Drawing.Size(0, 16)
         Me.messageBox.TabIndex = 7
+        '
+        'abbrButton
+        '
+        Me.abbrButton.DialogResult = System.Windows.Forms.DialogResult.Abort
+        Me.abbrButton.Location = New System.Drawing.Point(255, 137)
+        Me.abbrButton.Name = "abbrButton"
+        Me.abbrButton.Size = New System.Drawing.Size(96, 23)
+        Me.abbrButton.TabIndex = 8
+        Me.abbrButton.Text = "Abbrechen"
+        Me.abbrButton.UseVisualStyleBackColor = True
         '
         'frmAuthentication
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(390, 158)
+        Me.ClientSize = New System.Drawing.Size(390, 172)
         Me.ControlBox = False
+        Me.Controls.Add(Me.abbrButton)
         Me.Controls.Add(Me.messageBox)
         Me.Controls.Add(Me.maskedPwd)
         Me.Controls.Add(Me.benutzer)
@@ -97,14 +109,15 @@ Partial Class frmAuthentication
         Me.Controls.Add(Me.Label1)
         Me.Name = "frmAuthentication"
         Me.Text = "ProjectBoard LOGIN"
-        Me.ResumeLayout(false)
-        Me.PerformLayout
+        Me.ResumeLayout(False)
+        Me.PerformLayout()
 
-End Sub
+    End Sub
     Friend WithEvents Label1 As System.Windows.Forms.Label
     Friend WithEvents Label2 As System.Windows.Forms.Label
     Friend WithEvents Label3 As System.Windows.Forms.Label
     Public WithEvents benutzer As System.Windows.Forms.TextBox
     Public WithEvents maskedPwd As System.Windows.Forms.TextBox
     Friend WithEvents messageBox As System.Windows.Forms.Label
+    Friend WithEvents abbrButton As System.Windows.Forms.Button
 End Class

@@ -17,6 +17,7 @@ Public Module Module1
     'login - Informationen
     Public username As String = ""
     Public password As String = ""
+    Public loginErfolgreich As Boolean = False
 
     Public awinSettings As New clsawinSettings
     Public magicBoardCmdBar As New clsCommandBarEvents
