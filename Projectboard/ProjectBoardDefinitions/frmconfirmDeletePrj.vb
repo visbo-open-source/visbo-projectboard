@@ -1,5 +1,6 @@
 ﻿Public Class frmconfirmDeletePrj
 
+    Public botschaft As String
     Private Sub OK_Button_Click(sender As System.Object, e As System.EventArgs) Handles OK_Button.Click
 
         DialogResult = System.Windows.Forms.DialogResult.OK
@@ -17,7 +18,7 @@
 
     Private Sub frmconfirmDeletePrj_Load(sender As Object, e As System.EventArgs) Handles Me.Load
 
-        Label1.Text = "Bitte bestätigen Sie das Löschen der selektierten Objekte"
+        Label1.Text = botschaft
 
     End Sub
 

@@ -556,7 +556,8 @@ Public Class clsCommandBarEvents
                         key = calcProjektKey(hproj)
                         Try
                             ShowProjekte.Remove(pname)
-                            AlleProjekte.Remove(key)
+                            'AlleProjekte.Remove(key)
+                            AlleProjekte.RemoveAllVariantsOf(pname)
                             'DeletedProjekte.Add(hproj)
                         Catch ex1 As Exception
 

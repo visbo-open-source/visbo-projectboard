@@ -153,8 +153,9 @@ Public Class clsEventsPrcCharts
 
     Private Sub PrcChartEvents_BeforeRightClick(ByRef Cancel As Boolean) Handles PrcChartEvents.BeforeRightClick
 
-        Cancel = True
-        appInstance.CommandBars("awinRightClickinPRCChart").ShowPopup()
+        ' tk Änderung 19.1.15 ; Right Click de-aktiviert 
+        'Cancel = True
+        'appInstance.CommandBars("awinRightClickinPRCChart").ShowPopup()
 
     End Sub
 

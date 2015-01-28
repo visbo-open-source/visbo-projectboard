@@ -14,6 +14,11 @@ Public Module Module1
     ' awinSettings: für StartOfCalendar, linker Rand, rechter Rand, ...
     ' Laufzeit Parameter;
 
+    'login - Informationen
+    Public username As String = ""
+    Public password As String = ""
+    Public loginErfolgreich As Boolean = False
+
     Public awinSettings As New clsawinSettings
     Public magicBoardCmdBar As New clsCommandBarEvents
     Public anzahlCalls As Integer = 0
@@ -44,8 +49,8 @@ Public Module Module1
     Public selectedProjekte As New clsProjekte
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
-    Public ImportProjekte As New clsProjekte
-    'Public DeletedProjekte As New clsProjekte
+    
+    Public ImportProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
     Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
@@ -72,11 +77,17 @@ Public Module Module1
     Public PhaseDefinitions As New clsPhasen
     Public MilestoneDefinitions As New clsMeilensteine
     Public CostDefinitions As New clsKostenarten
+    ' Welche Business-Units gibt es ? 
+    Public businessUnitDefinitions As SortedList(Of Integer, clsBusinessUnit)
+
+    ' diese Collection nimmt alle Filter Definitionen auf 
+    Public filterDefinitions As New clsFilterDefinitions
+    Public selFilterDefinitions As New clsFilterDefinitions
+
     Public DiagramList As New clsDiagramme
     Public awinButtonEvents As New clsAwinEvents
 
-    ' Variable gibt ab, ob die Time Zone, die auf Diagramme wirkt, gezeigt werden soll oder nicht
-    Public showtimezone As Boolean
+   
 
 
     ' damit ist das Formular Milestone / Status / Phase überall verfügbar
@@ -119,8 +130,7 @@ Public Module Module1
     Public Const maxProjektdauer As Integer = 60
 
 
-    ' Welche Business-Units gibt es ? 
-    Public businessUnit As List(Of String)
+   
 
 
     Public Enum PTbubble
@@ -237,6 +247,7 @@ Public Module Module1
         visualisieren = 0
         leistbarkeitsAnalyse = 1
         multiprojektReport = 2
+        filterdefinieren = 3
     End Enum
 
 
@@ -283,7 +294,7 @@ Public Module Module1
     End Enum
 
     ' wird in der Treeview für Laden, Löschen, Aktivieren von TreeView Formularen benötigt 
-    Public Enum PTtvactions
+    Public Enum PTTvActions
         delFromDB = 0
         delFromSession = 1
         loadPVS = 2
@@ -291,6 +302,7 @@ Public Module Module1
         definePortfolioDB = 4
         definePortfolioSE = 5
         loadPV = 6
+        deleteV = 7
     End Enum
 
    
@@ -352,10 +364,6 @@ Public Module Module1
     Public projektFilesOrdner As String = "ProjectFiles"
     Public deletedFilesOrdner As String = "DeletedFiles"
     Public rplanimportFilesOrdner As String = "RPLANImport"
-    ' spezifisch für BMW Export 
-    Public bmwExportFilesOrdner As String = "Export Dateien"
-    Public bmwFC52Vorlage As String = requirementsOrdner & "FC52 Vorlage.xlsx"
-    Public bmwExportVorlage As String = requirementsOrdner & "export Vorlage.xlsx"
 
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"
     ' Public projektDetail As String = "Project Detail.xlsx"
@@ -389,85 +397,78 @@ Public Module Module1
 
         With appInstance
             .EnableEvents = True
+            If .ScreenUpdating = False Then
+                'Call MsgBox ("Screen Update !")
+                .ScreenUpdating = True
+            End If
         End With
 
-        ' Konsistenzchecks durchführen
-
-        'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-        '    If Not kvp.Value.isConsistent Then
-        '        Call MsgBox("nicht konsistent: " & kvp.Value.name)
-        '    End If
-
-        'Next
-
-
     End Sub
 
 
 
-    Sub awinLoescheProjekt(pname As String)
-        '
-        'Prozedur löscht in Ws Ressourcen alle zeilen, die den Projektnamen enthalten
-        '
-        '
-        'Dim zeile As Integer, endpunkt As Integer
-        Dim hproj As clsProjekt
+    'Sub awinLoescheProjekt(pname As String)
+    '    '
+    '    'Prozedur löscht in Ws Ressourcen alle zeilen, die den Projektnamen enthalten
+    '    '
+    '    '
+    '    'Dim zeile As Integer, endpunkt As Integer
+    '    Dim hproj As clsProjekt
 
-        Dim tfz As Integer, tfs As Integer
-        Dim key As String
-
-
-
-        ' prüfen, ob es in der ShowProjektListe ist ...
-        If ShowProjekte.contains(pname) Then
-
-            ' Shape wird gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
-            Call clearProjektinPlantafel(pname)
-
-
-            Try
-                hproj = ShowProjekte.getProject(pname)
-                key = calcProjektKey(hproj)
-                'Try
-                '    DeletedProjekte.Add(hproj)
-                'Catch ex As Exception
-                '    ' nichts tun, dann wurde das eben schon mal gelöscht ..
-                'End Try
-
-            Catch ex As Exception
-                Call MsgBox(" Fehler in Delete " & pname & " , Modul: awinLoescheProjekt")
-                Exit Sub
-            End Try
+    '    Dim tfz As Integer, tfs As Integer
+    '    Dim key As String
 
 
 
-            With hproj
-                tfz = .tfZeile
-                tfs = .tfspalte
-            End With
+    '    ' prüfen, ob es in der ShowProjektListe ist ...
+    '    If ShowProjekte.contains(pname) Then
+
+    '        ' Shape wird gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
+    '        Call clearProjektinPlantafel(pname)
 
 
-            ShowProjekte.Remove(pname)
-            AlleProjekte.Remove(key)
+    '        Try
+    '            hproj = ShowProjekte.getProject(pname)
+    '            key = calcProjektKey(hproj)
+    '            'Try
+    '            '    DeletedProjekte.Add(hproj)
+    '            'Catch ex As Exception
+    '            '    ' nichts tun, dann wurde das eben schon mal gelöscht ..
+    '            'End Try
 
-
-            'Dim abstand As Integer ' eigentlich nur Dummy Variable, wird aber in Tabelle2 benötigt ...
-            'Call awinClkReset(abstand)
-
-            ' ein Projekt wurde gelöscht bzw aus Showprojekte entfernt  - typus = 3
-            Call awinNeuZeichnenDiagramme(3)
-
-
-
-        Else
-            Call MsgBox("Projekt " & pname & " wurde nicht gefunden")
-        End If
-
+    '        Catch ex As Exception
+    '            Call MsgBox(" Fehler in Delete " & pname & " , Modul: awinLoescheProjekt")
+    '            Exit Sub
+    '        End Try
 
 
 
-    End Sub
+    '        With hproj
+    '            tfz = .tfZeile
+    '            tfs = .tfspalte
+    '        End With
+
+
+    '        ShowProjekte.Remove(pname)
+    '        AlleProjekte.Remove(key)
+
+
+    '        'Dim abstand As Integer ' eigentlich nur Dummy Variable, wird aber in Tabelle2 benötigt ...
+    '        'Call awinClkReset(abstand)
+
+    '        ' ein Projekt wurde gelöscht bzw aus Showprojekte entfernt  - typus = 3
+    '        Call awinNeuZeichnenDiagramme(3)
+
+
+
+    '    Else
+    '        Call MsgBox("Projekt " & pname & " wurde nicht gefunden")
+    '    End If
+
+
+
+
+    'End Sub
 
     '
     ' prüft , ob übergebenes Diagramm ein Ergebnis Diagramm ist - in index steht ggf als Ergebnis die entsprechende Nummer; 0 wenn es kein Ergebnis Diagramm ist
@@ -1082,6 +1083,10 @@ Public Module Module1
 
     End Sub
 
+    ''' <summary>
+    ''' aktiviert die Right Clicks in den Charts 
+    ''' </summary>
+    ''' <remarks></remarks>
     Sub awinRightClickinPRCCharts()
         Dim myBar As CommandBar
         Dim myitem As CommandBarButton
@@ -2173,6 +2178,53 @@ Public Module Module1
         tmpValue = anzahlTage * 12 * boxWidth / 365
         
         calcDateToXCoord = tmpValue
+
+
+    End Function
+
+    ''' <summary>
+    ''' bestimmt den Prozentsatz der Überdeckung der beiden durch Start- und End-Datum angegebenen Phasen 
+    ''' </summary>
+    ''' <param name="startDate1">StartDatum Phase 1</param>
+    ''' <param name="endDate1">Ende Datum Phase 1</param>
+    ''' <param name="startDate2">Startdatum Phase 2</param>
+    ''' <param name="enddate2">Ende Datum Phase 2</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcPhaseUeberdeckung(ByVal startDate1 As Date, endDate1 As Date, _
+                                              ByVal startDate2 As Date, ByVal enddate2 As Date) As Double
+
+        Dim duration1 As Long = DateDiff(DateInterval.Day, startDate1, endDate1) + 1
+        Dim duration2 As Long = DateDiff(DateInterval.Day, startDate2, enddate2) + 1
+        Dim ueberdeckungsStart As Date, ueberdeckungsEnde As Date
+        Dim ueberdeckungsduration As Long
+        Dim ergebnis As Double
+
+
+        If DateDiff(DateInterval.Day, endDate1, startDate2) > 0 Or _
+            DateDiff(DateInterval.Day, enddate2, startDate1) > 0 Then
+            ' es gibt gar keine Überdeckung ...
+            ergebnis = 0.0
+        Else
+
+            If DateDiff(DateInterval.Day, startDate1, startDate2) >= 0 Then
+                ueberdeckungsStart = startDate2
+            Else
+                ueberdeckungsStart = startDate1
+            End If
+
+            If DateDiff(DateInterval.Day, endDate1, enddate2) >= 0 Then
+                ueberdeckungsEnde = endDate1
+            Else
+                ueberdeckungsEnde = enddate2
+            End If
+
+            ueberdeckungsduration = DateDiff(DateInterval.Day, ueberdeckungsStart, ueberdeckungsEnde) + 1
+            ergebnis = System.Math.Max(ueberdeckungsduration / duration1, ueberdeckungsduration / duration2)
+
+        End If
+
+        calcPhaseUeberdeckung = ergebnis
 
 
     End Function

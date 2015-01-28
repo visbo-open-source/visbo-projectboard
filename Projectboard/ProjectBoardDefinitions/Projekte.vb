@@ -7885,20 +7885,27 @@ Public Module Projekte
 
             Try
                 hproj = ShowProjekte.getProject(pname)
-                With hproj
-                    zeile = .tfZeile
-                    .Status = ProjektStatus(0)
-                    .timeStamp = Date.Now
-                End With
+
+                If hproj.variantName = "" Then
+                    Call MsgBox("die Fixierung der Standard Variante kann nicht aufgehoben werden ..." & vbLf & _
+                                "bitte erstellen Sie zu diesem Zweck eine Variante ...")
+                Else
+                    With hproj
+                        zeile = .tfZeile
+                        .Status = ProjektStatus(0)
+                        .timeStamp = Date.Now
+                    End With
 
 
-                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                Dim tmpCollection As New Collection
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
+                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
+                End If
+                
             Catch ex As Exception
-                Call MsgBox(" Fehler in Zurücknahme Beauftragung " & pname & " , Modul: awinCancelBeauftragung")
+                Call MsgBox(" Fehler in Fixierung aufheben " & pname & " , Modul: awinCancelBeauftragung")
                 Exit Sub
             End Try
 
@@ -9000,7 +9007,7 @@ Public Module Projekte
             kvp.Value.shpUID = ""
         Next
 
-        ' jetzt wird die Zuordnung Projektname und Shapge ID gelöscht ... 
+        ' jetzt wird die Zuordnung Projektname und Shape ID gelöscht ... 
         ShowProjekte.shpListe.Clear()
 
         appInstance.EnableEvents = formerEE
@@ -9240,7 +9247,7 @@ Public Module Projekte
             'appInstance.ScreenUpdating = False
             'Call diagramsVisible(False)
             Call awinClearPlanTafel()
-            Call awinZeichnePlanTafel()
+            Call awinZeichnePlanTafel(False)
             Call awinNeuZeichnenDiagramme(2)
             'Call diagramsVisible(True)
             'appInstance.ScreenUpdating = True
@@ -9945,21 +9952,12 @@ Public Module Projekte
 
             For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
 
-                ' wenn ein Zeitraum gesetzt ist, dann nur anzeigen, was in diesem Zeitraum liegt 
-                If showRangeLeft < showRangeRight And showRangeLeft > 0 Then
-
-                    If deleteOtherShapes Then
-                        singleShp = ShowProjekte.getShape(kvp.Value.name)
-                        Call awinDeleteProjectChildShapes(singleShp, 3)
-                    End If
-
-                    Call zeichnePhasenInProjekt(kvp.Value, nameList, showRangeLeft, showRangeRight, False, msNumber)
-                Else
-                    Call MsgBox("Bitte wählen Sie zunächst einen Zeitraum aus !")
-                    ' von jedem Projekt die Phasen anzeigen 
-                    'Call zeichnePhasenInProjekt(kvp.Value, nameList, False, 0)
+                If deleteOtherShapes Then
+                    singleShp = ShowProjekte.getShape(kvp.Value.name)
+                    Call awinDeleteProjectChildShapes(singleShp, 3)
                 End If
 
+                Call zeichnePhasenInProjekt(kvp.Value, nameList, showRangeLeft, showRangeRight, False, msNumber)
 
             Next
 
@@ -10046,7 +10044,7 @@ Public Module Projekte
                                 pName = hproj.name
                                 Call zeichneResultMilestonesInProjekt(hproj, nameList, farbTyp, 0, 0, False, msNumber, False)
                             Catch ex As Exception
-
+                                Dim a As Integer = 0
                             End Try
 
 
@@ -10067,49 +10065,47 @@ Public Module Projekte
 
         Else
 
-            If showRangeRight - showRangeLeft > 0 Then
-                If ShowProjekte.Count > 0 Then
 
-                    ' tue es für alle Projekte in Showprojekte 
+            If ShowProjekte.Count > 0 Then
 
-
-                    Dim todoListe As New SortedList(Of Long, clsProjekt)
-                    Dim key As Long
-
-                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-                        key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
-                        todoListe.Add(key, kvp.Value)
-
-                    Next
+                ' tue es für alle Projekte in Showprojekte 
 
 
-                    For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
+                Dim todoListe As New SortedList(Of Long, clsProjekt)
+                Dim key As Long
 
-                        If deleteOtherShapes Then
-                            singleShp = ShowProjekte.getShape(kvp.Value.name)
-                            Call awinDeleteProjectChildShapes(singleShp, 1)
-                        End If
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                        Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
+                    key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+                    todoListe.Add(key, kvp.Value)
 
-                    Next
+                Next
 
 
-                    If msNumber = 1 Then
-                        If nameList.Count > 1 Then
-                            Call MsgBox("im gewählten Zeitraum gibt es diese Meilensteine nicht")
-                        ElseIf nameList.Count = 1 Then
-                            Call MsgBox("im gewählten Zeitraum gibt es keinen Meilenstein " & nameList.Item(1))
-                        End If
+                For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
+
+                    If deleteOtherShapes Then
+                        singleShp = ShowProjekte.getShape(kvp.Value.name)
+                        Call awinDeleteProjectChildShapes(singleShp, 1)
                     End If
 
-                Else
-                    Call MsgBox("Es sind keine Projekte geladen!")
+                    Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
+
+                Next
+
+
+                If msNumber = 1 Then
+                    If nameList.Count > 1 Then
+                        Call MsgBox("im gewählten Zeitraum gibt es diese Meilensteine nicht")
+                    ElseIf nameList.Count = 1 Then
+                        Call MsgBox("im gewählten Zeitraum gibt es keinen Meilenstein " & nameList.Item(1))
+                    End If
                 End If
+
             Else
-                Call MsgBox("Bitte wählen Sie zunächst einen Zeitraum aus !")
+                Call MsgBox("Es sind keine Projekte geladen!")
             End If
+            
 
         End If
 
@@ -10123,37 +10119,6 @@ Public Module Projekte
 
     End Sub
 
-    Public Sub zeichneMilestones(ByVal nameList As Collection, ByVal farbTyp As Integer, ByVal numberIt As Boolean)
-        ' tue es für alle Projekte in Showprojekte 
-
-
-        Dim todoListe As New SortedList(Of Long, clsProjekt)
-        Dim key As Long
-        Dim formerEE As Boolean = appInstance.EnableEvents
-        Dim formereO As Boolean = enableOnUpdate
-
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-            key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
-            todoListe.Add(key, kvp.Value)
-
-        Next
-
-        Dim msNumber As Integer = 1
-
-        For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
-
-            Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
-
-        Next
-
-        appInstance.EnableEvents = formerEE
-        enableOnUpdate = formereO
-
-    End Sub
 
     ''' <summary>
     ''' bringt alle charts in den Vordergrund, so daß sie nicht von einem neu gezeichneten Projekt überdeckt werden 
@@ -10193,107 +10158,160 @@ Public Module Projekte
 
     ''' <summary>
     ''' zeichnet die Plantafel mit den Projekten neu; 
-    ''' versucht dabei immer die alte Position der Projekte zu übernehmen 
+    ''' zeichnet bei FromScrtach = true: zuerst in Reihenfolge der Business Units, 
+    ''' dann sortiert nach Anfangsdatum, dann sortiert nach Projektdauer
+    ''' im fall fromScratch = false: versucht dabei immer die alte Position der Projekte zu übernehmen 
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub awinZeichnePlanTafel()
+    Public Sub awinZeichnePlanTafel(ByVal fromScratch As Boolean)
 
         Dim todoListe As New SortedList(Of Double, String)
         Dim key As Double
         Dim pname As String
-        Dim zeile As Integer, lastZeile As Integer, curZeile As Integer, max As Integer
+
         Dim lastZeileOld As Integer
         Dim hproj As clsProjekt
+        Dim positionsKennzahl As Double
+
+        Dim notOK As Boolean = True
 
 
 
 
-        ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        If fromScratch Then
+            Dim zeile As Integer
+            Dim lastBU As String = ""
 
-            With kvp.Value
-                key = 10000 * .tfZeile + kvp.Value.Start
-                todoListe.Add(key, .name)
-            End With
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-        Next
+                notOK = True
 
-        zeile = 2
-        lastZeile = 0
+                With kvp.Value
 
+                    positionsKennzahl = calcKennziffer(kvp.Value)
 
-        'If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
-        ' dann sollen die Projekte im extended mode gezeichnet werden 
-        ' jetzt erst mal die Konstellation "last" speichern
-        ' 3.11.14 Auskommentiert: Zeichnen sollte nichts zu tun haben mit dem Verwalten von Konstellationen 
-        ' Call storeSessionConstellation(ShowProjekte, "Last")
+                    Do While notOK
+                        Try
+                            todoListe.Add(positionsKennzahl, .name)
+                            notOK = False
+                        Catch ex As Exception
+                            positionsKennzahl = positionsKennzahl + 0.01
+                        End Try
+                    Loop
+                    
 
-        ' jetzt die todoListe abarbeiten
-        Dim i As Integer
-        For i = 1 To todoListe.Count
-            pname = todoListe.ElementAt(i - 1).Value
+                End With
 
-            Try
-                hproj = ShowProjekte.getProject(pname)
+            Next
 
-                If i = 1 Then
-                    curZeile = hproj.tfZeile
-                    lastZeileOld = hproj.tfZeile
-                    lastZeile = curZeile
-                    max = curZeile
-                Else
-                    If lastZeileOld = hproj.tfZeile Then
-                        curZeile = lastZeile
-                    Else
-                        lastZeile = max
-                        lastZeileOld = hproj.tfZeile
+            zeile = 2
+            Dim i As Integer
+
+            For i = 1 To todoListe.Count
+
+                pname = todoListe.ElementAt(i - 1).Value
+
+                Try
+                    hproj = ShowProjekte.getProject(pname)
+
+                    If i = 1 Then
+                        lastBU = hproj.businessUnit
+                    ElseIf lastBU <> hproj.businessUnit Then
+                        lastBU = hproj.businessUnit
+                        zeile = zeile + 1
                     End If
 
-                End If
+                    hproj.tfZeile = zeile
 
-                ' Änderung 9.10.14, damit die Spaces in einer 
-                If hproj.tfZeile >= curZeile + 1 Then
-                    curZeile = curZeile + 1
-                End If
-                ' Ende Änderung
-                hproj.tfZeile = curZeile
-                lastZeile = curZeile
-                'Call ZeichneProjektinPlanTafel2(pname, curZeile)
-                ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                Dim tmpCollection As New Collection
-                Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
-                curZeile = lastZeile + getNeededSpace(hproj)
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
+                    zeile = zeile + getNeededSpace(hproj)
 
-                If curZeile > max Then
-                    max = curZeile
-                End If
-            Catch ex As Exception
+                Catch ex As Exception
 
-            End Try
+                End Try
 
 
 
-        Next
-
-        'Else
+            Next
 
 
-        '    Dim tryzeile As Integer
-
-        '    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-        '        pname = kvp.Key
-        '        tryzeile = kvp.Value.tfZeile
-        '        If tryzeile <= 1 Then
-        '            tryzeile = -1
-        '        End If
-        '        Call ZeichneProjektinPlanTafel(pname, tryzeile) ' es wird versucht, an der alten Stelle zu zeichnen 
-        '    Next
 
 
-        'End If
+        Else
 
+            Dim zeile As Integer, lastzeile As Integer, curzeile As Integer, max As Integer
+            ' so wurde es bisher gemacht ... bis zum 17.1.15
+            ' aufbauen der todoListe, so daß nachher die Projekte von oben nach unten gezeichnet werden können 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                With kvp.Value
+                    key = 10000 * .tfZeile + kvp.Value.Start
+                    todoListe.Add(key, .name)
+                End With
+
+            Next
+
+            zeile = 2
+            lastZeile = 0
+
+
+            'If ProjectBoardDefinitions.My.Settings.drawPhases = True Then
+            ' dann sollen die Projekte im extended mode gezeichnet werden 
+            ' jetzt erst mal die Konstellation "last" speichern
+            ' 3.11.14 Auskommentiert: Zeichnen sollte nichts zu tun haben mit dem Verwalten von Konstellationen 
+            ' Call storeSessionConstellation(ShowProjekte, "Last")
+
+            ' jetzt die todoListe abarbeiten
+            Dim i As Integer
+            For i = 1 To todoListe.Count
+                pname = todoListe.ElementAt(i - 1).Value
+
+                Try
+                    hproj = ShowProjekte.getProject(pname)
+
+                    If i = 1 Then
+                        curZeile = hproj.tfZeile
+                        lastZeileOld = hproj.tfZeile
+                        lastZeile = curZeile
+                        max = curZeile
+                    Else
+                        If lastZeileOld = hproj.tfZeile Then
+                            curZeile = lastZeile
+                        Else
+                            lastZeile = max
+                            lastZeileOld = hproj.tfZeile
+                        End If
+
+                    End If
+
+                    ' Änderung 9.10.14, damit die Spaces in einer 
+                    If hproj.tfZeile >= curZeile + 1 Then
+                        curZeile = curZeile + 1
+                    End If
+                    ' Ende Änderung
+                    hproj.tfZeile = curZeile
+                    lastZeile = curZeile
+                    'Call ZeichneProjektinPlanTafel2(pname, curZeile)
+                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
+                    curZeile = lastZeile + getNeededSpace(hproj)
+
+
+                    If curZeile > max Then
+                        max = curZeile
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+
+
+            Next
+        End If
 
 
 
@@ -11312,6 +11330,45 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' wird von der WPFPIE Vorage aufgerufen !
+    ''' </summary>
+    ''' <param name="nameList"></param>
+    ''' <param name="farbTyp"></param>
+    ''' <param name="numberIt"></param>
+    ''' <remarks></remarks>
+    Public Sub zeichneMilestones(ByVal nameList As Collection, ByVal farbTyp As Integer, ByVal numberIt As Boolean)
+        ' tue es für alle Projekte in Showprojekte 
+
+
+        Dim todoListe As New SortedList(Of Long, clsProjekt)
+        Dim key As Long
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim formereO As Boolean = enableOnUpdate
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+            todoListe.Add(key, kvp.Value)
+
+        Next
+
+        Dim msNumber As Integer = 1
+
+        For Each kvp As KeyValuePair(Of Long, clsProjekt) In todoListe
+
+            Call zeichneResultMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
+
+        Next
+
+        appInstance.EnableEvents = formerEE
+        enableOnUpdate = formereO
+
+    End Sub
+
 
     ''' <summary>
     ''' zeichnet die Meilensteine eines Projektes
@@ -11472,40 +11529,21 @@ Public Module Projekte
                                     End If
 
                                     ' Alt - Start 
-                                    'resultShape = .Shapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
-                                    '                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
-                                    'vorlagenShape.PickUp()
-                                    'resultShape.Apply()
+                                    resultShape = .Shapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
+                                                                    Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                                    vorlagenShape.PickUp()
+                                    resultShape.Apply()
 
-                                    'With resultShape
-                                    '    .Name = shpName
-                                    '    .Title = cResult.name
-                                    '    .AlternativeText = CInt(PTshty.milestoneN).ToString
-                                    'End With
-                                    ' Alt - Ende
-
-
-                                    ' neu Start 
-                                    vorlagenShape.Copy()
-                                    Dim ws As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
-
-
-                                    ws.Paste()
-                                    Dim ix As Integer = ws.Shapes.Count
-                                    resultShape = ws.Shapes.Item(ix)
+                                    resultShape.Rotation = vorlagenShape.Rotation
 
                                     With resultShape
-                                        .Left = CSng(left)
-                                        .Top = CSng(top)
-                                        .Width = CSng(width)
-                                        .Height = CSng(height)
-
                                         .Name = shpName
                                         .Title = cResult.name
                                         .AlternativeText = CInt(PTshty.milestoneN).ToString
                                     End With
+                                    ' Alt - Ende
 
-                                    ' neu Ende
+
 
                                     msNumber = msNumber + 1
                                     If numberIt Then
@@ -13295,7 +13333,16 @@ Public Module Projekte
         spalte = 1
 
         ' Dateiname des Projectfiles '
-        fileName = hproj.name & ".xlsx"
+        ' ur: 14.01.2015: Dateiname gleich dem Shape-Namen einschließlich VariantenNamen
+
+        fileName = hproj.getShapeText & ".xlsx"
+
+        'ur: 13.01.2015:  aus "fileName" werden die illegale Sonderzeichen eliminiert
+        fileName = cleanFileName(fileName)
+
+        ' fileName wird nun ergänzt mit dem passenden Pfad
+        fileName = awinPath & projektFilesOrdner & "\" & fileName
+
 
         ' -------------------------------------------------
         ' hier werden die einzelnen Stamm-Daten in das entsprechende File geschrieben 
@@ -13947,6 +13994,19 @@ Public Module Projekte
                     .WrapText = False
                 End With
 
+                ' ur: 13.01.2015: Varianten_Name wird hier in das Tabellenblatt Attribute des Projekt-Steckbriefes eingetragen
+
+                If Not IsNothing(hproj.variantName) And hproj.variantName <> "" Then
+
+                    .Range("Variant_Name").Value = hproj.variantName
+                    rng = .Range("Variant_Name")
+                    With rng
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                        .IndentLevel = 1
+                        .WrapText = False
+                    End With
+
+                End If
 
                 '' Blattschutz setzen
                 '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
@@ -13959,18 +14019,20 @@ Public Module Projekte
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Attribute")
         End Try
 
-
-        Dim newFileName As String = awinPath & projektFilesOrdner & "\" & fileName
+      
         Try
-            My.Computer.FileSystem.DeleteFile(newFileName)
+
+            My.Computer.FileSystem.DeleteFile(fileName)
         Catch ex As Exception
 
         End Try
 
         Try
-            appInstance.ActiveWorkbook.SaveAs(newFileName, _
+
+            appInstance.ActiveWorkbook.SaveAs(fileName, _
                                           ConflictResolution:=XlSaveConflictResolution.xlLocalSessionChanges
                                           )
+          
         Catch ex As Exception
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler beim Datei-Schreiben")
@@ -13981,6 +14043,28 @@ Public Module Projekte
 
 
     End Sub
+    '' '' '' ur: 13.01.2015: Funktion checkt ob ein String ein legaler DateiNamen ist( funktioniert aber nicht)
+    ' '' ''Function IsLegalFileName(ByVal str As String) As Boolean
+    ' '' ''    If (str Like "[/\:*?""<>]") Then
+    ' '' ''        IsLegalFileName = True
+    ' '' ''    Else
+    ' '' ''        IsLegalFileName = False
+    ' '' ''    End If
+    ' '' ''End Function
+
+
+    'ur: 13.01.2015: Funktion streicht die illegalen Zeigen heraus
+    'entnommen von folgendem Link: http://www.jpsoftwaretech.com/excel-vba/validate-filenames/
+
+    Function cleanFileName(stringToClean As String) As String
+        ' remove illegal characters from filenames
+        Dim newString As String
+
+        newString = Replace(Replace(Replace(Replace(Replace(Replace(Replace(Replace(Replace(Replace(Replace(stringToClean, "|", ""), "[", ""), "]", ""), ">", ""), "<", ""), Chr(34), ""), "?", ""), "*", ""), ":", ""), "/", ""), "\", "")
+
+        cleanFileName = newString
+
+    End Function
 
     ' Vorbedingung: das Active-workbook ist bereits das ProjektDetail File 
     Public Sub awinStoreProjForEditRess(hproj As clsProjekt)
@@ -14961,9 +15045,6 @@ Public Module Projekte
 
         If start <= 0 Then
             start = 1
-        End If
-        If ende > 120 Then
-            ende = 120
         End If
 
         Try
@@ -16282,13 +16363,22 @@ Public Module Projekte
     Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date)
 
         Dim hproj As New clsProjekt, cproj As New clsProjekt
-        Dim pname As String, vglName As String
+        Dim fullName As String, vglName As String
+        Dim pname As String
+
 
         Dim anzAktualisierungen As Integer, anzNeuProjekte As Integer
         Dim tafelZeile As Integer = 2
         'Dim shpElement As Excel.Shape
         Dim phaseList As New Collection
         Dim milestoneList As New Collection
+        Dim wasNotEmpty As Boolean
+
+        If AlleProjekte.Count > 0 Then
+            wasNotEmpty = True
+        Else
+            wasNotEmpty = False
+        End If
 
 
         Dim differentToPrevious As Boolean = False
@@ -16303,16 +16393,32 @@ Public Module Projekte
 
         Dim ok As Boolean = True
         ' jetzt werden alle importierten Projekte bearbeitet 
-        For Each pname In myCollection
+        For Each fullName In myCollection
+
 
             ok = True
 
             Try
-                hproj = ImportProjekte.getProject(pname)
+                hproj = ImportProjekte.getProject(fullName)
                 pname = hproj.name
 
+                ' Änderung tk: ist Filter aktiv ? wenn ja, muss der überprüft werden 
+                ' 18.1.15
+                If awinSettings.applyFilter Then
+
+                    Dim filter As clsFilter = filterDefinitions.retrieveFilter("Last")
+                    If IsNothing(filter) Then
+                        ok = True
+                    Else
+                        ok = filter.doesNotBlock(hproj)
+                    End If
+                Else
+                    ok = True
+                End If
+
             Catch ex As Exception
-                Call MsgBox("Projekt " & pname & " ist kein gültiges Projekt ... es wird ignoriert ...")
+                Call MsgBox("Projekt " & fullName & " ist kein gültiges Projekt ... es wird ignoriert ...")
+                pname = ""
                 ok = False
             End Try
 
@@ -16420,31 +16526,20 @@ Public Module Projekte
 
 
                     Try
-                        If ShowProjekte.contains(pname) Then
+                        ' Änderung tk 18.1.15 nachher soll die Projekt-Tafel komplett gelöscht und neu aufgebaut werden, deshalb wird das hier rausgenomme
+                        '
+                        'If ShowProjekte.contains(pname) Then
+
+                        '    phaseList = projectboardShapes.getPhaseList(pname)
+                        '    milestoneList = projectboardShapes.getMilestoneList(pname)
+
+                        '    ' Shape wird auf der Plan-Tafel gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
+                        '    Call clearProjektinPlantafel(hproj.name)
+
+                        '    ShowProjekte.Remove(pname)
 
 
-                            'shpElement = ShowProjekte.getShape(pname)
-
-                            'Dim typCollection As New Collection
-                            'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                            'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                            'phaseList = projectboardShapes.getAllChildswithType(shpElement, typCollection)
-                            phaseList = projectboardShapes.getPhaseList(pname)
-
-
-                            'typCollection.Clear()
-                            'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                            'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
-                            'milestoneList = projectboardShapes.getAllChildswithType(shpElement, typCollection)
-                            milestoneList = projectboardShapes.getMilestoneList(pname)
-
-                            ' Shape wird auf der Plan-Tafel gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
-                            Call clearProjektinPlantafel(hproj.name)
-
-                            ShowProjekte.Remove(pname)
-
-
-                        End If
+                        'End If
 
                         AlleProjekte.Remove(vglName)
 
@@ -16528,8 +16623,9 @@ Public Module Projekte
                 If ok Then
 
                     Try
-                        ShowProjekte.Add(hproj)
+
                         AlleProjekte.Add(vglName, hproj)
+                        ShowProjekte.Add(hproj)
 
                         ' ggf Bedarfe anzeigen 
                         If roentgenBlick.isOn Then
@@ -16539,17 +16635,22 @@ Public Module Projekte
 
                         End If
 
-                        ' zeichne das neue Shape in der Plan-Tafel 
-                        ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                        ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                        Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, phaseList, milestoneList)
+                        ' Änderung tk 18.1.15
+                        ' kein Zeichnen - das wird am Schluss komplett gemacht 
+                        '' zeichne das neue Shape in der Plan-Tafel 
+                        '' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                        '' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                        'Dim tmpCollection As New Collection
+                        'Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, phaseList, milestoneList)
 
-                        ' jetzt müssen die ggf aktuell gezeigten Diagramme neu gezeichnet werden 
-                        Call awinNeuZeichnenDiagramme(2)
+                        '' jetzt müssen die ggf aktuell gezeigten Diagramme neu gezeichnet werden 
+                        'Call awinNeuZeichnenDiagramme(2)
+                        ' Ende Änderung tk 18.1.15
+
 
                     Catch ex As Exception
-                        Call MsgBox("Fehler bei Eintrag Showprojekte / Import " & hproj.name)
+                        'ur:16.1.2015: Dies ist kein Fehler sondern gewollt: 
+                        'Call MsgBox("Fehler bei Eintrag Showprojekte / Import " & hproj.name)
                     End Try
 
                 End If
@@ -16562,9 +16663,23 @@ Public Module Projekte
         If ImportProjekte.Count < 1 Then
             Call MsgBox(" es waren keine Projekte zu importieren ...")
         Else
-            Call MsgBox("es wurden " & ImportProjekte.Count & " Projekte importiert!" & vbLf & _
+            Dim filterText As String
+            If awinSettings.applyFilter Then
+                filterText = " (Filter aktiviert)"
+            Else
+                filterText = " (Filter nicht aktiviert)"
+            End If
+            Call MsgBox("es wurden " & ImportProjekte.Count & " Projekte bearbeitet!" & filterText & vbLf & vbLf & _
                         anzNeuProjekte.ToString & " neue Projekte" & vbLf & _
                         anzAktualisierungen.ToString & " Projekt-Aktualisierungen")
+
+            ' Änderung tk: jetzt wird das neu gezeichnet 
+
+            If wasNotEmpty Then
+                Call awinClearPlanTafel()
+            End If
+
+            Call awinZeichnePlanTafel(True)
 
         End If
 
@@ -16809,5 +16924,118 @@ Public Module Projekte
         End If
 
     End Function
+
+    ''' <summary>
+    ''' gibt für die Phase zurück, ob Sie in dem angegebenen Zeitraum liegt oder nicht 
+    ''' </summary>
+    ''' <param name="projektstart">Monat, in dem das Projekt startet</param>
+    ''' <param name="relstart">Relativer Monats-Index Phasenstart</param>
+    ''' <param name="relEnde">Relative Monats-Index Phasenende</param>
+    ''' <param name="von">Monats-Index des linken Randes</param>
+    ''' <param name="bis">Monats-Index des rechten Randes</param>
+    ''' <returns>true: wenn die Phase diesen Zeitraum berührt
+    ''' false: wenn nicht</returns>
+    ''' <remarks></remarks>
+    Public Function phaseWithinTimeFrame(ByVal projektstart As Integer, ByVal relStart As Integer, ByVal relEnde As Integer, _
+                                             ByVal von As Integer, ByVal bis As Integer) As Boolean
+
+        Dim within As Boolean = False
+
+        If (projektstart + relStart - 1 > bis) Or (projektstart + relEnde - 1 < von) Then
+            ' dann liegt die Phase ausserhalb des betrachteten Zeitraums 
+            within = False
+        Else
+            within = True
+        End If
+        
+
+        phaseWithinTimeFrame = within
+
+    End Function
+
+    ''' <summary>
+    ''' gibt für das angegebene Datum zurück, ob es in dem angegebenen Zeitraum liegt oder nicht 
+    ''' </summary>
+    ''' <param name="msDate">Datum</param>
+    ''' <param name="von">Monats-Index des linken Randes</param>
+    ''' <param name="bis">Monats-Index des rechten Randes</param>
+    ''' <returns>true: wenn das Datum innerhalb liegt
+    ''' false: sonst</returns>
+    ''' <remarks></remarks>
+    Public Function milestoneWithinTimeFrame(ByVal msDate As Date, _
+                                                 ByVal von As Integer, ByVal bis As Integer) As Boolean
+
+        Dim within As Boolean = False
+
+        If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
+            If getColumnOfDate(msDate) > bis Or getColumnOfDate(msDate) < von Then
+                within = False
+            Else
+                within = True
+            End If
+        End If
+
+        milestoneWithinTimeFrame = within
+
+    End Function
+
+
+    ''' <summary>
+    ''' sorgt dafür. daß Projekte immer im gleichen Muster angezeigt werden 
+    ''' Erst sortiert nach BU, dann nach ProjektStart-Datum, dann nach Länge  
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcKennziffer(ByVal hproj As clsProjekt) As Double
+
+        Dim wertigkeitBU As Integer = 100000
+        Dim wertigkeitDate As Double = 100
+        Dim wertigkeitLaenge As Double = 0.1
+        Dim zwErg As Double = 0.0
+
+        Dim found As Boolean = False
+        Dim i As Integer = 1
+
+        While i <= businessUnitDefinitions.Count And Not found
+
+            If businessUnitDefinitions.ElementAt(i - 1).Value.name = hproj.businessUnit Then
+                found = True
+            Else
+                i = i + 1
+            End If
+
+        End While
+
+        zwErg = i * wertigkeitBU
+
+        ' Berücksichtigung ProjektstartDatum 
+        zwErg = zwErg + DateDiff(DateInterval.Day, StartofCalendar, hproj.startDate) / 30.4 * wertigkeitDate
+
+        ' Berücksichtigung Länge
+        zwErg = zwErg + hproj.dauerInDays / 30.4 * wertigkeitLaenge
+
+        calcKennziffer = zwErg
+
+    End Function
+
+    ''' <summary>
+    ''' kopiert eine Collection , die Strings enthält 
+    ''' </summary>
+    ''' <param name="original"></param>
+    ''' <param name="kopie"></param>
+    ''' <remarks></remarks>
+    Public Sub copyCollections(ByVal original As Collection, ByRef kopie As Collection)
+        Dim i As Integer
+        Dim element As String
+
+        If Not IsNothing(original) Then
+            For i = 1 To original.Count
+                element = CStr(original.Item(i))
+                kopie.Add(element, element)
+            Next
+        End If
+
+    End Sub
 
 End Module

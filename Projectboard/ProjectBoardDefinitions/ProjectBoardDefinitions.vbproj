@@ -75,6 +75,8 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsBusinessUnit.vb" />
+    <Compile Include="clsFilterDefinitions.vb" />
     <Compile Include="clsFilter.vb" />
     <Compile Include="clsImportFileHierarchy.vb" />
     <Compile Include="clsNameMapping.vb" />

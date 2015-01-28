@@ -55,10 +55,10 @@ Imports System.Drawing
         Dim returnValue As DialogResult
         Dim constellationName As String
         Dim speichernDatenbank As String = "Pt5G2B1"
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
 
         Dim newConstellationForm As New frmProjPortfolioAdmin
-        
+
 
 
         Call projektTafelInit()
@@ -130,7 +130,7 @@ Imports System.Drawing
         Dim loadConstellationFrm As New frmLoadConstellation
 
         Dim constellationName As String
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
 
         Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
 
@@ -166,7 +166,7 @@ Imports System.Drawing
                 appInstance.ScreenUpdating = False
                 'Call diagramsVisible(False)
                 Call awinClearPlanTafel()
-                Call awinZeichnePlanTafel()
+                Call awinZeichnePlanTafel(False)
                 Call awinNeuZeichnenDiagramme(2)
                 'Call diagramsVisible(True)
                 appInstance.ScreenUpdating = True
@@ -181,7 +181,7 @@ Imports System.Drawing
                 currentConstellation = constellationName
             End If
 
-            
+
 
         End If
         enableOnUpdate = True
@@ -200,7 +200,7 @@ Imports System.Drawing
 
 
         Dim deleteDatenbank As String = "Pt5G3B1"
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
 
         Dim removeFromDB As Boolean
 
@@ -251,7 +251,8 @@ Imports System.Drawing
         Try
             If AlleProjekte.Count > 0 Then
 
-                storedProj = StoreSelectedProjectsinDB()    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+                storedProj = StoreSelectedProjectsinDB()    ' es werden die selektierten Projekte einschl. der geladenen Varianten 
+                ' in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
                 If storedProj = 0 Then
                     Call MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte speichern?", MsgBoxStyle.OkCancel)
@@ -274,11 +275,17 @@ Imports System.Drawing
         Call awinDeSelect()
 
     End Sub
-    Sub PT5DeleteProjects(control As IRibbonControl)
+    ''' <summary>
+    ''' löscht die ausgewählten Projekte aus der Datenbank 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT5DeleteProjectsInDB(control As IRibbonControl)
+
 
         Dim deletedProj As Integer = 0
         Dim returnValue As DialogResult
-        
+
         'Dim deleteProjects As New frmDeleteProjects
         Dim deleteProjects As New frmProjPortfolioAdmin
 
@@ -286,7 +293,7 @@ Imports System.Drawing
 
             With deleteProjects
                 .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
-                .aKtionskennung = PTtvactions.delFromDB
+                .aKtionskennung = PTTvActions.delFromDB
                 .OKButton.Text = "Löschen"
                 .portfolioName.Visible = False
                 .Label1.Visible = False
@@ -294,11 +301,13 @@ Imports System.Drawing
 
             returnValue = deleteProjects.ShowDialog
 
+            ' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
+
             If returnValue = DialogResult.OK Then
-                'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+                ' everything is done ... 
 
             Else
-                ' returnValue = DialogResult.Cancel
+                ' everything is done ... 
 
             End If
 
@@ -307,7 +316,61 @@ Imports System.Drawing
             Call MsgBox(ex.Message)
         End Try
 
-        
+
+
+    End Sub
+
+    ''' <summary>
+    ''' löscht alles, was aktuell in der Session ist 
+    ''' Projekte, Charts, Shapes ... 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT6G3ClearSession(control As IRibbonControl)
+
+        Call projektTafelInit()
+
+        ' Bestätigungs-Fenster aufrufen 
+        Dim bestaetigeLoeschen As New frmconfirmDeletePrj
+        Dim returnValue As DialogResult
+        Dim allShapes As Excel.Shapes
+
+        bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen der kompletten Session"
+        returnValue = bestaetigeLoeschen.ShowDialog
+
+        If returnValue = DialogResult.Cancel Then
+            ' nichts tun
+        Else
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
+
+            ' jetzt: Löschen der Session 
+
+            Try
+
+                allShapes = CType(appInstance.ActiveSheet, Excel.Worksheet).Shapes
+                For Each element As Excel.Shape In allShapes
+                    element.Delete()
+                Next
+
+            Catch ex As Exception
+                Call MsgBox("Fehler beim Löschen der Shapes ...")
+            End Try
+
+            ShowProjekte.Clear()
+            AlleProjekte.Clear()
+            selectedProjekte.Clear()
+            ImportProjekte.Clear()
+            DiagramList.Clear()
+            awinButtonEvents.Clear()
+
+            allDependencies.Clear()
+            projectboardShapes.clear()
+            ' Session gelöscht
+
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
+        End If
 
     End Sub
 
@@ -350,10 +413,10 @@ Imports System.Drawing
             Call awinDeSelect()
 
             Dim anzDiagrams As Integer = CType(appInstance.Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
-          
+
             If anzDiagrams > 0 Then
 
-           
+
                 ' hier muss die Auswahl des Names für das Cockpit erfolgen
 
                 returnValue = storeCockpitFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Cockpitnamens
@@ -457,8 +520,8 @@ Imports System.Drawing
                     End Try
 
 
-                   
-                    
+
+
                     appInstance.ScreenUpdating = True
 
                 Else
@@ -501,7 +564,7 @@ Imports System.Drawing
 
         enableOnUpdate = False
 
-        
+
 
         Try
             awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
@@ -585,7 +648,7 @@ Imports System.Drawing
     Sub Tom2G1Rename(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         'Dim pName As String, variantName As String
         'Dim shapeText As String
 
@@ -627,7 +690,7 @@ Imports System.Drawing
                             ' jetzt muss Pname und Variant-Name ermittel werde 
                             Try
                                 hproj = ShowProjekte.getProject(.Name)
-                                
+
 
                                 If hproj.getShapeText <> .TextFrame2.TextRange.Text Then
                                     ' das Shape wurde vom Nutzer umbenannt 
@@ -719,7 +782,7 @@ Imports System.Drawing
         Dim ProjektEingabe As New frmProjektEingabe1
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
 
         Call projektTafelInit()
 
@@ -776,7 +839,7 @@ Imports System.Drawing
         Dim awinSelection As Excel.ShapeRange
         Dim neueVariante As New frmCreateNewVariant
         Dim resultat As DialogResult
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim newproj As clsProjekt
         Dim key As String
         Dim phaseList As New Collection
@@ -860,10 +923,10 @@ Imports System.Drawing
                         Call MsgBox("Fehler bei Zeichnen Projekt: " & ex.Message)
 
                     End Try
-                    
+
 
                 End If
-                
+
             Else
                 Call MsgBox("bitte nur ein Projekt selektieren")
 
@@ -895,7 +958,7 @@ Imports System.Drawing
 
             With activateVariant
                 .Text = "Variante aktivieren"
-                .aKtionskennung = PTtvactions.activateV
+                .aKtionskennung = PTTvActions.activateV
                 .OKButton.Visible = False
                 '.OKButton.Text = "Löschen"
                 .portfolioName.Visible = False
@@ -904,6 +967,126 @@ Imports System.Drawing
 
             'returnValue = activateVariant.ShowDialog
             activateVariant.Show()
+
+            'If returnValue = DialogResult.OK Then
+            '    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+
+            'Else
+            '    ' returnValue = DialogResult.Cancel
+
+            'End If
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+        End Try
+
+
+    End Sub
+
+    ''' <summary>
+    ''' die Variante, die übernommen werden soll, muss bereits in der Showprojekte sein und selektiert sein
+    ''' Das Projekt wird zur Standard-Variante 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT2VarianteUebernehmen(control As IRibbonControl)
+
+        Dim awinSelection As Excel.ShapeRange
+        Dim i As Integer
+        Dim hproj As clsProjekt
+        Dim singleShp As Excel.Shape
+        'Dim ausgabeString As String = ""
+        'Dim vglWert As Integer
+        'Dim curCoord() As Double
+        Dim key As String
+
+        Call projektTafelInit()
+
+
+        enableOnUpdate = False
+
+
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' Es muss mindestens 1 Projekt selektiert sein
+            For i = 1 To awinSelection.Count
+
+                singleShp = awinSelection.Item(i)
+                hproj = ShowProjekte.getProject(singleShp.Name)
+
+                ' das Projekt zur Standard Variante machen 
+                If hproj.variantName <> "" Then
+
+                    ' die aktuelle Variante aus der AlleProjekte rausnehmen 
+                    key = calcProjektKey(hproj)
+                    AlleProjekte.Remove(key)
+
+                    ' das bisherige Standard Projekt aus der AlleProjekte rausnehmen 
+                    key = calcProjektKey(hproj.name, "")
+                    AlleProjekte.Remove(key)
+
+                    'jetzt die aktuelle Variante zur Standard Variante machen 
+                    hproj.variantName = ""
+                    hproj.timeStamp = Date.Now
+                    If hproj.Status = ProjektStatus(0) Then
+                        hproj.Status = ProjektStatus(1)
+                    End If
+
+                    ' die "neue" Standard Variante in AlleProjekte aufnehmen 
+                    AlleProjekte.Add(key, hproj)
+
+                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                    Dim tmpCollection As New Collection
+                    Call ZeichneProjektinPlanTafel(tmpCollection, hproj.name, hproj.tfZeile, tmpCollection, tmpCollection)
+
+                End If
+
+
+
+            Next i
+
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' Es werden Projekte, die Varianten haben angezeigt in einem TreeView
+    ''' Hier können Varianten ausgewählt werden, die gelöscht werden sollen
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT2VarianteLoeschen(control As IRibbonControl)
+
+        Dim deletedProj As Integer = 0
+        'Dim returnValue As DialogResult
+
+        'Dim activateVariant As New frmDeleteProjects
+        Dim deleteVariant As New frmProjPortfolioAdmin
+
+        Try
+
+            With deleteVariant
+                .Text = "Variante löschen"
+                .aKtionskennung = PTTvActions.deleteV
+                .OKButton.Visible = True
+                .OKButton.Text = "Löschen"
+                .portfolioName.Visible = False
+                .Label1.Visible = False
+            End With
+
+            'returnValue = activateVariant.ShowDialog
+            deleteVariant.Show()
 
             'If returnValue = DialogResult.OK Then
             '    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
@@ -932,10 +1115,64 @@ Imports System.Drawing
 
         'returnValue = mvTimeSpan.Showdialog
         ' in dieser auskommentierten Variante ist es sehr langsam ... deshalb als modales Fenster
+        If showRangeRight <> showRangeLeft Then
+            mvTimeSpan.Show()
+        Else
+            Call MsgBox("bitte zuerst eine Zeitspanne definieren")
+        End If
 
-        mvTimeSpan.Show()
 
         appInstance.EnableEvents = True
+
+
+    End Sub
+
+    ''' <summary>
+    ''' Filter definieren
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT5defineFilter(control As IRibbonControl)
+
+        Dim auswahlFormular As New frmShowPlanElements
+
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = False
+
+
+        With auswahlFormular
+            .Text = "Filter definieren"
+
+            .chkbxShowObjects = False
+            .chkbxCreateCharts = False
+
+            .chkbxOneChart.Checked = False
+            .chkbxOneChart.Visible = False
+
+            .rdbBU.Visible = True
+            .pictureBU.Visible = True
+
+            .rdbTyp.Visible = True
+            .pictureTyp.Visible = True
+
+
+            .repVorlagenDropbox.Visible = False
+            .labelPPTVorlage.Visible = False
+
+            .showModePortfolio = True
+            .menuOption = PTmenue.filterdefinieren
+
+            .OKButton.Text = "Speichern"
+
+            .Show()
+        End With
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
 
 
     End Sub
@@ -1383,20 +1620,25 @@ Imports System.Drawing
 
 
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
-        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
-
+        'If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+        If ShowProjekte.Count > 0 Then
             With auswahlFormular
                 .Text = "Plan-Elemente visualisieren"
-                .rdbPhases.Checked = True
 
-                .chkbxShowObjects.Checked = True
-                .chkbxShowObjects.Visible = False
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .chkbxShowObjects = True
+
 
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
-                .chkbxCreateCharts.Checked = False
-                .chkbxCreateCharts.Visible = False
+                .chkbxCreateCharts = False
+
 
                 .repVorlagenDropbox.Visible = False
                 .labelPPTVorlage.Visible = False
@@ -1404,17 +1646,19 @@ Imports System.Drawing
                 .showModePortfolio = True
                 .menuOption = PTmenue.visualisieren
 
+                .OKButton.Text = "Anzeigen"
+
                 .Show()
             End With
 
 
-        ElseIf ShowProjekte.Count = 0 Then
+        Else
 
             Call MsgBox("Es sind keine Projekte sichtbar!  ")
 
-        ElseIf showRangeRight - showRangeLeft <= 5 Then
+            'ElseIf showRangeRight - showRangeLeft <= 5 Then
 
-            Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
+            '    Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
 
         End If
 
@@ -1442,16 +1686,20 @@ Imports System.Drawing
 
             With auswahlFormular
                 .Text = "Leistbarkeit analysieren"
-                .rdbPhases.Checked = True
 
-                .chkbxShowObjects.Checked = False
-                .chkbxShowObjects.Visible = False
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .chkbxShowObjects = False
 
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = True
 
-                .chkbxCreateCharts.Checked = True
-                .chkbxCreateCharts.Visible = False
+                .chkbxCreateCharts = True
+
 
                 .repVorlagenDropbox.Visible = False
                 .labelPPTVorlage.Visible = False
@@ -1459,6 +1707,7 @@ Imports System.Drawing
                 .showModePortfolio = True
 
                 .menuOption = PTmenue.leistbarkeitsAnalyse
+                .OKButton.Text = "Charts erstellen"
 
                 .Show()
             End With
@@ -1500,18 +1749,21 @@ Imports System.Drawing
 
             With auswahlFormular
 
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
                 .einstellungen.Visible = True
                 .Text = "Multiprojekt Reports erzeugen"
-                .rdbPhases.Checked = True
 
-                .chkbxShowObjects.Checked = False
-                .chkbxShowObjects.Visible = False
+                .chkbxShowObjects = False
 
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
-                .chkbxCreateCharts.Checked = False
-                .chkbxCreateCharts.Visible = False
+                .chkbxCreateCharts = False
 
                 .showModePortfolio = True
 
@@ -1523,6 +1775,7 @@ Imports System.Drawing
 
                 .menuOption = PTmenue.multiprojektReport
                 .statusLabel.Text = ""
+                .OKButton.Text = "Bericht erstellen"
 
                 '.Show()
                 returnValue = .ShowDialog
@@ -1747,9 +2000,7 @@ Imports System.Drawing
 
         Call projektTafelInit()
 
-        Dim formerEE As Boolean = appInstance.EnableEvents
         appInstance.EnableEvents = False
-
         enableOnUpdate = False
 
         Try
@@ -1761,11 +2012,13 @@ Imports System.Drawing
 
         If Not awinSelection Is Nothing Then
 
-
+            bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen" & vbLf & _
+                                            "Vorsicht: alle Varianten werden mitgelöscht ..."
             returnValue = bestaetigeLoeschen.ShowDialog
 
             If returnValue = DialogResult.Cancel Then
 
+                appInstance.EnableEvents = True
                 enableOnUpdate = True
                 Exit Sub
 
@@ -1815,7 +2068,7 @@ Imports System.Drawing
 
                     With deleteProjects
                         .Text = "Projekte, Varianten aus der Session löschen"
-                        .aKtionskennung = PTtvactions.delFromSession
+                        .aKtionskennung = PTTvActions.delFromSession
                         .OKButton.Text = "Löschen"
                         .portfolioName.Visible = False
                         .Label1.Visible = False
@@ -1839,14 +2092,14 @@ Imports System.Drawing
 
             End If
 
-            
+
 
         End If
 
         Call awinDeSelect()
 
         enableOnUpdate = True
-        appInstance.EnableEvents = formerEE
+        appInstance.EnableEvents = True
 
     End Sub
 
@@ -1989,7 +2242,7 @@ Imports System.Drawing
 
     Public Sub Tom2G4M1Import(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim hproj As New clsProjekt
         Dim cproj As New clsProjekt
         Dim vglName As String = " "
@@ -2047,8 +2300,9 @@ Imports System.Drawing
                         Call awinImportProject(hproj, Nothing, False, importDate)
 
                         Try
-                            ImportProjekte.Add(hproj)
-                            myCollection.Add(hproj.name)
+                            Dim keyStr As String = calcProjektKey(hproj)
+                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                            myCollection.Add(calcProjektKey(hproj))
                         Catch ex2 As Exception
                             Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
                         End Try
@@ -2126,7 +2380,7 @@ Imports System.Drawing
             ' jetzt die Aktion durchführen ...
 
             For Each singleShp In awinSelection
-                
+
                 ' hier muss jetzt die todo Liste aufgebaut werden 
 
                 Dim shapeArt As Integer
@@ -2214,6 +2468,19 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Public Sub bmwFC52Export(control As IRibbonControl)
 
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        Call awinWriteFC52()
+
+        Call awinDeSelect()
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
     End Sub
 
     Public Sub Tom2G4M1Export(control As IRibbonControl)
@@ -2261,9 +2528,9 @@ Imports System.Drawing
                                 ' jetzt wird dieses Projekt exportiert ... 
                                 Try
                                     Call awinExportProject(hproj)
-                                    outputString = outputString & hproj.name & " erfolgreich .." & vbLf
+                                    outputString = outputString & hproj.getShapeText & " erfolgreich .." & vbLf
                                 Catch ex As Exception
-                                    outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf & _
+                                    outputString = outputString & hproj.getShapeText & " nicht erfolgreich .." & vbLf & _
                                                     ex.Message & vbLf & vbLf
                                 End Try
 
@@ -2548,13 +2815,13 @@ Imports System.Drawing
             ' jetzt werden die Projekt-Symbole inkl Phasen Darstellung gezeichnet
             awinSettings.drawphases = True
             Call awinClearPlanTafel()
-            Call awinZeichnePlanTafel()
+            Call awinZeichnePlanTafel(False)
         Else
             ' jetzt werden die Projekt-Symbole ohne Phasen Darstellung gezeichnet 
             awinSettings.drawphases = False
             'Call awinLoadConstellation("Last")
             Call awinClearPlanTafel()
-            Call awinZeichnePlanTafel()
+            Call awinZeichnePlanTafel(False)
         End If
 
     End Sub
@@ -2739,7 +3006,7 @@ Imports System.Drawing
 
             With loadProjectsForm
                 .Text = "Projekte und Varianten in die Session laden "
-                .aKtionskennung = PTtvactions.loadPV
+                .aKtionskennung = PTTvActions.loadPV
                 .OKButton.Text = "Laden"
                 .portfolioName.Visible = False
                 .Label1.Visible = False
@@ -2768,7 +3035,7 @@ Imports System.Drawing
 
     Public Sub PT5loadprojectsInit(control As IRibbonControl, ByRef pressed As Boolean)
 
-        pressed = awinSettings.loadProjectsOnChange
+        pressed = awinSettings.applyFilter
 
 
     End Sub
@@ -2779,13 +3046,13 @@ Imports System.Drawing
 
         If pressed Then
             ' jetzt sollen die Projekte gemäß Time Span geladen werden - auch bei Veränderung des TimeSpan 
-            awinSettings.loadProjectsOnChange = True
+            awinSettings.applyFilter = True
             ' noch zu tun 
             ' Call awinloadProjectsFromDB()
         Else
 
             ' jetzt werden bei TimeSpan Änderung keine Projekte nachgeladen 
-            awinSettings.loadProjectsOnChange = False
+            awinSettings.applyFilter = False
 
 
         End If
@@ -3649,7 +3916,7 @@ Imports System.Drawing
     ''' <param name="typ"></param>
     ''' <remarks></remarks>
     Private Sub awinSollIstVergleich(ByVal auswahl As Integer, ByVal typ As String, ByVal vglBaseline As Boolean)
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
@@ -3778,7 +4045,7 @@ Imports System.Drawing
     ''' </param>
     ''' <remarks></remarks>
     Private Sub awinStatusAnzeige(ByVal compareTyp As Integer, ByVal auswahl As Integer, ByVal qualifier As String)
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
@@ -4050,7 +4317,7 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub PTShowMilestoneTrend(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim singleShp As Excel.Shape
         Dim listOfItems As New Collection
         Dim nameList As New SortedList(Of Date, String)
@@ -5952,7 +6219,7 @@ Imports System.Drawing
 
     Sub PT3G1B2PhasenVgl(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
@@ -6095,7 +6362,7 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub PT3G1B3PhasenVgl(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
@@ -6295,7 +6562,7 @@ Imports System.Drawing
 
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -6402,7 +6669,7 @@ Imports System.Drawing
     Sub awinShowTrendKPI(control As IRibbonControl)
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -6505,7 +6772,7 @@ Imports System.Drawing
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
         Dim vglName As String = " "
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -6664,7 +6931,7 @@ Imports System.Drawing
         Dim getReportVorlage As New frmSelectPPTTempl
         Dim returnValue As DialogResult
 
-        getReportVorlage.calledfrom = "Portfolio"
+        getReportVorlage.calledfrom = "Portfolio1"
 
         Call projektTafelInit()
 
@@ -6707,6 +6974,15 @@ Imports System.Drawing
         'enableOnUpdate = True
 
     End Sub
+    Sub PTShowVersions(control As IRibbonControl)
+
+        'Ermittlung der installierten Windows- und der Excelversion
+        Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
+        "Excel-Version: " & appInstance.Version, vbInformation, "Info")
+        'Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
+        '"Excel-Version: " & My.Settings.ExcelVersion, vbInformation, "Info")
+    End Sub
+
 
     Sub PTTestFunktion1(control As IRibbonControl)
 
@@ -6719,7 +6995,7 @@ Imports System.Drawing
     Sub PTTestFunktion2(control As IRibbonControl)
 
         Dim hproj As clsProjekt
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim singleShp As Excel.Shape
         Dim tstCollection As SortedList(Of Date, String)
         Dim anzElements As Integer

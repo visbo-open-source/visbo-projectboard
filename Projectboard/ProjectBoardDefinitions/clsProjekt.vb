@@ -1015,31 +1015,59 @@ Public Class clsProjekt
         End Set
     End Property
 
+    ''' <summary>
+    ''' gibt eine Liste von Phasen zurück, die für das gegebene Projekt im angegebenen Zeitrahmen liegen
+    ''' wenn von oder bis kleiner 0 , dann gibt es keinen Zeitraum, dann werden alle betrachtet 
+    ''' </summary>
+    ''' <param name="selectionType"></param>
+    ''' <param name="von">linker Rand des Zeitraums</param>
+    ''' <param name="bis">rechter Rand des Zeitraums</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property withinTimeFrame(selectionType As Integer, von As Integer, bis As Integer) As Collection
         Get
             Dim tmpListe As New Collection
             ' selection type wird aktuell noch ignoriert .... 
             Dim cphase As clsPhase
+            Dim noTimeFrame As Boolean
+
+            If von <= 0 Or bis <= 0 Then
+                noTimeFrame = True
+            Else
+                noTimeFrame = False
+            End If
 
 
             For i = 1 To AllPhases.Count
 
                 cphase = Me.getPhase(i)
 
-                If Me._Start + cphase.relStart - 1 > bis Or _
-                    Me._Start + cphase.relEnde - 1 < von Then
-                    ' nichts tun 
-                Else
-                    ' ist innerhalb des Zeitrahmens
-                    Try
-                        tmpListe.Add(cphase.name, cphase.name)
-                    Catch ex As Exception
-                        ' in diesem Fall muss keine Fehlerbehandlung geamcht werden 
+                If noTimeFrame Then
+
+
+                    If tmpListe.Contains(cphase.name) Then
                         ' jede Phase wird nur einmal eingetragen ....
+                    Else
+                        tmpListe.Add(cphase.name, cphase.name)
+                    End If
 
-                    End Try
+                    
+                Else
+                    If Me._Start + cphase.relStart - 1 > bis Or _
+                    Me._Start + cphase.relEnde - 1 < von Then
+                        ' nichts tun 
+                    Else
+                        ' ist innerhalb des Zeitrahmens
+                        If tmpListe.Contains(cphase.name) Then
+                            ' jede Phase wird nur einmal eingetragen ....
+                        Else
+                            tmpListe.Add(cphase.name, cphase.name)
+                        End If
 
+                    End If
                 End If
+                
 
             Next
 
@@ -1146,7 +1174,7 @@ Public Class clsProjekt
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getBedarfeInMonths(mycollection As Collection, type As String) As Double()
+    Public ReadOnly Property getBedarfeInMonths(ByVal mycollection As Collection, ByVal type As String) As Double()
         Get
             Dim i As Integer, k As Integer, projektDauer As Integer = Me.anzahlRasterElemente
             Dim valueArray() As Double
@@ -2486,7 +2514,14 @@ Public Class clsProjekt
         _shpUID = ""
         _variantName = ""   ' ur:25.6.2014: hinzugefügt, da sonst in der DB variantName mal "" und mal Nothing ist
         _timeStamp = Date.Now
+
         _variantName = ""
+
+        _description = ""
+        _businessUnit = ""
+        _complexity = 0.0
+        _volume = 0.0
+
 
     End Sub
 
@@ -2509,8 +2544,14 @@ Public Class clsProjekt
 
         _Status = ProjektStatus(0)
         _shpUID = ""
-        _variantName = ""
         _timeStamp = Date.Now
+
+        _variantName = ""
+
+        _description = ""
+        _businessUnit = ""
+        _complexity = 0.0
+        _volume = 0.0
 
     End Sub
 
@@ -2531,8 +2572,14 @@ Public Class clsProjekt
         _latestStart = CInt(DateDiff(DateInterval.Month, startDate, latestStartdate))
 
         _Status = ProjektStatus(0)
-        _variantName = ""
         _timeStamp = Date.Now
+
+        _variantName = ""
+
+        _description = ""
+        _businessUnit = ""
+        _complexity = 0.0
+        _volume = 0.0
 
     End Sub
 End Class

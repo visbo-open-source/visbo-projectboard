@@ -373,6 +373,7 @@ Public Module awinDiagrams
                         ElseIf prcTyp = DiagrammTypen(5) Then
 
                             einheit = " "
+                            objektFarbe = MilestoneDefinitions.getMilestoneDef(prcName).farbe
                             msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName)
 
                         End If
@@ -417,7 +418,8 @@ Public Module awinDiagrams
 
                                 With .SeriesCollection.NewSeries
                                     .name = prcName
-                                    .Interior.color = ampelfarbe(0)
+                                    '.Interior.color = ampelfarbe(0)
+                                    .Interior.color = objektFarbe
                                     .Values = datenreihe
                                     .XValues = Xdatenreihe
                                     .ChartType = Excel.XlChartType.xlColumnStacked
@@ -606,7 +608,7 @@ Public Module awinDiagrams
                         With .SeriesCollection.NewSeries
                             .HasDataLabels = False
 
-                            If prcTyp = DiagrammTypen(0) Then
+                            If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                                 .name = "Schwellwert"
                             Else
                                 .name = "Interne Kapazität"
@@ -1057,6 +1059,7 @@ Public Module awinDiagrams
                     ElseIf prcTyp = DiagrammTypen(5) Then
 
                         einheit = " "
+                        objektFarbe = MilestoneDefinitions.getMilestoneDef(prcName).farbe
                         msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName)
                     End If
 
@@ -1100,7 +1103,8 @@ Public Module awinDiagrams
 
                             With .SeriesCollection.NewSeries
                                 .name = prcName
-                                .Interior.color = ampelfarbe(0)
+                                '.Interior.color = ampelfarbe(0)
+                                .Interior.color = objektFarbe
                                 .Values = datenreihe
                                 .XValues = Xdatenreihe
                                 .ChartType = Excel.XlChartType.xlColumnStacked
@@ -1308,7 +1312,7 @@ Public Module awinDiagrams
                     With .SeriesCollection.NewSeries
                         .HasDataLabels = False
 
-                        If prcTyp = DiagrammTypen(0) Then
+                        If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
                             .name = "Schwellwert"
                         Else
                             .name = "Interne Kapazität"
@@ -3944,93 +3948,95 @@ Public Module awinDiagrams
         ' 8 - Selektion geändert
         ' 9 - Cockpit wurde geladen; (alle Diagramme neuzeichnen)
 
+        ' Schutz Funktion : wenn showrangeleft = 0 und showrangeright = 0 , dann nichts tun
+        If showRangeRight - showRangeLeft >= 5 Then
+            With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+                anz_diagrams = CType(.ChartObjects, Excel.ChartObjects).Count
+                For i = 1 To anz_diagrams
+                    chtobj = CType(.ChartObjects(i), Excel.ChartObject)
+                    Select Case typus
+                        '
+                        '
+                        Case 8 ' Selection hat sich geändert 
+
+                            If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                                istPhasenDiagramm(chtobj) Then
+
+                                Call awinUpdateprcCollectionDiagram(chtobj)
+
+                            End If
+
+                        Case Else
+                            ' 1: Projekt wurde verschoben
+                            ' 2: Projekt wurde eingefügt
+                            ' 3: Projekt wurde gelöscht
+                            ' 4: betrachteter Zeitraum wurde geändert
+                            ' 5: Stammdaten wurden geändert
+                            ' 6: Ressourcen Bedarf eines existierenden Projektes wurde geändert
+                            ' 7: Kosten Bedarf eines existierenden Projektes wurde geändert
+                            ' 9: Cockpit wurde geladen; (alle Diagramme neuzeichnen)
+
+                            If (typus <> 5) And (istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
+                                istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj)) Then
+
+                                Call awinUpdateprcCollectionDiagram(chtobj)
 
 
+                            ElseIf istSummenDiagramm(chtobj, p) Then
 
-        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
-            anz_diagrams = CType(.ChartObjects, Excel.ChartObjects).Count
-            For i = 1 To anz_diagrams
-                chtobj = CType(.ChartObjects(i), Excel.ChartObject)
-                Select Case typus
-                    '
-                    '
-                    Case 8 ' Selection hat sich geändert 
+                                If p = PTpfdk.ErgebnisWasserfall Then
+                                    Call awinUpdateErgebnisDiagramm(chtobj)
 
-                        If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                            istPhasenDiagramm(chtobj) Then
+                                ElseIf p = PTpfdk.Dependencies Or _
+                                       p = PTpfdk.FitRisiko Or _
+                                       p = PTpfdk.FitRisikoVol Or _
+                                       p = PTpfdk.ZeitRisiko Or _
+                                       p = PTpfdk.ComplexRisiko Then
 
-                            Call awinUpdateprcCollectionDiagram(chtobj)
+                                    Call awinUpdatePortfolioDiagrams(chtobj, 0)
 
-                        End If
+                                ElseIf p = PTpfdk.Auslastung Then
+                                    Try
+                                        Call awinUpdateAuslastungsDiagramm(chtobj)
+                                    Catch ex As Exception
 
-                    Case Else
-                        ' 1: Projekt wurde verschoben
-                        ' 2: Projekt wurde eingefügt
-                        ' 3: Projekt wurde gelöscht
-                        ' 4: betrachteter Zeitraum wurde geändert
-                        ' 5: Stammdaten wurden geändert
-                        ' 6: Ressourcen Bedarf eines existierenden Projektes wurde geändert
-                        ' 7: Kosten Bedarf eines existierenden Projektes wurde geändert
-                        ' 9: Cockpit wurde geladen; (alle Diagramme neuzeichnen)
+                                    End Try
 
-                        If (typus <> 5) And (istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                            istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj)) Then
+                                ElseIf p = PTpfdk.UeberAuslastung Then
+                                    Try
+                                        Call updateAuslastungsDetailPie(chtobj, 1)
+                                    Catch ex As Exception
 
-                            Call awinUpdateprcCollectionDiagram(chtobj)
+                                    End Try
+                                ElseIf p = PTpfdk.Unterauslastung Then
+                                    Try
+                                        Call updateAuslastungsDetailPie(chtobj, 2)
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                    ' p = 19 
+                                ElseIf p = PTpfdk.Budget Then
+                                    Try
+                                        Call awinUpdateBudgetErgebnisDiagramm(chtobj)
+                                    Catch ex As Exception
+
+                                    End Try
+                                End If
 
 
-                        ElseIf istSummenDiagramm(chtobj, p) Then
-
-                            If p = PTpfdk.ErgebnisWasserfall Then
-                                Call awinUpdateErgebnisDiagramm(chtobj)
-
-                            ElseIf p = PTpfdk.Dependencies Or _
-                                   p = PTpfdk.FitRisiko Or _
-                                   p = PTpfdk.FitRisikoVol Or _
-                                   p = PTpfdk.ZeitRisiko Or _
-                                   p = PTpfdk.ComplexRisiko Then
-
-                                Call awinUpdatePortfolioDiagrams(chtobj, 0)
-
-                            ElseIf p = PTpfdk.Auslastung Then
-                                Try
-                                    Call awinUpdateAuslastungsDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
-
-                            ElseIf p = PTpfdk.UeberAuslastung Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 1)
-                                Catch ex As Exception
-
-                                End Try
-                            ElseIf p = PTpfdk.Unterauslastung Then
-                                Try
-                                    Call updateAuslastungsDetailPie(chtobj, 2)
-                                Catch ex As Exception
-
-                                End Try
-
-                                ' p = 19 
-                            ElseIf p = PTpfdk.Budget Then
-                                Try
-                                    Call awinUpdateBudgetErgebnisDiagramm(chtobj)
-                                Catch ex As Exception
-
-                                End Try
                             End If
 
 
-                        End If
-                      
 
+                    End Select
 
-                End Select
+                Next i
 
-            Next i
+            End With
+        End If
 
-        End With
+        
 
 
 

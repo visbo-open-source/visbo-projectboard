@@ -123,14 +123,19 @@ Public Class Tabelle1
         If Not c2 Is Nothing Then
             c1 = Nothing
 
-            If c2.Columns.Count > 5 Then
-                von = c2.Column
-                bis = von + c2.Columns.Count - 1
-                Call awinChangeTimeSpan(von, bis)
-                Call awinDeSelect()
-            Else
-                Call awinDeSelect()
-            End If
+            von = c2.Column
+            bis = von + c2.Columns.Count - 1
+            Call awinChangeTimeSpan(von, bis)
+            Call awinDeSelect()
+
+            'If c2.Columns.Count > 5 Then
+            '    von = c2.Column
+            '    bis = von + c2.Columns.Count - 1
+            '    Call awinChangeTimeSpan(von, bis)
+            '    Call awinDeSelect()
+            'Else
+            '    Call awinDeSelect()
+            'End If
 
         Else
 

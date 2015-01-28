@@ -1,11 +1,149 @@
 ﻿Public Class clsFilter
 
-    Private filterBU As SortedList(Of String, String)
-    Private filterPhase As SortedList(Of String, String)
-    Private filterMilestone As SortedList(Of String, String)
-    Private filterTyp As SortedList(Of String, String)
+
+    Private filterPhase As Collection
+    Private filterMilestone As Collection
+    Private filterRolle As Collection
+    Private filterCost As Collection
+    Private filterTyp As Collection
+    Private filterBU As Collection
     Private _name As String
-    Private _isActive As Boolean
+
+
+    ''' <summary>
+    ''' prüft ob irgendein Filter gesetzt ist 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isEmpty As Boolean
+        Get
+            Dim sum As Integer = filterPhase.Count + filterMilestone.Count + _
+                                 filterRolle.Count + filterCost.Count + _
+                                 filterTyp.Count + filterBU.Count
+            If sum = 0 Then
+                isEmpty = True
+            Else
+                isEmpty = False
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' schreibt/liest die Filter Collection der BUs
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property BUs() As Collection
+        Get
+            BUs = filterBU
+        End Get
+        Set(value As Collection)
+
+            If Not IsNothing(value) Then
+                filterBU = value
+            End If
+
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' schreibt/liest die Filter Collection der Typen
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property Typs() As Collection
+        Get
+            Typs = filterTyp
+        End Get
+        Set(value As Collection)
+
+            If Not IsNothing(value) Then
+                filterTyp = value
+            End If
+
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' schreibt/liest die Filter Collection der Phasen
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property Phases() As Collection
+        Get
+            Phases = filterPhase
+        End Get
+        Set(value As Collection)
+
+            If Not IsNothing(value) Then
+                filterPhase = value
+            End If
+
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' schreibt/liest die Filter Collection der Meilensteine
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property Milestones() As Collection
+        Get
+            Milestones = filterMilestone
+        End Get
+        Set(value As Collection)
+
+            If Not IsNothing(value) Then
+                filterMilestone = value
+            End If
+
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' schreibt/liest die Filter Collection der Rolle
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property Roles() As Collection
+        Get
+            Roles = filterRolle
+        End Get
+        Set(value As Collection)
+
+            If Not IsNothing(value) Then
+                filterRolle = value
+            End If
+
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' schreibt/liest die Filter Collection der Kostenart
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property Costs() As Collection
+        Get
+            Costs = filterCost
+        End Get
+        Set(value As Collection)
+
+            If Not IsNothing(value) Then
+                filterCost = value
+            End If
+
+        End Set
+    End Property
+
 
     ''' <summary>
     ''' liest bzw. schreibt den Namen des filters 
@@ -19,8 +157,13 @@
             name = _name
         End Get
         Set(value As String)
-            If value.Trim.Length > 0 Then
-                _name = value
+
+            If Not IsNothing(value) Then
+                If value.Trim.Length > 0 Then
+                    _name = value
+                Else
+                    _name = "XXX"
+                End If
             Else
                 _name = "XXX"
             End If
@@ -28,14 +171,7 @@
         End Set
     End Property
 
-    Public Property isActive As Boolean
-        Get
-            isActive = _isActive
-        End Get
-        Set(value As Boolean)
-            _isActive = value
-        End Set
-    End Property
+    
 
     ''' <summary>
     ''' fügt dem Business Unit Filter einen Eintrag hinzu
@@ -46,10 +182,14 @@
     ''' <remarks></remarks>
     Public Sub addBU(ByVal businessUnit As String)
 
-        If filterBU.ContainsKey(businessUnit) Then
+        If filterBU.Contains(businessUnit) Then
             ' nichts tun ..
         Else
-            filterBU.Add(businessUnit, businessUnit)
+
+            If Not IsNothing(businessUnit) Then
+                filterBU.Add(businessUnit, businessUnit)
+            End If
+
         End If
 
     End Sub
@@ -63,10 +203,12 @@
     ''' <remarks></remarks>
     Public Sub removeBU(ByVal businessUnit As String)
 
-        If filterBU.ContainsKey(businessUnit) Then
-            filterBU.Remove(businessUnit)
-        Else
-            ' nichts tun ..
+        If Not IsNothing(businessUnit) Then
+            If filterBU.Contains(businessUnit) Then
+                filterBU.Remove(businessUnit)
+            Else
+                ' nichts tun ..
+            End If
         End If
 
     End Sub
@@ -88,18 +230,21 @@
             Dim containsTyp As Boolean
             Dim containsMS As Boolean
             Dim containsPH As Boolean
+            Dim containsRole As Boolean
+            Dim containsCost As Boolean
             Dim stillOK As Boolean
             Dim tmpMilestone As clsMeilenstein
             Dim tmpPhase As clsPhase
             Dim ix As Integer
 
-
-            If _isActive Then
+            If Not IsNothing(Me) Then
 
                 ' Überprüfe BU 
-                If filterBU.Count > 0 Then
+                If filterBU.Count = 0 Then
+                    containsBU = True
+                ElseIf filterBU.Count > 0 And Not IsNothing(hproj.businessUnit) Then
                     If hproj.businessUnit.Trim.Length > 0 Then
-                        If filterBU.ContainsKey(hproj.businessUnit.Trim) Then
+                        If filterBU.Contains(hproj.businessUnit.Trim) Then
                             containsBU = True
                         Else
                             containsBU = False
@@ -107,16 +252,23 @@
                     Else
                         containsBU = False
                     End If
-                Else
-                    containsBU = True
+                ElseIf IsNothing(hproj.businessUnit) Then
+                    If filterBU.Count > 0 Then
+                        containsBU = False
+                    Else
+                        containsBU = True
+                    End If
                 End If
+
 
                 stillOK = containsBU
 
                 If stillOK Then
-                    If filterTyp.Count > 0 Then
+                    If filterTyp.Count = 0 Then
+                        containsTyp = True
+                    ElseIf filterTyp.Count > 0 And Not IsNothing(hproj.VorlagenName) Then
                         If hproj.VorlagenName.Trim.Length > 0 Then
-                            If filterTyp.ContainsKey(hproj.VorlagenName.Trim) Then
+                            If filterTyp.Contains(hproj.VorlagenName.Trim) Then
                                 containsTyp = True
                             Else
                                 containsTyp = False
@@ -124,6 +276,14 @@
                         Else
                             containsTyp = False
                         End If
+
+                    ElseIf IsNothing(hproj.VorlagenName) Then
+                        If filterTyp.Count > 0 Then
+                            containsTyp = False
+                        Else
+                            containsTyp = True
+                        End If
+
                     Else
                         containsTyp = True
                     End If
@@ -145,7 +305,7 @@
                         ix = 1
 
                         While ix <= filterMilestone.Count And Not containsMS
-                            tmpMilestone = hproj.getMilestone(filterMilestone.ElementAt(ix - 1).Key)
+                            tmpMilestone = hproj.getMilestone(CStr(filterMilestone.Item(ix)))
 
                             If IsNothing(tmpMilestone) Then
 
@@ -183,7 +343,7 @@
                             ix = 1
 
                             While ix <= filterPhase.Count And Not containsPH
-                                tmpPhase = hproj.getPhase(filterPhase.ElementAt(ix - 1).Key)
+                                tmpPhase = hproj.getPhase(CStr(filterPhase.Item(ix)))
 
                                 If IsNothing(tmpPhase) Then
 
@@ -200,7 +360,7 @@
 
                                         If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or _
                                             DateDiff(DateInterval.Day, tmpPhStart, rightdate) < 0 Then
-                                            containsPH = False
+                                            ix = ix + 1
                                         Else
                                             containsPH = True
                                         End If
@@ -222,20 +382,148 @@
 
                 End If
 
-            Else
-                stillOK = True
-            End If
+                Else
+                    ' wenn der Filter = Nothing
+                    stillOK = True
+                End If
+
+                ' Prüfen ob bestimmte Rollen vorkommen 
+                If stillOK Then
+
+                    If filterRolle.Count > 0 Then
+
+                        Dim roleName As String
+                        Dim rollenBedarfe As Double = 0.0
+                        Dim myCollection As New Collection
+                        ' DiagrammTypen(1) = Rollen 
+                        Dim type As String = DiagrammTypen(1)
+                        ix = 1
+                        containsRole = False
+
+                        While ix <= filterRolle.Count And Not containsRole
+
+                            roleName = CStr(filterRolle.Item(ix))
+
+                            ' zurücksetzen
+                            myCollection.Clear()
+                            rollenBedarfe = 0.0
+
+                            ' berechnen
+                            myCollection.Add(roleName, roleName)
+                            rollenBedarfe = hproj.getBedarfeInMonths(myCollection, type).Sum
+
+                            ' entscheiden
+                            If rollenBedarfe > 0 Then
+                                containsRole = True
+                            Else
+                                ix = ix + 1
+                            End If
 
 
-            doesNotBlock = stillOK
+                        End While
+
+                    Else
+                        containsRole = True
+                    End If
+                    stillOK = containsRole
+                End If
+
+                ' Prüfen ob bestimmte Kostenarten vorkommen 
+                If stillOK Then
+
+                    If filterCost.Count > 0 Then
+
+                        Dim costName As String
+                        Dim costBedarfe As Double = 0.0
+                        Dim myCollection As New Collection
+                        ' DiagrammTypen(1) = Rollen 
+                        Dim type As String = DiagrammTypen(2)
+                        ix = 1
+                        containsCost = False
+
+                        While ix <= filterCost.Count And Not containsCost
+
+                            costName = CStr(filterCost.Item(ix))
+
+                            ' zurücksetzen
+                            myCollection.Clear()
+                            costBedarfe = 0.0
+
+                            ' berechnen
+                            myCollection.Add(costName, costName)
+                            costBedarfe = hproj.getBedarfeInMonths(myCollection, type).Sum
+
+                            ' entscheiden
+                            If costBedarfe > 0 Then
+                                containsCost = True
+                            Else
+                                ix = ix + 1
+                            End If
+
+
+                        End While
+
+                    Else
+                        containsCost = True
+                    End If
+                    stillOK = containsCost
+                End If
+
+
+                doesNotBlock = stillOK
 
         End Get
     End Property
 
+    
+
     Sub New()
-        filterBU = New SortedList(Of String, String)
-        filterPhase = New SortedList(Of String, String)
-        filterMilestone = New SortedList(Of String, String)
-        filterTyp = New SortedList(Of String, String)
+        filterBU = New Collection
+        filterPhase = New Collection
+        filterMilestone = New Collection
+        filterTyp = New Collection
+        filterRolle = New Collection
+        filterCost = New Collection
+        _name = "XXX"
+    End Sub
+
+    ''' <summary>
+    ''' legt einen neuen filter an unter Angabe der bekannten Filter Collections
+    ''' Eingabe Parameter kann auch Nothing sein 
+    ''' </summary>
+    ''' <param name="kennung">Name des Filters</param>
+    ''' <param name="fBU">filter BU</param>
+    ''' <param name="fTyp">filter Typ</param>
+    ''' <param name="fPhase">filter Phase</param>
+    ''' <param name="fMilestone">filter Meilenstein</param>
+    ''' <param name="fRolle">filter Rolle</param>
+    ''' <param name="fCost">filter Cost</param>
+    ''' <remarks></remarks>
+    Sub New(ByVal kennung As String, _
+                ByVal fBU As Collection, ByVal fTyp As Collection, _
+                ByVal fPhase As Collection, ByVal fMilestone As Collection, _
+                ByVal fRolle As Collection, ByVal fCost As Collection)
+
+        filterPhase = New Collection
+        Call copyCollections(fPhase, filterPhase)
+
+        filterMilestone = New Collection
+        Call copyCollections(fMilestone, filterMilestone)
+
+        filterRolle = New Collection
+        Call copyCollections(fRolle, filterRolle)
+        
+        filterCost = New Collection
+        Call copyCollections(fCost, filterCost)
+
+        filterBU = New Collection
+        Call copyCollections(fBU, filterBU)
+        
+        filterTyp = New Collection
+        Call copyCollections(fTyp, filterTyp)
+        
+
+        name = kennung
+
     End Sub
 End Class

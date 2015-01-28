@@ -8,7 +8,7 @@ Public Class frmCreateNewVariant
     End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim key As String
         Dim ok As Boolean = False
 
@@ -24,7 +24,7 @@ Public Class frmCreateNewVariant
                 ok = True
             Else
                 Call MsgBox(" Projekt (Variante) '" & Me.projektName.Text & "( " & Me.newVariant.Text & " ) " & _
-                            "existiert bereits !")
+                            "existiert bereits in DB!")
             End If
 
         Else
@@ -37,6 +37,10 @@ Public Class frmCreateNewVariant
             DialogResult = Windows.Forms.DialogResult.OK
             MyBase.Close()
         End If
+
+    End Sub
+
+    Private Sub newVariant_TextChanged(sender As Object, e As EventArgs) Handles newVariant.TextChanged
 
     End Sub
 End Class

@@ -5,7 +5,8 @@
         frmCoord(PTfrm.projInfo, PTpinfo.top) = Me.Top
         frmCoord(PTfrm.projInfo, PTpinfo.left) = Me.Left
 
-        Call awinDeleteProjectChildShapes(2)
+        'Call awinDeleteProjectChildShapes(2)
+        Call awinDeSelect()
         
 
     End Sub

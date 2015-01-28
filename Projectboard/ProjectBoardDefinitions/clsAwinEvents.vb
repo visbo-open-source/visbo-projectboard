@@ -2,6 +2,10 @@
     Private AllEvents As Collection
 
 
+    Public Sub Clear()
+        AllEvents.Clear()
+    End Sub
+
     ''' <summary>
     ''' fügt der global verfügbaren Collection eine Eventvariable hinzu, so daß die eventvaiable ständig verfügbar ist
     ''' </summary>
