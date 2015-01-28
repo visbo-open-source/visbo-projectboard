@@ -102,7 +102,7 @@ Public Class frmShowPlanElements
                 Dim i As Integer
                 For i = 1 To listOfVorlagen.Count
                     dateiName = Dir(listOfVorlagen.Item(i - 1))
-                    If dateiName.Contains("Multiprojekt") Then
+                    If dateiName.Contains("Typ II") Then
                         repVorlagenDropbox.Items.Add(dateiName)
                     End If
 

@@ -19,10 +19,15 @@ Public Class frmSelectPPTTempl
 
         Dim dateiName As String = ""
         Dim dirname As String = ""
+        Dim paramType As Boolean
 
         ' hier wird  unterschieden, ob Projekt- oder Portfolio Report
-        If calledfrom = "Portfolio" Then
+        If calledfrom = "Portfolio1" Then
             dirname = awinPath & RepPortfolioVorOrdner
+            paramType = False
+        ElseIf calledfrom = "Portfolio2" Then
+            dirname = awinPath & RepPortfolioVorOrdner
+            paramType = True
         ElseIf calledfrom = "Projekt" Then
             dirname = awinPath & RepProjectVorOrdner
         End If
@@ -34,7 +39,18 @@ Public Class frmSelectPPTTempl
             Dim i As Integer
             For i = 1 To listOfVorlagen.Count
                 dateiName = Dir(listOfVorlagen.Item(i - 1))
-                RepVorlagenDropbox.Items.Add(dateiName)
+                If calledfrom = "Projekt" Then
+                    RepVorlagenDropbox.Items.Add(dateiName)
+                ElseIf calledfrom = "Portfolio1" Then
+                    If Not dateiName.Contains("Typ II") Then
+                        RepVorlagenDropbox.Items.Add(dateiName)
+                    End If
+                Else
+                    If dateiName.Contains("Typ II") Then
+                        RepVorlagenDropbox.Items.Add(dateiName)
+                    End If
+                End If
+
             Next i
         Catch ex As Exception
             'Call MsgBox(ex.Message & ": " & dateiName)

@@ -6931,7 +6931,7 @@ Imports System.Drawing
         Dim getReportVorlage As New frmSelectPPTTempl
         Dim returnValue As DialogResult
 
-        getReportVorlage.calledfrom = "Portfolio"
+        getReportVorlage.calledfrom = "Portfolio1"
 
         Call projektTafelInit()
 
