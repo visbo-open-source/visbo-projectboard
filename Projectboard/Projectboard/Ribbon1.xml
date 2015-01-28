@@ -36,8 +36,8 @@
         </group>
       </tab>
       
-      <!--<tab id="PT0" label="Detail-Info">
-        <group id="PT0G1" label="Projekt Informationen">-->
+      <tab id="PT0" label="Detail-Info">
+        <group id="PT0G1" label="Projekt Informationen">
           <!--<menu id="PT0G1M3" label="Chart-Cockpit">
             <button id="PT0G1M3B1" label="Cockpit visualisieren" onAction="PT0ShowCockpit" />
             <button id="PT0G1M3B2" label="Cockpit speichern" onAction="PT0SaveCockpit" />
@@ -47,11 +47,11 @@
           <separator id="PT0G1s1"/>
           <button id="PT0G1B1" label="Abhängigkeiten" onAction="PT0ShowDependencies" />
           <separator id="PT0G1s2"/>-->
-          <!--<menu id="PT0G1M0" label="Phasen">
+          <menu id="PT0G1M0" label="Phasen">
             <button id="PT0G1M0B1" label="Namen wählen" onAction="PT0VisualizePhases" />
-            <button id="PT0G1M0B2" label="Phasen Übersicht" onAction="Tom2G2M1B1Phasen" />-->
+            <button id="PT0G1M0B2" label="Phasen Übersicht" onAction="Tom2G2M1B1Phasen" />
             <!--<button id="PT0G1M0B3" label="Phasen Darstellung" onAction="Tom2G2M1B1Phasen2" />-->
-          <!--</menu>
+          </menu>
           <separator id="PT0G1s3"/>
           <menu id="PT0G1M1" label="Ressourcen">
             <button id="PT0G1M1B1" label="Personal Bedarfe" onAction="Tom2G2M1B2Resources" />
@@ -61,19 +61,19 @@
           <menu id="PT0G1M2" label="Meilensteine">
             <button id="PT0G1M2B5" label="Alle" onAction="Tom2G2M5M2B5ShowMilestones" />
             <button id="PT0G1M2B6" label="Meilenstein anzeigen" onAction="PTShowMilestonesByName" />
-            <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="PTShowMilestoneTrend" />-->
+            <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="PTShowMilestoneTrend" />
             <!--<button id="PT0G1M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />-->
-          <!--</menu>-->
-      <!--<separator id="PT0G1s5"/>
+          </menu>
+          <!--<separator id="PT0G1s5"/>
           <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
           <button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />
           <button id="PT0G1B5" label="Abhängigkeiten" onAction="Tom2G2M1B6Abhaengigkeit" />
           <button id="PT0G1B4" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />-->
-          <!--<separator id="PT0G1s6"/>
+          <separator id="PT0G1s6"/>
           <button id="PT0G1B6" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
-        </group>-->
-
-      <!--<group id="PT0G2" label="Portfolio">
+        </group>
+        
+        <!--<group id="PT0G2" label="Portfolio">
           <button id="PT0G2B1" label="Status" onAction="Tom2G2M5M1B3ShowStatus" />
           <separator id="PT0G2s1"/>
           <menu id="PT0G2M0" label="Phasen">
@@ -105,7 +105,7 @@
           <button id="PT0G2B10" label="Budget/Kosten" onAction="PT0ShowPortfolioBudgetCost" />
           <button id="PT0G2B11" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" />
         </group>-->
-      <!--</tab>-->
+      </tab>
       <tab id="PT1" label="Reports erstellen">
         <group id="PT1G1" label="Powerpoint">
           <button id="PT1G1B1" label="Einzelprojekt Bericht" onAction="Tom2G1Doku" />
@@ -223,17 +223,17 @@
         <group id ="PT5G1" label ="Laden">
           <button id="PT5G1B1" label="Portfolio" onAction="PTLadenKonstellation" />
           <!--<button id="PT5G1B2" label="Programme" onAction="PT5DatenbankLoadPrograms" enabled="false"/>-->
-          <button id="PT5G1B3" label="Projekte" onAction="PT5DatenbankLoadProjekte"/>
+          <button id="PT5G1B3" label="Projekte/Varianten" onAction="PT5DatenbankLoadProjekte"/>
         </group>
         <group id ="PT5G2" label ="Speichern">
           <button id="Pt5G2B1" label="Portfolio" onAction="PTNeueKonstellation" />
           <!--<button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" enabled="false"/>-->
-          <button id="Pt5G2B3" label="Projekte " onAction="PT5StoreProjects" />
+          <button id="Pt5G2B3" label="Projekte/Vatianten " onAction="PT5StoreProjects" />
         </group>
         <group id ="PT5G3" label ="Löschen">
           <button id="Pt5G3B1" label="Portfolio" onAction="PTRemoveKonstellation" />
           <!--<button id="Pt5G3B2" label="Programm " onAction="PT5DeleteProgramme" enabled="false"/>-->
-          <button id="Pt5G3B3" label="Projekte " onAction="PT5DeleteProjectsInDB" />  
+          <button id="Pt5G3B3" label="Projekte/Varianten " onAction="PT5DeleteProjectsInDB" />  
         </group>
       </tab>
       <tab id ="PT6" label ="Einstellungen">
@@ -243,6 +243,7 @@
           <!--<checkBox id="PT6G1B2" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>-->
           <checkBox id="PT6G1B3" label="Anzeigen selekt. Objekte im Summenchart" getPressed="PTShowSelectedObjects" onAction ="awinSetShowSelObj"/>    
           <checkBox id="PT6G1B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
+          <!--<button id="PT6G1B7" label="Windows u. Excel-Version"  onAction ="PTShowVersions"/>-->
         </group>
         <group id ="PT6G2" label="Berechnung">
           <checkBox id="PT6G2B1" label="Bei Dehnen/Stauchen proportional anpassen" getPressed="PTPropAnpassen" onAction ="awinSetPropAnpass"/>

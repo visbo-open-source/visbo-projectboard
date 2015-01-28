@@ -128,7 +128,9 @@ Public Class frmProjPortfolioAdmin
             stopRecursion = False
 
 
-        ElseIf aKtionskennung = PTTvActions.delFromSession Then
+        ElseIf aKtionskennung = PTTvActions.delFromSession Or _
+              aKtionskennung = PTTvActions.deleteV Then
+
             stopRecursion = True
 
             Select Case treeLevel
@@ -173,8 +175,8 @@ Public Class frmProjPortfolioAdmin
 
             stopRecursion = False
         ElseIf aKtionskennung = PTTvActions.activateV Or _
-            aKtionskennung = PTTvActions.definePortfolioDB Or _
-            aKtionskennung = PTTvActions.definePortfolioSE Then
+               aKtionskennung = PTTvActions.definePortfolioDB Or _
+               aKtionskennung = PTTvActions.definePortfolioSE Then
 
             stopRecursion = True
 
@@ -254,7 +256,7 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub TreeViewProjekte_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles TreeViewProjekte.BeforeExpand
 
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim node As New TreeNode
         Dim nodeVariant As New TreeNode
         Dim nodeTimeStamp As New TreeNode
@@ -453,8 +455,8 @@ Public Class frmProjPortfolioAdmin
         Dim hproj As clsProjekt
         Dim portfolioZeile As Integer = 2
 
-        Dim request As New Request(awinSettings.databaseName)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash")
+        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", username, password)
 
         Dim p As Integer, v As Integer, t As Integer
 
@@ -584,6 +586,7 @@ Public Class frmProjPortfolioAdmin
 
         ElseIf aKtionskennung = PTTvActions.delFromDB Or _
             aKtionskennung = PTTvActions.delFromSession Or _
+            aKtionskennung = PTTvActions.deleteV Or _
             aKtionskennung = PTTvActions.loadPV Then
 
             ' alle anderen Aktionen wie Projekte aus Datenbank löschen , aus Session löschen, aus Datenbank laden  ... 
@@ -673,7 +676,8 @@ Public Class frmProjPortfolioAdmin
                                 ' lösche in Datenbank das Objekt mit DB-Namen pname#vname
 
                                 If aKtionskennung = PTTvActions.delFromDB Or _
-                                    aKtionskennung = PTTvActions.delFromSession Then
+                                    aKtionskennung = PTTvActions.delFromSession Or _
+                                    aKtionskennung = PTTvActions.deleteV Then
                                     Call deleteCompleteProjectVariant(pname, variantName, aKtionskennung)
 
                                 ElseIf aKtionskennung = PTTvActions.loadPV Then

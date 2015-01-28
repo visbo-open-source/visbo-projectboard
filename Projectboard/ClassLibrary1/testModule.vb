@@ -18,7 +18,7 @@ Public Module testModule
 
         Dim awinSelection As xlNS.ShapeRange
 
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim singleShp As xlNS.Shape
         Dim hproj As clsProjekt
         Dim vglName As String = " "
@@ -3887,7 +3887,7 @@ Public Module testModule
 
         Dim jetzt As Date = Now
         Dim zeitStempel As Date
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         enableOnUpdate = False
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
@@ -3991,12 +3991,14 @@ Public Module testModule
 
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt
+        Dim hilfshproj As clsProjekt
         Dim jetzt As Date = Now
         Dim zeitStempel As Date
         Dim anzSelectedProj As Integer = 0
         Dim anzStoredProj As Integer = 0
+        Dim variantCollection As Collection
 
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
 
         Dim awinSelection As Excel.ShapeRange
 
@@ -4020,34 +4022,55 @@ Public Module testModule
                     singleShp1 = awinSelection.Item(i)
 
                     Try
-                        hproj = ShowProjekte.getProject(singleShp1.Name)
+                        hilfshproj = ShowProjekte.getProject(singleShp1.Name)
+
                     Catch ex As Exception
                         Throw New ArgumentException("Projekt nicht gefunden ...")
                         enableOnUpdate = True
                     End Try
 
-                    Try
-                        ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+                    ' alle geladenen Variante in variantCollection holen
+                    variantCollection = AlleProjekte.getVariantNames(hilfshproj.name)
 
-                        If demoModusHistory Then
-                            hproj.timeStamp = historicDate
-                        Else
-                            hproj.timeStamp = jetzt
-                        End If
+                    For vi = 1 To variantCollection.Count
 
-                        If request.storeProjectToDB(hproj) Then
+                        Dim hVname As String
+                        Dim tmpStr(5) As String
+                        Dim trennzeichen1 As String = "("
+                        Dim trennzeichen2 As String = ")"
 
-                            anzStoredProj = anzStoredProj + 1
-                            'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
-                        Else
-                            Call MsgBox("Fehler in Schreiben Projekt " & hproj.name)
-                        End If
-                    Catch ex As Exception
+                        ' VariantenNamen von den () befreien
+                        tmpStr = variantCollection(vi).Split(New Char() {CChar(trennzeichen1)}, 4)
+                        tmpStr = tmpStr(1).Split(New Char() {CChar(trennzeichen2)}, 4)
+                        hVname = tmpStr(0)
 
-                        ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
-                        Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
-                        'Exit Sub
-                    End Try
+                        ' gesamte ProjektInfo der Variante aus Liste AlleProjekte lesen
+                        hproj = AlleProjekte.getProject(calcProjektKey(hilfshproj.name, hVname))
+
+                        Try
+                            ' hier wird der Wert für kvp.Value.timeStamp = heute gesetzt 
+
+                            If demoModusHistory Then
+                                hproj.timeStamp = historicDate
+                            Else
+                                hproj.timeStamp = jetzt
+                            End If
+
+                            If request.storeProjectToDB(hproj) Then
+
+                                anzStoredProj = anzStoredProj + 1
+                                'Call MsgBox("ok, Projekt '" & hproj.name & "' gespeichert!" & vbLf & hproj.timeStamp.ToShortDateString)
+                            Else
+                                Call MsgBox("Fehler in Schreiben Projekt " & hproj.name)
+                            End If
+                        Catch ex As Exception
+
+                            ' Call MsgBox("Fehler beim Speichern der Projekte in die Datenbank. Datenbank nicht aktiviert?")
+                            Throw New ArgumentException("Fehler beim Speichern der Projekte in die Datenbank." & vbLf & "Datenbank ist vermutlich nicht aktiviert?")
+                            'Exit Sub
+                        End Try
+
+                    Next vi
 
                 Next i
 
@@ -4073,7 +4096,7 @@ Public Module testModule
         End If
 
 
-        Call MsgBox("ok, " & anzStoredProj & " Projekte gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
+        Call MsgBox("ok, " & anzStoredProj & " Projekte und Varianten gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
         Return anzStoredProj
 
     End Function
@@ -4285,7 +4308,7 @@ Public Module testModule
                                          ByVal showLabels As Boolean, ByVal chartBorderVisible As Boolean, _
                                          ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double)
 
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim anzDiagrams As Integer, i As Integer
         Dim found As Boolean
         Dim pname As String
@@ -4794,7 +4817,7 @@ Public Module testModule
     Public Sub getStatusColorProject(ByRef hproj As clsProjekt, ByVal compareTo As Integer, ByVal auswahl As Integer, ByVal qualifier As String, _
                                   ByRef statusValue As Double, ByRef statusColor As Long)
 
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim currentValues() As Double
         Dim formerValues() As Double
         Dim vglProj As clsProjekt
@@ -6917,7 +6940,7 @@ Public Module testModule
         Dim outOfToleranceProjekte As New SortedList(Of String, Double())
         Dim vglName As String = ""
         Dim compareToLast As Boolean = True
-        Dim request As New Request(awinSettings.databaseName)
+        Dim request As New Request(awinSettings.databaseName, username, password)
         Dim variantName As String = ""
         Dim tolerancePercent As Double = 0.02
         Dim toleranceTimeAbs As Integer = 5

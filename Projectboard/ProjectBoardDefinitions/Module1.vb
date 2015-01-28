@@ -14,6 +14,11 @@ Public Module Module1
     ' awinSettings: für StartOfCalendar, linker Rand, rechter Rand, ...
     ' Laufzeit Parameter;
 
+    'login - Informationen
+    Public username As String = ""
+    Public password As String = ""
+    Public loginErfolgreich As Boolean = False
+
     Public awinSettings As New clsawinSettings
     Public magicBoardCmdBar As New clsCommandBarEvents
     Public anzahlCalls As Integer = 0
@@ -297,6 +302,7 @@ Public Module Module1
         definePortfolioDB = 4
         definePortfolioSE = 5
         loadPV = 6
+        deleteV = 7
     End Enum
 
    

@@ -46,6 +46,7 @@ Public Class ThisWorkbook
 
         'Dim cbar As CommandBar
 
+
         appInstance = Application
 
         myProjektTafel = appInstance.ActiveWorkbook.Name
@@ -63,10 +64,12 @@ Public Class ThisWorkbook
 
         magicBoardCmdBar.cmdbars = appInstance.CommandBars
 
+      
+
         Try
+
             appInstance.ScreenUpdating = False
             Call awinsetTypen()
-
 
         Catch ex As Exception
 
@@ -96,7 +99,6 @@ Public Class ThisWorkbook
         Dim plantafel As Excel.Window
 
 
-        'Call MsgBox(" in Open")
         CType(Application.Workbooks(myProjektTafel), Excel.Workbook).Activate()
 
         CType(Application.Worksheets(arrWsNames(3)), Excel.Worksheet).Activate()
@@ -173,59 +175,62 @@ Public Class ThisWorkbook
 
         Dim projektespeichern As New frmProjekteSpeichern
         Dim returnValue As DialogResult
-        Dim request As New Request(awinSettings.databaseName)
+        If loginErfolgreich Then
 
-        'If roentgenBlick.isOn Then
-        '    Call awinNoshowProjectNeeds()
-        '    With roentgenBlick
-        '        .isOn = False
-        '        .name = ""
-        '        .type = ""
-        '    End With
-        'End If
+            Dim request As New Request(awinSettings.databaseName, username, Password)
 
-
-        Call awinKontextReset()
-
-        ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
-        Try
-
-            If request.pingMongoDb() And AlleProjekte.Count > 0 Then
-                returnValue = projektespeichern.ShowDialog
+            'If roentgenBlick.isOn Then
+            '    Call awinNoshowProjectNeeds()
+            '    With roentgenBlick
+            '        .isOn = False
+            '        .name = ""
+            '        .type = ""
+            '    End With
+            'End If
 
 
-                If returnValue = DialogResult.Yes Then
+            Call awinKontextReset()
 
-                    Call StoreAllProjectsinDB()
+            ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
+            Try
+
+                If request.pingMongoDb() And AlleProjekte.Count > 0 Then
+                    returnValue = projektespeichern.ShowDialog
+
+
+                    If returnValue = DialogResult.Yes Then
+
+                        Call StoreAllProjectsinDB()
+
+                    End If
+
+                Else
+
+                    Call MsgBox("keine Projekte zu speichern ...")
+
 
                 End If
-
-            Else
-
-                Call MsgBox("keine Projekte zu speichern ...")
+            Catch ex As Exception
 
 
-            End If
-        Catch ex As Exception
+            End Try
 
-            
-        End Try
+            appInstance.ScreenUpdating = False
+            appInstance.EnableEvents = False
 
-        appInstance.ScreenUpdating = False
-        appInstance.EnableEvents = False
+            ' hier sollen jetzt noch die Phasen weggeschrieben werden 
+            Try
+                Call awinWritePhaseDefinitions()
+            Catch ex As Exception
+                Call MsgBox("Fehler bei Schreiben Customization File")
+            End Try
 
-        ' hier sollen jetzt noch die Phasen weggeschrieben werden 
-        Try
-            Call awinWritePhaseDefinitions()
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Schreiben Customization File")
-        End Try
-
+        End If
 
         appInstance.ActiveWorkbook.Saved = True
 
 
-                    ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
+        ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
 
         Application.Quit()
         appInstance.EnableEvents = True
