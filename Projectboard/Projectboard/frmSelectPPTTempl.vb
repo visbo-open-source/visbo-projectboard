@@ -155,6 +155,7 @@ Public Class frmSelectPPTTempl
             End With
         Catch ex As Exception
             Call MsgBox("Fehler " & ex.Message)
+            Call MsgBox(" in BAckground Worker ...")
         End Try
         
 

@@ -2324,13 +2324,19 @@ Public Module testModule
                                 availableSpace = drawingAreaBottom - drawingAreaTop
 
                                 Dim oldHeight As Double
-                                If querFormat Then
-                                    oldHeight = dinFormatA(format, 1)
-                                Else
-                                    oldHeight = dinFormatA(format, 0)
-                                End If
+                                Dim oldwidth As Double
 
-                                Dim curHeight As Double
+                                oldHeight = pptCurrentPresentation.PageSetup.SlideHeight
+                                oldwidth = pptCurrentPresentation.PageSetup.SlideWidth
+                                'If querFormat Then
+                                '    oldHeight = dinFormatA(format, 1)
+                                '    oldHeight = pptCurrentPresentation.PageSetup.SlideHeight
+                                'Else
+                                '    oldHeight = dinFormatA(format, 0)
+                                'End If
+
+                                Dim curHeight As Double = oldHeight
+                                Dim curWidth As Double = oldwidth
 
                                 If availableSpace < neededSpace Then
                                     Dim ix As Integer = format
@@ -2338,11 +2344,22 @@ Public Module testModule
                                     ' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
 
                                     Dim sizeMemory() As Single
+                                    Dim relativeSizeMemory As New SortedList(Of String, Double())
+
                                     sizeMemory = saveSizesOfElements(projectNameVorlagenShape, _
                                                                      MsDescVorlagenShape, MsDateVorlagenShape, _
                                                                      PhDescVorlagenShape, PhDateVorlagenShape, _
                                                                      phaseVorlagenShape, milestoneVorlagenShape, _
                                                                      projectVorlagenShape, ampelVorlagenShape)
+
+                                    If pptApp.Version = "14.0" Then
+                                        ' muss nichts machen
+                                        
+                                    Else
+
+                                        relativeSizeMemory = saveRelSizesOfElements(pptSlide, oldHeight, oldwidth)
+
+                                    End If
 
 
                                     Do While availableSpace < neededSpace And ix > 0
@@ -2364,15 +2381,19 @@ Public Module testModule
                                             End If
 
 
-
                                         End With
+
+                                        curHeight = pptCurrentPresentation.PageSetup.SlideHeight
+                                        curWidth = pptCurrentPresentation.PageSetup.SlideWidth
 
                                         ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
                                         ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
+
                                         If pptApp.Version = "14.0" Then
                                             ' muss nichts machen
                                         Else
-                                            Call resizeShapesDuePPT13(heightFaktor, widthFaktor, pptSlide)
+
+                                            Call restoreRelSizesDuePPT2013(relativeSizeMemory, curHeight, curWidth, pptSlide)
                                         End If
 
                                         ' jetzt wieder die Koordinaten neu berechnen 
@@ -2397,30 +2418,37 @@ Public Module testModule
                                         ix = 0
                                     End If
                                     ' bestimme die aktuelle Höhe 
-                                    If querFormat Then
-                                        curHeight = dinFormatA(ix, 1)
-                                    Else
-                                        curHeight = dinFormatA(ix, 0)
-                                    End If
+
+
+                                    'If querFormat Then
+                                    '    curHeight = dinFormatA(ix, 1)
+                                    'Else
+                                    '    curHeight = dinFormatA(ix, 0)
+                                    'End If
 
 
 
                                     ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
-                                    Call restoreSizesOfElements(sizeMemory, projectNameVorlagenShape, _
+
+                                    If pptApp.Version = "14.0" Then
+                                        Call restoreSizesOfElements(sizeMemory, projectNameVorlagenShape, _
                                                                 MsDescVorlagenShape, MsDateVorlagenShape, _
                                                                 PhDescVorlagenShape, PhDateVorlagenShape, _
                                                                 phaseVorlagenShape, milestoneVorlagenShape, _
                                                                 projectVorlagenShape, ampelVorlagenShape)
 
+                                    End If
+                                    
 
                                     ' jetzt alle Text Shapes, die auf der Folie ihre relative Größe behalten sollen 
                                     ' entsprechend um den errechneten Faktor anpassen
+
                                     Dim enlargeTxtFaktor As Double = curHeight / oldHeight
                                     Call enlargeTxtShapes(enlargeTxtFaktor, pptSlide)
 
                                 End If
 
-
+                                
                                 ' zeichne den Kalender
                                 Dim calendargroup As pptNS.Shape = Nothing
 
@@ -2431,7 +2459,7 @@ Public Module testModule
                                                         yearVorlagenShape, quarterMonthVorlagenShape, calendarYearSeparator, calendarQuartalSeparator, _
                                                         drawingAreaBottom)
                                 Catch ex As Exception
-                                    Call MsgBox(ex.Message)
+
                                 End Try
 
 
@@ -2519,6 +2547,7 @@ Public Module testModule
                                 legendMilestoneVorlagenShape.Delete()
                                 ampelVorlagenShape.Delete()
                                 projectVorlagenShape.Delete()
+
 
 
 
@@ -7779,9 +7808,12 @@ Public Module testModule
             End With
         End If
 
+
         nameCollection.Add(calendarLineShape.Name, calendarLineShape.Name)
         nameCollection.Add(calendarHeightShape.Name, calendarHeightShape.Name)
         nameCollection.Add(calendarMark.Name, calendarMark.Name)
+
+
 
         Dim qmHeightfaktor As Double = qmShape.Height / (qmShape.Height + yearShape.Height)
 
@@ -7807,6 +7839,8 @@ Public Module testModule
                                 .Top = yPosition + calendarStepShape.Height * 0.5
                                 .Height = calendarStepShape.Height * 0.5
                             End If
+                            ' den Namen für PPT 2013 eindeutig machen 
+                            .Name = .Name & .Id
                             nameCollection.Add(.Name, .Name)
                         End With
                     Else
@@ -7837,6 +7871,8 @@ Public Module testModule
                         .TextFrame2.TextRange.Text = lfdNr.ToString
                         .Left = xPosition + (qmWidth - .Width) * 0.5
                         .Top = yPosition
+                        ' den Namen für PPT 2013 eindeutig machen 
+                        .Name = .Name & .Id
                         nameCollection.Add(.Name, .Name)
                     End With
 
@@ -7857,6 +7893,8 @@ Public Module testModule
                         .TextFrame2.TextRange.Text = "Q" & lfdNr.ToString
                         .Left = xPosition + (qmWidth - .Width) * 0.5
                         .Top = yPosition
+                        ' den Namen für PPT 2013 eindeutig machen 
+                        .Name = .Name & .Id
                         nameCollection.Add(.Name, .Name)
                     End With
 
@@ -7875,6 +7913,8 @@ Public Module testModule
             With newShapes.Item(1)
                 .Left = calendarLineShape.Left
                 .Top = calendarLineShape.Top - qmHeightfaktor * calendarHeightShape.Height
+                ' den Namen für PPT 2013 eindeutig machen 
+                .Name = .Name & .Id
                 nameCollection.Add(.Name, .Name)
             End With
 
@@ -7905,6 +7945,8 @@ Public Module testModule
                 .TextFrame2.TextRange.Text = lfdNr.ToString
                 .Left = xPosition + (yearWidth - .Width) * 0.5
                 .Top = yPosition
+                ' den Namen für PPT 2013 eindeutig machen 
+                .Name = .Name & .Id
                 nameCollection.Add(.Name, .Name)
             End With
 
@@ -7918,6 +7960,8 @@ Public Module testModule
                 .Left = calendarHeightShape.Left + i * yearWidth
                 '.Top = calendarHeightShape.
                 .Top = calendarLineShape.Top - calendarHeightShape.Height
+                ' den Namen für PPT 2013 eindeutig machen 
+                .Name = .Name & .Id
                 nameCollection.Add(.Name, .Name)
 
             End With
@@ -7930,6 +7974,8 @@ Public Module testModule
         With newShapes.Item(1)
             .Left = calendarLineShape.Left
             .Top = calendarLineShape.Top - calendarHeightShape.Height
+            ' den Namen für PPT 2013 eindeutig machen 
+            .Name = .Name & .Id
             nameCollection.Add(.Name, .Name)
         End With
 
@@ -7952,6 +7998,8 @@ Public Module testModule
                     .Left = xPosition - .Width * 0.5
                     .Top = calendarLineShape.Top
                     .Height = drawingAreaBottom - calendarLineShape.Top
+                    ' den Namen für PPT 2013 eindeutig machen 
+                    .Name = .Name & .Id
                     nameCollection.Add(.Name, .Name)
                 End With
 
@@ -7982,6 +8030,8 @@ Public Module testModule
                         .Left = xPosition + qmWidth - .Width * 0.5
                         .Top = calendarLineShape.Top
                         .Height = drawingAreaBottom - calendarLineShape.Top
+                        ' den Namen für PPT 2013 eindeutig machen 
+                        .Name = .Name & .Id
                         nameCollection.Add(.Name, .Name)
                     End With
                 End If
@@ -7997,11 +8047,11 @@ Public Module testModule
         Dim anzElements As Integer = nameCollection.Count
         If anzElements = 0 Then
 
-            calendarGroup = Nothing
+            calendargroup = Nothing
 
         ElseIf anzElements = 1 Then
 
-            calendarGroup = pptslide.Shapes.Item(nameCollection.Item(1))
+            calendargroup = pptslide.Shapes.Item(nameCollection.Item(1))
 
         Else
 
@@ -8012,7 +8062,7 @@ Public Module testModule
             Next
 
             shapeGruppe = pptslide.Shapes.Range(arrayOFNames)
-            calendarGroup = shapeGruppe.Group
+            calendargroup = shapeGruppe.Group
 
 
         End If
@@ -8067,6 +8117,8 @@ Public Module testModule
                             ByVal phasedelimiterShape As pptNS.Shape, _
                             ByVal yOffsetMsToText As Double, ByVal yOffsetMsToDate As Double, _
                             ByVal yOffsetPhToText As Double, ByVal yOffsetPhToDate As Double)
+
+
 
         ' Bestimmen der Zeichenfläche
         Dim drawingAreaWidth As Double = drawingAreaRight - drawingAreaLeft
@@ -8406,7 +8458,7 @@ Public Module testModule
                             End With
 
                         End If
-                        
+
 
 
                         ' jetzt das Shape zeichnen 
@@ -9179,6 +9231,94 @@ Public Module testModule
     End Sub
 
     ''' <summary>
+    ''' leifert eine Sammlung relativer Größen für jedes Shape mit Enlarge13 im Titel 
+    ''' </summary>
+    ''' <param name="pptSlide"></param>
+    ''' <param name="slideHeight"></param>
+    ''' <param name="slideWidth"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function saveRelSizesOfElements(ByVal pptSlide As pptNS.Slide, ByVal slideHeight As Double, ByVal slideWidth As Double) As SortedList(Of String, Double())
+
+        Dim tmpList As New SortedList(Of String, Double())
+
+        For Each shp As pptNS.Shape In pptSlide.Shapes
+            If shp.AlternativeText.Trim = "Enlarge13" Or shp.AlternativeText.Trim = "Enlarge10und13" Then
+                Dim relSizes(4) As Double
+                ' top 
+
+                relSizes(0) = shp.Top / slideHeight
+                relSizes(1) = shp.Left / slideWidth
+                relSizes(2) = shp.Height / slideHeight
+                relSizes(3) = shp.Width / slideWidth
+
+                If shp.Type = MsoShapeType.msoLine Then
+                    If relSizes(2) = 0 Then
+                        relSizes(4) = shp.Line.Weight / slideHeight
+                    ElseIf relSizes(3) = 0 Then
+                        relSizes(4) = shp.Line.Weight / slideWidth
+                    End If
+
+                Else
+                    relSizes(4) = 0
+                End If
+
+                tmpList.Add(shp.Name, relSizes)
+
+            End If
+        Next
+
+        saveRelSizesOfElements = tmpList
+
+    End Function
+
+    ''' <summary>
+    ''' bringt bei Powerpoint 2013 die Shapes wieder auf ihre alte relative Größe zurück 
+    ''' </summary>
+    ''' <param name="sizes"></param>
+    ''' <param name="slideHeight"></param>
+    ''' <param name="slideWidth"></param>
+    ''' <param name="pptslide"></param>
+    ''' <remarks></remarks>
+    Private Sub restoreRelSizesDuePPT2013(ByVal sizes As SortedList(Of String, Double()), ByVal slideHeight As Double, ByVal slideWidth As Double, ByRef pptslide As pptNS.Slide)
+        Dim relSizes(4) As Double
+        Dim shp As pptNS.Shape
+        Dim allShapes As pptNS.Shapes = pptslide.Shapes
+
+        For Each kvp As KeyValuePair(Of String, Double()) In sizes
+
+            shp = allShapes.Item(kvp.Key)
+            relSizes = kvp.Value
+
+            With shp
+                'Call MsgBox("jetzt " & shp.Name & ", " & shp.Title & ", " & shp.AlternativeText & vbLf & _
+                '            "Top: " & relSizes(0).ToString & " * " & slideHeight.ToString & vbLf & _
+                '            "Left: " & relSizes(1).ToString & " * " & slideWidth.ToString & vbLf & _
+                '            "Height: " & relSizes(2).ToString & " * " & slideHeight.ToString & vbLf & _
+                '            "Width: " & relSizes(3).ToString & " * " & slideWidth.ToString & vbLf & _
+                '            "Weight: " & relSizes(4).ToString & " * .. whatever ")
+
+                .Top = relSizes(0) * slideHeight
+                .Left = relSizes(1) * slideWidth
+                .Height = relSizes(2) * slideHeight
+                .Width = relSizes(3) * slideWidth
+                If .Type = MsoShapeType.msoLine Then
+                    If .Height = 0 Then
+                        .Line.Weight = relSizes(4) * slideHeight
+                    ElseIf .Width = 0 Then
+                        .Line.Weight = relSizes(4) * slideWidth
+                    End If
+                End If
+                'Call MsgBox("jetzt " & shp.Name & ", " & shp.AlternativeText & " -> done")
+            End With
+
+
+        Next
+
+
+    End Sub
+
+    ''' <summary>
     ''' gibt einen Array of Single zurück, der all die Größen der übergebenen Shapes enthält (Schriftgröße bzw Liniendicke oder Weight)
     ''' </summary>
     ''' <param name="projectNameVorlagenShape"></param>
@@ -9195,7 +9335,8 @@ Public Module testModule
     Private Function saveSizesOfElements(ByVal projectNameVorlagenShape As pptNS.Shape, _
                                          ByVal MsDescVorlagenShape As pptNS.Shape, ByVal MsDateVorlagenShape As pptNS.Shape, _
                                          ByVal PhDescVorlagenShape As pptNS.Shape, ByVal PhDateVorlagenShape As pptNS.Shape, _
-                                         ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape) As Single()
+                                         ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, _
+                                         ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape) As Single()
 
 
         Dim sizes(8) As Single
@@ -9227,76 +9368,22 @@ Public Module testModule
 
         For Each tmpShape As pptNS.Shape In allShapes
 
-            If tmpShape.AlternativeText.Trim = "Enlarge" And tmpShape.HasTextFrame Then
-                With tmpShape.TextFrame2.TextRange.Font
-                    .Size = .Size * enlargeFaktor
-                End With
-            End If
+            Try
+                If (tmpShape.AlternativeText.Trim = "Enlarge" Or tmpShape.AlternativeText.Trim = "Enlarge10und13") And tmpShape.HasTextFrame Then
+                    With tmpShape.TextFrame2.TextRange.Font
+                        .Size = .Size * enlargeFaktor
+                    End With
+                End If
+            Catch ex As Exception
+
+            End Try
+            
 
         Next
 
     End Sub
 
-    ''' <summary>
-    ''' vergrößert alle shapes, die mit Enlarge13 
-    ''' </summary>
-    ''' <param name="heightFaktor"></param>
-    ''' <param name="widthFaktor"></param>
-    ''' <remarks></remarks>
-    Private Sub resizeShapesDuePPT13(ByVal heightFaktor As Double, ByVal widthFaktor As Double, ByRef pptslide As pptNS.Slide)
-
-        Dim allShapes As pptNS.Shapes = pptslide.Shapes
-
-        If heightFaktor = 0.0 Or widthFaktor = 0.0 Then
-            ' nichts tun 
-
-        Else
-
-            For Each tmpShape As pptNS.Shape In allShapes
-
-                With tmpShape
-
-                    If .AlternativeText.Trim = "Enlarge13" Then
-
-                        Select Case .Title
-                            Case "CalendarLine"
-                                .Left = .Left - 0.5 * (widthFaktor * .Width - .Width)
-                                .Line.Weight = .Line.Weight * heightFaktor
-                                .Width = .Width * widthFaktor
-                            Case "Multiprojektsicht"
-                                .Left = .Left - 0.5 * (widthFaktor * .Width - .Width)
-                                .Top = .Top - 0.5 * (heightFaktor * .Height - .Height)
-                                .Height = .Height * heightFaktor
-                                .Width = .Width * widthFaktor
-                            Case "LegendLine"
-                                .Left = .Left - 0.5 * (widthFaktor * .Width - .Width)
-                                .Line.Weight = .Line.Weight * heightFaktor
-                                .Width = .Width * widthFaktor
-                            Case "CalendarHeight"
-                                ' wird eh positioniert, deshalb ist es nur wichtig die Größe neu zu bestimmen 
-                                .Height = .Height * heightFaktor
-                                .Line.Weight = .Line.Weight * widthFaktor
-                            Case "CalendarStep"
-                                ' wird eh positioniert, deshalb ist es nur wichtig die Größe neu zu bestimmen 
-                                .Height = .Height * heightFaktor
-                                .Line.Weight = .Line.Weight * widthFaktor
-                            Case "Quartals-Trennstrich"
-                                .Line.Weight = .Line.Weight * widthFaktor
-                            Case "Jahres-Trennstrich"
-                                .Line.Weight = .Line.Weight * widthFaktor
-                        End Select
-
-                    End If
-
-                End With
-
-
-            Next
-        End If
-
-
-    End Sub
-
+   
 
     ''' <summary>
     ''' stellt die Größen der übergebenen Shapes wieder her 
