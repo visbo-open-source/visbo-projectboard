@@ -177,53 +177,56 @@ Public Class ThisWorkbook
         Dim returnValue As DialogResult
         If loginErfolgreich Then
 
+
             Dim request As New Request(awinSettings.databaseName, username, Password)
-
-            'If roentgenBlick.isOn Then
-            '    Call awinNoshowProjectNeeds()
-            '    With roentgenBlick
-            '        .isOn = False
-            '        .name = ""
-            '        .type = ""
-            '    End With
-            'End If
+        
 
 
-            Call awinKontextReset()
+        'If roentgenBlick.isOn Then
+        '    Call awinNoshowProjectNeeds()
+        '    With roentgenBlick
+        '        .isOn = False
+        '        .name = ""
+        '        .type = ""
+        '    End With
+        'End If
 
-            ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
-            Try
 
-                If request.pingMongoDb() And AlleProjekte.Count > 0 Then
-                    returnValue = projektespeichern.ShowDialog
+        Call awinKontextReset()
+
+        ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
+        Try
+
+            If Request.pingMongoDb() And AlleProjekte.Count > 0 Then
+                returnValue = projektespeichern.ShowDialog
 
 
-                    If returnValue = DialogResult.Yes Then
+                If returnValue = DialogResult.Yes Then
 
-                        Call StoreAllProjectsinDB()
-
-                    End If
-
-                Else
-
-                    Call MsgBox("keine Projekte zu speichern ...")
-
+                    Call StoreAllProjectsinDB()
 
                 End If
-            Catch ex As Exception
+
+            Else
+
+                Call MsgBox("keine Projekte zu speichern ...")
 
 
-            End Try
+            End If
+        Catch ex As Exception
 
-            appInstance.ScreenUpdating = False
-            appInstance.EnableEvents = False
 
-            ' hier sollen jetzt noch die Phasen weggeschrieben werden 
-            Try
-                Call awinWritePhaseDefinitions()
-            Catch ex As Exception
-                Call MsgBox("Fehler bei Schreiben Customization File")
-            End Try
+        End Try
+
+        appInstance.ScreenUpdating = False
+        appInstance.EnableEvents = False
+
+        ' hier sollen jetzt noch die Phasen weggeschrieben werden 
+        Try
+            Call awinWritePhaseDefinitions()
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Schreiben Customization File")
+        End Try
 
         End If
 

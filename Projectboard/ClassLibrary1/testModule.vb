@@ -2484,7 +2484,8 @@ Public Module testModule
                                                         PhDescVorlagenShape, PhDateVorlagenShape, _
                                                         phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape,
                                                         rowDifferentiatorShape, buColorShape, phaseDelimiterShape, _
-                                                        yOffsetMsToText, yOffsetMsToDate, yOffsetPhToText, yOffsetPhToDate)
+                                                        yOffsetMsToText, yOffsetMsToDate, yOffsetPhToText, yOffsetPhToDate, _
+                                                         worker, e)
 
 
                                 Catch ex As Exception
@@ -8139,7 +8140,8 @@ Public Module testModule
                             ByVal ampelVorlagenShape As pptNS.Shape, ByVal rowDifferentiatorShape As pptNS.Shape, ByVal buColorShape As pptNS.Shape, _
                             ByVal phasedelimiterShape As pptNS.Shape, _
                             ByVal yOffsetMsToText As Double, ByVal yOffsetMsToDate As Double, _
-                            ByVal yOffsetPhToText As Double, ByVal yOffsetPhToDate As Double)
+                            ByVal yOffsetPhToText As Double, ByVal yOffsetPhToDate As Double, _
+                            ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
 
 
 
@@ -8223,6 +8225,22 @@ Public Module testModule
             pName = projectCollection.ElementAt(currentProjektIndex - 1).Value
             hproj = ShowProjekte.getProject(pName)
 
+            If worker.WorkerSupportsCancellation Then
+
+                If worker.CancellationPending Then
+                    e.Cancel = True
+                    e.Result = "Berichterstellung abgebrochen ..."
+                    Exit For
+                End If
+
+            End If
+
+            ' Zwischenbericht abgeben ...
+            e.Result = "Projekt '" & pName & "' wird gezeichnet  ...."
+            If worker.WorkerReportsProgress Then
+                worker.ReportProgress(0, e)
+            End If
+
             ' optionales zeichnen der Zeilen-Markierung
             If drawRowDifferentiator And toggleRowDifferentiator Then
                 ' zeichnen des RowDifferentiators 
@@ -8233,6 +8251,7 @@ Public Module testModule
                     .Left = CSng(projectListLeft)
                     .Height = projekthoehe
                     .Width = drawingAreaRight + 5 - .Left
+                    .Name = .Name & .Id
                 End With
             End If
 
@@ -8262,6 +8281,7 @@ Public Module testModule
                     .Left = CSng(projectListLeft)
                     .Height = projekthoehe
                     .Fill.ForeColor.RGB = CInt(buFarbe)
+                    .Name = .Name & .Id
                     ' width ist die in der Vorlage angegebene Width 
                 End With
 
@@ -8276,6 +8296,7 @@ Public Module testModule
                 .Top = CSng(projektNamenYPos)
                 .Left = CSng(projektNamenXPos)
                 .TextFrame2.TextRange.Text = hproj.getShapeText
+                .Name = .Name & .Id
             End With
 
             projektNamenYPos = projektNamenYPos + projekthoehe
@@ -8304,6 +8325,7 @@ Public Module testModule
                     .Left = CSng(drawingAreaLeft - (.Width + 3))
                     .Line.ForeColor.RGB = CInt(statusColor)
                     .Fill.ForeColor.RGB = CInt(statusColor)
+                    .Name = .Name & .Id
                 End With
 
                 ampelGrafikYPos = ampelGrafikYPos + projekthoehe
@@ -8323,6 +8345,7 @@ Public Module testModule
                     .Top = CSng(projektGrafikYPos)
                     .Left = CSng(x1)
                     .Width = CSng(x2 - x1)
+                    .Name = .Name & .Id
                     ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
                     If DateDiff(DateInterval.Day, hproj.startDate, StartofPPTCalendar) > 0 Then
                         .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
@@ -8382,7 +8405,7 @@ Public Module testModule
                             copiedShape = pptslide.Shapes.Paste()
                             With copiedShape(1)
 
-
+                                .Name = .Name & .Id
                                 .TextFrame2.TextRange.Text = phShortname
                                 .TextFrame2.MarginLeft = 0.0
                                 .TextFrame2.MarginRight = 0.0
@@ -8409,6 +8432,7 @@ Public Module testModule
                             copiedShape = pptslide.Shapes.Paste()
                             With copiedShape(1)
 
+                                .Name = .Name & .Id
                                 .TextFrame2.TextRange.Text = phDateText
                                 .TextFrame2.MarginLeft = 0.0
                                 .TextFrame2.MarginRight = 0.0
@@ -8438,6 +8462,7 @@ Public Module testModule
                             copiedShape = pptslide.Shapes.Paste()
                             With copiedShape(1)
 
+                                .Name = .Name & .Id
                                 .TextFrame2.TextRange.Text = phDateText
                                 .TextFrame2.MarginLeft = 0.0
                                 .TextFrame2.MarginRight = 0.0
@@ -8465,6 +8490,7 @@ Public Module testModule
                                 .Height = 0.7 * projekthoehe
                                 .Top = rowYPos + 0.5 * (projekthoehe - .Height)
                                 .Left = CSng(x1) - .Width * 0.5
+                                .Name = .Name & .Id
 
                             End With
 
@@ -8477,6 +8503,7 @@ Public Module testModule
                                 .Height = 0.7 * projekthoehe
                                 .Top = rowYPos + 0.5 * (projekthoehe - .Height)
                                 .Left = CSng(x2) + .Width * 0.5
+                                .Name = .Name & .Id
 
                             End With
 
@@ -8488,14 +8515,16 @@ Public Module testModule
                         phaseShape.Copy()
                         copiedShape = pptslide.Shapes.Paste()
 
-                        phShapeNames.Add(copiedShape.Name)
-
                         With copiedShape(1)
                             .Top = CSng(phasenGrafikYPos)
                             .Left = CSng(x1)
                             .Width = CSng(x2 - x1)
                             .Height = phaseVorlagenShape.Height
+                            .Name = .Name & .Id
                         End With
+
+                        phShapeNames.Add(copiedShape.Name)
+
                     End If
 
                 End If
@@ -8566,6 +8595,7 @@ Public Module testModule
                             .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
                             '.Left = CSng(x1) - .Width / 2
                             .Left = CSng(x1) - .Width / 2
+                            .Name = .Name & .Id
 
                         End With
 
@@ -8585,6 +8615,7 @@ Public Module testModule
                             .TextFrame2.TextRange.Text = msDateText
                             .Top = CSng(milestoneGrafikYPos) + yOffsetMsToDate
                             .Left = CSng(x1) - .Width / 2
+                            .Name = .Name & .Id
 
                         End With
 
@@ -8596,13 +8627,14 @@ Public Module testModule
                     milestoneTypShape.Copy()
                     copiedShape = pptslide.Shapes.Paste()
 
-                    msShapeNames.Add(copiedShape.Name)
+
 
                     With copiedShape(1)
                         .Top = CSng(milestoneGrafikYPos)
                         .Height = milestoneVorlagenShape.Height
                         .Width = .Height / seitenverhaeltnis
                         .Left = CSng(x1) - .Width / 2
+                        .Name = .Name & .Id
                         If awinSettings.mppShowAmpel Then
                             .Glow.Color.RGB = CInt(curMeilenstein.getBewertung(1).color)
                             If .Glow.Radius = 0 Then
@@ -8610,6 +8642,8 @@ Public Module testModule
                             End If
                         End If
                     End With
+
+                    msShapeNames.Add(copiedShape.Name)
 
                 End If
 
