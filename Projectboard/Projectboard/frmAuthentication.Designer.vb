@@ -22,6 +22,7 @@ Partial Class frmAuthentication
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmAuthentication))
         Me.Label1 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.Label3 = New System.Windows.Forms.Label()
@@ -29,21 +30,24 @@ Partial Class frmAuthentication
         Me.maskedPwd = New System.Windows.Forms.TextBox()
         Me.messageBox = New System.Windows.Forms.Label()
         Me.abbrButton = New System.Windows.Forms.Button()
+        Me.PictureBox1 = New System.Windows.Forms.PictureBox()
+        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(12, 37)
+        Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Label1.Location = New System.Drawing.Point(234, 74)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(40, 13)
+        Me.Label1.Size = New System.Drawing.Size(118, 24)
         Me.Label1.TabIndex = 0
-        Me.Label1.Text = "LOGIN"
+        Me.Label1.Text = "ProjectBoard"
         '
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(12, 77)
+        Me.Label2.Location = New System.Drawing.Point(12, 128)
         Me.Label2.Name = "Label2"
         Me.Label2.Size = New System.Drawing.Size(55, 13)
         Me.Label2.TabIndex = 1
@@ -52,7 +56,7 @@ Partial Class frmAuthentication
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(12, 114)
+        Me.Label3.Location = New System.Drawing.Point(12, 172)
         Me.Label3.Name = "Label3"
         Me.Label3.Size = New System.Drawing.Size(50, 13)
         Me.Label3.TabIndex = 2
@@ -60,14 +64,16 @@ Partial Class frmAuthentication
         '
         'benutzer
         '
-        Me.benutzer.Location = New System.Drawing.Point(91, 74)
+        Me.benutzer.BackColor = System.Drawing.Color.WhiteSmoke
+        Me.benutzer.Location = New System.Drawing.Point(91, 125)
         Me.benutzer.Name = "benutzer"
         Me.benutzer.Size = New System.Drawing.Size(260, 20)
         Me.benutzer.TabIndex = 4
         '
         'maskedPwd
         '
-        Me.maskedPwd.Location = New System.Drawing.Point(91, 111)
+        Me.maskedPwd.BackColor = System.Drawing.Color.WhiteSmoke
+        Me.maskedPwd.Location = New System.Drawing.Point(91, 169)
         Me.maskedPwd.Name = "maskedPwd"
         Me.maskedPwd.PasswordChar = Global.Microsoft.VisualBasic.ChrW(42)
         Me.maskedPwd.Size = New System.Drawing.Size(260, 20)
@@ -87,19 +93,31 @@ Partial Class frmAuthentication
         'abbrButton
         '
         Me.abbrButton.DialogResult = System.Windows.Forms.DialogResult.Abort
-        Me.abbrButton.Location = New System.Drawing.Point(255, 137)
+        Me.abbrButton.Location = New System.Drawing.Point(255, 205)
         Me.abbrButton.Name = "abbrButton"
         Me.abbrButton.Size = New System.Drawing.Size(96, 23)
         Me.abbrButton.TabIndex = 8
         Me.abbrButton.Text = "Abbrechen"
         Me.abbrButton.UseVisualStyleBackColor = True
         '
+        'PictureBox1
+        '
+        Me.PictureBox1.Image = CType(resources.GetObject("PictureBox1.Image"), System.Drawing.Image)
+        Me.PictureBox1.InitialImage = Nothing
+        Me.PictureBox1.Location = New System.Drawing.Point(0, 28)
+        Me.PictureBox1.Name = "PictureBox1"
+        Me.PictureBox1.Size = New System.Drawing.Size(193, 73)
+        Me.PictureBox1.TabIndex = 9
+        Me.PictureBox1.TabStop = False
+        '
         'frmAuthentication
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(390, 172)
+        Me.BackColor = System.Drawing.SystemColors.ControlLightLight
+        Me.ClientSize = New System.Drawing.Size(390, 248)
         Me.ControlBox = False
+        Me.Controls.Add(Me.PictureBox1)
         Me.Controls.Add(Me.abbrButton)
         Me.Controls.Add(Me.messageBox)
         Me.Controls.Add(Me.maskedPwd)
@@ -107,8 +125,10 @@ Partial Class frmAuthentication
         Me.Controls.Add(Me.Label3)
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.Label1)
+        Me.ForeColor = System.Drawing.SystemColors.ControlText
         Me.Name = "frmAuthentication"
-        Me.Text = "ProjectBoard LOGIN"
+        Me.Text = "LOGIN"
+        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -120,4 +140,5 @@ Partial Class frmAuthentication
     Public WithEvents maskedPwd As System.Windows.Forms.TextBox
     Friend WithEvents messageBox As System.Windows.Forms.Label
     Friend WithEvents abbrButton As System.Windows.Forms.Button
+    Friend WithEvents PictureBox1 As System.Windows.Forms.PictureBox
 End Class
