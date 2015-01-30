@@ -77,7 +77,7 @@ Public Class frmSelectPPTTempl
         enableOnUpdate = False
 
         ' hier muss unterschieden werden, ob Projekt oder Portfolio-Report soll erzeugt werden
-        If calledfrom = "Portfolio" Then
+        If calledfrom = "Portfolio1" Then
             dirName = awinPath & RepPortfolioVorOrdner
             vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
             Try

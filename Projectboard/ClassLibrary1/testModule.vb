@@ -1688,6 +1688,7 @@ Public Module testModule
         ' vertikaler Offset zwischen zwei Rows in der Drawing Area
         Dim dOffsetRows As Double = 0.1
 
+        ' Übernommen ....
         ' Koordinaten des Containers
         Dim containerLeft As Double = 0.0
         Dim containerTop As Double = 0.0
@@ -9685,5 +9686,11 @@ Public Module testModule
         buildNameCollection = tmpCollection
 
     End Function
+
+    Private Sub zeichneMultiprojektSicht()
+
+
+
+    End Sub
 
 End Module
