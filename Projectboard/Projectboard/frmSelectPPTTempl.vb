@@ -60,7 +60,7 @@ Public Class frmSelectPPTTempl
 
     Private Sub createReport_Click(sender As Object, e As EventArgs) Handles createReport.Click
 
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
         'Dim singleShp As Excel.Shape
         'Dim hproj As clsProjekt
         Dim vglName As String = " "

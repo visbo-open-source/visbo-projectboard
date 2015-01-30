@@ -34,14 +34,16 @@ Public Class frmAuthentication
         Try
             Dim request As New Request(awinSettings.databaseName, user, pwd)
             projexist = request.projectNameAlreadyExists("TestProjekt", "v1")
-            username = benutzer.Text
-            password = maskedPwd.Text
+            dbUsername = benutzer.Text
+            dbPasswort = maskedPwd.Text
             messageBox.Text = ""
             DialogResult = System.Windows.Forms.DialogResult.OK
         Catch ex As Exception
             messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
             benutzer.Text = ""
             maskedPwd.Text = ""
+            dbUsername = benutzer.Text
+            dbPasswort = maskedPwd.Text
             benutzer.Focus()
             DialogResult = System.Windows.Forms.DialogResult.Retry
         End Try
@@ -62,14 +64,16 @@ Public Class frmAuthentication
             Try
                 Dim request As New Request(awinSettings.databaseName, user, pwd)
                 projexist = request.projectNameAlreadyExists("TestProjekt", "v1")
-                username = benutzer.Text
-                password = maskedPwd.Text
+                dbUsername = benutzer.Text
+                dbPasswort = maskedPwd.Text
                 messageBox.Text = ""
                 DialogResult = System.Windows.Forms.DialogResult.OK
             Catch ex As Exception
                 messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
                 benutzer.Text = ""
                 maskedPwd.Text = ""
+                dbUsername = benutzer.Text
+                dbPasswort = maskedPwd.Text
                 benutzer.Focus()
                 DialogResult = System.Windows.Forms.DialogResult.Retry
             End Try
@@ -82,13 +86,14 @@ Public Class frmAuthentication
 
 
     Private Sub maskedPwd_TextChanged(sender As Object, e As EventArgs) Handles maskedPwd.TextChanged
-     
+
     End Sub
 
 
 
     Private Sub frmAuthentication_FormClosed(sender As Object, e As EventArgs) Handles MyBase.FormClosed
-
+        Dim username_sav As String = dbUsername
+        Dim dbPasswort_sav As String = dbPasswort
 
     End Sub
 
