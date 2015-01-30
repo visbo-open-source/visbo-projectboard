@@ -15,8 +15,8 @@ Public Module Module1
     ' Laufzeit Parameter;
 
     'login - Informationen
-    Public username As String = ""
-    Public password As String = ""
+    Public dbUsername As String = ""
+    Public dbPasswort As String = ""
     Public loginErfolgreich As Boolean = False
 
     Public awinSettings As New clsawinSettings

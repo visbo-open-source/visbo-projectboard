@@ -177,7 +177,7 @@ Public Class ThisWorkbook
         Dim returnValue As DialogResult
         If loginErfolgreich Then
 
-            Dim request As New Request(awinSettings.databaseName, username, Password)
+            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
 
             'If roentgenBlick.isOn Then
             '    Call awinNoshowProjectNeeds()

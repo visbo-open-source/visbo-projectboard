@@ -1123,7 +1123,7 @@ Public Module awinGeneralModules
             appInstance.EnableEvents = True
 
 
-            Dim request As New Request(awinSettings.databaseName, username, password)
+            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
 
             ' Datenbank ist gestartet
             If request.pingMongoDb() Then
@@ -1611,7 +1611,7 @@ Public Module awinGeneralModules
                                     Catch ex As Exception
 
                                     End Try
-                                    
+
                                 Catch ex As Exception
 
                                 End Try
@@ -1659,7 +1659,7 @@ Public Module awinGeneralModules
 
     End Sub
 
-    
+
 
 
     Public Sub awinImportProjektInventur(ByRef myCollection As Collection)
@@ -2625,7 +2625,7 @@ Public Module awinGeneralModules
         Dim storedGestern As Date = storedHeute.AddDays(-1)
         Dim pname As String = ""
         Dim variantName As String = ""
-        Dim request As New Request(databaseName, username, password)
+        Dim request As New Request(databaseName, dbUsername, dbPasswort)
         Dim lastConstellation As New clsConstellation
         Dim hproj As clsProjekt
 
@@ -2678,7 +2678,7 @@ Public Module awinGeneralModules
         Dim storedGestern As Date = storedHeute.AddDays(-1)
         Dim pname As String = ""
         Dim variantName As String = ""
-        Dim request As New Request(databaseName, username, password)
+        Dim request As New Request(databaseName, dbUsername, dbPasswort)
         Dim lastConstellation As New clsConstellation
         Dim projekteImZeitraum As New SortedList(Of String, clsProjekt)
         Dim projektHistorie As New clsProjektHistorie
@@ -2687,7 +2687,7 @@ Public Module awinGeneralModules
         Dim ok As Boolean = True
         Dim filterIsActive As Boolean
         Dim toShowListe As New SortedList(Of Double, String)
-        
+
 
         ' wurde ein definierter Filter mit übergeben ?
         If IsNothing(filter) Then
@@ -2806,7 +2806,7 @@ Public Module awinGeneralModules
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
         Dim anzErrDB As Integer = 0
         Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
         Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
@@ -2913,7 +2913,7 @@ Public Module awinGeneralModules
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
         Dim anzErrDB As Integer = 0
         Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
         Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
@@ -3003,7 +3003,7 @@ Public Module awinGeneralModules
 
         Dim returnValue As Boolean = True
         Dim activeConstellation As New clsConstellation
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
 
         ' prüfen, ob diese Constellation überhaupt existiert ..
         Try
@@ -3047,7 +3047,7 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub loadProjectfromDB(ByVal pName As String, vName As String, ByVal show As Boolean)
 
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
         Dim hproj As clsProjekt
         Dim key As String = calcProjektKey(pName, vName)
 
@@ -3089,8 +3089,8 @@ Public Module awinGeneralModules
 
         If kennung = PTTvActions.delFromDB Then
 
-            Dim request As New Request(awinSettings.databaseName, username, password)
-            Dim requestTrash As New Request(awinSettings.databaseName & "Trash", username, password)
+            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+            Dim requestTrash As New Request(awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
             If Not projekthistorie Is Nothing Then
                 projekthistorie.clear() ' alte Historie löschen
@@ -3199,8 +3199,8 @@ Public Module awinGeneralModules
     Public Sub deleteProjectVariantTimeStamp(ByVal pname As String, ByVal variantName As String, _
                                                   ByVal timeStamp As Date, ByRef first As Boolean)
 
-        Dim request As New Request(awinSettings.databaseName, username, password)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
         Dim hproj As clsProjekt
 
         If first Then
@@ -3251,7 +3251,7 @@ Public Module awinGeneralModules
     ' ''' <remarks></remarks>
     Public Sub awinStoreConstellation(ByVal constellationName As String)
 
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
         ' prüfen, ob diese Constellation bereits existiert ..
         If projectConstellations.Contains(constellationName) Then
 
@@ -4047,8 +4047,8 @@ Public Module awinGeneralModules
         Dim deletedProj As Integer = 0
 
 
-        Dim request As New Request(awinSettings.databaseName, username, password)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
         ' alles zurücksetzen 
         projektHistorien.clear()
@@ -4056,6 +4056,7 @@ Public Module awinGeneralModules
         With TreeviewProjekte
             .Nodes.Clear()
         End With
+
 
         ' Alle Projekte aus DB
         ' projekteInDB = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
@@ -4072,12 +4073,17 @@ Public Module awinGeneralModules
                 aktuelleGesamtListe = AlleProjekte
                 loadErrorMsg = "es sind keine Projekte geladen"
 
-            Case PTTvActions.loadPVS
+            Case PTTvActions.loadPVS    ' ur: 30.01.2015: aktuell nicht benutzt!!!
                 pname = ""
                 variantName = ""
 
                 'ur: 25.01.2015 hier muss die "aktuelleGesamtListe.liste reduziert werden, da evt. ein Filter gesetzt wurde!!!!
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+
+                If awinSettings.applyFilter Then
+
+                    aktuelleGesamtListe = reduzierenWgFilter(aktuelleGesamtListe)
+                End If
 
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
@@ -4088,7 +4094,13 @@ Public Module awinGeneralModules
                 'ur: 25.01.2015 hier muss die "aktuelleGesamtListe.liste reduziert werden, da evt. ein Filter gesetzt wurde!!!!
 
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-                loadErrorMsg = "es gibt keine Projekte in der Datenbank"
+
+                If awinSettings.applyFilter Then
+
+                    aktuelleGesamtListe = reduzierenWgFilter(aktuelleGesamtListe)
+                End If
+
+                loadErrorMsg = "es gibt keine passenden Projekte in der Datenbank"
 
             Case PTTvActions.activateV
                 aktuelleGesamtListe = AlleProjekte
@@ -4117,7 +4129,7 @@ Public Module awinGeneralModules
         End Select
 
 
-        If aktuelleGesamtListe.Count > 1 Then
+        If aktuelleGesamtListe.Count >= 1 Then
 
             With TreeviewProjekte
 
@@ -4132,7 +4144,7 @@ Public Module awinGeneralModules
                     listOfVariantNamesDB = request.retrieveVariantNamesFromDB(pname)
 
                     ' im Falle activate Variante / Portfolio definieren: nur die Projekte anzeigen, die auch tatsächlich mehrere Varianten haben 
-                    If aKtionskennung = PTTvActions.activateV or aKtionskennung = PTTvActions.deleteV Then
+                    If aKtionskennung = PTTvActions.activateV Or aKtionskennung = PTTvActions.deleteV Then
                         If aktuelleGesamtListe.getVariantZahl(pname) = 0 Then
                             showPname = False
                         End If
@@ -4399,6 +4411,49 @@ Public Module awinGeneralModules
             Return False
         Else
             Return True
+        End If
+    End Function
+
+    Function reduzierenWgFilter(ByVal projektListe As clsProjekteAlle) As clsProjekteAlle
+        Dim filter As New clsFilter
+        Dim ok As Boolean = False
+        Dim newProjektliste As New clsProjekteAlle
+
+
+        If awinSettings.applyFilter Then
+
+            ' wenn applyFilter = true, dann soll  unter Anwendung 
+            ' des Filters "Last" nachgeladen werden
+
+            filter = filterDefinitions.retrieveFilter("Last")
+
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In projektListe.liste
+
+                If Not filter.isEmpty Then
+                    ok = filter.doesNotBlock(kvp.Value)
+                Else
+                    ok = True
+                End If
+
+                If ok Then
+                    Try
+                        newProjektliste.Add(kvp.Key, kvp.Value)
+                    Catch ex As Exception
+                        Call MsgBox("Fehler in reduzierenWgFilter" & kvp.Key)
+                    End Try
+                Else
+
+                End If
+
+            Next
+
+            ' Liste gefüllt mit Projekte, die auf den aktuellen Filter passen
+            reduzierenWgFilter = newProjektliste
+        Else
+            ' Liste unverändert zurückgeben
+            reduzierenWgFilter = projektListe
+
         End If
     End Function
 

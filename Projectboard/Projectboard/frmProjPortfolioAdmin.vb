@@ -37,6 +37,10 @@ Public Class frmProjPortfolioAdmin
         Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung)
         stopRecursion = False
 
+        If aktuelleGesamtListe.liste.Count < 1 Then
+            DialogResult = Windows.Forms.DialogResult.OK
+        End If
+
     End Sub
 
     Private Sub TreeViewProjekte_AfterCheck(sender As Object, e As TreeViewEventArgs) Handles TreeViewProjekte.AfterCheck
@@ -256,7 +260,7 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub TreeViewProjekte_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles TreeViewProjekte.BeforeExpand
 
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
         Dim node As New TreeNode
         Dim nodeVariant As New TreeNode
         Dim nodeTimeStamp As New TreeNode
@@ -455,8 +459,8 @@ Public Class frmProjPortfolioAdmin
         Dim hproj As clsProjekt
         Dim portfolioZeile As Integer = 2
 
-        Dim request As New Request(awinSettings.databaseName, username, password)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
         Dim p As Integer, v As Integer, t As Integer
 

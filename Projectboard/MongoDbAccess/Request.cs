@@ -37,17 +37,17 @@ namespace MongoDbAccess
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
         }
 
-        public Request(string databaseName, string username, string password)
+        public Request(string databaseName, string username, string dbPasswort)
         {
             
-            if (String.IsNullOrEmpty(username) && String.IsNullOrEmpty(password))
+            if (String.IsNullOrEmpty(username) && String.IsNullOrEmpty(dbPasswort))
             {
                 var connectionString = "mongodb://localhost";
                 Client = new MongoClient(connectionString);
             }
             else
             {
-                var connectionString = "mongodb://" + username + ":" + password + "@localhost";  /*Aufruf mit MongoDB mit Authentication  */
+                var connectionString = "mongodb://" + username + ":" + dbPasswort + "@localhost";  /*Aufruf mit MongoDB mit Authentication  */
                 Client = new MongoClient(connectionString);
             }
             

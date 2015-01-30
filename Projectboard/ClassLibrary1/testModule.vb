@@ -18,7 +18,7 @@ Public Module testModule
 
         Dim awinSelection As xlNS.ShapeRange
 
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As xlNS.Shape
         Dim hproj As clsProjekt
         Dim vglName As String = " "
@@ -2108,7 +2108,7 @@ Public Module testModule
                                     .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
 
                                 End With
-                                
+
 
                                 ' Anfang bestimme Koordinaten der zeichenfelder
                                 ' bestimme Container Area
@@ -3699,7 +3699,7 @@ Public Module testModule
 
         Dim jetzt As Date = Now
         Dim zeitStempel As Date
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
         enableOnUpdate = False
 
         ' die aktuelle Konstellation wird unter dem Namen <Last> gespeichert ..
@@ -3810,7 +3810,7 @@ Public Module testModule
         Dim anzStoredProj As Integer = 0
         Dim variantCollection As Collection
 
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim awinSelection As Excel.ShapeRange
 
@@ -4120,7 +4120,7 @@ Public Module testModule
                                          ByVal showLabels As Boolean, ByVal chartBorderVisible As Boolean, _
                                          ByVal top As Double, ByVal left As Double, ByVal width As Double, ByVal height As Double)
 
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
         Dim anzDiagrams As Integer, i As Integer
         Dim found As Boolean
         Dim pname As String
@@ -4629,7 +4629,7 @@ Public Module testModule
     Public Sub getStatusColorProject(ByRef hproj As clsProjekt, ByVal compareTo As Integer, ByVal auswahl As Integer, ByVal qualifier As String, _
                                   ByRef statusValue As Double, ByRef statusColor As Long)
 
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
         Dim currentValues() As Double
         Dim formerValues() As Double
         Dim vglProj As clsProjekt
@@ -6702,7 +6702,7 @@ Public Module testModule
         Dim outOfToleranceProjekte As New SortedList(Of String, Double())
         Dim vglName As String = ""
         Dim compareToLast As Boolean = True
-        Dim request As New Request(awinSettings.databaseName, username, password)
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
         Dim variantName As String = ""
         Dim tolerancePercent As Double = 0.02
         Dim toleranceTimeAbs As Integer = 5
