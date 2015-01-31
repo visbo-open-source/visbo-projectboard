@@ -94,7 +94,7 @@ Public Class clsProjekteAlle
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getVariantNames(ByVal pName As String) As Collection
+    Public ReadOnly Property getVariantNames(ByVal pName As String, ByVal mitKlammer As Boolean) As Collection
         Get
             Dim tmpCollection As New Collection
             Dim i As Integer = 0
@@ -114,7 +114,13 @@ Public Class clsProjekteAlle
             While i < _allProjects.Count And found
 
                 If _allProjects.ElementAt(i).Value.name = pName Then
-                    vName = "(" & _allProjects.ElementAt(i).Value.variantName & ")"
+
+                    If mitKlammer Then
+                        vName = "(" & _allProjects.ElementAt(i).Value.variantName & ")"
+                    Else
+                        vName = _allProjects.ElementAt(i).Value.variantName
+                    End If
+
                     tmpCollection.Add(vName)
                     i = i + 1
                 Else
@@ -124,6 +130,99 @@ Public Class clsProjekteAlle
             End While
 
             getVariantNames = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt das kleinste Start-Datum zurück, das alle Varianten des Projektes haben 
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMinDate(ByVal pName As String) As Date
+        Get
+            Dim tmpDate As Date = StartofCalendar
+            Dim i As Integer = 0
+            Dim found As Boolean = False
+
+
+            ' Positioniere i auf das erste Vorkommen von pName in der Liste 
+            While i < _allProjects.Count And Not found
+                If _allProjects.ElementAt(i).Value.name = pName Then
+                    tmpDate = _allProjects.ElementAt(i).Value.startDate
+                    found = True
+                    i = i + 1
+                Else
+                    i = i + 1
+                End If
+            End While
+
+            ' ist ein Datum einer weiteren Variante kleiner ? 
+
+
+            While i < _allProjects.Count And found
+                If _allProjects.ElementAt(i).Value.name = pName Then
+                    If DateDiff(DateInterval.Day, tmpDate, _allProjects.ElementAt(i).Value.startDate) < 0 Then
+                        tmpDate = _allProjects.ElementAt(i).Value.startDate
+                    End If
+                    i = i + 1
+                Else
+                    found = False
+                End If
+
+            End While
+
+            getMinDate = tmpDate
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt das größte Ende-Datum zurück, das alle Varianten des Projekts haben
+    ''' </summary>
+    ''' <param name="pName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMaxDate(ByVal pName As String) As Date
+        Get
+
+            Dim tmpDate As Date = StartofCalendar.AddMonths(240)
+            Dim i As Integer = 0
+            Dim found As Boolean = False
+
+
+            ' Positioniere i auf das erste Vorkommen von pName in der Liste 
+            While i < _allProjects.Count And Not found
+                If _allProjects.ElementAt(i).Value.name = pName Then
+                    tmpDate = _allProjects.ElementAt(i).Value.endeDate
+                    found = True
+                    i = i + 1
+                Else
+                    i = i + 1
+                End If
+            End While
+
+            ' ist ein Datum einer weiteren Variante größer ? 
+
+
+            While i < _allProjects.Count And found
+                If _allProjects.ElementAt(i).Value.name = pName Then
+                    If DateDiff(DateInterval.Day, tmpDate, _allProjects.ElementAt(i).Value.endeDate) > 0 Then
+                        tmpDate = _allProjects.ElementAt(i).Value.endeDate
+                    End If
+                    i = i + 1
+                Else
+                    found = False
+                End If
+
+            End While
+
+            getMaxDate = tmpDate
+
 
         End Get
     End Property

@@ -248,6 +248,7 @@ Public Module Module1
         leistbarkeitsAnalyse = 1
         multiprojektReport = 2
         filterdefinieren = 3
+        einzelprojektReport = 4
     End Enum
 
 

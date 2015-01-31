@@ -203,8 +203,10 @@ Public Class frmSelectPPTTempl
         Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
 
         Dim vorlagenDateiName As String = CType(e.Argument, String)
-
-        Call createPPTReportFromProjects(vorlagenDateiName, worker, e)
+        Dim tmpCollection As New Collection
+        Call createPPTReportFromProjects(vorlagenDateiName, _
+                                         tmpCollection, tmpCollection, tmpCollection, tmpCollection, _
+                                         worker, e)
 
 
     End Sub

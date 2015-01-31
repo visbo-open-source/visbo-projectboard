@@ -92,9 +92,16 @@ Public Class frmShowPlanElements
         ' jetzt werden die ProjektReport- bzw. PortfolioReport-Vorlagen ausgelesen 
         ' in diesem Fall werden nur die mit Multiprojekt angezeigt 
 
-        If Me.menuOption = PTmenue.multiprojektReport Then
+        If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Then
+
+            Dim dirname As String
             Dim dateiName As String = ""
-            Dim dirname As String = awinPath & RepPortfolioVorOrdner
+
+            If Me.menuOption = PTmenue.multiprojektReport Then
+                dirname = awinPath & RepPortfolioVorOrdner
+            Else
+                dirname = awinPath & RepProjectVorOrdner
+            End If
 
             Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
             Try
@@ -110,6 +117,7 @@ Public Class frmShowPlanElements
             Catch ex As Exception
                 'Call MsgBox(ex.Message & ": " & dateiName)
             End Try
+
         End If
 
         Me.rdbPhases.Checked = True
@@ -199,7 +207,7 @@ Public Class frmShowPlanElements
         ''''
 
         Dim validOption As Boolean
-        If Me.menuOption = PTmenue.visualisieren Then
+        If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft > 5 Then
             validOption = True
@@ -208,15 +216,22 @@ Public Class frmShowPlanElements
         End If
 
 
-        If Me.menuOption = PTmenue.multiprojektReport Then
+        If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Then
 
             If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
                     Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
                     And validOption Then
 
                 Dim vorlagenDateiName As String
-                vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
+
+                If Me.menuOption = PTmenue.multiprojektReport Then
+                    vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
                                     "\" & repVorlagenDropbox.Text
+                Else
+
+                    vorlagenDateiName = awinPath & RepProjectVorOrdner & _
+                                    "\" & repVorlagenDropbox.Text
+                End If
 
                 Try
                     rdbMilestones.Enabled = False
@@ -284,7 +299,7 @@ Public Class frmShowPlanElements
                 End If
 
                 ' den aktuellen Filter wegschreiben unter dem Namen last 
-                
+
                 Call storeFilterAndclearSelections("Last")
                 appInstance.ScreenUpdating = formerSU
 
@@ -622,7 +637,7 @@ Public Class frmShowPlanElements
     Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
 
 
-        If menuOption = PTmenue.multiprojektReport And backgroundRunning Then
+        If menuOption = (PTmenue.multiprojektReport Or PTmenue.einzelprojektReport) And backgroundRunning Then
 
             rdbMilestones.Enabled = True
             rdbPhases.Enabled = True
@@ -866,9 +881,16 @@ Public Class frmShowPlanElements
         Try
             With awinSettings
 
-                Call createPPTSlidesFromConstellation(vorlagenDateiName, _
+                If vorlagenDateiName.Contains(RepPortfolioVorOrdner) Then
+                    Call createPPTSlidesFromConstellation(vorlagenDateiName, _
                                                       selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
                                                       worker, e)
+                Else
+                    Call createPPTReportFromProjects(vorlagenDateiName, _
+                                                     selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                                     worker, e)
+                End If
+                
 
             End With
         Catch ex As Exception

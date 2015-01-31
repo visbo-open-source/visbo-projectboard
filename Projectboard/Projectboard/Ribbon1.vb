@@ -1732,6 +1732,75 @@ Imports System.Drawing
 
     End Sub
 
+    Sub VariantenprojektReport(ByVal control As IRibbonControl)
+
+        Dim auswahlFormular As New frmShowPlanElements
+        Dim returnValue As DialogResult
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = False
+
+        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
+        If ShowProjekte.Count > 0 Then
+
+            appInstance.ScreenUpdating = False
+
+            With auswahlFormular
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .einstellungen.Visible = True
+                .Text = "Projekt-Varianten Report erzeugen"
+
+                .chkbxShowObjects = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .chkbxCreateCharts = False
+
+                .showModePortfolio = True
+
+                .repVorlagenDropbox.Visible = True
+                .labelPPTVorlage.Visible = True
+
+                .rdbRoles.Enabled = False
+                .rdbCosts.Enabled = False
+
+                .menuOption = PTmenue.einzelprojektReport
+                .statusLabel.Text = ""
+                .OKButton.Text = "Bericht erstellen"
+
+                '.Show()
+                returnValue = .ShowDialog
+            End With
+
+            appInstance.ScreenUpdating = True
+
+        ElseIf ShowProjekte.Count = 0 Then
+
+            Call MsgBox("Es sind keine Projekte geladen!  ")
+
+
+        End If
+
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
+
+
+
+    End Sub
+
+
     Sub MultiprojektReport(ByVal control As IRibbonControl)
 
         Dim auswahlFormular As New frmShowPlanElements

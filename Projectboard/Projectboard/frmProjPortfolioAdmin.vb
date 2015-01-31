@@ -283,7 +283,7 @@ Public Class frmProjPortfolioAdmin
             ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
             If node.Tag = "P" Then
                 ' Inhalte der Sub-Nodes müssen neu aufgebaut werden 
-                variantListe = aktuelleGesamtListe.getVariantNames(projName)
+                variantListe = aktuelleGesamtListe.getVariantNames(projName, True)
 
                 ' hproj wird benötigt, um herauszufinden, welche Variante gerade aktiv ist
                 If aKtionskennung = PTTvActions.activateV Then
@@ -609,7 +609,7 @@ Public Class frmProjPortfolioAdmin
 
                         'anzahlVarianten = projektNode.Nodes.Count
 
-                        Dim variantListe As Collection = aktuelleGesamtListe.getVariantNames(pname)
+                        Dim variantListe As Collection = aktuelleGesamtListe.getVariantNames(pname, True)
                         anzahlVarianten = variantListe.Count
 
                         If aKtionskennung = PTTvActions.delFromSession Then

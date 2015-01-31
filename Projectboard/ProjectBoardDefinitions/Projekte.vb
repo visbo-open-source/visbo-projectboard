@@ -9440,7 +9440,7 @@ Public Module Projekte
 
         ' bestimme die Collection mit Projekten mit mehr als einer Variante
         For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-            anzahlVarianten = AlleProjekte.getVariantNames(kvp.Key).Count
+            anzahlVarianten = AlleProjekte.getVariantNames(kvp.Key, True).Count
             If anzahlVarianten = 1 Then
                 justOne.Add(kvp.Key, kvp.Key)
             ElseIf anzahlVarianten > 1 Then
@@ -16926,7 +16926,8 @@ Public Module Projekte
     End Function
 
     ''' <summary>
-    ''' gibt für die Phase zurück, ob Sie in dem angegebenen Zeitraum liegt oder nicht 
+    ''' gibt für die Phase zurück, ob Sie in dem angegebenen Zeitraum liegt oder nicht
+    ''' wenn kein Timeframe definiert ist, dann wird true zurückgegeben  
     ''' </summary>
     ''' <param name="projektstart">Monat, in dem das Projekt startet</param>
     ''' <param name="relstart">Relativer Monats-Index Phasenstart</param>
@@ -16941,11 +16942,16 @@ Public Module Projekte
 
         Dim within As Boolean = False
 
-        If (projektstart + relStart - 1 > bis) Or (projektstart + relEnde - 1 < von) Then
-            ' dann liegt die Phase ausserhalb des betrachteten Zeitraums 
-            within = False
-        Else
+        If von = 0 And bis = 0 Then
+            ' wenn kein Zitraum definiert ist, soll true zurückgegeben werden
             within = True
+        Else
+            If (projektstart + relStart - 1 > bis) Or (projektstart + relEnde - 1 < von) Then
+                ' dann liegt die Phase ausserhalb des betrachteten Zeitraums 
+                within = False
+            Else
+                within = True
+            End If
         End If
         
 
@@ -16955,6 +16961,7 @@ Public Module Projekte
 
     ''' <summary>
     ''' gibt für das angegebene Datum zurück, ob es in dem angegebenen Zeitraum liegt oder nicht 
+    ''' wenn kein Zeitraum definiert ist, wird true zurückgegeben 
     ''' </summary>
     ''' <param name="msDate">Datum</param>
     ''' <param name="von">Monats-Index des linken Randes</param>
@@ -16967,11 +16974,15 @@ Public Module Projekte
 
         Dim within As Boolean = False
 
-        If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
-            If getColumnOfDate(msDate) > bis Or getColumnOfDate(msDate) < von Then
-                within = False
-            Else
-                within = True
+        If von = 0 And bis = 0 Then
+            within = True
+        Else
+            If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
+                If getColumnOfDate(msDate) > bis Or getColumnOfDate(msDate) < von Then
+                    within = False
+                Else
+                    within = True
+                End If
             End If
         End If
 
