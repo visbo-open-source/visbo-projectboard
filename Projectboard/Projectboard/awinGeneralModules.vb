@@ -1470,7 +1470,7 @@ Public Module awinGeneralModules
                         hproj.leadPerson = responsible
 
                     Catch ex As Exception
-                        Throw New Exception("es gibt keine entsprechende Vorlage ..  " & vbLf & ex.Message)
+                        Throw New Exception("es gibt keine entsprechende Vorlage mit Namen  " & vorlagenName & vbLf & ex.Message)
                     End Try
 
 

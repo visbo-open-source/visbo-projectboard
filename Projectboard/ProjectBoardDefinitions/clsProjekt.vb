@@ -2517,6 +2517,9 @@ Public Class clsProjekt
 
         _variantName = ""
 
+        _ampelErlaeuterung = ""
+        _ampelStatus = 0
+
         _description = ""
         _businessUnit = ""
         _complexity = 0.0

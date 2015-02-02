@@ -2426,7 +2426,7 @@ Imports System.Drawing
         Dim hproj As clsProjekt
         Dim outputString As String = ""
         Dim fileListe As New SortedList(Of String, String)
-        Dim exportFileName As String = "Export" & Date.Now.ToShortDateString & ".xlsx"
+        Dim exportFileName As String = "Export_" & Date.Now.ToShortDateString & ".xlsx"
 
         Dim awinSelection As Excel.ShapeRange
 
@@ -2481,7 +2481,7 @@ Imports System.Drawing
         End If
 
         ' hier muss jetzt das File Projekt Detail aufgemacht werden ...
-        appInstance.Workbooks.Open(awinPath & bmwExportVorlage)
+        appInstance.Workbooks.Open(awinPath & requirementsOrdner & bmwExportVorlage)
 
         Dim zeile As Integer = 2
         For Each kvp As KeyValuePair(Of String, String) In fileListe
@@ -6158,7 +6158,7 @@ Imports System.Drawing
     Sub Tom2G3M1B2PhasenVgl(control As IRibbonControl)
 
         Dim singleShp1 As Excel.Shape, singleShp2 As Excel.Shape
-        Dim hproj As clsProjekt, cproj As clsProjekt
+        Dim hproj As New clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
         Dim scale As Double
         Dim noColorCollection As New Collection
@@ -6187,12 +6187,17 @@ Imports System.Drawing
                 Try
                     hproj = ShowProjekte.getProject(singleShp1.Name)
                     vproj = Projektvorlagen.getProject(hproj.VorlagenName)
+                    If IsNothing(vproj) Then
+                        Call MsgBox("Vorlage" & hproj.VorlagenName & " nicht gefunden ...")
+                        enableOnUpdate = True
+                        Exit Sub
+                    End If
                     cproj = New clsProjekt
                     vproj.CopyTo(cproj)
                     cproj.startDate = hproj.startDate
 
                 Catch ex As Exception
-                    Call MsgBox("Vorlage / Projekt nicht gefunden ...")
+                    Call MsgBox("Vorlage" & hproj.VorlagenName & " nicht gefunden ...")
                     enableOnUpdate = True
                     Exit Sub
                 End Try

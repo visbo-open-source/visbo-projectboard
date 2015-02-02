@@ -10287,9 +10287,9 @@ Public Module Projekte
                     End If
 
                     ' Änderung 9.10.14, damit die Spaces in einer 
-                    If hproj.tfZeile >= curZeile + 1 Then
-                        curZeile = curZeile + 1
-                    End If
+                    'If hproj.tfZeile >= curZeile + 1 Then
+                    '    curZeile = curZeile + 1
+                    'End If
                     ' Ende Änderung
                     hproj.tfZeile = curZeile
                     lastZeile = curZeile
@@ -10595,6 +10595,7 @@ Public Module Projekte
                                     .AlternativeText = CInt(PTshty.milestoneE).ToString
                                 End With
 
+                                msShape.Rotation = vorlagenShape.Rotation
 
                                 Call defineResultAppearance(hproj, 0, msShape, cBewertung)
 

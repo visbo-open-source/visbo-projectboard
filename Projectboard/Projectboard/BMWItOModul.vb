@@ -15,8 +15,8 @@ Module BMWItOModul
 
     ' spezifisch für BMW Export 
     Friend bmwExportFilesOrdner As String = "Export Dateien"
-    Friend bmwFC52Vorlage As String = requirementsOrdner & "FC52 Vorlage.xlsx"
-    Friend bmwExportVorlage As String = requirementsOrdner & "export Vorlage.xlsx"
+    Friend bmwFC52Vorlage As String = "FC52 Vorlage.xlsx"
+    Friend bmwExportVorlage As String = "export Vorlage.xlsx"
 
     ''' <summary>
     ''' speziell auf BMW Mpp Anforderungen angepasstes BMW Import File
@@ -52,7 +52,7 @@ Module BMWItOModul
 
         Dim startDate As Date, endDate As Date
         Dim startoffset As Long, duration As Long
-        Dim vorlagenName As String
+        Dim vorlagenName As String = ""
 
         Dim itemName As String
         Dim zufall As New Random(10)
@@ -60,6 +60,10 @@ Module BMWItOModul
 
         Dim schriftGroesse As Integer
         Dim schriftfarbe As Long
+
+        ' Kennungen für die BMW Projekte
+        Dim typKennung As String = ""
+        Dim anlaufKennung As String = ""
 
 
         Dim milestoneIX As Integer = MilestoneDefinitions.Count + 1
@@ -212,7 +216,8 @@ Module BMWItOModul
                             pName = pName & tmpStr(0).Chars(ih)
                         Next
                         pName = pName.Trim
-                        doADD = True
+                        ' doADD = True
+                        doADD = False
                     Else
                         pName = tmpStr(0).Trim
                     End If
@@ -220,19 +225,22 @@ Module BMWItOModul
 
                     If Not isVorlage Then
                         If tmpStr(0).Trim.EndsWith("eA") Then
-                            vorlagenName = "Rel 4 eA 07"
+                            typKennung = "eA"
+                            'vorlagenName = "Rel 4 eA 07"
                             If doADD Then
                                 pName = pName & " eA"
                             End If
 
                         ElseIf tmpStr(0).Trim.EndsWith("wA") Then
-                            vorlagenName = "Rel 4 wA 07"
+                            typKennung = "wA"
+                            'vorlagenName = "Rel 4 wA 07"
                             If doADD Then
                                 pName = pName & " wA"
                             End If
 
                         ElseIf tmpStr(0).Trim.EndsWith("E") Then
-                            vorlagenName = "Rel 4 E 07"
+                            typKennung = "E"
+                            'vorlagenName = "Rel 4 E 07"
                             If doADD Then
                                 pName = pName & " E"
                             End If
@@ -258,32 +266,7 @@ Module BMWItOModul
                         '
                         hproj = New clsProjekt
 
-                        Try
-                            If isVorlage Then
-                                hproj.farbe = projektFarbe
-                                hproj.Schrift = schriftGroesse
-                                hproj.Schriftfarbe = schriftfarbe
-                            Else
-                                vproj = Projektvorlagen.getProject(vorlagenName)
-                                hproj.farbe = vproj.farbe
-                                hproj.Schrift = vproj.Schrift
-                                hproj.Schriftfarbe = vproj.Schriftfarbe
-                                hproj.name = ""
-                                hproj.VorlagenName = vorlagenName
-                                hproj.earliestStart = vproj.earliestStart
-                                hproj.latestStart = vproj.latestStart
-                                hproj.ampelStatus = PTfarbe.none
-                                hproj.leadPerson = ""
-                                hproj.businessUnit = defaultBU
-                            End If
-
-
-
-
-                        Catch ex As Exception
-                            Throw New Exception("es gibt keine entsprechende Vorlage ..  " & vbLf & ex.Message)
-                        End Try
-
+                        
 
                         Try
 
@@ -844,6 +827,71 @@ Module BMWItOModul
                         '    hproj.Schriftfarbe = schriftfarbe
                         'End If
 
+                        ' bestimme die anlaufkennung 
+                        Try
+                            Dim sopDate As Date = hproj.getMilestone("SOP").getDate
+
+                            If DateDiff(DateInterval.Month, StartofCalendar, sopDate) > 0 Then
+                                Dim sopMonth As Integer = sopDate.Month
+                                If sopMonth >= 3 And sopMonth <= 6 Then
+                                    anlaufKennung = "03"
+                                ElseIf sopMonth >= 7 And sopMonth <= 10 Then
+                                    anlaufKennung = "07"
+                                Else
+                                    anlaufKennung = "11"
+                                End If
+                            Else
+                                anlaufKennung = "?"
+                            End If
+                            
+                        Catch ex As Exception
+                            anlaufKennung = "?"
+                        End Try
+
+                        ' jetzt wird die Vorlagen Kennung bestimmt 
+
+                        vorlagenName = typKennung & "-" & anlaufKennung
+                        Try
+                            vorlagenName = vorlagenName.Trim
+                        Catch ex As Exception
+                            vorlagenName = "unknown"
+                        End Try
+
+                        If Projektvorlagen.Contains(vorlagenName) Then
+                            hproj.VorlagenName = vorlagenName
+                        Else
+                            hproj.VorlagenName = "unknown"
+                        End If
+
+
+                        Try
+                            If isVorlage Then
+                                hproj.farbe = projektFarbe
+                                hproj.Schrift = schriftGroesse
+                                hproj.Schriftfarbe = schriftfarbe
+                            Else
+
+                                If Projektvorlagen.Contains(vorlagenName) Then
+                                    vproj = Projektvorlagen.getProject(vorlagenName)
+                                ElseIf Projektvorlagen.Contains("unknown") Then
+                                    vproj = Projektvorlagen.getProject("unknown")
+                                Else
+                                    Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
+                                End If
+
+
+                                hproj.farbe = vproj.farbe
+                                hproj.Schrift = vproj.Schrift
+                                hproj.Schriftfarbe = vproj.Schriftfarbe
+                                hproj.earliestStart = vproj.earliestStart
+                                hproj.latestStart = vproj.latestStart
+                                
+                            End If
+
+                        Catch ex As Exception
+                            Throw New Exception(ex.Message)
+                        End Try
+
 
                         ' jetzt muss das Projekt eingetragen werden 
                         ImportProjekte.Add(calcProjektKey(hproj), hproj)
@@ -908,9 +956,10 @@ Module BMWItOModul
         CType(ws.Cells(zeile, spalte), Excel.Range).Value = hproj.getShapeText
         CType(ws.Cells(zeile, spalte).offset(0, 1), Excel.Range).Value = hproj.startDate.ToShortDateString
         CType(ws.Cells(zeile, spalte).offset(0, 2), Excel.Range).Value = hproj.endeDate.ToShortDateString
+        CType(ws.Rows(zeile), Excel.Range).Interior.Color = color
 
-        Dim indentPhase As Integer = 3
-        Dim indentMS As Integer = 6
+        Dim indentPhase As String = "   "
+        Dim indentMS As String = "      "
 
         ' die erste Phase kann auch Meilensteine haben !
         cphase = hproj.getPhase(1)
@@ -1018,7 +1067,7 @@ Module BMWItOModul
         ' hier muss jetzt das File Projekt Tafel Definitions.xlsx aufgemacht werden ...
         ' das File 
         Try
-            appInstance.Workbooks.Open(awinPath & bmwFC52Vorlage)
+            appInstance.Workbooks.Open(awinPath & requirementsOrdner & bmwFC52Vorlage)
 
         Catch ex As Exception
             Call MsgBox("FC52 Vorlage nicht gefunden - Abbruch")

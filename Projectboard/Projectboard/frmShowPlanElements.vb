@@ -300,7 +300,9 @@ Public Class frmShowPlanElements
 
                 ' den aktuellen Filter wegschreiben unter dem Namen last 
 
-                Call storeFilterAndclearSelections("Last")
+                Call storeFilter("Last", selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts)
                 appInstance.ScreenUpdating = formerSU
 
             Else
@@ -338,7 +340,9 @@ Public Class frmShowPlanElements
                     Call MsgBox("noch nicht implementiert")
                 End If
 
-                Call storeFilterAndclearSelections("Last")
+                Call storeFilter("Last", selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts)
 
             Else
                 Call MsgBox("bitte mindestens ein Element aus einer der Kategorien selektieren  ")
@@ -346,7 +350,9 @@ Public Class frmShowPlanElements
 
         ElseIf menuOption = PTmenue.filterdefinieren Then
 
-            Call storeFilterAndclearSelections("Last")
+            Call storeFilter("Last", selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts)
             Call MsgBox("ok, Filter gespeichert")
 
         Else
@@ -436,13 +442,13 @@ Public Class frmShowPlanElements
                 Next
             End If
 
-            
+
             Call rebuildFormerState(PTauswahlTyp.meilenstein)
 
 
 
         Else
-            
+
             ' Merken welches die selektierten Phasen waren 
             selectedMilestones.Clear()
             For Each element As String In ListBox2.Items
@@ -534,7 +540,7 @@ Public Class frmShowPlanElements
                 Call rebuildFormerState(PTauswahlTyp.Kostenart)
 
             Else
-                
+
                 ' Merken welches die selektierten Phasen waren 
                 selectedCosts.Clear()
                 'For Each element As String In ListBox1.SelectedItems
@@ -615,7 +621,7 @@ Public Class frmShowPlanElements
                         allTyps.Add(Projektvorlagen.Liste.ElementAt(i - 1).Key)
                     Next
                 End If
-                
+
 
                 Call rebuildFormerState(PTauswahlTyp.ProjektTyp)
 
@@ -890,13 +896,13 @@ Public Class frmShowPlanElements
                                                      selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
                                                      worker, e)
                 End If
-                
+
 
             End With
         Catch ex As Exception
             Call MsgBox("Fehler " & ex.Message)
         End Try
-       
+
 
 
     End Sub
@@ -928,7 +934,9 @@ Public Class frmShowPlanElements
         Me.Cursor = Cursors.Arrow
         Me.statusLabel.Visible = True
 
-        Call storeFilterAndclearSelections("Last")
+        Call storeFilter("Last", selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts)
 
 
 
@@ -1060,14 +1068,17 @@ Public Class frmShowPlanElements
     ''' speichert den letzten Filter und setzt die temporären Collections wieder zurück 
     ''' </summary>
     ''' <remarks></remarks>
-    Private Sub storeFilterAndclearSelections(ByVal fName As String)
+    Private Sub storeFilter(ByVal fName As String, _
+                                              ByVal fBU As Collection, ByVal fTyp As Collection, _
+                                              ByVal fPhase As Collection, ByVal fMilestone As Collection, _
+                                              ByVal fRole As Collection, ByVal fCost As Collection)
 
         Dim lastFilter As clsFilter
 
 
-        lastFilter = New clsFilter(fName, selectedBUs, selectedTyps, _
-                                  selectedPhases, selectedMilestones, _
-                                 selectedRoles, selectedCosts)
+        lastFilter = New clsFilter(fName, fBU, fTyp, _
+                                  fPhase, fMilestone, _
+                                 fRole, fCost)
 
 
         If menuOption = PTmenue.filterdefinieren Then
@@ -1077,14 +1088,14 @@ Public Class frmShowPlanElements
         End If
 
 
-        Me.selectedPhases.Clear()
-        Me.selectedMilestones.Clear()
-        Me.selectedRoles.Clear()
-        Me.selectedCosts.Clear()
-        Me.selectedBUs.Clear()
-        Me.selectedTyps.Clear()
+        'Me.selectedPhases.Clear()
+        'Me.selectedMilestones.Clear()
+        'Me.selectedRoles.Clear()
+        'Me.selectedCosts.Clear()
+        'Me.selectedBUs.Clear()
+        'Me.selectedTyps.Clear()
 
-        Me.ListBox2.Items.Clear()
+        'Me.ListBox2.Items.Clear()
 
     End Sub
 
@@ -1117,8 +1128,14 @@ Public Class frmShowPlanElements
 
 
         If Not IsNothing(lastFilter) Then
-            selectedBUs = lastFilter.BUs
-            selectedTyps = lastFilter.Typs
+            If menuOption = PTmenue.filterdefinieren Then
+                selectedBUs = lastFilter.BUs
+                selectedTyps = lastFilter.Typs
+            Else
+                selectedBUs = New Collection
+                selectedTyps = New Collection
+            End If
+            
             selectedPhases = lastFilter.Phases
             selectedMilestones = lastFilter.Milestones
             selectedRoles = lastFilter.Roles

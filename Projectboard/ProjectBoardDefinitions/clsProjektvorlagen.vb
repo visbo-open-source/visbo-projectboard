@@ -53,7 +53,12 @@
     Public ReadOnly Property getProject(projectname As String) As clsProjektvorlage
 
         Get
-            getProject = AllProjects.Item(projectname)
+            If AllProjects.ContainsKey(projectname) Then
+                getProject = AllProjects.Item(projectname)
+            Else
+                getProject = Nothing
+            End If
+
         End Get
 
     End Property

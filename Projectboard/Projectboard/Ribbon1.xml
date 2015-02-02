@@ -215,7 +215,8 @@
           <!--<button id="PT4G1B1" label="Import Projekt-Inventur" onAction="Tom2G4B1InventurImport" />-->
           <button id="PT4G1B2" label="Import RPLAN Projekte" onAction="Tom2G4B1RPLANImport" />
           <!--<button id="PT4G1B6" label="Exportieren Excel/RPLAN" onAction="bmwExcelExport" />-->
-          <button id="PT4G1B7" label="Exportieren Excel/FC-52" onAction="bmwFC52Export" />
+          <button id="PT4G1B7" label="Exportieren FC-52" onAction="bmwFC52Export" />
+          <button id="PT4G1B8" label="Exportieren Projekt" onAction="bmwExcelExport" />
           <separator id="PT4G1s1"/>
           <menu id="PT4G1M1" label ="Projekt Steckbriefe">
             <button id="PT4G1B3" label="Importieren" onAction="Tom2G4M1Import" />

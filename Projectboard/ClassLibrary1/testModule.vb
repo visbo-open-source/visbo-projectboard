@@ -599,7 +599,7 @@ Public Module testModule
                             Case "Teilprojekte"
 
                                 Dim scale As Integer
-
+                                Dim continueWork As Boolean = True
                                 Dim cproj As clsProjekt = Nothing
                                 Dim vproj As clsProjektvorlage
                                 auswahl = 0
@@ -610,9 +610,13 @@ Public Module testModule
                                     If qualifier = "Vorlage" Then
                                         auswahl = 1
                                         vproj = Projektvorlagen.getProject(hproj.VorlagenName)
-                                        vproj.CopyTo(cproj)
-                                        cproj.startDate = hproj.startDate
-
+                                        If IsNothing(vproj) Then
+                                            .TextFrame2.TextRange.Text = "Projekt-Vorlage " & hproj.VorlagenName & " existiert nicht !"
+                                            continueWork = False
+                                        Else
+                                            vproj.CopyTo(cproj)
+                                            cproj.startDate = hproj.startDate
+                                        End If
 
                                     ElseIf qualifier = "Beauftragung" Then
                                         cproj = bproj
@@ -628,29 +632,32 @@ Public Module testModule
                                     auswahl = 0
                                 End If
 
-                                htop = 150
-                                hleft = 150
+                                If continueWork Then
+                                    htop = 150
+                                    hleft = 150
 
 
-                                hheight = 380
-                                hwidth = 900
-                                scale = cproj.dauerInDays
+                                    hheight = 380
+                                    hwidth = 900
+                                    scale = cproj.dauerInDays
 
-                                Dim noColorCollection As New Collection
-                                reportObj = Nothing
-                                Call createPhasesBalken(noColorCollection, cproj, reportObj, scale, htop, hleft, hheight, hwidth, auswahl)
+                                    Dim noColorCollection As New Collection
+                                    reportObj = Nothing
+                                    Call createPhasesBalken(noColorCollection, cproj, reportObj, scale, htop, hleft, hheight, hwidth, auswahl)
 
 
-                                notYetDone = True
+                                    notYetDone = True
+                                End If
+                                
 
                             Case "Vergleich mit Vorlage"
 
                                 Dim vproj As clsProjektvorlage
-                                Dim cproj As clsProjekt
+                                Dim cproj As New clsProjekt
                                 Dim scale As Double
                                 Dim noColorCollection As New Collection
                                 Dim repObj1 As xlNS.ChartObject, repObj2 As xlNS.ChartObject
-
+                                Dim continueWork As Boolean = True
 
                                 ' jetzt die Aktion durchführen ...
 
@@ -658,107 +665,114 @@ Public Module testModule
                                 Try
 
                                     vproj = Projektvorlagen.getProject(hproj.VorlagenName)
-                                    cproj = New clsProjekt
-                                    vproj.CopyTo(cproj)
-                                    cproj.startDate = hproj.startDate
+                                    If IsNothing(vproj) Then
+                                        .TextFrame2.TextRange.Text = "Projekt-Vorlage " & hproj.VorlagenName & " existiert nicht !"
+                                        continueWork = False
+                                    Else
+                                        cproj = New clsProjekt
+                                        vproj.CopyTo(cproj)
+                                        cproj.startDate = hproj.startDate
+                                    End If
 
                                 Catch ex As Exception
                                     Throw New Exception("Vorlage konnte nicht bestimmt werden")
                                 End Try
 
-
-                                htop = 150
-                                hleft = 150
-
-
-                                hheight = 380
-                                hwidth = 900
-                                scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
+                                If continueWork Then
+                                    htop = 150
+                                    hleft = 150
 
 
-                                appInstance.EnableEvents = False
+                                    hheight = 380
+                                    hwidth = 900
+                                    scale = System.Math.Max(hproj.dauerInDays, cproj.dauerInDays)
 
 
-                                noColorCollection = getPhasenUnterschiede(hproj, cproj)
-
-                                repObj1 = Nothing
-                                Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, PThis.current)
-
-                                With repObj1
-                                    htop = .Top + .Height + 3
-                                End With
+                                    appInstance.EnableEvents = False
 
 
-                                repObj2 = Nothing
-                                Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, PThis.vorlage)
+                                    noColorCollection = getPhasenUnterschiede(hproj, cproj)
 
-                                ' jetzt wird das Shape in der Powerpoint entsprechend entsprechend aufgebaut 
-                                Try
-                                    pptSize = CInt(.TextFrame2.TextRange.Font.Size)
-                                    .TextFrame2.TextRange.Text = " "
-                                Catch ex As Exception
-                                    pptSize = 12
-                                End Try
+                                    repObj1 = Nothing
+                                    Call createPhasesBalken(noColorCollection, hproj, repObj1, scale, htop, hleft, hheight, hwidth, PThis.current)
+
+                                    With repObj1
+                                        htop = .Top + .Height + 3
+                                    End With
 
 
-                                Dim widthFaktor As Double = 1.0
-                                Dim heightFaktor As Double = 1.0
-                                Dim topNext As Double
+                                    repObj2 = Nothing
+                                    Call createPhasesBalken(noColorCollection, cproj, repObj2, scale, htop, hleft, hheight, hwidth, PThis.vorlage)
 
-
-                                If Not repObj1 Is Nothing Then
+                                    ' jetzt wird das Shape in der Powerpoint entsprechend entsprechend aufgebaut 
                                     Try
-                                        repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                        newShapeRange = pptSlide.Shapes.Paste
+                                        pptSize = CInt(.TextFrame2.TextRange.Font.Size)
+                                        .TextFrame2.TextRange.Text = " "
+                                    Catch ex As Exception
+                                        pptSize = 12
+                                    End Try
 
-                                        With newShapeRange(1)
-                                            .Top = CSng(top + 0.02 * height)
-                                            .Left = CSng(left + 0.02 * width)
-                                            .Width = CSng(width * 0.96)
-                                            topNext = CSng(top + 0.04 * height + .Height)
-                                            '.Height = height * 0.46
-                                        End With
 
-                                        repObj1.Delete()
+                                    Dim widthFaktor As Double = 1.0
+                                    Dim heightFaktor As Double = 1.0
+                                    Dim topNext As Double
 
-                                        If Not repObj2 Is Nothing Then
-                                            Try
-                                                repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
-                                                newShapeRange2 = pptSlide.Shapes.Paste
 
-                                                With newShapeRange2(1)
-                                                    .Top = CSng(topNext)
-                                                    .Left = CSng(left + 0.02 * width)
-                                                    .Width = CSng(width * 0.96)
-                                                    ' Height wird nicht gesetzt - bei Bildern wird das proportional automatisch gesetzt 
-                                                End With
+                                    If Not repObj1 Is Nothing Then
+                                        Try
+                                            repObj1.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                            newShapeRange = pptSlide.Shapes.Paste
 
-                                                ' jetzt muss noch geschaut werden, ob die Shapes zu viele Höhe beanspruchen 
+                                            With newShapeRange(1)
+                                                .Top = CSng(top + 0.02 * height)
+                                                .Left = CSng(left + 0.02 * width)
+                                                .Width = CSng(width * 0.96)
+                                                topNext = CSng(top + 0.04 * height + .Height)
+                                                '.Height = height * 0.46
+                                            End With
+
+                                            repObj1.Delete()
+
+                                            If Not repObj2 Is Nothing Then
                                                 Try
-                                                    If newShapeRange(1).Height + newShapeRange2(1).Height > 0.96 * height Then
-                                                        widthFaktor = 0.96 * height / (newShapeRange(1).Height + newShapeRange2(1).Height)
-                                                        newShapeRange(1).Width = CSng(widthFaktor * newShapeRange(1).Width)
-                                                        newShapeRange2(1).Width = CSng(widthFaktor * newShapeRange2(1).Width)
-                                                        newShapeRange2(1).Top = CSng(newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height)
-                                                    End If
+                                                    repObj2.CopyPicture(Excel.XlPictureAppearance.xlScreen, Excel.XlCopyPictureFormat.xlPicture)
+                                                    newShapeRange2 = pptSlide.Shapes.Paste
+
+                                                    With newShapeRange2(1)
+                                                        .Top = CSng(topNext)
+                                                        .Left = CSng(left + 0.02 * width)
+                                                        .Width = CSng(width * 0.96)
+                                                        ' Height wird nicht gesetzt - bei Bildern wird das proportional automatisch gesetzt 
+                                                    End With
+
+                                                    ' jetzt muss noch geschaut werden, ob die Shapes zu viele Höhe beanspruchen 
+                                                    Try
+                                                        If newShapeRange(1).Height + newShapeRange2(1).Height > 0.96 * height Then
+                                                            widthFaktor = 0.96 * height / (newShapeRange(1).Height + newShapeRange2(1).Height)
+                                                            newShapeRange(1).Width = CSng(widthFaktor * newShapeRange(1).Width)
+                                                            newShapeRange2(1).Width = CSng(widthFaktor * newShapeRange2(1).Width)
+                                                            newShapeRange2(1).Top = CSng(newShapeRange(1).Top + newShapeRange(1).Height + 0.02 * height)
+                                                        End If
+                                                    Catch ex As Exception
+
+                                                    End Try
+
+
+
+                                                    repObj2.Delete()
                                                 Catch ex As Exception
 
                                                 End Try
 
+                                            End If
+                                        Catch ex As Exception
 
+                                        End Try
 
-                                                repObj2.Delete()
-                                            Catch ex As Exception
-
-                                            End Try
-
-                                        End If
-                                    Catch ex As Exception
-
-                                    End Try
+                                    End If
 
                                 End If
-
+                                
 
                             Case "Vergleich mit Beauftragung"
 
@@ -7975,9 +7989,9 @@ Public Module testModule
                 .Top = CSng(projektNamenYPos)
                 .Left = CSng(projektNamenXPos)
                 If currentProjektIndex > 1 And lastProjectName = hproj.name Then
-                    .TextFrame2.TextRange.Text = "... " & hproj.variantName
+                    .TextFrame2.TextRange.Text = "... " & hproj.variantName & " " & hproj.VorlagenName
                 Else
-                    .TextFrame2.TextRange.Text = hproj.getShapeText
+                    .TextFrame2.TextRange.Text = hproj.getShapeText & " " & hproj.VorlagenName
                 End If
                 lastProjectName = hproj.name
                 .Name = .Name & .Id
