@@ -4432,6 +4432,12 @@ Public Module awinGeneralModules
         End If
     End Function
 
+    ''' <summary>
+    ''' übergebenene ProjektListe wird um die Projekte reduziert, die nicht zu dem Filter passen
+    ''' </summary>
+    ''' <param name="projektListe"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Function reduzierenWgFilter(ByVal projektListe As clsProjekteAlle) As clsProjekteAlle
         Dim filter As New clsFilter
         Dim ok As Boolean = False
@@ -4445,33 +4451,38 @@ Public Module awinGeneralModules
 
             filter = filterDefinitions.retrieveFilter("Last")
 
+            If IsNothing(filter) Then
 
-            For Each kvp As KeyValuePair(Of String, clsProjekt) In projektListe.liste
+                ' Liste unverändert zurückgeben
+                reduzierenWgFilter = projektListe
+            Else
 
-                If Not filter.isEmpty Then
-                    ok = filter.doesNotBlock(kvp.Value)
-                Else
-                    ok = True
-                End If
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In projektListe.liste
 
-                If ok Then
-                    Try
-                        newProjektliste.Add(kvp.Key, kvp.Value)
-                    Catch ex As Exception
-                        Call MsgBox("Fehler in reduzierenWgFilter" & kvp.Key)
-                    End Try
-                Else
+                    If Not filter.isEmpty Then
+                        ok = filter.doesNotBlock(kvp.Value)
+                    Else
+                        ok = True
+                    End If
 
-                End If
+                    If ok Then
+                        Try
+                            newProjektliste.Add(kvp.Key, kvp.Value)
+                        Catch ex As Exception
+                            Call MsgBox("Fehler in reduzierenWgFilter" & kvp.Key)
+                        End Try
+                    Else
 
-            Next
+                    End If
 
-            ' Liste gefüllt mit Projekte, die auf den aktuellen Filter passen
-            reduzierenWgFilter = newProjektliste
+                Next
+
+                ' Liste gefüllt mit Projekte, die auf den aktuellen Filter passen
+                reduzierenWgFilter = newProjektliste
+            End If
         Else
             ' Liste unverändert zurückgeben
             reduzierenWgFilter = projektListe
-
         End If
     End Function
 
