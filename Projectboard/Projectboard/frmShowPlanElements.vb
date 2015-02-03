@@ -233,29 +233,43 @@ Public Class frmShowPlanElements
                                     "\" & repVorlagenDropbox.Text
                 End If
 
-                Try
-                    rdbMilestones.Enabled = False
-                    rdbPhases.Enabled = False
-                    rdbRoles.Enabled = False
-                    rdbCosts.Enabled = False
-                    filterBox.Enabled = False
-                    ListBox1.Enabled = False
-                    OKButton.Enabled = False
-                    repVorlagenDropbox.Enabled = False
-                    AbbrButton.Cursor = Cursors.Arrow
+                ' Prüfen, ob die Datei überhaupt existirt 
+                If repVorlagenDropbox.Text.Length = 0 Then
+                    Call MsgBox("bitte PPT Vorlage auswählen !")
+                ElseIf My.Computer.FileSystem.FileExists(vorlagenDateiName) Then
 
-                    statusLabel.Text = ""
-                    statusLabel.Visible = True
+                    Try
+                        rdbMilestones.Enabled = False
+                        rdbPhases.Enabled = False
+                        rdbRoles.Enabled = False
+                        rdbCosts.Enabled = False
+                        filterBox.Enabled = False
+                        ListBox1.Enabled = False
+                        OKButton.Enabled = False
+                        repVorlagenDropbox.Enabled = False
+                        AbbrButton.Cursor = Cursors.Arrow
 
-                    Me.Cursor = Cursors.WaitCursor
+                        statusLabel.Text = ""
+                        statusLabel.Visible = True
 
-                    ' Alternativ ohne Background Worker
+                        Me.Cursor = Cursors.WaitCursor
+                        AbbrButton.Text = "Abbrechen"
 
-                    BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
+                        ' Alternativ ohne Background Worker
 
-                Catch ex As Exception
-                    Call MsgBox(ex.Message)
-                End Try
+                        BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
+
+                    Catch ex As Exception
+                        Call MsgBox(ex.Message)
+                    End Try
+
+                Else
+
+                    Call MsgBox("bitte PPT Vorlage auswählen !")
+
+                End If
+
+                
 
 
             Else
@@ -652,6 +666,7 @@ Public Class frmShowPlanElements
             filterBox.Enabled = True
             ListBox1.Enabled = True
             OKButton.Enabled = True
+            AbbrButton.Text = "Zurücksetzen"
             repVorlagenDropbox.Enabled = True
             statusLabel.Text = "Berichterstellung wurde beendet"
 
@@ -933,6 +948,7 @@ Public Class frmShowPlanElements
         Me.repVorlagenDropbox.Enabled = True
         Me.Cursor = Cursors.Arrow
         Me.statusLabel.Visible = True
+        Me.AbbrButton.Text = "Zurücksetzen"
 
         Call storeFilter("Last", selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
