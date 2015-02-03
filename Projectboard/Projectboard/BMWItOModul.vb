@@ -517,7 +517,7 @@ Module BMWItOModul
                                                 ' dann wird ein neues Element mit lfd_Nr erzeugt 
                                                 ' alt: 
                                                 'If vglPhase.startOffsetinDays <> startoffset Or vglPhase.dauerInDays <> duration Then
-                                                If ueberdeckung < 0.98 Then
+                                                If ueberdeckung < 0.95 Then
                                                     Dim lfdNr As Integer = 2
                                                     Dim newName As String = stdName & " " & lfdNr.ToString
                                                     found = False
@@ -529,7 +529,7 @@ Module BMWItOModul
                                                                           itemStartDate, itemEndDate)
 
                                                         'If vglPhase.startOffsetinDays <> startoffset Or vglPhase.dauerInDays <> duration Then
-                                                        If ueberdeckung < 0.98 Then
+                                                        If ueberdeckung < 0.95 Then
                                                             lfdNr = lfdNr + 1
                                                             newName = stdName & " " & lfdNr
                                                         Else

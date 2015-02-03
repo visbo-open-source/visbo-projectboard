@@ -418,65 +418,31 @@ Public Module awinGeneralModules
 
             Call aufbauenAppearanceDefinitions(wsName7810)
 
-            ' hier muss jetzt das Worksheet Darstellungsklassen aufgemacht werden 
-            ' das ist in arrwsnames(7) abgelegt 
-            ' das wird jetzt durch die obige Sub erledigt 
-            'With wsName7810
-
-            '    For Each shp As Excel.Shape In .Shapes
-            '        appDefinition = New clsAppearance
-            '        With appDefinition
-
-            '            If shp.Title <> "" Then
-
-            '                .name = shp.Title
-            '                If shp.AlternativeText = "1" Then
-            '                    .isMilestone = True
-            '                Else
-            '                    .isMilestone = False
-            '                End If
-            '                .form = shp
-
-            '                Try
-            '                    appearanceDefinitions.Add(.name, appDefinition)
-            '                Catch ex As Exception
-            '                    Call MsgBox("Mehrfach Definition in den Darstellungsklassen ... " & vbLf & _
-            '                                 "bitte korrigieren")
-            '                End Try
-
-
-            '            End If
-
-            '        End With
-
-
-            '    Next
-
 
         ' hier werden jetzt die Business Unit Informationen ausgelesen 
-        businessUnitDefinitions = New SortedList(Of Integer, clsBusinessUnit)
-        With wsName4
-            '
-            ' Business Unit Definitionen auslesen - im bereich awin_BusinessUnit_Definitions
-            '
-            Dim index As Integer = 1
-            Dim tmpBU As clsBusinessUnit
+            businessUnitDefinitions = New SortedList(Of Integer, clsBusinessUnit)
+            With wsName4
+                '
+                ' Business Unit Definitionen auslesen - im bereich awin_BusinessUnit_Definitions
+                '
+                Dim index As Integer = 1
+                Dim tmpBU As clsBusinessUnit
 
-            For Each c In .Range("awin_BusinessUnit_Definitions")
+                For Each c In .Range("awin_BusinessUnit_Definitions")
 
                     tmpBU = New clsBusinessUnit
 
-                Try
+                    Try
 
-                    tmpBU.name = CType(c.Value, String).Trim
-                    tmpBU.color = CLng(c.Interior.Color)
-                    businessUnitDefinitions.Add(index, tmpBU)
-                    index = index + 1
+                        tmpBU.name = CType(c.Value, String).Trim
+                        tmpBU.color = CLng(c.Interior.Color)
+                        businessUnitDefinitions.Add(index, tmpBU)
+                        index = index + 1
 
-                Catch ex As Exception
-                    ' nichts tun ...
-                    index = index + 1
-                End Try
+                    Catch ex As Exception
+                        ' nichts tun ...
+                        index = index + 1
+                    End Try
 
 
 
@@ -903,75 +869,77 @@ Public Module awinGeneralModules
 
 
             For i = 1 To listOfFiles.Count
+
                 dateiName = listOfFiles.Item(i - 1)
+                If dateiName.Contains(".xls") Or dateiName.Contains(".xlsx") Then
+                    Try
 
-                Try
+                        appInstance.Workbooks.Open(dateiName)
 
-                    appInstance.Workbooks.Open(dateiName)
-
-                    If awinSettings.importTyp = 1 Then
-
-
-
-                        Dim projVorlage As New clsProjektvorlage
-                        Call awinImportProject(Nothing, projVorlage, True, Date.Now)
-                        ' Auslesen der Projektvorlage wird wie das Importieren eines Projekts behandelt, nur am Ende in die Liste der Projektvorlagen eingehängt
-                        ' Kennzeichen für Projektvorlage ist der 3.Parameter im Aufruf (isTemplate)
-
-                        Projektvorlagen.Add(projVorlage)
+                        If awinSettings.importTyp = 1 Then
 
 
-                    ElseIf awinSettings.importTyp = 2 Then
 
-                        ' hier muss die Datei ausgelesen werden
-                        Dim myCollection As New Collection
-                        Dim ok As Boolean
-                        Dim hproj As clsProjekt = Nothing
+                            Dim projVorlage As New clsProjektvorlage
+                            Call awinImportProject(Nothing, projVorlage, True, Date.Now)
+                            ' Auslesen der Projektvorlage wird wie das Importieren eines Projekts behandelt, nur am Ende in die Liste der Projektvorlagen eingehängt
+                            ' Kennzeichen für Projektvorlage ist der 3.Parameter im Aufruf (isTemplate)
 
-                        Call bmwImportProjekteITO15(myCollection, True)
-
-                        ' jetzt muss für jeden Eintrag in ImportProjekte eine Vorlage erstellt werden  
-                        For Each pName As String In myCollection
-
-                            ok = True
-
-                            Try
-
-                                hproj = ImportProjekte.getProject(pName)
-
-                            Catch ex As Exception
-                                Call MsgBox("Projekt " & pName & " ist kein gültiges Projekt ... es wird ignoriert ...")
-                                ok = False
-                            End Try
-
-                            If ok Then
-
-                                ' hier müssen die Werte für die Vorlage übergeben werden.
-                                Dim projVorlage As New clsProjektvorlage
-                                projVorlage.VorlagenName = hproj.name
-                                projVorlage.Schrift = hproj.Schrift
-                                projVorlage.Schriftfarbe = hproj.Schriftfarbe
-                                projVorlage.farbe = hproj.farbe
-                                projVorlage.earliestStart = -6
-                                projVorlage.latestStart = 6
-                                projVorlage.AllPhases = hproj.AllPhases
-
-                                Projektvorlagen.Add(projVorlage)
-
-                            End If
-
-                        Next
+                            Projektvorlagen.Add(projVorlage)
 
 
-                    End If
+                        ElseIf awinSettings.importTyp = 2 Then
 
-                    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                            ' hier muss die Datei ausgelesen werden
+                            Dim myCollection As New Collection
+                            Dim ok As Boolean
+                            Dim hproj As clsProjekt = Nothing
+
+                            Call bmwImportProjekteITO15(myCollection, True)
+
+                            ' jetzt muss für jeden Eintrag in ImportProjekte eine Vorlage erstellt werden  
+                            For Each pName As String In myCollection
+
+                                ok = True
+
+                                Try
+
+                                    hproj = ImportProjekte.getProject(pName)
+
+                                Catch ex As Exception
+                                    Call MsgBox("Projekt " & pName & " ist kein gültiges Projekt ... es wird ignoriert ...")
+                                    ok = False
+                                End Try
+
+                                If ok Then
+
+                                    ' hier müssen die Werte für die Vorlage übergeben werden.
+                                    Dim projVorlage As New clsProjektvorlage
+                                    projVorlage.VorlagenName = hproj.name
+                                    projVorlage.Schrift = hproj.Schrift
+                                    projVorlage.Schriftfarbe = hproj.Schriftfarbe
+                                    projVorlage.farbe = hproj.farbe
+                                    projVorlage.earliestStart = -6
+                                    projVorlage.latestStart = 6
+                                    projVorlage.AllPhases = hproj.AllPhases
+
+                                    Projektvorlagen.Add(projVorlage)
+
+                                End If
+
+                            Next
 
 
-                Catch ex As Exception
-                    appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                    Call MsgBox(ex.Message)
-                End Try
+                        End If
+
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+
+                    Catch ex As Exception
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                        Call MsgBox(ex.Message)
+                    End Try
+                End If
 
 
             Next
