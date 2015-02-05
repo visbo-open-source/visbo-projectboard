@@ -1340,6 +1340,10 @@ Imports System.Drawing
                     With ProjektAendern
                         .projectName.Text = hproj.name
                         .vorlagenName.Text = hproj.VorlagenName
+                        For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                            .businessUnit.Items.Add(kvp.Value.name)
+                        Next
+                        .businessUnit.Text = hproj.businessUnit
                         .Erloes.Text = hproj.Erloes.ToString
                         .risiko.Text = hproj.Risiko.ToString("0.0")
                         .sFit.Text = hproj.StrategicFit.ToString("0.0")
@@ -1374,6 +1378,7 @@ Imports System.Drawing
 
                             .StrategicFit = CType(ProjektAendern.sFit.Text, Double)
                             .Risiko = CType(ProjektAendern.risiko.Text, Double)
+                            .businessUnit = CType(ProjektAendern.businessUnit.Text, String)
 
                         End With
 
