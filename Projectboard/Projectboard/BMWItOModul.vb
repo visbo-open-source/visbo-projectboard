@@ -397,21 +397,30 @@ Module BMWItOModul
 
                                 ' jetzt prüfen, ob es sich um ein grundsätzlich zu ignorierendes Element handelt .. 
                                 If isMilestone Then
-                                    If milestoneMappings.tobeIgnored(itemName) Then
+                                    If MilestoneDefinitions.Contains(itemName) Then
+                                        ok = True
+                                    ElseIf milestoneMappings.tobeIgnored(itemName) Then
                                         CType(activeWSListe.Cells(curZeile, protocolColumn + 1), Excel.Range).Value = _
                                                         "Element soll nach Wörterbuch ignoriert werden: "
                                         ok = False
                                     Else
                                         ok = True
                                     End If
+
+
                                 Else
-                                    If phaseMappings.tobeIgnored(itemName) Then
+
+                                    If PhaseDefinitions.Contains(itemName) Then
+                                        ok = True
+                                    ElseIf phaseMappings.tobeIgnored(itemName) Then
                                         CType(activeWSListe.Cells(curZeile, protocolColumn + 1), Excel.Range).Value = _
                                                         "Element soll nach Wörterbuch ignoriert werden: "
                                         ok = False
                                     Else
                                         ok = True
+
                                     End If
+                                    
                                 End If
 
 
@@ -446,8 +455,8 @@ Module BMWItOModul
 
                                 Catch ex As Exception
 
-                                    CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
-                                                "Fehler bei Abbildung auf Darstellungsklasse ... " & txtVorgangsKlasse.Trim
+                                    'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
+                                    '            "Fehler bei Abbildung auf Darstellungsklasse ... " & txtVorgangsKlasse.Trim
 
                                 End Try
 
