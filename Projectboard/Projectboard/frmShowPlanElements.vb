@@ -207,7 +207,8 @@ Public Class frmShowPlanElements
         ''''
 
         Dim validOption As Boolean
-        If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Then
+        If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
+            Me.menuOption = PTmenue.excelExport Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft > 5 Then
             validOption = True
@@ -369,6 +370,34 @@ Public Class frmShowPlanElements
                                                    selectedRoles, selectedCosts)
             Call MsgBox("ok, Filter gespeichert")
 
+        ElseIf menuOption = PTmenue.excelExport Then
+
+            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) _
+                    And validOption Then
+
+                Try
+                    Call createExcelExportFromSelection(selectedPhases, selectedMilestones, _
+                                                     selectedRoles, selectedCosts)
+
+                    Call MsgBox("ok, Excel File in " & exportFilesOrdner & " erzeugt")
+                Catch ex As Exception
+                    Call MsgBox(ex.Message)
+                End Try
+                
+
+
+                Call storeFilter("Last", selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts)
+
+
+            Else
+                Call MsgBox("bitte mindestens ein Element aus einer der Kategorien Phasen / Meilensteine selektieren  ")
+            End If
+
+
+
+
         Else
 
             Call MsgBox("noch nicht unterstützt")
@@ -379,6 +408,11 @@ Public Class frmShowPlanElements
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
+
+        ' bei bestimmten Menu-Optionen das Formuzlar dann schliessen 
+        If menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Then
+            MyBase.Close()
+        End If
 
     End Sub
 
@@ -1081,6 +1115,143 @@ Public Class frmShowPlanElements
     End Sub
 
     ''' <summary>
+    ''' erstellt das Excel Export File für die angegebenen Phasen, Meilensteine, Rollen und Kosten
+    ''' vorläufig nur für Phasen und Rollen realisiert
+    ''' </summary>
+    ''' <param name="selPhases"></param>
+    ''' <param name="selMilestones"></param>
+    ''' <param name="selRoles"></param>
+    ''' <param name="selCosts"></param>
+    ''' <remarks></remarks>
+    Private Sub createExcelExportFromSelection(ByVal selPhases As Collection, ByVal selMilestones As Collection, _
+                                                   ByVal selRoles As Collection, ByVal selCosts As Collection)
+
+        Dim earliestDate As Date, latestDate As Date
+        Dim phaseList As New SortedList(Of Double, String)
+        Dim milestonelist As New SortedList(Of Double, String)
+
+
+        ' initialisieren 
+        earliestDate = StartofCalendar.AddMonths(-12)
+        latestDate = StartofCalendar.AddMonths(1200)
+
+        Dim anteil As Double = 0.0
+        Dim anzahlProjekte As Integer = ShowProjekte.Count
+        Dim currentIX As Integer
+        Dim hproj As clsProjekt
+        Dim pName As String, msName As String
+        Dim cphase As clsPhase, milestone As clsMeilenstein
+        Dim anzPlanobjekte As Integer = selPhases.Count + selMilestones.Count
+        Dim bestproj As String = ""
+        Dim startFaktor As Double = 1.0
+        Dim durationFaktor As Double = 0.000001
+        Dim correctFaktor As Double = 0.00000001
+        Dim schluessel As Double
+        Dim korrFaktor As Double
+        Dim refLaenge As Integer
+
+        currentIX = 1
+        Do While phaseList.Count + milestonelist.Count < selPhases.Count + selMilestones.Count And _
+                 currentIX <= anzahlProjekte
+
+            hproj = ShowProjekte.getProject(currentIX)
+            Dim anzFoundElem As Integer = 0
+
+            If currentIX = 1 Then
+                korrFaktor = 1.0
+                refLaenge = hproj.dauerInDays
+            Else
+                Try
+                    korrFaktor = hproj.dauerInDays / refLaenge
+                Catch ex As Exception
+                    korrFaktor = 1.0
+                End Try
+
+            End If
+
+            If phaseList.Count < selPhases.Count Then
+                For Each pObject As Object In selPhases
+                    pName = CStr(pObject)
+                    If phaseList.ContainsValue(pName) Then
+                        ' sie ist schon eingeordnet und es muss nichts mehr gemacht werden 
+                    Else
+                        cphase = hproj.getPhase(pName)
+
+                        If Not IsNothing(cphase) Then
+
+                            anzFoundElem = anzFoundElem + 1
+                            schluessel = (cphase.startOffsetinDays * startFaktor + _
+                                            cphase.dauerInDays * durationFaktor) * korrFaktor
+
+                            Dim ok As Boolean = False
+                            Do Until ok
+
+                                If phaseList.ContainsKey(schluessel) Then
+                                    schluessel = schluessel + correctFaktor
+                                Else
+                                    phaseList.Add(schluessel, pName)
+                                    ok = True
+                                End If
+
+                            Loop
+
+
+                        End If
+                    End If
+
+                Next
+            End If
+
+
+            If milestonelist.Count < selMilestones.Count Then
+                For Each pObject As Object In selMilestones
+                    msName = CStr(pObject)
+                    If milestonelist.ContainsValue(msName) Then
+                        ' er ist schon eingeordnet und es muss nichts mehr gemacht werden 
+                    Else
+                        milestone = hproj.getMilestone(msName)
+
+                        If Not IsNothing(milestone) Then
+
+                            anzFoundElem = anzFoundElem + 1
+                            schluessel = DateDiff(DateInterval.Day, hproj.startDate, milestone.getDate) * korrFaktor
+
+                            Dim ok As Boolean = False
+                            Do Until ok
+
+                                If milestonelist.ContainsKey(schluessel) Then
+                                    schluessel = schluessel + correctFaktor
+                                Else
+                                    milestonelist.Add(schluessel, msName)
+                                    ok = True
+                                End If
+
+                            Loop
+
+
+                        End If
+                    End If
+
+                Next
+            End If
+
+            currentIX = currentIX + 1
+
+        Loop
+
+        ' jetzt sind die Elemente in der richtigen Reihenfolge eingeordnet 
+        ' jetzt werden sie rausgeschrieben 
+        Try
+            Call exportSelectionToExcel(phaseList, milestonelist)
+        Catch ex As Exception
+            Throw New Exception(ex.Message)
+        End Try
+
+
+
+    End Sub
+
+    ''' <summary>
     ''' speichert den letzten Filter und setzt die temporären Collections wieder zurück 
     ''' </summary>
     ''' <remarks></remarks>
@@ -1168,11 +1339,4 @@ Public Class frmShowPlanElements
 
     End Sub
 
-    Private Sub repVorlagenDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles repVorlagenDropbox.SelectedIndexChanged
-
-        If menuOption = PTmenue.filterdefinieren Then
-            ' es wurde ein anderer Filter gewählt ... 
-        End If
-
-    End Sub
 End Class

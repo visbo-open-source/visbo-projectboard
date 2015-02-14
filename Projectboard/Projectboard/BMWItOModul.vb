@@ -14,9 +14,8 @@ Module BMWItOModul
 
 
     ' spezifisch für BMW Export 
-    Friend bmwExportFilesOrdner As String = "Export Dateien"
+
     Friend bmwFC52Vorlage As String = "FC52 Vorlage.xlsx"
-    Friend bmwExportVorlage As String = "export Vorlage.xlsx"
 
     ''' <summary>
     ''' speziell auf BMW Mpp Anforderungen angepasstes BMW Import File
@@ -116,7 +115,7 @@ Module BMWItOModul
             End If
 
         End While
-        
+
 
         Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.ActiveSheet, _
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -266,7 +265,7 @@ Module BMWItOModul
                         '
                         hproj = New clsProjekt
 
-                        
+
 
                         Try
 
@@ -420,7 +419,7 @@ Module BMWItOModul
                                         ok = True
 
                                     End If
-                                    
+
                                 End If
 
 
@@ -813,7 +812,7 @@ Module BMWItOModul
                                         End If
 
 
-                                        
+
                                     Else ' Ende 
 
                                         CType(activeWSListe.Cells(curZeile, protocolColumn + 1), Excel.Range).Value = _
@@ -822,7 +821,7 @@ Module BMWItOModul
                                     End If
 
 
-                                    End If
+                                End If
 
                             End If
 
@@ -852,7 +851,7 @@ Module BMWItOModul
                             Else
                                 anlaufKennung = "?"
                             End If
-                            
+
                         Catch ex As Exception
                             anlaufKennung = "?"
                         End Try
@@ -894,7 +893,7 @@ Module BMWItOModul
                                 hproj.Schriftfarbe = vproj.Schriftfarbe
                                 hproj.earliestStart = vproj.earliestStart
                                 hproj.latestStart = vproj.latestStart
-                                
+
                             End If
 
                         Catch ex As Exception
@@ -948,8 +947,8 @@ Module BMWItOModul
         ' diese Datei muss offen sein und das aktive Workbook
         ' wenn nein, dann aktivieren ! 
         Try
-            If appInstance.ActiveWorkbook.Name <> bmwExportVorlage Then
-                appInstance.Workbooks(bmwExportVorlage).Activate()
+            If appInstance.ActiveWorkbook.Name <> excelExportVorlage Then
+                appInstance.Workbooks(excelExportVorlage).Activate()
             End If
         Catch ex As Exception
             Throw New ArgumentException("Export Vorlage ist nicht die aktive Excel Datei")
@@ -1073,7 +1072,7 @@ Module BMWItOModul
         appInstance.EnableEvents = False
 
 
-        ' hier muss jetzt das File Projekt Tafel Definitions.xlsx aufgemacht werden ...
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
         ' das File 
         Try
             appInstance.Workbooks.Open(awinPath & requirementsOrdner & bmwFC52Vorlage)
@@ -1166,8 +1165,8 @@ Module BMWItOModul
 
                 ' End of Production ist nicht im RPLAN abgelegt 
                 CType(.Cells(zeile, spalte + 5), Excel.Range).Value = "-"
-                
-                
+
+
 
             End With
 
@@ -1175,7 +1174,7 @@ Module BMWItOModul
 
         Next
 
-        Dim expFName As String = awinPath & bmwExportFilesOrdner & "/Report_" & Date.Now.ToShortDateString & ".xlsx"
+        Dim expFName As String = awinPath & exportFilesOrdner & "/Report_" & Date.Now.ToShortDateString & ".xlsx"
 
         Try
             appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)

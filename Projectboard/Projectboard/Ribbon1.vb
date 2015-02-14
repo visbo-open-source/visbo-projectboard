@@ -2427,6 +2427,7 @@ Imports System.Drawing
         Dim outputString As String = ""
         Dim fileListe As New SortedList(Of String, String)
         Dim exportFileName As String = "Export_" & Date.Now.ToShortDateString & ".xlsx"
+        Dim ok As Boolean
 
         Dim awinSelection As Excel.ShapeRange
 
@@ -2481,44 +2482,52 @@ Imports System.Drawing
         End If
 
         ' hier muss jetzt das File Projekt Detail aufgemacht werden ...
-        appInstance.Workbooks.Open(awinPath & requirementsOrdner & bmwExportVorlage)
+        Try
+            appInstance.Workbooks.Open(awinPath & requirementsOrdner & excelExportVorlage)
+            ok = True
+        Catch ex As Exception
+            ok = False
+        End Try
 
-        Dim zeile As Integer = 2
-        For Each kvp As KeyValuePair(Of String, String) In fileListe
+        If ok Then
+            Dim zeile As Integer = 2
+            For Each kvp As KeyValuePair(Of String, String) In fileListe
 
-            Try
-                hproj = ShowProjekte.getProject(kvp.Key)
-
-                ' jetzt wird dieses Projekt exportiert ... 
                 Try
-                    Call bmwExportProject(hproj, zeile)
-                    outputString = outputString & hproj.name & " erfolgreich .." & vbLf
+                    hproj = ShowProjekte.getProject(kvp.Key)
+
+                    ' jetzt wird dieses Projekt exportiert ... 
+                    Try
+                        Call bmwExportProject(hproj, zeile)
+                        outputString = outputString & hproj.name & " erfolgreich .." & vbLf
+                    Catch ex As Exception
+                        outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf & _
+                                        ex.Message & vbLf & vbLf
+                    End Try
+
+
+
                 Catch ex As Exception
-                    outputString = outputString & hproj.name & " nicht erfolgreich .." & vbLf & _
-                                    ex.Message & vbLf & vbLf
+
+                    Call MsgBox(ex.Message)
+
                 End Try
 
+            Next
 
-
+            Try
+                ' Schließen der Export Datei unter neuem Namen, original Zustand bleibt erhalten
+                appInstance.ActiveWorkbook.Close(SaveChanges:=True, Filename:=awinPath & exportFilesOrdner & "\" & _
+                                                 exportFileName)
+                Call MsgBox(outputString & "exportiert !")
             Catch ex As Exception
 
-                Call MsgBox(ex.Message)
+                Call MsgBox("Fehler beim Speichern der Export Datei")
 
             End Try
 
-        Next
-
-        Try
-            ' Schließen der Export Datei unter neuem Namen, original Zustand bleibt erhalten
-            appInstance.ActiveWorkbook.Close(SaveChanges:=True, Filename:=awinPath & bmwExportFilesOrdner & "\" & _
-                                             exportFileName)
-            Call MsgBox(outputString & "exportiert !")
-        Catch ex As Exception
-
-            Call MsgBox("Fehler beim Speichern der Export Datei")
-
-        End Try
-
+        End If
+        
 
         Call awinDeSelect()
         enableOnUpdate = True
@@ -2549,6 +2558,75 @@ Imports System.Drawing
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
+
+    End Sub
+
+    Public Sub typIIExport(control As IRibbonControl)
+
+        Dim auswahlFormular As New frmShowPlanElements
+        Dim returnValue As DialogResult
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = False
+
+        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
+        If ShowProjekte.Count > 0 Then
+
+            appInstance.ScreenUpdating = False
+
+            With auswahlFormular
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .einstellungen.Visible = False
+                .Text = "Excel Report erzeugen"
+
+                .chkbxShowObjects = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .chkbxCreateCharts = False
+
+                .showModePortfolio = True
+
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                .rdbRoles.Enabled = False
+                .rdbCosts.Enabled = False
+
+                .menuOption = PTmenue.excelExport
+
+                .statusLabel.Text = ""
+                .OKButton.Text = "Report erstellen"
+
+                '.Show()
+                returnValue = .ShowDialog
+            End With
+
+            appInstance.ScreenUpdating = True
+
+        ElseIf ShowProjekte.Count = 0 Then
+
+            Call MsgBox("Es sind keine Projekte geladen!  ")
+
+
+        End If
+
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
+
+
 
     End Sub
 
