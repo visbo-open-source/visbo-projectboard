@@ -13,6 +13,9 @@
             ShwMilestoneDate.Checked = .mppShowMsDate
             shwVerticals.Checked = .mppVertikalesRaster
             shwLegend.Checked = .mppShowLegend
+            sortiertNachDauer.Checked = .mppSortiertDauer
+            allOnOnePage.Checked = .mppOnePage
+
 
         End With
 
@@ -28,13 +31,20 @@
         awinSettings.mppShowAmpel = shwAmpeln.Checked
         awinSettings.mppShowPhName = shwPhaseText.Checked
         awinSettings.mppShowPhDate = shwPhaseDate.Checked
-        'awinSettings.mppFullyContained = phaseFullyContained.Checked
         awinSettings.mppShowMsName = ShwMilestoneText.Checked
         awinSettings.mppShowMsDate = ShwMilestoneDate.Checked
         awinSettings.mppVertikalesRaster = shwVerticals.Checked
         awinSettings.mppShowLegend = shwLegend.Checked
+        awinSettings.mppOnePage = allOnOnePage.Checked
+        awinSettings.mppSortiertDauer = sortiertNachDauer.Checked
+
+        awinSettings.mppFullyContained = awinSettings.mppSortiertDauer
 
         MyBase.Close()
+
+    End Sub
+
+    Private Sub CheckBox1_CheckedChanged(sender As Object, e As EventArgs) Handles sortiertNachDauer.CheckedChanged
 
     End Sub
 End Class
