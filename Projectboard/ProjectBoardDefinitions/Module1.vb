@@ -249,6 +249,7 @@ Public Module Module1
         multiprojektReport = 2
         filterdefinieren = 3
         einzelprojektReport = 4
+        excelExport = 5
     End Enum
 
 
@@ -363,8 +364,9 @@ Public Module Module1
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
     Public projektFilesOrdner As String = "ProjectFiles"
-    Public deletedFilesOrdner As String = "DeletedFiles"
     Public rplanimportFilesOrdner As String = "RPLANImport"
+    Public exportFilesOrdner As String = "Export Dateien"
+    Public excelExportVorlage As String = "export Vorlage.xlsx"
 
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"
     ' Public projektDetail As String = "Project Detail.xlsx"

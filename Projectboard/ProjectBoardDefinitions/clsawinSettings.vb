@@ -83,6 +83,8 @@
     Public Property mppVertikalesRaster As Boolean
     Public Property mppShowLegend As Boolean
     Public Property mppFullyContained As Boolean
+    Public Property mppSortiertDauer As Boolean
+    Public Property mppOnePage As Boolean
 
 
     Property importTyp As Integer
@@ -151,6 +153,9 @@
         _mppVertikalesRaster = False
         _mppShowLegend = False
         _mppFullyContained = False
+        _mppSortiertDauer = False
+        _mppOnePage = False
+
         _importTyp = 1
 
 
