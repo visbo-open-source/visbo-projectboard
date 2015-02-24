@@ -11,6 +11,7 @@ Public Class frmProjPortfolioAdmin
     Private projektHistorien As New clsProjektDBInfos
     Private stopRecursion As Boolean = False
     Private constellationName As String = ""
+    Private filterAnwenden As Boolean = awinSettings.applyFilter
 
     ' wird an der aufrufenden Stelle gesetzt; steuert, was mit den ausgewählten ELementen geschieht
     Friend aKtionskennung As Integer
@@ -33,8 +34,11 @@ Public Class frmProjPortfolioAdmin
             Me.Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
         End If
 
+        Me.applyFilter.Checked = awinSettings.applyFilter
+
         stopRecursion = True
-        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung)
+        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
+                           Me.applyFilter.Checked)
         stopRecursion = False
 
         If aktuelleGesamtListe.liste.Count < 1 Then
@@ -737,6 +741,27 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
-    
+    Private Sub applyFilter_CheckedChanged(sender As Object, e As EventArgs) Handles applyFilter.CheckedChanged
 
+        ' der TreeView muss neu aufgebaut werden 
+
+        stopRecursion = True
+        Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
+                           Me.applyFilter.Checked)
+        stopRecursion = False
+
+
+    End Sub
+
+    ''' <summary>
+    ''' ruft die Eingabe Maske zum Definieren des Filters auf 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub defineFilter_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles defineFilter.LinkClicked
+
+        Call defineFilterDB()
+
+    End Sub
 End Class

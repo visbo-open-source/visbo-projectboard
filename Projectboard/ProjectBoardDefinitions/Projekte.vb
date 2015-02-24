@@ -10158,7 +10158,7 @@ Public Module Projekte
 
     ''' <summary>
     ''' zeichnet die Plantafel mit den Projekten neu; 
-    ''' zeichnet bei FromScrtach = true: zuerst in Reihenfolge der Business Units, 
+    ''' zeichnet bei fromScratch = true: zuerst in Reihenfolge der Business Units, 
     ''' dann sortiert nach Anfangsdatum, dann sortiert nach Projektdauer
     ''' im fall fromScratch = false: versucht dabei immer die alte Position der Projekte zu übernehmen 
     ''' </summary>

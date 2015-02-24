@@ -257,7 +257,7 @@ Imports System.Drawing
                 If storedProj = 0 Then
                     Call MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte speichern?", MsgBoxStyle.OkCancel)
 
-                    If CBool(MsgBoxResult.Ok) Then
+                    If MsgBoxResult.Ok = vbOK Then
                         Call StoreAllProjectsinDB()
                     End If
                 Else
@@ -1134,42 +1134,13 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub PT5defineFilter(control As IRibbonControl)
 
-        Dim auswahlFormular As New frmShowPlanElements
-
 
         Call projektTafelInit()
 
         enableOnUpdate = False
         appInstance.EnableEvents = False
 
-
-        With auswahlFormular
-            .Text = "Filter definieren"
-
-            .chkbxShowObjects = False
-            .chkbxCreateCharts = False
-
-            .chkbxOneChart.Checked = False
-            .chkbxOneChart.Visible = False
-
-            .rdbBU.Visible = True
-            .pictureBU.Visible = True
-
-            .rdbTyp.Visible = True
-            .pictureTyp.Visible = True
-
-
-            .repVorlagenDropbox.Visible = False
-            .labelPPTVorlage.Visible = False
-
-            .showModePortfolio = True
-            .menuOption = PTmenue.filterdefinieren
-
-            .OKButton.Text = "Speichern"
-
-            .Show()
-        End With
-
+        Call defineFilterDB()
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -1611,7 +1582,7 @@ Imports System.Drawing
     Sub VisPlanObjects001(control As IRibbonControl)
 
         Dim auswahlFormular As New frmShowPlanElements
-
+        Dim returnValue As DialogResult
 
         Call projektTafelInit()
 
@@ -1648,7 +1619,8 @@ Imports System.Drawing
 
                 .OKButton.Text = "Anzeigen"
 
-                .Show()
+                '.Show()
+                returnValue = .ShowDialog
             End With
 
 
@@ -1674,7 +1646,7 @@ Imports System.Drawing
     Sub AnalyseLeistbarkeit(ByVal control As IRibbonControl)
 
         Dim auswahlFormular As New frmShowPlanElements
-
+        Dim returnValue As DialogResult
 
         Call projektTafelInit()
 
@@ -1709,7 +1681,8 @@ Imports System.Drawing
                 .menuOption = PTmenue.leistbarkeitsAnalyse
                 .OKButton.Text = "Charts erstellen"
 
-                .Show()
+                '.Show()
+                returnValue = .ShowDialog
             End With
 
 
@@ -1732,7 +1705,7 @@ Imports System.Drawing
 
     End Sub
 
-    Sub VariantenprojektReport(ByVal control As IRibbonControl)
+    Sub awinVariantenprojektReport(ByVal control As IRibbonControl)
 
         Dim auswahlFormular As New frmShowPlanElements
         Dim returnValue As DialogResult
@@ -1749,11 +1722,11 @@ Imports System.Drawing
 
             With auswahlFormular
 
-                .rdbBU.Visible = False
-                .pictureBU.Visible = False
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
 
-                .rdbTyp.Visible = False
-                .pictureTyp.Visible = False
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
 
                 .einstellungen.Visible = True
                 .Text = "Projekt-Varianten Report erzeugen"
@@ -1801,7 +1774,7 @@ Imports System.Drawing
     End Sub
 
 
-    Sub MultiprojektReport(ByVal control As IRibbonControl)
+    Sub awinMultiprojektReport(ByVal control As IRibbonControl)
 
         Dim auswahlFormular As New frmShowPlanElements
         Dim returnValue As DialogResult
@@ -1818,11 +1791,11 @@ Imports System.Drawing
 
             With auswahlFormular
 
-                .rdbBU.Visible = False
-                .pictureBU.Visible = False
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
 
-                .rdbTyp.Visible = False
-                .pictureTyp.Visible = False
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
 
                 .einstellungen.Visible = True
                 .Text = "Multiprojekt Reports erzeugen"

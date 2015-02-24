@@ -196,7 +196,7 @@ Public Class frmShowPlanElements
         End If
 
 
-        ' jetzt sollte eigentlich der letzte Filter gespeichert werden ..
+        ' jetzt wird der letzte Filter gespeichert ..
         Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts)
@@ -613,6 +613,12 @@ Public Class frmShowPlanElements
                     For i = 1 To businessUnitDefinitions.Count
                         allBUs.Add(CStr(businessUnitDefinitions.ElementAt(i - 1).Value.name))
                     Next
+
+                    ' den Fall noch vorsehen, dass etwas unknown ist ... 
+                    If Not allBUs.Contains("unknown") Then
+                        allBUs.Add("unknown")
+                    End If
+
                 End If
 
                 Call rebuildFormerState(PTauswahlTyp.BusinessUnit)
@@ -651,11 +657,17 @@ Public Class frmShowPlanElements
                 chkbxOneChart.Text = "Alles in einem Chart"
 
                 If allTyps.Count = 0 Then
+
                     For i = 1 To Projektvorlagen.Count
                         allTyps.Add(Projektvorlagen.Liste.ElementAt(i - 1).Key)
                     Next
-                End If
 
+                    ' den Fall noch vorsehen, dass etwas unknown ist ... 
+                    If Not allTyps.Contains("unknown") Then
+                        allTyps.Add("unknown")
+                    End If
+
+                End If
 
                 Call rebuildFormerState(PTauswahlTyp.ProjektTyp)
 

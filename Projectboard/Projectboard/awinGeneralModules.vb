@@ -2694,7 +2694,7 @@ Public Module awinGeneralModules
         End If
 
         If AlleProjekte.Count > 0 Then
-            ' es sind bereits PRojekte geladen 
+            ' es sind bereits Projekte geladen 
             Dim atleastOne As Boolean = False
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
@@ -4016,7 +4016,8 @@ Public Module awinGeneralModules
     Friend Sub buildTreeview(ByRef projektHistorien As clsProjektDBInfos, _
                               ByRef TreeviewProjekte As TreeView, _
                               ByRef aktuelleGesamtListe As clsProjekteAlle, _
-                              ByVal aKtionskennung As Integer)
+                              ByVal aKtionskennung As Integer, _
+                              ByVal applyFilter As Boolean)
 
         Dim nodeLevel0 As TreeNode
         Dim nodeLevel1 As TreeNode
@@ -4064,28 +4065,15 @@ Public Module awinGeneralModules
                 variantName = ""
 
                 'ur: 25.01.2015 hier muss die "aktuelleGesamtListe.liste reduziert werden, da evt. ein Filter gesetzt wurde!!!!
+                ' tk das applyFilter wird nachher gemacht , ausnahmslos für alle 
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-
-                If awinSettings.applyFilter Then
-
-                    aktuelleGesamtListe = reduzierenWgFilter(aktuelleGesamtListe)
-                End If
-
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
             Case PTTvActions.loadPV
                 pname = ""
                 variantName = ""
 
-                'ur: 25.01.2015 hier muss die "aktuelleGesamtListe.liste reduziert werden, da evt. ein Filter gesetzt wurde!!!!
-
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-
-                If awinSettings.applyFilter Then
-
-                    aktuelleGesamtListe = reduzierenWgFilter(aktuelleGesamtListe)
-                End If
-
                 loadErrorMsg = "es gibt keine passenden Projekte in der Datenbank"
 
             Case PTTvActions.activateV
@@ -4100,8 +4088,6 @@ Public Module awinGeneralModules
                 pname = ""
                 variantName = ""
 
-                'ur: 25.01.2015 hier muss die "aktuelleGesamtListe.liste reduziert werden, da evt. ein Filter gesetzt wurde!!!!
-
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
@@ -4113,6 +4099,12 @@ Public Module awinGeneralModules
 
 
         End Select
+
+        ' jetzt wird der Filter angewendet, wenn er angewendet werden soll 
+        ' das wird jetzt in der Routine mitgegeben 
+        If applyFilter Then
+            aktuelleGesamtListe = reduzierenWgFilter(aktuelleGesamtListe)
+        End If
 
 
         If aktuelleGesamtListe.Count >= 1 Then
@@ -4402,6 +4394,7 @@ Public Module awinGeneralModules
 
     ''' <summary>
     ''' übergebenene ProjektListe wird um die Projekte reduziert, die nicht zu dem Filter passen
+    ''' das wird nur aufgerufen, wenn der Filter angewendet werden soll 
     ''' </summary>
     ''' <param name="projektListe"></param>
     ''' <returns></returns>
@@ -4412,46 +4405,42 @@ Public Module awinGeneralModules
         Dim newProjektliste As New clsProjekteAlle
 
 
-        If awinSettings.applyFilter Then
 
-            ' wenn applyFilter = true, dann soll  unter Anwendung 
-            ' des Filters "Last" nachgeladen werden
+        ' wenn applyFilter = true, dann soll  unter Anwendung 
+        ' des Filters "Last" nachgeladen werden
 
-            filter = filterDefinitions.retrieveFilter("Last")
+        filter = filterDefinitions.retrieveFilter("Last")
 
-            If IsNothing(filter) Then
+        If IsNothing(filter) Then
 
-                ' Liste unverändert zurückgeben
-                reduzierenWgFilter = projektListe
-            Else
-
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In projektListe.liste
-
-                    If Not filter.isEmpty Then
-                        ok = filter.doesNotBlock(kvp.Value)
-                    Else
-                        ok = True
-                    End If
-
-                    If ok Then
-                        Try
-                            newProjektliste.Add(kvp.Key, kvp.Value)
-                        Catch ex As Exception
-                            Call MsgBox("Fehler in reduzierenWgFilter" & kvp.Key)
-                        End Try
-                    Else
-
-                    End If
-
-                Next
-
-                ' Liste gefüllt mit Projekte, die auf den aktuellen Filter passen
-                reduzierenWgFilter = newProjektliste
-            End If
-        Else
             ' Liste unverändert zurückgeben
             reduzierenWgFilter = projektListe
+        Else
+
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In projektListe.liste
+
+                If Not filter.isEmpty Then
+                    ok = filter.doesNotBlock(kvp.Value)
+                Else
+                    ok = True
+                End If
+
+                If ok Then
+                    Try
+                        newProjektliste.Add(kvp.Key, kvp.Value)
+                    Catch ex As Exception
+                        Call MsgBox("Fehler in reduzierenWgFilter" & kvp.Key)
+                    End Try
+                Else
+
+                End If
+
+            Next
+
+            ' Liste gefüllt mit Projekte, die auf den aktuellen Filter passen
+            reduzierenWgFilter = newProjektliste
         End If
+
     End Function
 
     ''' <summary>
@@ -4703,6 +4692,44 @@ Public Module awinGeneralModules
         appInstance.EnableEvents = True
 
 
+
+    End Sub
+
+    ''' <summary>
+    ''' ruft das Formular auf, um Filter zu definieren
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub defineFilterDB()
+        Dim auswahlFormular As New frmShowPlanElements
+        Dim returnValue As DialogResult
+
+        With auswahlFormular
+            .Text = "Datenbank Filter definieren"
+
+            .chkbxShowObjects = False
+            .chkbxCreateCharts = False
+
+            .chkbxOneChart.Checked = False
+            .chkbxOneChart.Visible = False
+
+            .rdbBU.Visible = True
+            .pictureBU.Visible = True
+
+            .rdbTyp.Visible = True
+            .pictureTyp.Visible = True
+
+
+            .repVorlagenDropbox.Visible = False
+            .labelPPTVorlage.Visible = False
+
+            .showModePortfolio = True
+            .menuOption = PTmenue.filterdefinieren
+
+            .OKButton.Text = "Speichern"
+
+            '.Show()
+            returnValue = .ShowDialog
+        End With
 
     End Sub
 
