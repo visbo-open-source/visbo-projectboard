@@ -32,6 +32,8 @@ Partial Class frmMppSettings
         Me.shwVerticals = New System.Windows.Forms.CheckBox()
         Me.notStrictly = New System.Windows.Forms.CheckBox()
         Me.okButton = New System.Windows.Forms.Button()
+        Me.allOnOnePage = New System.Windows.Forms.CheckBox()
+        Me.sortiertNachDauer = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'shwPhaseText
@@ -134,12 +136,34 @@ Partial Class frmMppSettings
         Me.okButton.Text = "OK"
         Me.okButton.UseVisualStyleBackColor = True
         '
+        'allOnOnePage
+        '
+        Me.allOnOnePage.AutoSize = True
+        Me.allOnOnePage.Location = New System.Drawing.Point(181, 157)
+        Me.allOnOnePage.Name = "allOnOnePage"
+        Me.allOnOnePage.Size = New System.Drawing.Size(91, 17)
+        Me.allOnOnePage.TabIndex = 11
+        Me.allOnOnePage.Text = "auf eine Seite"
+        Me.allOnOnePage.UseVisualStyleBackColor = True
+        '
+        'sortiertNachDauer
+        '
+        Me.sortiertNachDauer.AutoSize = True
+        Me.sortiertNachDauer.Location = New System.Drawing.Point(181, 180)
+        Me.sortiertNachDauer.Name = "sortiertNachDauer"
+        Me.sortiertNachDauer.Size = New System.Drawing.Size(116, 17)
+        Me.sortiertNachDauer.TabIndex = 12
+        Me.sortiertNachDauer.Text = "sortiert nach Dauer"
+        Me.sortiertNachDauer.UseVisualStyleBackColor = True
+        '
         'frmMppSettings
         '
         Me.AcceptButton = Me.okButton
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(337, 268)
+        Me.Controls.Add(Me.sortiertNachDauer)
+        Me.Controls.Add(Me.allOnOnePage)
         Me.Controls.Add(Me.okButton)
         Me.Controls.Add(Me.notStrictly)
         Me.Controls.Add(Me.shwLegend)
@@ -167,4 +191,6 @@ Partial Class frmMppSettings
     Friend WithEvents shwVerticals As System.Windows.Forms.CheckBox
     Friend WithEvents notStrictly As System.Windows.Forms.CheckBox
     Friend WithEvents okButton As System.Windows.Forms.Button
+    Friend WithEvents allOnOnePage As System.Windows.Forms.CheckBox
+    Friend WithEvents sortiertNachDauer As System.Windows.Forms.CheckBox
 End Class

@@ -166,7 +166,9 @@ Public Class frmSelectPPTTempl
         Try
             With awinSettings
                 Call createPPTSlidesFromConstellation(vorlagenDateiName, _
-                                                      tmpCollection, tmpCollection, tmpCollection, tmpCollection, _
+                                                      tmpCollection, tmpCollection, _
+                                                      tmpCollection, tmpCollection, _
+                                                      tmpCollection, tmpCollection, _
                                                       worker, e)
             End With
         Catch ex As Exception
@@ -205,7 +207,9 @@ Public Class frmSelectPPTTempl
         Dim vorlagenDateiName As String = CType(e.Argument, String)
         Dim tmpCollection As New Collection
         Call createPPTReportFromProjects(vorlagenDateiName, _
-                                         tmpCollection, tmpCollection, tmpCollection, tmpCollection, _
+                                         tmpCollection, tmpCollection, _
+                                         tmpCollection, tmpCollection, _
+                                         tmpCollection, tmpCollection, _
                                          worker, e)
 
 

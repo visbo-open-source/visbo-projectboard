@@ -5,13 +5,13 @@ Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
 Imports System.Windows
-Imports Excel = Microsoft.Office.Interop.Excel
+'Imports Excel = Microsoft.Office.Interop.Excel
 
 
 Public Module awinGeneralModules
 
 
-   
+
 
     ''' <summary>
     ''' schreibt evtl neu durch Inventur hinzugekommene Phasen in 
@@ -87,7 +87,7 @@ Public Module awinGeneralModules
             Else
                 ' eintragen 
                 lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
-                CType(lastrow.EntireRow, Excel.Range).Insert(XlInsertShiftDirection.xlShiftDown)
+                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = phColor
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
@@ -419,7 +419,7 @@ Public Module awinGeneralModules
             Call aufbauenAppearanceDefinitions(wsName7810)
 
 
-        ' hier werden jetzt die Business Unit Informationen ausgelesen 
+            ' hier werden jetzt die Business Unit Informationen ausgelesen 
             businessUnitDefinitions = New SortedList(Of Integer, clsBusinessUnit)
             With wsName4
                 '
@@ -499,7 +499,7 @@ Public Module awinGeneralModules
 
                             .shortName = abbrev
 
-                            
+
                             ' hat die Phase eine Darstellungsklasse ? 
                             Try
                                 Dim darstellungsklasse As String
@@ -1716,7 +1716,7 @@ Public Module awinGeneralModules
                         'vglName = pName.Trim & "#" & ""
                         vglName = calcProjektKey(pName.Trim, "")
 
-                        If AlleProjekte.ContainsKey(vglName) Then
+                        If AlleProjekte.Containskey(vglName) Then
                             ' nichts tun ...
                             Call MsgBox("Projekt aus Inventur Liste existiert bereits - keine Neuanlage")
                         Else
@@ -2694,7 +2694,7 @@ Public Module awinGeneralModules
         End If
 
         If AlleProjekte.Count > 0 Then
-            ' es sind bereits PRojekte geladen 
+            ' es sind bereits Projekte geladen 
             Dim atleastOne As Boolean = False
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In projekteImZeitraum
@@ -2819,7 +2819,7 @@ Public Module awinGeneralModules
 
         For Each kvp As KeyValuePair(Of String, clsConstellationItem) In activeConstellation.Liste
 
-            If AlleProjekte.ContainsKey(kvp.Key) Then
+            If AlleProjekte.Containskey(kvp.Key) Then
                 ' Projekt ist bereits im Hauptspeicher geladen
                 hproj = AlleProjekte.getProject(kvp.Key)
             Else
@@ -4016,7 +4016,8 @@ Public Module awinGeneralModules
     Friend Sub buildTreeview(ByRef projektHistorien As clsProjektDBInfos, _
                               ByRef TreeviewProjekte As TreeView, _
                               ByRef aktuelleGesamtListe As clsProjekteAlle, _
-                              ByVal aKtionskennung As Integer)
+                              ByVal aKtionskennung As Integer, _
+                              ByVal applyFilter As Boolean)
 
         Dim nodeLevel0 As TreeNode
         Dim nodeLevel1 As TreeNode
@@ -4064,28 +4065,15 @@ Public Module awinGeneralModules
                 variantName = ""
 
                 'ur: 25.01.2015 hier muss die "aktuelleGesamtListe.liste reduziert werden, da evt. ein Filter gesetzt wurde!!!!
+                ' tk das applyFilter wird nachher gemacht , ausnahmslos für alle 
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-
-                If awinSettings.applyFilter Then
-
-                    aktuelleGesamtListe = reduzierenWgFilter(aktuelleGesamtListe)
-                End If
-
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
             Case PTTvActions.loadPV
                 pname = ""
                 variantName = ""
 
-                'ur: 25.01.2015 hier muss die "aktuelleGesamtListe.liste reduziert werden, da evt. ein Filter gesetzt wurde!!!!
-
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-
-                If awinSettings.applyFilter Then
-
-                    aktuelleGesamtListe = reduzierenWgFilter(aktuelleGesamtListe)
-                End If
-
                 loadErrorMsg = "es gibt keine passenden Projekte in der Datenbank"
 
             Case PTTvActions.activateV
@@ -4100,8 +4088,6 @@ Public Module awinGeneralModules
                 pname = ""
                 variantName = ""
 
-                'ur: 25.01.2015 hier muss die "aktuelleGesamtListe.liste reduziert werden, da evt. ein Filter gesetzt wurde!!!!
-
                 aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
                 loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
@@ -4113,6 +4099,12 @@ Public Module awinGeneralModules
 
 
         End Select
+
+        ' jetzt wird der Filter angewendet, wenn er angewendet werden soll 
+        ' das wird jetzt in der Routine mitgegeben 
+        If applyFilter Then
+            aktuelleGesamtListe = reduzierenWgFilter(aktuelleGesamtListe)
+        End If
 
 
         If aktuelleGesamtListe.Count >= 1 Then
@@ -4402,6 +4394,7 @@ Public Module awinGeneralModules
 
     ''' <summary>
     ''' übergebenene ProjektListe wird um die Projekte reduziert, die nicht zu dem Filter passen
+    ''' das wird nur aufgerufen, wenn der Filter angewendet werden soll 
     ''' </summary>
     ''' <param name="projektListe"></param>
     ''' <returns></returns>
@@ -4412,46 +4405,332 @@ Public Module awinGeneralModules
         Dim newProjektliste As New clsProjekteAlle
 
 
-        If awinSettings.applyFilter Then
 
-            ' wenn applyFilter = true, dann soll  unter Anwendung 
-            ' des Filters "Last" nachgeladen werden
+        ' wenn applyFilter = true, dann soll  unter Anwendung 
+        ' des Filters "Last" nachgeladen werden
 
-            filter = filterDefinitions.retrieveFilter("Last")
+        filter = filterDefinitions.retrieveFilter("Last")
 
-            If IsNothing(filter) Then
+        If IsNothing(filter) Then
 
-                ' Liste unverändert zurückgeben
-                reduzierenWgFilter = projektListe
-            Else
+            ' Liste unverändert zurückgeben
+            reduzierenWgFilter = projektListe
+        Else
 
-                For Each kvp As KeyValuePair(Of String, clsProjekt) In projektListe.liste
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In projektListe.liste
 
-                    If Not filter.isEmpty Then
-                        ok = filter.doesNotBlock(kvp.Value)
-                    Else
-                        ok = True
-                    End If
+                If Not filter.isEmpty Then
+                    ok = filter.doesNotBlock(kvp.Value)
+                Else
+                    ok = True
+                End If
 
-                    If ok Then
+                If ok Then
+                    Try
+                        newProjektliste.Add(kvp.Key, kvp.Value)
+                    Catch ex As Exception
+                        Call MsgBox("Fehler in reduzierenWgFilter" & kvp.Key)
+                    End Try
+                Else
+
+                End If
+
+            Next
+
+            ' Liste gefüllt mit Projekte, die auf den aktuellen Filter passen
+            reduzierenWgFilter = newProjektliste
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' schreibt die übergebenen Phasen und Meilensteine in eine Excel Datei 
+    ''' </summary>
+    ''' <param name="phaseList"></param>
+    ''' <param name="milestoneList"></param>
+    ''' <remarks></remarks>
+    Public Sub exportSelectionToExcel(ByVal phaseList As SortedList(Of Double, String), _
+                                            ByVal milestoneList As SortedList(Of Double, String))
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+            'appInstance.Workbooks.Open(awinPath & requirementsOrdner & excelExportVorlage)
+            appInstance.Workbooks.Add()
+
+
+        Catch ex As Exception
+            appInstance.EnableEvents = formerEE
+            enableOnUpdate = True
+            Throw New ArgumentException("Excel Export nicht gefunden - Abbruch")
+        End Try
+
+        'appInstance.Workbooks(myCustomizationFile).Activate()
+        Dim wsName As Excel.Worksheet = CType(appInstance.ActiveSheet, _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        Dim startDate As Date, endDate As Date
+        Dim earliestDate As Date, latestDate As Date
+        Dim tmpRange As Excel.Range
+        Dim anzahlProjekte As Integer = ShowProjekte.Count
+
+        With wsName
+            ' jetzt werden alle Spalten auf Breite 25 gesetzt 
+            tmpRange = CType(.Range(.Cells(zeile, spalte), .Cells(zeile, spalte).offset(0, 200)), Excel.Range)
+            tmpRange.ColumnWidth = 25
+
+            ' jetzt wird der Header geschrieben 
+            CType(.Cells(zeile, spalte), Excel.Range).Value = "Produktlinie"
+            CType(.Cells(zeile, spalte + 1), Excel.Range).Value = "Name"
+            CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "Projekt-Typ"
+
+            spalte = spalte + 2
+            Dim pName As String
+            For ix As Integer = 1 To phaseList.Count
+
+                Try
+                    pName = CStr(phaseList.ElementAt(ix - 1).Value)
+                Catch ex As Exception
+                    pName = ""
+                End Try
+
+                CType(.Cells(zeile, spalte + ix), Excel.Range).Value = pName
+            Next
+
+            spalte = spalte + phaseList.Count
+
+            For ix As Integer = 1 To milestoneList.Count
+                CType(.Cells(zeile, spalte + ix), Excel.Range).Value = CStr(milestoneList.ElementAt(ix - 1).Value)
+            Next
+
+
+            ' Datumsformat einstellen 
+            Dim s1 As Integer = 4 + phaseList.Count
+            Dim o1 As Integer = milestoneList.Count - 1
+
+            ' mittig darstellen 
+            tmpRange = CType(.Range(.Cells(zeile, 4), .Cells(zeile, 4).offset(anzahlProjekte, s1 + o1 - 4)), Excel.Range)
+            tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+
+            tmpRange = CType(.Range(.Cells(zeile + 1, s1), .Cells(zeile + 1, s1).offset(anzahlProjekte - 1, o1)), Excel.Range)
+            tmpRange.NumberFormat = "dd/mm/yy;@"
+
+            spalte = spalte + milestoneList.Count
+
+            CType(.Cells(zeile, spalte + 1), Excel.Range).Value = "Dauer (T)"
+            CType(.Range(.Cells(zeile + 1, spalte + 1), .Cells(zeile + 1, spalte + 1).offset(anzahlProjekte - 1, 0)), Excel.Range).NumberFormat = "0"
+
+            CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "Dauer (M)"
+            CType(.Range(.Cells(zeile + 1, spalte + 2), .Cells(zeile + 1, spalte + 2).offset(anzahlProjekte - 1, 0)), Excel.Range).NumberFormat = "0.0"
+
+        End With
+
+
+        zeile = 2
+        spalte = 1
+        Dim minCol As Integer
+        Dim maxCol As Integer
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            earliestDate = kvp.Value.endeDate
+            latestDate = kvp.Value.startDate
+
+            With wsName
+                ' Produktlinie schreiben 
+                If kvp.Value.businessUnit.Length > 0 Then
+                    CType(.Cells(zeile, spalte), Excel.Range).Value = kvp.Value.businessUnit
+                Else
+                    CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+                End If
+
+                ' Name schreiben 
+                CType(.Cells(zeile, spalte + 1), Excel.Range).Value = kvp.Value.name
+
+                ' Projekt-Typ schreiben 
+                If kvp.Value.VorlagenName.Length > 0 Then
+                    CType(.Cells(zeile, spalte + 2), Excel.Range).Value = kvp.Value.VorlagenName
+                Else
+                    CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "-"
+                End If
+
+                ' Phasen Information schreiben
+
+                Dim pName As String
+                Dim cphase As clsPhase
+                spalte = spalte + 2
+
+                For ix As Integer = 1 To phaseList.Count
+
+                    pName = CStr(phaseList.ElementAt(ix - 1).Value)
+                    cphase = kvp.Value.getPhase(pName)
+
+                    If Not IsNothing(cphase) Then
                         Try
-                            newProjektliste.Add(kvp.Key, kvp.Value)
+                            startDate = cphase.getStartDate
+                            endDate = cphase.getEndDate
+
+                            If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
+                                earliestDate = startDate
+                                minCol = spalte + ix
+                            End If
+
+                            If DateDiff(DateInterval.Day, latestDate, endDate) > 0 Then
+                                latestDate = endDate
+                                maxCol = spalte + ix
+                            End If
+
+                            CType(.Cells(zeile, spalte + ix), Excel.Range).Value = startDate.ToShortDateString & " - " & endDate.ToShortDateString
+
                         Catch ex As Exception
-                            Call MsgBox("Fehler in reduzierenWgFilter" & kvp.Key)
+                            CType(.Cells(zeile, spalte + ix), Excel.Range).Value = "?"
+
                         End Try
                     Else
+
+                        CType(.Cells(zeile, spalte + ix), Excel.Range).Value = "-"
+
+
+                    End If
+
+
+                    
+                Next
+
+
+                ' Meilensteine schreiben 
+                spalte = spalte + phaseList.Count
+                Dim msName As String
+                Dim milestone As clsMeilenstein = Nothing
+
+                For ix As Integer = 1 To milestoneList.Count
+                    msName = CStr(milestoneList.ElementAt(ix - 1).Value)
+                    milestone = kvp.Value.getMilestone(msName)
+
+                    If Not IsNothing(milestone) Then
+                        Try
+                            startDate = milestone.getDate
+
+                            If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
+                                earliestDate = startDate
+                                minCol = spalte + ix
+                            End If
+
+                            If DateDiff(DateInterval.Day, latestDate, startDate) > 0 Then
+                                latestDate = startDate
+                                maxCol = spalte + ix
+                            End If
+
+                            CType(.Cells(zeile, spalte + ix), Excel.Range).Value = startDate
+
+
+                        Catch ex As Exception
+                            CType(.Cells(zeile, spalte + ix), Excel.Range).Value = "?"
+                            CType(.Cells(zeile, spalte + ix), Excel.Range).Value = "?"
+                        End Try
+                    Else
+
+                        CType(.Cells(zeile, spalte + ix), Excel.Range).Value = "-"
+                        CType(.Cells(zeile, spalte + ix), Excel.Range).Value = "-"
 
                     End If
 
                 Next
 
-                ' Liste gefüllt mit Projekte, die auf den aktuellen Filter passen
-                reduzierenWgFilter = newProjektliste
-            End If
-        Else
-            ' Liste unverändert zurückgeben
-            reduzierenWgFilter = projektListe
-        End If
-    End Function
+
+                ' Dauer in Tagen schreiben 
+                spalte = spalte + milestoneList.Count
+
+                Dim dauerT As Long = DateDiff(DateInterval.Day, earliestDate, latestDate)
+                'Dim dauerM As Double = CDbl(DateDiff(DateInterval.Month, earliestDate, earliestDate.AddDays(2 * dauerT))) / 2
+                Dim dauerM As Double = 12 * dauerT / 365
+
+
+                CType(.Cells(zeile, spalte + 1), Excel.Range).Value = dauerT
+                CType(.Cells(zeile, spalte + 2), Excel.Range).Value = dauerM
+
+                ' jetzt einfärben, welche Daten zu der Dauer geführt haben 
+                If minCol = maxCol Then
+                    CType(.Cells(zeile, minCol), Excel.Range).Interior.Color = awinSettings.AmpelGruen
+                Else
+                    CType(.Cells(zeile, minCol), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                    CType(.Cells(zeile, maxCol), Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                End If
+                
+
+
+            End With
+
+            zeile = zeile + 1
+            spalte = 1
+
+        Next
+
+        Dim expFName As String = awinPath & exportFilesOrdner & "/Report_" & Date.Now.ToShortDateString & ".xlsx"
+
+        Try
+            appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = True
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' ruft das Formular auf, um Filter zu definieren
+    ''' </summary>
+    ''' <remarks></remarks>
+    Friend Sub defineFilterDB()
+        Dim auswahlFormular As New frmShowPlanElements
+        Dim returnValue As DialogResult
+
+        With auswahlFormular
+            .Text = "Datenbank Filter definieren"
+
+            .chkbxShowObjects = False
+            .chkbxCreateCharts = False
+
+            .chkbxOneChart.Checked = False
+            .chkbxOneChart.Visible = False
+
+            .rdbBU.Visible = True
+            .pictureBU.Visible = True
+
+            .rdbTyp.Visible = True
+            .pictureTyp.Visible = True
+
+
+            .repVorlagenDropbox.Visible = False
+            .labelPPTVorlage.Visible = False
+
+            .showModePortfolio = True
+            .menuOption = PTmenue.filterdefinieren
+
+            .OKButton.Text = "Speichern"
+
+            '.Show()
+            returnValue = .ShowDialog
+        End With
+
+    End Sub
 
 End Module

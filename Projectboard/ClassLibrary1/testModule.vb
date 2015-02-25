@@ -20,6 +20,7 @@ Public Module testModule
     Public Sub createPPTReportFromProjects(ByVal pptTemplate As String, _
                                            ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                            ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                                           ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
                                            ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
 
         Dim awinSelection As xlNS.ShapeRange
@@ -89,6 +90,7 @@ Public Module testModule
                     Call createPPTSlidesFromProject(hproj, vorlagenDateiName, _
                                                     selectedPhases, selectedMilestones, _
                                                     selectedRoles, selectedCosts, _
+                                                    selectedBUs, selectedTyps, _
                                                     worker, e)
                     tatsErstellt = tatsErstellt + 1
 
@@ -118,6 +120,7 @@ Public Module testModule
     Public Sub createPPTSlidesFromProject(ByRef hproj As clsProjekt, pptTemplateName As String, _
                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                                          ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
                                           ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
         Dim pptApp As pptNS.Application = Nothing
         Dim pptCurrentPresentation As pptNS.Presentation = Nothing
@@ -291,39 +294,50 @@ Public Module testModule
         Dim kennzeichnung As String
         Dim anzShapes As Integer
 
-        For j = 1 To anzSlidesToAdd
+        Dim folieIX As Integer = 1
+        Dim objectsToDo As Integer = 0
+        Dim objectsDone As Integer = 0
+
+
+        While folieIX <= anzSlidesToAdd
+            'For j = 1 To anzSlidesToAdd
 
             If worker.WorkerSupportsCancellation Then
 
                 If worker.CancellationPending Then
                     e.Cancel = True
-                    e.Result = "Berichterstellung nach " & j - 1 & " Seiten abgebrochen ..."
-                    Exit For
+                    e.Result = "Berichterstellung nach " & folieIX - 1 & " Seiten abgebrochen ..."
+                    Exit While
                 End If
 
             End If
 
             ' jetzt wird eine Seite aus der Vorlage ergänzt 
             Dim tmpIX As Integer
-            tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides + j - 1, _
-                                                                          SlideStart:=j, SlideEnd:=j)
+            'tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides + folieIX - 1, _
+            '                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
+
+            tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
+                                                                          SlideStart:=folieIX, SlideEnd:=folieIX)
 
 
             'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
-            e.Result = "Bericht Seite " & j & " wird aufgebaut ...."
+            e.Result = "Bericht Seite " & folieIX & " wird aufgebaut ...."
 
             If worker.WorkerReportsProgress Then
                 worker.ReportProgress(0, e)
             End If
 
-            pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides + j)
-
+            anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
+            'pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides + folieIX)
+            pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides)
 
             ' jetzt werden die Charts gezeichnet 
             anzShapes = pptSlide.Shapes.Count
             Dim newShapeRange As pptNS.ShapeRange
             Dim newShapeRange2 As pptNS.ShapeRange
             Dim newShape As pptNS.Shape
+
 
             ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
             For i = 1 To anzShapes
@@ -531,7 +545,10 @@ Public Module testModule
 
                                 Try
                                     Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                                  selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                                                  objectsToDo, objectsDone, _
+                                                                  selectedPhases, selectedMilestones, _
+                                                                  selectedRoles, selectedCosts, _
+                                                                  selectedBUs, selectedTyps, _
                                                                   worker, e, False, hproj)
                                     .TextFrame2.TextRange.Text = ""
                                 Catch ex As Exception
@@ -648,7 +665,7 @@ Public Module testModule
 
                                     notYetDone = True
                                 End If
-                                
+
 
                             Case "Vergleich mit Vorlage"
 
@@ -772,7 +789,7 @@ Public Module testModule
                                     End If
 
                                 End If
-                                
+
 
                             Case "Vergleich mit Beauftragung"
 
@@ -1705,8 +1722,15 @@ Public Module testModule
                 ampelShape = Nothing
             End If
 
-        Next
+            'Next
 
+            If objectsDone >= objectsToDo Then
+                folieIX = folieIX + 1
+                objectsToDo = 0
+                objectsDone = 0
+            End If
+
+        End While
 
 
 
@@ -1729,6 +1753,7 @@ Public Module testModule
     Public Sub createPPTSlidesFromConstellation(ByVal pptTemplateName As String, _
                                                     ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                                     ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                                                    ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
                                                     ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
         'ByVal showNames As Boolean, ByVal showProjectLine As Boolean,
         'ByVal showAmpeln As Boolean, ByVal showDates As Boolean, ByVal strict As Boolean, _
@@ -1752,7 +1777,7 @@ Public Module testModule
         Dim myCollection As New Collection
         Dim notYetDone As Boolean = False
         Dim listofShapes As New Collection
-        
+
 
         Try
             ' prüft, ob bereits Powerpoint geöffnet ist 
@@ -1807,7 +1832,7 @@ Public Module testModule
 
                     Catch ex As Exception
                         ' in diesem Fall existiert schon eine geöffnete BoardDossier, allerdings mit anderem Format ...
-                        
+
                         pptTemplatePresentation.Saved = True
                         pptTemplatePresentation.Close()
 
@@ -1819,7 +1844,7 @@ Public Module testModule
                         Exit Sub
 
                     End Try
-                    
+
                 End If
             End If
 
@@ -1859,8 +1884,14 @@ Public Module testModule
         Dim qualifier As String = ""
         Dim anzShapes As Integer
         Dim tatsErstellt As Integer = 0
+        Dim folieIX As Integer = 1
+        Dim projToDo As Integer = 0
+        Dim projDone As Integer = 0
 
-        For j = 1 To anzSlidesToAdd
+        While folieIX <= anzSlidesToAdd
+
+
+            'For folieIX = 1 To anzSlidesToAdd
 
             tatsErstellt = tatsErstellt + 1
             If worker.WorkerSupportsCancellation Then
@@ -1868,15 +1899,20 @@ Public Module testModule
                 If worker.CancellationPending Then
                     e.Cancel = True
                     e.Result = "Berichterstellung nach " & tatsErstellt & " Seiten abgebrochen ..."
-                    Exit For
+                    ' Exit For 
+                    Exit While
                 End If
 
             End If
 
             ' jetzt wird eine Seite aus der Vorlage ergänzt 
             Dim tmpIX As Integer
-            tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides + j - 1, _
-                                                                          SlideStart:=j, SlideEnd:=j)
+            'tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides + folieIX - 1, _
+            '                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
+
+            tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
+                                                                          SlideStart:=folieIX, SlideEnd:=folieIX)
+
 
 
             'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
@@ -1886,7 +1922,9 @@ Public Module testModule
                 worker.ReportProgress(0, e)
             End If
 
-            pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides + j)
+            'pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides + folieIX)
+            anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
+            pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides)
 
 
             ' jetzt werden die Charts gezeichnet 
@@ -1954,7 +1992,7 @@ Public Module testModule
 
                     End If
 
-                    
+
 
                 End With
             Next
@@ -2032,7 +2070,10 @@ Public Module testModule
                             Try
                                 Dim tmpProjekt As New clsProjekt
                                 Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                              selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                                              projToDo, projDone, _
+                                                              selectedPhases, selectedMilestones, _
+                                                              selectedRoles, selectedCosts, _
+                                                              selectedBUs, selectedTyps, _
                                                               worker, e, True, tmpProjekt)
                                 .TextFrame2.TextRange.Text = ""
                             Catch ex As Exception
@@ -3336,8 +3377,15 @@ Public Module testModule
             Next
 
             listofShapes.Clear()
+            If projDone >= projToDo Then
+                folieIX = folieIX + 1
+                projToDo = 0
+                projDone = 0
+            End If
+            ' Next 
 
-        Next
+        End While
+        ' hier muss die While Schleife beendet werden 
 
         ' pptTemplate muss noch geschlossen werden
 
@@ -7183,8 +7231,13 @@ Public Module testModule
     ''' </summary>
     ''' <param name="selectedPhases">die Phasen, nach denen gesúcht wird </param>
     ''' <param name="selectedMilestones">die Meilensteine, nach denen gesucht wird</param>
+    ''' <param name="selectedRoles">die Rollen die gezeigt werden sollen; aktuell nicht relevant</param>
+    ''' <param name="selectedCosts" >die Kostenarten, die gezeigt werden sollen; aktuell nicht relevant</param>
+    ''' <param name="selectedBUs" >die Produktlininen bzw BusinessUnits, die gezeigt werden sollen</param>
+    ''' <param name="selectedTyps">die Vorlagen, die gezeigt werden sollen</param>
     ''' <param name="von">linker Rand des Zeitraums</param>
     ''' <param name="bis">rechter Rand des zeitraums</param>
+    ''' <param name="sortiertNachDauer" >soll nach Dauer sortiert werden: true; nach Position auf der Projekttafel: false </param>
     ''' <param name="projektListe">Ergebnis enthält alle Projekt-Namen die eine der Phasen oder einen der Meilensteine im angegebenen Zeitraum enthalten </param>
     ''' <param name="minDate">das kleinste auftretende Start-Datum einer Phase</param>
     ''' <param name="maxDate">das größte auftretende Ende-Datum einer Phase </param>
@@ -7192,23 +7245,29 @@ Public Module testModule
     ''' <param name="projMitVariants">im Falle Varainten-Sicht: Projekt, dessen Varianten dargestellt werden sollen</param>
     ''' <remarks></remarks>
     Public Sub bestimmeProjekteAndMinMaxDates(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
-                                              ByVal von As Integer, ByVal bis As Integer, _
+                                              ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                                              ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+                                              ByVal von As Integer, ByVal bis As Integer, ByVal sortiertNachDauer As Boolean, _
                                                   ByRef projektListe As SortedList(Of Double, String), ByRef minDate As Date, ByRef maxDate As Date, _
                                                   ByVal isMultiprojektSicht As Boolean, ByVal projMitVariants As clsProjekt)
 
         Dim tmpMinimum As Date
         Dim tmpMaximum As Date
         Dim tmpDate As Date
-
+        Dim currentFilter As clsFilter
 
         Dim hproj As clsProjekt
         Dim cphase As clsPhase
         Dim projektstart As Integer
-        Dim found As Boolean
+        'Dim found As Boolean
         Dim key As Double
         ' selection type wird aktuell noch ignoriert .... 
 
-        ' in der ersten Welle werden die Projektnamen aufgesammelt, die eine der Phasen oder Meilensteine enthalten  
+        ' in der ersten Welle werden die Projektnamen aufgesammelt, die eine der Phasen oder Meilensteine enthalten 
+        ' und gleichzeitig den ggf definierten filterkriterien BU und Typ entsprechen 
+        currentFilter = New clsFilter("temp", selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
+                                      selectedRoles, selectedCosts)
+
 
         If isMultiprojektSicht Then
 
@@ -7217,82 +7276,19 @@ Public Module testModule
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                found = False
-
-                With kvp.Value
-
-                    projektstart = .Start + .StartOffset
-
-
-                    If (projektstart > bis) Or (projektstart + .anzahlRasterElemente - 1 < von) Then
-                        ' dann liegt das Projekt ausserhalb des Zeitraums und muss überhaupt nicht berücksichtig werden 
-
-                    Else
-
-                        Dim ix As Integer = 1
-                        Dim phaseName As String
-                        While ix <= selectedPhases.Count And Not found
-
-                            phaseName = CStr(selectedPhases.Item(ix))
-                            cphase = kvp.Value.getPhase(phaseName)
-
-                            If Not IsNothing(cphase) Then
-                                If phaseWithinTimeFrame(projektstart, cphase.relStart, cphase.relEnde, von, bis) Then
-                                    found = True
-                                Else
-                                    ix = ix + 1
-                                End If
-                            Else
-                                ix = ix + 1
-                            End If
-
-
-
-                        End While
-
-                        ' das muss nur gemacht werden, wenn found <> true
-                        If Not found Then
-                            ix = 1
-                            Dim milestoneName As String
-
-                            While ix <= selectedMilestones.Count And Not found
-
-                                milestoneName = CStr(selectedMilestones.Item(ix))
-                                tmpDate = kvp.Value.getMilestoneDate(milestoneName)
-
-                                If milestoneWithinTimeFrame(tmpDate, von, bis) Then
-                                    found = True
-                                Else
-                                    ix = ix + 1
-                                End If
-
-
-                            End While
-
-                        End If
-
-
-                    End If
-
-
-                End With
-
-                If found Then
+                If currentFilter.doesNotBlock(kvp.Value) Then
                     key = kvp.Value.tfZeile + kvp.Value.anzahlRasterElemente / 10000
-                    'projektListe.Add(key, kvp.Value.name)
                     projektListe.Add(key, calcProjektKey(kvp.Value))
                 End If
 
             Next
         Else
             ' Multivarianten Sicht 
-            If von > 0 And bis > 0 Then
-                tmpMinimum = StartofCalendar.AddMonths(von - 1)
-                tmpMaximum = StartofCalendar.AddMonths(bis).AddDays(-1)
-            Else
-                tmpMinimum = AlleProjekte.getMinDate(pName:=projMitVariants.name)
-                tmpMaximum = AlleProjekte.getMaxDate(pName:=projMitVariants.name)
-            End If
+            ' in diesem Fall soll der selektierte Zeitraum nicht betrachtet werden 
+            von = 0
+            bis = 0
+            tmpMinimum = AlleProjekte.getMinDate(pName:=projMitVariants.name)
+            tmpMaximum = AlleProjekte.getMaxDate(pName:=projMitVariants.name)
 
             Dim variantNames As Collection = AlleProjekte.getVariantNames(projMitVariants.name, False)
             For i As Integer = 1 To variantNames.Count
@@ -7819,6 +7815,7 @@ Public Module testModule
     ''' <param name="yOffsetPhToDate"></param>
     ''' <remarks>wenn ein Fehler auftritt wird eine Exception geworfen und im aufrufenden Programm eine entsprechende Fehlermeldung in das Shape</remarks>
     Sub zeichnePPTprojects(ByRef pptslide As pptNS.Slide, ByRef projectCollection As SortedList(Of Double, String), _
+                            ByRef projDone As Integer, _
                             ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
                             ByVal drawingAreaLeft As Double, ByVal drawingAreaRight As Double, ByVal drawingAreaTop As Double, ByVal drawingAreaBottom As Double, _
                             ByVal projekthoehe As Double, _
@@ -7880,12 +7877,6 @@ Public Module testModule
         Dim lastProjectName As String = ""
 
 
-        'Dim projekthoehe As Double = bestimmeMppProjektHoehe(phaseVorlagenShape, milestoneVorlagenShape, _
-        '                                                     selectedPhases.Count, selectedMilestones.Count, _
-        '                                                        MsDescVorlagenShape, MsDateVorlagenShape,
-        '                                                        PhDescVorlagenShape, PhDateVorlagenShape, _
-        '                                                        projectNameVorlagenShape)
-
 
         ' bestimme jetzt Y Start-Position für den Text bzw. die Grafik
         rowYPos = drawingAreaTop
@@ -7912,7 +7903,8 @@ Public Module testModule
             drawBUShape = False
         End If
 
-        For currentProjektIndex = 1 To projectsToDraw
+        Dim startIX As Integer = projDone + 1
+        For currentProjektIndex = startIX To projectsToDraw
 
             fullName = projectCollection.ElementAt(currentProjektIndex - 1).Value
             'hproj = ShowProjekte.getProject(pName)
@@ -7984,6 +7976,7 @@ Public Module testModule
             ' zeichne den Projekt-Namen
             projectNameVorlagenShape.Copy()
             copiedShape = pptslide.Shapes.Paste()
+            Dim projectNameShape As pptNS.Shape = copiedShape(1)
 
             With copiedShape(1)
                 .Top = CSng(projektNamenYPos)
@@ -8034,6 +8027,27 @@ Public Module testModule
             ' zeichne jetzt das Projekt 
             Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, hproj.startDate, hproj.endeDate, _
                                     drawingAreaLeft, drawingAreaWidth, x1, x2)
+
+            ' jetzt muss überprüft werden, ob projectName zu lang ist - dann wird der Name entsprechend abgekürzt ...
+            With projectNameShape
+                If .Left + .Width > x1 Then
+                    ' jetzt muss der Name entsprechend gekürzt werden 
+                    Dim longName As String = .TextFrame2.TextRange.Text
+                    Dim shortName As String = ""
+
+                    .TextFrame2.TextRange.Text = shortName
+                    Dim stringIX As Integer = 0
+                    Do While .Left + .Width < x1 And stringIX <= longName.Length - 1
+                        shortName = shortName & longName.Chars(stringIX)
+                        stringIX = stringIX + 1
+                        .TextFrame2.TextRange.Text = shortName
+                    Loop
+
+                End If
+            End With
+            
+
+
 
             If awinSettings.mppShowProjectLine Then
 
@@ -8347,6 +8361,8 @@ Public Module testModule
 
             Next
 
+
+            projDone = projDone + 1
             projektGrafikYPos = projektGrafikYPos + projekthoehe
             phasenGrafikYPos = phasenGrafikYPos + projekthoehe
             milestoneGrafikYPos = milestoneGrafikYPos + projekthoehe
@@ -8402,7 +8418,7 @@ Public Module testModule
 
         End If
 
-        If currentProjektIndex < projectCollection.Count Then
+        If currentProjektIndex < projectCollection.Count And awinSettings.mppOnePage Then
             Throw New ArgumentException("es konnten nur " & _
                                         currentProjektIndex.ToString & " von " & projectsToDraw.ToString & _
                                         " Projekten gezeichnet werden ... " & vbLf & _
@@ -9132,13 +9148,13 @@ Public Module testModule
             Catch ex As Exception
 
             End Try
-            
+
 
         Next
 
     End Sub
 
-   
+
 
     ''' <summary>
     ''' stellt die Größen der übergebenen Shapes wieder her 
@@ -9401,8 +9417,10 @@ Public Module testModule
     ''' <param name="projMitVariants">das Projekt, dessen Varianten alle dargestellt werden sollen; nur besetzt wenn isMultiprojektSicht = false</param>
     ''' <remarks></remarks>
     Private Sub zeichneMultiprojektSicht(ByRef pptApp As pptNS.Application, ByRef pptCurrentPresentation As pptNS.Presentation, ByRef pptslide As pptNS.Slide, _
+                                             ByRef projToDo As Integer, ByRef projDone As Integer, _
                                              ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                              ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                                             ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
                                              ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs, _
                                              ByVal isMultiprojektSicht As Boolean, ByVal projMitVariants As clsProjekt)
 
@@ -9706,11 +9724,31 @@ Public Module testModule
                     dinFormatA(4, 1) = curFormatSize(0)
                     dinFormatA(4, 0) = curFormatSize(1)
                 End If
+
+                dinFormatA(3, 0) = dinFormatA(4, 0) * paperSizeRatio
+                dinFormatA(3, 1) = dinFormatA(4, 1) * paperSizeRatio
+
+            ElseIf pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA3Paper Then
+                If querFormat Then
+                    paperSizeRatio = curFormatSize(0) / curFormatSize(1)
+                    dinFormatA(3, 0) = curFormatSize(0)
+                    dinFormatA(3, 1) = curFormatSize(1)
+
+                Else
+                    paperSizeRatio = curFormatSize(1) / curFormatSize(0)
+                    dinFormatA(3, 1) = curFormatSize(0)
+                    dinFormatA(3, 0) = curFormatSize(1)
+                End If
+
+                dinFormatA(4, 0) = dinFormatA(3, 0) / paperSizeRatio
+                dinFormatA(4, 1) = dinFormatA(3, 1) / paperSizeRatio
+
             Else
-                Throw New ArgumentException("Vorlage ist kein A4 Format ... bitte verwenden Sie eine DinA4 Vorlage")
+
+                Throw New ArgumentException("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
             End If
 
-            For i = 3 To 0 Step -1
+            For i = 2 To 0 Step -1
                 dinFormatA(i, 0) = dinFormatA(i + 1, 0) * paperSizeRatio
                 dinFormatA(i, 1) = dinFormatA(i + 1, 1) * paperSizeRatio
             Next
@@ -9760,8 +9798,15 @@ Public Module testModule
             ' bestimme die Projekte, die gezeichnet werden sollen
             ' und bestimme das kleinste / resp größte auftretende Datum 
             Call bestimmeProjekteAndMinMaxDates(selectedPhases, selectedMilestones, _
-                                                showRangeLeft, showRangeRight, projCollection, minDate, maxDate, _
+                                                selectedRoles, selectedCosts, _
+                                                selectedBUs, selectedTyps, _
+                                                showRangeLeft, showRangeRight, awinSettings.mppSortiertDauer, _
+                                                projCollection, minDate, maxDate, _
                                                 isMultiprojektSicht, projMitVariants)
+
+            If projToDo <> projCollection.Count Then
+                projToDo = projCollection.Count
+            End If
 
             '
             ' bestimme das Start und Ende Datum des PPT Kalenders
@@ -9809,7 +9854,8 @@ Public Module testModule
             Dim curHeight As Double = oldHeight
             Dim curWidth As Double = oldwidth
 
-            If availableSpace < neededSpace Then
+            If availableSpace < neededSpace And _
+                awinSettings.mppOnePage Then
                 Dim ix As Integer = format
                 Dim ok As Boolean = True
                 ' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
@@ -9931,7 +9977,7 @@ Public Module testModule
             ' zeichne die Projekte 
 
             Try
-                Call zeichnePPTprojects(pptslide, projCollection, _
+                Call zeichnePPTprojects(pptslide, projCollection, projDone, _
                                     pptStartofCalendar, pptEndOfCalendar, _
                                     drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
                                     projekthoehe, projectListLeft, _
