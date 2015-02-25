@@ -553,6 +553,7 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = ""
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
+                                    objectsDone = objectsToDo
                                 End Try
 
 
@@ -2078,6 +2079,7 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = ""
                             Catch ex As Exception
                                 .TextFrame2.TextRange.Text = ex.Message
+                                projDone = projToDo
                             End Try
 
                         Case "Szenario-Projekt-Tabelle"
@@ -7947,18 +7949,24 @@ Public Module testModule
             If drawBUShape Then
                 buName = hproj.businessUnit
                 buFarbe = awinSettings.AmpelNichtBewertet
-                If buName.Length > 0 Then
-                    Dim found As Boolean = False
-                    Dim ix As Integer = 1
-                    While ix <= businessUnitDefinitions.Count And Not found
-                        If businessUnitDefinitions.ElementAt(ix - 1).Value.name = buName Then
-                            found = True
-                            buFarbe = businessUnitDefinitions.ElementAt(ix - 1).Value.color
-                        Else
-                            ix = ix + 1
-                        End If
-                    End While
+
+                If Not IsNothing(buName) Then
+
+                    If buName.Length > 0 Then
+                        Dim found As Boolean = False
+                        Dim ix As Integer = 1
+                        While ix <= businessUnitDefinitions.Count And Not found
+                            If businessUnitDefinitions.ElementAt(ix - 1).Value.name = buName Then
+                                found = True
+                                buFarbe = businessUnitDefinitions.ElementAt(ix - 1).Value.color
+                            Else
+                                ix = ix + 1
+                            End If
+                        End While
+                    End If
+
                 End If
+                
                 buColorShape.Copy()
                 copiedShape = pptslide.Shapes.Paste()
                 With copiedShape(1)
