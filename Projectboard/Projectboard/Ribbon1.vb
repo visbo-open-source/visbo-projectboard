@@ -1607,6 +1607,12 @@ Imports System.Drawing
                 .rdbTyp.Visible = False
                 .pictureTyp.Visible = False
 
+                .rdbRoles.Visible = False
+                .pictureRoles.Visible = False
+
+                .rdbCosts.Visible = False
+                .pictureCosts.Visible = False
+
                 .chkbxShowObjects = True
 
 
@@ -1669,6 +1675,12 @@ Imports System.Drawing
 
                 .rdbTyp.Visible = False
                 .pictureTyp.Visible = False
+
+                .rdbRoles.Visible = True
+                .pictureRoles.Visible = True
+
+                .rdbCosts.Visible = True
+                .pictureCosts.Visible = True
 
                 .chkbxShowObjects = False
 
@@ -1790,8 +1802,8 @@ Imports System.Drawing
         appInstance.EnableEvents = False
 
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
-        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
-
+        'If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+        If ShowProjekte.Count > 0 Then
             appInstance.ScreenUpdating = False
 
             With auswahlFormular
@@ -1830,13 +1842,13 @@ Imports System.Drawing
 
             appInstance.ScreenUpdating = True
 
-        ElseIf ShowProjekte.Count = 0 Then
+        Else
 
             Call MsgBox("Es sind keine Projekte geladen!  ")
 
-        ElseIf showRangeRight - showRangeLeft <= 5 Then
+            'ElseIf showRangeRight - showRangeLeft <= 5 Then
 
-            Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
+            '    Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
 
         End If
 
@@ -2556,11 +2568,17 @@ Imports System.Drawing
 
             With auswahlFormular
 
-                .rdbBU.Visible = False
-                .pictureBU.Visible = False
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
 
-                .rdbTyp.Visible = False
-                .pictureTyp.Visible = False
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
+
+                ''.rdbRoles.Visible = False
+                ''.pictureRoles.Visible = False
+
+                ''.rdbCosts.Visible = False
+                ''.pictureCosts.Visible = False
 
                 .einstellungen.Visible = False
                 .Text = "Excel Report erzeugen"

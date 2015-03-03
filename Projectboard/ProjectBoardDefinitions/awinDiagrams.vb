@@ -248,14 +248,15 @@ Public Module awinDiagrams
 
         End If
 
-
-
         If prcTyp = DiagrammTypen(1) Then
             kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection, False)
             kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)
         ElseIf prcTyp = DiagrammTypen(0) Then
             kdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
+        ElseIf prcTyp = DiagrammTypen(5) Then
+            kdatenreihe = ShowProjekte.getMilestoneSchwellWerteInMonth(myCollection)
         End If
+
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         appInstance.ScreenUpdating = False
@@ -604,7 +605,8 @@ Public Module awinDiagrams
 
 
                     If prcTyp = DiagrammTypen(1) Or _
-                        (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Then
+                        (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
+                        (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
                         With .SeriesCollection.NewSeries
                             .HasDataLabels = False
 
@@ -618,6 +620,12 @@ Public Module awinDiagrams
                             .Values = kdatenreihe
                             .XValues = Xdatenreihe
                             .ChartType = Excel.XlChartType.xlLine
+                            With .Format.Line
+                                .DashStyle = MsoLineDashStyle.msoLineLongDashDotDot
+                                .ForeColor.RGB = XlRgbColor.rgbFireBrick
+                                .Weight = 3
+                            End With
+
                             nr_pts = CType(.Points, Excel.Points).Count
 
                             With .Points(nr_pts)
@@ -627,13 +635,6 @@ Public Module awinDiagrams
                             End With
 
                         End With
-
-                        'Dim series1 As Excel.Series = CType(.SeriesCollection(1), Excel.Series)
-                        'With series1
-                        '    .Format.Line.ForeColor
-                        'End With
-
-
 
                     End If
                     .HasTitle = True
@@ -943,6 +944,8 @@ Public Module awinDiagrams
             kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)
         ElseIf prcTyp = DiagrammTypen(0) Then
             kdatenreihe = ShowProjekte.getPhaseSchwellWerteInMonth(myCollection)
+        ElseIf prcTyp = DiagrammTypen(5) Then
+            kdatenreihe = ShowProjekte.getMilestoneSchwellWerteInMonth(myCollection)
         End If
 
         appInstance.EnableEvents = False
@@ -1308,7 +1311,8 @@ Public Module awinDiagrams
 
 
                 If prcTyp = DiagrammTypen(1) Or _
-                       (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Then
+                       (prcTyp = DiagrammTypen(0) And kdatenreihe.Sum > 0) Or _
+                       (prcTyp = DiagrammTypen(5) And kdatenreihe.Sum > 0) Then
                     With .SeriesCollection.NewSeries
                         .HasDataLabels = False
 
@@ -1322,6 +1326,12 @@ Public Module awinDiagrams
                         .Values = kdatenreihe
                         .XValues = Xdatenreihe
                         .ChartType = Excel.XlChartType.xlLine
+                        With .Format.Line
+                            .DashStyle = MsoLineDashStyle.msoLineLongDashDotDot
+                            .ForeColor.RGB = XlRgbColor.rgbFireBrick
+                            .Weight = 3
+                        End With
+
                         nr_pts = CType(.Points, Excel.Points).Count
 
                         With .Points(nr_pts)

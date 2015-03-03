@@ -3,6 +3,11 @@
     Private Sub frmMppSettings_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         With awinSettings
+
+            If .mppSortiertDauer Then
+                .mppShowAllIfOne = True
+            End If
+
             shwProjectLine.Checked = .mppShowProjectLine
             notStrictly.Checked = .mppShowAllIfOne
             shwAmpeln.Checked = .mppShowAmpel
@@ -38,13 +43,15 @@
         awinSettings.mppOnePage = allOnOnePage.Checked
         awinSettings.mppSortiertDauer = sortiertNachDauer.Checked
 
+        If awinSettings.mppSortiertDauer Then
+            awinSettings.mppShowAllIfOne = True
+        End If
+
         awinSettings.mppFullyContained = awinSettings.mppSortiertDauer
 
         MyBase.Close()
 
     End Sub
 
-    Private Sub CheckBox1_CheckedChanged(sender As Object, e As EventArgs) Handles sortiertNachDauer.CheckedChanged
-
-    End Sub
+    
 End Class

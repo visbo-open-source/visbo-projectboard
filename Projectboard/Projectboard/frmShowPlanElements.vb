@@ -211,7 +211,7 @@ Public Class frmShowPlanElements
 
         Dim validOption As Boolean
         If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
-            Me.menuOption = PTmenue.excelExport Then
+            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft > 5 Then
             validOption = True

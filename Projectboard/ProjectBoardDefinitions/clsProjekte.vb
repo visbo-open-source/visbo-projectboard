@@ -854,6 +854,48 @@ Public Class clsProjekte
         End Get
     End Property
 
+
+    ''' <summary>
+    ''' gibt die Meilenstein Kapa Werte zurück 
+    ''' </summary>
+    ''' <param name="myCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneSchwellWerteInMonth(myCollection As Collection) As Double()
+        Get
+
+            Dim schwellWerte() As Double
+
+            Dim hkapa As Double
+            Dim msName As String
+            Dim zeitraum As Integer
+            Dim r As Integer, m As Integer
+
+
+            ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
+            zeitraum = showRangeRight - showRangeLeft
+            ReDim schwellWerte(zeitraum)
+
+            For r = 1 To myCollection.Count
+
+                msName = CStr(myCollection.Item(r))
+                hkapa = MilestoneDefinitions.getMilestoneDef(msName).schwellWert
+
+                For m = 0 To zeitraum
+                    ' Änderung 31.5 Holen der Schwellwerte einer Phase 
+                    schwellWerte(m) = schwellWerte(m) + hkapa
+                Next m
+
+
+            Next r
+
+            getMilestoneSchwellWerteInMonth = schwellWerte
+
+        End Get
+    End Property
+
+
     '
     '
     '

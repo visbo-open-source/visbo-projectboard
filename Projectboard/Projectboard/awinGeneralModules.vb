@@ -4545,6 +4545,10 @@ Public Module awinGeneralModules
             earliestDate = kvp.Value.endeDate
             latestDate = kvp.Value.startDate
 
+            ' wird benötigt, um festzustellen, ob überhaupt eines der Elemente im aktuell 
+            ' betrachteten Projekt vorkommt 
+            Dim atleastOne As Boolean = False
+
             With wsName
                 ' Produktlinie schreiben 
                 If kvp.Value.businessUnit.Length > 0 Then
@@ -4578,6 +4582,8 @@ Public Module awinGeneralModules
                         Try
                             startDate = cphase.getStartDate
                             endDate = cphase.getEndDate
+
+                            atleastOne = True
 
                             If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
                                 earliestDate = startDate
@@ -4620,6 +4626,8 @@ Public Module awinGeneralModules
                         Try
                             startDate = milestone.getDate
 
+                            atleastOne = True
+
                             If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
                                 earliestDate = startDate
                                 minCol = spalte + ix
@@ -4646,14 +4654,19 @@ Public Module awinGeneralModules
 
                 Next
 
+                Dim dauerT As Long
+                Dim dauerM As Double
 
                 ' Dauer in Tagen schreiben 
                 spalte = spalte + milestoneList.Count
 
-                Dim dauerT As Long = DateDiff(DateInterval.Day, earliestDate, latestDate)
-                'Dim dauerM As Double = CDbl(DateDiff(DateInterval.Month, earliestDate, earliestDate.AddDays(2 * dauerT))) / 2
-                Dim dauerM As Double = 12 * dauerT / 365
-
+                If atleastOne Then
+                    dauerT = DateDiff(DateInterval.Day, earliestDate, latestDate)
+                    dauerM = 12 * dauerT / 365
+                Else
+                    dauerT = 0
+                    dauerM = 0.0
+                End If
 
                 CType(.Cells(zeile, spalte + 1), Excel.Range).Value = dauerT
                 CType(.Cells(zeile, spalte + 2), Excel.Range).Value = dauerM

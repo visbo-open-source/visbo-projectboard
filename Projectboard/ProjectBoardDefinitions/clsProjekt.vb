@@ -54,6 +54,110 @@ Public Class clsProjekt
     Public Property diffToPrev As Boolean
 
     ''' <summary>
+    ''' gibt für die übergebenen Listen an Phasen und Meilensteinen das früheste bzw. späteste Datum zurück, das in den 
+    ''' aufgeführten Phasen bzw. Meilensteinen existiert; 
+    ''' ausserdem wird die Dauer in Tagen zwischen minDate und maxDate zurückgegeben 
+    ''' wenn nicht wenigstens zwei unterschiedliche Daten existieren , wird 0 als Länge zurückgegeben  
+    ''' </summary>
+    ''' <param name="selPhases">Liste der Phasen Namen</param>
+    ''' <param name="selMilestones">Liste der Meilenstein Namen</param>
+    ''' <param name="minDate"></param>
+    ''' <param name="maxDate"></param>
+    ''' <param name="durationInDays"></param>
+    ''' <remarks></remarks>
+    Public Sub getMinMaxDatesAndDuration(ByVal selPhases As Collection, ByVal selMilestones As Collection, _
+                                             ByRef minDate As Date, ByRef maxDate As Date, ByRef durationInDays As Long)
+
+        Dim earliestDate As Date = Me.endeDate.AddMonths(1)
+        Dim latestDate As Date = Me.startDate.AddMonths(-1)
+        Dim earliestfound As Boolean = False
+        Dim latestfound As Boolean = False
+        Dim tmpStartDate As Date
+        Dim tmpEndDate As Date
+        Dim phaseName As String
+        Dim cphase As clsPhase
+
+        ' Phasen Information untersuchen 
+
+
+        For ix As Integer = 1 To selPhases.Count
+
+            phaseName = CStr(selPhases.Item(ix))
+            cphase = Me.getPhase(phaseName)
+
+            If Not IsNothing(cphase) Then
+                Try
+                    tmpStartDate = cphase.getStartDate
+                    tmpEndDate = cphase.getEndDate
+
+                    If DateDiff(DateInterval.Day, tmpStartDate, earliestDate) > 0 Then
+                        earliestDate = tmpStartDate
+                        earliestfound = True
+                    End If
+
+                    If DateDiff(DateInterval.Day, latestDate, tmpEndDate) > 0 Then
+                        latestDate = tmpEndDate
+                        latestfound = True
+                    End If
+
+                Catch ex As Exception
+                    ' nichts tun 
+                End Try
+            Else
+                ' nichts tun
+            End If
+
+
+
+        Next
+
+
+        ' Meilensteine schreiben 
+        Dim msName As String
+        Dim milestone As clsMeilenstein = Nothing
+
+        For ix As Integer = 1 To selMilestones.Count
+            msName = CStr(selMilestones.Item(ix))
+            milestone = Me.getMilestone(msName)
+
+            If Not IsNothing(milestone) Then
+                Try
+                    tmpStartDate = milestone.getDate
+
+                    If DateDiff(DateInterval.Day, tmpStartDate, earliestDate) > 0 Then
+                        earliestDate = tmpStartDate
+                        earliestfound = True
+                    End If
+
+                    If DateDiff(DateInterval.Day, latestDate, tmpStartDate) > 0 Then
+                        latestDate = tmpStartDate
+                        latestfound = True
+                    End If
+
+                Catch ex As Exception
+                    ' nichts tun
+                End Try
+            Else
+                ' nichts tun 
+
+            End If
+
+        Next
+
+
+        If earliestfound And latestfound Then
+            durationInDays = DateDiff(DateInterval.Day, earliestDate, latestDate)
+        Else
+            durationInDays = 0
+        End If
+
+        minDate = earliestDate
+        maxDate = latestDate
+        
+
+    End Sub
+
+    ''' <summary>
     ''' synchronisiert die Arrays mit der evtl veränderten Array Länge durch eine Verschiebung des Projekts 
     ''' berechnet und bestimmt die XWerte der Rollen und Kostenarten für die Phasen neu
     ''' wird aus set Startdate heraus aufgerufen; dadurch kann es sein, daß sich die 
@@ -1052,7 +1156,7 @@ Public Class clsProjekt
                         tmpListe.Add(cphase.name, cphase.name)
                     End If
 
-                    
+
                 Else
                     If Me._Start + cphase.relStart - 1 > bis Or _
                     Me._Start + cphase.relEnde - 1 < von Then
@@ -1067,7 +1171,7 @@ Public Class clsProjekt
 
                     End If
                 End If
-                
+
 
             Next
 
