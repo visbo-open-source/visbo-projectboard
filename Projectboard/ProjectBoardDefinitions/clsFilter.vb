@@ -242,7 +242,9 @@
                 ' Überprüfe BU 
                 If filterBU.Count = 0 Then
                     containsBU = True
+
                 ElseIf filterBU.Count > 0 And Not IsNothing(hproj.businessUnit) Then
+
                     If hproj.businessUnit.Trim.Length > 0 Then
                         If filterBU.Contains(hproj.businessUnit.Trim) Then
                             containsBU = True
@@ -250,14 +252,20 @@
                             containsBU = False
                         End If
                     Else
-                        containsBU = False
+                        If filterBU.Contains("unknown") Then
+                            containsBU = True
+                        Else
+                            containsBU = False
+                        End If
                     End If
+
                 ElseIf IsNothing(hproj.businessUnit) Then
-                    If filterBU.Count > 0 Then
-                        containsBU = False
-                    Else
+                    If filterBU.Contains("unknown") Then
                         containsBU = True
+                    Else
+                        containsBU = False
                     End If
+
                 End If
 
 
@@ -266,6 +274,7 @@
                 If stillOK Then
                     If filterTyp.Count = 0 Then
                         containsTyp = True
+
                     ElseIf filterTyp.Count > 0 And Not IsNothing(hproj.VorlagenName) Then
                         If hproj.VorlagenName.Trim.Length > 0 Then
                             If filterTyp.Contains(hproj.VorlagenName.Trim) Then
@@ -274,18 +283,23 @@
                                 containsTyp = False
                             End If
                         Else
-                            containsTyp = False
+                            If filterTyp.Contains("unknown") Then
+                                containsTyp = True
+                            Else
+                                containsTyp = False
+                            End If
                         End If
 
                     ElseIf IsNothing(hproj.VorlagenName) Then
-                        If filterTyp.Count > 0 Then
-                            containsTyp = False
-                        Else
+                        If filterTyp.Contains("unknown") Then
                             containsTyp = True
+                        Else
+                            containsTyp = False
                         End If
 
                     Else
                         containsTyp = True
+
                     End If
                     stillOK = containsTyp
                 End If

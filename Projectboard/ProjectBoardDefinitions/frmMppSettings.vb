@@ -3,6 +3,11 @@
     Private Sub frmMppSettings_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         With awinSettings
+
+            If .mppSortiertDauer Then
+                .mppShowAllIfOne = True
+            End If
+
             shwProjectLine.Checked = .mppShowProjectLine
             notStrictly.Checked = .mppShowAllIfOne
             shwAmpeln.Checked = .mppShowAmpel
@@ -13,6 +18,9 @@
             ShwMilestoneDate.Checked = .mppShowMsDate
             shwVerticals.Checked = .mppVertikalesRaster
             shwLegend.Checked = .mppShowLegend
+            sortiertNachDauer.Checked = .mppSortiertDauer
+            allOnOnePage.Checked = .mppOnePage
+
 
         End With
 
@@ -28,13 +36,22 @@
         awinSettings.mppShowAmpel = shwAmpeln.Checked
         awinSettings.mppShowPhName = shwPhaseText.Checked
         awinSettings.mppShowPhDate = shwPhaseDate.Checked
-        'awinSettings.mppFullyContained = phaseFullyContained.Checked
         awinSettings.mppShowMsName = ShwMilestoneText.Checked
         awinSettings.mppShowMsDate = ShwMilestoneDate.Checked
         awinSettings.mppVertikalesRaster = shwVerticals.Checked
         awinSettings.mppShowLegend = shwLegend.Checked
+        awinSettings.mppOnePage = allOnOnePage.Checked
+        awinSettings.mppSortiertDauer = sortiertNachDauer.Checked
+
+        If awinSettings.mppSortiertDauer Then
+            awinSettings.mppShowAllIfOne = True
+        End If
+
+        awinSettings.mppFullyContained = awinSettings.mppSortiertDauer
 
         MyBase.Close()
 
     End Sub
+
+    
 End Class

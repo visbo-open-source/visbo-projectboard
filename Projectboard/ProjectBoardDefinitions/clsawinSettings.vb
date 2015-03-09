@@ -156,6 +156,10 @@
         _mppSortiertDauer = False
         _mppOnePage = False
 
+        If _mppSortiertDauer Then
+            _mppShowAllIfOne = True
+        End If
+
         _importTyp = 1
 
 

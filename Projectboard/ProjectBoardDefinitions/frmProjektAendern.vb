@@ -120,4 +120,7 @@ Public Class frmProjektAendern
     End Sub
 
     
+    Private Sub businessUnit_SelectedIndexChanged(sender As Object, e As EventArgs) Handles businessUnit.SelectedIndexChanged
+
+    End Sub
 End Class

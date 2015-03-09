@@ -2287,4 +2287,88 @@ Public Module Module1
         mapToAppearance = ergebnis
 
     End Function
+
+    ''' <summary>
+    ''' speichert den letzten Filter und setzt die temporären Collections wieder zurück 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
+                                              ByVal fBU As Collection, ByVal fTyp As Collection, _
+                                              ByVal fPhase As Collection, ByVal fMilestone As Collection, _
+                                              ByVal fRole As Collection, ByVal fCost As Collection)
+
+        Dim lastFilter As clsFilter
+
+
+        lastFilter = New clsFilter(fName, fBU, fTyp, _
+                                  fPhase, fMilestone, _
+                                 fRole, fCost)
+
+
+        If menuOption = PTmenue.filterdefinieren Then
+            filterDefinitions.storeFilter(fName, lastFilter)
+        Else
+            selFilterDefinitions.storeFilter(fName, lastFilter)
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' besetzt die Selection Collections mit den Werten des Filters mit Namen fName
+    ''' </summary>
+    ''' <param name="fName"></param>
+    ''' <param name="selectedBUs"></param>
+    ''' <param name="selectedTyps"></param>
+    ''' <param name="selectedPhases"></param>
+    ''' <param name="selectedMilestones"></param>
+    ''' <param name="selectedRoles"></param>
+    ''' <param name="selectedCosts"></param>
+    ''' <remarks></remarks>
+    Public Sub retrieveSelections(ByVal fName As String, ByVal menuOption As Integer, _
+                                       ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
+                                       ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
+                                       ByRef selectedRoles As Collection, ByRef selectedCosts As Collection)
+
+        Dim lastFilter As clsFilter
+
+        If menuOption = PTmenue.filterdefinieren Then
+            lastFilter = filterDefinitions.retrieveFilter(fName)
+        Else
+            lastFilter = selFilterDefinitions.retrieveFilter(fName)
+            If IsNothing(lastFilter) Then
+                lastFilter = filterDefinitions.retrieveFilter(fName)
+            End If
+        End If
+
+
+        If Not IsNothing(lastFilter) Then
+            ' Änderung 16.2.15: es sollen immer alle berücksichtigt werden 
+            'If menuOption = PTmenue.filterdefinieren Then
+            '    selectedBUs = lastFilter.BUs
+            '    selectedTyps = lastFilter.Typs
+            'Else
+            '    selectedBUs = New Collection
+            '    selectedTyps = New Collection
+            'End If
+
+            selectedBUs = lastFilter.BUs
+            selectedTyps = lastFilter.Typs
+            selectedPhases = lastFilter.Phases
+            selectedMilestones = lastFilter.Milestones
+            selectedRoles = lastFilter.Roles
+            selectedCosts = lastFilter.Costs
+
+        Else
+            selectedBUs = New Collection
+            selectedTyps = New Collection
+            selectedPhases = New Collection
+            selectedMilestones = New Collection
+            selectedRoles = New Collection
+            selectedCosts = New Collection
+        End If
+
+    End Sub
+
+    
 End Module

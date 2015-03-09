@@ -15,24 +15,25 @@
           <separator id="PTXG1s1"/>
           <button id="PTXG1B2" label="Meilenstein-Ampeln" onAction="PT0ShowZieleUebersicht" />
           <separator id="PTXG1s2"/>
-          <button id="PTXG1B4" label="Auslastung" onAction="PT0ShowAuslastung" />-->
-          <button id="PTXG1B4" label="Planelemente visualisieren" onAction="VisPlanObjects001" supertip="Meilensteine, Vorgänge, Rollen- und Kostenbedarfe visualisieren" />
-          <separator id="PTXG1s3"/>
-          <button id="PTXG1B5" label="Leistbarkeit analysieren" onAction="AnalyseLeistbarkeit" supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren"/>
-          <!--<separator id="PTXG1s4"/>
-          <button id="PTXG1B7" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
+          <button id="PTXG1B3" label="Auslastung" onAction="PT0ShowAuslastung" />
+          <separator id="PTXG1s3"/>-->
+          <button id="PTXG1B4" label="Planelemente visualisieren" onAction="VisPlanObjects001" supertip="Meilensteine, Vorgänge, Rollen- und Kostenbedarfe visualisieren"/>
           <separator id="PTXG1s4"/>
-          <button id="PTXG1B5" label="Engpass" onAction="PTXShowEngpass" />
+          <button id="PTXG1B5" label="Leistbarkeit analysieren" onAction="AnalyseLeistbarkeit"  supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren"/>
+          <!--<separator id="PTXG1s5"/>
+          <button id="PTXG1B6" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
           <separator id="PTXG1s5"/>
-          <button id="PTXG1B6" label="Symbole löschen" onAction="Tom2G2M5B3NoShowSymbols" />-->
+          <button id="PTXG1B7" label="Engpass" onAction="PTXShowEngpass" />
+          <separator id="PTXG1s6"/>
+          <button id="PTXG1B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowSymbols" />-->
         </group>
         <group id="PTFK" label ="Finanz-Kennzahlen">
-          <button id="PTFKB1" label="Budget/Kosten" onAction="PT0ShowPortfolioBudgetCost" enabled ="false" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
-          <button id="PTFKB2" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" enabled ="false" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>
+          <button id="PTFKB1" label="Budget/Kosten" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
+          <button id="PTFKB2" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>
         </group>
         <group id="PTOPT" label="Optimieren">
           <button id="PTOPTB1" label ="optimale Varianten-Kombination" onAction ="PTOPTVariantenOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse die optimale Kombination von Projekt-Varianten ermitteln"/>
-          <button id="PTOPTB2" label ="Spielraum nutzen" onAction ="PTOPTFreiraumOptimieren" enabled ="false" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>
+          <button id="PTOPTB2" label ="Spielraum nutzen" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>
         </group>
       </tab>
 
@@ -47,33 +48,33 @@
           <separator id="PT0G1s1"/>
           <button id="PT0G1B1" label="Abhängigkeiten" onAction="PT0ShowDependencies" />
           <separator id="PT0G1s2"/>
-      <menu id="PT0G1M0" label="Phasen">
-        <button id="PT0G1M0B1" label="Namen wählen" onAction="PT0VisualizePhases" />
-        <button id="PT0G1M0B2" label="Phasen Übersicht" onAction="Tom2G2M1B1Phasen" />
-        <button id="PT0G1M0B3" label="Phasen Darstellung" onAction="Tom2G2M1B1Phasen2" />
-      </menu>
-      <separator id="PT0G1s3"/>
-      <menu id="PT0G1M1" label="Ressourcen">
-        <button id="PT0G1M1B1" label="Personal Bedarfe" onAction="Tom2G2M1B2Resources" />
-        <button id="PT0G1M1B2" label="Kosten Bedarfe" onAction="Tom2G2M1B5GKosten" />
-      </menu>
-      <separator id="PT0G1s4"/>
-      <menu id="PT0G1M2" label="Meilensteine">
-        <button id="PT0G1M2B5" label="Alle" onAction="Tom2G2M5M2B5ShowMilestones" />
-        <button id="PT0G1M2B6" label="Meilenstein anzeigen" onAction="PTShowMilestonesByName" />
-        <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="PTShowMilestoneTrend" />
-        <button id="PT0G1M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
-      </menu>
-      <separator id="PT0G1s5"/>
-          <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
-          <button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />
-          <button id="PT0G1B5" label="Abhängigkeiten" onAction="Tom2G2M1B6Abhaengigkeit" />
-          <button id="PT0G1B4" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />
-      <separator id="PT0G1s6"/>
-      <button id="PT0G1B6" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
-      </group>
+          <menu id="PT0G1M0" label="Phasen">
+            <button id="PT0G1M0B1" label="Namen wählen" onAction="PT0VisualizePhases" />
+            <button id="PT0G1M0B2" label="Phasen Übersicht" onAction="Tom2G2M1B1Phasen" />
+            <button id="PT0G1M0B3" label="Phasen Darstellung" onAction="Tom2G2M1B1Phasen2" />
+          </menu>
+          <separator id="PT0G1s3"/>
+          <menu id="PT0G1M1" label="Ressourcen">
+             <button id="PT0G1M1B1" label="Personal Bedarfe" onAction="Tom2G2M1B2Resources" />
+             <button id="PT0G1M1B2" label="Kosten Bedarfe" onAction="Tom2G2M1B5GKosten" />
+          </menu>
+          <separator id="PT0G1s4"/>
+          <menu id="PT0G1M2" label="Meilensteine">
+            <button id="PT0G1M2B5" label="Alle" onAction="Tom2G2M5M2B5ShowMilestones" />
+            <button id="PT0G1M2B6" label="Meilenstein anzeigen" onAction="PTShowMilestonesByName" />
+            <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="PTShowMilestoneTrend" />
+            <button id="PT0G1M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
+          </menu>
+          <separator id="PT0G1s5"/>
+            <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
+            <button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />
+            <button id="PT0G1B5" label="Abhängigkeiten" onAction="Tom2G2M1B6Abhaengigkeit" />
+            <button id="PT0G1B6" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />
+          <separator id="PT0G1s6"/>
+            <button id="PT0G1B7" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
+        </group>
 
-      <group id="PT0G2" label="Portfolio">
+        <group id="PT0G2" label="Portfolio">
           <button id="PT0G2B1" label="Status" onAction="Tom2G2M5M1B3ShowStatus" />
           <separator id="PT0G2s1"/>
           <menu id="PT0G2M0" label="Phasen">
@@ -89,9 +90,9 @@
           <separator id="PT0G2s3"/>
           <menu id="PT0G2M2" label="Meilensteine">
             <button id="PT0G2M2B1" label="Ampel Übersicht" onAction="PT0ShowZieleUebersicht" />
-            <button id="PT0G2M2B3" label="Namen wählen" onAction="PTShowAllMilestonesByName" />
-            <button id="PT0G2M2B4" label="Summen Charts" onAction="PTShowMilestoneSummen" />
-            <button id="PT0G2M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
+            <button id="PT0G2M2B2" label="Namen wählen" onAction="PTShowAllMilestonesByName" />
+            <button id="PT0G2M2B3" label="Summen Charts" onAction="PTShowMilestoneSummen" />
+            <button id="PT0G2M2B4" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />
           </menu>
           <separator id="PT0G2s4"/>
           <button id="PT0G2B3" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
@@ -110,11 +111,11 @@
         <group id="PT1G1" label="Powerpoint">
           <button id="PT1G1B0" label="Einzelprojekt Berichte I" onAction="Tom2G1Doku" supertip="zu den selektierten Projekten statische Einzelprojektberichte erstellen; hier ist keine Auswahl von Elementen im Vorfeld möglich. Der Report wird auf Basis der Plan-Elementen erstellt, wie sie in der Vorlage definiert sind"/>
           <separator id="PT1G1s0"/>
-          <button id="PT1G1B1" label="Einzelprojekt Berichte II" onAction="VariantenprojektReport" supertip="zu den selektierten Projekten Einzelprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann auf Basis der selektierten Plan-Elemente erstellt"/>
+          <button id="PT1G1B1" label="Einzelprojekt Berichte II" onAction="awinVariantenprojektReport" supertip="zu den selektierten Projekten Einzelprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann auf Basis der selektierten Plan-Elemente erstellt"/>
           <separator id="PT1G1s1"/>
           <button id="PT1G1B2" label="Multiprojekt Berichte I" onAction="awinAllprojectsReport" supertip="zu dem dargestellten Projekt-Szenario im ausgewählten Zeitraum statische Multiprojektberichte erstellen; hier ist keine Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der Plan-Elementen erstellt, wie sie in der Vorlage definiert sind"/>
           <separator id="PT1G1s2"/>
-          <button id="PT1G1B3" label="Multiprojekt Berichte II" onAction="MultiprojektReport" supertip="zu dem dargestellten Projekt-Szenario im ausgewählten Zeitraum Multiprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der selektierten Plan-Elemente erstellt"/>
+          <button id="PT1G1B3" label="Multiprojekt Berichte II" onAction="awinMultiprojektReport" supertip="zu dem dargestellten Projekt-Szenario im ausgewählten Zeitraum Multiprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der selektierten Plan-Elemente erstellt"/>
         </group>
       </tab>
       <!--
@@ -145,8 +146,8 @@
           <button id="PT2G1B3" label="Fixierung aufheben" onAction="Tom2GXBeauftragen" supertip ="mit dem Aufheben der Fixierung können Projekte bzw. Varianten in ihren Terminen und zugehörigen Rollen- und Kostenbedarfe verändert werden. Visuell ist ein nicht fixiertes Projekt durch die rundere Projektbalken Darstellung zu erkennen"/>
           <!--<separator id="PT2G1s3"/>
           <button id="PT2G1B4" label="in Warteschlange stellen" onAction="Tom2G1NoShow" />
-          <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />-->
-          <!--<separator id="PT2G1s4"/>
+          <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />
+          <separator id="PT2G1s4"/>
           <button id="PT2G1B6" label="Umbenennen" onAction="Tom2G1Rename" />-->
         </group>
         <!---->
@@ -159,28 +160,25 @@
         </group>
         <group id="PT2G3" label ="Session">
           <menu id="PT2G3M1" label="aus der Session löschen">
-            <button id="PT2G1M3B1" label="Session Reset"  onAction="PT6G3ClearSession" supertip ="die komplette Session wird gelöscht; das heißt es werden alle dargestellten Projekte, Phasen, Meilensteine und Charts gelöscht. diese Aktion hat keinen Einfluss auf die Datenbank; Vorsicht: neu erzeugte Projekte oder Varianten in der Session, die noch nicht gespeichert wurden, gehen damit verloren"/>
-            <button id="PT2G1M3B2" label="Projekte und Varianten" onAction="Tom2G1Loeschen" supertip ="ausgewählte Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
+            <button id="PT2G3M3B1" label="Session Reset"  onAction="PT6G3ClearSession" supertip ="die komplette Session wird gelöscht; das heißt es werden alle dargestellten Projekte, Phasen, Meilensteine und Charts gelöscht. diese Aktion hat keinen Einfluss auf die Datenbank; Vorsicht: neu erzeugte Projekte oder Varianten in der Session, die noch nicht gespeichert wurden, gehen damit verloren"/>
+            <button id="PT2G3M3B2" label="Projekte und Varianten" onAction="Tom2G1Loeschen" supertip ="ausgewählte Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
           </menu>
-          <separator id="PT2G1s6"/>
+          <separator id="PT2G3s1"/>
           <menu id="PT2G3M2" label ="Symbole löschen">
-            <button id="PT2G1M4B1" label="Meilensteine, Phasen, Stati"  onAction="Tom2G2M5B3NoShowSymbols" supertip ="alle visuellen Darstellungen von Projekt-Stati, Phasen oder Meilensteinen werden aus der Session gelöscht; das hat jedoch keinerlei Einfluss auf die Phasen und Meilensteine der Projekte in der Session; die bleiben weiterhin erhalten"/>
-            <button id="PT2G1M4B2" label="Charts"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
+            <button id="PT2G3M4B1" label="Meilensteine, Phasen, Stati"  onAction="Tom2G2M5B3NoShowSymbols" supertip ="alle visuellen Darstellungen von Projekt-Stati, Phasen oder Meilensteinen werden aus der Session gelöscht; das hat jedoch keinerlei Einfluss auf die Phasen und Meilensteine der Projekte in der Session; die bleiben weiterhin erhalten"/>
+            <button id="PT2G3M4B2" label="Charts"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
           </menu>
         </group>
-        <!--<group id="PT2G3" label="Projekt Abhängigkeiten">
-          <button id="PT2G3B1" label="Definieren" onAction="PTDefineDependencies" />
-          <separator id="PT2G3s1"/>
-          <button id="PT2G3B2" label="Löschen" onAction="PTDeleteDependencies" enabled="false"/>
+        <!--<group id="PT2G4" label="Projekt Abhängigkeiten">
+          <button id="PT2G4B1" label="Definieren" onAction="PTDefineDependencies" />
+          <separator id="PT2G4s1"/>
+          <button id="PT2G4B2" label="Löschen" onAction="PTDeleteDependencies" enabled="false"/>
         </group>-->
       </tab>
       <!--
-      -->
-      <!--<tab id ="PT3" label="Vergleichen">
+      <tab id ="PT3" label="Vergleichen">
         <group id="PT3G1" label="Projekt">
-          -->
-      <!--<button id="PT3G1B0" label="Phasen vergleichen in 1 Chart" onAction="Tom2G3M1B1PhasenVgl" />-->
-      <!--
+          <button id="PT3G1B0" label="Phasen vergleichen in 1 Chart" onAction="Tom2G3M1B1PhasenVgl" />
           <button id="PT3G1B1" label="mit Projekt bzw. Vorlage vergleichen" onAction="Tom2G3M1B2PhasenVgl" />
           <button id="PT3G1B2" label="mit letztem Stand vergleichen" onAction="PT3G1B2PhasenVgl" />
           <button id="PT3G1B3" label="mit Beauftragung vergleichen" onAction="PT3G1B3PhasenVgl" />
@@ -200,28 +198,21 @@
             <button id="PT3G1M2B2" label="Kennzahlen" onAction="awinShowTrendKPI"/>
           </menu>
         </group>
-        -->
-      <!---->
-      <!--
         <group id="PT3G2" label="Portfolio">
           <button id="PT3G2B1" label="Vergleichen" onAction="awinSetModusHistory" enabled="false" />
         </group>
       </tab>-->
-      <!--
-      
-      -->
       <tab id ="PT4" label="Austauschen">
         <group id="PT4G1" label=" ">
           <!--<button id="PT4G1B1" label="Import Projekt-Inventur" onAction="Tom2G4B1InventurImport" />-->
-          <button id="PT4G1B2" label="Import RPLAN Projekte" onAction="Tom2G4B1RPLANImport" supertip ="es kann jeweils eine RPLAN Excel Datei aus dem Folder RPLAN Import eingelesen werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
-          <!--<button id="PT4G1B6" label="Exportieren Excel/RPLAN" onAction="bmwExcelExport" />-->
+          <button id="PT4G1B2" label="Import RPLAN Projekte" onAction="Tom2G4B1RPLANImport" supertip ="es kann jeweils eine RPLAN Excel Datei aus dem Folder RPLANImport eingelesen werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
           <button id="PT4G1B7" label="Exportieren FC-52" onAction="bmwFC52Export" supertip ="alle geladenen Projekte bzw. Varianten in der Session werden gemaß der FC52 Vorlage exportiert; die neue Datei liegt im Folder Export Dateien"/>
-          <button id="PT4G1B8" label="Exportieren Typ II" onAction="typIIExport" supertip ="die ausgewählten Phasen und Meilensteine aller geladenen Projekte bzw. Varianten in der Session werden in eine Excel Datei exportiert; ebenso die Dauer zwischen erstem und letztem Element der ausgewählten Phasen bzw. Meilensteine"/>
-          <button id="PT4G1B9" label="Exportieren Projekt" onAction="bmwExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner Export Dateien"/>
+          <button id="PT4G1B8" label="Exportieren Excel/RPLAN" onAction="bmwExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner Export Dateien"/>
+          <button id="PT4G1B9" label="Exportieren Typ II" onAction="typIIExport" supertip ="die ausgewählten Phasen und Meilensteine aller geladenen Projekte bzw. Varianten in der Session werden in eine Excel Datei exportiert; ebenso die Dauer zwischen erstem und letztem Element der ausgewählten Phasen bzw. Meilensteine"/> 
           <separator id="PT4G1s1"/>
           <menu id="PT4G1M1" label ="Projekt Steckbriefe">
-            <button id="PT4G1B3" label="Importieren" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
-            <button id="PT4G1B4" label="Exportieren" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner ProjectFiles"/>
+            <button id="PT4G1M1B1" label="Importieren" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+            <button id="PT4G1M1B2" label="Exportieren" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner ProjectFiles"/>
           </menu>
           <!--<separator id="PT4G1s2"/>
           <button id="PT4G1B5" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />-->
@@ -246,21 +237,20 @@
       </tab>
       <tab id ="PT6" label ="Einstellungen">
         <group id ="PT6G1" label ="Visualisierug">
-          <!--<toggleButton id="PT5G1B1" label="Phasen zeichnen" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen"/>-->
-          <checkBox id="PT6G1B1" label="Extended Drawing Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen" supertip ="mit Extended Drawing Mode werden alle Projekte mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. In dieser Darstellung können einzelne Phasen oder Meilensteine selektiv verschoben werden; Achtung: es werden alle Projekte der Session im Extended Mode dargestellt - das kann nach Menge der Projekte einige Zeit dauern!"/>
-          <!--<checkBox id="PT6G1B2" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>-->
-          <checkBox id="PT6G1B3" label="Anzeigen selekt. Objekte im Summenchart" getPressed="PTShowSelectedObjects" onAction ="awinSetShowSelObj" supertip ="ist diese Option aktiviert, so werden in Leistbarkeitscharts der Anteil der selektierten Projekte im Leistbarkeits-Gebirge angezeigt; auf diese Art und Weise kann man leicht erkennen, welchen Anteil die selektierten Projekte am Gesamtverlauf haben"/>
-          <checkBox id="PT6G1B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln" supertip ="ist diese Option aktiviert, so werden die Ampeln mit einem Schatten dargestellt, dessen Farbe der gesetzten Ampelfarbe des Meilensteines entspricht. So kann man schnell erkennen, wo die roten Ampeln liegen. Durch Klicken auf den Meilenstein wird eine Erläuterung des Projektleiters zur Meilensteinbewertung angezeigt"/>
-          <!--<button id="PT6G1B7" label="Windows u. Excel-Version"  onAction ="PTShowVersions"/>-->
+          <checkBox id="PT6G1B2" label="Extended Drawing Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen" supertip ="Es werden alle Projekte mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. In dieser Darstellung können einzelne Phasen oder Meilensteine selektiv verschoben werden; Achtung: es werden alle Projekte der Session im Extended Mode dargestellt - das kann nach Menge der Projekte einige Zeit dauern!"/>
+          <!--<checkBox id="PT6G1B3" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>-->
+          <checkBox id="PT6G1B4" label="Anzeigen selekt. Objekte im Summenchart" getPressed="PTShowSelectedObjects" onAction ="awinSetShowSelObj" supertip ="ist diese Option aktiviert, so werden in Leistbarkeitscharts der Anteil der selektierten Projekte im Leistbarkeits-Gebirge angezeigt; auf diese Art und Weise kann man leicht erkennen, welchen Anteil die selektierten Projekte am Gesamtverlauf haben"/>
+          <checkBox id="PT6G1B5" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln" supertip ="ist diese Option aktiviert, so werden die Ampeln mit einem Schatten dargestellt, dessen Farbe der gesetzten Ampelfarbe des Meilensteines entspricht. So kann man schnell erkennen, wo die roten Ampeln liegen. Durch Klicken auf den Meilenstein wird eine Erläuterung des Projektleiters zur Meilensteinbewertung angezeigt"/>
+          <!--<button id="PT6G1B6" label="Windows u. Excel-Version"  onAction ="PTShowVersions" />-->
         </group>
         <group id ="PT6G2" label="Berechnung">
           <checkBox id="PT6G2B1" label="Bei Dehnen/Stauchen proportional anpassen" getPressed="PTPropAnpassen" onAction ="awinSetPropAnpass" supertip ="diese Option wirkt nur auf Ressourcenbedarfe und Kostenbedarfe; ist diese Option aktiviert, so werden die Ressourcen und Kostenbedarfe proportional angepasst, wenn das Projekt / die Phase durch Dehnen oder Stauchen verlängert bzw. verkürzt wird. Das Budget bleibt allerdings unverändert !"/>
           <checkBox id="PT6G2B2" label="Phasenhäufigkeit anteilig berechnen" getPressed="PTPhaseAnteilig" onAction ="awinSetPhaseAnteilig" supertip ="diese Option wirkt nur auf die Berechnung von Häufigkeit Charts bei Phasen; ist diese Option aktiviert, so wird für die Phase in ihrem Start-Monat und Ende-Monat der prozentuale Wert angenommen. Andernfalls wird der Wert 1 zugrundegelegt, unabhängig wieviel vom Monat von der Phase belegt wird. Beispiel: die Phase beginnt erst zum 10. eines Monats, das bedeutet mit der aktivierten Option wird der Häufigkeits-Wert für diese Phase in diesem Monat auf ca 0.66 gesetzt, weil nur in knapp 2/3 des Monats die Phase aktiv ist"/>
         </group>
         <group id ="PT6G3" label ="Lade- und Import-Filter">
-          <checkBox id="PT6G3B1" label="Filter sind aktiv" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange" supertip ="diese Option wirkt auf alle Import- und Ladevorgänge aus der Datenbank; wenn der Filter aktiviert ist, so werden beispielsweise aus der Datenbank nur die Projekte geladen, die den gesetzten Kriterien entsprechen. Dabei gilt: wenn in einer Kategorie gar nichts ausgewählt wird, so gilt der Filter für diese Kategorie als nicht gesetzt"/>
-          <button id="Pt6G3B2" label="Element und Attribut Filter" onAction="PT5defineFilter" supertip ="für folgende Kategorien können Filter definiert werden: Der Zeitraum filter wird implizit durch entsprechendes Markieren in der Kalenderleiste markiert; weitere Filter-Kategorien sind Plan-Elemente (Phasen und Meilensteine), Ressourcen Bedarfe, Kostenbedarfe, Produktlinien und Projekt-Typen. Dabei gilt: das Projekt passiert den Filter , das eines der angegebenen Planelemente im angegebenen Zeitraum enthält, und jeweils mindestens ein Kriterium in den anderen gesetzen Kategorien erfüllt. Ist gar kein Kriterium in einer Kategorie gesetzt, so gilt diese Kategorie als nicht gesetzt, es findet damit durch diese Kategorie keine Ausfilterung statt"/>
-          <button id="Pt6G3B3" label="Zeitraum verschieben" onAction="PT5changeTimeSpan" supertip ="mit diesem Formular kann das Zeitraumfenster jeweils um einen Monat nach rechts bzw. links verschoben werden; so kann man sich bei der anzeige von Leistbarkeits-Charts einen schnellen Eindruck verschaffen, wie sich die Leistbarkeitskurve über die Zeit verändert"/>
+          <checkBox id="PT6G3B1" label="DB Filter aktivieren" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange" supertip ="diese Option wirkt auf alle Import- und Ladevorgänge aus der Datenbank; wenn der Filter aktiviert ist, so werden beispielsweise aus der Datenbank nur die Projekte geladen, die den gesetzten Kriterien entsprechen. Dabei gilt: wenn in einer Kategorie gar nichts ausgewählt wird, so gilt der Filter für diese Kategorie als nicht gesetzt"/>
+          <button id="Pt6G3B2" label="DB Filter definieren" onAction="PT5defineFilter" supertip ="für folgende Kategorien können Filter definiert werden: Der Zeitraum filter wird implizit durch entsprechendes Markieren in der Kalenderleiste markiert; weitere Filter-Kategorien sind Plan-Elemente (Phasen und Meilensteine), Ressourcen Bedarfe, Kostenbedarfe, Produktlinien und Projekt-Typen. Dabei gilt: das Projekt passiert den Filter , das eines der angegebenen Planelemente im angegebenen Zeitraum enthält, und jeweils mindestens ein Kriterium in den anderen gesetzen Kategorien erfüllt. Ist gar kein Kriterium in einer Kategorie gesetzt, so gilt diese Kategorie als nicht gesetzt, es findet damit durch diese Kategorie keine Ausfilterung statt"/>
+          <button id="Pt6G3B3" label="Zeitraum Filter" onAction="PT5changeTimeSpan" supertip ="mit diesem Formular kann das Zeitraumfenster jeweils um einen Monat nach rechts bzw. links verschoben werden; so kann man sich bei der Anzeige von Leistbarkeits-Charts einen schnellen Eindruck verschaffen, wie sich die Leistbarkeitskurve über die Zeit verändert"/>
         </group>
         <!--<group id ="PT6G4" label ="Multiprojekt Sichten">
           <checkBox id="PT6G4B1" label="Strikte Zeitraum-Orientierung" getPressed="PT6StriktPressed" onAction ="PT6SetStrict"/>
@@ -271,9 +261,9 @@
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
         </group>
-        <group id ="PT6G4" label ="Testfunktionen">
-          <button id="Pt6G4B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
-          <button id="Pt6G4B1" label="Aufbau Histories"  onAction="PTTestFunktion2" />
+        <group id ="PT6G5" label ="Testfunktionen">
+          <button id="Pt6G5B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
+          <button id="Pt6G5B1" label="Aufbau Histories"  onAction="PTTestFunktion2" />
         </group>-->
       </tab>
     </tabs>

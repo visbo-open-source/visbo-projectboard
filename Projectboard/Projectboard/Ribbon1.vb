@@ -257,7 +257,7 @@ Imports System.Drawing
                 If storedProj = 0 Then
                     Call MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte speichern?", MsgBoxStyle.OkCancel)
 
-                    If CBool(MsgBoxResult.Ok) Then
+                    If MsgBoxResult.Ok = vbOK Then
                         Call StoreAllProjectsinDB()
                     End If
                 Else
@@ -1134,42 +1134,13 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub PT5defineFilter(control As IRibbonControl)
 
-        Dim auswahlFormular As New frmShowPlanElements
-
 
         Call projektTafelInit()
 
         enableOnUpdate = False
         appInstance.EnableEvents = False
 
-
-        With auswahlFormular
-            .Text = "Filter definieren"
-
-            .chkbxShowObjects = False
-            .chkbxCreateCharts = False
-
-            .chkbxOneChart.Checked = False
-            .chkbxOneChart.Visible = False
-
-            .rdbBU.Visible = True
-            .pictureBU.Visible = True
-
-            .rdbTyp.Visible = True
-            .pictureTyp.Visible = True
-
-
-            .repVorlagenDropbox.Visible = False
-            .labelPPTVorlage.Visible = False
-
-            .showModePortfolio = True
-            .menuOption = PTmenue.filterdefinieren
-
-            .OKButton.Text = "Speichern"
-
-            .Show()
-        End With
-
+        Call defineFilterDB()
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
@@ -1340,6 +1311,10 @@ Imports System.Drawing
                     With ProjektAendern
                         .projectName.Text = hproj.name
                         .vorlagenName.Text = hproj.VorlagenName
+                        For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                            .businessUnit.Items.Add(kvp.Value.name)
+                        Next
+                        .businessUnit.Text = hproj.businessUnit
                         .Erloes.Text = hproj.Erloes.ToString
                         .risiko.Text = hproj.Risiko.ToString("0.0")
                         .sFit.Text = hproj.StrategicFit.ToString("0.0")
@@ -1374,6 +1349,7 @@ Imports System.Drawing
 
                             .StrategicFit = CType(ProjektAendern.sFit.Text, Double)
                             .Risiko = CType(ProjektAendern.risiko.Text, Double)
+                            .businessUnit = CType(ProjektAendern.businessUnit.Text, String)
 
                         End With
 
@@ -1611,7 +1587,7 @@ Imports System.Drawing
     Sub VisPlanObjects001(control As IRibbonControl)
 
         Dim auswahlFormular As New frmShowPlanElements
-
+        Dim returnValue As DialogResult
 
         Call projektTafelInit()
 
@@ -1631,6 +1607,12 @@ Imports System.Drawing
                 .rdbTyp.Visible = False
                 .pictureTyp.Visible = False
 
+                .rdbRoles.Visible = False
+                .pictureRoles.Visible = False
+
+                .rdbCosts.Visible = False
+                .pictureCosts.Visible = False
+
                 .chkbxShowObjects = True
 
 
@@ -1648,7 +1630,8 @@ Imports System.Drawing
 
                 .OKButton.Text = "Anzeigen"
 
-                .Show()
+                '.Show()
+                returnValue = .ShowDialog
             End With
 
 
@@ -1674,7 +1657,7 @@ Imports System.Drawing
     Sub AnalyseLeistbarkeit(ByVal control As IRibbonControl)
 
         Dim auswahlFormular As New frmShowPlanElements
-
+        Dim returnValue As DialogResult
 
         Call projektTafelInit()
 
@@ -1693,6 +1676,12 @@ Imports System.Drawing
                 .rdbTyp.Visible = False
                 .pictureTyp.Visible = False
 
+                .rdbRoles.Visible = True
+                .pictureRoles.Visible = True
+
+                .rdbCosts.Visible = True
+                .pictureCosts.Visible = True
+
                 .chkbxShowObjects = False
 
                 .chkbxOneChart.Checked = False
@@ -1709,7 +1698,8 @@ Imports System.Drawing
                 .menuOption = PTmenue.leistbarkeitsAnalyse
                 .OKButton.Text = "Charts erstellen"
 
-                .Show()
+                '.Show()
+                returnValue = .ShowDialog
             End With
 
 
@@ -1732,7 +1722,7 @@ Imports System.Drawing
 
     End Sub
 
-    Sub VariantenprojektReport(ByVal control As IRibbonControl)
+    Sub awinVariantenprojektReport(ByVal control As IRibbonControl)
 
         Dim auswahlFormular As New frmShowPlanElements
         Dim returnValue As DialogResult
@@ -1749,11 +1739,11 @@ Imports System.Drawing
 
             With auswahlFormular
 
-                .rdbBU.Visible = False
-                .pictureBU.Visible = False
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
 
-                .rdbTyp.Visible = False
-                .pictureTyp.Visible = False
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
 
                 .einstellungen.Visible = True
                 .Text = "Projekt-Varianten Report erzeugen"
@@ -1801,7 +1791,7 @@ Imports System.Drawing
     End Sub
 
 
-    Sub MultiprojektReport(ByVal control As IRibbonControl)
+    Sub awinMultiprojektReport(ByVal control As IRibbonControl)
 
         Dim auswahlFormular As New frmShowPlanElements
         Dim returnValue As DialogResult
@@ -1812,17 +1802,17 @@ Imports System.Drawing
         appInstance.EnableEvents = False
 
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
-        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
-
+        'If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+        If ShowProjekte.Count > 0 Then
             appInstance.ScreenUpdating = False
 
             With auswahlFormular
 
-                .rdbBU.Visible = False
-                .pictureBU.Visible = False
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
 
-                .rdbTyp.Visible = False
-                .pictureTyp.Visible = False
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
 
                 .einstellungen.Visible = True
                 .Text = "Multiprojekt Reports erzeugen"
@@ -1852,13 +1842,13 @@ Imports System.Drawing
 
             appInstance.ScreenUpdating = True
 
-        ElseIf ShowProjekte.Count = 0 Then
+        Else
 
             Call MsgBox("Es sind keine Projekte geladen!  ")
 
-        ElseIf showRangeRight - showRangeLeft <= 5 Then
+            'ElseIf showRangeRight - showRangeLeft <= 5 Then
 
-            Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
+            '    Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
 
         End If
 
@@ -2578,11 +2568,17 @@ Imports System.Drawing
 
             With auswahlFormular
 
-                .rdbBU.Visible = False
-                .pictureBU.Visible = False
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
 
-                .rdbTyp.Visible = False
-                .pictureTyp.Visible = False
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
+
+                ''.rdbRoles.Visible = False
+                ''.pictureRoles.Visible = False
+
+                ''.rdbCosts.Visible = False
+                ''.pictureCosts.Visible = False
 
                 .einstellungen.Visible = False
                 .Text = "Excel Report erzeugen"

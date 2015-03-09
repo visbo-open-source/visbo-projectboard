@@ -174,6 +174,8 @@ Module BMWItOModul
 
                 While zeile <= lastRow
 
+                    ' wenn es mit einem neuen Projekt beginnt, muss der lastDuplicateIndent zurückgesetzt sein 
+                    lastDuplicateIndent = 1000000
 
                     ix = zeile + 1
 
@@ -881,18 +883,27 @@ Module BMWItOModul
 
                                 If Projektvorlagen.Contains(vorlagenName) Then
                                     vproj = Projektvorlagen.getProject(vorlagenName)
-                                ElseIf Projektvorlagen.Contains("unknown") Then
-                                    vproj = Projektvorlagen.getProject("unknown")
+
+                                    hproj.farbe = vproj.farbe
+                                    hproj.Schrift = vproj.Schrift
+                                    hproj.Schriftfarbe = vproj.Schriftfarbe
+                                    hproj.earliestStart = vproj.earliestStart
+                                    hproj.latestStart = vproj.latestStart
+
+                                    'ElseIf Projektvorlagen.Contains("unknown") Then
+                                    '    vproj = Projektvorlagen.getProject("unknown")
                                 Else
-                                    Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
+                                    'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
+                                    hproj.farbe = awinSettings.AmpelNichtBewertet
+                                    hproj.Schrift = Projektvorlagen.getProject(1).Schrift
+                                    hproj.Schriftfarbe = RGB(10, 10, 10)
+                                    hproj.earliestStart = 0
+                                    hproj.latestStart = 0
+
                                 End If
 
 
-                                hproj.farbe = vproj.farbe
-                                hproj.Schrift = vproj.Schrift
-                                hproj.Schriftfarbe = vproj.Schriftfarbe
-                                hproj.earliestStart = vproj.earliestStart
-                                hproj.latestStart = vproj.latestStart
+                                
 
                             End If
 

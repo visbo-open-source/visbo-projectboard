@@ -85,7 +85,7 @@ Public Class frmShowPlanElements
 
 
         ' jetzt werden anhand des letzten Filters die Collections gesetzt 
-        Call retrieveSelections("Last", selectedBUs, selectedTyps, _
+        Call retrieveSelections("Last", menuOption, selectedBUs, selectedTyps, _
                                 selectedPhases, selectedMilestones, _
                                 selectedRoles, selectedCosts)
 
@@ -132,7 +132,7 @@ Public Class frmShowPlanElements
     ''' <remarks></remarks>
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
-
+        Dim filterName As String = "Last"
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
@@ -196,7 +196,10 @@ Public Class frmShowPlanElements
         End If
 
 
-
+        ' jetzt wird der letzte Filter gespeichert ..
+        Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts)
 
         ''''
         ''
@@ -208,7 +211,7 @@ Public Class frmShowPlanElements
 
         Dim validOption As Boolean
         If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
-            Me.menuOption = PTmenue.excelExport Then
+            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft > 5 Then
             validOption = True
@@ -313,11 +316,6 @@ Public Class frmShowPlanElements
                     Call zeichneLeistbarkeitsChart(selectedCosts, chTyp, chtop, chleft)
                 End If
 
-                ' den aktuellen Filter wegschreiben unter dem Namen last 
-
-                Call storeFilter("Last", selectedBUs, selectedTyps, _
-                                                   selectedPhases, selectedMilestones, _
-                                                   selectedRoles, selectedCosts)
                 appInstance.ScreenUpdating = formerSU
 
             Else
@@ -355,19 +353,12 @@ Public Class frmShowPlanElements
                     Call MsgBox("noch nicht implementiert")
                 End If
 
-                Call storeFilter("Last", selectedBUs, selectedTyps, _
-                                                   selectedPhases, selectedMilestones, _
-                                                   selectedRoles, selectedCosts)
-
             Else
                 Call MsgBox("bitte mindestens ein Element aus einer der Kategorien selektieren  ")
             End If
 
         ElseIf menuOption = PTmenue.filterdefinieren Then
 
-            Call storeFilter("Last", selectedBUs, selectedTyps, _
-                                                   selectedPhases, selectedMilestones, _
-                                                   selectedRoles, selectedCosts)
             Call MsgBox("ok, Filter gespeichert")
 
         ElseIf menuOption = PTmenue.excelExport Then
@@ -376,8 +367,7 @@ Public Class frmShowPlanElements
                     And validOption Then
 
                 Try
-                    Call createExcelExportFromSelection(selectedPhases, selectedMilestones, _
-                                                     selectedRoles, selectedCosts)
+                    Call createExcelExportFromSelection(filterName) 
 
                     Call MsgBox("ok, Excel File in " & exportFilesOrdner & " erzeugt")
                 Catch ex As Exception
@@ -385,10 +375,6 @@ Public Class frmShowPlanElements
                 End Try
                 
 
-
-                Call storeFilter("Last", selectedBUs, selectedTyps, _
-                                                   selectedPhases, selectedMilestones, _
-                                                   selectedRoles, selectedCosts)
 
 
             Else
@@ -627,6 +613,12 @@ Public Class frmShowPlanElements
                     For i = 1 To businessUnitDefinitions.Count
                         allBUs.Add(CStr(businessUnitDefinitions.ElementAt(i - 1).Value.name))
                     Next
+
+                    ' den Fall noch vorsehen, dass etwas unknown ist ... 
+                    If Not allBUs.Contains("unknown") Then
+                        allBUs.Add("unknown")
+                    End If
+
                 End If
 
                 Call rebuildFormerState(PTauswahlTyp.BusinessUnit)
@@ -665,11 +657,17 @@ Public Class frmShowPlanElements
                 chkbxOneChart.Text = "Alles in einem Chart"
 
                 If allTyps.Count = 0 Then
+
                     For i = 1 To Projektvorlagen.Count
                         allTyps.Add(Projektvorlagen.Liste.ElementAt(i - 1).Key)
                     Next
-                End If
 
+                    ' den Fall noch vorsehen, dass etwas unknown ist ... 
+                    If Not allTyps.Contains("unknown") Then
+                        allTyps.Add("unknown")
+                    End If
+
+                End If
 
                 Call rebuildFormerState(PTauswahlTyp.ProjektTyp)
 
@@ -938,11 +936,15 @@ Public Class frmShowPlanElements
 
                 If vorlagenDateiName.Contains(RepPortfolioVorOrdner) Then
                     Call createPPTSlidesFromConstellation(vorlagenDateiName, _
-                                                      selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                                      selectedPhases, selectedMilestones, _
+                                                      selectedRoles, selectedCosts, _
+                                                      selectedBUs, selectedTyps, _
                                                       worker, e)
                 Else
                     Call createPPTReportFromProjects(vorlagenDateiName, _
-                                                     selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                                     selectedPhases, selectedMilestones, _
+                                                     selectedRoles, selectedCosts, _
+                                                     selectedBUs, selectedTyps, _
                                                      worker, e)
                 End If
 
@@ -984,9 +986,9 @@ Public Class frmShowPlanElements
         Me.statusLabel.Visible = True
         Me.AbbrButton.Text = "Zurücksetzen"
 
-        Call storeFilter("Last", selectedBUs, selectedTyps, _
-                                                   selectedPhases, selectedMilestones, _
-                                                   selectedRoles, selectedCosts)
+        'Call storeFilter("Last", selectedBUs, selectedTyps, _
+        '                                           selectedPhases, selectedMilestones, _
+        '                                           selectedRoles, selectedCosts)
 
 
 
@@ -1118,18 +1120,23 @@ Public Class frmShowPlanElements
     ''' erstellt das Excel Export File für die angegebenen Phasen, Meilensteine, Rollen und Kosten
     ''' vorläufig nur für Phasen und Rollen realisiert
     ''' </summary>
-    ''' <param name="selPhases"></param>
-    ''' <param name="selMilestones"></param>
-    ''' <param name="selRoles"></param>
-    ''' <param name="selCosts"></param>
+    ''' <param name="filterName">gibt den Namen des Filters an, der die Collections enthält </param>
     ''' <remarks></remarks>
-    Private Sub createExcelExportFromSelection(ByVal selPhases As Collection, ByVal selMilestones As Collection, _
-                                                   ByVal selRoles As Collection, ByVal selCosts As Collection)
+    Private Sub createExcelExportFromSelection(ByVal filterName As String)
 
         Dim earliestDate As Date, latestDate As Date
         Dim phaseList As New SortedList(Of Double, String)
         Dim milestonelist As New SortedList(Of Double, String)
 
+        Dim selphases As New Collection
+        Dim selMilestones As New Collection
+        Dim selRoles As New Collection
+        Dim selCosts As New Collection
+        Dim selBUs As New Collection
+        Dim selTyps As New Collection
+
+        Call retrieveSelections(filterName, PTmenue.excelExport, selBUs, selTyps, _
+                                 selphases, selMilestones, selRoles, selCosts)
 
         ' initialisieren 
         earliestDate = StartofCalendar.AddMonths(-12)
@@ -1141,7 +1148,7 @@ Public Class frmShowPlanElements
         Dim hproj As clsProjekt
         Dim pName As String, msName As String
         Dim cphase As clsPhase, milestone As clsMeilenstein
-        Dim anzPlanobjekte As Integer = selPhases.Count + selMilestones.Count
+        Dim anzPlanobjekte As Integer = selphases.Count + selMilestones.Count
         Dim bestproj As String = ""
         Dim startFaktor As Double = 1.0
         Dim durationFaktor As Double = 0.000001
@@ -1151,7 +1158,7 @@ Public Class frmShowPlanElements
         Dim refLaenge As Integer
 
         currentIX = 1
-        Do While phaseList.Count + milestonelist.Count < selPhases.Count + selMilestones.Count And _
+        Do While phaseList.Count + milestonelist.Count < selphases.Count + selMilestones.Count And _
                  currentIX <= anzahlProjekte
 
             hproj = ShowProjekte.getProject(currentIX)
@@ -1169,8 +1176,8 @@ Public Class frmShowPlanElements
 
             End If
 
-            If phaseList.Count < selPhases.Count Then
-                For Each pObject As Object In selPhases
+            If phaseList.Count < selphases.Count Then
+                For Each pObject As Object In selphases
                     pName = CStr(pObject)
                     If phaseList.ContainsValue(pName) Then
                         ' sie ist schon eingeordnet und es muss nichts mehr gemacht werden 
@@ -1251,92 +1258,6 @@ Public Class frmShowPlanElements
 
     End Sub
 
-    ''' <summary>
-    ''' speichert den letzten Filter und setzt die temporären Collections wieder zurück 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Private Sub storeFilter(ByVal fName As String, _
-                                              ByVal fBU As Collection, ByVal fTyp As Collection, _
-                                              ByVal fPhase As Collection, ByVal fMilestone As Collection, _
-                                              ByVal fRole As Collection, ByVal fCost As Collection)
-
-        Dim lastFilter As clsFilter
-
-
-        lastFilter = New clsFilter(fName, fBU, fTyp, _
-                                  fPhase, fMilestone, _
-                                 fRole, fCost)
-
-
-        If menuOption = PTmenue.filterdefinieren Then
-            filterDefinitions.storeFilter(fName, lastFilter)
-        Else
-            selFilterDefinitions.storeFilter(fName, lastFilter)
-        End If
-
-
-        'Me.selectedPhases.Clear()
-        'Me.selectedMilestones.Clear()
-        'Me.selectedRoles.Clear()
-        'Me.selectedCosts.Clear()
-        'Me.selectedBUs.Clear()
-        'Me.selectedTyps.Clear()
-
-        'Me.ListBox2.Items.Clear()
-
-    End Sub
-
-    ''' <summary>
-    ''' besetzt die Selection Collections mit den Werten des Filters mit Namen fName
-    ''' </summary>
-    ''' <param name="fName"></param>
-    ''' <param name="selectedBUs"></param>
-    ''' <param name="selectedTyps"></param>
-    ''' <param name="selectedPhases"></param>
-    ''' <param name="selectedMilestones"></param>
-    ''' <param name="selectedRoles"></param>
-    ''' <param name="selectedCosts"></param>
-    ''' <remarks></remarks>
-    Private Sub retrieveSelections(ByVal fName As String, _
-                                       ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
-                                       ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
-                                       ByRef selectedRoles As Collection, ByRef selectedCosts As Collection)
-
-        Dim lastFilter As clsFilter
-
-        If menuOption = PTmenue.filterdefinieren Then
-            lastFilter = filterDefinitions.retrieveFilter(fName)
-        Else
-            lastFilter = selFilterDefinitions.retrieveFilter(fName)
-            If IsNothing(lastFilter) Then
-                lastFilter = filterDefinitions.retrieveFilter(fName)
-            End If
-        End If
-
-
-        If Not IsNothing(lastFilter) Then
-            If menuOption = PTmenue.filterdefinieren Then
-                selectedBUs = lastFilter.BUs
-                selectedTyps = lastFilter.Typs
-            Else
-                selectedBUs = New Collection
-                selectedTyps = New Collection
-            End If
-            
-            selectedPhases = lastFilter.Phases
-            selectedMilestones = lastFilter.Milestones
-            selectedRoles = lastFilter.Roles
-            selectedCosts = lastFilter.Costs
-
-        Else
-            selectedBUs = New Collection
-            selectedTyps = New Collection
-            selectedPhases = New Collection
-            selectedMilestones = New Collection
-            selectedRoles = New Collection
-            selectedCosts = New Collection
-        End If
-
-    End Sub
+    
 
 End Class
