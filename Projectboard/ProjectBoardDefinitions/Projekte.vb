@@ -9612,13 +9612,17 @@ Public Module Projekte
                         tmpConstellation.constellationName = autoSzenarioNamen(3)
                         projectConstellations.Add(tmpConstellation)
 
-                        tmpConstellation = projectConstellations.getConstellation(autoSzenarioNamen(1))
-                        If projectConstellations.Contains(autoSzenarioNamen(2)) Then
-                            projectConstellations.Remove(autoSzenarioNamen(2))
-                        End If
+                        If projectConstellations.Contains(autoSzenarioNamen(1)) Then
+                            tmpConstellation = projectConstellations.getConstellation(autoSzenarioNamen(1))
 
-                        tmpConstellation.constellationName = autoSzenarioNamen(2)
-                        projectConstellations.Add(tmpConstellation)
+                            If projectConstellations.Contains(autoSzenarioNamen(2)) Then
+                                projectConstellations.Remove(autoSzenarioNamen(2))
+                            End If
+
+                            tmpConstellation.constellationName = autoSzenarioNamen(2)
+                            projectConstellations.Add(tmpConstellation)
+                        End If
+                        
 
                     End If
 
@@ -9632,10 +9636,13 @@ Public Module Projekte
                     thirdValue = secondValue
                     secondValue = currentValue
 
-                    If projectConstellations.Contains(autoSzenarioNamen(3)) Then
+                    If projectConstellations.Contains(autoSzenarioNamen(2)) Then
                         tmpConstellation = projectConstellations.getConstellation(autoSzenarioNamen(2))
 
-                        projectConstellations.Remove(autoSzenarioNamen(3))
+                        If projectConstellations.Contains(autoSzenarioNamen(3)) Then
+                            projectConstellations.Remove(autoSzenarioNamen(3))
+                        End If
+
                         tmpConstellation.constellationName = autoSzenarioNamen(3)
                         projectConstellations.Add(tmpConstellation)
 
@@ -10158,7 +10165,7 @@ Public Module Projekte
 
     ''' <summary>
     ''' zeichnet die Plantafel mit den Projekten neu; 
-    ''' zeichnet bei FromScrtach = true: zuerst in Reihenfolge der Business Units, 
+    ''' zeichnet bei fromScratch = true: zuerst in Reihenfolge der Business Units, 
     ''' dann sortiert nach Anfangsdatum, dann sortiert nach Projektdauer
     ''' im fall fromScratch = false: versucht dabei immer die alte Position der Projekte zu übernehmen 
     ''' </summary>

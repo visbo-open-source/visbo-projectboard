@@ -188,7 +188,9 @@
                             End If
 
                         Else
-                            milestoneDate = awinSettings.nullDatum
+                            ' damit wird gekennzeichnet, dass es eigentlich keinen Wert im Berichtsmonat gab
+                            milestoneDate = currentproj.getMilestoneDate(milestoneName).AddHours(12)
+                            'milestoneDate = awinSettings.nullDatum
                         End If
 
                     End If
@@ -631,35 +633,16 @@
                     Else
                         ' es gibt keinen exakten Match, aber das Abbruch Kriterium ist erfüllt 
                         found = True
+                        If i > 0 Then
+                            i = i - 1
+                        Else
+                            i = 0
+                        End If
+
                     End If
 
                 End While
 
-
-                ' alte Version: war fehlerhaft 
-                'Dim lg As Integer = 0, rg As Integer = _liste.Count - 1
-                'Dim suchindex As Integer = CInt((rg - lg) / 2)
-                'Dim oldindex As Integer = -1
-
-                'Do While lg < rg And Not found
-
-                '    oldindex = suchindex
-                '    If DateDiff(DateInterval.Second, _liste.ElementAt(suchindex).Key, suchDatum) = 0 Then
-                '        found = True
-                '    ElseIf _liste.ElementAt(suchindex).Key > suchDatum Then
-                '        ' links suchen 
-                '        rg = suchindex
-                '        suchindex = CInt(lg + (rg - lg) / 2)
-
-                '    Else
-                '        ' rechts suchen
-                '        lg = suchindex
-                '        suchindex = CInt(lg + (rg - lg) / 2)
-
-                '    End If
-
-                'Loop
-                ' Ende alte Version 
 
                 If found Then
                     _currentIndex = i
