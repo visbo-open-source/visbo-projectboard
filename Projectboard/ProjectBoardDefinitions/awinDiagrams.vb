@@ -742,8 +742,9 @@ Public Module awinDiagrams
                         .top = top
                         .left = left
                         .kennung = chtobjName
-                        '.width = width
-                        '.height = height
+                        ' ur:09.03.2015: wegen Chart-Resize geändert
+                        .width = width
+                        .height = height
 
                     End With
 

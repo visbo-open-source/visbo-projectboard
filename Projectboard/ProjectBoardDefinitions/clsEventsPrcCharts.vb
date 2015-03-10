@@ -1,5 +1,6 @@
 ﻿Imports System.Math
 Imports xlNS = Microsoft.Office.Interop.Excel
+Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Core
 Imports System.Windows.Forms
 
@@ -418,8 +419,8 @@ Public Class clsEventsPrcCharts
         Dim chtobj As xlNS.ChartObject, chtobj1 As xlNS.ChartObject
         Dim IDKennung As String
         Dim foundDiagram As clsDiagramm
-
-
+        Dim kFontsize As Double
+        Dim achsenFontsize As Double
         Try
             chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
             Try
@@ -430,6 +431,71 @@ Public Class clsEventsPrcCharts
 
             IDKennung = chtobj.Name
             foundDiagram = DiagramList.getDiagramm(IDKennung)
+
+            kFontsize = (chtobj.Width / foundDiagram.width)
+            'kHeight = (chtobj.Height / foundDiagram.height)
+
+            With chtobj.Chart
+
+                ' Schriftgröße der Überschrift anpassen
+                If .HasTitle Then
+                    .ChartTitle.Format.TextFrame2.TextRange.Font.Size = CType(.ChartTitle.Format.TextFrame2.TextRange.Font.Size * kFontsize, Single)
+                End If
+
+                ' Schriftgröße der Legende anpassen
+                If .HasLegend Then
+                    With .Legend
+                        .Format.TextFrame2.TextRange.Font.Size = CType(.Format.TextFrame2.TextRange.Font.Size * kFontsize, Single)
+                    End With
+                End If
+
+                ' Schriftgröße der x-Achse anpassen
+                Try
+                    With .Axes(Microsoft.Office.Interop.Excel.XlAxisType.xlCategory, Microsoft.Office.Interop.Excel.XlAxisGroup.xlPrimary)
+                        achsenFontsize = CType(.Ticklabels.Font.Size * kFontsize, Double)
+                        .TickLabels.Font.Size = .Ticklabels.Font.Size * kFontsize
+                    End With
+                Catch ex As Exception
+
+                End Try
+
+
+                ' Schriftgröße der y-Achse anpassen
+                Try
+                    With .Axes(Microsoft.Office.Interop.Excel.XlAxisType.xlValue, Microsoft.Office.Interop.Excel.XlAxisGroup.xlPrimary)
+                        '.TickLabels.Font.Size = .Ticklabels.Font.Size * kFontsize
+                        .TickLabels.Font.Size = achsenFontsize
+                    End With
+                Catch ex As Exception
+
+                End Try
+
+
+
+                ' Schriftgröße der eingezeichenten Daten bestimmen
+                If .SeriesCollection.Count > 0 Then
+
+                    For j = 1 To .SeriesCollection.Count
+
+                        With .SeriesCollection(j)
+                            If .HasDataLabels = True Then
+                                .ApplyDataLabels()
+                                For i = 1 To .Points.count
+                                    With .Points(i)
+                                        .DataLabel.Font.Size = .DataLabel.Font.Size * kFontsize
+                                    End With
+                                Next i
+                            End If
+
+                        End With
+
+                    Next j
+
+                End If
+
+            End With
+
+
             With foundDiagram
                 .top = chtobj.Top
                 .left = chtobj.Left
@@ -491,7 +557,7 @@ Public Class clsEventsPrcCharts
         '    previousHeight = .Height
         'End With
 
-
+        enableOnUpdate = True
 
     End Sub
 
@@ -568,4 +634,6 @@ Public Class clsEventsPrcCharts
 
 
     End Sub
+
+  
 End Class
