@@ -1388,10 +1388,10 @@ Public Module awinDiagrams
                     .HasLegend = False
                 ElseIf lastSC > 1 And seldatenreihe.Sum = 0 Then
                     .HasLegend = True
-                    .Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
-                    .Legend.Font.Size = awinSettings.fontsizeLegend
+                    'ur: 11.03.2015: wenn ein Chart eine Legende hat, so soll sie bleiben wie zuletzt definiert, nicht jedesmal auf Ursprungszustand zurückgesetzt werden
+                    '.Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
+                    '.Legend.Font.Size = awinSettings.fontsizeLegend
                 Else
-
                     .HasLegend = False
                 End If
 
