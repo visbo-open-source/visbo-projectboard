@@ -107,7 +107,6 @@
     <Compile Include="clsDiagramme.vb" />
     <Compile Include="clsEventsPfCharts.vb" />
     <Compile Include="clsEventsPrcCharts.vb" />
-    <Compile Include="clsEventsPrjCharts.vb" />
     <Compile Include="clsKeyboardEvents.vb" />
     <Compile Include="clsKostenart.vb" />
     <Compile Include="clsKostenartDefinition.vb" />

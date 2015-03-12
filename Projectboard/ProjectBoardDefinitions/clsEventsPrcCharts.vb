@@ -1,9 +1,8 @@
 ﻿Imports System.Math
 Imports xlNS = Microsoft.Office.Interop.Excel
-Imports Microsoft.Office.Interop.Excel
-Imports Microsoft.Office.Core
+Imports Microsoft.Office.Interop
 Imports System.Windows.Forms
-
+Imports Microsoft.Office.Core
 'Imports System.Int32
 
 Public Class clsEventsPrcCharts
@@ -421,6 +420,7 @@ Public Class clsEventsPrcCharts
         Dim foundDiagram As clsDiagramm
         Dim kFontsize As Double
         Dim achsenFontsize As Double
+        Dim axisTitleFontsize As Double
         Try
             chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
             Try
@@ -451,9 +451,15 @@ Public Class clsEventsPrcCharts
 
                 ' Schriftgröße der x-Achse anpassen
                 Try
-                    With .Axes(Microsoft.Office.Interop.Excel.XlAxisType.xlCategory, Microsoft.Office.Interop.Excel.XlAxisGroup.xlPrimary)
+                    With CType(.Axes(Microsoft.Office.Interop.Excel.XlAxisType.xlCategory, Microsoft.Office.Interop.Excel.XlAxisGroup.xlPrimary), Excel.Axis)
                         achsenFontsize = CType(.Ticklabels.Font.Size * kFontsize, Double)
-                        .TickLabels.Font.Size = .Ticklabels.Font.Size * kFontsize
+                        .TickLabels.Font.Size = .TickLabels.Font.Size * kFontsize
+                        If .HasTitle Then
+                            With .AxisTitle
+                                axisTitleFontsize = CType(.Characters.Font.Size * kFontsize, Double)
+                                .Characters.Font.Size = .Characters.Font.Size * kFontsize
+                            End With
+                        End If
                     End With
                 Catch ex As Exception
 
@@ -462,15 +468,19 @@ Public Class clsEventsPrcCharts
 
                 ' Schriftgröße der y-Achse anpassen
                 Try
-                    With .Axes(Microsoft.Office.Interop.Excel.XlAxisType.xlValue, Microsoft.Office.Interop.Excel.XlAxisGroup.xlPrimary)
+                    With CType(.Axes(Microsoft.Office.Interop.Excel.XlAxisType.xlValue, Microsoft.Office.Interop.Excel.XlAxisGroup.xlPrimary), Excel.Axis)
                         '.TickLabels.Font.Size = .Ticklabels.Font.Size * kFontsize
                         .TickLabels.Font.Size = achsenFontsize
+                        If .HasTitle Then
+                            With .AxisTitle
+                                .Characters.Font.Size = axisTitleFontsize
+                            End With
+                        End If
+                     
                     End With
                 Catch ex As Exception
 
                 End Try
-
-
 
                 ' Schriftgröße der eingezeichenten Daten bestimmen
                 If .SeriesCollection.Count > 0 Then
@@ -505,57 +515,6 @@ Public Class clsEventsPrcCharts
         Catch ex As Exception
             'Call MsgBox("konnte das Chart nicht in der Diagramm-Liste finden ...")
         End Try
-
-
-        'Dim chtobj As ChartObject
-        ''Dim spanDiff As Integer
-
-
-
-        'Try
-        '    chtobj = Me.PrcChartEvents.Parent
-        '    With chtobj
-        '        Call MsgBox("top: " & .Top & vbLf & _
-        '                     "left: " & .Left & vbLf & _
-        '                     "width: " & .Width & vbLf & _
-        '                     "height: " & .Height)
-        '    End With
-
-        'Catch ex As Exception
-        '    Exit Sub
-        'End Try
-
-        'With chtobj
-        '    width = .Width
-        '    left = .Left
-        'End With
-
-
-        'If width <> previousWidth Then
-        '    If left = previousLeft Then
-        '        ' es wurde der rechte Rand verändert 
-        '        spanDiff = (width - previousWidth) / boxWidth
-        '        If spanDiff <> 0 Then
-        '            Call awinChangeTimeSpan(showRangeLeft, showRangeRight + spanDiff)
-        '        End If
-
-        '    Else
-        '        ' es wurde der linke Rand verändert 
-        '        spanDiff = (width - previousWidth) / boxWidth
-        '        If spanDiff <> 0 Then
-        '            Call awinChangeTimeSpan(showRangeLeft + spanDiff, showRangeRight)
-        '        End If
-
-        '    End If
-
-        'End If
-
-        'With chtobj
-        '    previousLeft = .Left
-        '    previousTop = .Top
-        '    previousWidth = .Width
-        '    previousHeight = .Height
-        'End With
 
         enableOnUpdate = True
 

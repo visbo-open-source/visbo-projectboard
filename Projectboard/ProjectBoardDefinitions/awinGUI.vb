@@ -674,21 +674,25 @@ Public Module awinGUI
                 ' nichts tun
             Else
 
-                pfDiagram = New clsDiagramm
 
+                pfDiagram = New clsDiagramm
+                ' Anfang Event Handling für Chart 
                 pfChart = New clsEventsPfCharts
                 pfChart.PfChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
-
                 pfDiagram.setDiagramEvent = pfChart
+                ' Ende Event Handling für Chart 
 
                 With pfDiagram
-
                     .kennung = calcChartKennung("pf", charttype, ProjektListe)
                     .DiagrammTitel = diagramTitle
                     .diagrammTyp = DiagrammTypen(3)                     ' Portfolio
                     .gsCollection = ProjektListe
                     .isCockpitChart = False
-
+                    ' ur:09.03.2015: wegen Chart-Resize geändert
+                    .top = top
+                    .left = left
+                    .width = width
+                    .height = height
                 End With
 
                 DiagramList.Add(pfDiagram)
@@ -702,8 +706,6 @@ Public Module awinGUI
 
     End Sub  ' Ende Prozedur awinCreatePortfolioChartDiagramm
 
-
-
     
     ''' <summary>
     ''' aktualisiert die Portfolio Charts 
@@ -712,6 +714,7 @@ Public Module awinGUI
     ''' <param name="chtobj"></param>
     ''' <param name="bubbleColor">gibt an, ob di eAMpelfarbe des Projekts gezeigt werden soll</param>
     ''' <remarks></remarks>
+    '''
     Sub awinUpdatePortfolioDiagrams(ByRef chtobj As ChartObject, bubbleColor As Integer)
 
         Dim i As Integer
@@ -1149,7 +1152,7 @@ Public Module awinGUI
             .ChartTitle.Text = diagramTitle
         End With
 
-                appInstance.EnableEvents = formerEE
+        appInstance.EnableEvents = formerEE
 
 
 
