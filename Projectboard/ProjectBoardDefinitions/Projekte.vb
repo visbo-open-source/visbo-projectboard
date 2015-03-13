@@ -12055,6 +12055,8 @@ Public Module Projekte
     Public Sub aktualisiereCharts(ByVal hproj As clsProjekt, ByVal replaceProj As Boolean)
         Dim chtobj As Excel.ChartObject
         Dim vglName As String = hproj.name.Trim
+        Dim founddiagram As New clsDiagramm
+        Dim IDkennung As String
 
 
         If Not (hproj Is Nothing) Then
@@ -12071,6 +12073,23 @@ Public Module Projekte
                             tmpArray = chtobj.Name.Split(New Char() {CType("#", Char)}, 5)
                             ' chtobj name ist aufgebaut: pr#PTprdk.kennung#pName#Auswahl
                             If tmpArray(0) = "pr" Then
+
+                                'ur:12.03.2015
+                                ' Diagramlist auf den neuesten Stand bringen, damit der Resize der Charts funktioniert
+
+                                founddiagram = DiagramList.getDiagramm(chtobj.Name)
+                                DiagramList.Remove(chtobj.Name)
+                                With founddiagram
+                                    tmpArray(2) = vglName
+                                    IDkennung = Join(tmpArray, "#")
+                                    .kennung = IDkennung
+                                End With
+                                DiagramList.Add(founddiagram)
+                                ' VORSICHT: das Diagram 'founddiagram' ist von den Inhalten in der DiagramList inkonsistenz.
+                                '           DiagramTitle und die myCollection stimmen nicht mit dem selektierten Projekt überein.
+                                ' TODO: den in den update-Routinen zusammengesetzen DiagramTitle und die aktuelle myCollection müssen noch in das ListenElement richtig eingetragen werden.
+                                ' siehe JIRA PT89
+                                ' ur:12.03.2025: ende
 
                                 If replaceProj Or (tmpArray(2).Trim = vglName) Then
                                     Select Case tmpArray(1)

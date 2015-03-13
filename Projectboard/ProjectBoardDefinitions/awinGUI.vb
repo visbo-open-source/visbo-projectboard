@@ -671,24 +671,52 @@ Public Module awinGUI
 
 
             If isProjektCharakteristik And ProjektListe.Count = 1 Then
-                ' nichts tun
-            Else
 
+                ' ur: 12.03.2015: testweise geändert, Diagramme mit nur einem selektierten Projekt gleich behandeln
                 pfDiagram = New clsDiagramm
-
+                ' Anfang Event Handling für Chart 
                 pfChart = New clsEventsPfCharts
                 pfChart.PfChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
-
                 pfDiagram.setDiagramEvent = pfChart
+                ' Ende Event Handling für Chart 
 
                 With pfDiagram
-
-                    .kennung = calcChartKennung("pf", charttype, ProjektListe)
+                    .kennung = kennung
+                    '.kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
                     .DiagrammTitel = diagramTitle
                     .diagrammTyp = DiagrammTypen(3)                     ' Portfolio
                     .gsCollection = ProjektListe
                     .isCockpitChart = False
+                    ' ur:09.03.2015: wegen Chart-Resize geändert
+                    .top = top
+                    .left = left
+                    .width = width
+                    .height = height
+                End With
 
+                DiagramList.Add(pfDiagram)
+            Else
+
+
+                pfDiagram = New clsDiagramm
+                ' Anfang Event Handling für Chart 
+                pfChart = New clsEventsPfCharts
+                pfChart.PfChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
+                pfDiagram.setDiagramEvent = pfChart
+                ' Ende Event Handling für Chart 
+
+                With pfDiagram
+                    .kennung = kennung
+                    '.kennung = calcChartKennung("pf", charttype, ProjektListe)
+                    .DiagrammTitel = diagramTitle
+                    .diagrammTyp = DiagrammTypen(3)                     ' Portfolio
+                    .gsCollection = ProjektListe
+                    .isCockpitChart = False
+                    ' ur:09.03.2015: wegen Chart-Resize geändert
+                    .top = top
+                    .left = left
+                    .width = width
+                    .height = height
                 End With
 
                 DiagramList.Add(pfDiagram)
@@ -702,8 +730,6 @@ Public Module awinGUI
 
     End Sub  ' Ende Prozedur awinCreatePortfolioChartDiagramm
 
-
-
     
     ''' <summary>
     ''' aktualisiert die Portfolio Charts 
@@ -712,6 +738,7 @@ Public Module awinGUI
     ''' <param name="chtobj"></param>
     ''' <param name="bubbleColor">gibt an, ob di eAMpelfarbe des Projekts gezeigt werden soll</param>
     ''' <remarks></remarks>
+    '''
     Sub awinUpdatePortfolioDiagrams(ByRef chtobj As ChartObject, bubbleColor As Integer)
 
         Dim i As Integer
@@ -1149,7 +1176,7 @@ Public Module awinGUI
             .ChartTitle.Text = diagramTitle
         End With
 
-                appInstance.EnableEvents = formerEE
+        appInstance.EnableEvents = formerEE
 
 
 
