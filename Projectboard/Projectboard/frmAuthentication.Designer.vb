@@ -31,6 +31,7 @@ Partial Class frmAuthentication
         Me.messageBox = New System.Windows.Forms.Label()
         Me.abbrButton = New System.Windows.Forms.Button()
         Me.PictureBox1 = New System.Windows.Forms.PictureBox()
+        Me.OKButton = New System.Windows.Forms.Button()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -110,6 +111,15 @@ Partial Class frmAuthentication
         Me.PictureBox1.TabIndex = 9
         Me.PictureBox1.TabStop = False
         '
+        'OKButton
+        '
+        Me.OKButton.Location = New System.Drawing.Point(91, 205)
+        Me.OKButton.Name = "OKButton"
+        Me.OKButton.Size = New System.Drawing.Size(102, 23)
+        Me.OKButton.TabIndex = 10
+        Me.OKButton.Text = "OK"
+        Me.OKButton.UseVisualStyleBackColor = True
+        '
         'frmAuthentication
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -117,6 +127,7 @@ Partial Class frmAuthentication
         Me.BackColor = System.Drawing.SystemColors.ControlLightLight
         Me.ClientSize = New System.Drawing.Size(390, 248)
         Me.ControlBox = False
+        Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.PictureBox1)
         Me.Controls.Add(Me.abbrButton)
         Me.Controls.Add(Me.messageBox)
@@ -141,4 +152,5 @@ Partial Class frmAuthentication
     Friend WithEvents messageBox As System.Windows.Forms.Label
     Friend WithEvents abbrButton As System.Windows.Forms.Button
     Friend WithEvents PictureBox1 As System.Windows.Forms.PictureBox
+    Friend WithEvents OKButton As System.Windows.Forms.Button
 End Class

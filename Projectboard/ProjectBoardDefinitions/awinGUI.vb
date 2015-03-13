@@ -671,7 +671,30 @@ Public Module awinGUI
 
 
             If isProjektCharakteristik And ProjektListe.Count = 1 Then
-                ' nichts tun
+
+                ' ur: 12.03.2015: testweise geändert, Diagramme mit nur einem selektierten Projekt gleich behandeln
+                pfDiagram = New clsDiagramm
+                ' Anfang Event Handling für Chart 
+                pfChart = New clsEventsPfCharts
+                pfChart.PfChartEvents = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject).Chart
+                pfDiagram.setDiagramEvent = pfChart
+                ' Ende Event Handling für Chart 
+
+                With pfDiagram
+                    .kennung = kennung
+                    '.kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
+                    .DiagrammTitel = diagramTitle
+                    .diagrammTyp = DiagrammTypen(3)                     ' Portfolio
+                    .gsCollection = ProjektListe
+                    .isCockpitChart = False
+                    ' ur:09.03.2015: wegen Chart-Resize geändert
+                    .top = top
+                    .left = left
+                    .width = width
+                    .height = height
+                End With
+
+                DiagramList.Add(pfDiagram)
             Else
 
 
@@ -683,7 +706,8 @@ Public Module awinGUI
                 ' Ende Event Handling für Chart 
 
                 With pfDiagram
-                    .kennung = calcChartKennung("pf", charttype, ProjektListe)
+                    .kennung = kennung
+                    '.kennung = calcChartKennung("pf", charttype, ProjektListe)
                     .DiagrammTitel = diagramTitle
                     .diagrammTyp = DiagrammTypen(3)                     ' Portfolio
                     .gsCollection = ProjektListe
