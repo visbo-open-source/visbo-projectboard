@@ -876,6 +876,7 @@ Public Module awinGeneralModules
 
                         appInstance.Workbooks.Open(dateiName)
 
+
                         If awinSettings.importTyp = 1 Then
 
 
@@ -1656,10 +1657,11 @@ Public Module awinGeneralModules
         Dim ende As Date
         Dim budget As Double
         Dim sfit As Double, risk As Double
+        Dim volume As Double, complexity As Double
         Dim description As String
         Dim businessUnit As String
         Dim lastRow As Integer
-        Dim startSpalte As Integer
+        'Dim startSpalte As Integer
         Dim vglName As String
         Dim hproj As clsProjekt
         Dim vproj As clsProjektvorlage
@@ -1690,51 +1692,42 @@ Public Module awinGeneralModules
                         vproj = Projektvorlagen.getProject(vName)
 
                         start = CDate(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        ende = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        If start <> Date.MinValue And ende <> Date.MinValue Then
-                            ProjektdauerIndays = calcDauerIndays(start, ende)
-                        ElseIf start <> Date.MinValue Then
-                            ProjektdauerIndays = vproj.dauerInDays
-                            ende = calcDatum(start, vproj.dauerInDays)
-                        ElseIf ende <> Date.MinValue Then
-                            ProjektdauerIndays = vproj.dauerInDays
-                            start = calcDatum(ende, -vproj.dauerInDays)
-                        End If
-
-                        'startSpalte = CInt(DateDiff(DateInterval.Month, StartofCalendar, start) + 1)
-                        If startSpalte < 1 Then
-                            startSpalte = 1
-                        End If
-
-                        budget = CDbl(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        risk = CDbl(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        sfit = CDbl(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        'volume = CDbl(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        'complexity = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        businessUnit = CStr(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        description = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        'ende = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        budget = CDbl(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        risk = CDbl(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        sfit = CDbl(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        volume = CDbl(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        complexity = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        businessUnit = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        description = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
                         'vglName = pName.Trim & "#" & ""
                         vglName = calcProjektKey(pName.Trim, "")
 
-                        If AlleProjekte.Containskey(vglName) Then
-                            ' nichts tun ...
-                            Call MsgBox("Projekt aus Inventur Liste existiert bereits - keine Neuanlage")
-                        Else
-                            'Projekt anlegen ,Verschiebung um 
-                            hproj = New clsProjekt(start, start.AddMonths(-3), start.AddMonths(3))
 
-                            Call erstelleInventurProjekt(hproj, pName, vName, start, ende, budget, zeile, sfit, risk, _
-                                                         0, 0, businessUnit, description)
-                            If Not hproj Is Nothing Then
-                                Try
-                                    ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                                    myCollection.Add(calcProjektKey(hproj))
-                                Catch ex As Exception
+                        If getColumnOfDate(start) >= 1 Then
+                            ProjektdauerIndays = vproj.dauerInDays
+                            ende = calcDatum(start, vproj.dauerInDays)
 
-                                End Try
+                            If AlleProjekte.Containskey(vglName) Then
+                                ' nichts tun ...
+                                Call MsgBox("Projekt aus Inventur Liste existiert bereits - keine Neuanlage")
+                            Else
+                                'Projekt anlegen ,Verschiebung um 
+                                hproj = New clsProjekt(start, start.AddMonths(-3), start.AddMonths(3))
+
+                                Call erstelleInventurProjekt(hproj, pName, vName, start, ende, budget, zeile, sfit, risk, _
+                                                             volume, complexity, businessUnit, description)
+                                If Not hproj Is Nothing Then
+                                    Try
+                                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                                        myCollection.Add(calcProjektKey(hproj))
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                End If
 
                             End If
-
                         End If
 
                     Else

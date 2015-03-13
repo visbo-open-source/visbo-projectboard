@@ -146,6 +146,27 @@ Public Class clsMeilensteine
     End Property
 
     ''' <summary>
+    ''' gibt den Meilenstein an Position Index zurück
+    ''' Index muss Zahl zwischen 1 und Anzahl Elemente sein
+    ''' wenn Zahl ausserhalb liegt, wird die leere Menge zurückgegegen 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneDef(ByVal index As Integer) As clsMeilensteinDefinition
+        Get
+
+            If index > 0 And index <= allMilestones.Count Then
+                getMilestoneDef = allMilestones.ElementAt(index - 1).Value
+            Else
+                getMilestoneDef = Nothing
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt die Shape Definition für den angegebenen Meilenstein zurück 
     ''' wenn es die Kombination name, belongsto nicht gibt, wird nur Name als Suchkriterium verwendet 
     ''' wenn es auch den nicht gibt, wird die Default Milestone Klasse verwendet 

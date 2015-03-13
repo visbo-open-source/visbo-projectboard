@@ -7866,7 +7866,7 @@ Public Module testModule
 
         If Not IsNothing(durationArrowShape) And Not IsNothing(durationTextShape) Then
 
-            addOn = System.Math.Max(durationArrowShape.Height, durationTextShape.Height)
+            addOn = System.Math.Max(durationArrowShape.Height, durationTextShape.Height) * 11 / 15
 
         End If
 
@@ -8443,7 +8443,7 @@ Public Module testModule
                     Dim pfeilbreite As Double = maxX2 - minX1
 
                     With copiedShape(1)
-                        .Top = CSng(rowYPos) + 0.5 * addOn
+                        .Top = CSng(rowYPos) + 7 + 0.5 * (addOn - .Height)
                         .Left = CSng(minX1)
                         .Width = CSng(pfeilbreite)
                         .Name = .Name & .Id
@@ -8462,8 +8462,8 @@ Public Module testModule
                     copiedShape = pptslide.Shapes.Paste()
 
                     With copiedShape(1)
-                        .TextFrame2.TextRange.Text = dauerInM.ToString("0.0")
-                        .Top = CSng(rowYPos)
+                        .TextFrame2.TextRange.Text = dauerInM.ToString("0.0") & " M"
+                        .Top = CSng(rowYPos) + 7 + 0.5 * (addOn - .Height)
                         .Left = CSng(minX1 + (pfeilbreite - .Width) / 2)
                         .Name = .Name & .Id
                     End With
@@ -8705,7 +8705,7 @@ Public Module testModule
 
         End If
 
-        bestimmeMppProjektHoehe = projekthoehe + addOn
+        bestimmeMppProjektHoehe = projekthoehe + addOn * 13 / 15
 
     End Function
 

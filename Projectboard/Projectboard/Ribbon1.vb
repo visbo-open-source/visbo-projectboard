@@ -2237,7 +2237,7 @@ Imports System.Drawing
         End Try
 
         Try
-            Call importProjekteEintragen(myCollection, importDate)
+            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(0))
         Catch ex As Exception
             Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
         End Try
@@ -2281,7 +2281,7 @@ Imports System.Drawing
                 'Call bmwImportProjektInventur(myCollection)
                 Call bmwImportProjekteITO15(myCollection, False)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-                Call importProjekteEintragen(myCollection, importDate)
+                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -2388,7 +2388,7 @@ Imports System.Drawing
 
 
         Try
-            Call importProjekteEintragen(myCollection, importDate)
+            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
         Catch ex As Exception
             Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
         End Try

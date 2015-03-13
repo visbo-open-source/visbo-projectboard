@@ -7257,23 +7257,26 @@ Public Module Projekte
                 .earliestStartDate = .startDate.AddMonths(.earliestStart)
                 .latestStartDate = .startDate.AddMonths(.latestStart)
                 ' jedes Projekt zu Beginn als beauftragtes Projekt importieren
-                .Status = ProjektStatus(1) 
+                .Status = ProjektStatus(0)
                 .StrategicFit = sfit
                 .Risiko = risk
-                .volume = 0         ' in Projekt-Inventur Spalte "Volume" nicht mehr enthalten
-                .complexity = 0     ' in Projekt-Inventur "Spalte Complexity" nicht mehr enthalten
+
+                If Not IsNothing(volume) Then
+                    .volume = volume
+                Else
+                    .volume = 0.0
+                End If
+
+                If Not IsNothing(complexity) Then
+                    .complexity = complexity
+                Else
+                    .complexity = 0.0
+                End If
+
                 .businessUnit = businessUnit
                 .description = description
                 .tfZeile = tafelZeile
                 .Erloes = erloes
-                '.tfSpalte = start
-                'plen = .Dauer
-                'pcolor = .farbe
-                'If erloes <= 0 Then
-                '    .Erloes = System.Math.Round(.getGesamtKostenBedarf.Sum * (1 + .risikoKostenfaktor))
-                'Else
-                '    .Erloes = erloes
-                'End If
 
             End With
         Catch ex As Exception
@@ -16368,7 +16371,7 @@ Public Module Projekte
     ''' <param name="myCollection"></param>
     ''' <param name="importDate"></param>
     ''' <remarks></remarks>
-    Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date)
+    Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date, ByVal pStatus As String)
 
         Dim hproj As New clsProjekt, cproj As New clsProjekt
         Dim fullName As String, vglName As String
@@ -16595,10 +16598,10 @@ Public Module Projekte
                             .shpUID = ""
                             .StartOffset = 0
 
-                            ' ein importiertes Projekt soll immer erst mal auf "beauftrag" gesetzt werden; 
-                            ' wenn es denn verändert werden soll, dann muss eine Variante erzeugt werden oder 
-                            ' der Status auf 0 gesetzt werden 
-                            .Status = ProjektStatus(1)
+                            ' ein importiertes Projekt soll normalerweise immer gleich  auf "beauftragt" gesetzt werden; 
+                            ' das kann aber jetzt an der aufrufenden Stelle gesetzt werden 
+                            ' Inventur: erst mal auf geplant, sonst beauftragt 
+                            .Status = pStatus
 
                             'If DateDiff(DateInterval.Month, .startDate, Date.Now) < -1 Then
                             '    .Status = ProjektStatus(0)
