@@ -47,7 +47,8 @@
             awinSettings.mppShowAllIfOne = True
         End If
 
-        awinSettings.mppFullyContained = awinSettings.mppSortiertDauer
+        ' Änderung tk: geändert, weil sonst die Phasen nicht mehr ganz angezeigt werden ... 
+        'awinSettings.mppFullyContained = awinSettings.mppSortiertDauer
 
         MyBase.Close()
 

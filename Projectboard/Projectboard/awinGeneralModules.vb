@@ -1266,7 +1266,7 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
-    '''speziell auf BMW Rplan Outpunt angepasstes Inventur Import File 
+    '''speziell auf BMW Rplan Output angepasstes Inventur Import File 
     ''' </summary>
     ''' <remarks></remarks>
     Public Sub bmwImportProjektInventur(ByRef myCollection As Collection)

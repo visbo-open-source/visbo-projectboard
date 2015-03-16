@@ -8198,7 +8198,9 @@ Public Module testModule
 
                             ' jetzt muss ggf das Datum angebracht werden 
                             If awinSettings.mppShowPhDate Then
-                                Dim phDateText As String = phaseStart.ToShortDateString
+                                'Dim phDateText As String = phaseStart.ToShortDateString
+                                Dim phDateText As String = phaseStart.Day.ToString & "." & phaseStart.Month.ToString
+                                Dim rightX As Double, addHeight As Double
 
                                 PhDateVorlagenShape.Copy()
                                 copiedShape = pptslide.Shapes.Paste()
@@ -8216,19 +8218,24 @@ Public Module testModule
                                     End If
                                     .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
 
+                                    rightX = .Left + .Width
+                                    addHeight = .Height * 0.7
+
                                 End With
 
-                                If phShortname.Length <= 7 Then
-                                    phDateText = phShortname & ", " & phaseEnd.ToShortDateString
-                                Else
-                                    Dim tmptxt As String = ""
-                                    For i = 0 To 4
-                                        tmptxt = tmptxt & phShortname.Chars(i)
-                                    Next
-                                    tmptxt = tmptxt & ".."
-                                    phDateText = tmptxt & ", " & phaseEnd.ToShortDateString
-                                End If
+                                'If phShortname.Length <= 7 Then
+                                '    phDateText = phShortname & ", " & phaseEnd.ToShortDateString
+                                'Else
+                                '    Dim tmptxt As String = ""
+                                '    For i = 0 To 4
+                                '        tmptxt = tmptxt & phShortname.Chars(i)
+                                '    Next
+                                '    tmptxt = tmptxt & ".."
+                                '    phDateText = tmptxt & ", " & phaseEnd.ToShortDateString
+                                'End If
 
+                                ' Änderung tk 14.3.15 kein Voranstellen des Phasen Namens mehr ... 
+                                phDateText = phaseEnd.Day.ToString & "." & phaseEnd.Month.ToString
 
                                 PhDateVorlagenShape.Copy()
                                 copiedShape = pptslide.Shapes.Paste()
@@ -8246,6 +8253,10 @@ Public Module testModule
                                     End If
                                     .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignRight
 
+                                    If rightX >= .Left Then
+                                        .Top = .Top + addHeight
+                                    End If
+
                                 End With
 
                             End If
@@ -8261,7 +8272,7 @@ Public Module testModule
 
                                     '.Height = 0.7 * projekthoehe
                                     '.Top = rowYPos + 0.5 * (projekthoehe - .Height)
-                                    .Height = 1.8 * phaseShape.Height
+                                    .Height = 1.3 * phaseShape.Height
                                     .Top = CSng(phasenGrafikYPos)
                                     .Left = CSng(x1) - .Width * 0.5
                                     .Name = .Name & .Id
@@ -8276,7 +8287,7 @@ Public Module testModule
 
                                     '.Height = 0.7 * projekthoehe
                                     '.Top = rowYPos + 0.5 * (projekthoehe - .Height)
-                                    .Height = 1.8 * phaseShape.Height
+                                    .Height = 1.3 * phaseShape.Height
                                     .Top = CSng(phasenGrafikYPos)
                                     .Left = CSng(x2) + .Width * 0.5
                                     .Name = .Name & .Id
@@ -8390,7 +8401,9 @@ Public Module testModule
 
                         ' jetzt muss ggf das Datum angebracht werden 
                         If awinSettings.mppShowMsDate Then
-                            Dim msDateText As String = msDate.ToShortDateString
+                            'Dim msDateText As String = msDate.ToShortDateString
+                            Dim msDateText As String
+                            msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
 
                             MsDateVorlagenShape.Copy()
                             copiedShape = pptslide.Shapes.Paste()
@@ -8443,7 +8456,7 @@ Public Module testModule
                     Dim pfeilbreite As Double = maxX2 - minX1
 
                     With copiedShape(1)
-                        .Top = CSng(rowYPos) + 7 + 0.5 * (addOn - .Height)
+                        .Top = CSng(rowYPos) + 3 + 0.5 * (addOn - .Height)
                         .Left = CSng(minX1)
                         .Width = CSng(pfeilbreite)
                         .Name = .Name & .Id
@@ -8463,7 +8476,7 @@ Public Module testModule
 
                     With copiedShape(1)
                         .TextFrame2.TextRange.Text = dauerInM.ToString("0.0") & " M"
-                        .Top = CSng(rowYPos) + 7 + 0.5 * (addOn - .Height)
+                        .Top = CSng(rowYPos) + 3 + 0.5 * (addOn - .Height)
                         .Left = CSng(minX1 + (pfeilbreite - .Width) / 2)
                         .Name = .Name & .Id
                     End With
@@ -8779,6 +8792,7 @@ Public Module testModule
                     .Top = yCursor
                     .Height = zeilenHoehe
                     .Left = xCursor
+                    .Fill.ForeColor.RGB = buColor
                 End With
 
                 ' jetzt den Business Unit Name eintragen 
@@ -8789,8 +8803,8 @@ Public Module testModule
                     .TextFrame2.TextRange.Text = buName
                     .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                     .Left = xCursor + buColorVorlagenShape.Width + 3
-                    If maxDelta < .Width + 3 Then
-                        maxDelta = .Width + 3
+                    If maxDelta < buColorVorlagenShape.Width + .Width + 3 Then
+                        maxDelta = buColorVorlagenShape.Width + .Width + 3
                     End If
                 End With
 
@@ -8812,6 +8826,7 @@ Public Module testModule
                 .Top = yCursor
                 .Height = zeilenHoehe
                 .Left = xCursor
+                .Fill.ForeColor.RGB = buColor
             End With
 
             ' jetzt den Business Unit Name eintragen 
@@ -8822,8 +8837,8 @@ Public Module testModule
                 .TextFrame2.TextRange.Text = buName
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor + buColorVorlagenShape.Width + 3
-                If maxDelta < .Width + 3 Then
-                    maxDelta = .Width + 3
+                If maxDelta < buColorVorlagenShape.Width + .Width + 3 Then
+                    maxDelta = buColorVorlagenShape.Width + .Width + 3
                 End If
             End With
 

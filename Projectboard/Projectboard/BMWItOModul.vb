@@ -143,7 +143,7 @@ Module BMWItOModul
         Try
             colProtocol = firstZeile.Find(What:=suchstr(ptNamen.Protocol)).Column - 1
             With activeWSListe
-                protocolRange = CType(.Range(.Cells(1, colProtocol - 3), .Cells(lastRow + 10, colProtocol + 20)), Excel.Range)
+                protocolRange = CType(.Range(.Cells(1, colProtocol - 3), .Cells(lastRow + 10, colProtocol + 200)), Excel.Range)
                 protocolRange.Clear()
             End With
 
@@ -181,6 +181,7 @@ Module BMWItOModul
             colName = firstZeile.Find(What:=suchstr(ptNamen.Name)).Column
             colAnfang = firstZeile.Find(What:=suchstr(ptNamen.Anfang)).Column
             colEnde = firstZeile.Find(What:=suchstr(ptNamen.Ende)).Column
+
         Catch ex As Exception
             Throw New ArgumentException("Fehler im Datei Aufbau ..." & vbLf & ex.Message)
         End Try
@@ -650,11 +651,6 @@ Module BMWItOModul
                                                     ok1 = True
                                                 End If
                                             Else
-                                                ok1 = False
-                                                logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten "
-
-                                                ' in die Missing Phase-Definitions aufnehmen 
-
 
                                                 Dim hphase As clsPhasenDefinition
                                                 hphase = New clsPhasenDefinition
@@ -665,11 +661,28 @@ Module BMWItOModul
                                                 hphase.UID = phaseIX
                                                 phaseIX = phaseIX + 1
 
-                                                Try
-                                                    missingPhaseDefinitions.Add(hphase)
-                                                Catch ex As Exception
 
-                                                End Try
+                                                If isVorlage Then
+                                                    ok1 = True
+
+                                                    ' in die Phase-Definitions aufnehmen 
+                                                    Try
+                                                        PhaseDefinitions.Add(hphase)
+                                                    Catch ex As Exception
+                                                    End Try
+                                                Else
+                                                    ok1 = False
+                                                    logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten "
+
+                                                    ' in die Missing Phase-Definitions aufnehmen 
+                                                    Try
+                                                        missingPhaseDefinitions.Add(hphase)
+                                                    Catch ex As Exception
+                                                    End Try
+
+
+                                                End If
+                                                
 
                                             End If
 
@@ -689,25 +702,26 @@ Module BMWItOModul
                                                 End If
 
                                                 ' Änderung tk 6.3.2015
-                                                If Not PhaseDefinitions.Contains(stdName) And isVorlage Then
-                                                    ' in die Phase-Definitions aufnehmen 
+                                                ' 13.3. ist jetzt nicht mehr notwendig, weil das bereits zuvor gemacht wird 
+                                                'If Not PhaseDefinitions.Contains(stdName) And isVorlage Then
+                                                '    ' in die Phase-Definitions aufnehmen 
 
-                                                    Dim hphase As clsPhasenDefinition
-                                                    hphase = New clsPhasenDefinition
+                                                '    Dim hphase As clsPhasenDefinition
+                                                '    hphase = New clsPhasenDefinition
 
-                                                    hphase.darstellungsKlasse = txtVorgangsKlasse
-                                                    hphase.shortName = txtAbbrev
-                                                    hphase.name = stdName
-                                                    hphase.UID = phaseIX
-                                                    phaseIX = phaseIX + 1
+                                                '    hphase.darstellungsKlasse = txtVorgangsKlasse
+                                                '    hphase.shortName = txtAbbrev
+                                                '    hphase.name = stdName
+                                                '    hphase.UID = phaseIX
+                                                '    phaseIX = phaseIX + 1
 
-                                                    Try
-                                                        PhaseDefinitions.Add(hphase)
-                                                    Catch ex As Exception
+                                                '    Try
+                                                '        PhaseDefinitions.Add(hphase)
+                                                '    Catch ex As Exception
 
-                                                    End Try
+                                                '    End Try
 
-                                                End If
+                                                'End If
 
                                                 ' das muss auf alle Fälle gemacht werden 
                                                 cphase = New clsPhase(parent:=hproj)
@@ -850,10 +864,6 @@ Module BMWItOModul
 
 
                                                 Else
-                                                    ok1 = False
-                                                    logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
-
-                                                    ' in die Missing Phase-Definitions aufnehmen 
 
                                                     Dim hMilestone As New clsMeilensteinDefinition
 
@@ -867,11 +877,26 @@ Module BMWItOModul
 
                                                     milestoneIX = milestoneIX + 1
 
-                                                    Try
-                                                        missingMilestoneDefinitions.Add(hMilestone)
-                                                    Catch ex As Exception
+                                                    If isVorlage Then
 
-                                                    End Try
+                                                        ok1 = True
+                                                        ' in die Milestone-Definitions aufnehmen 
+                                                        Try
+                                                            MilestoneDefinitions.Add(hMilestone)
+                                                        Catch ex As Exception
+                                                        End Try
+
+                                                    Else
+                                                        ok1 = False
+                                                        logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
+
+                                                        ' in die Missing Milestone-Definitions aufnehmen 
+                                                        Try
+                                                            missingMilestoneDefinitions.Add(hMilestone)
+                                                        Catch ex As Exception
+                                                        End Try
+                                                    End If
+                                                    
 
                                                 End If
 
@@ -942,9 +967,6 @@ Module BMWItOModul
                                                     anzIgnored = anzIgnored + 1
 
                                                 End If
-
-
-
 
 
                                             Catch ex As Exception
@@ -1070,11 +1092,12 @@ Module BMWItOModul
                             Throw New Exception(ex.Message)
                         End Try
 
-                        ' jetzt werden Projekt-Name, Business Unit und Vorlagen-Kennung weggeschreiben 
-                        CType(activeWSListe.Cells(anfang - 1, colProtocol - 3), Excel.Range).Value = hproj.name
-                        CType(activeWSListe.Cells(anfang - 1, colProtocol - 2), Excel.Range).Value = hproj.VorlagenName
-                        CType(activeWSListe.Cells(anfang - 1, colProtocol - 1), Excel.Range).Value = hproj.businessUnit
-
+                        If Not isVorlage Then
+                            ' jetzt werden Projekt-Name, Business Unit und Vorlagen-Kennung weggeschreiben 
+                            CType(activeWSListe.Cells(anfang - 1, colProtocol - 3), Excel.Range).Value = hproj.name
+                            CType(activeWSListe.Cells(anfang - 1, colProtocol - 2), Excel.Range).Value = hproj.VorlagenName
+                            CType(activeWSListe.Cells(anfang - 1, colProtocol - 1), Excel.Range).Value = hproj.businessUnit
+                        End If
 
                         ' jetzt muss das Projekt eingetragen werden 
                         ImportProjekte.Add(calcProjektKey(hproj), hproj)

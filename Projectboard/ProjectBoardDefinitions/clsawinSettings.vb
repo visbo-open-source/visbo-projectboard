@@ -152,7 +152,7 @@
         _mppShowProjectLine = True
         _mppVertikalesRaster = False
         _mppShowLegend = False
-        _mppFullyContained = False
+        _mppFullyContained = True
         _mppSortiertDauer = False
         _mppOnePage = False
 
