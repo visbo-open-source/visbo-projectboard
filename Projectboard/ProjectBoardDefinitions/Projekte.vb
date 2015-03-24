@@ -10500,6 +10500,8 @@ Public Module Projekte
                 ' stelle das Projekt im Extended Mode dar  
                 'Dim shapeGroupListe() As Object
                 Dim shapeGroupListe() As String
+                Dim arrayOfMSNames() As String
+                Dim msShapeNames As New Collection
                 Dim anzGroupElemente As Integer = 0
                 Dim projectShapesCollection As New Collection
 
@@ -10605,6 +10607,12 @@ Public Module Projekte
                                     .AlternativeText = CInt(PTshty.milestoneE).ToString
                                 End With
 
+
+                                ' tk 24.3.2015 um nachher die Milestone Shapes nach vorne zu holen
+                                If Not msShapeNames.Contains(msName) Then
+                                    msShapeNames.Add(msName, msName)
+                                End If
+
                                 msShape.Rotation = vorlagenShape.Rotation
 
                                 Call defineResultAppearance(hproj, 0, msShape, cBewertung)
@@ -10630,6 +10638,26 @@ Public Module Projekte
 
                 Next
 
+                ' Änderung tk 24.3.2015
+                ' jetzt müssen ggf die Meilensteine noch nach vorne gebracht werden ...
+                Dim anzElements As Integer
+                anzElements = msShapeNames.Count
+
+                If anzElements > 0 Then
+
+                    ReDim arrayOfMSNames(anzElements - 1)
+                    For ix = 1 To anzElements
+                        arrayOfMSNames(ix - 1) = CStr(msShapeNames.Item(ix))
+                    Next
+
+                    Try
+                        CType(worksheetShapes.Range(arrayOfMSNames), Excel.ShapeRange).ZOrder(MsoZOrderCmd.msoBringToFront)
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
 
                 ' hier werden die Shapes gruppiert
                 anzGroupElemente = projectShapesCollection.Count
@@ -10652,6 +10680,7 @@ Public Module Projekte
 
                 End If
                 projectShape.Name = pname
+
 
             Else
                 ' stelle das Projekt im Einzeilen Mode dar
