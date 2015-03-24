@@ -4487,16 +4487,16 @@ Public Module awinGeneralModules
             CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "Projekt-Typ"
 
             spalte = spalte + 2
-            Dim pName As String
+            Dim phaseName As String
             For ix As Integer = 1 To phaseList.Count
 
                 Try
-                    pName = CStr(phaseList.ElementAt(ix - 1).Value)
+                    phaseName = CStr(phaseList.ElementAt(ix - 1).Value)
                 Catch ex As Exception
-                    pName = ""
+                    phaseName = ""
                 End Try
 
-                CType(.Cells(zeile, spalte + ix), Excel.Range).Value = pName
+                CType(.Cells(zeile, spalte + ix), Excel.Range).Value = phaseName
             Next
 
             spalte = spalte + phaseList.Count
@@ -4544,21 +4544,32 @@ Public Module awinGeneralModules
 
             With wsName
                 ' Produktlinie schreiben 
-                If kvp.Value.businessUnit.Length > 0 Then
-                    CType(.Cells(zeile, spalte), Excel.Range).Value = kvp.Value.businessUnit
-                Else
+
+                Try
+                    If kvp.Value.businessUnit.Length > 0 Then
+                        CType(.Cells(zeile, spalte), Excel.Range).Value = kvp.Value.businessUnit
+                    Else
+                        CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+                    End If
+                Catch ex As Exception
                     CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
-                End If
+                End Try
+                
 
                 ' Name schreiben 
                 CType(.Cells(zeile, spalte + 1), Excel.Range).Value = kvp.Value.name
 
                 ' Projekt-Typ schreiben 
-                If kvp.Value.VorlagenName.Length > 0 Then
-                    CType(.Cells(zeile, spalte + 2), Excel.Range).Value = kvp.Value.VorlagenName
-                Else
+                Try
+                    If kvp.Value.VorlagenName.Length > 0 Then
+                        CType(.Cells(zeile, spalte + 2), Excel.Range).Value = kvp.Value.VorlagenName
+                    Else
+                        CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "-"
+                    End If
+                Catch ex As Exception
                     CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "-"
-                End If
+                End Try
+                
 
                 ' Phasen Information schreiben
 
@@ -4653,13 +4664,19 @@ Public Module awinGeneralModules
                 ' Dauer in Tagen schreiben 
                 spalte = spalte + milestoneList.Count
 
-                If atleastOne Then
-                    dauerT = DateDiff(DateInterval.Day, earliestDate, latestDate)
-                    dauerM = 12 * dauerT / 365
-                Else
+                Try
+                    If atleastOne Then
+                        dauerT = DateDiff(DateInterval.Day, earliestDate, latestDate)
+                        dauerM = 12 * dauerT / 365
+                    Else
+                        dauerT = 0
+                        dauerM = 0.0
+                    End If
+                Catch ex As Exception
                     dauerT = 0
                     dauerM = 0.0
-                End If
+                End Try
+                
 
                 CType(.Cells(zeile, spalte + 1), Excel.Range).Value = dauerT
                 CType(.Cells(zeile, spalte + 2), Excel.Range).Value = dauerM
@@ -4681,7 +4698,10 @@ Public Module awinGeneralModules
 
         Next
 
-        Dim expFName As String = awinPath & exportFilesOrdner & "/Report_" & Date.Now.ToShortDateString & ".xlsx"
+        Dim expFName As String = awinPath & exportFilesOrdner & _
+            "\Report_" & Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+
 
         Try
             appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)

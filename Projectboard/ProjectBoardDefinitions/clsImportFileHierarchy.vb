@@ -114,6 +114,66 @@ Public Class clsImportFileHierarchy
 
     End Function
 
+    ''' <summary>
+    ''' gibt den Namen der aktuellen Ebene mit Nummer ebenenNr zurück 
+    ''' kann den Wert 0 .. count-1 haben  
+    ''' </summary>
+    ''' <param name="ebenenNr"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getEbenenName(ByVal ebenenNr As Integer) As String
+
+        If ebenenNr >= 0 And ebenenNr < phaseHierarchy.Count Then
+            getEbenenName = phaseHierarchy.ElementAt(ebenenNr).Value.name
+        Else
+            getEbenenName = ""
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' ''' gibt den aktuellen Footprint bis zur Ebene mit IndentLevel kleiner level zurück 
+    ''' der Hierarchie zurück 
+    ''' </summary>
+    ''' <param name="level">Indentlevel</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getFootPrint(ByVal level As Integer) As String
+
+        Dim tmpValue As String = ""
+
+        If phaseHierarchy.Count > 0 Then
+
+            Dim index As Integer = 0
+            Dim found As Boolean = False
+
+            While index <= phaseHierarchy.Count - 1 And Not found
+                If phaseHierarchy.ElementAt(index).Key < level Then
+                    index = index + 1
+                Else
+                    found = True
+                End If
+            End While
+
+            If index = 0 Then
+                tmpValue = ""
+            Else
+                For i As Integer = 0 To index - 1
+                    If i = 0 Then
+                        'tmpValue = phaseHierarchy.ElementAt(i).Value.name.Trim
+                        tmpValue = "."
+                    Else
+                        tmpValue = tmpValue & " - " & phaseHierarchy.ElementAt(i).Value.name.Trim
+                    End If
+                Next
+            End If
+
+        End If
+
+        getFootPrint = tmpValue
+
+    End Function
+
 
     ''' <summary>
     ''' nName ist bereits normiert sein. d.h alle leading, trailing und Anzahl>1 Blanks in der Mitte wurden entfernt
@@ -170,6 +230,23 @@ Public Class clsImportFileHierarchy
 
             End If
 
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Indent der letzten Hierarchie Stufe zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCurrentLevel As Integer
+        Get
+            If phaseHierarchy.Count > 0 Then
+                getCurrentLevel = phaseHierarchy.Last.Key
+            Else
+                getCurrentLevel = -1
+            End If
 
         End Get
     End Property

@@ -3030,24 +3030,6 @@ Public Module testModule
 
                             myCollection = buildNameCollection(PTpfdk.Phasen, qualifier, selectedPhases)
 
-                            'Dim qstr(20) As String
-                            'Dim phName As String = " "
-                            'qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
-
-                            '' Aufbau der Collection 
-                            'For i = 0 To qstr.Length - 1
-
-                            '    Try
-                            '        phName = qstr(i).Trim
-                            '        If PhaseDefinitions.Contains(phName) Then
-                            '            myCollection.Add(phName, phName)
-                            '        End If
-                            '    Catch ex As Exception
-                            '        Call MsgBox("Fehler: Phasen Name " & phName & " konnte nicht erkannt werden ...")
-                            '    End Try
-
-                            'Next
-
 
                             If myCollection.Count > 0 Then
 
@@ -3106,27 +3088,6 @@ Public Module testModule
                             myCollection.Clear()
                             myCollection = buildNameCollection(PTpfdk.Meilenstein, qualifier, selectedMilestones)
 
-                            'Dim MSnameList As New Collection
-                            'MSnameList = ShowProjekte.getMilestoneNames
-
-                            'Dim qstr(20) As String
-                            'Dim msName As String = " "
-                            'qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
-
-                            '' Aufbau der Collection 
-                            'For i = 0 To qstr.Length - 1
-
-                            '    Try
-                            '        msName = qstr(i).Trim
-                            '        If MSnameList.Contains(msName) Then
-                            '            myCollection.Add(msName, msName)
-                            '        End If
-                            '    Catch ex As Exception
-                            '        Call MsgBox("Fehler: Phasen Name " & msName & " konnte nicht erkannt werden ...")
-                            '    End Try
-
-                            'Next
-
 
                             If myCollection.Count > 0 Then
 
@@ -3183,24 +3144,6 @@ Public Module testModule
                             myCollection.Clear()
                             myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, selectedRoles)
 
-                            Dim qstr(20) As String
-                            Dim roleName As String = " "
-                            qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
-
-                            ' Aufbau der Collection 
-                            For i = 0 To qstr.Length - 1
-
-                                Try
-                                    roleName = qstr(i).Trim
-                                    If RoleDefinitions.Contains(roleName) Then
-                                        myCollection.Add(roleName, roleName)
-                                    End If
-                                Catch ex As Exception
-                                    Call MsgBox("Fehler: Rolle " & roleName & " konnte nicht erkannt werden ...")
-                                End Try
-
-                            Next
-
 
                             If myCollection.Count > 0 Then
 
@@ -3256,24 +3199,6 @@ Public Module testModule
 
                             myCollection.Clear()
                             myCollection = buildNameCollection(PTpfdk.Kosten, qualifier, selectedCosts)
-
-                            'Dim qstr(20) As String
-                            'Dim costName As String = " "
-                            'qstr = qualifier.Trim.Split(New Char() {CChar("#")}, 18)
-
-                            '' Aufbau der Collection 
-                            'For i = 0 To qstr.Length - 1
-
-                            '    Try
-                            '        costName = qstr(i).Trim
-                            '        If CostDefinitions.Contains(costName) Then
-                            '            myCollection.Add(costName, costName)
-                            '        End If
-                            '    Catch ex As Exception
-                            '        Call MsgBox("Fehler: Kostenart " & costName & " konnte nicht erkannt werden ...")
-                            '    End Try
-
-                            'Next
 
 
                             If myCollection.Count > 0 Then
@@ -8219,7 +8144,7 @@ Public Module testModule
                                     .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
 
                                     rightX = .Left + .Width
-                                    addHeight = .Height * 0.7
+                                    addHeight = .Height * 0.49
 
                                 End With
 

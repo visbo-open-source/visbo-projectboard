@@ -2416,7 +2416,7 @@ Imports System.Drawing
         Dim hproj As clsProjekt
         Dim outputString As String = ""
         Dim fileListe As New SortedList(Of String, String)
-        Dim exportFileName As String = "Export_" & Date.Now.ToShortDateString & ".xlsx"
+        Dim exportFileName As String = "Export_" & Date.Now.ToString & ".xlsx"
         Dim ok As Boolean
 
         Dim awinSelection As Excel.ShapeRange

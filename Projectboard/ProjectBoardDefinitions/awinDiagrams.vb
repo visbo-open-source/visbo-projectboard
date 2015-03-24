@@ -611,7 +611,7 @@ Public Module awinDiagrams
                             .HasDataLabels = False
 
                             If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
-                                .name = "Schwellwert"
+                                .name = "Leistbarkeitsgrenze"
                             Else
                                 .name = "Interne Kapazität"
                             End If
@@ -656,6 +656,8 @@ Public Module awinDiagrams
                     End If
 
                     .ChartTitle.Text = diagramTitle & titleSumme
+                    ' lastSC muss  bestimmt werden 
+                    lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
                     If isCockpitChart Then
 
@@ -667,8 +669,6 @@ Public Module awinDiagrams
                         .HasLegend = True
 
                         .Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
-
-
                         .Legend.Font.Size = awinSettings.fontsizeLegend
                     Else
                         .HasLegend = False
@@ -1117,35 +1117,6 @@ Public Module awinDiagrams
 
 
 
-
-                            ' Alt: jetzt werden die Summe der Meilensteine angezeigt 
-                            'For c = 0 To 3
-
-                            '    For i = 0 To bis - von
-                            '        datenreihe(i) = msdatenreihe(c, i)
-                            '        seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
-                            '    Next
-
-                            '    With .SeriesCollection.NewSeries
-                            '        If c = 0 Then
-                            '            .name = prcName & ", ohne Ampel"
-                            '        ElseIf c = 1 Then
-                            '            .name = prcName & ", grüne Ampel"
-                            '        ElseIf c = 2 Then
-                            '            .name = prcName & ", gelbe Ampel"
-                            '        Else
-                            '            .name = prcName & ", rote Ampel"
-                            '        End If
-                            '        .Interior.color = ampelfarbe(c)
-                            '        .Values = datenreihe
-                            '        .XValues = Xdatenreihe
-                            '        .ChartType = Excel.XlChartType.xlColumnStacked
-                            '        .HasDataLabels = False
-                            '    End With
-
-
-                            'Next
-
                         Else
 
                             With .SeriesCollection.NewSeries
@@ -1318,7 +1289,7 @@ Public Module awinDiagrams
                         .HasDataLabels = False
 
                         If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
-                            .name = "Schwellwert"
+                            .name = "Leistbarkeitsgrenze"
                         Else
                             .name = "Interne Kapazität"
                         End If
@@ -1383,17 +1354,22 @@ Public Module awinDiagrams
 
 
                 .ChartTitle.Text = diagramTitle & titleSumme
+                ' lastSC muss  bestimmt werden 
+                lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
-                If isCockpitChart Then
-                    .HasLegend = False
-                ElseIf lastSC > 1 And seldatenreihe.Sum = 0 Then
-                    .HasLegend = True
-                    'ur: 11.03.2015: wenn ein Chart eine Legende hat, so soll sie bleiben wie zuletzt definiert, nicht jedesmal auf Ursprungszustand zurückgesetzt werden
-                    '.Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
-                    '.Legend.Font.Size = awinSettings.fontsizeLegend
-                Else
-                    .HasLegend = False
-                End If
+
+                ' Änderung 18.3.15 tk: bei einem Update muss überhaupt nix geändert werden, was LEgende angeht ; 
+                ' die ist entweder da und soll da bleiben oder sie ist nicht da und soll auch nicht kommen 
+                'If isCockpitChart Then
+                '    .HasLegend = False
+                'ElseIf lastSC > 1 And seldatenreihe.Sum = 0 Then
+                '    .HasLegend = True
+                '    'ur: 11.03.2015: wenn ein Chart eine Legende hat, so soll sie bleiben wie zuletzt definiert, nicht jedesmal auf Ursprungszustand zurückgesetzt werden
+                '    '.Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
+                '    '.Legend.Font.Size = awinSettings.fontsizeLegend
+                'Else
+                '    .HasLegend = False
+                'End If
 
             End With
 

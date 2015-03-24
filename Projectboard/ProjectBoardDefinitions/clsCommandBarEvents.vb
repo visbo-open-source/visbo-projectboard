@@ -226,8 +226,6 @@ Public Class clsCommandBarEvents
                             'zeile = findeMagicBoardPosition(selCollection, pname, zeile, spalte, laengeInMon)
 
 
-                            pname = shpelement.Name & " - Kopie " & zaehler
-
                             Dim anzahlZeilen As Integer
                             Dim oldproj As clsProjekt
                             Try
@@ -242,6 +240,9 @@ Public Class clsCommandBarEvents
                                 Throw New ArgumentException("Projekt in OnUpdate nicht gefunden: " & shpName)
                                 Exit Sub
                             End Try
+
+                            ' Name der Kopie soll auch die Variantenbezeichnung enthalten ...  
+                            pname = oldproj.getShapeText & " - Kopie " & zaehler
 
                             hproj = New clsProjekt
                             oldproj.CopyTo(hproj)
@@ -291,7 +292,7 @@ Public Class clsCommandBarEvents
                                     successful = True
                                 Catch ex As Exception
                                     zaehler = zaehler + 1
-                                    pname = shpelement.Name & " - Kopie " & zaehler
+                                    pname = oldproj.getShapeText & " - Kopie " & zaehler
                                     hproj.name = pname
                                 End Try
                             End While

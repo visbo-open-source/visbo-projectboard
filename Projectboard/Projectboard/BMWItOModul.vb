@@ -92,6 +92,7 @@ Module BMWItOModul
         Dim firstZeile As Excel.Range
         Dim protocolRange As Excel.Range
 
+
         Dim suchstr(6) As String
         suchstr(ptNamen.Name) = "Name"
         suchstr(ptNamen.Anfang) = "Anfang"
@@ -203,9 +204,17 @@ Module BMWItOModul
 
         ' Die Überschriften für das Protokoll werden alle wieder gesetzt 
         With activeWSListe
-            CType(.Cells(1, colProtocol), Excel.Range).Value = "Plan-Element"
-            CType(.Cells(1, colProtocol + 1), Excel.Range).Value = suchstr(ptNamen.Protocol)
-            CType(.Cells(1, colProtocol + 2), Excel.Range).Value = "Grund"
+            CType(.Cells(1, colProtocol), Excel.Range).Value = "Projekt"
+            CType(.Cells(1, colProtocol + 1), Excel.Range).Value = "Hierarchie"
+            CType(.Cells(1, colProtocol + 2), Excel.Range).Value = "Plan-Element"
+            CType(.Cells(1, colProtocol + 3), Excel.Range).Value = "Klasse"
+            CType(.Cells(1, colProtocol + 4), Excel.Range).Value = "Abkürzung"
+            CType(.Cells(1, colProtocol + 5), Excel.Range).Value = "Quelle"
+            CType(.Cells(1, colProtocol + 6), Excel.Range).Value = suchstr(ptNamen.Protocol)
+            CType(.Cells(1, colProtocol + 7), Excel.Range).Value = "PT Hierarchie"
+            CType(.Cells(1, colProtocol + 8), Excel.Range).Value = "PT Klasse"
+            CType(.Cells(1, colProtocol + 9), Excel.Range).Value = "Grund"
+
         End With
 
 
@@ -364,6 +373,7 @@ Module BMWItOModul
 
                         ' jetzt wird die Import Hierarchie angelegt 
                         Dim pHierarchy As New clsImportFileHierarchy
+                        Dim origHierarchy As New clsImportFileHierarchy
 
 
                         ' jetzt wird die Meilenstein und Phasen Collection angelegt, die dazu dient herauszufinden, wo es Duplikate im Projekt gibt
@@ -383,6 +393,7 @@ Module BMWItOModul
 
                         Try
                             pHierarchy.add(cphase, 0)
+                            origHierarchy.add(cphase, 0)
                         Catch ex As Exception
 
                         End Try
@@ -393,6 +404,7 @@ Module BMWItOModul
 
                         Dim curZeile As Integer
                         Dim txtVorgangsKlasse As String
+                        Dim origVorgangsKlasse As String
                         Dim txtAbbrev As String
                         ' ist notwendig um anhand der führenden Blanks die Hierarchie Stufe zu bestimmen 
                         Dim origItem As String = ""
@@ -400,9 +412,12 @@ Module BMWItOModul
                         ' hier werden jetzt die einzelnen Zeilen = Phasen oder Meilensteine ausgelesen 
                         For curZeile = anfang To ende
 
+                            origVorgangsKlasse = ""
                             txtVorgangsKlasse = ""
                             txtAbbrev = ""
                             logMessage = ""
+
+                            Dim isMilestone As Boolean
 
                             Try
 
@@ -411,14 +426,16 @@ Module BMWItOModul
 
                                 anzProcessedElements = anzProcessedElements + 1
 
-                                CType(activeWSListe.Cells(curZeile, colProtocol), Excel.Range).Value = origItem
+                                CType(activeWSListe.Cells(curZeile, colProtocol + 2), Excel.Range).Value = origItem.Trim
+                                CType(activeWSListe.Cells(curZeile, colProtocol), Excel.Range).Value = completeName
+                                CType(activeWSListe.Cells(curZeile, colProtocol + 5), Excel.Range).Value = currentDateiName
 
 
                                 ' Änderung 26.1.15 Ignorieren 
 
                                 itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
                                 itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
-                                Dim isMilestone As Boolean
+
                                 If DateDiff(DateInterval.Day, itemStartDate, itemEndDate) = 0 Then
                                     isMilestone = True
                                 Else
@@ -469,8 +486,8 @@ Module BMWItOModul
                                     If MilestoneDefinitions.Contains(itemName) Then
                                         ok = True
                                     ElseIf milestoneMappings.tobeIgnored(itemName) Then
-                                        CType(activeWSListe.Cells(curZeile, colProtocol + 2), Excel.Range).Value = _
-                                                        "Element soll nach Wörterbuch ignoriert werden: "
+                                        CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
+                                                        "nicht zugelassen (Ignore)"
                                         ok = False
                                     Else
                                         ok = True
@@ -482,8 +499,8 @@ Module BMWItOModul
                                     If PhaseDefinitions.Contains(itemName) Then
                                         ok = True
                                     ElseIf phaseMappings.tobeIgnored(itemName) Then
-                                        CType(activeWSListe.Cells(curZeile, colProtocol + 2), Excel.Range).Value = _
-                                                        "Element soll nach Wörterbuch ignoriert werden: "
+                                        CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
+                                                        "nicht zugelassen (Ignore)"
                                         ok = False
                                     Else
                                         ok = True
@@ -498,6 +515,7 @@ Module BMWItOModul
                                 ok = False
                             End Try
 
+
                             If ok Then
 
 
@@ -509,13 +527,13 @@ Module BMWItOModul
                                 If colVorgangsKlasse > 0 Then
                                     Try
 
-                                        txtVorgangsKlasse = CStr((CType(.Cells(curZeile, colVorgangsKlasse), Excel.Range).Value)).Trim
+                                        origVorgangsKlasse = CStr((CType(.Cells(curZeile, colVorgangsKlasse), Excel.Range).Value)).Trim
                                         If duration > 1 Then
-                                            txtVorgangsKlasse = mapToAppearance(txtVorgangsKlasse, False)
+                                            txtVorgangsKlasse = mapToAppearance(origVorgangsKlasse, False)
                                             'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
                                             '        "auf folgende Phasen Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
                                         Else
-                                            txtVorgangsKlasse = mapToAppearance(txtVorgangsKlasse, True)
+                                            txtVorgangsKlasse = mapToAppearance(origVorgangsKlasse, True)
                                             'CType(activeWSListe.Cells(curZeile, protocolColumn + 2), Excel.Range).Value = _
                                             '        "auf folgende Meilenstein Darstellungsklasse abgebildet: " & txtVorgangsKlasse.Trim
                                         End If
@@ -543,28 +561,61 @@ Module BMWItOModul
                                     End Try
                                 End If
 
+                                '
+                                ' jetzt muss protokolliert werden 
+                                Dim oLevel As Integer
+                                oLevel = origHierarchy.getLevel(origItem)
+                                Dim oBreadCrumb As String = origHierarchy.getFootPrint(oLevel)
+
+                                ' Original Footprint
+                                CType(activeWSListe.Cells(curZeile, colProtocol + 1), Excel.Range).Value = oBreadCrumb
+                                ' Textvorgangsklasse
+                                CType(activeWSListe.Cells(curZeile, colProtocol + 3), Excel.Range).Value = origVorgangsKlasse
+                                ' Abkürzung
+                                CType(activeWSListe.Cells(curZeile, colProtocol + 4), Excel.Range).Value = txtAbbrev
+
+                                ' jetzt muss ggf die Phase in die Orig Hierarchie aufgenommen werden 
+                                If Not isMilestone Then
+
+                                    Dim ophase As clsPhase
+                                    ophase = New clsPhase(parent:=hproj)
+                                    ophase.name = origItem.Trim
+                                    'ophase.changeStartandDauer(startoffset, duration)
+
+                                    Try
+                                        origHierarchy.add(ophase, oLevel)
+                                    Catch ex As Exception
+
+                                    End Try
+
+
+                                End If
 
                                 Dim stdName As String
 
                                 If duration > 1 Then
                                     ' es handelt sich um eine Phase 
 
+
+
                                     If itemName.Length = 0 Then
 
-                                        CType(activeWSListe.Cells(curZeile, colProtocol + 2), Excel.Range).Value = _
+                                        CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
                                                 "leerer String wurde ignoriert  "
                                         anzIgnored = anzIgnored + 1
 
                                     Else
                                         Dim indentLevel As Integer
                                         ' bestimme den Indent-Level , damit die Hierarchie
+
+
                                         indentLevel = pHierarchy.getLevel(origItem)
 
                                         If indentLevel > lastDuplicateIndent Then
                                             ' Skip , weil es sich dann um Elemente handelt, deren Parent Phase als Duplikat ignoriert wurde 
                                             ' Protokollieren ...
 
-                                            CType(activeWSListe.Cells(curZeile, colProtocol + 2), Excel.Range).Value = _
+                                            CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
                                                         "ist Kind eines doppelten/nicht zugelassenen Elements und wird ignoriert"
                                             anzIgnored = anzIgnored + 1
 
@@ -692,10 +743,18 @@ Module BMWItOModul
                                             If ok1 Then
 
                                                 ' wird übernommen als 
-                                                CType(activeWSListe.Cells(curZeile, colProtocol + 1), Excel.Range).Value = stdName
+                                                CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Value = stdName
+
+                                                ' neuer Breadcrumb 
+                                                Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
+                                                CType(activeWSListe.Cells(curZeile, colProtocol + 7), Excel.Range).Value = PTBreadCrumb
+
+                                                ' neue Vorgangsklasse
+                                                CType(activeWSListe.Cells(curZeile, colProtocol + 8), Excel.Range).Value = txtVorgangsKlasse
+
                                                 If stdName.Trim <> origItem.Trim Then
                                                     ' es hat eine Ersetzung stattgefunden 
-                                                    CType(activeWSListe.Cells(curZeile, colProtocol + 1), Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                                    CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                                     anzSubstituted = anzSubstituted + 1
                                                 Else
                                                     anzCorrect = anzCorrect + 1
@@ -740,7 +799,7 @@ Module BMWItOModul
 
                                             Else
 
-                                                CType(activeWSListe.Cells(curZeile, colProtocol + 2), Excel.Range).Value = logMessage
+                                                CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = logMessage
                                                 lastDuplicateIndent = indentLevel
 
                                                 anzIgnored = anzIgnored + 1
@@ -769,7 +828,7 @@ Module BMWItOModul
                                             ' Skip , weil es sich dann um Elemente handelt, deren Parent Phase als Duplikat ignoriert wurde 
                                             ' Protokollieren ...
 
-                                            CType(activeWSListe.Cells(curZeile, colProtocol + 2), Excel.Range).Value = _
+                                            CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
                                                         "ist Kind eines doppelten/nicht zugelassenen Elements und wird ignoriert"
                                             anzIgnored = anzIgnored + 1
                                         Else
@@ -904,10 +963,18 @@ Module BMWItOModul
                                                 If ok1 Then
 
                                                     ' Protokollieren
-                                                    CType(activeWSListe.Cells(curZeile, colProtocol + 1), Excel.Range).Value = stdName.Trim
+                                                    CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Value = stdName.Trim
+
+                                                    ' neuer Breadcrumb 
+                                                    Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
+                                                    CType(activeWSListe.Cells(curZeile, colProtocol + 7), Excel.Range).Value = PTBreadCrumb
+
+                                                    ' neue Vorgangsklasse
+                                                    CType(activeWSListe.Cells(curZeile, colProtocol + 8), Excel.Range).Value = txtVorgangsKlasse
+
                                                     If stdName.Trim <> origItem.Trim Then
                                                         ' es hat eine Ersetzung stattgefunden 
-                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 1), Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelGelb
                                                         anzSubstituted = anzSubstituted + 1
                                                     Else
                                                         anzCorrect = anzCorrect + 1
@@ -955,22 +1022,21 @@ Module BMWItOModul
                                                     Else
 
                                                         ' Meilenstein existiert in dieser Phase bereits .... 
-                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 2), Excel.Range).Value = _
+                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
                                                                 stdName.Trim & " existiert bereits: Datum 1: " & cphase.getResult(stdName).getDate.ToShortDateString & _
                                                                 "   , Datum 2: " & cresult.getDate.ToShortDateString
-                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 1), Excel.Range).Value = ""
 
                                                     End If
                                                 Else
 
-                                                    CType(activeWSListe.Cells(curZeile, colProtocol + 2), Excel.Range).Value = logMessage
+                                                    CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = logMessage
                                                     anzIgnored = anzIgnored + 1
 
                                                 End If
 
 
                                             Catch ex As Exception
-                                                CType(activeWSListe.Cells(curZeile, colProtocol + 5), Excel.Range).Value = _
+                                                CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
                                                                     "Fehler in Zeile " & zeile & ", Item-Name: " & itemName
                                             End Try
 
@@ -980,7 +1046,7 @@ Module BMWItOModul
 
                                     Else ' Ende 
 
-                                        CType(activeWSListe.Cells(curZeile, colProtocol + 2), Excel.Range).Value = _
+                                        CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
                                                 "leerer String wurde ignoriert  "
                                         anzIgnored = anzIgnored + 1
 
@@ -1112,17 +1178,17 @@ Module BMWItOModul
                 End While
 
                 ' jetzt wird die Statistik geschreiben ....
-                CType(activeWSListe.Cells(1, colProtocol + 5), Excel.Range).Value = "Anzahl Insgesamt"
-                CType(activeWSListe.Cells(2, colProtocol + 5), Excel.Range).Value = anzProcessedElements
+                'CType(activeWSListe.Cells(1, colProtocol + 10), Excel.Range).Value = "Anzahl Insgesamt"
+                'CType(activeWSListe.Cells(2, colProtocol + 10), Excel.Range).Value = anzProcessedElements
 
-                CType(activeWSListe.Cells(1, colProtocol + 6), Excel.Range).Value = "Original Namen"
-                CType(activeWSListe.Cells(2, colProtocol + 6), Excel.Range).Value = anzCorrect
+                'CType(activeWSListe.Cells(1, colProtocol + 11), Excel.Range).Value = "Original Namen"
+                'CType(activeWSListe.Cells(2, colProtocol + 11), Excel.Range).Value = anzCorrect
 
-                CType(activeWSListe.Cells(1, colProtocol + 7), Excel.Range).Value = "Korrigierte Namen"
-                CType(activeWSListe.Cells(2, colProtocol + 7), Excel.Range).Value = anzSubstituted
+                'CType(activeWSListe.Cells(1, colProtocol + 12), Excel.Range).Value = "Korrigierte Namen"
+                'CType(activeWSListe.Cells(2, colProtocol + 12), Excel.Range).Value = anzSubstituted
 
-                CType(activeWSListe.Cells(1, colProtocol + 8), Excel.Range).Value = "Ignorierte Namen"
-                CType(activeWSListe.Cells(2, colProtocol + 8), Excel.Range).Value = anzIgnored
+                'CType(activeWSListe.Cells(1, colProtocol + 13), Excel.Range).Value = "Ignorierte Namen"
+                'CType(activeWSListe.Cells(2, colProtocol + 13), Excel.Range).Value = anzIgnored
 
                 '
                 ' jetzt werden die Missing Phase- und Milestone Definitions noch weggeschrieben 
@@ -1470,7 +1536,8 @@ Module BMWItOModul
 
         Next
 
-        Dim expFName As String = awinPath & exportFilesOrdner & "/Report_" & Date.Now.ToShortDateString & ".xlsx"
+        Dim expFName As String = awinPath & exportFilesOrdner & "\Report_" & _
+            Date.Now.ToString.Replace(":", ".") & ".xlsx"
 
         Try
             appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)

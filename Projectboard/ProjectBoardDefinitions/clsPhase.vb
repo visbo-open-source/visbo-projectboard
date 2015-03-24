@@ -576,10 +576,10 @@
             name = _name
         End Get
         Set(value As String)
-            If Len(value) > 1 Then
+            If Len(value) > 0 Then
                 _name = value
             Else
-                Throw New ApplicationException("Name muss mindestens zwei Zeichen lang sein ...")
+                Throw New ApplicationException("Name darf nicht leer sein ...")
             End If
 
         End Set
