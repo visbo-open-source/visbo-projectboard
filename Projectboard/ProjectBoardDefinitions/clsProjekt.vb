@@ -180,7 +180,7 @@ Public Class clsProjekt
 
             dimension = getColumnOfDate(phaseEnd) - getColumnOfDate(phaseStart)
 
-            If cphase.CountRoles > 0 Then
+            If cphase.countRoles > 0 Then
 
                 ' hier müssen jetzt die Xwerte neu gesetzt werden 
                 Call cphase.calcNewXwerte(dimension, 1)
@@ -188,7 +188,7 @@ Public Class clsProjekt
 
             End If
 
-            If cphase.CountCosts > 0 And notYetDone Then
+            If cphase.countCosts > 0 And notYetDone Then
 
                 ' hier müssen jetzt die Xwerte neu gesetzt werden 
                 Call cphase.calcNewXwerte(dimension, 1)
@@ -339,7 +339,7 @@ Public Class clsProjekt
 
             phaseEnde = .startOffsetinDays + .dauerInDays - 1
 
-            For m = 1 To .CountResults
+            For m = 1 To .countMilestones
                 If phaseEnde < .startOffsetinDays + .getResult(m).offset Then
                     phaseEnde = .startOffsetinDays + .getResult(m).offset
                 End If
@@ -1214,7 +1214,7 @@ Public Class clsProjekt
 
         For p = 1 To Me.CountPhases
             cPhase = Me.getPhase(p)
-            For r = 1 To cPhase.CountResults
+            For r = 1 To cPhase.countMilestones
                 With cPhase.getResult(r)
                     .clearBewertungen()
                 End With
@@ -1420,7 +1420,7 @@ Public Class clsProjekt
                     phase = MyBase.getPhase(p)
                     With phase
                         ' Off1
-                        anzResults = .CountResults
+                        anzResults = .countMilestones
                         phasenStart = .relStart - 1
                         phasenEnde = .relEnde - 1
 
@@ -1513,7 +1513,7 @@ Public Class clsProjekt
                     phase = AllPhases.Item(p)
                     With phase
                         ' Off1
-                        anzResults = .CountResults
+                        anzResults = .countMilestones
 
 
                         For r = 1 To anzResults
@@ -1679,12 +1679,12 @@ Public Class clsProjekt
             Try
                 newphase = newproj.getPhase(cphase.name)
                 ' wenn gefunden dann alle Results kopieren 
-                For r = 1 To cphase.CountResults
+                For r = 1 To cphase.countMilestones
                     newresult = New clsMeilenstein(parent:=newphase)
                     cphase.getResult(r).CopyToWithoutBewertung(newresult)
 
                     Try
-                        newphase.addresult(newresult)
+                        newphase.addMilestone(newresult)
                     Catch ex As Exception
 
                     End Try
@@ -1719,12 +1719,12 @@ Public Class clsProjekt
             Try
                 newphase = newproj.getPhase(cphase.name)
                 ' wenn gefunden dann alle Results kopieren 
-                For r = 1 To cphase.CountResults
+                For r = 1 To cphase.countMilestones
                     newresult = New clsMeilenstein(parent:=newphase)
                     cphase.getResult(r).CopyTo(newresult)
 
                     Try
-                        newphase.addresult(newresult)
+                        newphase.addMilestone(newresult)
                     Catch ex1 As Exception
 
                     End Try
@@ -1743,7 +1743,7 @@ Public Class clsProjekt
     End Sub
 
 
-    Public Overrides Sub CopyTo(ByRef newproject As clsProjekt)
+    Public Overrides Sub copyTo(ByRef newproject As clsProjekt)
 
         Dim newphase As clsPhase
 
@@ -1862,7 +1862,7 @@ Public Class clsProjekt
                     For p = 1 To Me.CountPhases
 
                         tmpPhase = Me.getPhase(p)
-                        anzResults = tmpPhase.CountResults
+                        anzResults = tmpPhase.countMilestones
 
 
                         For r = 1 To anzResults
@@ -2042,7 +2042,7 @@ Public Class clsProjekt
                 For p = 1 To Me.CountPhases
 
                     tmpPhase = Me.getPhase(p)
-                    anzResults = tmpPhase.CountResults
+                    anzResults = tmpPhase.countMilestones
 
 
                     For r = 1 To anzResults
@@ -2400,7 +2400,7 @@ Public Class clsProjekt
     ''' <param name="width"></param>
     ''' <param name="height"></param>
     ''' <remarks></remarks>
-    Public Sub CalculateShapeCoord(ByVal phaseNr As Integer, ByRef zeilenOffset As Integer,
+    Public Sub calculateShapeCoord(ByVal phaseNr As Integer, ByRef zeilenOffset As Integer,
                                        ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
         Dim cphase As clsPhase
         Dim phasenName As String
@@ -2455,7 +2455,7 @@ Public Class clsProjekt
                     'width = ((phasenDauer) / 365) * boxWidth * 12
                     'height = 0.8 * boxHeight
                 Else
-                    cphase.CalculatePhaseShapeCoord(top, left, width, height)
+                    cphase.calculatePhaseShapeCoord(top, left, width, height)
                     top = top + (zeilenOffset) * boxHeight
                     'top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.5 * (1 - 0.33) * boxHeight + (zeilenOffset) * boxHeight
                     'left = (phasenStart / 365) * boxWidth * 12

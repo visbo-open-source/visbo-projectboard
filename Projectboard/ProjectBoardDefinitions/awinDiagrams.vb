@@ -122,6 +122,7 @@ Public Module awinDiagrams
         'Dim chtTitle As String
         Dim chtobjName As String
 
+
         ' Debugging variable 
         Dim HDiagramList As clsDiagramme
         HDiagramList = DiagramList
@@ -245,6 +246,22 @@ Public Module awinDiagrams
             Catch ex As Exception
 
             End Try
+
+            ' Änderung tk 26.3.15 
+            ' wenn die Koordinaten ausserhalb des aktuell sichtbaren Windows sind, dann sollen sie 
+            ' ins Sichtbare gerückt werden 
+            
+            With CType(appInstance.ActiveWindow, Excel.Window)
+
+                If top < CDbl(.VisibleRange.Top) Or top + height > CDbl(.VisibleRange.Top + .VisibleRange.Height) Then
+                    top = CDbl(.VisibleRange.Top) + 10
+                End If
+
+                If left < CDbl(.VisibleRange.Left) Or left + width > CDbl(.VisibleRange.Left + .VisibleRange.Width) Then
+                    left = CDbl(.VisibleRange.Left) + 10
+                End If
+
+            End With
 
         End If
 

@@ -1016,7 +1016,7 @@ Module BMWItOModul
                                                     If IsNothing(cphase.getResult(cresult.name)) Then
 
                                                         With cphase
-                                                            .addresult(cresult)
+                                                            .addMilestone(cresult)
                                                         End With
 
                                                     Else
@@ -1333,7 +1333,7 @@ Module BMWItOModul
 
         ' die erste Phase kann auch Meilensteine haben !
         cphase = hproj.getPhase(1)
-        For im = 1 To cphase.CountResults
+        For im = 1 To cphase.countMilestones
             zeile = zeile + 1
             cmilestone = cphase.getResult(im)
             startdate = cmilestone.getDate
@@ -1387,7 +1387,7 @@ Module BMWItOModul
                 CType(ws.Cells(zeile, spalte).offset(0, 2), Excel.Range).Value = "Fehler !"
             End If
 
-            For im = 1 To cphase.CountResults
+            For im = 1 To cphase.countMilestones
                 zeile = zeile + 1
                 cmilestone = cphase.getResult(im)
                 startdate = cmilestone.getDate

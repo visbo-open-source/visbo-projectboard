@@ -206,7 +206,7 @@ Public Class clsProjekte
                     For p = 1 To kvp.Value.CountPhases
 
                         cphase = kvp.Value.getPhase(p)
-                        For r = 1 To cphase.CountResults
+                        For r = 1 To cphase.countMilestones
 
                             msName = cphase.getResult(r).name
                             If tmpListe.Contains(msName) Then
@@ -1539,7 +1539,7 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getAuslastungsValues(roleName As String, typus As Integer) As Double()
+    Public ReadOnly Property getAuslastungsValues(ByVal roleName As String, ByVal typus As Integer) As Double()
 
         Get
             Dim roleValues() As Double
@@ -1559,6 +1559,7 @@ Public Class clsProjekte
             roleValues = Me.getRoleValuesInMonth(roleName)
             kapaValues = Me.getRoleKapasInMonth(myCollection, False)
             myCollection.Clear()
+
 
             Select Case typus
 
@@ -1931,7 +1932,9 @@ Public Class clsProjekte
         Get
 
             Dim tmpValues() As Double
+            Dim tmpValues2(,) As Double
             Dim tmpSum As Double
+            Dim zwSum As Double
 
             Dim zeitraum As Integer
             Dim rcName As String
@@ -1940,7 +1943,7 @@ Public Class clsProjekte
 
             anzElements = myCollection.Count
             zeitraum = showRangeRight - showRangeLeft
-
+            'ReDim tmpValues2(3, zeitraum)
 
             tmpSum = 0.0
 
@@ -1955,6 +1958,16 @@ Public Class clsProjekte
                     tmpValues = Me.getRoleValuesInMonth(rcName)
                 ElseIf diagrammtyp = DiagrammTypen(2) Then
                     tmpValues = Me.getCostValuesInMonth(rcName)
+                ElseIf diagrammtyp = DiagrammTypen(5) Then
+                    tmpValues2 = Me.getCountMilestonesInMonth(rcName)
+
+                    For ix = 0 To zeitraum
+                        zwSum = 0
+                        For ik = 0 To 3
+                            zwSum = zwSum + tmpValues2(ik, ix)
+                        Next
+                        tmpValues(ix) = zwSum
+                    Next
                 End If
 
 

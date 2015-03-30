@@ -245,7 +245,7 @@ Public Class clsCommandBarEvents
                             pname = oldproj.getShapeText & " - Kopie " & zaehler
 
                             hproj = New clsProjekt
-                            oldproj.CopyTo(hproj)
+                            oldproj.copyTo(hproj)
 
                             With hproj
                                 .name = pname

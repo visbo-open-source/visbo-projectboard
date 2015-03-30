@@ -632,7 +632,7 @@ Public Module testModule
                                             .TextFrame2.TextRange.Text = "Projekt-Vorlage " & hproj.VorlagenName & " existiert nicht !"
                                             continueWork = False
                                         Else
-                                            vproj.CopyTo(cproj)
+                                            vproj.copyTo(cproj)
                                             cproj.startDate = hproj.startDate
                                         End If
 
@@ -688,7 +688,7 @@ Public Module testModule
                                         continueWork = False
                                     Else
                                         cproj = New clsProjekt
-                                        vproj.CopyTo(cproj)
+                                        vproj.copyTo(cproj)
                                         cproj.startDate = hproj.startDate
                                     End If
 
@@ -4865,7 +4865,7 @@ Public Module testModule
                 Dim phaseStart As Date = hproj.startDate.AddMonths(cphase.relStart - 1)
                 Dim resultColumn As Integer
 
-                For r = 1 To cphase.CountResults
+                For r = 1 To cphase.countMilestones
                     Dim cResult As clsMeilenstein
                     Dim cBewertung As clsBewertung
 
@@ -5158,7 +5158,7 @@ Public Module testModule
 
 
 
-                For r = 1 To cphase.CountResults
+                For r = 1 To cphase.countMilestones
                     Dim cResult As clsMeilenstein = Nothing
                     Dim cBewertung As clsBewertung = Nothing
 
@@ -6123,7 +6123,7 @@ Public Module testModule
                 Dim cphase As clsPhase = hproj.getPhase(p)
                 Dim phaseStart As Date = hproj.startDate.AddMonths(cphase.relStart - 1)
 
-                For r = 1 To cphase.CountResults
+                For r = 1 To cphase.countMilestones
                     Dim cResult As clsMeilenstein
                     Dim cBewertung As clsBewertung
 

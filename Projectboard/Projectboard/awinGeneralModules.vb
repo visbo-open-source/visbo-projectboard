@@ -1488,7 +1488,7 @@ Public Module awinGeneralModules
                     cresult.addBewertung(cbewertung)
 
                     Try
-                        cphase.addresult(cresult)
+                        cphase.addMilestone(cresult)
                     Catch ex As Exception
 
                     End Try
@@ -1593,7 +1593,7 @@ Public Module awinGeneralModules
 
                                     Try
                                         With cphase
-                                            .addresult(cresult)
+                                            .addMilestone(cresult)
                                         End With
                                     Catch ex As Exception
 
@@ -2136,7 +2136,7 @@ Public Module awinGeneralModules
                                                 End With
 
                                                 With cphase
-                                                    .AddRole(crole)
+                                                    .addRole(crole)
                                                 End With
                                             Catch ex As Exception
                                                 '
@@ -2442,17 +2442,17 @@ Public Module awinGeneralModules
                                         ' jetzt wird auf Inkonsistenz geprüft 
                                         Dim inkonsistent As Boolean = False
 
-                                        If cphase.CountRoles > 0 Or cphase.CountCosts > 0 Then
+                                        If cphase.countRoles > 0 Or cphase.countCosts > 0 Then
                                             ' prüfen , ob es Inkonsistenzen gibt ? 
                                             Dim r As Integer
-                                            For r = 1 To cphase.CountRoles
+                                            For r = 1 To cphase.countRoles
                                                 If cphase.getRole(r).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
                                                     inkonsistent = True
                                                 End If
                                             Next
 
                                             Dim k As Integer
-                                            For k = 1 To cphase.CountCosts
+                                            For k = 1 To cphase.countCosts
                                                 If cphase.getCost(k).Xwerte.Length <> cphase.relEnde - cphase.relStart + 1 Then
                                                     inkonsistent = True
                                                 End If
@@ -2537,7 +2537,7 @@ Public Module awinGeneralModules
 
                                     Try
                                         With hproj.getPhase(phaseName)
-                                            .addresult(cResult)
+                                            .addMilestone(cResult)
                                         End With
                                     Catch ex1 As Exception
 

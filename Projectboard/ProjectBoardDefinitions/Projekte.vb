@@ -8196,7 +8196,7 @@ Public Module Projekte
                     vname = hproj.VorlagenName
 
                     hvproj = Projektvorlagen.getProject(vname)
-                    hvproj.CopyTo(cproj)
+                    hvproj.copyTo(cproj)
                     cproj.name = "Vorlage " & vname.Trim
                     ctitel = cproj.name
 
@@ -9813,17 +9813,36 @@ Public Module Projekte
 
     Public Function berechneOptimierungsWert(ByRef currentProjektListe As clsProjekte, ByRef DiagrammTyp As String, ByRef myCollection As Collection) As Double
         Dim value As Double
+        Dim kennzahl1 As Double
+        Dim kennzahl2 As Double
         Dim avgValue As Double
 
         If DiagrammTyp = DiagrammTypen(1) Then
             value = currentProjektListe.getbadCostOfRole(myCollection)
-        ElseIf DiagrammTyp = DiagrammTypen(0) Or DiagrammTyp = DiagrammTypen(2) Then
+
+        ElseIf DiagrammTyp = DiagrammTypen(0) Then
+
+            kennzahl1 = currentProjektListe.getAverage(myCollection, DiagrammTyp)
+            kennzahl2 = currentProjektListe.getPhaseSchwellWerteInMonth(myCollection).Sum
+            avgValue = System.Math.Max(kennzahl1, kennzahl2)
+            value = currentProjektListe.getDeviationfromAverage(myCollection, avgValue, DiagrammTyp)
+
+        ElseIf DiagrammTyp = DiagrammTypen(2) Then
             avgValue = currentProjektListe.getAverage(myCollection, DiagrammTyp)
             value = currentProjektListe.getDeviationfromAverage(myCollection, avgValue, DiagrammTyp)
+
         ElseIf DiagrammTyp = DiagrammTypen(4) Then
             ' da der Optimierungs-Algorithmus die kleinste Zahl sucht , muss mit -1 multipliziert werden, 
             ' damit tatsächlich der größte Ertrag heraus kommt 
             value = currentProjektListe.getErgebniskennzahl * (-1)
+
+        ElseIf DiagrammTyp = DiagrammTypen(5) Then
+            'Throw New ArgumentException("Optimierung ist für diesen Diagramm-Typ nicht implementiert")
+            ' tk: das folgende kann aktiviert werden, sobald 
+            kennzahl1 = currentProjektListe.getAverage(myCollection, DiagrammTyp)
+            kennzahl2 = currentProjektListe.getMilestoneSchwellWerteInMonth(myCollection).Sum
+            avgValue = System.Math.Max(kennzahl1, kennzahl2)
+            value = currentProjektListe.getDeviationfromAverage(myCollection, avgValue, DiagrammTyp)
         Else
             Throw New ArgumentException("Optimierung ist für diesen Diagramm-Typ nicht implementiert")
         End If
@@ -10451,7 +10470,7 @@ Public Module Projekte
 
                     End Try
 
-                    For r = 1 To cphase.CountResults
+                    For r = 1 To cphase.countMilestones
 
                         Dim cResult As clsMeilenstein
                         Dim cBewertung As clsBewertung
@@ -10524,7 +10543,7 @@ Public Module Projekte
 
                     Try
                         zeilenOffset = 0
-                        Call hproj.CalculateShapeCoord(i, zeilenOffset, top, left, width, height)
+                        Call hproj.calculateShapeCoord(i, zeilenOffset, top, left, width, height)
                         'phaseShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
                         '        Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
 
@@ -10569,7 +10588,7 @@ Public Module Projekte
                         Dim msName As String
                         Dim msShape As Excel.Shape
 
-                        For r = 1 To .CountResults
+                        For r = 1 To .countMilestones
 
                             Dim cResult As clsMeilenstein
                             Dim cBewertung As clsBewertung
@@ -11521,7 +11540,7 @@ Public Module Projekte
                     Dim cphase As clsPhase = hproj.getPhase(p)
 
 
-                    For r = 1 To cphase.CountResults
+                    For r = 1 To cphase.countMilestones
                         Dim cResult As clsMeilenstein
                         Dim cBewertung As clsBewertung
                         Dim nameIstInListe As Boolean
@@ -11962,7 +11981,7 @@ Public Module Projekte
 
                         Try
                             'cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
-                            cphase.CalculatePhaseShapeCoord(top, left, width, height)
+                            cphase.calculatePhaseShapeCoord(top, left, width, height)
 
                         Catch ex As Exception
                             Throw New ArgumentException(ex.Message)
@@ -12319,7 +12338,7 @@ Public Module Projekte
 
                         Try
                             'cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
-                            cphase.CalculatePhaseShapeCoord(top, left, width, height)
+                            cphase.calculatePhaseShapeCoord(top, left, width, height)
                         Catch ex As Exception
                             ok = False
                         End Try
@@ -12471,7 +12490,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-            
+
 
 
         End With
@@ -12534,7 +12553,7 @@ Public Module Projekte
         'End With
 
 
-       
+
 
         With resultShape
 
@@ -12643,7 +12662,7 @@ Public Module Projekte
         Catch ex As Exception
 
         End Try
-        
+
 
         With myshape
 
@@ -12664,7 +12683,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-            
+
 
             'With .Line
             '    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
@@ -12697,7 +12716,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-           
+
 
             Try
                 With .TextFrame2
@@ -12737,7 +12756,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-            
+
 
 
         End With
@@ -12761,7 +12780,7 @@ Public Module Projekte
         Try
             myphase = myproject.getPhase(phasenIndex)
 
-            
+
         Catch ex As Exception
             Throw New ArgumentException("Phase " & phasenIndex.ToString & _
                                         " existiert nicht ...")
@@ -12787,8 +12806,8 @@ Public Module Projekte
         Catch ex As Exception
 
         End Try
-        
-        
+
+
         With myshape
 
 
@@ -12838,7 +12857,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-            
+
             Try
                 With .Fill
 
@@ -12868,7 +12887,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-           
+
 
             Try
 
@@ -12911,7 +12930,7 @@ Public Module Projekte
 
             End Try
 
-            
+
 
         End With
 
@@ -13635,7 +13654,7 @@ Public Module Projekte
 
 
 
-                    anzahlItems = cphase.CountRoles
+                    anzahlItems = cphase.countRoles
 
 
                     ' jetzt werden Rollen geschrieben 
@@ -13657,7 +13676,7 @@ Public Module Projekte
 
                     ' jetzt werden Kosten geschrieben 
 
-                    anzahlItems = cphase.CountCosts
+                    anzahlItems = cphase.countCosts
 
                     For k = 1 To anzahlItems
                         itemName = cphase.getCost(k).name
@@ -13953,7 +13972,7 @@ Public Module Projekte
 
                 zeile = zeile + 1
 
-                For r = 1 To cphase.CountResults
+                For r = 1 To cphase.countMilestones
                     cResult = cphase.getResult(r)
 
                     cBewertung = cResult.getBewertung(1)
@@ -14078,7 +14097,7 @@ Public Module Projekte
             Throw New ArgumentException("Fehler in awinExportProject, Schreiben Attribute")
         End Try
 
-      
+
         Try
 
             My.Computer.FileSystem.DeleteFile(fileName)
@@ -14091,7 +14110,7 @@ Public Module Projekte
             appInstance.ActiveWorkbook.SaveAs(fileName, _
                                           ConflictResolution:=XlSaveConflictResolution.xlLocalSessionChanges
                                           )
-          
+
         Catch ex As Exception
             appInstance.EnableEvents = formerEE
             Throw New ArgumentException("Fehler beim Datei-Schreiben")
@@ -14379,7 +14398,7 @@ Public Module Projekte
 
 
 
-                anzahlItems = cphase.CountRoles
+                anzahlItems = cphase.countRoles
 
 
                 Dim startEingabebereich As Integer = zeile
@@ -14400,7 +14419,7 @@ Public Module Projekte
 
                 ' jetzt werden Kosten geschrieben 
 
-                anzahlItems = cphase.CountCosts
+                anzahlItems = cphase.countCosts
 
                 For k = 1 To anzahlItems
                     itemName = cphase.getCost(k).name
@@ -14571,7 +14590,7 @@ Public Module Projekte
                                     End With
 
                                     With cphase
-                                        .AddRole(crole)
+                                        .addRole(crole)
                                     End With
                                 Catch ex As Exception
                                     '
@@ -15876,7 +15895,7 @@ Public Module Projekte
 
                     phaseNr = CInt(tmpstr(2))
                     zeilenoffset = 0
-                    Call hproj.CalculateShapeCoord(phaseNr, zeilenoffset, sollTop, sollLeft, sollWidth, sollHeight)
+                    Call hproj.calculateShapeCoord(phaseNr, zeilenoffset, sollTop, sollLeft, sollWidth, sollHeight)
 
                     'Dim korrfaktorleft As Double = istLeft - sollLeft
                     'Dim korrfakttorwidth As Double = istWidth - sollWidth
@@ -15914,7 +15933,7 @@ Public Module Projekte
 
                 Else
                     'Call cPhase.calculateLineCoord(hproj.tfZeile, 1, 1, top1, left1, top2, left2, ld)
-                    Call cPhase.CalculatePhaseShapeCoord(sollTop, sollLeft, sollWidth, sollHeight)
+                    Call cPhase.calculatePhaseShapeCoord(sollTop, sollLeft, sollWidth, sollHeight)
                     'sollLeft = left1
                     'sollWidth = left2 - left1
                     'sollTop = top1 - boxHeight * 0.3 * 0.5

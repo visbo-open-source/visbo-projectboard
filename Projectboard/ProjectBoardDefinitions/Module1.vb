@@ -1429,7 +1429,8 @@ Public Module Module1
     ''' <remarks></remarks>
     Sub awinDeSelect()
         Dim srow As Integer = 1
-        Dim ziel As Integer
+        Dim hziel As Integer
+        Dim vziel As Integer
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -1450,11 +1451,16 @@ Public Module Module1
         '
         Try
             With appInstance.ActiveWindow
-                ziel = CInt((.VisibleRange.Left + .VisibleRange.Width / 2) / boxWidth)
+                hziel = CInt((.VisibleRange.Left + .VisibleRange.Width / 2) / boxWidth)
+                vziel = CInt((.VisibleRange.Top + .VisibleRange.Height / 2) / boxHeight)
+                If vziel < 2 Then
+                    vziel = 2
+                End If
             End With
 
             With appInstance.ActiveSheet
-                .Cells(2, ziel).Select()
+                '.Cells(2, hziel).Select()
+                .Cells(vziel, hziel).Select()
             End With
         Catch ex As Exception
 

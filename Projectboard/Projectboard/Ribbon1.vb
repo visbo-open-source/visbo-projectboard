@@ -152,6 +152,7 @@ Imports System.Drawing
 
         enableOnUpdate = False
 
+        loadConstellationFrm.addToSession.Checked = True
         returnValue = loadConstellationFrm.ShowDialog
 
         If returnValue = DialogResult.OK Then
@@ -886,7 +887,7 @@ Imports System.Drawing
                 If resultat = DialogResult.OK Then
 
                     newproj = New clsProjekt
-                    hproj.CopyTo(newproj)
+                    hproj.copyTo(newproj)
 
                     With newproj
                         .name = hproj.name
@@ -2517,7 +2518,7 @@ Imports System.Drawing
             End Try
 
         End If
-        
+
 
         Call awinDeSelect()
         enableOnUpdate = True
@@ -6267,7 +6268,7 @@ Imports System.Drawing
                         Exit Sub
                     End If
                     cproj = New clsProjekt
-                    vproj.CopyTo(cproj)
+                    vproj.copyTo(cproj)
                     cproj.startDate = hproj.startDate
 
                 Catch ex As Exception

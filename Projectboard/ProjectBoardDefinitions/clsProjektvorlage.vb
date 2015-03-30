@@ -129,7 +129,7 @@
 
     End Sub
 
-    Public Overridable Sub CopyTo(ByRef newproject As clsProjekt)
+    Public Overridable Sub copyTo(ByRef newproject As clsProjekt)
         Dim p As Integer
         Dim newphase As clsPhase
 
@@ -377,7 +377,7 @@
                     phase = AllPhases.Item(p)
                     With phase
                         ' Off1
-                        anzRollen = .CountRoles
+                        anzRollen = .countRoles
                         phasenStart = .relStart - 1
 
                         ' Änderung: relende, relstart bezeichnet nicht mehr notwendigerweise die tatsächliche Länge des Arrays
@@ -448,7 +448,7 @@
                 For p = 0 To AllPhases.Count - 1
                     phase = AllPhases.Item(p)
                     With phase
-                        For r = 1 To .CountRoles
+                        For r = 1 To .countRoles
                             hrole = .getRole(r)
                             If hrole.summe > 0 Then
                                 roleName = hrole.name
@@ -521,7 +521,7 @@
             Dim anzahlMilestones As Integer = 0
 
             For p = 1 To Me.CountPhases
-                anzahlMilestones = anzahlMilestones + Me.getPhase(p).CountResults
+                anzahlMilestones = anzahlMilestones + Me.getPhase(p).countMilestones
             Next
 
             If anzahlMilestones > 0 Then
@@ -532,7 +532,7 @@
                 For p = 1 To Me.CountPhases
                     cphase = Me.getPhase(p)
 
-                    For r = 1 To cphase.CountResults
+                    For r = 1 To cphase.countMilestones
                         cresult = cphase.getResult(r)
                         colorIndex = cresult.getBewertung(1).colorIndex
                         tmpvalues(index) = colorIndex
@@ -566,7 +566,7 @@
             For p = 1 To Me.CountPhases
                 cphase = Me.getPhase(p)
 
-                For r = 1 To cphase.CountResults
+                For r = 1 To cphase.countMilestones
                     cresult = cphase.getResult(r)
                     tmpDate = cresult.getDate
 
@@ -629,7 +629,7 @@
                     phase = AllPhases.Item(p)
                     With phase
                         ' Off1
-                        anzRollen = .CountRoles
+                        anzRollen = .countRoles
                         phasenStart = .relStart - 1
                         'phasenEnde = .relEnde - 1
 
@@ -723,7 +723,7 @@
                         phase = AllPhases.Item(p)
                         With phase
                             ' Off1
-                            anzKostenarten = .CountCosts
+                            anzKostenarten = .countCosts
                             phasenStart = .relStart - 1
                             'phasenEnde = .relEnde - 1
 
@@ -792,7 +792,7 @@
                 For p = 0 To AllPhases.Count - 1
                     phase = AllPhases.Item(p)
                     With phase
-                        For k = 1 To .CountCosts
+                        For k = 1 To .countCosts
                             hcost = .getCost(k)
                             If hcost.summe > 0 Then
                                 costname = hcost.name
@@ -1154,7 +1154,7 @@
                     phase = AllPhases.Item(p)
                     With phase
                         ' Off1
-                        anzRollen = .CountRoles
+                        anzRollen = .countRoles
                         phasenStart = .relStart - 1
                         'phasenEnde = .relEnde - 1
 

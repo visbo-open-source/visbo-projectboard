@@ -3,7 +3,7 @@
     ' earliestStart und latestStart sind absolute Werte im "koordinaten-System" des Projektes
     ' von daher ist es anders gelöst als in clsProjekt, wo earlieststart und latestStart relative Angaben sind 
 
-    Private AllResults As List(Of clsMeilenstein)
+    Private AllMilestones As List(Of clsMeilenstein)
     Private AllRoles As List(Of clsRolle)
     Private AllCosts As List(Of clsKostenart)
     Private _Offset As Integer
@@ -42,14 +42,14 @@
 
             dimension = getColumnOfDate(phaseEnd) - getColumnOfDate(phaseStart)
 
-            While tmpValue And r <= Me.CountRoles
+            While tmpValue And r <= Me.countRoles
                 If dimension <> Me.getRole(r).Xwerte.Length - 1 Then
                     tmpValue = False
                 End If
                 r = r + 1
             End While
 
-            While tmpValue And k <= Me.CountCosts
+            While tmpValue And k <= Me.countCosts
                 If dimension <> Me.getCost(k).Xwerte.Length - 1 Then
                     tmpValue = False
                 End If
@@ -145,7 +145,7 @@
                     dimension = _relEnde - _relStart
                     ReDim newvalues(dimension)
 
-                    If Me.CountRoles > 0 Then
+                    If Me.countRoles > 0 Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
                         Call Me.calcNewXwerte(dimension, faktor)
@@ -153,7 +153,7 @@
 
                     End If
 
-                    If Me.CountCosts > 0 And notYetDone Then
+                    If Me.countCosts > 0 And notYetDone Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
                         Call Me.calcNewXwerte(dimension, 1)
@@ -262,7 +262,7 @@
                     dimension = _relEnde - _relStart
                     ReDim newvalues(dimension)
 
-                    If Me.CountRoles > 0 Then
+                    If Me.countRoles > 0 Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
                         Call Me.calcNewXwerte(dimension, faktor)
@@ -270,7 +270,7 @@
 
                     End If
 
-                    If Me.CountCosts > 0 And notYetDone Then
+                    If Me.countCosts > 0 And notYetDone Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
                         Call Me.calcNewXwerte(dimension, 1)
@@ -593,7 +593,7 @@
     ''' <param name="width"></param>
     ''' <param name="height"></param>
     ''' <remarks></remarks>
-    Public Sub CalculatePhaseShapeCoord(ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
+    Public Sub calculatePhaseShapeCoord(ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
 
         Try
 
@@ -694,7 +694,7 @@
 
 
     'End Sub
-    Public Sub AddRole(ByVal role As clsRolle)
+    Public Sub addRole(ByVal role As clsRolle)
 
         AllRoles.Add(role)
 
@@ -704,17 +704,17 @@
     ''' es wird überprüft, ob der Meilenstein-Name schon existiert 
     ''' wenn er bereits existiert, wird eine ArgumentException geworfen  
     ''' </summary>
-    ''' <param name="result"></param>
+    ''' <param name="milestone"></param>
     ''' <remarks></remarks>
-    Public Sub addresult(ByVal result As clsMeilenstein)
+    Public Sub addMilestone(ByVal milestone As clsMeilenstein)
 
 
-        Dim anzElements As Integer = AllResults.Count - 1
+        Dim anzElements As Integer = AllMilestones.Count - 1
         Dim ix As Integer = 0
         Dim found As Boolean = False
 
         Do While ix <= anzElements And Not found
-            If AllResults.Item(ix).name = result.name Then
+            If AllMilestones.Item(ix).name = milestone.name Then
                 found = True
             Else
                 ix = ix + 1
@@ -722,51 +722,51 @@
         Loop
 
         If found Then
-            Throw New ArgumentException("Meilenstein existiert bereits !" & result.name)
+            Throw New ArgumentException("Meilenstein existiert bereits !" & milestone.name)
         Else
-            AllResults.Add(result)
+            AllMilestones.Add(milestone)
         End If
 
 
     End Sub
 
-    Public ReadOnly Property RollenListe() As List(Of clsRolle)
+    Public ReadOnly Property rollenListe() As List(Of clsRolle)
 
         Get
-            RollenListe = AllRoles
+            rollenListe = AllRoles
         End Get
 
     End Property
 
-    Public ReadOnly Property ResultListe() As List(Of clsMeilenstein)
+    Public ReadOnly Property meilensteinListe() As List(Of clsMeilenstein)
 
         Get
-            ResultListe = AllResults
+            meilensteinListe = AllMilestones
         End Get
 
     End Property
 
-    Public ReadOnly Property KostenListe() As List(Of clsKostenart)
+    Public ReadOnly Property kostenListe() As List(Of clsKostenart)
 
         Get
-            KostenListe = AllCosts
+            kostenListe = AllCosts
         End Get
 
     End Property
 
 
-    Public ReadOnly Property CountRoles() As Integer
+    Public ReadOnly Property countRoles() As Integer
 
         Get
-            CountRoles = AllRoles.Count
+            countRoles = AllRoles.Count
         End Get
 
     End Property
 
-    Public ReadOnly Property CountResults() As Integer
+    Public ReadOnly Property countMilestones() As Integer
 
         Get
-            CountResults = AllResults.Count
+            countMilestones = AllMilestones.Count
         End Get
 
     End Property
@@ -794,17 +794,17 @@
 
             .name = _name
 
-            For r = 1 To Me.CountRoles
+            For r = 1 To Me.countRoles
                 'newrole = New clsRolle(relEnde - relStart)
 
                 dimension = Me.getRole(r).getDimension
                 newrole = New clsRolle(dimension)
                 Me.getRole(r).CopyTo(newrole)
-                .AddRole(newrole)
+                .addRole(newrole)
             Next r
 
 
-            For k = 1 To Me.CountCosts
+            For k = 1 To Me.countCosts
                 'newcost = New clsKostenart(relEnde - relStart)
 
                 dimension = Me.getCost(k).getDimension
@@ -820,12 +820,12 @@
 
             .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
-            For r = 1 To Me.AllResults.Count
+            For r = 1 To Me.AllMilestones.Count
                 newresult = New clsMeilenstein(parent:=newphase)
                 Me.getResult(r).CopyTo(newresult)
 
                 Try
-                    .addresult(newresult)
+                    .addMilestone(newresult)
                 Catch ex As Exception
 
                 End Try
@@ -860,7 +860,7 @@
 
             .changeStartandDauer(CInt(Me._startOffsetinDays * corrFactor), CInt(Me._dauerInDays * corrFactor))
 
-            For r = 1 To Me.CountRoles
+            For r = 1 To Me.countRoles
                 Try
 
                     oldrole = Me.getRole(r)
@@ -876,7 +876,7 @@
                         .Xwerte = newXwerte
                     End With
                     With newphase
-                        .AddRole(newrole)
+                        .addRole(newrole)
                     End With
                 Catch ex As Exception
 
@@ -887,7 +887,7 @@
             Next r
 
 
-            For k = 1 To Me.CountCosts
+            For k = 1 To Me.countCosts
                 Try
                     oldcost = Me.getCost(k)
                     newcost = New clsKostenart(newphase.relEnde - newphase.relStart)
@@ -919,14 +919,14 @@
 
             ' alt .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
-            For r = 1 To Me.AllResults.Count
+            For r = 1 To Me.AllMilestones.Count
                 newresult = New clsMeilenstein(parent:=newphase)
                 Me.getResult(r).CopyTo(newresult)
                 ' korrigiert den Offset der Meilensteine 
                 newresult.offset = CLng(System.Math.Round(CLng(Me.getResult(r).offset * corrFactor)))
 
                 Try
-                    .addresult(newresult)
+                    .addMilestone(newresult)
                 Catch ex As Exception
 
                 End Try
@@ -945,7 +945,7 @@
     ''' <remarks></remarks>
     Public Sub adjustMilestones(ByVal faktor As Double)
         Dim newOffset As Integer
-        For r = 1 To Me.AllResults.Count
+        For r = 1 To Me.AllMilestones.Count
 
             ' korrigiert den Offset der Meilensteine 
             newOffset = CInt(System.Math.Round(CLng(Me.getResult(r).offset * faktor)))
@@ -994,7 +994,7 @@
     Public ReadOnly Property getResult(ByVal index As Integer) As clsMeilenstein
 
         Get
-            getResult = AllResults.Item(index - 1)
+            getResult = AllMilestones.Item(index - 1)
         End Get
 
     End Property
@@ -1015,11 +1015,11 @@
             Dim found As Boolean = False
             Dim r As Integer = 1
 
-            While r <= Me.CountResults And Not found
+            While r <= Me.countMilestones And Not found
 
-                If AllResults.Item(r - 1).name = key Then
+                If AllMilestones.Item(r - 1).name = key Then
                     found = True
-                    tmpResult = AllResults.Item(r - 1)
+                    tmpResult = AllMilestones.Item(r - 1)
                 Else
                     r = r + 1
                 End If
@@ -1047,7 +1047,7 @@
             Dim found As Boolean = False
             Dim tmpValue As Integer = 0
 
-            While r <= Me.CountResults And Not found
+            While r <= Me.countMilestones And Not found
                 If Me.getResult(r).name = msName Then
                     found = True
                     tmpValue = r
@@ -1068,10 +1068,10 @@
     End Sub
 
 
-    Public ReadOnly Property CountCosts() As Integer
+    Public ReadOnly Property countCosts() As Integer
 
         Get
-            CountCosts = AllCosts.Count
+            countCosts = AllCosts.Count
         End Get
 
     End Property
@@ -1101,7 +1101,7 @@
 
         AllRoles = New List(Of clsRolle)
         AllCosts = New List(Of clsKostenart)
-        AllResults = New List(Of clsMeilenstein)
+        AllMilestones = New List(Of clsMeilenstein)
         _minDauer = 1
         _maxDauer = 60
         _Offset = 0
@@ -1120,7 +1120,7 @@
 
         AllRoles = New List(Of clsRolle)
         AllCosts = New List(Of clsKostenart)
-        AllResults = New List(Of clsMeilenstein)
+        AllMilestones = New List(Of clsMeilenstein)
         _minDauer = 1
         _maxDauer = 60
         _Offset = 0
@@ -1143,14 +1143,14 @@
 
         Dim r As Integer, k As Integer
 
-        For r = 1 To Me.CountRoles
+        For r = 1 To Me.countRoles
             oldXwerte = Me.getRole(r).Xwerte
             ReDim newXwerte(dimension)
             Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
             Me.getRole(r).Xwerte = newXwerte
         Next
 
-        For k = 1 To Me.CountCosts
+        For k = 1 To Me.countCosts
             oldXwerte = Me.getCost(k).Xwerte
             ReDim newXwerte(dimension)
             Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)

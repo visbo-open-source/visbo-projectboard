@@ -224,7 +224,7 @@
                 End Try
 
 
-                For r = 1 To .CountRoles
+                For r = 1 To .countRoles
                     'Dim newRole As New clsRolleDB(.relEnde - .relStart)
                     dimension = .getRole(r).getDimension
                     Dim newRole As New clsRolleDB(dimension)
@@ -232,7 +232,7 @@
                     AllRoles.Add(newRole)
                 Next
 
-                For r = 1 To .CountResults
+                For r = 1 To .countMilestones
                     Dim newResult As New clsResultDB
 
                     Try
@@ -244,7 +244,7 @@
 
                 Next
 
-                For k = 1 To .CountCosts
+                For k = 1 To .countCosts
                     'Dim newCost As New clsKostenartDB(.relEnde - relStart)
                     dimension = .getCost(k).getDimension
                     Dim newCost As New clsKostenartDB(dimension)
@@ -348,7 +348,7 @@
                     dimension = Me.AllRoles.Item(r - 1).Bedarf.Length - 1
                     Dim newRole As New clsRolle(dimension)
                     Me.AllRoles.Item(r - 1).copyto(newRole)
-                    .AddRole(newRole)
+                    .addRole(newRole)
 
                 Next
 
@@ -370,7 +370,7 @@
 
                         Try
                             Me.getResult(r).CopyTo(newresult)
-                            .AddResult(newresult)
+                            .addMilestone(newresult)
                         Catch ex As Exception
 
                         End Try
