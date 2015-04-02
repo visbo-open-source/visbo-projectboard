@@ -1474,13 +1474,14 @@ Public Module Module1
         Dim istfrei = True
         Dim ix As Integer = 1
         Dim anzahlP As Integer = ShowProjekte.Count
+        Dim tmpCollection As New Collection
 
         If zeile >= 2 Then
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
                 With kvp.Value
-                    If zeile >= .tfZeile And zeile < .tfZeile + getNeededSpace(kvp.Value) Then
+                    If zeile >= .tfZeile And zeile < .tfZeile + kvp.Value.calcNeededLines(tmpCollection, awinSettings.drawphases, False) Then
                         istfrei = False
                         Exit For
                     End If
@@ -1493,7 +1494,7 @@ Public Module Module1
             istfrei = False
 
         End If
-        
+
         magicBoardZeileIstFrei = istfrei
     End Function
 
@@ -1532,12 +1533,12 @@ Public Module Module1
         Dim lookDown As Boolean = True
         Dim tryoben As Integer, tryunten As Integer
         Dim anzahlzeilen As Integer
-
+        Dim tmpCollection As New Collection
 
 
         Try
             Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
-            anzahlzeilen = getNeededSpace(hproj)
+            anzahlzeilen = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
 
             ' Konsistenzbedingung prüfen ... 
             If zeile < 2 Then
@@ -1575,7 +1576,7 @@ Public Module Module1
         Catch ex As Exception
 
         End Try
-        
+
 
         findeMagicBoardPosition = zeile
 

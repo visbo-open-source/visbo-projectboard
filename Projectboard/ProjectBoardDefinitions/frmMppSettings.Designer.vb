@@ -34,12 +34,13 @@ Partial Class frmMppSettings
         Me.okButton = New System.Windows.Forms.Button()
         Me.allOnOnePage = New System.Windows.Forms.CheckBox()
         Me.sortiertNachDauer = New System.Windows.Forms.CheckBox()
+        Me.shwExtendedMode = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'shwPhaseText
         '
         Me.shwPhaseText.AutoSize = True
-        Me.shwPhaseText.Location = New System.Drawing.Point(22, 86)
+        Me.shwPhaseText.Location = New System.Drawing.Point(14, 86)
         Me.shwPhaseText.Name = "shwPhaseText"
         Me.shwPhaseText.Size = New System.Drawing.Size(124, 17)
         Me.shwPhaseText.TabIndex = 0
@@ -49,7 +50,7 @@ Partial Class frmMppSettings
         'shwPhaseDate
         '
         Me.shwPhaseDate.AutoSize = True
-        Me.shwPhaseDate.Location = New System.Drawing.Point(22, 110)
+        Me.shwPhaseDate.Location = New System.Drawing.Point(14, 110)
         Me.shwPhaseDate.Name = "shwPhaseDate"
         Me.shwPhaseDate.Size = New System.Drawing.Size(96, 17)
         Me.shwPhaseDate.TabIndex = 1
@@ -59,7 +60,7 @@ Partial Class frmMppSettings
         'shwProjectLine
         '
         Me.shwProjectLine.AutoSize = True
-        Me.shwProjectLine.Location = New System.Drawing.Point(22, 22)
+        Me.shwProjectLine.Location = New System.Drawing.Point(14, 21)
         Me.shwProjectLine.Name = "shwProjectLine"
         Me.shwProjectLine.Size = New System.Drawing.Size(77, 17)
         Me.shwProjectLine.TabIndex = 3
@@ -89,7 +90,7 @@ Partial Class frmMppSettings
         'shwAmpeln
         '
         Me.shwAmpeln.AutoSize = True
-        Me.shwAmpeln.Location = New System.Drawing.Point(181, 22)
+        Me.shwAmpeln.Location = New System.Drawing.Point(181, 21)
         Me.shwAmpeln.Name = "shwAmpeln"
         Me.shwAmpeln.Size = New System.Drawing.Size(61, 17)
         Me.shwAmpeln.TabIndex = 6
@@ -99,7 +100,7 @@ Partial Class frmMppSettings
         'shwLegend
         '
         Me.shwLegend.AutoSize = True
-        Me.shwLegend.Location = New System.Drawing.Point(22, 180)
+        Me.shwLegend.Location = New System.Drawing.Point(14, 180)
         Me.shwLegend.Name = "shwLegend"
         Me.shwLegend.Size = New System.Drawing.Size(114, 17)
         Me.shwLegend.TabIndex = 8
@@ -109,7 +110,7 @@ Partial Class frmMppSettings
         'shwVerticals
         '
         Me.shwVerticals.AutoSize = True
-        Me.shwVerticals.Location = New System.Drawing.Point(22, 157)
+        Me.shwVerticals.Location = New System.Drawing.Point(14, 157)
         Me.shwVerticals.Name = "shwVerticals"
         Me.shwVerticals.Size = New System.Drawing.Size(98, 17)
         Me.shwVerticals.TabIndex = 7
@@ -119,7 +120,7 @@ Partial Class frmMppSettings
         'notStrictly
         '
         Me.notStrictly.AutoSize = True
-        Me.notStrictly.Location = New System.Drawing.Point(22, 45)
+        Me.notStrictly.Location = New System.Drawing.Point(14, 44)
         Me.notStrictly.Name = "notStrictly"
         Me.notStrictly.Size = New System.Drawing.Size(295, 17)
         Me.notStrictly.TabIndex = 9
@@ -128,7 +129,7 @@ Partial Class frmMppSettings
         '
         'okButton
         '
-        Me.okButton.Location = New System.Drawing.Point(128, 230)
+        Me.okButton.Location = New System.Drawing.Point(132, 242)
         Me.okButton.Name = "okButton"
         Me.okButton.RightToLeft = System.Windows.Forms.RightToLeft.No
         Me.okButton.Size = New System.Drawing.Size(75, 23)
@@ -149,19 +150,30 @@ Partial Class frmMppSettings
         'sortiertNachDauer
         '
         Me.sortiertNachDauer.AutoSize = True
-        Me.sortiertNachDauer.Location = New System.Drawing.Point(181, 180)
+        Me.sortiertNachDauer.Location = New System.Drawing.Point(14, 203)
         Me.sortiertNachDauer.Name = "sortiertNachDauer"
         Me.sortiertNachDauer.Size = New System.Drawing.Size(116, 17)
         Me.sortiertNachDauer.TabIndex = 12
         Me.sortiertNachDauer.Text = "sortiert nach Dauer"
         Me.sortiertNachDauer.UseVisualStyleBackColor = True
         '
+        'shwExtendedMode
+        '
+        Me.shwExtendedMode.AutoSize = True
+        Me.shwExtendedMode.Location = New System.Drawing.Point(181, 180)
+        Me.shwExtendedMode.Name = "shwExtendedMode"
+        Me.shwExtendedMode.Size = New System.Drawing.Size(101, 17)
+        Me.shwExtendedMode.TabIndex = 13
+        Me.shwExtendedMode.Text = "Extended Mode"
+        Me.shwExtendedMode.UseVisualStyleBackColor = True
+        '
         'frmMppSettings
         '
         Me.AcceptButton = Me.okButton
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(337, 268)
+        Me.ClientSize = New System.Drawing.Size(328, 277)
+        Me.Controls.Add(Me.shwExtendedMode)
         Me.Controls.Add(Me.sortiertNachDauer)
         Me.Controls.Add(Me.allOnOnePage)
         Me.Controls.Add(Me.okButton)
@@ -193,4 +205,5 @@ Partial Class frmMppSettings
     Friend WithEvents okButton As System.Windows.Forms.Button
     Friend WithEvents allOnOnePage As System.Windows.Forms.CheckBox
     Friend WithEvents sortiertNachDauer As System.Windows.Forms.CheckBox
+    Friend WithEvents shwExtendedMode As System.Windows.Forms.CheckBox
 End Class

@@ -3322,9 +3322,10 @@ Imports System.Drawing
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
 
-                ' bestimme die Anzahl Zeilen, die benötigt wird  
-                Dim anzahlZeilen As Integer = getNeededSpace(hproj)
+
                 Dim tmpCollection As New Collection
+                ' bestimme die Anzahl Zeilen, die benötigt wird 
+                Dim anzahlZeilen As Integer = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
                 Call moveShapesDown(tmpCollection, hproj.tfZeile + 1, anzahlZeilen, 0)
                 'Call ZeichneProjektinPlanTafel2(pname, hproj.tfZeile)
                 Dim listCollection As New Collection

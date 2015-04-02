@@ -2600,7 +2600,135 @@ Public Class clsProjekt
 
 
     End Sub
+    ''' <summary>
+    ''' gibt die Anzahl Zeilen zurück, die das aktuelle Projekt im "Extended Drawing Mode" benötigt 
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property calcNeededLines(ByVal selectedPhases As Collection, ByVal extended As Boolean, ByVal considerTimespace As Boolean) As Integer
+        Get
 
+            Dim phasenName As String
+            Dim zeilenOffset As Integer = 1
+            Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
+            Dim tmpValue As Integer
+
+
+            If extended And selectedPhases.Count > 0 Then ' extended Sicht bzw. Report mit selektierte Phasen
+
+                Dim anzPhases As Integer = 0
+                Dim cphase As clsPhase = Nothing
+
+                For i = 1 To Me.CountPhases ' Schleife über alle Phasen eines Projektes
+                    Try
+                        cphase = Me.getPhase(i)
+                        If Not IsNothing(cphase) Then
+
+                            ' herausfinden, ob cphase in den selektierten Phasen enthalten ist
+                            Dim found As Boolean = False
+                            Dim j As Integer = 1
+                            While j <= selectedPhases.Count And Not found
+
+                                If cphase.name = selectedPhases(j) Then
+                                    found = True
+                                End If
+                                j = j + 1
+                            End While
+
+                            If found Then           ' cphase ist eine der selektierten Phasen
+
+                                If Not considerTimespace _
+                                    Or _
+                                    (considerTimespace And phaseWithinTimeFrame(Me.Start, cphase.relStart, cphase.relEnde, showRangeLeft, showRangeRight)) Then
+
+                                    With cphase
+
+                                        'phasenName = .name
+                                        If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+                                            zeilenOffset = zeilenOffset + 1
+                                            lastEndDate = StartofCalendar.AddDays(-1)
+                                        End If
+
+                                        If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+                                            lastEndDate = .getEndDate
+                                        End If
+
+                                    End With
+                                    anzPhases = anzPhases + 1
+                                Else
+                                    ' ''If phaseWithinTimeFrame(Me.Start, cphase.relStart, cphase.relEnde, showRangeLeft, showRangeRight) Then
+
+                                    ' ''    With cphase
+                                    ' ''        'phasenName = .name
+                                    ' ''        If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+                                    ' ''            zeilenOffset = zeilenOffset + 1
+                                    ' ''            lastEndDate = StartofCalendar.AddDays(-1)
+                                    ' ''        End If
+
+                                    ' ''        If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+                                    ' ''            lastEndDate = .getEndDate
+                                    ' ''        End If
+
+                                    ' ''    End With
+                                    ' ''    anzPhases = anzPhases + 1
+                                    ' ''Else
+                                    ' ''End If
+
+                                End If
+                            End If
+                        End If
+
+                    Catch ex As Exception
+
+                    End Try
+
+
+
+                Next i      ' nächste Phase im Projekt betrachten
+
+                If anzPhases > 1 Then
+                    tmpValue = zeilenOffset
+                Else
+                    tmpValue = 1
+                End If
+
+
+            ElseIf extended And selectedPhases.Count < 1 Then   ' extended Sicht bzw. Report ohne selektierte Phasen
+
+
+                For i = 1 To Me.CountPhases ' Schleife über alle Phasen eines Projektes
+
+                    With Me.getPhase(i)
+
+                        phasenName = .name
+                        If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+                            zeilenOffset = zeilenOffset + 1
+                            lastEndDate = StartofCalendar.AddDays(-1)
+                        End If
+
+                        If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+                            lastEndDate = .getEndDate
+                        End If
+
+                    End With
+                Next
+
+                If Me.CountPhases > 1 Then
+                    tmpValue = zeilenOffset
+                Else
+                    tmpValue = 1
+                End If
+
+            Else    ' keine extended Sicht (bzw. Report) 
+                tmpValue = 1
+            End If
+
+
+            calcNeededLines = tmpValue
+
+        End Get
+
+    End Property
 
     Public Sub New()
 

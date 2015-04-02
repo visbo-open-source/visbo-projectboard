@@ -168,7 +168,7 @@ Public Class frmSelectPPTTempl
                 Call createPPTSlidesFromConstellation(vorlagenDateiName, _
                                                       tmpCollection, tmpCollection, _
                                                       tmpCollection, tmpCollection, _
-                                                      tmpCollection, tmpCollection, _
+                                                      tmpCollection, tmpCollection, True, _
                                                       worker, e)
             End With
         Catch ex As Exception

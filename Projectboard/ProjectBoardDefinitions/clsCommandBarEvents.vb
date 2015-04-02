@@ -228,15 +228,16 @@ Public Class clsCommandBarEvents
 
                             pname = shpelement.Name & " - Kopie " & zaehler
 
+
                             Dim anzahlZeilen As Integer
                             Dim oldproj As clsProjekt
+                            Dim tmpCollection As New Collection
                             Try
                                 oldproj = ShowProjekte.getProject(shpName) ' der shpName ist identisch mit dem Projekt-Namen aus dem kopiert wurde
 
                                 ' Änderung 25.3.14 wegen Kopiertes Projekt soll einfach in der nächsten Zeile gezeichnet werden  
-                                anzahlZeilen = getNeededSpace(oldproj)
+                                anzahlZeilen = oldproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
                                 zeile = oldproj.tfZeile + 1
-                                Dim tmpCollection As New Collection
                                 Call moveShapesDown(tmpCollection, zeile, anzahlZeilen, 0) ' Stoppzeile 0: alle Elemente werden verschoben  
                             Catch ex As Exception
                                 Throw New ArgumentException("Projekt in OnUpdate nicht gefunden: " & shpName)
@@ -326,7 +327,7 @@ Public Class clsCommandBarEvents
 
                                 ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                                 ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                                Dim tmpCollection As New Collection
+
                                 Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, tmpCollection, tmpCollection)
 
                                 enableOnUpdate = True

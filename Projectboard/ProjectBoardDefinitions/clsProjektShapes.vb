@@ -1212,8 +1212,8 @@ Public Class clsProjektShapes
                         newZeile = calcYCoordToZeile(curCoord(0))
 
                         ' Platz schaffen auf der Projekt-Tafel
-
-                        Dim anzahlZeilen As Integer = getNeededSpace(hproj)
+                        Dim tmpCollection As New Collection
+                        Dim anzahlZeilen As Integer = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
                         If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
                                             spalte:=hproj.Start, laenge:=hproj.anzahlRasterElemente, _
                                             anzahlZeilen:=anzahlZeilen) Then

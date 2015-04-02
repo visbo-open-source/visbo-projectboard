@@ -938,7 +938,7 @@ Public Class frmShowPlanElements
                     Call createPPTSlidesFromConstellation(vorlagenDateiName, _
                                                       selectedPhases, selectedMilestones, _
                                                       selectedRoles, selectedCosts, _
-                                                      selectedBUs, selectedTyps, _
+                                                      selectedBUs, selectedTyps, True, _
                                                       worker, e)
                 Else
                     Call createPPTReportFromProjects(vorlagenDateiName, _

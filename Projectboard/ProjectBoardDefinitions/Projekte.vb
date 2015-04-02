@@ -7311,12 +7311,13 @@ Public Module Projekte
         Dim zeile As Integer
         Dim hproj As clsProjekt
         Dim anzahlZeilen As Integer
+        Dim tmpCollection As New Collection
 
         Dim formerEOU As Boolean = enableOnUpdate
         enableOnUpdate = False
 
         hproj = ShowProjekte.getProject(pName)
-        anzahlZeilen = getNeededSpace(hproj)
+        anzahlZeilen = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
 
 
 
@@ -7713,9 +7714,9 @@ Public Module Projekte
                         Dim chtTop As Double = chtobj.Top
                         Dim chtLeft As Double = chtobj.Left
 
-                  
+
                         chtobj.Cut()
-                      
+
                         'Dim newtestshape As Excel.ChartObject
                         currentWS.Activate()
                         currentWS.Paste()
@@ -7796,7 +7797,7 @@ Public Module Projekte
                     xlsCockpits.Close(SaveChanges:=False)
                     Throw New ArgumentException("Fehler beim Laden des Cockpits '" & cockpitname & vbLf, ex.Message)
                 End Try
-              
+
                 xlsCockpits.Close(SaveChanges:=False)
 
             Else
@@ -7906,7 +7907,7 @@ Public Module Projekte
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
                 End If
-                
+
             Catch ex As Exception
                 Call MsgBox(" Fehler in Fixierung aufheben " & pname & " , Modul: awinCancelBeauftragung")
                 Exit Sub
@@ -8992,7 +8993,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-            
+
 
         Next shp
 
@@ -9038,7 +9039,7 @@ Public Module Projekte
                 Catch ex As Exception
 
                 End Try
-                
+
             End With
         Next shp
 
@@ -9625,7 +9626,7 @@ Public Module Projekte
                             tmpConstellation.constellationName = autoSzenarioNamen(2)
                             projectConstellations.Add(tmpConstellation)
                         End If
-                        
+
 
                     End If
 
@@ -10115,7 +10116,7 @@ Public Module Projekte
             Else
                 Call MsgBox("Es sind keine Projekte geladen!")
             End If
-            
+
 
         End If
 
@@ -10208,7 +10209,7 @@ Public Module Projekte
                             positionsKennzahl = positionsKennzahl + 0.01
                         End Try
                     Loop
-                    
+
 
                 End With
 
@@ -10236,17 +10237,13 @@ Public Module Projekte
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
-                    zeile = zeile + getNeededSpace(hproj)
+                    zeile = zeile + hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
 
                 Catch ex As Exception
 
                 End Try
 
-
-
             Next
-
-
 
 
         Else
@@ -10308,7 +10305,7 @@ Public Module Projekte
                     ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
-                    curZeile = lastZeile + getNeededSpace(hproj)
+                    curzeile = lastzeile + hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
 
 
                     If curZeile > max Then
@@ -11043,56 +11040,56 @@ Public Module Projekte
 
     'End Sub
 
-    ''' <summary>
-    ''' gibt die Anzahl Zeilen zurück, die das Projekt im "expanded View Mode" benötigt 
-    ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function getNeededSpace(ByVal hproj As clsProjekt) As Integer
+    '' '' ''' <summary>
+    '' '' ''' gibt die Anzahl Zeilen zurück, die das Projekt im "expanded View Mode" benötigt 
+    '' '' ''' </summary>
+    '' '' ''' <param name="hproj"></param>
+    '' '' ''' <returns></returns>
+    '' '' ''' <remarks></remarks>
+    '' ''Public Function calculateNeededLines(ByVal hproj As clsProjekt) As Integer
 
-        Dim phasenName As String
-        Dim zeilenOffset As Integer = 1
-        Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
-        Dim tmpValue As Integer
+    '' ''    Dim phasenName As String
+    '' ''    Dim zeilenOffset As Integer = 1
+    '' ''    Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
+    '' ''    Dim tmpValue As Integer
 
-        If awinSettings.drawphases Then
+    '' ''    If awinSettings.drawphases Then
 
-            For i = 1 To hproj.CountPhases
+    '' ''        For i = 1 To hproj.CountPhases
 
-                With hproj.getPhase(i)
+    '' ''            With hproj.getPhase(i)
 
-                    phasenName = .name
-                    If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
-                        zeilenOffset = zeilenOffset + 1
-                        lastEndDate = StartofCalendar.AddDays(-1)
-                    End If
+    '' ''                phasenName = .name
+    '' ''                If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+    '' ''                    zeilenOffset = zeilenOffset + 1
+    '' ''                    lastEndDate = StartofCalendar.AddDays(-1)
+    '' ''                End If
 
-                    If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
-                        lastEndDate = .getEndDate
-                    End If
+    '' ''                If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+    '' ''                    lastEndDate = .getEndDate
+    '' ''                End If
 
-                End With
-
-
-            Next
-
-            If hproj.CountPhases > 1 Then
-                tmpValue = zeilenOffset
-            Else
-                tmpValue = 1
-            End If
+    '' ''            End With
 
 
-        Else
-            tmpValue = 1
-        End If
+    '' ''        Next
+
+    '' ''        If hproj.CountPhases > 1 Then
+    '' ''            tmpValue = zeilenOffset
+    '' ''        Else
+    '' ''            tmpValue = 1
+    '' ''        End If
 
 
-        getNeededSpace = tmpValue
+    '' ''    Else
+    '' ''        tmpValue = 1
+    '' ''    End If
 
 
-    End Function
+    '' ''    calculateNeededLines = tmpValue
+
+
+    '' ''End Function
 
 
     ''' <summary>

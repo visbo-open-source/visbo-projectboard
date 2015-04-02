@@ -85,6 +85,7 @@
     Public Property mppFullyContained As Boolean
     Public Property mppSortiertDauer As Boolean
     Public Property mppOnePage As Boolean
+    Public Property mppExtendedMode As Boolean
 
 
     Property importTyp As Integer
@@ -155,6 +156,8 @@
         _mppFullyContained = True
         _mppSortiertDauer = False
         _mppOnePage = False
+        _mppExtendedMode = False
+
 
         If _mppSortiertDauer Then
             _mppShowAllIfOne = True

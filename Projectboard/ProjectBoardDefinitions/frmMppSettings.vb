@@ -20,7 +20,7 @@
             shwLegend.Checked = .mppShowLegend
             sortiertNachDauer.Checked = .mppSortiertDauer
             allOnOnePage.Checked = .mppOnePage
-
+            shwExtendedMode.Checked = .mppExtendedMode
 
         End With
 
@@ -42,6 +42,7 @@
         awinSettings.mppShowLegend = shwLegend.Checked
         awinSettings.mppOnePage = allOnOnePage.Checked
         awinSettings.mppSortiertDauer = sortiertNachDauer.Checked
+        awinSettings.mppExtendedMode = shwExtendedMode.Checked
 
         If awinSettings.mppSortiertDauer Then
             awinSettings.mppShowAllIfOne = True
@@ -55,4 +56,7 @@
     End Sub
 
     
+    Private Sub notStrictly_CheckedChanged(sender As Object, e As EventArgs) Handles notStrictly.CheckedChanged
+
+    End Sub
 End Class
