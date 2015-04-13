@@ -4670,7 +4670,7 @@ Public Module testModule
         Dim toDraw As Integer
         Dim anzTabellenElements As Integer
         Dim anzDrawn As Integer = 0
-
+        Dim modRest As Integer
         Dim copiedShape As pptNS.ShapeRange
 
 
@@ -4682,21 +4682,22 @@ Public Module testModule
 
         anzSpalten = tabelle.Columns.Count
         anzZeilen = tabelle.Rows.Count
-        If anzSpalten <> 3 Then
-            Throw New Exception("Tabelle hat nicht 3 Spalten : Symbol, Short- und Long-Name")
+        anzTabellenElements = System.Math.DivRem(anzSpalten, 3, modRest)
+
+        If modRest <> 0 Then
+            Throw New Exception("Tabelle hat keine durch 3 teilbare Anzahl Spalten" & vbLf & "Symbol, Short- und Long-Name")
         End If
 
         If anzZeilen < 2 Then
             Throw New Exception("Tabelle muss mindestens 2 Zeilen haben .... ")
         End If
 
-
-
         zeilenHoehe = tabelle.Rows(tabelle.Rows.Count).Height
         zeilenHoeheTitel = tabelle.Rows(1).Height
         anzMaxZeilen = (pptslide.CustomLayout.Height - (pptShape.Top + zeilenHoeheTitel)) / zeilenHoehe - 1
-        anzTabellenElements = anzMaxZeilen
         toDraw = selectedPhases.Count + selectedMilestones.Count
+
+        
 
 
         Dim curZeile As Integer = 2
@@ -4725,14 +4726,18 @@ Public Module testModule
                     .Fill.ForeColor.RGB = tmpBU.color
                 End With
                 ' jetzt den Business Unit Name eintragen 
-                CType(tabelle.Cell(curZeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie " & tmpBU.name
+                CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie " & tmpBU.name
 
-                curZeile = curZeile + 1
-                If curZeile > anzZeilen Then
-                    tabelle.Rows.Add()
-                    anzZeilen = anzZeilen + 1
+                curSpalte = curSpalte + 3
+                If curSpalte > anzSpalten Then
+                    curSpalte = 1
+                    curZeile = curZeile + 1
+                    If curZeile > anzZeilen Then
+                        tabelle.Rows.Add()
+                        anzZeilen = anzZeilen + 1
+                    End If
+
                 End If
-
             Next
 
             ' jetzt die undefinierte Produktlinie noch zeichnen ...
@@ -4747,14 +4752,25 @@ Public Module testModule
                 .Fill.ForeColor.RGB = awinSettings.AmpelNichtBewertet
             End With
             ' jetzt den Business Unit Name eintragen 
-            CType(tabelle.Cell(curZeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie ist undefiniert"
+            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie ist undefiniert"
 
-            curZeile = curZeile + 1
-            If curZeile > anzZeilen Then
-                tabelle.Rows.Add()
-                anzZeilen = anzZeilen + 1
+            curSpalte = curSpalte + 3
+            If curSpalte > anzSpalten Then
+                curSpalte = 1
+                curZeile = curZeile + 1
+                If curZeile > anzZeilen Then
+                    tabelle.Rows.Add()
+                    anzZeilen = anzZeilen + 1
+                End If
+
             End If
 
+        End If
+
+        ' Überprüfung, ob die restlichen Zeilen für die Legende ausreichen
+
+        If anzMaxZeilen - anzZeilen < toDraw / anzTabellenElements Then
+            Throw New Exception("Anzahl Zeilen in der Tabelle sind nicht ausreichend." & vbLf & "Tabelle muss anders definiert werden .... ")
         End If
 
         For Each phaseName In selectedPhases
@@ -4774,15 +4790,19 @@ Public Module testModule
             End With
 
             ' jetzt den Abkürzungstext eintragen 
-            CType(tabelle.Cell(curZeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = shortName
+            CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = shortName
 
             ' jetzt den Long Name eintragen 
-            CType(tabelle.Cell(curZeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = phaseName
+            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = phaseName
 
-            curZeile = curZeile + 1
-            If curZeile > anzZeilen Then
-                tabelle.Rows.Add()
-                anzZeilen = anzZeilen + 1
+            curSpalte = curSpalte + 3
+            If curSpalte > anzSpalten Then
+                curSpalte = 1
+                curZeile = curZeile + 1
+                If curZeile > anzZeilen Then
+                    tabelle.Rows.Add()
+                    anzZeilen = anzZeilen + 1
+                End If
             End If
 
         Next
@@ -4812,11 +4832,14 @@ Public Module testModule
             ' jetzt den Long Name eintragen 
             CType(tabelle.Cell(curZeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = milestoneName
 
-
-            curZeile = curZeile + 1
-            If curZeile > anzZeilen Then
-                tabelle.Rows.Add()
-                anzZeilen = anzZeilen + 1
+            curSpalte = curSpalte + 3
+            If curSpalte > anzSpalten Then
+                curSpalte = 1
+                curZeile = curZeile + 1
+                If curZeile > anzZeilen Then
+                    tabelle.Rows.Add()
+                    anzZeilen = anzZeilen + 1
+                End If
             End If
 
         Next
@@ -8601,10 +8624,8 @@ Public Module testModule
         'Dim versatzFaktor As Double = 0.87
 
         Dim listOfShapes As New Collection
-        Dim shapeGruppe As pptNS.ShapeRange
-        Dim arrayOFNames() As String
-        Dim anzElements As Integer
-        Dim oneShape As pptNS.Shape
+        ' '' ''Dim arrayOFNames() As String
+        ' '' ''Dim anzElements As Integer
         Dim minTop As Double = 1.79769313486231E+308        ' Maximale Double - Wert
         Dim maxBottom As Double = 0.0
 
@@ -8658,12 +8679,15 @@ Public Module testModule
             End If
         End If
 
-        anzElements = listOfShapes.Count
-        ReDim arrayOFNames(anzElements - 1)
+        Dim projekthoehe As Double = maxBottom - minTop
+        projekthoehe = ((maxBottom - minTop) * 13 / 15)
 
-        For i = 1 To anzElements
-            arrayOFNames(i - 1) = CStr(listOfShapes.Item(i))
-        Next
+        ' '' ''anzElements = listOfShapes.Count
+        ' '' ''ReDim arrayOFNames(anzElements - 1)
+
+        ' '' ''For i = 1 To anzElements
+        ' '' ''    arrayOFNames(i - 1) = CStr(listOfShapes.Item(i))
+        ' '' ''Next
 
 
         ' '' ''shapeGruppe = pptSlide.Shapes.Range(arrayOFNames)
@@ -8672,90 +8696,8 @@ Public Module testModule
 
         ' '' ''Dim projekthoehe As Double = (oneShape.Height * 13 / 15)
 
-        Dim projekthoehe As Double = maxBottom - minTop
-        projekthoehe = ((maxBottom - minTop) * 13 / 15)
-        ''oneShape.Ungroup()
+        ' '' ''oneShape.Ungroup()
 
-        ' jetzt die relativen Positionen zueinander bestimmen
-
-        '' Festlegung: Phase und Milestone werden zunächst immer zentriert dargestellt ; der Beschriftungstext kommt oben, zentriert hin, das Datum zentriert unten
-        '' Bestimmen, wieviele Projekte mit den gegebenen Einstellungen gezeichnet werden können
-        'Dim mindestNettoHoehe As Double = 0.0
-
-        'Dim tmpDbl(3) As Double
-        'tmpDbl(0) = phaseVorlagenShape.Height
-        'tmpDbl(1) = milestoneVorlagenShape.Height
-        'tmpDbl(2) = projectNameVorlagenShape.Height
-
-        'If Not IsNothing(phaseDelimiterShape) Then
-        '    tmpDbl(3) = phaseDelimiterShape.Height
-        'Else
-        '    tmpDbl(3) = 0.0
-        'End If
-
-        'mindestNettoHoehe = tmpDbl.Max
-        'NullLevel = mindestNettoHoehe / 2
-
-        ''tmpDbl(3) = phaseVorlagenShape.Height
-
-        ''If anzPhasen > 0 And anzMilestones > 0 Then
-        ''    mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
-        ''ElseIf anzPhasen > 0 Then
-        ''    mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, phaseDelimiterShape.Height)
-        ''ElseIf anzMilestones > 0 Then
-        ''    mindestNettoHoehe = milestoneVorlagenShape.Height
-        ''Else
-        ''    mindestNettoHoehe = projectNameVorlagenShape.Height
-        ''End If
-
-
-        'Dim projekthoehe As Double = mindestNettoHoehe
-
-        'If anzMilestones > 0 Then
-        '    If awinSettings.mppShowMsName Then
-        '        'projekthoehe = projekthoehe + versatzFaktor * MsDescVorlagenShape.Height
-        '        If milestoneVorlagenShape.Top > MsDescVorlagenShape.Top Then
-        '            projekthoehe = projekthoehe + (milestoneVorlagenShape.Top - MsDescVorlagenShape.Top)
-        '        Else
-        '            projekthoehe = projekthoehe + (MsDescVorlagenShape.Top - milestoneVorlagenShape.Top)
-        '        End If
-
-        '    End If
-
-        '    If awinSettings.mppShowMsDate Then
-        '        If milestoneVorlagenShape.Top > MsDateVorlagenShape.Top Then
-        '            projekthoehe = projekthoehe + (milestoneVorlagenShape.Top - MsDateVorlagenShape.Top)
-        '        Else
-        '            projekthoehe = projekthoehe + (MsDateVorlagenShape.Top - milestoneVorlagenShape.Top)
-        '        End If
-        '    End If
-        'End If
-
-        'If anzPhasen > 0 And anzMilestones = 0 Then
-        '    If awinSettings.mppShowPhName Then
-
-        '        If phaseVorlagenShape.Top > PhDateVorlagenShape.Top Then
-        '            projekthoehe = projekthoehe + (phaseVorlagenShape.Top - MsDateVorlagenShape.Top)
-        '        Else
-        '            projekthoehe = projekthoehe + (MsDateVorlagenShape.Top - milestoneVorlagenShape.Top)
-        '        End If
-
-        '    End If
-
-        '    If awinSettings.mppShowPhDate Then
-        '        projekthoehe = projekthoehe + versatzFaktor * PhDateVorlagenShape.Height
-        '    End If
-        'End If
-
-
-
-        'If projekthoehe < projectNameVorlagenShape.Height Then
-        '    projekthoehe = projectNameVorlagenShape.Height
-        'End If
-
-        'If projekthoehe <= mindestNettoHoehe Then
-        '    projekthoehe = mindestNettoHoehe * 1.1
-        'End If
 
         ' jetzt werden noch die Höhe des Pfeiles und der Beschriftung berücksichtigt 
 
@@ -10446,7 +10388,8 @@ Public Module testModule
                 errorVorlagenShape.Copy()
                 errorShape = pptslide.Shapes.Paste
                 With errorShape(1)
-                    .TextFrame2.TextRange.Text = "Fehler beim Zeichnen  Legenden Symbole Phase oder Meilenstein fehlen "
+                    '.TextFrame2.TextRange.Text = "Fehler beim Zeichnen  Legenden Symbole Phase oder Meilenstein fehlen "
+                    .TextFrame2.TextRange.Text = ex.Message
                 End With
             End Try
 
