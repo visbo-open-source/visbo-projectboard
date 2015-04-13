@@ -3,6 +3,10 @@
    
 
     Public AllPhases As List(Of clsPhase)
+
+    ' Änderung tk 31.3.15 Hierachie Klasse ergänzt 
+    Public hierarchy As clsHierarchy
+
     Private relStart As Integer
     Private uuid As Long
     ' als Friend deklariert, damit sie aus der Klasse clsProjekt, die von clsProjektvorlage erbt , erreichbar ist
@@ -39,7 +43,9 @@
     ''' </summary>
     ''' <param name="phase"></param>
     ''' <remarks></remarks>
-    Public Overridable Sub AddPhase(ByVal phase As clsPhase)
+    Public Overridable Sub AddPhase(ByVal phase As clsPhase, _
+                                    Optional ByVal origName As String = "", _
+                                    Optional ByVal parentID As String = "")
 
         Dim phaseEnde As Double
         Dim maxM As Integer
@@ -62,8 +68,76 @@
 
         AllPhases.Add(phase)
 
+        ' jetzt muss die Phase in die Projekt-Hierarchie aufgenommen werden 
+        Dim currentElementNode As New clsHierarchyNode
+        With currentElementNode
+
+            If Me.CountPhases = 1 Then
+                .elemName = "."
+            Else
+                .elemName = elemNameOfElemID(phase.name)
+            End If
+
+            If origName = "" Then
+                .origName = .elemName
+            Else
+                .origName = origName
+            End If
+
+            .indexOfElem = Me.CountPhases
+            .isMilestone = False
+
+            If parentID = "" Then
+                If .indexOfElem = 1 Then
+                    .parentNodeKey = ""
+                Else
+                    .parentNodeKey = calcHryElemKey(".", False)
+                End If
+            Else
+                .parentNodeKey = parentID
+            End If
+
+        End With
+
+        With Me.hierarchy
+            .addNode(currentElementNode, phase.name)
+        End With
+
 
     End Sub
+
+    ''' <summary>
+    ''' gibt den Meilenstein mit Element-ID elemID zurück 
+    ''' Nothing, wenn sie nicht existiert 
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneByID(elemID As String) As clsMeilenstein
+        Get
+            Dim currentNode As clsHierarchyNode = Me.hierarchy.item(elemID)
+            Dim phaseID As String
+            Dim phIndex As Integer, msIndex As Integer
+
+            If Not IsNothing(currentNode) Then
+                phaseID = currentNode.parentNodeKey
+                phIndex = Me.hierarchy.item(phaseID).indexOfElem
+                msIndex = currentNode.indexOfElem
+
+                Dim cphase As clsPhase = Me.getPhase(phIndex)
+                If Not IsNothing(cphase) Then
+                    getMilestoneByID = cphase.getMilestone(msIndex)
+                Else
+                    getMilestoneByID = Nothing
+                End If
+
+            Else
+                getMilestoneByID = Nothing
+            End If
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt zu einem gegebenen Meilenstein-Namen das clsResult Objekt zurück, sofern es existiert
@@ -81,7 +155,7 @@
 
             While (p <= AllPhases.Count - 1) And (Not found)
 
-                tmpResult = AllPhases.Item(p).getResult(msName)
+                tmpResult = AllPhases.Item(p).getMilestone(msName)
                 If Not IsNothing(tmpResult) Then
                     found = True
                 Else
@@ -193,13 +267,6 @@
                         max = .startOffsetinDays + .dauerInDays
                     End If
 
-                    ' Änderung 16.1.2014 es wird in phase.add(result) sichergestellt, daß kein Meilenstein nach Projektende, vor Projekt-Start sein kann 
-                    'For m = 1 To .CountResults
-                    '    If max < .startOffsetinDays + .getResult(m).offset Then
-                    '        max = .startOffsetinDays + .getResult(m).offset
-                    '    End If
-                    'Next
-
                 End With
 
             Next i
@@ -252,49 +319,97 @@
 
     End Property
 
-    Public Property Phase(index As Integer) As clsPhase
+    ''' <summary>
+    ''' gibt die Phase mit Index zurück, wenn Index kleiner bzw. gleich oder größer Anzahl Phasen, 
+    ''' dann Nothing 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhase(ByVal index As Integer) As clsPhase
 
         Get
-            Phase = AllPhases.Item(index - 1)
-        End Get
-
-        Set(value As clsPhase)
-            AllPhases.Item(index - 1) = value
-        End Set
-
-    End Property
-
-    Public ReadOnly Property getPhase(index As Integer) As clsPhase
-
-        Get
-            getPhase = AllPhases.Item(index - 1)
-        End Get
-
-    End Property
-
-    Public ReadOnly Property getPhase(name As String) As clsPhase
-
-        Get
-            Dim index As Integer
-            Dim i As Integer
-            Dim found As Boolean
-            found = False
-            i = 1
-            While i <= AllPhases.Count And Not found
-                If name = AllPhases.Item(i - 1).name Then
-                    found = True
-                    index = i
-                Else
-                    i = i + 1
-                End If
-
-            End While
-
-            If found Then
-                getPhase = AllPhases.Item(index - 1)
-            Else
+            If index < 1 Or index > AllPhases.Count Then
                 getPhase = Nothing
+            Else
+                getPhase = AllPhases.Item(index - 1)
             End If
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Phase zurück, die die folgenden Eigenschaften erfüllt
+    ''' hat name als elemName Bestandteil
+    ''' hat den optional angegebenen Breadcrumb, wenn der nicht angegeben wird oder "" ist, dann ist es egal, unter welcher Hierarchie Stufe die Phase liegen soll 
+    ''' der breadcrum kann die gesamte Hierarchie umfassen oder auch nur die erste Parent-Stufe; Parent-Stufen werden per # voneinander getrennt
+    ''' hat die optional angegebene lfdNr, ist also das lfdNr-vielte Vorkommen von name / breadcrumb 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <param name="lfdNr"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhase(ByVal name As String, Optional ByVal breadcrumb As String = "", Optional ByVal lfdNr As Integer = 1) As clsPhase
+
+        Get
+            
+            Dim found As Boolean = False
+
+            
+            Dim phaseIndices() As Integer
+            phaseIndices = Me.hierarchy.getPhaseIndices(name, breadcrumb)
+
+            If lfdNr > phaseIndices.Length Or lfdNr < 0 Then
+                getPhase = Nothing
+            Else
+                getPhase = AllPhases.Item(phaseIndices(lfdNr) - 1)
+            End If
+
+
+
+            ' alter Code
+            'found = False
+            'i = 1
+            'While i <= AllPhases.Count And Not found
+            '    If name = AllPhases.Item(i - 1).name Then
+            '        found = True
+            '        index = i
+            '    Else
+            '        i = i + 1
+            '    End If
+
+            'End While
+
+            'If found Then
+            '    getPhase = AllPhases.Item(index - 1)
+            'Else
+            '    getPhase = Nothing
+            'End If
+
+        End Get
+
+    End Property
+
+    ''' <summary>
+    ''' gibt die der ElemID entsprechende Phase zurück 
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseByID(elemID As String) As clsPhase
+
+        Get
+
+            Dim phIndex As Integer = Me.hierarchy.getIndexOfElem(elemID)
+            If phIndex >= 0 Or phIndex < AllPhases.Count Then
+                getPhaseByID = AllPhases.Item(phIndex - 1)
+            Else
+                getPhaseByID = Nothing
+            End If
+
 
         End Get
 
@@ -533,7 +648,7 @@
                     cphase = Me.getPhase(p)
 
                     For r = 1 To cphase.countMilestones
-                        cresult = cphase.getResult(r)
+                        cresult = cphase.getMilestone(r)
                         colorIndex = cresult.getBewertung(1).colorIndex
                         tmpvalues(index) = colorIndex
                         index = index + 1
@@ -567,7 +682,7 @@
                 cphase = Me.getPhase(p)
 
                 For r = 1 To cphase.countMilestones
-                    cresult = cphase.getResult(r)
+                    cresult = cphase.getMilestone(r)
                     tmpDate = cresult.getDate
 
                     Dim ok As Boolean = False
@@ -1314,6 +1429,9 @@
     Public Sub New()
 
         AllPhases = New List(Of clsPhase)
+        ' Änderung tk 31.3.15
+        hierarchy = New clsHierarchy
+
         relStart = 1
         _Dauer = 0
         '_StartOffset = 0

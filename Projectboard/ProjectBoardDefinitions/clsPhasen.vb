@@ -4,9 +4,13 @@ Public Class clsPhasen
     Private AllPhasen As SortedList(Of String, clsPhasenDefinition)
 
 
-    Public Sub Add(phase As clsPhasenDefinition)
+    Public Sub Add(phaseDef As clsPhasenDefinition)
 
-        AllPhasen.Add(phase.name, phase)
+
+        If Not AllPhasen.ContainsKey(phaseDef.name) Then
+            AllPhasen.Add(phaseDef.name, phaseDef)
+        End If
+
 
     End Sub
 

@@ -5,6 +5,7 @@
 Public Class clsImportFileHierarchy
 
     Private phaseHierarchy As SortedList(Of Integer, clsPhase)
+    Private IDHierarchy As SortedList(Of Integer, String)
 
     ' ''' <summary>
     ' ''' liefert true zurück, wenn der übergebene Name bereits so in der Phasen Hierarchie vorhanden war 
@@ -183,21 +184,27 @@ Public Class clsImportFileHierarchy
     ''' <param name="phase">Phase</param>
     ''' <param name="level"></param>
     ''' <remarks></remarks>
-    Public Sub add(ByVal phase As clsPhase, ByVal level As Integer)
+    Public Sub add(ByVal phase As clsPhase, ByVal elemKey As String, ByVal level As Integer)
 
 
         If Not IsNothing(phase) And level >= 0 Then
 
             If phaseHierarchy.ContainsKey(level) Then
                 phaseHierarchy.Item(level) = phase
+                IDHierarchy.Item(level) = elemKey
             Else
                 phaseHierarchy.Add(level, phase)
+                IDHierarchy.Add(level, elemKey)
             End If
 
+
+
             Do While phaseHierarchy.Last.Key > level
-
                 phaseHierarchy.Remove(phaseHierarchy.Last.Key)
+            Loop
 
+            Do While IDHierarchy.Last.Key > level
+                IDHierarchy.Remove(IDHierarchy.Last.Key)
             Loop
 
         End If
@@ -227,6 +234,35 @@ Public Class clsImportFileHierarchy
                 Loop
 
                 getPhaseBeforeLevel = phaseHierarchy.ElementAt(ix).Value
+
+            End If
+
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den ElemKey zurück, der der letzte der angegebenen Ebene war
+    ''' wenn die nicht exakt existiert, die Elemkey der nächst tieferen Ebene
+    ''' </summary>
+    ''' <param name="level"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getIDBeforeLevel(ByVal level As Integer) As String
+        Get
+
+            Dim ix As Integer = IDHierarchy.Count - 1
+
+            If IDHierarchy.Count = 0 Then
+                getIDBeforeLevel = ""
+
+            Else
+                Do While IDHierarchy.ElementAt(ix).Key >= level And ix > 0
+                    ix = ix - 1
+                Loop
+
+                getIDBeforeLevel = IDHierarchy.ElementAt(ix).Value
 
             End If
 
@@ -267,6 +303,8 @@ Public Class clsImportFileHierarchy
 
     Sub New()
         phaseHierarchy = New SortedList(Of Integer, clsPhase)
+        IDHierarchy = New SortedList(Of Integer, String)
+
     End Sub
 
 

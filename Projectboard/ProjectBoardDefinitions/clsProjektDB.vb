@@ -192,10 +192,10 @@
         Public name As String
         Public farbe As Object
 
-        Public ReadOnly Property getResult(ByVal index As Integer) As clsResultDB
+        Public ReadOnly Property getMilestone(ByVal index As Integer) As clsResultDB
 
             Get
-                getResult = AllResults.Item(index - 1)
+                getMilestone = AllResults.Item(index - 1)
             End Get
 
         End Property
@@ -236,7 +236,7 @@
                     Dim newResult As New clsResultDB
 
                     Try
-                        newResult.CopyFrom(.getResult(r))
+                        newResult.CopyFrom(.getMilestone(r))
                         AllResults.Add(newResult)
                     Catch ex As Exception
 
@@ -255,62 +255,6 @@
             End With
 
         End Sub
-
-        'Sub copyto(ByRef phase As clsPhase, ByVal ProjektStartdate As Date)
-
-        '    Dim r As Integer, k As Integer
-
-        '    With phase
-        '        .earliestStart = Me.earliestStart
-        '        .latestStart = Me.latestStart
-        '        .minDauer = Me.minDauer
-        '        .maxDauer = Me.maxDauer
-        '        .relStart = Me.relStart
-        '        .relEnde = Me.relEnde
-        '        ' das Projektstartdatum muss mit übergeben werden, weil in dieser Methode
-        '        ' die Werte für relstart und relende gesetzt werden 
-        '        .startOffsetinDays = .startOffsetinDays
-        '        .dauerInDays = .dauerInDays
-
-        '        .name = Me.name
-
-        '        For r = 1 To Me.AllRoles.Count
-        '            Dim newRole As New clsRolle(.relEnde - .relStart)
-        '            Me.AllRoles.Item(r - 1).copyto(newRole)
-        '            .AddRole(newRole)
-
-        '        Next
-
-        '        Try
-        '            Dim tstAnzahl As Integer = Me.AllResults.Count
-        '            For r = 1 To tstAnzahl
-
-        '                Dim newresult As New clsResult(parent:=phase)
-
-        '                Try
-        '                    Me.getResult(r).CopyTo(newresult)
-        '                    .AddResult(newresult)
-        '                Catch ex As Exception
-
-        '                End Try
-
-        '            Next
-        '        Catch ex As Exception
-
-        '        End Try
-
-
-
-        '        For k = 1 To Me.AllCosts.Count
-        '            Dim newCost As New clsKostenart(.relEnde - relStart)
-        '            Me.AllCosts.Item(k - 1).copyto(newCost)
-        '            .AddCost(newCost)
-        '        Next
-
-        '    End With
-
-
-        'End Sub
 
 
         Sub copyto(ByRef phase As clsPhase)
@@ -369,7 +313,7 @@
                         Dim newresult As New clsMeilenstein(parent:=phase)
 
                         Try
-                            Me.getResult(r).CopyTo(newresult)
+                            Me.getMilestone(r).CopyTo(newresult)
                             .addMilestone(newresult)
                         Catch ex As Exception
 

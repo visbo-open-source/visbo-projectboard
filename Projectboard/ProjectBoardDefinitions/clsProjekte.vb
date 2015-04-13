@@ -208,7 +208,7 @@ Public Class clsProjekte
                         cphase = kvp.Value.getPhase(p)
                         For r = 1 To cphase.countMilestones
 
-                            msName = cphase.getResult(r).name
+                            msName = cphase.getMilestone(r).name
                             If tmpListe.Contains(msName) Then
                             Else
                                 tmpListe.Add(msName, msName)
@@ -505,7 +505,7 @@ Public Class clsProjekte
                             End If
 
                             For Each milestoneName As String In selItems2
-                                cmileStone = cphase.getResult(milestoneName)
+                                cmileStone = cphase.getMilestone(milestoneName)
                                 If Not IsNothing(cmileStone) Then
                                     Dim msColumn As Integer = getColumnOfDate(cmileStone.getDate)
                                     If msColumn > bis Or msColumn < von Then
@@ -526,7 +526,7 @@ Public Class clsProjekte
                         If Not found And selItems1.Count = 0 Then
                             For Each milestoneName As String In selItems2
                                 For Each hphase As clsPhase In kvp.Value.AllPhases
-                                    cmileStone = hphase.getResult(milestoneName)
+                                    cmileStone = hphase.getMilestone(milestoneName)
                                     If Not IsNothing(cmileStone) Then
                                         Dim msColumn As Integer = getColumnOfDate(cmileStone.getDate)
                                         If msColumn > bis Or msColumn < von Then
@@ -602,7 +602,7 @@ Public Class clsProjekte
 
 
                     cphase = hproj.getPhase(p)
-                    cresult = cphase.getResult(milestoneName)
+                    cresult = cphase.getMilestone(milestoneName)
 
                     If IsNothing(cresult) Then
                     Else

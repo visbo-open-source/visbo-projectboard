@@ -2010,6 +2010,58 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' berechnet den "ersten" Namen, der in der sortedList der Hierarchie auftreten würde 
+    ''' </summary>
+    ''' <param name="elemName"></param>
+    ''' <param name="isMilestone"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcHryElemKey(ByVal elemName As String, ByVal isMilestone As Boolean, Optional ByVal lfdNr As Integer = 0) As String
+
+        Dim elemKey As String
+        Dim elemTyp As String
+
+        If isMilestone Then
+            elemTyp = "1"
+        Else
+            elemTyp = "0"
+        End If
+
+        If lfdNr <= 1 Then
+            elemKey = elemTyp & "§" & elemName & "§"
+        Else
+            elemKey = elemTyp & "§" & elemName & "§" & lfdNr.ToString("0#")
+        End If
+
+
+        calcHryElemKey = elemKey
+
+
+    End Function
+
+    ''' <summary>
+    ''' extrahiert den Elem-Namen aus der ElemID 
+    ''' ElemID=Typ§ElemName§lfd-Nr 
+    ''' </summary>
+    ''' <param name="ElemID"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function elemNameOfElemID(ByVal ElemID As String) As String
+        Dim tmpStr() As String
+
+        tmpStr = ElemID.Split(New Char() {CChar("§")}, 5)
+        If tmpStr.Length >= 2 Then
+            elemNameOfElemID = tmpStr(1)
+        ElseIf tmpStr.Length = 1 Then
+            elemNameOfElemID = ElemID
+        Else
+            elemNameOfElemID = "?"
+        End If
+
+
+    End Function
+
+    ''' <summary>
     ''' erzeugt die monatlichen Budget Werte für ein Projekt
     ''' berechnet aus dem Wert für Erloes, verteilt nach einem Schlüssel, der sich aus Marge und Kostenbedarf ergibt 
     ''' </summary>
@@ -2185,7 +2237,7 @@ Public Module Module1
         End If
 
         tmpValue = anzahlTage * 12 * boxWidth / 365
-        
+
         calcDateToXCoord = tmpValue
 
 
@@ -2250,7 +2302,7 @@ Public Module Module1
         If Len(strName) < 2 Then
             ' ProjektName soll mehr als 1 Zeichen haben
             found = True
-        ElseIf AlleProjekte.ContainsKey(key) Then
+        ElseIf AlleProjekte.Containskey(key) Then
             found = True
             'ElseIf request.pingMongoDb() Then
 
@@ -2277,7 +2329,7 @@ Public Module Module1
         Dim index As Integer = 0
         Dim anzElements As Integer = appearanceDefinitions.Count
 
-        
+
         Do While Not found And index <= anzElements - 1
 
             If completeText.Contains(appearanceDefinitions.ElementAt(index).Key.Trim) And _
@@ -2376,5 +2428,5 @@ Public Module Module1
 
     End Sub
 
-    
+
 End Module

@@ -32,6 +32,7 @@ Module BMWItOModul
         Dim zeile As Integer, spalte As Integer
         Dim pName As String = " "
         Dim currentDateiName As String
+        Dim isMilestone As Boolean
 
         Dim lastRow As Integer
 
@@ -41,7 +42,7 @@ Module BMWItOModul
         Dim projektFarbe As Object
         Dim anfang As Integer, ende As Integer
         Dim cphase As clsPhase
-        Dim cresult As clsMeilenstein
+        Dim cmilestone As clsMeilenstein
         Dim cbewertung As clsBewertung
         Dim ix As Integer
         Dim tmpStr(20) As String
@@ -175,7 +176,7 @@ Module BMWItOModul
 
         End Try
 
-       
+
 
         ' diese Daten müssen vorhanden sein - andernfalls Abbruch 
         Try
@@ -226,7 +227,7 @@ Module BMWItOModul
 
 
 
-       
+
 
 
         Try
@@ -341,6 +342,7 @@ Module BMWItOModul
 
 
 
+
                         Try
 
                             hproj.name = pName
@@ -375,25 +377,22 @@ Module BMWItOModul
                         Dim pHierarchy As New clsImportFileHierarchy
                         Dim origHierarchy As New clsImportFileHierarchy
 
-
-                        ' jetzt wird die Meilenstein und Phasen Collection angelegt, die dazu dient herauszufinden, wo es Duplikate im Projekt gibt
-                        ' 
-                        Dim listOFProjectMilestones As New SortedList(Of String, String)
-                        Dim listOfProjectPhases As New SortedList(Of String, String)
+                        ' jetzt wird die Projekt-Hierarchie neu angelegt 
+                        ' die erste Phase, die sogenannte Root Phase hat immer diesen Namen: 
+                        Dim elemKey As String = calcHryElemKey(".", False)
 
                         ' jetzt werden all die Phasen angelegt , beginnend mit der ersten 
                         cphase = New clsPhase(parent:=hproj)
-                        cphase.name = pName
+                        cphase.name = elemKey
                         startoffset = 0
                         duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
                         cphase.changeStartandDauer(startoffset, duration)
 
-
                         hproj.AddPhase(cphase)
 
                         Try
-                            pHierarchy.add(cphase, 0)
-                            origHierarchy.add(cphase, 0)
+                            pHierarchy.add(cphase, elemKey, 0)
+                            origHierarchy.add(cphase, elemKey, 0)
                         Catch ex As Exception
 
                         End Try
@@ -417,7 +416,7 @@ Module BMWItOModul
                             txtAbbrev = ""
                             logMessage = ""
 
-                            Dim isMilestone As Boolean
+
 
                             Try
 
@@ -583,7 +582,7 @@ Module BMWItOModul
                                     'ophase.changeStartandDauer(startoffset, duration)
 
                                     Try
-                                        origHierarchy.add(ophase, oLevel)
+                                        origHierarchy.add(ophase, "dummy", oLevel)
                                     Catch ex As Exception
 
                                     End Try
@@ -592,6 +591,9 @@ Module BMWItOModul
                                 End If
 
                                 Dim stdName As String
+                                Dim parentElemName As String
+                                Dim parentNodeID As String
+                                Dim elemID As String
 
                                 If duration > 1 Then
                                     ' es handelt sich um eine Phase 
@@ -623,13 +625,15 @@ Module BMWItOModul
                                             ' wieder zurücksetzen, also auf einen astronomisch hohen wert setzen
                                             lastDuplicateIndent = 1000000
 
-                                            Dim parentPhaseName As String = pHierarchy.getPhaseBeforeLevel(indentLevel).name
+                                            parentElemName = elemNameOfElemID(pHierarchy.getPhaseBeforeLevel(indentLevel).name)
+                                            ' das folgende wurde am 31.3. ergänzt, um die Hierarchie aufbauen zu können
+                                            parentNodeID = pHierarchy.getIDBeforeLevel(indentLevel)
 
                                             ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
                                             Try
 
                                                 If Not PhaseDefinitions.Contains(itemName) Then
-                                                    stdName = phaseMappings.mapToStdName(parentPhaseName, itemName)
+                                                    stdName = phaseMappings.mapToStdName(parentElemName, itemName)
                                                 Else
                                                     stdName = itemName
                                                 End If
@@ -637,6 +641,8 @@ Module BMWItOModul
                                             Catch ex As Exception
                                                 stdName = itemName
                                             End Try
+
+                                            elemID = calcHryElemKey(stdName, False)
 
                                             Dim ok1 As Boolean
                                             Dim ueberdeckung As Double
@@ -647,32 +653,32 @@ Module BMWItOModul
                                             If PhaseDefinitions.Contains(stdName) Then
 
                                                 ' wenn dieses Projekt diese Phase bereits enthält ...
-                                                If listOfProjectPhases.ContainsKey(stdName) Then
+
+                                                If hproj.hierarchy.containsKey(elemID) Then
 
                                                     ' PT-79 toleranz für Identität von Phasen
-                                                    Dim vglPhase As clsPhase = hproj.getPhase(stdName)
+                                                    Dim vglPhase As clsPhase = hproj.getPhaseByID(elemID)
                                                     ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
                                                                               itemStartDate, itemEndDate)
 
                                                     ' wenn diese Phase zwar den gleichen Namen aber andere Start-/Ende Daten hat ...
                                                     ' dann wird ein neues Element mit lfd_Nr erzeugt 
-                                                    ' alt: 
-                                                    'If vglPhase.startOffsetinDays <> startoffset Or vglPhase.dauerInDays <> duration Then
+
                                                     If ueberdeckung < 0.95 Then
                                                         Dim lfdNr As Integer = 2
-                                                        Dim newName As String = stdName & " " & lfdNr.ToString
+                                                        elemID = calcHryElemKey(stdName, False, lfdNr)
                                                         found = False
 
-                                                        Do While listOfProjectPhases.ContainsKey(newName) And Not found
+                                                        Do While hproj.hierarchy.containsKey(elemID) And Not found
 
-                                                            vglPhase = hproj.getPhase(newName)
+                                                            vglPhase = hproj.getPhaseByID(elemID)
                                                             ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
                                                                               itemStartDate, itemEndDate)
 
                                                             'If vglPhase.startOffsetinDays <> startoffset Or vglPhase.dauerInDays <> duration Then
                                                             If ueberdeckung < 0.95 Then
                                                                 lfdNr = lfdNr + 1
-                                                                newName = stdName & " " & lfdNr
+                                                                elemID = calcHryElemKey(stdName, False, lfdNr)
                                                             Else
                                                                 found = True
                                                             End If
@@ -680,12 +686,14 @@ Module BMWItOModul
                                                         Loop
 
                                                         If Not found Then
-                                                            stdName = newName
-                                                            listOfProjectPhases.Add(stdName, parentPhaseName)
+                                                            ' Änderung tk 31.3.15 - nicht mehr nötig 
+                                                            'stdName = newElemID
+                                                            'listOfProjectPhases.Add(stdName, parentPhaseName)
                                                             ok1 = True
                                                         Else
                                                             ok1 = False
-                                                            logMessage = "(" & newName & ")" & " ist doppelt und wird ignoriert "
+                                                            logMessage = "(" & stdName & " " & lfdNr.ToString & ")" & _
+                                                                " ist doppelt und wird ignoriert "
                                                         End If
 
 
@@ -698,18 +706,18 @@ Module BMWItOModul
 
 
                                                 Else
-                                                    listOfProjectPhases.Add(stdName, parentPhaseName)
+                                                    'listOfProjectPhases.Add(stdName, parentPhaseName)
                                                     ok1 = True
                                                 End If
                                             Else
 
-                                                Dim hphase As clsPhasenDefinition
-                                                hphase = New clsPhasenDefinition
+                                                Dim hphaseDef As clsPhasenDefinition
+                                                hphaseDef = New clsPhasenDefinition
 
-                                                hphase.darstellungsKlasse = txtVorgangsKlasse
-                                                hphase.shortName = txtAbbrev
-                                                hphase.name = stdName
-                                                hphase.UID = phaseIX
+                                                hphaseDef.darstellungsKlasse = txtVorgangsKlasse
+                                                hphaseDef.shortName = txtAbbrev
+                                                hphaseDef.name = stdName
+                                                hphaseDef.UID = phaseIX
                                                 phaseIX = phaseIX + 1
 
 
@@ -718,22 +726,25 @@ Module BMWItOModul
 
                                                     ' in die Phase-Definitions aufnehmen 
                                                     Try
-                                                        PhaseDefinitions.Add(hphase)
+                                                        PhaseDefinitions.Add(hphaseDef)
                                                     Catch ex As Exception
                                                     End Try
                                                 Else
-                                                    ok1 = False
-                                                    logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten "
+                                                    ' Änderung tk: es sollen die nicht bekannten Elemente nicht mehr ausgegrenzt werden ! 
+                                                    ok1 = True
+                                                    'ok1 = False
+                                                    'logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten "
+
 
                                                     ' in die Missing Phase-Definitions aufnehmen 
                                                     Try
-                                                        missingPhaseDefinitions.Add(hphase)
+                                                        missingPhaseDefinitions.Add(hphaseDef)
                                                     Catch ex As Exception
                                                     End Try
 
 
                                                 End If
-                                                
+
 
                                             End If
 
@@ -742,11 +753,24 @@ Module BMWItOModul
 
                                             If ok1 Then
 
+
+                                                ' das muss auf alle Fälle gemacht werden 
+                                                cphase = New clsPhase(parent:=hproj)
+                                                'cphase.name = stdName
+                                                ' Änderung tk: jetzt muss die elemID in den Phasen Namen 
+                                                cphase.name = elemID
+                                                cphase.changeStartandDauer(startoffset, duration)
+
+                                                ' der Aufbau der Hierarchie erfolgt in addphase
+                                                hproj.AddPhase(cphase, origName:=origItem.Trim, _
+                                                               parentID:=pHierarchy.getIDBeforeLevel(indentLevel))
+
                                                 ' wird übernommen als 
                                                 CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Value = stdName
 
                                                 ' neuer Breadcrumb 
-                                                Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
+                                                'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
+                                                Dim PTBreadCrumb As String = hproj.hierarchy.getBreadCrumb(elemID)
                                                 CType(activeWSListe.Cells(curZeile, colProtocol + 7), Excel.Range).Value = PTBreadCrumb
 
                                                 ' neue Vorgangsklasse
@@ -760,39 +784,9 @@ Module BMWItOModul
                                                     anzCorrect = anzCorrect + 1
                                                 End If
 
-                                                ' Änderung tk 6.3.2015
-                                                ' 13.3. ist jetzt nicht mehr notwendig, weil das bereits zuvor gemacht wird 
-                                                'If Not PhaseDefinitions.Contains(stdName) And isVorlage Then
-                                                '    ' in die Phase-Definitions aufnehmen 
-
-                                                '    Dim hphase As clsPhasenDefinition
-                                                '    hphase = New clsPhasenDefinition
-
-                                                '    hphase.darstellungsKlasse = txtVorgangsKlasse
-                                                '    hphase.shortName = txtAbbrev
-                                                '    hphase.name = stdName
-                                                '    hphase.UID = phaseIX
-                                                '    phaseIX = phaseIX + 1
-
-                                                '    Try
-                                                '        PhaseDefinitions.Add(hphase)
-                                                '    Catch ex As Exception
-
-                                                '    End Try
-
-                                                'End If
-
-                                                ' das muss auf alle Fälle gemacht werden 
-                                                cphase = New clsPhase(parent:=hproj)
-                                                cphase.name = stdName
-
-                                                cphase.changeStartandDauer(startoffset, duration)
-
-                                                hproj.AddPhase(cphase)
-
                                                 ' nur wenn es aufgenommen ist, sollte es in die Hierarchie aufgenommen werden 
                                                 Try
-                                                    pHierarchy.add(cphase, indentLevel)
+                                                    pHierarchy.add(cphase, elemID, indentLevel)
                                                 Catch ex As Exception
 
                                                 End Try
@@ -842,7 +836,7 @@ Module BMWItOModul
 
                                                 ' hole die Parentphase
                                                 cphase = pHierarchy.getPhaseBeforeLevel(indentLevel)
-                                                cresult = New clsMeilenstein(parent:=cphase)
+                                                cmilestone = New clsMeilenstein(parent:=cphase)
                                                 cbewertung = New clsBewertung
 
 
@@ -855,12 +849,12 @@ Module BMWItOModul
                                                 End With
 
 
-                                                Dim parentPhaseName As String = cphase.name
+                                                parentElemName = elemNameOfElemID(cphase.name)
                                                 ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
 
                                                 Try
                                                     If Not MilestoneDefinitions.Contains(itemName) Then
-                                                        stdName = milestoneMappings.mapToStdName(parentPhaseName, itemName)
+                                                        stdName = milestoneMappings.mapToStdName(parentElemName, itemName)
                                                     Else
                                                         stdName = itemName
                                                     End If
@@ -869,30 +863,31 @@ Module BMWItOModul
                                                     stdName = itemName
                                                 End Try
 
-
+                                                elemID = calcHryElemKey(stdName, True)
                                                 Dim ok1 As Boolean
 
                                                 ' jetzt muss geprüft werden, ob das Element in der Liste der zugelassenen Elemente enthalten ist 
                                                 If MilestoneDefinitions.Contains(stdName) Then
 
-                                                    If listOFProjectMilestones.ContainsKey(stdName) Then
+                                                    If hproj.hierarchy.containsKey(elemID) Then
 
-                                                        Dim vglMilestone As clsMeilenstein = hproj.getMilestone(stdName)
+                                                        Dim vglMilestone As clsMeilenstein = hproj.getMilestoneByID(elemID)
 
                                                         If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
                                                             ' es muss ein neuer Meilenstein mit neuer lfd Nr angelegt werden 
 
                                                             Dim lfdNr As Integer = 2
-                                                            Dim newName As String = stdName & " " & lfdNr.ToString
+                                                            'Dim newName As String = stdName & " " & lfdNr.ToString
+                                                            Dim newElemID As String = calcHryElemKey(stdName, True, lfdNr)
                                                             found = False
 
-                                                            Do While listOFProjectMilestones.ContainsKey(newName) And Not found
+                                                            Do While hproj.hierarchy.containsKey(newElemID) And Not found
 
-                                                                vglMilestone = hproj.getMilestone(newName)
+                                                                vglMilestone = hproj.getMilestoneByID(newElemID)
 
                                                                 If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
                                                                     lfdNr = lfdNr + 1
-                                                                    newName = stdName & " " & lfdNr.ToString
+                                                                    newElemID = calcHryElemKey(stdName, True, lfdNr)
                                                                 Else
                                                                     found = True
                                                                 End If
@@ -901,12 +896,12 @@ Module BMWItOModul
                                                             Loop
 
                                                             If Not found Then
-                                                                stdName = newName
-                                                                listOFProjectMilestones.Add(stdName, parentPhaseName)
+                                                                stdName = newElemID
+                                                                'listOFProjectMilestones.Add(stdName, parentPhaseName)
                                                                 ok1 = True
                                                             Else
                                                                 ok1 = False
-                                                                logMessage = "(" & newName & ")" & " ist doppelt und wird ignoriert "
+                                                                logMessage = "(" & newElemID & ")" & " ist doppelt und wird ignoriert "
                                                             End If
 
                                                         Else
@@ -917,7 +912,7 @@ Module BMWItOModul
 
 
                                                     Else
-                                                        listOFProjectMilestones.Add(stdName, parentPhaseName)
+                                                        'listOFProjectMilestones.Add(stdName, parentPhaseName)
                                                         ok1 = True
                                                     End If
 
@@ -928,7 +923,7 @@ Module BMWItOModul
 
                                                     With hMilestone
                                                         .name = stdName
-                                                        .belongsTo = parentPhaseName
+                                                        .belongsTo = parentElemName
                                                         .shortName = txtAbbrev
                                                         .darstellungsKlasse = txtVorgangsKlasse
                                                         .UID = milestoneIX
@@ -955,34 +950,16 @@ Module BMWItOModul
                                                         Catch ex As Exception
                                                         End Try
                                                     End If
-                                                    
+
 
                                                 End If
 
 
                                                 If ok1 Then
 
-                                                    ' Protokollieren
-                                                    CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Value = stdName.Trim
 
-                                                    ' neuer Breadcrumb 
-                                                    Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
-                                                    CType(activeWSListe.Cells(curZeile, colProtocol + 7), Excel.Range).Value = PTBreadCrumb
-
-                                                    ' neue Vorgangsklasse
-                                                    CType(activeWSListe.Cells(curZeile, colProtocol + 8), Excel.Range).Value = txtVorgangsKlasse
-
-                                                    If stdName.Trim <> origItem.Trim Then
-                                                        ' es hat eine Ersetzung stattgefunden 
-                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                                                        anzSubstituted = anzSubstituted + 1
-                                                    Else
-                                                        anzCorrect = anzCorrect + 1
-                                                    End If
-
-
-                                                    With cresult
-                                                        .name = stdName
+                                                    With cmilestone
+                                                        .name = calcHryElemKey(stdName, True)
                                                         .setDate = itemEndDate
                                                         If Not cbewertung Is Nothing Then
                                                             .addBewertung(cbewertung)
@@ -993,11 +970,11 @@ Module BMWItOModul
                                                     If Not MilestoneDefinitions.Contains(stdName) And isVorlage Then
                                                         ' in die Milestone-Definitions aufnehmen 
 
-                                                        Dim hMilestone As New clsMeilensteinDefinition
+                                                        Dim hMilestoneDef As New clsMeilensteinDefinition
 
-                                                        With hMilestone
+                                                        With hMilestoneDef
                                                             .name = stdName
-                                                            .belongsTo = parentPhaseName
+                                                            .belongsTo = parentElemName
                                                             .shortName = txtAbbrev
                                                             .darstellungsKlasse = txtVorgangsKlasse
                                                             .UID = milestoneIX
@@ -1006,25 +983,45 @@ Module BMWItOModul
                                                         milestoneIX = milestoneIX + 1
 
                                                         Try
-                                                            MilestoneDefinitions.Add(hMilestone)
+                                                            MilestoneDefinitions.Add(hMilestoneDef)
                                                         Catch ex As Exception
 
                                                         End Try
 
                                                     End If
 
-                                                    If IsNothing(cphase.getResult(cresult.name)) Then
+                                                    If IsNothing(cphase.getMilestone(cmilestone.name)) Then
 
                                                         With cphase
-                                                            .addMilestone(cresult)
+                                                            .addMilestone(cmilestone)
                                                         End With
+
+                                                        ' Protokollieren
+                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Value = stdName.Trim
+
+                                                        ' neuer Breadcrumb 
+                                                        'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
+                                                        Dim PTBreadCrumb As String = hproj.hierarchy.getBreadCrumb(elemID)
+                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 7), Excel.Range).Value = PTBreadCrumb
+
+                                                        ' neue Vorgangsklasse
+                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 8), Excel.Range).Value = txtVorgangsKlasse
+
+                                                        If stdName.Trim <> origItem.Trim Then
+                                                            ' es hat eine Ersetzung stattgefunden 
+                                                            CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                                            anzSubstituted = anzSubstituted + 1
+                                                        Else
+                                                            anzCorrect = anzCorrect + 1
+                                                        End If
+
 
                                                     Else
 
                                                         ' Meilenstein existiert in dieser Phase bereits .... 
                                                         CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
-                                                                stdName.Trim & " existiert bereits: Datum 1: " & cphase.getResult(stdName).getDate.ToShortDateString & _
-                                                                "   , Datum 2: " & cresult.getDate.ToShortDateString
+                                                                stdName.Trim & " existiert bereits: Datum 1: " & cphase.getMilestone(stdName).getDate.ToShortDateString & _
+                                                                "   , Datum 2: " & cmilestone.getDate.ToShortDateString
 
                                                     End If
                                                 Else
@@ -1281,7 +1278,8 @@ Module BMWItOModul
 
             End With
         Catch ex As Exception
-            Throw New Exception("Fehler in Datei BMW Import ITO15 " & vbLf & ex.Message & vbLf & pName)
+            Throw New Exception("Fehler in Datei BMW Import ITO15 " & vbLf & ex.Message & vbLf & _
+                                 pName & vbLf)
         End Try
 
 
@@ -1335,7 +1333,7 @@ Module BMWItOModul
         cphase = hproj.getPhase(1)
         For im = 1 To cphase.countMilestones
             zeile = zeile + 1
-            cmilestone = cphase.getResult(im)
+            cmilestone = cphase.getMilestone(im)
             startdate = cmilestone.getDate
             If cmilestone.name.StartsWith(cphase.name & "+") Then
 
@@ -1389,7 +1387,7 @@ Module BMWItOModul
 
             For im = 1 To cphase.countMilestones
                 zeile = zeile + 1
-                cmilestone = cphase.getResult(im)
+                cmilestone = cphase.getMilestone(im)
                 startdate = cmilestone.getDate
                 If cmilestone.name.StartsWith(cphase.name & "+") Then
 

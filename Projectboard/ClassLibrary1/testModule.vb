@@ -4869,7 +4869,7 @@ Public Module testModule
                     Dim cResult As clsMeilenstein
                     Dim cBewertung As clsBewertung
 
-                    cResult = cphase.getResult(r)
+                    cResult = cphase.getMilestone(r)
 
                     cBewertung = cResult.getBewertung(1)
 
@@ -5171,7 +5171,7 @@ Public Module testModule
                     Dim bDate As Date, lDate As Date
                     Dim currentDate As Date
 
-                    cResult = cphase.getResult(r)
+                    cResult = cphase.getMilestone(r)
                     currentDate = cResult.getDate
 
                     If IsNothing(bphase) Then
@@ -5179,7 +5179,7 @@ Public Module testModule
 
                     End If
 
-                    bResult = bphase.getResult(cResult.name)
+                    bResult = bphase.getMilestone(cResult.name)
                     If IsNothing(bResult) Then
                         bdiff = -9999
                     Else
@@ -5188,7 +5188,7 @@ Public Module testModule
                     End If
 
 
-                    lResult = lphase.getResult(cResult.name)
+                    lResult = lphase.getMilestone(cResult.name)
                     If IsNothing(lResult) Then
                         ldiff = -9999
                     Else
@@ -6127,7 +6127,7 @@ Public Module testModule
                     Dim cResult As clsMeilenstein
                     Dim cBewertung As clsBewertung
 
-                    cResult = cphase.getResult(r)
+                    cResult = cphase.getMilestone(r)
                     cBewertung = cResult.getBewertung(1)
 
                     'Try

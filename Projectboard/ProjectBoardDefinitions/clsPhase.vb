@@ -706,12 +706,15 @@
     ''' </summary>
     ''' <param name="milestone"></param>
     ''' <remarks></remarks>
-    Public Sub addMilestone(ByVal milestone As clsMeilenstein)
+    Public Sub addMilestone(ByVal milestone As clsMeilenstein,
+                            Optional ByVal origName As String = "")
 
 
         Dim anzElements As Integer = AllMilestones.Count - 1
         Dim ix As Integer = 0
         Dim found As Boolean = False
+
+        Dim elemName As String = elemNameOfElemID(milestone.name)
 
         Do While ix <= anzElements And Not found
             If AllMilestones.Item(ix).name = milestone.name Then
@@ -722,10 +725,66 @@
         Loop
 
         If found Then
-            Throw New ArgumentException("Meilenstein existiert bereits !" & milestone.name)
+            Throw New ArgumentException("Meilenstein existiert bereits in dieser Phase!" & milestone.name)
         Else
             AllMilestones.Add(milestone)
         End If
+
+        ' jetzt muss der Meilenstein in die Projekt-Hierarchie aufgenommen werden , 
+        ' aber nur, wenn die Phase bereits in der Projekt-Hierarchie vorhanden ist ... 
+        Dim elemID As String
+        Dim currentElementNode As New clsHierarchyNode
+        Dim hproj As New clsProjekt, vproj As New clsProjektvorlage
+        Dim parentIsVorlage As Boolean
+        Dim milestoneIndex As Integer = AllMilestones.Count
+        Dim phaseID As String = Me.name
+        Dim ok As Boolean = False
+
+        If IsNothing(Me.Parent) Then
+            parentIsVorlage = True
+            vproj = Me.VorlagenParent
+            elemID = vproj.hierarchy.findUniqueElemKey(elemName, True)
+            If vproj.hierarchy.containsKey(phaseID) Then
+                ' Phase ist bereits in der Projekt-Hierarchie eingetragen
+                ok = True
+            End If
+        Else
+            parentIsVorlage = False
+            hproj = Me.Parent
+            elemID = hproj.hierarchy.findUniqueElemKey(elemName, True)
+            If hproj.hierarchy.containsKey(phaseID) Then
+                ' Phase ist bereits in der Projekt-Hierarchie eingetragen
+                ok = True
+            End If
+        End If
+
+        If ok Then
+
+            With currentElementNode
+
+                .elemName = elemName
+
+                If origName = "" Then
+                    .origName = .elemName
+                Else
+                    .origName = origName
+                End If
+
+                .indexOfElem = milestoneIndex
+                .isMilestone = True
+                .parentNodeKey = phaseID
+
+            End With
+
+            If parentIsVorlage Then
+                vproj.hierarchy.addNode(currentElementNode, elemID)
+            Else
+                hproj.hierarchy.addNode(currentElementNode, elemID)
+            End If
+
+        End If
+        
+
 
 
     End Sub
@@ -822,7 +881,7 @@
 
             For r = 1 To Me.AllMilestones.Count
                 newresult = New clsMeilenstein(parent:=newphase)
-                Me.getResult(r).CopyTo(newresult)
+                Me.getMilestone(r).CopyTo(newresult)
 
                 Try
                     .addMilestone(newresult)
@@ -921,9 +980,9 @@
 
             For r = 1 To Me.AllMilestones.Count
                 newresult = New clsMeilenstein(parent:=newphase)
-                Me.getResult(r).CopyTo(newresult)
+                Me.getMilestone(r).CopyTo(newresult)
                 ' korrigiert den Offset der Meilensteine 
-                newresult.offset = CLng(System.Math.Round(CLng(Me.getResult(r).offset * corrFactor)))
+                newresult.offset = CLng(System.Math.Round(CLng(Me.getMilestone(r).offset * corrFactor)))
 
                 Try
                     .addMilestone(newresult)
@@ -948,7 +1007,7 @@
         For r = 1 To Me.AllMilestones.Count
 
             ' korrigiert den Offset der Meilensteine 
-            newOffset = CInt(System.Math.Round(CLng(Me.getResult(r).offset * faktor)))
+            newOffset = CInt(System.Math.Round(CLng(Me.getMilestone(r).offset * faktor)))
 
             If newOffset < 0 Then
                 newOffset = 0
@@ -956,7 +1015,7 @@
                 newOffset = Me.dauerInDays - 1
             End If
 
-            Me.getResult(r).offset = newOffset
+            Me.getMilestone(r).offset = newOffset
         Next
 
     End Sub
@@ -991,10 +1050,15 @@
 
     End Property
 
-    Public ReadOnly Property getResult(ByVal index As Integer) As clsMeilenstein
+    Public ReadOnly Property getMilestone(ByVal index As Integer) As clsMeilenstein
 
         Get
-            getResult = AllMilestones.Item(index - 1)
+            If index < 1 Or index > AllMilestones.Count Then
+                getMilestone = Nothing
+            Else
+                getMilestone = AllMilestones.Item(index - 1)
+            End If
+
         End Get
 
     End Property
@@ -1008,7 +1072,7 @@
     ''' <returns>Objekt vom Typ Result</returns>
     ''' <remarks>
     ''' Rückgabe von Nothing ist schneller als über Throw Exception zu arbeiten</remarks>
-    Public ReadOnly Property getResult(ByVal key As String) As clsMeilenstein
+    Public ReadOnly Property getMilestone(ByVal key As String) As clsMeilenstein
 
         Get
             Dim tmpResult As clsMeilenstein = Nothing
@@ -1026,7 +1090,7 @@
 
             End While
 
-            getResult = tmpResult
+            getMilestone = tmpResult
 
 
         End Get
@@ -1048,7 +1112,7 @@
             Dim tmpValue As Integer = 0
 
             While r <= Me.countMilestones And Not found
-                If Me.getResult(r).name = msName Then
+                If Me.getMilestone(r).name = msName Then
                     found = True
                     tmpValue = r
                 Else

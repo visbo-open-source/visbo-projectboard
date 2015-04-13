@@ -522,7 +522,7 @@ Public Class clsProjektShapes
 
 
                                     Try
-                                        elementName = hproj.getPhase(phaseName).getResult(msNr).name
+                                        elementName = hproj.getPhase(phaseName).getMilestone(msNr).name
                                         If Not tmpCollection.Contains(elementName) Then
                                             tmpCollection.Add(elementName, elementName)
                                         End If
@@ -966,7 +966,7 @@ Public Class clsProjektShapes
                     phaseName = extractName(shpElement.Name, PTshty.phaseN)
                     cphase = hproj.getPhase(phaseName)
 
-                   
+
 
                     If cphase.name = hproj.name Then
                         ' hier muss die Sonderbehandlung der Phase 1 rein' sicherstellen, 
@@ -1122,7 +1122,7 @@ Public Class clsProjektShapes
                     phaseName = extractName(shpElement.Name, PTshty.phaseN)
                     resultNr = CInt(extractName(shpElement.Name, PTshty.milestoneN))
                     cphase = hproj.getPhase(phaseName)
-                    cresult = cphase.getResult(resultNr)
+                    cresult = cphase.getMilestone(resultNr)
 
                     Dim phBorderLinks As Double = calcDateToXCoord(cphase.getStartDate)
                     Dim phBorderRechts As Double = calcDateToXCoord(cphase.getEndDate)
