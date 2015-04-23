@@ -123,6 +123,38 @@
     End Sub
 
     ''' <summary>
+    ''' gibt die Anzahl Childs des aktuellen Knoten zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property childCount As Integer
+        Get
+            childCount = Me._childNodeKeys.Count
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Schlüssel des Childs mit Index zurück
+    ''' index kann die Werte 1 .. childCount annehmen
+    ''' wennindex ausserhalb des zugelassenen Wertebereichs liegt , wird der leere String zurückgegeben 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getChild(ByVal index As Integer) As String
+        Get
+            If index >= 1 And index <= Me._childNodeKeys.Count Then
+                getChild = Me._childNodeKeys.Item(index - 1)
+            Else
+                getChild = ""
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' entfernt aus dem Hierarchie-Knoten das Kind mit ID = childID 
     ''' </summary>
     ''' <param name="childKey"></param>

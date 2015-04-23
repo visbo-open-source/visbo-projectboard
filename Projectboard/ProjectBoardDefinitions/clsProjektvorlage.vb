@@ -75,7 +75,7 @@
             If Me.CountPhases = 1 Then
                 .elemName = "."
             Else
-                .elemName = elemNameOfElemID(phase.name)
+                .elemName = phase.name
             End If
 
             If origName = "" Then
@@ -100,7 +100,7 @@
         End With
 
         With Me.hierarchy
-            .addNode(currentElementNode, phase.name)
+            .addNode(currentElementNode, phase.nameID)
         End With
 
 
@@ -116,24 +116,61 @@
     ''' <remarks></remarks>
     Public ReadOnly Property getMilestoneByID(elemID As String) As clsMeilenstein
         Get
-            Dim currentNode As clsHierarchyNode = Me.hierarchy.item(elemID)
+            Dim currentNode As clsHierarchyNode = Me.hierarchy.nodeItem(elemID)
             Dim phaseID As String
             Dim phIndex As Integer, msIndex As Integer
 
             If Not IsNothing(currentNode) Then
-                phaseID = currentNode.parentNodeKey
-                phIndex = Me.hierarchy.item(phaseID).indexOfElem
-                msIndex = currentNode.indexOfElem
 
-                Dim cphase As clsPhase = Me.getPhase(phIndex)
-                If Not IsNothing(cphase) Then
-                    getMilestoneByID = cphase.getMilestone(msIndex)
+                If currentNode.isMilestone Then
+                    phaseID = currentNode.parentNodeKey
+                    phIndex = Me.hierarchy.nodeItem(phaseID).indexOfElem
+                    msIndex = currentNode.indexOfElem
+
+                    Dim cphase As clsPhase = Me.getPhase(phIndex)
+                    If Not IsNothing(cphase) Then
+                        getMilestoneByID = cphase.getMilestone(msIndex)
+                    Else
+                        getMilestoneByID = Nothing
+                    End If
                 Else
                     getMilestoneByID = Nothing
                 End If
 
             Else
                 getMilestoneByID = Nothing
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Parent-Phase zu der angegebenen Elem-ID zurück; 
+    ''' wenn es keine Parent-Phase gibt oder 
+    ''' wenn es das Element gar nicht gibt, wird Nothing zurückgegeben 
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getParentPhaseByID(ByVal elemID As String) As clsPhase
+        Get
+
+            Dim currentNode As clsHierarchyNode
+            Dim phaseID As String
+            Dim phIndex As Integer
+
+
+            currentNode = Me.hierarchy.nodeItem(elemID)
+
+            If Not IsNothing(currentNode) Then
+
+                phaseID = currentNode.parentNodeKey
+                phIndex = Me.hierarchy.nodeItem(phaseID).indexOfElem
+                getParentPhaseByID = Me.getPhase(phIndex)
+
+            Else
+                getParentPhaseByID = Nothing
             End If
 
         End Get
@@ -147,23 +184,55 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMilestone(ByVal msName As String) As clsMeilenstein
+    Public ReadOnly Property getMilestone(ByVal msName As String, Optional ByVal breadcrumb As String = "", Optional ByVal lfdNr As Integer = 1) As clsMeilenstein
         Get
-            Dim tmpResult As clsMeilenstein = Nothing
-            Dim p As Integer
+            Dim tmpMilestone As clsMeilenstein = Nothing
             Dim found As Boolean = False
 
-            While (p <= AllPhases.Count - 1) And (Not found)
+            Dim milestoneIndices(,) As Integer
+            milestoneIndices = Me.hierarchy.getMilestoneIndices(msName, breadcrumb)
 
-                tmpResult = AllPhases.Item(p).getMilestone(msName)
-                If Not IsNothing(tmpResult) Then
-                    found = True
-                Else
-                    p = p + 1
+            If lfdNr > CInt(milestoneIndices.Length / 2) Or lfdNr < 1 Then
+                ' kein gültiger Meilenstein 
+            Else
+                If milestoneIndices(0, lfdNr - 1) > 0 And milestoneIndices(1, lfdNr - 1) > 0 Then
+                    ' nur dann existiert dieser Meilenstein
+                    tmpMilestone = Me.getMilestone(milestoneIndices(0, lfdNr - 1), milestoneIndices(1, lfdNr - 1))
                 End If
-            End While
+
+            End If
+
+            getMilestone = tmpMilestone
+
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Meilenstein zurück, der in der Phase mit Index PhaseIndex, 
+    ''' und dort in der Meilenstein Liste mit Index milestoneIndex vorkommt  
+    ''' </summary>
+    ''' <param name="phaseIndex"></param>
+    ''' <param name="milestoneIndex"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestone(ByVal phaseIndex As Integer, ByVal milestoneIndex As Integer) As clsMeilenstein
+        Get
+
+            Dim tmpResult As clsMeilenstein = Nothing
+            Dim found As Boolean = False
+
+            If phaseIndex >= 1 And phaseIndex <= AllPhases.Count Then
+                Dim cphase As clsPhase = AllPhases.Item(phaseIndex - 1)
+                If milestoneIndex >= 1 And milestoneIndex <= cphase.countMilestones Then
+                    tmpResult = cphase.getMilestone(milestoneIndex)
+                End If
+            End If
+
 
             getMilestone = tmpResult
+
 
         End Get
     End Property
@@ -200,19 +269,30 @@
             .name = ""
         End With
 
+        ' jetzt wird die Hierarchie kopiert 
+        Call copyHryTo(newproject)
+
 
     End Sub
 
     Public Overridable Sub copyTo(ByRef newproject As clsProjekt)
         Dim p As Integer
         Dim newphase As clsPhase
+        Dim oldPhase As clsPhase
+        'Dim parentID As String
+        Dim origName As String = ""
 
         Call copyAttrTo(newproject)
 
         For p = 0 To Me.CountPhases - 1
+            oldPhase = AllPhases.Item(p)
             newphase = New clsPhase(newproject)
-            AllPhases.Item(p).CopyTo(newphase)
+
+            'parentID = Me.hierarchy.getParentIDOfID(oldPhase.nameID)
+
+            oldPhase.CopyTo(newphase)
             newproject.AddPhase(newphase)
+            'newproject.AddPhase(newphase, origName:="", parentID:=parentID)
         Next p
 
 
@@ -239,6 +319,43 @@
             newproject.AddPhase(newphase)
         Next p
 
+
+    End Sub
+
+    ''' <summary>
+    ''' kopiert die Hierarchie des aktuellen Me Projektes 
+    ''' </summary>
+    ''' <param name="newproject"></param>
+    ''' <remarks></remarks>
+    Friend Sub copyHryTo(ByRef newproject As clsProjekt)
+        Dim ix As Integer
+        Dim curNode As clsHierarchyNode
+        Dim copiedNode As clsHierarchyNode
+        Dim key As String
+        Dim childKey As String
+
+        newproject.hierarchy = New clsHierarchy
+
+        For ix = 1 To Me.hierarchy.count
+            curNode = Me.hierarchy.nodeItem(ix)
+            key = Me.hierarchy.getIDAtIndex(ix)
+            copiedNode = New clsHierarchyNode
+            With copiedNode
+                .elemName = curNode.elemName
+                .indexOfElem = curNode.indexOfElem
+                .isMilestone = curNode.isMilestone
+                .origName = curNode.origName
+                .parentNodeKey = curNode.parentNodeKey
+                ' jetzt die Kinder kopieren 
+                For cx As Integer = 1 To curNode.childCount
+                    childKey = curNode.getChild(cx)
+                    .addChild(childKey)
+                Next
+            End With
+
+            newproject.hierarchy.copyNode(copiedNode, key)
+
+        Next
 
     End Sub
 
@@ -338,6 +455,142 @@
         End Get
     End Property
 
+    Public ReadOnly Property getPhaseCount(ByVal name As String, Optional ByVal breadcrumb As String = "") As Integer
+        Get
+
+            Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(name, breadcrumb)
+            If phaseIndices.Length = 1 And phaseIndices(0) = 0 Then
+                getPhaseCount = 0
+            Else
+                getPhaseCount = phaseIndices.Length
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' in der namenListe können Elem-Namen oder Elem-IDs sein; wenn ein Elem-NAme gefunden wird, 
+    ''' so wird er ersetzt durch alle Elem-IDs, diesen Namen tragen 
+    ''' es wird sichergestellt, dass jede ID tatsächlich nur einmal aufgeführt ist 
+    ''' </summary>
+    ''' <param name="namenListe"></param>
+    ''' <param name="namesAreMilestones"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getElemIdsOf(ByVal namenListe As Collection, ByVal namesAreMilestones As Boolean) As Collection
+        Get
+            Dim iDCollection As New Collection
+            Dim nameItem As String
+            Dim iDItem As String
+            Dim phaseIndices() As Integer
+            Dim milestoneIndices(,) As Integer
+
+            For i As Integer = 1 To namenListe.Count
+
+                nameItem = CStr(namenListe.Item(i))
+
+                If istElemID(nameItem) Then
+
+                    If Not iDCollection.Contains(nameItem) Then
+                        iDCollection.Add(nameItem, nameItem)
+                    End If
+
+                Else
+                    If namesAreMilestones Then
+                        milestoneIndices = Me.hierarchy.getMilestoneIndices(nameItem)
+
+                        For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+                            ' wenn der Wert Null ist , so existiert der Wert nicht 
+                            If milestoneIndices(0, mx) > 0 And milestoneIndices(1, mx) > 0 Then
+
+                                Try
+                                    iDItem = Me.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx)).nameID
+                                    If Not iDCollection.Contains(iDItem) Then
+                                        iDCollection.Add(iDItem, iDItem)
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+                                
+                            End If
+
+                        Next
+                    Else
+                        phaseIndices = Me.hierarchy.getPhaseIndices(nameItem)
+                        For px As Integer = 0 To phaseIndices.Length - 1
+
+                            If phaseIndices(px) > 0 And phaseIndices(px) <= Me.CountPhases Then
+                                iDItem = Me.getPhase(phaseIndices(px)).nameID
+                                If Not iDCollection.Contains(iDItem) Then
+                                    iDCollection.Add(iDItem, iDItem)
+                                End If
+                            End If
+                            
+                        Next
+                    End If
+                End If
+
+            Next
+
+            getElemIdsOf = iDCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt alle Phasen bzw. Milestone ElemIDs in einer Collection zurück 
+    ''' die Milestones gehen alle mit 1§ los, die Phasen alle mit 0§; 
+    ''' deshalb markiert das erste Element mit "1§" das Ende der Phasen bzw. 
+    ''' den Start der Meilensteine
+    ''' </summary>
+    ''' <param name="lookingForMS"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAllElemIDs(ByVal lookingForMS As Boolean) As Collection
+        Get
+            Dim iDCollection As New Collection
+            Dim firstIX As Integer, lastIX As Integer
+            Dim elemID As String
+
+            If lookingForMS Then
+                lastIX = Me.hierarchy.count
+                firstIX = Me.hierarchy.getIndexOf1stMilestone
+                If firstIX < 0 Then
+                    ' es gibt keine Meilensteine 
+                Else
+                    For mx = firstIX To lastIX
+                        elemID = Me.hierarchy.getIDAtIndex(mx)
+                        If Not iDCollection.Contains(elemID) Then
+                            iDCollection.Add(elemID, elemID)
+                        End If
+                    Next
+                End If
+            Else
+                ' Phasen holen
+                firstIX = 1
+                lastIX = Me.hierarchy.getIndexOf1stMilestone - 1
+                
+                If lastIX < 0 Then
+                    ' es gibt keine Meilensteine, sondern nur Phasen 
+                    lastIX = Me.hierarchy.count
+                End If
+
+                For mx = firstIX To lastIX
+                    elemID = Me.hierarchy.getIDAtIndex(mx)
+                    If Not iDCollection.Contains(elemID) Then
+                        iDCollection.Add(elemID, elemID)
+                    End If
+                Next
+
+            End If
+
+            getAllElemIDs = iDCollection
+
+        End Get
+    End Property
+
     ''' <summary>
     ''' gibt die Phase zurück, die die folgenden Eigenschaften erfüllt
     ''' hat name als elemName Bestandteil
@@ -354,17 +607,23 @@
     Public ReadOnly Property getPhase(ByVal name As String, Optional ByVal breadcrumb As String = "", Optional ByVal lfdNr As Integer = 1) As clsPhase
 
         Get
-            
+
             Dim found As Boolean = False
 
-            
+
             Dim phaseIndices() As Integer
             phaseIndices = Me.hierarchy.getPhaseIndices(name, breadcrumb)
 
-            If lfdNr > phaseIndices.Length Or lfdNr < 0 Then
+            If lfdNr > phaseIndices.Length Or lfdNr < 1 Then
                 getPhase = Nothing
             Else
-                getPhase = AllPhases.Item(phaseIndices(lfdNr) - 1)
+                If phaseIndices(lfdNr - 1) > 0 And phaseIndices(lfdNr - 1) <= AllPhases.Count Then
+                    ' wenn phaseIndices(x) = 0 dann gibt es die Phase nicht ..
+                    getPhase = AllPhases.Item(phaseIndices(lfdNr - 1) - 1)
+                Else
+                    getPhase = Nothing
+                End If
+
             End If
 
 
@@ -403,7 +662,7 @@
 
         Get
 
-            Dim phIndex As Integer = Me.hierarchy.getIndexOfElem(elemID)
+            Dim phIndex As Integer = Me.hierarchy.getPMIndexOfID(elemID)
             If phIndex >= 0 Or phIndex < AllPhases.Count Then
                 getPhaseByID = AllPhases.Item(phIndex - 1)
             Else
@@ -688,7 +947,7 @@
                     Dim ok As Boolean = False
                     Do Until ok
                         Try
-                            tmpValues.Add(tmpDate, cresult.name)
+                            tmpValues.Add(tmpDate, cresult.nameID)
                             ok = True
                         Catch ex As Exception
                             tmpDate = tmpDate.AddSeconds(1)

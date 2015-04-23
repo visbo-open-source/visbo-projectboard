@@ -67,6 +67,7 @@ Public Class frmProjPortfolioAdmin
         treeLevel = node.Level
 
 
+
         ' hier wird jetzt sichergestellt, daß nur die nach der aktuellen Aktion gültigen Checks gesetzt werden können
 
         If aKtionskennung = PTTvActions.delFromDB Or _

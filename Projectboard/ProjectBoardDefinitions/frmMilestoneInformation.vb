@@ -1,7 +1,8 @@
 ﻿Public Class frmMilestoneInformation
 
     Public bewertungsListe As SortedList(Of String, clsBewertung)
-
+    Public milestoneNameID As String
+    Public curProject As clsProjekt
 
     Public Sub New()
 
@@ -107,13 +108,26 @@
     End Sub
 
 
-    Private Sub nextButton_Click(sender As Object, e As EventArgs)
-        Call MsgBox("noch nicht implementiert")
-    End Sub
-
-    Private Sub prevButton_Click_1(sender As Object, e As EventArgs)
-        Call MsgBox("noch nicht implementiert")
-    End Sub
 
     
+    ''' <summary>
+    ''' zeigt den urspünglichen Meilenstein-Namen aus Rplan oder anderem PM-System an 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub showOrigItem_CheckedChanged(sender As Object, e As EventArgs) Handles showOrigItem.CheckedChanged
+        Dim tmpNode As clsHierarchyNode
+
+        If showOrigItem.Checked = True Then
+            tmpNode = curProject.hierarchy.nodeItem(milestoneNameID)
+            If Not IsNothing(tmpNode) Then
+                resultName.Text = tmpNode.origName
+                lfdNr.Text = ""
+            End If
+        Else
+            resultName.Text = elemNameOfElemID(milestoneNameID)
+            lfdNr.Text = lfdNrOfElemID(milestoneNameID).ToString("0#")
+        End If
+    End Sub
 End Class

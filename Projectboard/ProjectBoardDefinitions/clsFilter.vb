@@ -319,28 +319,40 @@
                         ix = 1
 
                         While ix <= filterMilestone.Count And Not containsMS
-                            tmpMilestone = hproj.getMilestone(CStr(filterMilestone.Item(ix)))
 
-                            If IsNothing(tmpMilestone) Then
+                            Dim curMsName As String = CStr(filterMilestone.Item(ix))
+                            Dim breadcrumb As String = ""
+                            Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(curMsName, breadcrumb)
+                            ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
 
-                                ix = ix + 1
+                            For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                            Else
+                                tmpMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                                If IsNothing(tmpMilestone) Then
 
-                                If showRangeLeft > 0 And showRangeRight > 0 Then
-                                    ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
-                                    Dim tmpMsDate As Integer = getColumnOfDate(tmpMilestone.getDate)
-                                    If tmpMsDate >= showRangeLeft And tmpMsDate <= showRangeRight Then
-                                        containsMS = True
-                                    Else
-                                        ix = ix + 1
-                                    End If
+
+
                                 Else
-                                    containsMS = True
+
+                                    If showRangeLeft > 0 And showRangeRight > 0 And showRangeRight >= showRangeLeft Then
+                                        ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
+                                        Dim tmpMsDate As Integer = getColumnOfDate(tmpMilestone.getDate)
+                                        If tmpMsDate >= showRangeLeft And tmpMsDate <= showRangeRight Then
+                                            containsMS = True
+                                            Exit For
+                                        End If
+                                    Else
+                                        containsMS = True
+                                        Exit For
+                                    End If
+
                                 End If
 
-                            End If
 
+                            Next
+
+                            ix = ix + 1
+                            
                         End While
 
                     End If
@@ -357,34 +369,49 @@
                             ix = 1
 
                             While ix <= filterPhase.Count And Not containsPH
-                                tmpPhase = hproj.getPhase(CStr(filterPhase.Item(ix)))
 
-                                If IsNothing(tmpPhase) Then
+                                Dim pName As String = CStr(filterPhase.Item(ix))
+                                Dim breadcrumb As String = ""
+                                Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(pName, breadcrumb)
 
-                                    ix = ix + 1
+                                For px As Integer = 0 To phaseIndices.Length - 1
 
-                                Else
+                                    tmpPhase = hproj.getPhase(phaseIndices(px))
 
-                                    If showRangeLeft > 0 And showRangeRight > 0 Then
+                                    If IsNothing(tmpPhase) Then
 
-                                        Dim leftDate As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
-                                        Dim rightdate As Date = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
-                                        Dim tmpPhStart As Date = tmpPhase.getStartDate
-                                        Dim tmpPhEnde As Date = tmpPhase.getEndDate
 
-                                        If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or _
-                                            DateDiff(DateInterval.Day, tmpPhStart, rightdate) < 0 Then
-                                            ix = ix + 1
+
+                                    Else
+
+                                        If showRangeLeft > 0 And showRangeRight > 0 Then
+
+                                            Dim leftDate As Date = StartofCalendar.AddMonths(showRangeLeft - 1)
+                                            Dim rightdate As Date = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
+                                            Dim tmpPhStart As Date = tmpPhase.getStartDate
+                                            Dim tmpPhEnde As Date = tmpPhase.getEndDate
+
+                                            If DateDiff(DateInterval.Day, tmpPhEnde, leftDate) > 0 Or _
+                                                DateDiff(DateInterval.Day, tmpPhStart, rightdate) < 0 Then
+
+                                            Else
+                                                containsPH = True
+                                            End If
+                                            ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
+
                                         Else
                                             containsPH = True
                                         End If
-                                        ' jetzt muss geprüft werden, ob der Meilenstein auch im angegebenen Bereich liegt 
 
-                                    Else
-                                        containsPH = True
                                     End If
 
-                                End If
+                                    If containsPH Then
+                                        Exit For
+                                    End If
+
+                                Next
+
+                                ix = ix + 1
 
                             End While
 

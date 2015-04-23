@@ -346,22 +346,10 @@ Public Class clsEventsPrcCharts
                                             Call .syncXWertePhases()
                                         End If
 
-                                        'shpElement = ShowProjekte.getShape(.name)
-
-                                        'Dim typCollection As New Collection
-                                        'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                                        'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                                        'Dim phaseList As Collection = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+                                        
                                         Dim phaseList As Collection = projectboardShapes.getPhaseList(.name)
-
-                                        'typCollection.Clear()
-                                        'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                                        'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
                                         Dim milestoneList As Collection = projectboardShapes.getMilestoneList(.name)
 
-
-
-                                        ' jetzt wird das Shape in der Plantafel gelöscht 
                                         Call clearProjektinPlantafel(.name)
 
                                         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
@@ -565,7 +553,7 @@ Public Class clsEventsPrcCharts
 
                     For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                        Call zeichnePhasenInProjekt(kvp.Value, diagOBJ.gsCollection, selMonth, selMonth, False, msNumber)
+                        Call zeichnePhasenInProjekt(kvp.Value, diagOBJ.gsCollection, False, msNumber, selMonth, selMonth)
 
                     Next
 
@@ -575,7 +563,10 @@ Public Class clsEventsPrcCharts
 
                     For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                        Call zeichneResultMilestonesInProjekt(kvp.Value, diagOBJ.gsCollection, 4, selMonth, selMonth, False, msNumber, False)
+                        ' hier wird die zeichneMilestones aufgerufen mit den Element-Namen und nicht den Element-IDs
+                        ' d.h es ist wichtig, daß die Zeichen-Routine so schlau ist, im Falle des Aufrufes mit den Namen alle 
+                        ' Namen durch ihre auftretenden IDs zu ersetzen.  
+                        Call zeichneMilestonesInProjekt(kvp.Value, diagOBJ.gsCollection, 4, selMonth, selMonth, False, msNumber, False)
 
                     Next
 

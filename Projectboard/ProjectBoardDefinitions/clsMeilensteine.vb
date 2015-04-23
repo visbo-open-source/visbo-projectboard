@@ -168,15 +168,13 @@ Public Class clsMeilensteine
 
     ''' <summary>
     ''' gibt die Shape Definition für den angegebenen Meilenstein zurück 
-    ''' wenn es die Kombination name, belongsto nicht gibt, wird nur Name als Suchkriterium verwendet 
-    ''' wenn es auch den nicht gibt, wird die Default Milestone Klasse verwendet 
+    ''' wenn es den nicht gibt, wird die Default Milestone Klasse verwendet 
     ''' </summary>
     ''' <param name="name"></param>
-    ''' <param name="belongsTo"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getShape(ByVal name As String, ByVal belongsTo As String) As xlNS.Shape
+    Public ReadOnly Property getShape(ByVal name As String) As xlNS.Shape
         Get
             Dim appearanceID As String
             Dim defaultMilestoneAppearance As String = "Meilenstein Default"

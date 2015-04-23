@@ -127,7 +127,7 @@
                 ' dieser Aufruf korrigiert notfalls die intern gehaltene
 
                 Try
-                    If Me.name <> Me.Parent.getPhase(1).name Then
+                    If Me.nameID <> Me.Parent.getPhase(1).nameID Then
                         ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
                         Me.Parent.keepPhase1consistent(Me.startOffsetinDays + Me.dauerInDays)
                     End If
@@ -571,18 +571,45 @@
 
     End Property
 
-    Public Property name As String
+    ''' <summary>
+    ''' setzt bzw liest die NamensID einer Phase; die NamensID setzt sich zusammen aus 
+    ''' dem Kennzeichen Phase/Meilenstein 0/1, dem eigentlichen Namen der Phase und der laufenden Nummer. 
+    ''' Getrennt sind die Elemente durch das Zeichen § 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property nameID As String
         Get
-            name = _name
+            nameID = _name
         End Get
         Set(value As String)
+            Dim tmpstr() As String
+            tmpstr = value.Split(New Char() {CChar("§")}, 3)
             If Len(value) > 0 Then
-                _name = value
+                If value.StartsWith("0§") And tmpstr.Length >= 2 Then
+                    _name = value
+                Else
+                    Throw New ApplicationException("unzulässige Namens-ID: " & value)
+                End If
+
             Else
                 Throw New ApplicationException("Name darf nicht leer sein ...")
             End If
 
         End Set
+    End Property
+
+    ''' <summary>
+    ''' liest den Namensteil der NamensID 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property name As String
+        Get
+            name = elemNameOfElemID(_name)
+        End Get
     End Property
 
     ''' <summary>
@@ -620,11 +647,11 @@
                 height = 0.23 * boxHeight
 
             Else
-                Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
+                Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.nameID)
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
+            Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.nameID)
         End Try
 
 
@@ -714,10 +741,10 @@
         Dim ix As Integer = 0
         Dim found As Boolean = False
 
-        Dim elemName As String = elemNameOfElemID(milestone.name)
+        Dim elemName As String = elemNameOfElemID(milestone.nameID)
 
         Do While ix <= anzElements And Not found
-            If AllMilestones.Item(ix).name = milestone.name Then
+            If AllMilestones.Item(ix).nameID = milestone.nameID Then
                 found = True
             Else
                 ix = ix + 1
@@ -725,25 +752,28 @@
         Loop
 
         If found Then
-            Throw New ArgumentException("Meilenstein existiert bereits in dieser Phase!" & milestone.name)
+            Throw New ArgumentException("Meilenstein existiert bereits in dieser Phase!" & milestone.nameID)
         Else
             AllMilestones.Add(milestone)
         End If
 
         ' jetzt muss der Meilenstein in die Projekt-Hierarchie aufgenommen werden , 
         ' aber nur, wenn die Phase bereits in der Projekt-Hierarchie vorhanden ist ... 
-        Dim elemID As String
+        Dim elemID As String = milestone.nameID
         Dim currentElementNode As New clsHierarchyNode
         Dim hproj As New clsProjekt, vproj As New clsProjektvorlage
         Dim parentIsVorlage As Boolean
         Dim milestoneIndex As Integer = AllMilestones.Count
-        Dim phaseID As String = Me.name
+        Dim phaseID As String = Me.nameID
         Dim ok As Boolean = False
+
+        If Not istElemID(elemID) Then
+            elemID = vproj.hierarchy.findUniqueElemKey(elemName, True)
+        End If
 
         If IsNothing(Me.Parent) Then
             parentIsVorlage = True
             vproj = Me.VorlagenParent
-            elemID = vproj.hierarchy.findUniqueElemKey(elemName, True)
             If vproj.hierarchy.containsKey(phaseID) Then
                 ' Phase ist bereits in der Projekt-Hierarchie eingetragen
                 ok = True
@@ -751,7 +781,6 @@
         Else
             parentIsVorlage = False
             hproj = Me.Parent
-            elemID = hproj.hierarchy.findUniqueElemKey(elemName, True)
             If hproj.hierarchy.containsKey(phaseID) Then
                 ' Phase ist bereits in der Projekt-Hierarchie eingetragen
                 ok = True
@@ -782,9 +811,8 @@
                 hproj.hierarchy.addNode(currentElementNode, elemID)
             End If
 
-        End If
-        
 
+        End If
 
 
     End Sub
@@ -851,7 +879,7 @@
 
 
 
-            .name = _name
+            .nameID = _name
 
             For r = 1 To Me.countRoles
                 'newrole = New clsRolle(relEnde - relStart)
@@ -915,7 +943,7 @@
             .latestStart = Me._latestStart
             .Offset = Me._Offset
 
-            .name = _name
+            .nameID = _name
 
             .changeStartandDauer(CInt(Me._startOffsetinDays * corrFactor), CInt(Me._dauerInDays * corrFactor))
 
@@ -1064,7 +1092,8 @@
     End Property
 
     ''' <summary>
-    ''' gibt das Objekt Meilenstein mit dem angegebenen NAmen zurück. 
+    ''' gibt das Objekt Meilenstein mit der angegebenen ElemID zurück. 
+    ''' beim Key kann es sich um eine ElemID handeln oder aber um einen Meilenstein-Namen, optional mit Nummer 
     ''' Wenn der Meilenstein nicht existiert, wird Nothing zurückgegeben 
     ''' </summary>
     ''' <param name="key">Name des Meilensteines</param>
@@ -1072,25 +1101,53 @@
     ''' <returns>Objekt vom Typ Result</returns>
     ''' <remarks>
     ''' Rückgabe von Nothing ist schneller als über Throw Exception zu arbeiten</remarks>
-    Public ReadOnly Property getMilestone(ByVal key As String) As clsMeilenstein
+    Public ReadOnly Property getMilestone(ByVal key As String, Optional ByVal lfdNr As Integer = 1) As clsMeilenstein
 
         Get
-            Dim tmpResult As clsMeilenstein = Nothing
+            Dim tmpMilestone As clsMeilenstein = Nothing
             Dim found As Boolean = False
-            Dim r As Integer = 1
+            Dim anzahl As Integer = 0
+            Dim index As Integer
+            Dim hryNode As clsHierarchyNode
 
-            While r <= Me.countMilestones And Not found
 
-                If AllMilestones.Item(r - 1).name = key Then
-                    found = True
-                    tmpResult = AllMilestones.Item(r - 1)
-                Else
-                    r = r + 1
+            ' fedtlegen, worum es sich handelt: elemID oder Name
+
+            If istElemID(key) Then
+
+                hryNode = Me.Parent.hierarchy.nodeItem(key)
+                If Not IsNothing(hryNode) Then
+
+                    ' prüfen, ob der Meilenstein überhaupt zu dieser Phase gehört 
+                    If hryNode.parentNodeKey = Me.nameID Then
+                        index = hryNode.indexOfElem
+                        tmpMilestone = AllMilestones.Item(index - 1)
+                    End If
+
                 End If
 
-            End While
 
-            getMilestone = tmpResult
+            Else
+
+                Dim r As Integer = 1
+                While r <= Me.countMilestones And Not found
+
+                    If elemNameOfElemID(AllMilestones.Item(r - 1).nameID) = key Then
+                        anzahl = anzahl + 1
+                        If anzahl >= lfdNr Then
+                            found = True
+                            tmpMilestone = AllMilestones.Item(r - 1)
+                        End If
+                    Else
+                        r = r + 1
+                    End If
+
+                End While
+
+            End If
+
+
+            getMilestone = tmpMilestone
 
 
         End Get
@@ -1101,18 +1158,18 @@
     ''' gibt die laufende Nummer des Meilensteins in der Phase zurück
     ''' 0: wenn nicht gefunden
     ''' </summary>
-    ''' <param name="msName"></param>
+    ''' <param name="msNameID"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getlfdNr(ByVal msName As String) As Integer
+    Public ReadOnly Property getlfdNr(ByVal msNameID As String) As Integer
         Get
             Dim r As Integer = 1
             Dim found As Boolean = False
             Dim tmpValue As Integer = 0
 
             While r <= Me.countMilestones And Not found
-                If Me.getMilestone(r).name = msName Then
+                If Me.getMilestone(r).nameID = msNameID Then
                     found = True
                     tmpValue = r
                 Else

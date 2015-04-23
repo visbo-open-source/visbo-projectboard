@@ -175,7 +175,7 @@ Public Class clsProjektShapes
                                     .AlternativeText = CInt(PTshty.phase1).ToString
                                 End If
 
-                                .Name = projectboardShapes.calcPhaseShapeName(hproj.name, hproj.getPhase(1).name)
+                                .Name = projectboardShapes.calcPhaseShapeName(hproj.name, hproj.getPhase(1).nameID)
 
 
                             End With
@@ -196,7 +196,7 @@ Public Class clsProjektShapes
             End Try
 
 
-            
+
 
         End Get
     End Property
@@ -231,7 +231,7 @@ Public Class clsProjektShapes
         Catch ex As Exception
 
         End Try
-        
+
 
     End Sub
 
@@ -253,29 +253,28 @@ Public Class clsProjektShapes
     ''' berechnet für die Phase phaseName des Projekts pName den Shape-Namen und gibt ihn zurück
     ''' </summary>
     ''' <param name="pName"></param>
-    ''' <param name="phaseName"></param>
+    ''' <param name="phaseNameID"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property calcPhaseShapeName(ByVal pName As String, ByVal phaseName As String) As String
+    Public ReadOnly Property calcPhaseShapeName(ByVal pName As String, ByVal phaseNameID As String) As String
         Get
-            calcPhaseShapeName = pName & "#" & phaseName
+            calcPhaseShapeName = pName & "#" & phaseNameID
         End Get
     End Property
 
     ''' <summary>
-    ''' berechnet für den Meilenstein mit laufender Nummer lfdNr in Phase phaseNAme in Projekt pName 
+    ''' berechnet für den Meilenstein mit MilestoneID  
     ''' den Milestone-Shape Namen und gibt ihn zurück 
     ''' </summary>
     ''' <param name="pName">Projekt-Name</param>
-    ''' <param name="phaseName">Phasen-Name</param>
-    ''' <param name="lfdNr">lfd Nummer des Meilensteins in Phase phaseName</param>
+    ''' <param name="milestoneNameID">Phasen-Name</param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property calcMilestoneShapeName(ByVal pName As String, ByVal phaseName As String, ByVal lfdNr As Integer) As String
+    Public ReadOnly Property calcMilestoneShapeName(ByVal pName As String, ByVal milestoneNameID As String) As String
         Get
-            calcMilestoneShapeName = pName & "#" & phaseName & "#M" & lfdNr.ToString
+            calcMilestoneShapeName = pName & "#" & milestoneNameID & "#M"
         End Get
     End Property
 
@@ -340,14 +339,14 @@ Public Class clsProjektShapes
     ''' <summary>
     ''' löscht zu dem angegeben projektshape die Child-Shapes mit den in typCollection angegebenen Typen
     ''' wenn typCollection Null ist , dann sollen alle Elemente gelöscht werden 
-    ''' Ausnahme: die Phase 1 darf nicht geöscht werden 
+    ''' Ausnahme: die Phase 1 darf nicht gelöscht werden 
     ''' </summary>
     ''' <param name="projektshape"></param>
     ''' <param name="typCollection"></param>
     ''' <remarks></remarks>
     Public Sub removeChildsOfType(ByRef projektshape As Excel.Shape, ByVal typCollection As Collection)
 
-        
+
         Dim pName As String
 
         Dim done As Boolean
@@ -398,16 +397,17 @@ Public Class clsProjektShapes
         Get
             Dim projektShape As Excel.Shape
             Dim tmpCollection As New Collection
+            Dim typCollection As New Collection
 
             projektShape = ShowProjekte.getShape(pName)
 
             If IsNothing(projektShape) Then
 
             Else
-                tmpCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                tmpCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
+                typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
+                typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
 
-                tmpCollection = getAllChildswithType(projektShape, tmpCollection)
+                tmpCollection = getAllChildswithType(projektShape, typCollection)
             End If
 
             getMilestoneList = tmpCollection
@@ -426,16 +426,17 @@ Public Class clsProjektShapes
         Get
             Dim projektShape As Excel.Shape
             Dim tmpCollection As New Collection
+            Dim typCollection As New Collection
 
             projektShape = ShowProjekte.getShape(pName)
 
             If IsNothing(projektShape) Then
 
             Else
-                tmpCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                tmpCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
+                typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
+                typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
 
-                tmpCollection = getAllChildswithType(projektShape, tmpCollection)
+                tmpCollection = getAllChildswithType(projektShape, typCollection)
             End If
 
             getPhaseList = tmpCollection
@@ -445,7 +446,7 @@ Public Class clsProjektShapes
 
 
     ''' <summary>
-    ''' gibt eine Collection der Shape-Namen zurück, die im gruppierten Shape projektshape enthalten sind
+    ''' gibt eine Collection der Shape-ElementIDs zurück, die im gruppierten Shape projektshape enthalten sind
     ''' jedes Item hat folgende Struktur: 
     ''' PTshty.typ#Name des Shapes
     ''' </summary>
@@ -492,8 +493,8 @@ Public Class clsProjektShapes
 
 
                         If typCollection.Count = 0 Then
-
-                            If tmpShape.Name <> projektShape.Name And _
+                            ' dieser Fall tritt bisher gar nicht auf - aber wenn, dann muss die Kennung im Ergebnis mitgegeben werden 
+                            If tmpShape.Name <> projektShape.Name And tmpShape.Name <> rootPhaseName And _
                                 Not tmpCollection.Contains(tmpShape.AlternativeText & "#" & tmpShape.Name) Then
 
                                 tmpCollection.Add(tmpShape.AlternativeText & "#" & tmpShape.Name, tmpShape.AlternativeText & "#" & tmpShape.Name)
@@ -501,30 +502,27 @@ Public Class clsProjektShapes
                             End If
 
                         Else
-                            Dim elementName As String
+                            Dim elementNameID As String
 
                             If tmpShape.Name <> projektShape.Name And typCollection.Contains(tmpShape.AlternativeText) Then
 
                                 If tmpShape.AlternativeText = CInt(PTshty.phaseE).ToString Or _
                                     tmpShape.AlternativeText = CInt(PTshty.phaseN).ToString Then
 
-                                    elementName = extractName(tmpShape.Name, PTshty.phaseN)
+                                    elementNameID = extractName(tmpShape.Name, PTshty.phaseN)
 
-                                    If elementName <> projektShape.Name And Not tmpCollection.Contains(elementName) Then
-                                        tmpCollection.Add(elementName, elementName)
+                                    If elementNameID <> rootPhaseName And Not tmpCollection.Contains(elementNameID) Then
+                                        tmpCollection.Add(elementNameID, elementNameID)
                                     End If
 
                                 ElseIf tmpShape.AlternativeText = CInt(PTshty.milestoneE).ToString Or _
                                         tmpShape.AlternativeText = CInt(PTshty.milestoneN).ToString Then
 
-                                    Dim phaseName As String = extractName(tmpShape.Name, PTshty.phaseN)
-                                    Dim msNr As Integer = CInt(extractName(tmpShape.Name, PTshty.milestoneN))
-
+                                    elementNameID = extractName(tmpShape.Name, PTshty.milestoneN)
 
                                     Try
-                                        elementName = hproj.getPhase(phaseName).getMilestone(msNr).name
-                                        If Not tmpCollection.Contains(elementName) Then
-                                            tmpCollection.Add(elementName, elementName)
+                                        If Not tmpCollection.Contains(elementNameID) Then
+                                            tmpCollection.Add(elementNameID, elementNameID)
                                         End If
                                     Catch ex As Exception
 
@@ -761,7 +759,7 @@ Public Class clsProjektShapes
         Dim curCoord(3) As Double, oldCoord() As Double
         Dim shapeType As Integer
         Dim moveAllowed As Boolean
-        Dim phaseName As String, resultNr As Integer
+        Dim phaseNameID As String
         Dim hproj As clsProjekt, newProjekt As clsProjekt
         Dim tmpRange As Excel.ShapeRange
         Dim pShape As Excel.Shape
@@ -963,12 +961,12 @@ Public Class clsProjektShapes
                     Dim tmpDauerIndays = hproj.dauerInDays
                     Dim diffDays As Integer = 0
 
-                    phaseName = extractName(shpElement.Name, PTshty.phaseN)
-                    cphase = hproj.getPhase(phaseName)
+                    phaseNameID = extractName(shpElement.Name, PTshty.phaseN)
+                    cphase = hproj.getPhaseByID(phaseNameID)
 
 
 
-                    If cphase.name = hproj.name Then
+                    If cphase.nameID = rootPhaseName Then
                         ' hier muss die Sonderbehandlung der Phase 1 rein' sicherstellen, 
                         ' daß die Phase 1 in curCoord die richtigen Koordinaten hat 
                         ' und dass die notwendigen Anpassungen der anderen Phasen gemacht wurde 
@@ -1052,7 +1050,7 @@ Public Class clsProjektShapes
                             Call cphase.adjustMilestones(faktor)
                         End If
 
-                        If cphase.name = hproj.name Then
+                        If cphase.nameID = rootPhaseName Then
                             ' in diesem Fall wurde die Phase 1 verändert - wenn sich der line Rand der 
                             ' Phase 1 verändert hat, müssen die Pahsen 2 bis N ihren Startoffsets neu berechnet werden 
                             If curCoord(1) <> oldCoord(1) Then
@@ -1112,17 +1110,18 @@ Public Class clsProjektShapes
                     ' für Meilensteine: berechne das neue Datum ; muss innerhalb der Phase bleiben 
 
                     Dim cphase As clsPhase
-                    Dim cresult As clsMeilenstein
+                    Dim cMilestone As clsMeilenstein
+                    Dim milestoneID As String
 
                     Dim reDraw As Boolean = False
                     Dim tmpDauerIndays = hproj.dauerInDays
                     Dim diffDays As Integer = 0
 
                     reDraw = False
-                    phaseName = extractName(shpElement.Name, PTshty.phaseN)
-                    resultNr = CInt(extractName(shpElement.Name, PTshty.milestoneN))
-                    cphase = hproj.getPhase(phaseName)
-                    cresult = cphase.getMilestone(resultNr)
+                    milestoneID = extractName(shpElement.Name, PTshty.milestoneN)
+
+                    cphase = hproj.getParentPhaseByID(milestoneID)
+                    cMilestone = hproj.getMilestoneByID(milestoneID)
 
                     Dim phBorderLinks As Double = calcDateToXCoord(cphase.getStartDate)
                     Dim phBorderRechts As Double = calcDateToXCoord(cphase.getEndDate)
@@ -1145,8 +1144,8 @@ Public Class clsProjektShapes
 
                     ' jetzt ist sichergestellt, daß eine gültige Position gefunden ist 
                     Dim newDate As Date = calcXCoordToDate(curCoord(1) + curCoord(3) / 2)
-                    If DateDiff(DateInterval.Day, newDate, cresult.getDate) <> 0 Then
-                        cresult.setDate = newDate
+                    If DateDiff(DateInterval.Day, newDate, cMilestone.getDate) <> 0 Then
+                        cMilestone.setDate = newDate
                         reDraw = True
                     End If
 

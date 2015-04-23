@@ -1602,6 +1602,24 @@ Imports System.Drawing
             With auswahlFormular
                 .Text = "Plan-Elemente visualisieren"
 
+                .useHierarchyforSelection = awinSettings.useHierarchy
+
+                If .useHierarchyforSelection Then
+                    .hryTreeView.Visible = True
+                    .hryStufenLabel.Visible = True
+                    .hryStufen.Visible = True
+                    .nameListBox.Visible = False
+                    .headerLine.Visible = False
+                    .filterBox.Visible = False
+                Else
+                    .hryTreeView.Visible = False
+                    .hryStufenLabel.Visible = False
+                    .hryStufen.Visible = False
+                    .nameListBox.Visible = True
+                    .headerLine.Visible = True
+                    .filterBox.Visible = True
+                End If
+
                 .rdbBU.Visible = False
                 .pictureBU.Visible = False
 
@@ -1670,6 +1688,24 @@ Imports System.Drawing
 
             With auswahlFormular
                 .Text = "Leistbarkeit analysieren"
+
+                .useHierarchyforSelection = awinSettings.useHierarchy
+
+                If .useHierarchyforSelection Then
+                    .hryTreeView.Visible = True
+                    .hryStufenLabel.Visible = True
+                    .hryStufen.Visible = True
+                    .nameListBox.Visible = False
+                    .headerLine.Visible = False
+                    .filterBox.Visible = False
+                Else
+                    .hryTreeView.Visible = False
+                    .hryStufenLabel.Visible = False
+                    .hryStufen.Visible = False
+                    .nameListBox.Visible = True
+                    .headerLine.Visible = True
+                    .filterBox.Visible = True
+                End If
 
                 .rdbBU.Visible = False
                 .pictureBU.Visible = False
@@ -1740,6 +1776,24 @@ Imports System.Drawing
 
             With auswahlFormular
 
+                .useHierarchyforSelection = awinSettings.useHierarchy
+
+                If .useHierarchyforSelection Then
+                    .hryTreeView.Visible = True
+                    .hryStufenLabel.Visible = True
+                    .hryStufen.Visible = True
+                    .nameListBox.Visible = False
+                    .headerLine.Visible = False
+                    .filterBox.Visible = False
+                Else
+                    .hryTreeView.Visible = False
+                    .hryStufenLabel.Visible = False
+                    .hryStufen.Visible = False
+                    .nameListBox.Visible = True
+                    .headerLine.Visible = True
+                    .filterBox.Visible = True
+                End If
+
                 .rdbBU.Visible = True
                 .pictureBU.Visible = True
 
@@ -1808,6 +1862,24 @@ Imports System.Drawing
             appInstance.ScreenUpdating = False
 
             With auswahlFormular
+
+                .useHierarchyforSelection = awinSettings.useHierarchy
+
+                If .useHierarchyforSelection Then
+                    .hryTreeView.Visible = True
+                    .hryStufenLabel.Visible = True
+                    .hryStufen.Visible = True
+                    .nameListBox.Visible = False
+                    .headerLine.Visible = False
+                    .filterBox.Visible = False
+                Else
+                    .hryTreeView.Visible = False
+                    .hryStufenLabel.Visible = False
+                    .hryStufen.Visible = False
+                    .nameListBox.Visible = True
+                    .headerLine.Visible = True
+                    .filterBox.Visible = True
+                End If
 
                 .rdbBU.Visible = True
                 .pictureBU.Visible = True
@@ -2417,7 +2489,7 @@ Imports System.Drawing
         Dim hproj As clsProjekt
         Dim outputString As String = ""
         Dim fileListe As New SortedList(Of String, String)
-        Dim exportFileName As String = "Export_" & Date.Now.ToString & ".xlsx"
+        Dim exportFileName As String = "Export_" & Date.Now.ToString.Replace(":", ".") & ".xlsx"
         Dim ok As Boolean
 
         Dim awinSelection As Excel.ShapeRange
@@ -2568,6 +2640,24 @@ Imports System.Drawing
             appInstance.ScreenUpdating = False
 
             With auswahlFormular
+
+                .useHierarchyforSelection = awinSettings.useHierarchy
+
+                If .useHierarchyforSelection Then
+                    .hryTreeView.Visible = True
+                    .hryStufenLabel.Visible = True
+                    .hryStufen.Visible = True
+                    .nameListBox.Visible = False
+                    .headerLine.Visible = False
+                    .filterBox.Visible = False
+                Else
+                    .hryTreeView.Visible = False
+                    .hryStufenLabel.Visible = False
+                    .hryStufen.Visible = False
+                    .nameListBox.Visible = True
+                    .headerLine.Visible = True
+                    .filterBox.Visible = True
+                End If
 
                 .rdbBU.Visible = True
                 .pictureBU.Visible = True
@@ -7216,6 +7306,216 @@ Imports System.Drawing
             todoListe.Add(schluessel, ts)
         Next
 
+
+        enableOnUpdate = True
+
+
+    End Sub
+
+    ''' <summary>
+    ''' testet, ob die Hierarchien in den geladenen Projekten alle stimmig sind 
+    ''' das heißt, verweisen die Indices tatsächlich auf die richtigen Phasen bzw Meilensteine  
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTTestFunktion3(control As IRibbonControl)
+
+        Dim hproj As clsProjekt
+        Dim allesInOrdnung As Boolean = True
+        Dim anzElements As Integer
+        Dim curNode As clsHierarchyNode
+        Dim parentNode As clsHierarchyNode
+        Dim childNode As clsHierarchyNode
+        Dim parentID As String
+        Dim curID As String
+        Dim childID As String
+        Dim elemID As String
+        Dim elemName As String
+        Dim lfdNr As Integer
+        Dim isMilestone As Boolean
+        Dim cphase As clsPhase
+        Dim cphase2 As clsPhase
+        Dim cMilestone As clsMeilenstein
+        Dim logMessage As String = ""
+        Dim atleastOne As Boolean = False
+
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+
+        ' Testreihe 1: ausgehend von der Hierarchie alle Projekte und Varianten 
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In AlleProjekte.liste
+
+            hproj = kvp.Value
+
+
+            ' zuerst wird ausgehend von der Hierarchie gecheckt 
+            anzElements = hproj.hierarchy.count
+
+            For ix As Integer = 1 To anzElements
+
+                curID = hproj.hierarchy.getIDAtIndex(ix)
+                elemName = elemNameOfElemID(curID)
+                lfdNr = lfdNrOfElemID(curID)
+
+                curNode = hproj.hierarchy.nodeItem(ix)
+
+                If curID.StartsWith("1§") Then
+                    isMilestone = True
+                ElseIf curID.StartsWith("0§") Then
+                    isMilestone = False
+                Else
+                    logMessage = logMessage & vbLf & kvp.Value.getShapeText & ": Node kann nicht identifiziert werden .." & curID
+                    atleastOne = True
+                End If
+
+                If Not isMilestone Then
+                    ' test 1: Zugriff über ID 
+                    cphase = hproj.getPhaseByID(curID)
+
+                    If cphase.nameID = curID Then
+                        ' ok 
+                    Else
+                        logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Node-Zugriff über ID nicht ok " & curID & ", " & cphase.nameID
+                        atleastOne = True
+                    End If
+
+                    ' Test2: Zugriff über Name und lfd-Nr 
+                    elemID = calcHryElemKey(elemName, isMilestone, lfdNr)
+
+                    cphase = hproj.getPhaseByID(elemID)
+
+                    If cphase.nameID = elemID Then
+                        ' ok 
+                    Else
+                        logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Node-Zugriff über Elem-Name, lfdNr nicht ok " & curID & ", " & cphase.nameID
+                        atleastOne = True
+                    End If
+
+                Else
+                    cMilestone = hproj.getMilestoneByID(curID)
+
+                    If cMilestone.nameID = curID Then
+                        ' ok 
+                    Else
+                        logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Node-Zugriff über ID nicht ok " & curID & ", " & cMilestone.nameID
+                        atleastOne = True
+                    End If
+
+                    ' Test2: Zugriff über Name und lfd-Nr 
+                    elemID = calcHryElemKey(elemName, isMilestone, lfdNr)
+
+                    cMilestone = hproj.getMilestoneByID(elemID)
+
+                    If cMilestone.nameID = elemID Then
+                        ' ok 
+                    Else
+                        logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Node-Zugriff über Elem-Name, lfdNr nicht ok " & curID & ", " & cMilestone.nameID
+                        atleastOne = True
+                    End If
+
+
+                End If
+
+                ' jetzt wird gecheckt, ob das Element einen parent hat - wenn ja, ob es auch das Kind des Parents ist   
+                ' wenn ja, wird gecheckt, ob der Parent-Knoten das aktuelle Element in der Liste der Child-Knoten hat 
+
+                parentID = curNode.parentNodeKey
+                If parentID <> "" Then
+                    parentNode = hproj.hierarchy.nodeItem(parentID)
+
+                    If Not IsNothing(parentNode) Then
+                        Dim found As Boolean
+                        For cx As Integer = 1 To parentNode.childCount
+                            If curID = parentNode.getChild(cx) Then
+                                found = True
+                            End If
+                        Next
+                        If Not found Then
+                            logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Eltern-Knoten hat mich nicht als Kind" & parentID & ", Kind:  " & curID
+                        End If
+                    Else
+                        logMessage = logMessage & vbLf & kvp.Value.getShapeText & "hat keinen Eltern-Knoten: curID: " & curID & ", parentID " & parentID
+                    End If
+                End If
+
+                ' jetzt wird gecheckt, ob das Element Kinder hat -  
+                ' wenn ja, ob jedes Kind das Element als parent hat    
+
+                For cx As Integer = 1 To curNode.childCount
+
+                    childID = curNode.getChild(cx)
+                    childNode = hproj.hierarchy.nodeItem(childID)
+                    If Not childNode.parentNodeKey = curID Then
+                        logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Kind hat mich nicht als Vater:  " & childID & ", CurID " & curID
+                    End If
+
+                Next
+
+
+            Next
+
+            ' jetzt wird ausgehend von den Phasen und den zugehörigen Milestones gecheckt 
+
+            For ix As Integer = 1 To hproj.CountPhases
+
+                cphase = hproj.getPhase(ix)
+                curID = cphase.nameID
+
+                ' check in der Hierarchie
+                cphase2 = hproj.getPhaseByID(curID)
+                If Not IsNothing(cphase2) Then
+                    If Not cphase2.nameID = cphase.nameID Then
+                        logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Zugriff über ix: " & ix & ": " & cphase.nameID & " <> " & cphase.nameID
+                        atleastOne = True
+                    End If
+                End If
+
+
+                ' jetzt werden die Meilensteine gecheckt
+                For mx As Integer = 1 To cphase.countMilestones
+                    cMilestone = cphase.getMilestone(mx)
+                    curID = cMilestone.nameID
+                    curNode = hproj.hierarchy.nodeItem(curID)
+                    If curNode.indexOfElem <> mx Then
+                        logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Meilenstein-Zugriff über mx: " & ix & vbLf & _
+                                     curNode.indexOfElem & " <> " & mx
+                    End If
+
+                    parentID = curNode.parentNodeKey
+                    parentNode = hproj.hierarchy.nodeItem(parentID)
+                    If Not IsNothing(parentNode) Then
+                        If parentNode.indexOfElem <> ix Then
+                            logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Phasen-Zugriff über ix: " & ix & vbLf & _
+                                         parentNode.indexOfElem & " <> " & mx
+                        End If
+                    Else
+                        If parentID <> "" Then
+                            logMessage = logMessage & vbLf & kvp.Value.getShapeText & "Phasen-Zugriff über ix: " & ix & vbLf & _
+                                         curID & " hat keinen Parent " & parentID
+                        End If
+                    End If
+
+                Next
+
+
+            Next
+
+
+        Next
+
+        If atleastOne Or logMessage.Length > 1 Then
+            atleastOne = False
+            Call MsgBox(logMessage)
+            logMessage = ""
+        End If
+
+        If Not atleastOne Then
+            Call MsgBox("done ..")
+        End If
 
         enableOnUpdate = True
 

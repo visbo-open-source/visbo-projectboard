@@ -86,6 +86,8 @@
     Public Property mppSortiertDauer As Boolean
     Public Property mppOnePage As Boolean
 
+    ' Settings für Auswahl-Dialog 
+    Public Property useHierarchy As Boolean
 
     Property importTyp As Integer
 
@@ -159,6 +161,8 @@
         If _mppSortiertDauer Then
             _mppShowAllIfOne = True
         End If
+
+        _useHierarchy = True
 
         _importTyp = 1
 

@@ -915,6 +915,7 @@ Public Module awinGeneralModules
                                 If ok Then
 
                                     ' hier müssen die Werte für die Vorlage übergeben werden.
+                                    ' Änderung tk 19.4.15 Übernehmen der Hierarchie 
                                     Dim projVorlage As New clsProjektvorlage
                                     projVorlage.VorlagenName = hproj.name
                                     projVorlage.Schrift = hproj.Schrift
@@ -923,6 +924,8 @@ Public Module awinGeneralModules
                                     projVorlage.earliestStart = -6
                                     projVorlage.latestStart = 6
                                     projVorlage.AllPhases = hproj.AllPhases
+
+                                    projVorlage.hierarchy = hproj.hierarchy
 
                                     Projektvorlagen.Add(projVorlage)
 
@@ -1473,13 +1476,13 @@ Public Module awinGeneralModules
 
                     ' jetzt werden all die Phasen angelegt , beginnend mit der ersten 
                     cphase = New clsPhase(parent:=hproj)
-                    cphase.name = pName
+                    cphase.nameID = rootPhaseName
                     startoffset = 0
                     duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
                     cphase.changeStartandDauer(startoffset, duration)
 
                     cresult = New clsMeilenstein(parent:=cphase)
-                    cresult.name = "SOP"
+                    cresult.nameID = calcHryElemKey("SOP", True)
                     cresult.setDate = sopDate
 
                     cbewertung = New clsBewertung
@@ -1503,7 +1506,7 @@ Public Module awinGeneralModules
                     Dim pStartDate As Date
                     Dim pEndDate As Date
                     Dim ok As Boolean = True
-                    Dim lastPhaseName As String = cphase.name
+                    Dim lastPhaseName As String = cphase.nameID
 
                     Dim i As Integer
                     For i = anfang To ende
@@ -1526,7 +1529,7 @@ Public Module awinGeneralModules
                                 ' es handelt sich um eine Phase 
                                 phaseName = itemName
                                 cphase = New clsPhase(parent:=hproj)
-                                cphase.name = phaseName
+                                cphase.nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
 
                                 If PhaseDefinitions.Contains(phaseName) Then
                                     ' nichts tun 
@@ -1551,7 +1554,7 @@ Public Module awinGeneralModules
 
                                 cphase.changeStartandDauer(startoffset, duration)
                                 hproj.AddPhase(cphase)
-                                lastPhaseName = cphase.name
+                                lastPhaseName = cphase.nameID
 
                             ElseIf duration = 1 Then
 
@@ -1564,7 +1567,7 @@ Public Module awinGeneralModules
                                     bewertungsAmpel = CInt(CType(.Cells(i, 12), Excel.Range).Value)
                                     explanation = CStr(CType(.Cells(i, 1), Excel.Range).Value)
 
-                                    cphase = hproj.getPhase(lastPhaseName)
+                                    cphase = hproj.getPhaseByID(lastPhaseName)
                                     cresult = New clsMeilenstein(parent:=cphase)
                                     cbewertung = New clsBewertung
 
@@ -1584,7 +1587,7 @@ Public Module awinGeneralModules
                                     End With
 
                                     With cresult
-                                        .name = itemName
+                                        .nameID = hproj.hierarchy.findUniqueElemKey(itemName, True)
                                         .setDate = pEndDate
                                         If Not cbewertung Is Nothing Then
                                             .addBewertung(cbewertung)
@@ -1925,11 +1928,11 @@ Public Module awinGeneralModules
 
                 ' ProjektPhase wird erzeugt
                 cphase = New clsPhase(parent:=hproj)
-                cphase.name = hproj.name
+                cphase.nameID = rootPhaseName
 
                 ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
                 With cphase
-                    .name = hproj.name
+                    .nameID = rootPhaseName
                     Dim startOffset As Integer = 0
                     .changeStartandDauer(startOffset, ProjektdauerIndays)
                 End With
@@ -1976,11 +1979,11 @@ Public Module awinGeneralModules
                         ' ProjektPhase wird hinzugefügt
                         cphase = New clsPhase(parent:=hproj)
                         added = False
-                        phaseName = hproj.name
+
 
                         ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
                         With cphase
-                            .name = phaseName
+                            .nameID = rootPhaseName
                             Dim startOffset As Integer = 0
                             .changeStartandDauer(startOffset, ProjektdauerIndays)
                             Dim phaseStartdate As Date = .getStartDate
@@ -2081,7 +2084,7 @@ Public Module awinGeneralModules
                                 End If
 
                                 With cphase
-                                    .name = phaseName
+                                    .nameID = phaseName
                                     ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                                     Dim startOffset As Long
                                     Dim dauerIndays As Long
@@ -2284,7 +2287,7 @@ Public Module awinGeneralModules
 
                                     ' Erzeuge ProjektPhase mit Länge des Projekts
                                     cphase = New clsPhase(parent:=hproj)
-                                    cphase.name = hproj.name
+                                    cphase.nameID = rootPhaseName
                                     'cphaseExisted = False       ' Phase existiert noch nicht
 
                                     offset = 0
@@ -2321,7 +2324,7 @@ Public Module awinGeneralModules
                                     isPhase = True
                                     isMeilenstein = False
                                 Else
-                                    If hproj.name = objectName Then
+                                    If objectName = hproj.name Then
                                         isPhase = True
                                         isMeilenstein = False
                                     Else
@@ -2411,7 +2414,7 @@ Public Module awinGeneralModules
                                     cphase = hproj.getPhase(objectName)
                                     If IsNothing(cphase) Then
                                         cphase = New clsPhase(parent:=hproj)
-                                        cphase.name = objectName
+                                        cphase.nameID = hproj.hierarchy.findUniqueElemKey(objectName, False)
                                         cphaseExisted = False       ' Phase existiert noch nicht
                                     End If
                                 End If
@@ -2476,7 +2479,7 @@ Public Module awinGeneralModules
                                 Else
 
 
-                                    phaseName = cphase.name
+                                    phaseName = cphase.nameID
                                     cResult = New clsMeilenstein(parent:=cphase)
                                     cBewertung = New clsBewertung
 
@@ -2528,7 +2531,7 @@ Public Module awinGeneralModules
                                     With cResult
                                         .setDate = resultDate
                                         '.verantwortlich = resultVerantwortlich
-                                        .name = resultName
+                                        .nameID = hproj.hierarchy.findUniqueElemKey(resultName, True)
                                         If Not cBewertung Is Nothing Then
                                             .addBewertung(cBewertung)
                                         End If
@@ -2536,7 +2539,7 @@ Public Module awinGeneralModules
 
 
                                     Try
-                                        With hproj.getPhase(phaseName)
+                                        With hproj.getPhaseByID(phaseName)
                                             .addMilestone(cResult)
                                         End With
                                     Catch ex1 As Exception
@@ -4488,6 +4491,10 @@ Public Module awinGeneralModules
 
             spalte = spalte + 2
             Dim phaseName As String
+
+
+            ' hier muss noch orrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses NAmens gibt, so 
+            ' muss das in dieser Liste auch vorgesehen werden 
             For ix As Integer = 1 To phaseList.Count
 
                 Try
@@ -4501,6 +4508,8 @@ Public Module awinGeneralModules
 
             spalte = spalte + phaseList.Count
 
+            ' hier muss noch orrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses NAmens gibt, so 
+            ' muss das in dieser Liste auch vorgesehen werden 
             For ix As Integer = 1 To milestoneList.Count
                 CType(.Cells(zeile, spalte + ix), Excel.Range).Value = CStr(milestoneList.ElementAt(ix - 1).Value)
             Next
@@ -4575,94 +4584,110 @@ Public Module awinGeneralModules
 
                 Dim pName As String
                 Dim cphase As clsPhase
-                spalte = spalte + 2
+                spalte = spalte + 3
 
                 For ix As Integer = 1 To phaseList.Count
 
                     pName = CStr(phaseList.ElementAt(ix - 1).Value)
-                    cphase = kvp.Value.getPhase(pName)
 
-                    If Not IsNothing(cphase) Then
-                        Try
-                            startDate = cphase.getStartDate
-                            endDate = cphase.getEndDate
+                    Dim breadcrumb As String = ""
+                    Dim phaseIndices() As Integer = kvp.Value.hierarchy.getPhaseIndices(pName, breadcrumb)
 
-                            atleastOne = True
+                    For px As Integer = 0 To phaseIndices.Length - 1
 
-                            If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
-                                earliestDate = startDate
-                                minCol = spalte + ix
-                            End If
+                        cphase = kvp.Value.getPhase(phaseIndices(px))
 
-                            If DateDiff(DateInterval.Day, latestDate, endDate) > 0 Then
-                                latestDate = endDate
-                                maxCol = spalte + ix
-                            End If
+                        If Not IsNothing(cphase) Then
+                            Try
+                                startDate = cphase.getStartDate
+                                endDate = cphase.getEndDate
 
-                            CType(.Cells(zeile, spalte + ix), Excel.Range).Value = startDate.ToShortDateString & " - " & endDate.ToShortDateString
+                                atleastOne = True
 
-                        Catch ex As Exception
-                            CType(.Cells(zeile, spalte + ix), Excel.Range).Value = "?"
+                                If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
+                                    earliestDate = startDate
+                                    minCol = spalte
+                                End If
 
-                        End Try
-                    Else
+                                If DateDiff(DateInterval.Day, latestDate, endDate) > 0 Then
+                                    latestDate = endDate
+                                    maxCol = spalte
+                                End If
 
-                        CType(.Cells(zeile, spalte + ix), Excel.Range).Value = "-"
+                                CType(.Cells(zeile, spalte), Excel.Range).Value = startDate.ToShortDateString & " - " & endDate.ToShortDateString
+
+                            Catch ex As Exception
+                                CType(.Cells(zeile, spalte), Excel.Range).Value = "?"
+
+                            End Try
+                        Else
+
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
 
 
-                    End If
+                        End If
 
+                        spalte = spalte + 1
 
-                    
+                    Next
+
                 Next
 
 
                 ' Meilensteine schreiben 
-                spalte = spalte + phaseList.Count
+
                 Dim msName As String
                 Dim milestone As clsMeilenstein = Nothing
 
                 For ix As Integer = 1 To milestoneList.Count
+
                     msName = CStr(milestoneList.ElementAt(ix - 1).Value)
-                    milestone = kvp.Value.getMilestone(msName)
+                    Dim breadcrumb As String = ""
+                    Dim milestoneIndices(,) As Integer = kvp.Value.hierarchy.getMilestoneIndices(msName, breadcrumb)
+                    ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
 
-                    If Not IsNothing(milestone) Then
-                        Try
-                            startDate = milestone.getDate
+                    For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                            atleastOne = True
+                        milestone = kvp.Value.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
 
-                            If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
-                                earliestDate = startDate
-                                minCol = spalte + ix
-                            End If
+                        If Not IsNothing(milestone) Then
+                            Try
+                                startDate = milestone.getDate
 
-                            If DateDiff(DateInterval.Day, latestDate, startDate) > 0 Then
-                                latestDate = startDate
-                                maxCol = spalte + ix
-                            End If
+                                atleastOne = True
 
-                            CType(.Cells(zeile, spalte + ix), Excel.Range).Value = startDate
+                                If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
+                                    earliestDate = startDate
+                                    minCol = spalte
+                                End If
+
+                                If DateDiff(DateInterval.Day, latestDate, startDate) > 0 Then
+                                    latestDate = startDate
+                                    maxCol = spalte
+                                End If
+
+                                CType(.Cells(zeile, spalte), Excel.Range).Value = startDate
 
 
-                        Catch ex As Exception
-                            CType(.Cells(zeile, spalte + ix), Excel.Range).Value = "?"
-                            CType(.Cells(zeile, spalte + ix), Excel.Range).Value = "?"
-                        End Try
-                    Else
+                            Catch ex As Exception
+                                CType(.Cells(zeile, spalte), Excel.Range).Value = "?"
+                                CType(.Cells(zeile, spalte), Excel.Range).Value = "?"
+                            End Try
+                        Else
 
-                        CType(.Cells(zeile, spalte + ix), Excel.Range).Value = "-"
-                        CType(.Cells(zeile, spalte + ix), Excel.Range).Value = "-"
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
 
-                    End If
+                        End If
 
+                        spalte = spalte + 1
+                    Next
                 Next
 
                 Dim dauerT As Long
                 Dim dauerM As Double
 
                 ' Dauer in Tagen schreiben 
-                spalte = spalte + milestoneList.Count
 
                 Try
                     If atleastOne Then
@@ -4676,7 +4701,7 @@ Public Module awinGeneralModules
                     dauerT = 0
                     dauerM = 0.0
                 End Try
-                
+
 
                 CType(.Cells(zeile, spalte + 1), Excel.Range).Value = dauerT
                 CType(.Cells(zeile, spalte + 2), Excel.Range).Value = dauerM
@@ -4688,7 +4713,7 @@ Public Module awinGeneralModules
                     CType(.Cells(zeile, minCol), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
                     CType(.Cells(zeile, maxCol), Excel.Range).Interior.Color = awinSettings.AmpelGelb
                 End If
-                
+
 
 
             End With
@@ -4731,6 +4756,24 @@ Public Module awinGeneralModules
 
         With auswahlFormular
             .Text = "Datenbank Filter definieren"
+            .useHierarchyforSelection = awinSettings.useHierarchy
+
+
+            If .useHierarchyforSelection Then
+                .hryTreeView.Visible = True
+                .hryStufenLabel.Visible = True
+                .hryStufen.Visible = True
+                .nameListBox.Visible = False
+                .headerLine.Visible = False
+                .filterBox.Visible = False
+            Else
+                .hryTreeView.Visible = False
+                .hryStufenLabel.Visible = False
+                .hryStufen.Visible = False
+                .nameListBox.Visible = True
+                .headerLine.Visible = True
+                .filterBox.Visible = True
+            End If
 
             .chkbxShowObjects = False
             .chkbxCreateCharts = False

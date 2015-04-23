@@ -377,11 +377,11 @@ Public Class clsCommandBarEvents
                         ' es darf nur ein Shape von diesem Typ selektiert sein ... 
                         If awinSelection.Count = 1 Then
 
-                            Dim phaseName As String
+                            Dim phaseNameID As String
                             somethingChanged = projectboardShapes.hasAchanged(shpelement)
 
                             pname = extractName(shpelement.Name, PTshty.projektN)
-                            phaseName = extractName(shpelement.Name, PTshty.phaseN)
+                            phaseNameID = extractName(shpelement.Name, PTshty.phaseN)
                             hproj = ShowProjekte.getProject(pname)
 
                             If somethingChanged Then
@@ -415,7 +415,7 @@ Public Class clsCommandBarEvents
                             End If
 
                             'Call updatePhaseInformation(shpelement)
-                            Call updatePhaseInformation(hproj, phaseName)
+                            Call updatePhaseInformation(hproj, phaseNameID)
 
                         Else
                             Call MsgBox("bitte nur ein Element bzw. eine Phase selektieren ...")
@@ -432,13 +432,11 @@ Public Class clsCommandBarEvents
                         ' es darf nur ein Shape von diesem Typ selektiert sein ... 
                         If awinSelection.Count = 1 Then
 
-                            Dim phaseName As String
-                            Dim resultName As String
+                            Dim milestoneNameID As String
                             somethingChanged = projectboardShapes.hasAchanged(shpelement)
 
                             pname = extractName(shpelement.Name, PTshty.projektN)
-                            phaseName = extractName(shpelement.Name, PTshty.phaseN)
-                            resultName = shpelement.Title
+                            milestoneNameID = extractName(shpelement.Name, PTshty.milestoneN)
                             hproj = ShowProjekte.getProject(pname)
 
                             If somethingChanged Then
@@ -470,8 +468,7 @@ Public Class clsCommandBarEvents
                                 End If
                             End If
 
-                            'Call updateMilestoneInformation(shpelement)
-                            Call updateMilestoneInformation(hproj, phaseName, resultName)
+                            Call updateMilestoneInformation(hproj, milestoneNameID)
 
                         Else
 

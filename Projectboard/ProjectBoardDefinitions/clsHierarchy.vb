@@ -11,30 +11,171 @@
         Dim parentNode As clsHierarchyNode
         Dim parentNodeKey As String = elemNode.parentNodeKey
 
+        ' wenn der elemKey bereits existiert, so soll nichts gemacht werden 
+        ' das ist dann der Fall, wenn ein Projekt durch Kopie aus einem anderen entsteht
 
-        ' jetzt wird der Parent-Node bestimmt , sofern er existiert 
-        If parentNodeKey.Length > 0 Then
-            Try
-                parentNode = _allNodes.Item(parentNodeKey)
-            Catch ex As Exception
-                Throw New Exception(parentNodeKey & " existiert nicht ")
-            End Try
+        If _allNodes.ContainsKey(elemKey) Then
+            ' nichts tun 
         Else
-            parentNode = Nothing
+
+            ' jetzt wird der Parent-Node bestimmt , sofern er existiert 
+            If parentNodeKey.Length > 0 Then
+                If _allNodes.ContainsKey(parentNodeKey) Then
+                    parentNode = _allNodes.Item(parentNodeKey)
+                Else
+                    Throw New Exception(parentNodeKey & " existiert nicht ")
+                End If
+            Else
+                parentNode = Nothing
+            End If
+
+            ' jetzt den Parent Key eintragen 
+            elemNode.parentNodeKey = parentNodeKey
+            _allNodes.Add(elemKey, elemNode)
+
+            ' jetzt das Child im Parent Node verankern 
+            If Not IsNothing(parentNode) Then
+                parentNode.addChild(elemKey)
+            End If
+
+
         End If
 
-        ' jetzt den Parent Key eintragen 
-        elemNode.parentNodeKey = parentNodeKey
-        _allNodes.Add(elemKey, elemNode)
-
-        ' jetzt das Child im Parent Node verankern 
-        If Not IsNothing(parentNode) Then
-            parentNode.addChild(elemKey)
-        End If
-
+        
 
 
     End Sub
+
+    ''' <summary>
+    ''' kopiert den Hierarchie Knoten ohne Überprüfungen in die Hierarchie
+    ''' dies wird benötigt, wenn 
+    ''' eine Projektvorlage in ein Projekt kopiert wird
+    ''' ein Projekt in ein Projekt kopiert wird 
+    ''' 
+    ''' </summary>
+    ''' <param name="elemNode">ausgefüllter elemNode</param>
+    ''' <param name="elemKey">unique Key</param>
+    ''' <remarks></remarks>
+    Public Sub copyNode(ByVal elemNode As clsHierarchyNode, ByVal elemKey As String)
+
+        If _allNodes.ContainsKey(elemKey) Then
+            ' nichts tun 
+        Else
+            _allNodes.Add(elemKey, elemNode)
+        End If
+
+    End Sub
+
+
+    ''' <summary>
+    ''' gibt die Gesamt-Anzahl Elemente = Anzahl Phasen plus Anzahl Meilensteine zurück  
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property count As Integer
+        Get
+            count = Me._allNodes.Count
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die ID zurück, die das angegebene Element mit Nummer index hat 
+    ''' index darf Werte von 1 .. Anzahl Elemente annehmen 
+    ''' bei unzulässigem Index wird der leere String zurückgegeben  
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getIDAtIndex(ByVal index As Integer) As String
+        Get
+            If index >= 1 And index <= Me._allNodes.Count Then
+                getIDAtIndex = Me._allNodes.ElementAt(index - 1).Key
+            Else
+                getIDAtIndex = ""
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Index zurück, an dem der erste Meilenstein steht ; mögliche Werte sind 1 ... Anzahl Elemente in der Hierarchie Liste 
+    ''' da die Liste sortiert ist und Meilensteine alle mit 1§ beginnen, ist das erste Auftreten zugleich 
+    ''' eins nach der letzten Phase
+    ''' wenn es keinen Meilenstein gibt, dann ist das Ergebnis -1 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getIndexOf1stMilestone() As Integer
+        Get
+            Dim left As Integer = 0, right As Integer = Me._allNodes.Count - 1
+            Dim anzElems As Integer = Me._allNodes.Count
+            Dim curptr As Integer, testL As Integer, testR As Integer
+            Dim found As Boolean = False
+            Dim firstMilestone As Integer = -1
+
+            curptr = CInt(anzElems / 2)
+            curptr = left + CInt((right - left + 1) / 2)
+
+            If curptr - 1 >= 0 Then
+                testL = curptr - 1
+            Else
+                testL = 0
+            End If
+
+            If curptr + 1 <= anzElems - 1 Then
+                testR = curptr + 1
+            Else
+                testR = anzElems - 1
+            End If
+
+            Do While Not found And (right - left) >= 1
+
+                If Me._allNodes.ElementAt(curptr).Key.Substring(0, 1) <> Me._allNodes.ElementAt(testR).Key.Substring(0, 1) Then
+                    ' found 
+                    found = True
+                    firstMilestone = curptr + 1
+
+                ElseIf Me._allNodes.ElementAt(curptr).Key.Substring(0, 1) <> Me._allNodes.ElementAt(testL).Key.Substring(0, 1) Then
+                    ' found
+                    found = True
+                    firstMilestone = curptr
+
+                ElseIf Me._allNodes.ElementAt(curptr).Key.Substring(0, 1) = "1" Then
+                    ' suche links weiter
+                    right = testL
+
+                Else
+                    ' suche rechts weiter 
+                    left = testR
+
+                End If
+
+                If Not found Then
+                    curptr = left + CInt((right - left + 1) / 2)
+
+                    If curptr - 1 >= 0 Then
+                        testL = curptr - 1
+                    Else
+                        testL = 0
+                    End If
+
+                    If curptr + 1 <= anzElems - 1 Then
+                        testR = curptr + 1
+                    Else
+                        testR = anzElems - 1
+                    End If
+                End If
+
+            Loop
+
+            ' wenn nicht gefunden, dann ist firstMilestone = -1 , das heisst, es gibt keine Meilensteine
+            getIndexOf1stMilestone = firstMilestone + 1
+
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' berechnet den Unique Namen ElemKey für den gegebenen elemName und Angabe, ob Meilenstein oder nicht 
@@ -50,7 +191,7 @@
             Dim elemKey As String
             Dim lfdNr As Integer = 2
 
-            
+
             elemKey = calcHryElemKey(elemName, isMilestone)
 
             If _allNodes.ContainsKey(elemKey) Then
@@ -70,7 +211,7 @@
     End Property
 
 
-    
+
 
     ''' <summary>
     ''' gibt an, ob dieser Schlüssel bereits in der Liste vorhanden ist
@@ -86,21 +227,60 @@
     End Property
 
     ''' <summary>
-    ''' gibt den Phasen Index in der Liste der Phasen zurück 
+    ''' gibt den  Index in der Liste der Phasen bzw. Meilensteine zurück
+    ''' wenn es sich um eine Phase handelt: welcher Index von 1 .. countPhases ist es 
+    ''' wenn es sich um einen Meilenstein handelt: welcher Index von 1..countMilestones ist es 
     ''' </summary>
     ''' <param name="uniqueID"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getIndexOfElem(ByVal uniqueID As String) As Integer
+    Public ReadOnly Property getPMIndexOfID(ByVal uniqueID As String) As Integer
         Get
             If _allNodes.ContainsKey(uniqueID) Then
-                getIndexOfElem = _allNodes.Item(uniqueID).indexOfElem
+                getPMIndexOfID = _allNodes.Item(uniqueID).indexOfElem
             Else
-                getIndexOfElem = -1
+                getPMIndexOfID = -1
             End If
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt den Index in der Hierarchie zurück, den das Element mit uniqueID hat
+    ''' wenn uniqueID nicht existiert, dann wird als Wert 0 zurückgegeben  
+    ''' </summary>
+    ''' <param name="uniqueID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getIndexOfID(ByVal uniqueID As String) As Integer
+        Get
+            If _allNodes.ContainsKey(uniqueID) Then
+                getIndexOfID = _allNodes.IndexOfKey(uniqueID) + 1
+            Else
+                getIndexOfID = 0
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die ParentID zurück, die das Element mit ID uniqueID hat
+    ''' wenn das Element gar nicht existiert wird "" zurückgegeben; ebenso, wenn es keinen PArent gibt 
+    ''' </summary>
+    ''' <param name="uniqueID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getParentIDOfID(ByVal uniqueID As String) As String
+        Get
+            If _allNodes.ContainsKey(uniqueID) Then
+                getParentIDOfID = _allNodes.Item(uniqueID).parentNodeKey
+            Else
+                getParentIDOfID = ""
+            End If
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' gibt den Hierarchie Knoten zurück , der die angegebene uniqueID hat
@@ -110,15 +290,36 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property item(ByVal uniqueID As String) As clsHierarchyNode
+    Public ReadOnly Property nodeItem(ByVal uniqueID As String) As clsHierarchyNode
         Get
             If _allNodes.ContainsKey(uniqueID) Then
-                item = _allNodes.Item(uniqueID)
+                nodeItem = _allNodes.Item(uniqueID)
             Else
-                item = Nothing
+                nodeItem = Nothing
             End If
         End Get
     End Property
+
+    ''' <summary>
+    ''' gibt den Hierarchie Knoten zurück, der in der sortierten Liste an Position Index steht 
+    ''' Index läuft von 1 .. Anzahl Knoten 
+    ''' bei ungültigem Index wird Nothing zurückgegeben 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property nodeItem(ByVal index As Integer) As clsHierarchyNode
+        Get
+            If index >= 1 And index <= _allNodes.Count Then
+                nodeItem = _allNodes.ElementAt(index - 1).Value
+            Else
+                nodeItem = Nothing
+            End If
+        End Get
+    End Property
+
+
 
     ''' <summary>
     ''' gibt eine Liste von Phasen-Indices zurück; jeder Index bezeichnet eine Phase, die den Elem-Namen trägt 
@@ -130,23 +331,32 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getPhaseIndices(ByVal name As String, ByVal breadcrumb As String) As Integer()
+    Public ReadOnly Property getPhaseIndices(ByVal name As String, Optional ByVal breadcrumb As String = "") As Integer()
         Get
             Dim phaseIndices() As Integer
             Dim first As Integer, last As Integer
             Dim elemID As String = calcHryElemKey(name, False)
             Dim i As Integer, k As Integer
+            Dim anzahlNodes As Integer = _allNodes.Count
 
             ' da die Liste sortiert ist, reicht es den Index des ersten und den Index des letzten Elements zu bestimmen 
 
             ReDim phaseIndices(0)
             If _allNodes.ContainsKey(elemID) Then
                 first = _allNodes.IndexOfKey(calcHryElemKey(name, False))
-                i = 1
-                Do While elemNameOfElemID(_allNodes.ElementAt(first + i).Key) = name
-                    i = i + 1
+
+                i = first + 1
+                Dim otherNamefound As Boolean = False
+
+                Do While Not otherNamefound And i <= anzahlNodes - 1
+                    If elemNameOfElemID(_allNodes.ElementAt(i).Key) <> name Then
+                        otherNamefound = True
+                    Else
+                        i = i + 1
+                    End If
                 Loop
-                last = first + i - 1
+
+                last = i - 1
 
                 If breadcrumb = "" Then
                     ReDim phaseIndices(last - first)
@@ -159,6 +369,9 @@
                     Dim bcLevels() As String
                     bcLevels = breadcrumb.Split((New Char() {CChar("#")}), 20)
                     Dim anzLevel As Integer = bcLevels.Length
+
+                    ' herausfinden, welche Elemente auch den gleichen Breadcrumb haben ..
+                    ' sie können den gleichen Element-Namen haben, aber evtl ganz unterschiedliche Breadcrumbs
                     k = 0
                     For i = 0 To last - first
                         Dim vglbreadCrumb As String = Me.getBreadCrumb(_allNodes.ElementAt(first + i).Key, anzLevel)
@@ -166,16 +379,17 @@
                             tmpIndices(k) = _allNodes.ElementAt(first + i).Value.indexOfElem
                             k = k + 1
                         End If
-                        If k > 0 Then
-                            ' es wurde mindestens ein Element gefunden 
-                            k = k - 1
-                            ReDim phaseIndices(k)
-                            For ii As Integer = 0 To k
-                                phaseIndices(ii) = tmpIndices(ii)
-                            Next
-                        End If
                     Next
 
+                    ' jetzt müssen die gefundenen Elemente umkopiert werden 
+                    If k > 0 Then
+                        ' es wurde mindestens ein Element gefunden 
+                        k = k - 1
+                        ReDim phaseIndices(k)
+                        For ii As Integer = 0 To k
+                            phaseIndices(ii) = tmpIndices(ii)
+                        Next
+                    End If
 
                 End If
 
@@ -196,30 +410,38 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getMilestoneIndices(ByVal name As String, ByVal breadcrumb As String) As Integer(,)
+    Public ReadOnly Property getMilestoneIndices(ByVal name As String, Optional ByVal breadcrumb As String = "") As Integer(,)
         Get
             Dim milestoneIndices(,) As Integer
             Dim first As Integer, last As Integer
             Dim elemID As String = calcHryElemKey(name, True)
             Dim i As Integer, k As Integer
             Dim phaseID As String
+            Dim anzahlNodes As Integer = _allNodes.Count
 
             ' da die Liste sortiert ist, reicht es den Index des ersten und den Index des letzten Elements zu bestimmen 
 
             ReDim milestoneIndices(1, 0)
             If _allNodes.ContainsKey(elemID) Then
                 first = _allNodes.IndexOfKey(elemID)
-                i = 1
-                Do While elemNameOfElemID(_allNodes.ElementAt(first + i).Key) = name
-                    i = i + 1
+                i = first + 1
+
+                Dim otherNamefound As Boolean = False
+                Do While Not otherNamefound And i <= anzahlNodes - 1
+                    If elemNameOfElemID(_allNodes.ElementAt(i).Key) <> name Then
+                        otherNamefound = True
+                    Else
+                        i = i + 1
+                    End If
                 Loop
-                last = first + i - 1
+                
+                last = i - 1
 
                 If breadcrumb = "" Then
                     ReDim milestoneIndices(1, last - first)
                     For i = 0 To last - first
                         phaseID = _allNodes.ElementAt(first + i).Value.parentNodeKey
-                        milestoneIndices(0, i) = Me.getIndexOfElem(phaseID)
+                        milestoneIndices(0, i) = Me.getPMIndexOfID(phaseID)
                         milestoneIndices(1, i) = _allNodes.ElementAt(first + i).Value.indexOfElem
                     Next
                 Else
@@ -233,7 +455,7 @@
                         Dim vglbreadCrumb As String = Me.getBreadCrumb(_allNodes.ElementAt(first + i).Key, anzLevel)
                         If vglbreadCrumb = breadcrumb Then
                             phaseID = _allNodes.ElementAt(first + i).Value.parentNodeKey
-                            tmpIndices(0, k) = Me.getIndexOfElem(phaseID)
+                            tmpIndices(0, k) = Me.getPMIndexOfID(phaseID)
                             tmpIndices(1, k) = _allNodes.ElementAt(first + i).Value.indexOfElem
                             k = k + 1
                         End If
@@ -327,7 +549,7 @@
 
                     tmpEbene = tmpEbene + 1
 
-                    
+
                 Loop
 
             Else
@@ -336,6 +558,62 @@
 
             getBreadCrumb = tmpBreadCrumb
 
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Hierarchie Level der elemID zurück 
+    ''' 0: es handelt sich um den RootKnoten
+    ''' x: Element ist auf der x-Ten Hierarchie Stufe 
+    ''' -1: elemID oder eiens der Vater Elemente existieren nicht in der Hierarchie
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getIndentLevel(ByVal elemID As String) As Integer
+        Get
+            Dim tmpEbene As Integer = 0
+
+            ' sicherstellen, ob elemID überhaupt existiert , wenn nein, dann wird "-1" zurückgegeben 
+            If Me._allNodes.ContainsKey(elemID) Then
+
+                Dim tmpBreadCrumb = ""
+                Dim rootReached As Boolean = False
+                Dim currentElemID As String = elemID
+                Dim parentID As String = ""
+
+                Dim ok As Boolean = True
+
+                If elemID <> rootPhaseName Then
+
+                    Do While Not rootReached And ok
+
+                        parentID = Me._allNodes.Item(currentElemID).parentNodeKey
+
+                        If currentElemID = rootPhaseName Then
+                            rootReached = True
+
+                        ElseIf Me._allNodes.ContainsKey(parentID) Then
+                            tmpEbene = tmpEbene + 1
+                            currentElemID = parentID
+
+                        Else
+                            ok = False
+                            tmpEbene = -1
+                        End If
+
+                    Loop
+
+                Else
+                    tmpEbene = 0
+                End If
+
+            Else
+                tmpEbene = -1
+            End If
+
+            getIndentLevel = tmpEbene
         End Get
     End Property
     Public Sub New()

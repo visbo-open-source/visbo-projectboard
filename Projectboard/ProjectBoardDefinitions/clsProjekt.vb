@@ -83,31 +83,38 @@ Public Class clsProjekt
         For ix As Integer = 1 To selPhases.Count
 
             phaseName = CStr(selPhases.Item(ix))
-            cphase = Me.getPhase(phaseName)
 
-            If Not IsNothing(cphase) Then
-                Try
-                    tmpStartDate = cphase.getStartDate
-                    tmpEndDate = cphase.getEndDate
+            Dim breadcrumb As String = ""
+            Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
-                    If DateDiff(DateInterval.Day, tmpStartDate, earliestDate) > 0 Then
-                        earliestDate = tmpStartDate
-                        earliestfound = True
-                    End If
+            For px As Integer = 0 To phaseIndices.Length - 1
 
-                    If DateDiff(DateInterval.Day, latestDate, tmpEndDate) > 0 Then
-                        latestDate = tmpEndDate
-                        latestfound = True
-                    End If
+                cphase = Me.getPhase(phaseIndices(px))
 
-                Catch ex As Exception
-                    ' nichts tun 
-                End Try
-            Else
-                ' nichts tun
-            End If
+                If Not IsNothing(cphase) Then
+                    Try
+                        tmpStartDate = cphase.getStartDate
+                        tmpEndDate = cphase.getEndDate
+
+                        If DateDiff(DateInterval.Day, tmpStartDate, earliestDate) > 0 Then
+                            earliestDate = tmpStartDate
+                            earliestfound = True
+                        End If
+
+                        If DateDiff(DateInterval.Day, latestDate, tmpEndDate) > 0 Then
+                            latestDate = tmpEndDate
+                            latestfound = True
+                        End If
+
+                    Catch ex As Exception
+                        ' nichts tun 
+                    End Try
+                Else
+                    ' nichts tun
+                End If
 
 
+            Next
 
         Next
 
@@ -118,29 +125,38 @@ Public Class clsProjekt
 
         For ix As Integer = 1 To selMilestones.Count
             msName = CStr(selMilestones.Item(ix))
-            milestone = Me.getMilestone(msName)
 
-            If Not IsNothing(milestone) Then
-                Try
-                    tmpStartDate = milestone.getDate
+            Dim breadcrumb As String = ""
+            Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(msName, breadcrumb)
+            ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
 
-                    If DateDiff(DateInterval.Day, tmpStartDate, earliestDate) > 0 Then
-                        earliestDate = tmpStartDate
-                        earliestfound = True
-                    End If
+            For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                    If DateDiff(DateInterval.Day, latestDate, tmpStartDate) > 0 Then
-                        latestDate = tmpStartDate
-                        latestfound = True
-                    End If
+                milestone = Me.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
 
-                Catch ex As Exception
-                    ' nichts tun
-                End Try
-            Else
-                ' nichts tun 
+                If Not IsNothing(milestone) Then
+                    Try
+                        tmpStartDate = milestone.getDate
 
-            End If
+                        If DateDiff(DateInterval.Day, tmpStartDate, earliestDate) > 0 Then
+                            earliestDate = tmpStartDate
+                            earliestfound = True
+                        End If
+
+                        If DateDiff(DateInterval.Day, latestDate, tmpStartDate) > 0 Then
+                            latestDate = tmpStartDate
+                            latestfound = True
+                        End If
+
+                    Catch ex As Exception
+                        ' nichts tun
+                    End Try
+                Else
+                    ' nichts tun 
+
+                End If
+
+            Next
 
         Next
 
@@ -153,7 +169,7 @@ Public Class clsProjekt
 
         minDate = earliestDate
         maxDate = latestDate
-        
+
 
     End Sub
 
@@ -290,7 +306,7 @@ Public Class clsProjekt
             If Me.CountPhases > 0 Then
                 ' Änderung 13.4.15 Root Phasen Namen heisst immer so, nicht mehr wie Projekt: 
                 'Me.getPhase(1).name = _name
-                Me.getPhase(1).name = calcHryElemKey(".", False)
+                Me.getPhase(1).nameID = rootPhaseName
             End If
 
 
@@ -370,7 +386,7 @@ Public Class clsProjekt
             If Me.CountPhases = 1 Then
                 .elemName = "."
             Else
-                .elemName = elemNameOfElemID(phase.name)
+                .elemName = phase.name
             End If
 
             If origName = "" Then
@@ -386,7 +402,7 @@ Public Class clsProjekt
                 If .indexOfElem = 1 Then
                     .parentNodeKey = ""
                 Else
-                    .parentNodeKey = calcHryElemKey(".", False)
+                    .parentNodeKey = rootPhaseName
                 End If
             Else
                 .parentNodeKey = parentID
@@ -395,7 +411,7 @@ Public Class clsProjekt
         End With
 
         With Me.hierarchy
-            .addNode(currentElementNode, phase.name)
+            .addNode(currentElementNode, phase.nameID)
         End With
 
         ' jetzt müssen noch alle bereits in der Phase existierenden Meilensteine aufgenommen werden 
@@ -405,16 +421,16 @@ Public Class clsProjekt
 
             With currentElementNode
 
-                .elemName = elemNameOfElemID(cmilestone.name)
+                .elemName = elemNameOfElemID(cmilestone.nameID)
                 .origName = .elemName
                 .indexOfElem = m
                 .isMilestone = True
-                .parentNodeKey = phase.name
+                .parentNodeKey = phase.nameID
 
             End With
 
             With Me.hierarchy
-                .addNode(currentElementNode, cmilestone.name)
+                .addNode(currentElementNode, cmilestone.nameID)
             End With
 
         Next
@@ -1127,59 +1143,93 @@ Public Class clsProjekt
 
     ''' <summary>
     ''' gibt eine Liste von Phasen zurück, die für das gegebene Projekt im angegebenen Zeitrahmen liegen
-    ''' wenn von oder bis kleiner 0 , dann gibt es keinen Zeitraum, dann werden alle betrachtet 
+    ''' wenn namenliste leer ist, werden alle Projekte des Projekts betrachtet 
     ''' </summary>
-    ''' <param name="selectionType"></param>
+    ''' <param name="areMilestones">gibt an, ob Meilensteine geuscht werden, oder Phasen</param>
     ''' <param name="von">linker Rand des Zeitraums</param>
     ''' <param name="bis">rechter Rand des Zeitraums</param>
+    ''' <param name="namenListe" >gibt an, welche elemIDs nur betrachtet werden sollen; wenn namenListe leer ist, dann werden alle Phasen/Meilensteine betrachtet </param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property withinTimeFrame(selectionType As Integer, von As Integer, bis As Integer) As Collection
+    Public ReadOnly Property withinTimeFrame(ByVal areMilestones As Boolean, von As Integer, bis As Integer, ByVal namenListe As Collection) As Collection
         Get
             Dim tmpListe As New Collection
             ' selection type wird aktuell noch ignoriert .... 
-            Dim cphase As clsPhase
-            Dim noTimeFrame As Boolean
+            Dim elemID As String
+            Dim considerAllNames As Boolean
+            Dim startIX As Integer, endIX As Integer
 
-            If von <= 0 Or bis <= 0 Then
-                noTimeFrame = True
+            ' ein Zeitraum muss definiert sein 
+            If von <= 0 Or bis <= 0 Or bis - von < 0 Then
+                withinTimeFrame = tmpListe
             Else
-                noTimeFrame = False
-            End If
+                Dim ix As Integer
+                Dim anzElements As Integer
 
-
-            For i = 1 To AllPhases.Count
-
-                cphase = Me.getPhase(i)
-
-                If noTimeFrame Then
-
-
-                    If tmpListe.Contains(cphase.name) Then
-                        ' jede Phase wird nur einmal eingetragen ....
+                If namenListe.Count = 0 Then
+                    considerAllNames = True
+                    If areMilestones Then
+                        startIX = Me.hierarchy.getIndexOf1stMilestone
+                        endIX = Me.hierarchy.count
+                        anzElements = endIX - startIX + 1
                     Else
-                        tmpListe.Add(cphase.name, cphase.name)
+                        startIX = 1
+                        endIX = Me.hierarchy.getIndexOf1stMilestone - 1
+                        anzElements = endIX - startIX + 1
                     End If
-
-
                 Else
-                    If Me._Start + cphase.relStart - 1 > bis Or _
-                    Me._Start + cphase.relEnde - 1 < von Then
-                        ' nichts tun 
-                    Else
-                        ' ist innerhalb des Zeitrahmens
-                        If tmpListe.Contains(cphase.name) Then
-                            ' jede Phase wird nur einmal eingetragen ....
-                        Else
-                            tmpListe.Add(cphase.name, cphase.name)
-                        End If
-
-                    End If
+                    considerAllNames = False
+                    startIX = 1
+                    endIX = namenListe.Count
                 End If
 
+                ' jetzt muss die Schleife kommen 
+                ix = startIX
+                While ix <= endIX
 
-            Next
+                    If considerAllNames Then
+                        elemID = Me.hierarchy.getIDAtIndex(ix)
+                    Else
+                        elemID = CStr(namenListe.Item(ix))
+                    End If
+
+                    If areMilestones Then
+                        ' Behandlung von Meilensteinen
+                        Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(elemID)
+                        Dim milestoneColumn As Integer = getColumnOfDate(cMilestone.getDate)
+                        If milestoneColumn < von Or milestoneColumn > bis Then
+                            ' nichts machen 
+                        Else
+                            ' Milestone ist im Zeitraum 
+                            If tmpListe.Contains(cMilestone.nameID) Then
+                                ' nichts tun, denn jede Phase wird nur einmal eingetragen ....
+                            Else
+                                tmpListe.Add(cMilestone.nameID, cMilestone.nameID)
+                            End If
+                        End If
+
+                    Else
+                        ' Behandlung von Phasen
+                        Dim cphase As clsPhase = Me.getPhaseByID(elemID)
+                        If Me._Start + cphase.relStart - 1 > bis Or _
+                            Me._Start + cphase.relEnde - 1 < von Then
+                            ' nichts tun 
+                        Else
+                            ' ist innerhalb des Zeitrahmens
+                            If tmpListe.Contains(cphase.nameID) Then
+                                ' nichts tun, denn jede Phase wird nur einmal eingetragen ....
+                            Else
+                                tmpListe.Add(cphase.nameID, cphase.nameID)
+                            End If
+                        End If
+                    End If
+
+                    ix = ix + 1
+
+                End While
+
+            End If
 
             withinTimeFrame = tmpListe
 
@@ -1272,6 +1322,10 @@ Public Class clsProjekt
             .Status = _Status
 
         End With
+
+        ' jetzt wird die Hierarchie kopiert 
+        Call copyHryTo(newproject)
+
 
 
     End Sub
@@ -1663,49 +1717,49 @@ Public Class clsProjekt
 
         End Get
     End Property
+    ' wird wohl überhaupt nicht mehr benötigt - es gibt keine Aufrufe !? 
+    ' ''' <summary>
+    ' ''' kopiert alle Meilensteine, aber ohne Bewertung 
+    ' ''' </summary>
+    ' ''' <param name="newproj"></param>
+    ' ''' <remarks></remarks>
+    'Public Sub copyMilestonesTo(ByRef newproj As clsProjekt)
 
-    ''' <summary>
-    ''' kopiert alle Meilensteine, aber ohne Bewertung 
-    ''' </summary>
-    ''' <param name="newproj"></param>
-    ''' <remarks></remarks>
-    Public Sub copyMilestonesTo(ByRef newproj As clsProjekt)
+    '    Dim newresult As clsMeilenstein
+    '    Dim newphase As clsPhase
 
-        Dim newresult As clsMeilenstein
-        Dim newphase As clsPhase
+    '    ' Kopiere die Ampel - und die Ampel-Bewertung
+    '    With newproj
+    '        .ampelStatus = Me.ampelStatus
+    '        .ampelErlaeuterung = Me.ampelErlaeuterung
+    '    End With
 
-        ' Kopiere die Ampel - und die Ampel-Bewertung
-        With newproj
-            .ampelStatus = Me.ampelStatus
-            .ampelErlaeuterung = Me.ampelErlaeuterung
-        End With
+    '    For Each cphase In MyBase.Liste
 
-        For Each cphase In MyBase.Liste
+    '        Try
+    '            newphase = newproj.getPhase(cphase.name)
+    '            ' wenn gefunden dann alle Results kopieren 
+    '            For r = 1 To cphase.countMilestones
+    '                newresult = New clsMeilenstein(parent:=newphase)
+    '                cphase.getMilestone(r).CopyToWithoutBewertung(newresult)
 
-            Try
-                newphase = newproj.getPhase(cphase.name)
-                ' wenn gefunden dann alle Results kopieren 
-                For r = 1 To cphase.countMilestones
-                    newresult = New clsMeilenstein(parent:=newphase)
-                    cphase.getMilestone(r).CopyToWithoutBewertung(newresult)
+    '                Try
+    '                    newphase.addMilestone(newresult)
+    '                Catch ex As Exception
 
-                    Try
-                        newphase.addMilestone(newresult)
-                    Catch ex As Exception
+    '                End Try
 
-                    End Try
+    '            Next
 
-                Next
-
-            Catch ex As Exception
-                ' in diesem Falle gibt es die komplette Phase in dem Projekt nicht mehr 
-                ' dann muss auch nichts gemacht werden 
-            End Try
+    '        Catch ex As Exception
+    '            ' in diesem Falle gibt es die komplette Phase in dem Projekt nicht mehr 
+    '            ' dann muss auch nichts gemacht werden 
+    '        End Try
 
 
-        Next
+    '    Next
 
-    End Sub
+    'End Sub
 
 
 
@@ -1723,7 +1777,7 @@ Public Class clsProjekt
         For Each cphase In MyBase.Liste
 
             Try
-                newphase = newproj.getPhase(cphase.name)
+                newphase = newproj.getPhaseByID(cphase.nameID)
                 ' wenn gefunden dann alle Results kopieren 
                 For r = 1 To cphase.countMilestones
                     newresult = New clsMeilenstein(parent:=newphase)
@@ -1752,13 +1806,19 @@ Public Class clsProjekt
     Public Overrides Sub copyTo(ByRef newproject As clsProjekt)
 
         Dim newphase As clsPhase
+        'Dim parentID As String
+        Dim origName As String = ""
 
         Call copyAttrTo(newproject)
 
         For Each hphase In MyBase.Liste
             newphase = New clsPhase(newproject)
+
+            'parentID = Me.hierarchy.getParentIDOfID(hphase.nameID)
+
             hphase.CopyTo(newphase)
             newproject.AddPhase(newphase)
+            'newproject.AddPhase(newphase, origName:="", parentID:=parentID)
         Next
 
 
@@ -1823,7 +1883,7 @@ Public Class clsProjekt
         Get
             Dim tmpValue(2) As Double
             Dim curMsName As String = ""
-            Dim curPhName As String = ""
+            Dim curPhNameID As String = ""
             Dim curAbstand As Integer = 10000
             Dim tmpAbstand As Integer
             Dim tmpPhase As clsPhase
@@ -1875,8 +1935,8 @@ Public Class clsProjekt
                             tmpDate = tmpPhase.getMilestone(r).getDate
                             tmpAbstand = CInt(DateDiff(DateInterval.Day, refDate, tmpDate))
                             If tmpAbstand > 0 And tmpAbstand < curAbstand Then
-                                curMsName = tmpPhase.getMilestone(r).name
-                                curPhName = tmpPhase.name
+                                curMsName = tmpPhase.getMilestone(r).nameID
+                                curPhNameID = tmpPhase.nameID
                                 curAbstand = tmpAbstand
                                 chkDate1 = tmpDate
                                 tmpColor = tmpPhase.getMilestone(r).getBewertung(1).colorIndex
@@ -1887,7 +1947,7 @@ Public Class clsProjekt
                         ' falls es in dieser Phase keinen Meilenstein gab ... oder falls das Phasen Ende noch vor dem Meilenstein lag
                         If tmpPhase.dauerInDays > nullWert And tmpPhase.dauerInDays - nullWert < curAbstand Then
                             curMsName = ""
-                            curPhName = tmpPhase.name
+                            curPhNameID = tmpPhase.nameID
                             curAbstand = tmpPhase.dauerInDays - nullWert
                             chkDate1 = tmpDate
                             If tmpColor = -1 Then
@@ -1898,10 +1958,10 @@ Public Class clsProjekt
                     Next
 
                     ' jetzt ist sichergestellt , daß es zumindest curPhName (current PhaseName) gibt, evtl auch curMsName (current MilestoneName)
-                    If curPhName <> "" Then
+                    If curPhNameID <> "" Then
                         vglWert1 = curAbstand + nullWert
                         ' jetzt muss der Vergleichswert2 bestimmt werden ...
-                        tmpPhase = vproj.getPhase(curPhName)
+                        tmpPhase = vproj.getPhaseByID(curPhNameID)
 
                         If IsNothing(tmpPhase) Then
                             ' im vergleichsprojekt gibt es die Phase gar nicht , also muss auf das Gesamtprojekt verglichen werden 
@@ -1918,7 +1978,7 @@ Public Class clsProjekt
                                 If IsNothing(tmpResult) Then
 
                                     ' die beiden Phasen-Ende als Vergleichskriterien nehmen 
-                                    With Me.getPhase(curPhName)
+                                    With Me.getPhaseByID(curPhNameID)
                                         vglWert1 = .startOffsetinDays + .dauerInDays
                                         chkDate1 = .getEndDate
                                     End With
@@ -1938,7 +1998,7 @@ Public Class clsProjekt
                                 End If
 
                             Else
-                                With Me.getPhase(curPhName)
+                                With Me.getPhaseByID(curPhNameID)
                                     vglWert1 = .startOffsetinDays + .dauerInDays
                                     chkDate1 = .getEndDate
                                 End With
@@ -2009,7 +2069,7 @@ Public Class clsProjekt
         Get
             Dim tmpValue(2) As Double
             Dim curMsName As String = ""
-            Dim curPhName As String = ""
+            Dim curPhNameID As String = ""
             Dim curAbstand As Integer = 10000
             Dim tmpAbstand As Integer
             Dim tmpPhase As clsPhase
@@ -2055,8 +2115,8 @@ Public Class clsProjekt
                         tmpDate = tmpPhase.getMilestone(r).getDate
                         tmpAbstand = CInt(DateDiff(DateInterval.Day, refDate, tmpDate))
                         If tmpAbstand > 0 And tmpAbstand < curAbstand Then
-                            curMsName = tmpPhase.getMilestone(r).name
-                            curPhName = tmpPhase.name
+                            curMsName = tmpPhase.getMilestone(r).nameID
+                            curPhNameID = tmpPhase.nameID
                             curAbstand = tmpAbstand
                             chkDate1 = tmpDate
                             tmpColor = tmpPhase.getMilestone(r).getBewertung(1).colorIndex
@@ -2067,7 +2127,7 @@ Public Class clsProjekt
                     ' falls es in dieser Phase keinen Meilenstein gab ... oder falls das Phasen Ende noch vor dem Meilenstein lag
                     If tmpPhase.dauerInDays > nullWert And tmpPhase.dauerInDays - nullWert < curAbstand Then
                         curMsName = ""
-                        curPhName = tmpPhase.name
+                        curPhNameID = tmpPhase.nameID
                         curAbstand = tmpPhase.dauerInDays - nullWert
                         chkDate1 = tmpDate
                         If tmpColor = -1 Then
@@ -2078,10 +2138,10 @@ Public Class clsProjekt
                 Next
 
                 ' jetzt ist sichergestellt , daß es zumindest curPhName (current PhaseName) gibt, evtl auch curMsName (current MilestoneName)
-                If curPhName <> "" Then
+                If curPhNameID <> "" Then
                     vglWert1 = curAbstand + nullWert
                     ' jetzt muss der Vergleichswert2 bestimmt werden ...
-                    tmpPhase = vproj.getPhase(curPhName)
+                    tmpPhase = vproj.getPhaseByID(curPhNameID)
 
                     If IsNothing(tmpPhase) Then
                         ' im vergleichsprojekt gibt es die Phase gar nicht , also muss auf das Gesamtprojekt verglichen werden 
@@ -2098,7 +2158,7 @@ Public Class clsProjekt
                             If IsNothing(tmpResult) Then
 
                                 ' die beiden Phasen-Ende als Vergleichskriterien nehmen 
-                                With Me.getPhase(curPhName)
+                                With Me.getPhaseByID(curPhNameID)
                                     vglWert1 = .startOffsetinDays + .dauerInDays
                                     chkDate1 = .getEndDate
                                 End With
@@ -2118,7 +2178,7 @@ Public Class clsProjekt
                             End If
 
                         Else
-                            With Me.getPhase(curPhName)
+                            With Me.getPhaseByID(curPhNameID)
                                 vglWert1 = .startOffsetinDays + .dauerInDays
                                 chkDate1 = .getEndDate
                             End With
@@ -2409,7 +2469,7 @@ Public Class clsProjekt
     Public Sub calculateShapeCoord(ByVal phaseNr As Integer, ByRef zeilenOffset As Integer,
                                        ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
         Dim cphase As clsPhase
-        Dim phasenName As String
+        'Dim phasenNameID As String
         Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
 
 
@@ -2422,7 +2482,7 @@ Public Class clsProjekt
 
             With Me.getPhase(i)
 
-                phasenName = .name
+                'phasenNameID = .nameID
                 If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
                     zeilenOffset = zeilenOffset + 1
                     lastEndDate = StartofCalendar.AddDays(-1)
@@ -2471,7 +2531,7 @@ Public Class clsProjekt
 
 
             Else
-                Throw New ArgumentException("es kann kein Shape berechnet werden für : " & cphase.name)
+                Throw New ArgumentException("es kann kein Shape berechnet werden für : " & cphase.nameID)
             End If
 
         Catch ex As Exception

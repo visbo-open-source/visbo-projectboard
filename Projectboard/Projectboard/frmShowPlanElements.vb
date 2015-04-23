@@ -7,6 +7,8 @@ Public Class frmShowPlanElements
 
     ' kann von ausserhalb gesetzt werden; gibt an ob das ganze Portfolio angezeigt werden soll
     ' oder nur die selektierten Projekte 
+    Friend useHierarchyforSelection As Boolean
+
     Friend showModePortfolio As Boolean
     Friend menuOption As Integer
     Friend chkbxShowObjects As Boolean
@@ -27,6 +29,8 @@ Public Class frmShowPlanElements
     Private selectedRoles As New Collection
     Private selectedBUs As New Collection
     Private selectedTyps As New Collection
+
+    Private hry As clsHierarchy
 
     'Private sKeyMilestones As String = ""
     'Private sKeyPhases As String = ""
@@ -81,9 +85,12 @@ Public Class frmShowPlanElements
         statusLabel.Text = ""
         statusLabel.Visible = True
 
-        Dim nrShapes As Integer = appearanceDefinitions.Count
-
-
+        ' es wird ein Treeview gemacht, der alles enthält: sowohl Phasen als auch Meilensteine 
+        If useHierarchyforSelection Then
+            hry = Projektvorlagen.getProject("rel 5 E-07").hierarchy
+            Call buildHryTreeView()
+        End If
+        
         ' jetzt werden anhand des letzten Filters die Collections gesetzt 
         Call retrieveSelections("Last", menuOption, selectedBUs, selectedTyps, _
                                 selectedPhases, selectedMilestones, _
@@ -142,7 +149,7 @@ Public Class frmShowPlanElements
         If Me.rdbPhases.Checked = True Then
 
             selectedPhases.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 If Not selectedPhases.Contains(element) Then
                     selectedPhases.Add(element, element)
                 End If
@@ -152,7 +159,7 @@ Public Class frmShowPlanElements
         ElseIf Me.rdbMilestones.Checked = True Then
 
             selectedMilestones.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 If Not selectedMilestones.Contains(element) Then
                     selectedMilestones.Add(element, element)
                 End If
@@ -161,7 +168,7 @@ Public Class frmShowPlanElements
         ElseIf rdbRoles.Checked = True Then
 
             selectedRoles.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 If Not selectedRoles.Contains(element) Then
                     selectedRoles.Add(element, element)
                 End If
@@ -170,7 +177,7 @@ Public Class frmShowPlanElements
         ElseIf rdbCosts.Checked = True Then
 
             selectedCosts.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 If Not selectedCosts.Contains(element) Then
                     selectedCosts.Add(element, element)
                 End If
@@ -179,7 +186,7 @@ Public Class frmShowPlanElements
         ElseIf rdbBU.Checked = True Then
 
             selectedBUs.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 If Not selectedBUs.Contains(element) Then
                     selectedBUs.Add(element, element)
                 End If
@@ -188,7 +195,7 @@ Public Class frmShowPlanElements
         ElseIf rdbTyp.Checked = True Then
 
             selectedTyps.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 If Not selectedTyps.Contains(element) Then
                     selectedTyps.Add(element, element)
                 End If
@@ -248,7 +255,7 @@ Public Class frmShowPlanElements
                         rdbRoles.Enabled = False
                         rdbCosts.Enabled = False
                         filterBox.Enabled = False
-                        ListBox1.Enabled = False
+                        nameListBox.Enabled = False
                         OKButton.Enabled = False
                         repVorlagenDropbox.Enabled = False
                         AbbrButton.Cursor = Cursors.Arrow
@@ -273,7 +280,7 @@ Public Class frmShowPlanElements
 
                 End If
 
-                
+
 
 
             Else
@@ -367,13 +374,13 @@ Public Class frmShowPlanElements
                     And validOption Then
 
                 Try
-                    Call createExcelExportFromSelection(filterName) 
+                    Call createExcelExportFromSelection(filterName)
 
                     Call MsgBox("ok, Excel File in " & exportFilesOrdner & " erzeugt")
                 Catch ex As Exception
                     Call MsgBox(ex.Message)
                 End Try
-                
+
 
 
 
@@ -418,24 +425,36 @@ Public Class frmShowPlanElements
     ''' <remarks></remarks>
     Private Sub rdbPhases_CheckedChanged(sender As Object, e As EventArgs) Handles rdbPhases.CheckedChanged
 
-        Dim i As Integer
+        'Dim i As Integer
         statusLabel.Text = ""
 
         If Me.rdbPhases.Checked Then
             ' clear Listbox1 
             headerLine.Text = "Phasen"
-            ListBox1.Items.Clear()
-            ListBox2.Items.Clear()
+            nameListBox.Items.Clear()
+            selNameListBox.Items.Clear()
             filterBox.Text = ""
 
             chkbxOneChart.Text = "Alles in einem Chart"
 
 
-            If allPhases.Count = 0 Then
-                For i = 1 To PhaseDefinitions.Count
-                    allPhases.Add(CStr(PhaseDefinitions.getPhaseDef(i).name))
-                Next
+            ' wäre es nicht besser, hier alle vorkommenden Phasen zu zeigen ? 
+            ' ggf noch zu tun , Stand 150421
+
+            If Not useHierarchyforSelection Then
+                If selectedProjekte.Count > 0 Then
+                    allPhases = selectedProjekte.getPhaseNames
+                Else
+                    allPhases = ShowProjekte.getPhaseNames
+                End If
             End If
+            
+
+            'If allPhases.Count = 0 Then
+            '    For i = 1 To PhaseDefinitions.Count
+            '        allPhases.Add(CStr(PhaseDefinitions.getPhaseDef(i).name))
+            '    Next
+            'End If
 
 
             Call rebuildFormerState(PTauswahlTyp.phase)
@@ -447,7 +466,7 @@ Public Class frmShowPlanElements
 
             ' Merken welches die selektierten Phasen waren 
             selectedPhases.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 selectedPhases.Add(element, element)
             Next
 
@@ -462,19 +481,28 @@ Public Class frmShowPlanElements
         If Me.rdbMilestones.Checked Then
             ' clear Listbox1 
             headerLine.Text = "Meilensteine"
-            ListBox1.Items.Clear()
-            ListBox2.Items.Clear()
+            nameListBox.Items.Clear()
+            selNameListBox.Items.Clear()
 
             filterBox.Text = ""
 
             chkbxOneChart.Text = "Alles in einem Chart"
 
-            If allMilestones.Count = 0 Then
-
-                For i As Integer = 1 To MilestoneDefinitions.Count
-                    allMilestones.Add(MilestoneDefinitions.elementAt(i - 1).name)
-                Next
+            If Not useHierarchyforSelection Then
+                If selectedProjekte.Count > 0 Then
+                    allMilestones = selectedProjekte.getMilestoneNames
+                Else
+                    allPhases = ShowProjekte.getMilestoneNames
+                End If
             End If
+
+            '' hier muss alles eingetragen werden, was an Meilensteinen da ist ... 
+            'If allMilestones.Count = 0 Then
+
+            '    For i As Integer = 1 To MilestoneDefinitions.Count
+            '        allMilestones.Add(MilestoneDefinitions.elementAt(i - 1).name)
+            '    Next
+            'End If
 
 
             Call rebuildFormerState(PTauswahlTyp.meilenstein)
@@ -485,7 +513,7 @@ Public Class frmShowPlanElements
 
             ' Merken welches die selektierten Phasen waren 
             selectedMilestones.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 selectedMilestones.Add(element, element)
             Next
 
@@ -511,8 +539,8 @@ Public Class frmShowPlanElements
             If Me.rdbRoles.Checked Then
                 ' clear Listbox1 
                 headerLine.Text = "Rollen"
-                ListBox1.Items.Clear()
-                ListBox2.Items.Clear()
+                nameListBox.Items.Clear()
+                selNameListBox.Items.Clear()
                 filterBox.Text = ""
                 chkbxOneChart.Text = "Alles in einem Chart"
 
@@ -534,7 +562,7 @@ Public Class frmShowPlanElements
 
                 ' Merken welches die selektierten Phasen waren 
                 selectedRoles.Clear()
-                For Each element As String In ListBox2.Items
+                For Each element As String In selNameListBox.Items
                     selectedRoles.Add(element, element)
                 Next
 
@@ -560,8 +588,8 @@ Public Class frmShowPlanElements
             If Me.rdbCosts.Checked Then
                 ' clear Listbox1 
                 headerLine.Text = "Kostenarten"
-                ListBox1.Items.Clear()
-                ListBox2.Items.Clear()
+                nameListBox.Items.Clear()
+                selNameListBox.Items.Clear()
                 filterBox.Text = ""
                 chkbxOneChart.Text = "Alles in einem Chart"
 
@@ -578,7 +606,7 @@ Public Class frmShowPlanElements
                 ' Merken welches die selektierten Phasen waren 
                 selectedCosts.Clear()
                 'For Each element As String In ListBox1.SelectedItems
-                For Each element As String In ListBox2.Items
+                For Each element As String In selNameListBox.Items
                     selectedCosts.Add(element, element)
                 Next
 
@@ -605,8 +633,8 @@ Public Class frmShowPlanElements
             If Me.rdbBU.Checked Then
                 ' clear Listbox1 
                 headerLine.Text = "Business Units"
-                ListBox1.Items.Clear()
-                ListBox2.Items.Clear()
+                nameListBox.Items.Clear()
+                selNameListBox.Items.Clear()
                 filterBox.Text = ""
 
                 If allBUs.Count = 0 Then
@@ -628,7 +656,7 @@ Public Class frmShowPlanElements
                 ' Merken welches die selektierten Phasen waren 
                 selectedBUs.Clear()
 
-                For Each element As String In ListBox2.Items
+                For Each element As String In selNameListBox.Items
                     selectedBUs.Add(element, element)
                 Next
 
@@ -650,8 +678,8 @@ Public Class frmShowPlanElements
             If Me.rdbTyp.Checked Then
                 ' clear Listbox1 
                 headerLine.Text = "Projektvorlagen / Generik"
-                ListBox1.Items.Clear()
-                ListBox2.Items.Clear()
+                nameListBox.Items.Clear()
+                selNameListBox.Items.Clear()
 
                 filterBox.Text = ""
                 chkbxOneChart.Text = "Alles in einem Chart"
@@ -676,7 +704,7 @@ Public Class frmShowPlanElements
                 ' Merken welches die selektierten Phasen waren 
                 selectedTyps.Clear()
 
-                For Each element As String In ListBox2.Items
+                For Each element As String In selNameListBox.Items
                     selectedTyps.Add(element, element)
                 Next
 
@@ -696,7 +724,7 @@ Public Class frmShowPlanElements
             rdbRoles.Enabled = True
             rdbCosts.Enabled = True
             filterBox.Enabled = True
-            ListBox1.Enabled = True
+            nameListBox.Enabled = True
             OKButton.Enabled = True
             AbbrButton.Text = "Zurücksetzen"
             repVorlagenDropbox.Enabled = True
@@ -713,8 +741,8 @@ Public Class frmShowPlanElements
 
 
         Else
-            ListBox1.SelectedItems.Clear()
-            ListBox2.Items.Clear()
+            nameListBox.SelectedItems.Clear()
+            selNameListBox.Items.Clear()
             filterBox.Text = ""
 
             If rdbPhases.Checked Then
@@ -765,15 +793,15 @@ Public Class frmShowPlanElements
 
 
         If filterBox.Text = "" Then
-            ListBox1.Items.Clear()
+            nameListBox.Items.Clear()
             For Each s As String In currentNames
-                ListBox1.Items.Add(s)
+                nameListBox.Items.Add(s)
             Next
         Else
-            ListBox1.Items.Clear()
+            nameListBox.Items.Clear()
             For Each s As String In currentNames
                 If s.Contains(suchstr) Then
-                    ListBox1.Items.Add(s)
+                    nameListBox.Items.Add(s)
                 End If
             Next
         End If
@@ -898,19 +926,24 @@ Public Class frmShowPlanElements
 
         End Select
 
+        ' ist nur notwendig, wenn nicht useHierarchy
+        If Not useHierarchyforSelection Then
 
+            For i = 1 To listOfNames.Count
+                nameListBox.Items.Add(listOfNames.Item(i))
+            Next
 
+        End If
+        
         ' Filter Box Test setzen 
-        For i = 1 To listOfNames.Count
-            ListBox1.Items.Add(listOfNames.Item(i))
-        Next
         filterBox.Text = ""
-
+        
         ' jetzt prüfen, ob selectedphases bereits etwas enthält
         ' wenn ja, dann werden diese Items in Listbox2 dargestellt 
         For Each element As String In tmpCollection
-            ListBox2.Items.Add(element)
+            selNameListBox.Items.Add(element)
         Next
+
     End Sub
 
     Private Sub BackgroundWorker1_Disposed(sender As Object, e As EventArgs) Handles BackgroundWorker1.Disposed
@@ -979,7 +1012,7 @@ Public Class frmShowPlanElements
         Me.rdbRoles.Enabled = True
         Me.rdbCosts.Enabled = True
         Me.filterBox.Enabled = True
-        Me.ListBox1.Enabled = True
+        Me.nameListBox.Enabled = True
         Me.OKButton.Enabled = True
         Me.repVorlagenDropbox.Enabled = True
         Me.Cursor = Cursors.Arrow
@@ -1021,18 +1054,101 @@ Public Class frmShowPlanElements
 
         Dim i As Integer
         Dim element As Object
+        Dim anzahlKnoten As Integer
+        Dim selectedNode As TreeNode
+        Dim elemName As String
+        Dim tmpNode As TreeNode
+        Dim sammelCollection As New Collection
 
-        For i = 1 To ListBox1.SelectedItems.Count
-            element = ListBox1.SelectedItems.Item(i - 1)
-            If ListBox2.Items.Contains(element) Then
-                ' nichts tun 
-            Else
-                ListBox2.Items.Add(element)
-            End If
-        Next
+        If useHierarchyforSelection Then
+
+            anzahlKnoten = hryTreeView.Nodes.Count
+            selectedNode = hryTreeView.SelectedNode
+
+            With hryTreeView
+
+                For px As Integer = 1 To anzahlKnoten
+
+                    tmpNode = .Nodes.Item(px - 1)
+
+                    If tmpNode.Checked Then
+                        ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
+                        elemName = elemNameOfElemID(tmpNode.Name)
+                        tmpNode.Checked = False
+
+                        If Not elemName = "?" Then
+
+                            If Not sammelCollection.Contains(elemName) Then
+
+                                If rdbPhases.Checked Then
+                                    If Not elemIDIstMeilenstein(tmpNode.Name) Then
+                                        sammelCollection.Add(elemName, elemName)
+                                    End If
+
+                                ElseIf rdbMilestones.Checked Then
+                                    If elemIDIstMeilenstein(tmpNode.Name) Then
+                                        sammelCollection.Add(elemName, elemName)
+                                    Else
+                                        ' alle Meilensteine dieser Phase aufsammeln ...
+                                        sammelCollection = ShowProjekte.getMilestonesOfPhase(elemName)
+                                    End If
+                                End If
+
+                            End If
+                        End If
+
+                    End If
+                    
+
+                    If tmpNode.Nodes.Count > 0 Then
+                        Call pickupCheckedItems(tmpNode, sammelCollection)
+                    End If
+
+                Next
+                '' wenn jetzt noch ein zusätzliches Element selektiert war , ggf auch aufnehmen 
+
+                'If Not IsNothing(selectedNode) Then
+
+                '    elemName = elemNameOfElemID(selectedNode.Name)
+                '    If selNameListBox.Items.Contains(elemName) Then
+                '        ' nichts tun 
+                '    Else
+                '        selNameListBox.Items.Add(elemName)
+                '    End If
+
+                'End If
+
+            End With
 
 
-        ListBox1.SelectedItems.Clear()
+
+            ' jetzt muss die selNameListBox aufgebaut werden 
+            For i = 1 To sammelCollection.Count
+                element = CStr(sammelCollection.Item(i))
+                If selNameListBox.Items.Contains(element) Then
+                    ' nichts tun 
+                Else
+                    selNameListBox.Items.Add(element)
+                End If
+            Next
+
+
+
+        Else
+            For i = 1 To nameListBox.SelectedItems.Count
+                element = nameListBox.SelectedItems.Item(i - 1)
+                If selNameListBox.Items.Contains(element) Then
+                    ' nichts tun 
+                Else
+                    selNameListBox.Items.Add(element)
+                End If
+            Next
+
+            nameListBox.SelectedItems.Clear()
+        End If
+
+
+
 
     End Sub
 
@@ -1047,13 +1163,13 @@ Public Class frmShowPlanElements
         Dim element As Object
         Dim removeCollection As New Collection
 
-        For i = 1 To ListBox2.SelectedItems.Count
-            element = ListBox2.SelectedItems.Item(i - 1)
+        For i = 1 To selNameListBox.SelectedItems.Count
+            element = selNameListBox.SelectedItems.Item(i - 1)
             removeCollection.Add(element)
         Next
 
         For Each element In removeCollection
-            ListBox2.Items.Remove(element)
+            selNameListBox.Items.Remove(element)
         Next
 
     End Sub
@@ -1118,7 +1234,7 @@ Public Class frmShowPlanElements
 
     ''' <summary>
     ''' erstellt das Excel Export File für die angegebenen Phasen, Meilensteine, Rollen und Kosten
-    ''' vorläufig nur für Phasen und Rollen realisiert
+    ''' vorläufig nur für Phasen und Meilensteine realisiert
     ''' </summary>
     ''' <param name="filterName">gibt den Namen des Filters an, der die Collections enthält </param>
     ''' <remarks></remarks>
@@ -1178,6 +1294,7 @@ Public Class frmShowPlanElements
 
             If phaseList.Count < selphases.Count Then
                 For Each pObject As Object In selphases
+
                     pName = CStr(pObject)
                     If phaseList.ContainsValue(pName) Then
                         ' sie ist schon eingeordnet und es muss nichts mehr gemacht werden 
@@ -1258,6 +1375,221 @@ Public Class frmShowPlanElements
 
     End Sub
 
-    
+    Private Sub selNameListBox_MouseDoubleClick(sender As Object, e As MouseEventArgs) Handles selNameListBox.MouseDoubleClick
+        Dim elemID As String = ""
+        Dim elemName As String = ""
+        Dim sammelCollection As Collection
+        Dim anzahl As Integer = selNameListBox.SelectedItems.Count
 
+        If rdbPhases.Checked Then
+
+            If anzahl = 1 Then
+                elemID = CStr(selNameListBox.SelectedItem)
+            ElseIf anzahl > 1 Then
+                elemID = CStr(selNameListBox.SelectedItems.Item(1))
+            End If
+
+            'sammelCollection = ShowProjekte.getPhasesOfPhase(elemName)
+        End If
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' baut den TreeView für die Hierarchie auf , Treeview enthält sowohl Meilensteine als auch Phasen
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub buildHryTreeView()
+
+        Dim hryNode As clsHierarchyNode
+        Dim anzChilds As Integer
+        Dim childNameID As String
+        Dim nodeLevel0 As TreeNode
+        Dim nodeLevel1 As TreeNode
+
+        With hryTreeView
+            .Nodes.Clear()
+        End With
+
+        If hry.count >= 1 Then
+            hryNode = hry.nodeItem(rootPhaseName)
+
+            anzChilds = hryNode.childCount
+
+            With hryTreeView
+                .CheckBoxes = True
+
+                For i As Integer = 1 To anzChilds
+
+                    childNameID = hryNode.getChild(i)
+                    nodeLevel0 = .Nodes.Add(elemNameOfElemID(childNameID))
+                    nodeLevel0.Name = childNameID
+
+                    If elemIDIstMeilenstein(childNameID) Then
+                        nodeLevel0.BackColor = System.Drawing.Color.Azure
+
+                    End If
+
+
+                    If hry.nodeItem(childNameID).childCount > 0 Then
+                        nodeLevel0.Tag = "P"
+                        nodeLevel1 = nodeLevel0.Nodes.Add("-")
+                        nodeLevel1.Tag = "P"
+                    Else
+                        nodeLevel0.Tag = "X"
+                    End If
+
+
+                Next
+
+            End With
+
+        Else
+            Call MsgBox("es ist keine Hierarchie gegeben")
+        End If
+    End Sub
+
+    Private Sub hryTreeView_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles hryTreeView.AfterSelect
+
+    End Sub
+
+    Private Sub hryTreeView_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles hryTreeView.BeforeExpand
+
+        Dim node As TreeNode
+        Dim childNode As TreeNode
+        Dim placeholder As TreeNode
+        Dim elemID As String
+        Dim hryNode As clsHierarchyNode
+        Dim anzChilds As Integer
+        Dim childNameID As String
+
+        node = e.Node
+        elemID = node.Name
+
+        ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
+        If node.Tag = "P" Then
+
+            node.Tag = "X"
+
+            ' Löschen von Platzhalter
+            node.Nodes.Clear()
+
+            hryNode = hry.nodeItem(elemID)
+
+            anzChilds = hryNode.childCount
+
+            With hryTreeView
+                .CheckBoxes = True
+
+                For i As Integer = 1 To anzChilds
+
+                    childNameID = hryNode.getChild(i)
+                    childNode = node.Nodes.Add(elemNameOfElemID(childNameID))
+                    childNode.Name = childNameID
+
+
+                    If elemIDIstMeilenstein(childNameID) Then
+                        childNode.BackColor = System.Drawing.Color.Azure
+                    End If
+
+
+                    If hry.nodeItem(childNameID).childCount > 0 Then
+                        childNode.Tag = "P"
+                        placeholder = childNode.Nodes.Add("-")
+                        placeholder.Tag = "P"
+                    Else
+                        childNode.Tag = "X"
+                    End If
+
+
+                Next
+
+            End With
+
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt alle Namen von Knoten, die "gecheckt" sind, in der nameList zurück  
+    ''' wird rekursiv aufgerufen 
+    ''' Achtung: wenn es Endlos Zyklen gibt, dann ist hier eine Endlos-Schleife ! 
+    ''' </summary>
+    ''' <param name="node"></param>
+    ''' <param name="sammelCollection"></param>
+    ''' <remarks></remarks>
+    Private Sub pickupCheckedItems(ByVal node As TreeNode, ByRef sammelCollection As Collection)
+
+        Dim tmpNode As TreeNode
+        Dim elemName As String
+
+        If IsNothing(node) Then
+            ' nichts tun
+        Else
+
+            Dim anzahlKnoten As Integer = node.Nodes.Count
+
+            With node
+
+                For px As Integer = 1 To anzahlKnoten
+
+                    tmpNode = .Nodes.Item(px - 1)
+                    If tmpNode.Checked Then
+
+                        tmpNode.Checked = False
+                        elemName = elemNameOfElemID(tmpNode.Name)
+
+                        If Not elemName = "?" Then
+
+                            If Not sammelCollection.Contains(elemName) Then
+
+                                If rdbPhases.Checked Then
+                                    If Not elemIDIstMeilenstein(tmpNode.Name) Then
+                                        sammelCollection.Add(elemName, elemName)
+                                    End If
+                                ElseIf rdbMilestones.Checked Then
+                                    If elemIDIstMeilenstein(tmpNode.Name) Then
+                                        sammelCollection.Add(elemName, elemName)
+                                    Else
+                                        ' alle Meilensteine dieser Phase aufsammeln ...
+                                        Dim tmpCollection As Collection
+                                        tmpCollection = ShowProjekte.getMilestonesOfPhase(elemName)
+
+                                        ' Übertragen der Ergebnisse in zwischen result
+                                        For i As Integer = 1 To tmpCollection.Count
+                                            Dim newItem As String = CStr(tmpCollection.Item(i))
+                                            If Not sammelCollection.Contains(newItem) Then
+                                                sammelCollection.Add(newItem, newItem)
+                                            End If
+                                        Next
+
+                                    End If
+                                End If
+
+                            End If
+
+                        End If
+
+                    End If
+                    
+                    If tmpNode.Nodes.Count > 0 Then
+                        Call pickupCheckedItems(tmpNode, sammelCollection)
+                    End If
+
+                Next
+
+            End With
+
+        End If
+
+
+
+    End Sub
+
+   
+    Private Sub hryStufenLabel_Click(sender As Object, e As EventArgs) Handles hryStufenLabel.Click
+
+    End Sub
 End Class

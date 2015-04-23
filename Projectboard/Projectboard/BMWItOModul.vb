@@ -55,7 +55,7 @@ Module BMWItOModul
         Dim startoffset As Long, duration As Long
         Dim vorlagenName As String = ""
 
-        Dim itemName As String
+        Dim itemName As String = ""
         Dim zufall As New Random(10)
         Dim colProtocol As Integer
 
@@ -379,11 +379,10 @@ Module BMWItOModul
 
                         ' jetzt wird die Projekt-Hierarchie neu angelegt 
                         ' die erste Phase, die sogenannte Root Phase hat immer diesen Namen: 
-                        Dim elemKey As String = calcHryElemKey(".", False)
 
                         ' jetzt werden all die Phasen angelegt , beginnend mit der ersten 
                         cphase = New clsPhase(parent:=hproj)
-                        cphase.name = elemKey
+                        cphase.nameID = rootPhaseName
                         startoffset = 0
                         duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
                         cphase.changeStartandDauer(startoffset, duration)
@@ -391,8 +390,8 @@ Module BMWItOModul
                         hproj.AddPhase(cphase)
 
                         Try
-                            pHierarchy.add(cphase, elemKey, 0)
-                            origHierarchy.add(cphase, elemKey, 0)
+                            pHierarchy.add(cphase, rootPhaseName, 0)
+                            origHierarchy.add(cphase, rootPhaseName, 0)
                         Catch ex As Exception
 
                         End Try
@@ -408,6 +407,8 @@ Module BMWItOModul
                         ' ist notwendig um anhand der führenden Blanks die Hierarchie Stufe zu bestimmen 
                         Dim origItem As String = ""
 
+                        ' 
+                        ' Schleife, um alle Elemente des Projektes auszulesen
                         ' hier werden jetzt die einzelnen Zeilen = Phasen oder Meilensteine ausgelesen 
                         For curZeile = anfang To ende
 
@@ -416,98 +417,129 @@ Module BMWItOModul
                             txtAbbrev = ""
                             logMessage = ""
 
-
+                            Dim indentLevel As Integer
 
                             Try
 
                                 origItem = CStr(CType(.Cells(curZeile, colName), Excel.Range).Value)
-                                itemName = origItem.Trim
 
-                                anzProcessedElements = anzProcessedElements + 1
+                                If origItem.Trim.Length = 0 Then
 
-                                CType(activeWSListe.Cells(curZeile, colProtocol + 2), Excel.Range).Value = origItem.Trim
-                                CType(activeWSListe.Cells(curZeile, colProtocol), Excel.Range).Value = completeName
-                                CType(activeWSListe.Cells(curZeile, colProtocol + 5), Excel.Range).Value = currentDateiName
+                                    CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
+                                                "leerer String wird ignoriert .."
+                                    ok = False
 
-
-                                ' Änderung 26.1.15 Ignorieren 
-
-                                itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
-                                itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
-
-                                If DateDiff(DateInterval.Day, itemStartDate, itemEndDate) = 0 Then
-                                    isMilestone = True
                                 Else
-                                    isMilestone = False
-                                End If
 
-                                If itemName = "Projektphasen" Then
-                                    Try
-                                        Dim tmpBU As String
-                                        If colProduktlinie > 0 Then
-                                            tmpBU = CStr(CType(.Cells(curZeile, colProduktlinie), Excel.Range).Value).Trim
+                                    ' bestimme den Indent-Level 
+                                    indentLevel = pHierarchy.getLevel(origItem)
+                                    ' hier checken, ob indentlevel > lastduplicateIndent; 
+                                    ' wenn ja, dann protokollieren, Next for und lastduplicateIndent wieder auf hohen Wert setzen
+
+                                    If indentLevel > lastDuplicateIndent Then
+                                        ' Skip , weil es sich dann um Elemente handelt, deren Parent Phase als Duplikat ignoriert wurde 
+                                        ' Protokollieren ...
+
+                                        CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
+                                                    "ist Kind eines doppelten/nicht zugelassenen Elements und wird ignoriert"
+
+                                        ok = False
+
+                                    Else
+                                        lastDuplicateIndent = 1000000
+
+                                        itemName = origItem.Trim
+
+                                        anzProcessedElements = anzProcessedElements + 1
+
+                                        CType(activeWSListe.Cells(curZeile, colProtocol + 2), Excel.Range).Value = origItem.Trim
+                                        CType(activeWSListe.Cells(curZeile, colProtocol), Excel.Range).Value = completeName
+                                        CType(activeWSListe.Cells(curZeile, colProtocol + 5), Excel.Range).Value = currentDateiName
+
+
+                                        ' Änderung 26.1.15 Ignorieren 
+
+                                        itemStartDate = CDate(CType(.Cells(curZeile, colAnfang), Excel.Range).Value)
+                                        itemEndDate = CDate(CType(.Cells(curZeile, colEnde), Excel.Range).Value)
+
+                                        If DateDiff(DateInterval.Day, itemStartDate, itemEndDate) = 0 Then
+                                            isMilestone = True
                                         Else
-                                            tmpBU = ""
+                                            isMilestone = False
                                         End If
 
-
-                                        ' gibt es die Business Unit ? 
-                                        found = False
-                                        Dim bix As Integer = 1
-
-                                        If tmpBU.Length > 0 Then
-                                            While bix <= businessUnitDefinitions.Count And Not found
-                                                If businessUnitDefinitions.ElementAt(bix - 1).Value.name = tmpBU Then
-
-                                                    found = True
-                                                    hproj.businessUnit = tmpBU
-                                                    CType(activeWSListe.Cells(curZeile, colProtocol - 1), Excel.Range).Value = tmpBU
-
+                                        If itemName = "Projektphasen" Then
+                                            Try
+                                                Dim tmpBU As String
+                                                If colProduktlinie > 0 Then
+                                                    tmpBU = CStr(CType(.Cells(curZeile, colProduktlinie), Excel.Range).Value).Trim
                                                 Else
-                                                    bix = bix + 1
+                                                    tmpBU = ""
                                                 End If
-                                            End While
+
+
+                                                ' gibt es die Business Unit ? 
+                                                found = False
+                                                Dim bix As Integer = 1
+
+                                                If tmpBU.Length > 0 Then
+                                                    While bix <= businessUnitDefinitions.Count And Not found
+                                                        If businessUnitDefinitions.ElementAt(bix - 1).Value.name = tmpBU Then
+
+                                                            found = True
+                                                            hproj.businessUnit = tmpBU
+                                                            CType(activeWSListe.Cells(curZeile, colProtocol - 1), Excel.Range).Value = tmpBU
+
+                                                        Else
+                                                            bix = bix + 1
+                                                        End If
+                                                    End While
+                                                End If
+
+                                                If Not found Then
+
+                                                    CType(activeWSListe.Cells(curZeile, colProtocol - 1), Excel.Range).Value = hproj.businessUnit
+
+                                                End If
+
+                                            Catch ex1 As Exception
+
+                                            End Try
                                         End If
 
-                                        If Not found Then
+                                        ' jetzt prüfen, ob es sich um ein grundsätzlich zu ignorierendes Element handelt .. 
+                                        If isMilestone Then
+                                            If MilestoneDefinitions.Contains(itemName) Then
+                                                ok = True
+                                            ElseIf milestoneMappings.tobeIgnored(itemName) Then
+                                                CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
+                                                                "nicht zugelassen (Ignore)"
+                                                ok = False
+                                                lastDuplicateIndent = indentLevel
+                                            Else
+                                                ok = True
+                                            End If
 
-                                            CType(activeWSListe.Cells(curZeile, colProtocol - 1), Excel.Range).Value = hproj.businessUnit
+
+                                        Else
+
+                                            If PhaseDefinitions.Contains(itemName) Then
+                                                ok = True
+                                            ElseIf phaseMappings.tobeIgnored(itemName) Then
+                                                CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
+                                                                "nicht zugelassen (Ignore)"
+                                                lastDuplicateIndent = indentLevel
+                                                ok = False
+                                            Else
+                                                ok = True
+
+                                            End If
 
                                         End If
 
-                                    Catch ex1 As Exception
-
-                                    End Try
-                                End If
-
-                                ' jetzt prüfen, ob es sich um ein grundsätzlich zu ignorierendes Element handelt .. 
-                                If isMilestone Then
-                                    If MilestoneDefinitions.Contains(itemName) Then
-                                        ok = True
-                                    ElseIf milestoneMappings.tobeIgnored(itemName) Then
-                                        CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
-                                                        "nicht zugelassen (Ignore)"
-                                        ok = False
-                                    Else
-                                        ok = True
-                                    End If
-
-
-                                Else
-
-                                    If PhaseDefinitions.Contains(itemName) Then
-                                        ok = True
-                                    ElseIf phaseMappings.tobeIgnored(itemName) Then
-                                        CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
-                                                        "nicht zugelassen (Ignore)"
-                                        ok = False
-                                    Else
-                                        ok = True
-
                                     End If
 
                                 End If
-
 
                             Catch ex As Exception
                                 itemName = ""
@@ -578,7 +610,7 @@ Module BMWItOModul
 
                                     Dim ophase As clsPhase
                                     ophase = New clsPhase(parent:=hproj)
-                                    ophase.name = origItem.Trim
+                                    ophase.nameID = calcHryElemKey(origItem.Trim, False)
                                     'ophase.changeStartandDauer(startoffset, duration)
 
                                     Try
@@ -599,174 +631,316 @@ Module BMWItOModul
                                     ' es handelt sich um eine Phase 
 
 
+                                    parentElemName = pHierarchy.getPhaseBeforeLevel(indentLevel).name
+                                        ' das folgende wurde am 31.3. ergänzt, um die Hierarchie aufbauen zu können
+                                    parentNodeID = pHierarchy.getIDBeforeLevel(indentLevel)
 
-                                    If itemName.Length = 0 Then
+                                    ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
+                                    Try
 
-                                        CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
-                                                "leerer String wurde ignoriert  "
-                                        anzIgnored = anzIgnored + 1
-
-                                    Else
-                                        Dim indentLevel As Integer
-                                        ' bestimme den Indent-Level , damit die Hierarchie
-
-
-                                        indentLevel = pHierarchy.getLevel(origItem)
-
-                                        If indentLevel > lastDuplicateIndent Then
-                                            ' Skip , weil es sich dann um Elemente handelt, deren Parent Phase als Duplikat ignoriert wurde 
-                                            ' Protokollieren ...
-
-                                            CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
-                                                        "ist Kind eines doppelten/nicht zugelassenen Elements und wird ignoriert"
-                                            anzIgnored = anzIgnored + 1
-
+                                        If Not PhaseDefinitions.Contains(itemName) Then
+                                            stdName = phaseMappings.mapToStdName(parentElemName, itemName)
                                         Else
-                                            ' wieder zurücksetzen, also auf einen astronomisch hohen wert setzen
-                                            lastDuplicateIndent = 1000000
+                                            stdName = itemName
+                                        End If
 
-                                            parentElemName = elemNameOfElemID(pHierarchy.getPhaseBeforeLevel(indentLevel).name)
-                                            ' das folgende wurde am 31.3. ergänzt, um die Hierarchie aufbauen zu können
-                                            parentNodeID = pHierarchy.getIDBeforeLevel(indentLevel)
+                                    Catch ex As Exception
+                                        stdName = itemName
+                                    End Try
 
-                                            ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
-                                            Try
+                                    elemID = calcHryElemKey(stdName, False)
 
-                                                If Not PhaseDefinitions.Contains(itemName) Then
-                                                    stdName = phaseMappings.mapToStdName(parentElemName, itemName)
+                                    Dim ok1 As Boolean
+                                    Dim ueberdeckung As Double
+
+                                    ' jetzt muss geprüft werden, ob der ggf bereits korrigierte Std-Name überhaupt in der 
+                                    ' Positiv Liste enthalten ist 
+                                    ' wenn nein, dann soll das Element nicht aufgenommen werden 
+
+                                    ' wenn dieses Projekt diese Phase bereits enthält ...
+
+                                    If hproj.hierarchy.containsKey(elemID) Then
+
+                                        ' PT-79 toleranz für Identität von Phasen
+                                        Dim vglPhase As clsPhase = hproj.getPhaseByID(elemID)
+                                        ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
+                                                                  itemStartDate, itemEndDate)
+
+                                        ' wenn diese Phase zwar den gleichen Namen aber andere Start-/Ende Daten hat ...
+                                        ' dann wird ein neues Element mit lfd_Nr erzeugt 
+
+                                        If ueberdeckung < 0.95 Then
+                                            Dim lfdNr As Integer = 2
+                                            elemID = calcHryElemKey(stdName, False, lfdNr)
+                                            found = False
+
+                                            Do While hproj.hierarchy.containsKey(elemID) And Not found
+
+                                                vglPhase = hproj.getPhaseByID(elemID)
+                                                ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
+                                                                  itemStartDate, itemEndDate)
+
+                                                'If vglPhase.startOffsetinDays <> startoffset Or vglPhase.dauerInDays <> duration Then
+                                                If ueberdeckung < 0.95 Then
+                                                    lfdNr = lfdNr + 1
+                                                    elemID = calcHryElemKey(stdName, False, lfdNr)
                                                 Else
-                                                    stdName = itemName
+                                                    found = True
                                                 End If
 
-                                            Catch ex As Exception
-                                                stdName = itemName
-                                            End Try
+                                            Loop
 
-                                            elemID = calcHryElemKey(stdName, False)
-
-                                            Dim ok1 As Boolean
-                                            Dim ueberdeckung As Double
-
-                                            ' jetzt muss geprüft werden, ob der ggf bereits korrigierte Std-Name überhaupt in der 
-                                            ' Positiv Liste enthalten ist 
-                                            ' wenn nein, dann soll das Element nicht aufgenommen werden 
-                                            If PhaseDefinitions.Contains(stdName) Then
-
-                                                ' wenn dieses Projekt diese Phase bereits enthält ...
-
-                                                If hproj.hierarchy.containsKey(elemID) Then
-
-                                                    ' PT-79 toleranz für Identität von Phasen
-                                                    Dim vglPhase As clsPhase = hproj.getPhaseByID(elemID)
-                                                    ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
-                                                                              itemStartDate, itemEndDate)
-
-                                                    ' wenn diese Phase zwar den gleichen Namen aber andere Start-/Ende Daten hat ...
-                                                    ' dann wird ein neues Element mit lfd_Nr erzeugt 
-
-                                                    If ueberdeckung < 0.95 Then
-                                                        Dim lfdNr As Integer = 2
-                                                        elemID = calcHryElemKey(stdName, False, lfdNr)
-                                                        found = False
-
-                                                        Do While hproj.hierarchy.containsKey(elemID) And Not found
-
-                                                            vglPhase = hproj.getPhaseByID(elemID)
-                                                            ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
-                                                                              itemStartDate, itemEndDate)
-
-                                                            'If vglPhase.startOffsetinDays <> startoffset Or vglPhase.dauerInDays <> duration Then
-                                                            If ueberdeckung < 0.95 Then
-                                                                lfdNr = lfdNr + 1
-                                                                elemID = calcHryElemKey(stdName, False, lfdNr)
-                                                            Else
-                                                                found = True
-                                                            End If
-
-                                                        Loop
-
-                                                        If Not found Then
-                                                            ' Änderung tk 31.3.15 - nicht mehr nötig 
-                                                            'stdName = newElemID
-                                                            'listOfProjectPhases.Add(stdName, parentPhaseName)
-                                                            ok1 = True
-                                                        Else
-                                                            ok1 = False
-                                                            logMessage = "(" & stdName & " " & lfdNr.ToString & ")" & _
-                                                                " ist doppelt und wird ignoriert "
-                                                        End If
-
-
-                                                    Else
-                                                        ' in diesem Fall ist die Phase doppelt und soll nicht weiter berücksichtigt werden ...
-                                                        ok1 = False
-                                                        logMessage = "ist doppelt und wird ignoriert "
-                                                    End If
-
-
-
-                                                Else
-                                                    'listOfProjectPhases.Add(stdName, parentPhaseName)
-                                                    ok1 = True
-                                                End If
+                                            If Not found Then
+                                                ' Änderung tk 31.3.15 - nicht mehr nötig 
+                                                'stdName = newElemID
+                                                'listOfProjectPhases.Add(stdName, parentPhaseName)
+                                                ok1 = True
                                             Else
-
-                                                Dim hphaseDef As clsPhasenDefinition
-                                                hphaseDef = New clsPhasenDefinition
-
-                                                hphaseDef.darstellungsKlasse = txtVorgangsKlasse
-                                                hphaseDef.shortName = txtAbbrev
-                                                hphaseDef.name = stdName
-                                                hphaseDef.UID = phaseIX
-                                                phaseIX = phaseIX + 1
-
-
-                                                If isVorlage Then
-                                                    ok1 = True
-
-                                                    ' in die Phase-Definitions aufnehmen 
-                                                    Try
-                                                        PhaseDefinitions.Add(hphaseDef)
-                                                    Catch ex As Exception
-                                                    End Try
-                                                Else
-                                                    ' Änderung tk: es sollen die nicht bekannten Elemente nicht mehr ausgegrenzt werden ! 
-                                                    ok1 = True
-                                                    'ok1 = False
-                                                    'logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten "
-
-
-                                                    ' in die Missing Phase-Definitions aufnehmen 
-                                                    Try
-                                                        missingPhaseDefinitions.Add(hphaseDef)
-                                                    Catch ex As Exception
-                                                    End Try
-
-
-                                                End If
-
-
+                                                ok1 = False
+                                                logMessage = "(" & stdName & " " & lfdNr.ToString & ")" & _
+                                                    " ist doppelt und wird ignoriert "
                                             End If
 
 
+                                        Else
+                                            ' in diesem Fall ist die Phase doppelt und soll nicht weiter berücksichtigt werden ...
+                                            ok1 = False
+                                            logMessage = "ist doppelt und wird ignoriert "
+                                        End If
+
+                                    Else
+                                        'listOfProjectPhases.Add(stdName, parentPhaseName)
+                                        ok1 = True
+                                    End If
+
+                                        ' jetzt muss geprüft werden, ob das Element in Std Definitions aufgenommen werden muss 
+                                    If Not PhaseDefinitions.Contains(stdName) Then
+
+                                        Dim hphaseDef As clsPhasenDefinition
+                                        hphaseDef = New clsPhasenDefinition
+
+                                        hphaseDef.darstellungsKlasse = txtVorgangsKlasse
+                                        hphaseDef.shortName = txtAbbrev
+                                        hphaseDef.name = stdName
+                                        hphaseDef.UID = phaseIX
+                                        phaseIX = phaseIX + 1
 
 
-                                            If ok1 Then
+                                        If isVorlage Then
+                                            ' in die Phase-Definitions aufnehmen 
+                                            Try
+                                                PhaseDefinitions.Add(hphaseDef)
+                                            Catch ex As Exception
+                                            End Try
+                                        Else
+                                            ' Änderung tk: es sollen die nicht bekannten Elemente nicht mehr ausgegrenzt werden ! 
+                                            ' wenn die nicht bekannten Namen ausgegrenzt werden sollen , muss hier ein ok2 eingeführt werdne 
+                                            ' in die Missing Phase-Definitions aufnehmen 
+                                            Try
+                                                missingPhaseDefinitions.Add(hphaseDef)
+                                            Catch ex As Exception
+                                            End Try
 
 
-                                                ' das muss auf alle Fälle gemacht werden 
-                                                cphase = New clsPhase(parent:=hproj)
-                                                'cphase.name = stdName
-                                                ' Änderung tk: jetzt muss die elemID in den Phasen Namen 
-                                                cphase.name = elemID
-                                                cphase.changeStartandDauer(startoffset, duration)
+                                        End If
 
-                                                ' der Aufbau der Hierarchie erfolgt in addphase
-                                                hproj.AddPhase(cphase, origName:=origItem.Trim, _
-                                                               parentID:=pHierarchy.getIDBeforeLevel(indentLevel))
+                                    End If
 
-                                                ' wird übernommen als 
-                                                CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Value = stdName
+
+                                    If ok1 Then
+
+
+                                        ' das muss auf alle Fälle gemacht werden 
+                                        cphase = New clsPhase(parent:=hproj)
+
+                                        ' Änderung tk: jetzt muss die elemID in den Phasen Namen 
+                                        cphase.nameID = elemID
+                                        cphase.changeStartandDauer(startoffset, duration)
+
+                                        ' der Aufbau der Hierarchie erfolgt in addphase
+                                        hproj.AddPhase(cphase, origName:=origItem.Trim, _
+                                                       parentID:=pHierarchy.getIDBeforeLevel(indentLevel))
+
+                                        ' wird übernommen als 
+                                        CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Value = stdName
+
+                                        ' neuer Breadcrumb 
+                                        'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
+                                        Dim PTBreadCrumb As String = hproj.hierarchy.getBreadCrumb(elemID)
+                                        CType(activeWSListe.Cells(curZeile, colProtocol + 7), Excel.Range).Value = PTBreadCrumb
+
+                                        ' neue Vorgangsklasse
+                                        CType(activeWSListe.Cells(curZeile, colProtocol + 8), Excel.Range).Value = txtVorgangsKlasse
+
+                                        If stdName.Trim <> origItem.Trim Then
+                                            ' es hat eine Ersetzung stattgefunden 
+                                            CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                                            anzSubstituted = anzSubstituted + 1
+                                        Else
+                                            anzCorrect = anzCorrect + 1
+                                        End If
+
+                                        ' nur wenn es aufgenommen ist, sollte es in die Hierarchie aufgenommen werden 
+                                        Try
+                                            pHierarchy.add(cphase, elemID, indentLevel)
+                                        Catch ex As Exception
+
+                                        End Try
+
+                                    Else
+
+                                        CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = logMessage
+                                        lastDuplicateIndent = indentLevel
+
+                                        anzIgnored = anzIgnored + 1
+
+                                    End If
+
+
+                                ElseIf duration = 1 Then
+                                    ' hier kommt die Behandlung eines Meilensteins
+
+
+                                    Try
+
+                                        Dim bewertungsAmpel As Integer = 0
+                                        Dim explanation As String = ""
+
+                                        ' hole die Parentphase
+                                        cphase = pHierarchy.getPhaseBeforeLevel(indentLevel)
+                                        cmilestone = New clsMeilenstein(parent:=cphase)
+                                        cbewertung = New clsBewertung
+
+
+                                        ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                        With cbewertung
+                                            '.bewerterName = resultVerantwortlich
+                                            .colorIndex = bewertungsAmpel
+                                            .datum = Date.Now
+                                            .description = explanation
+                                        End With
+
+
+                                        parentElemName = cphase.name
+                                        ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
+
+                                        Try
+                                            If Not MilestoneDefinitions.Contains(itemName) Then
+                                                stdName = milestoneMappings.mapToStdName(parentElemName, itemName)
+                                            Else
+                                                stdName = itemName
+                                            End If
+
+                                        Catch ex As Exception
+                                            stdName = itemName
+                                        End Try
+
+                                        elemID = calcHryElemKey(stdName, True)
+                                        Dim ok1 As Boolean
+
+                                        ' jetzt muss geprüft werden, ob das Element in der Liste der zugelassenen Elemente enthalten ist 
+
+                                        If hproj.hierarchy.containsKey(elemID) Then
+
+                                            Dim vglMilestone As clsMeilenstein = hproj.getMilestoneByID(elemID)
+
+                                            If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
+                                                ' es muss ein neuer Meilenstein mit neuer lfd Nr angelegt werden 
+
+                                                Dim lfdNr As Integer = 2
+                                                'Dim newName As String = stdName & " " & lfdNr.ToString
+                                                Dim newElemID As String = calcHryElemKey(stdName, True, lfdNr)
+                                                found = False
+
+                                                Do While hproj.hierarchy.containsKey(newElemID) And Not found
+
+                                                    vglMilestone = hproj.getMilestoneByID(newElemID)
+
+                                                    If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
+                                                        lfdNr = lfdNr + 1
+                                                        newElemID = calcHryElemKey(stdName, True, lfdNr)
+                                                    Else
+                                                        found = True
+                                                    End If
+                                                Loop
+
+                                                If Not found Then
+                                                    elemID = newElemID
+                                                    ok1 = True
+                                                Else
+                                                    ok1 = False
+                                                    logMessage = "(" & newElemID & ")" & " ist doppelt und wird ignoriert "
+                                                End If
+
+                                            Else
+                                                ' es ist ein Duplikat 
+                                                ok1 = False
+                                                logMessage = "ist doppelt und wird ignoriert "
+                                            End If
+
+
+                                        Else
+                                            ok1 = True
+                                        End If
+
+
+
+                                        ' jetzt muss geprüft werden, ob stdName bereits aufgenommen ist 
+                                        If Not MilestoneDefinitions.Contains(stdName) And ok1 Then
+
+                                            Dim hMilestoneDef As New clsMeilensteinDefinition
+
+                                            With hMilestoneDef
+                                                .name = stdName
+                                                .belongsTo = parentElemName
+                                                .shortName = txtAbbrev
+                                                .darstellungsKlasse = txtVorgangsKlasse
+                                                .UID = milestoneIX
+                                            End With
+
+                                            milestoneIX = milestoneIX + 1
+
+                                            If isVorlage Then
+                                                ' in die Milestone-Definitions aufnehmen 
+                                                Try
+                                                    MilestoneDefinitions.Add(hMilestoneDef)
+                                                Catch ex As Exception
+                                                End Try
+
+                                            Else
+                                                ' auch diese Elemente werden aufgenommen ; wenn das nicht mehr der Fall sein soll, muss hier die Log-Message erweitert
+                                                ' werden und eine Variable ok2 eingeführt werden 
+                                                logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
+
+                                                ' in die Missing Milestone-Definitions aufnehmen 
+                                                Try
+                                                    missingMilestoneDefinitions.Add(hMilestoneDef)
+                                                Catch ex As Exception
+                                                End Try
+                                            End If
+
+
+                                        End If
+
+                                        If ok1 Then
+
+
+                                            With cmilestone
+                                                .nameID = elemID
+                                                .setDate = itemEndDate
+                                                If Not cbewertung Is Nothing Then
+                                                    .addBewertung(cbewertung)
+                                                End If
+                                            End With
+
+                                            If IsNothing(cphase.getMilestone(cmilestone.nameID)) Then
+
+                                                With cphase
+                                                    .addMilestone(cmilestone, origName:=origItem.Trim)
+                                                End With
+
+                                                ' Protokollieren
+                                                CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Value = stdName.Trim
 
                                                 ' neuer Breadcrumb 
                                                 'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
@@ -784,270 +958,27 @@ Module BMWItOModul
                                                     anzCorrect = anzCorrect + 1
                                                 End If
 
-                                                ' nur wenn es aufgenommen ist, sollte es in die Hierarchie aufgenommen werden 
-                                                Try
-                                                    pHierarchy.add(cphase, elemID, indentLevel)
-                                                Catch ex As Exception
-
-                                                End Try
 
                                             Else
 
-                                                CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = logMessage
-                                                lastDuplicateIndent = indentLevel
-
-                                                anzIgnored = anzIgnored + 1
+                                                ' Meilenstein existiert in dieser Phase bereits .... 
+                                                CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
+                                                        stdName.Trim & " existiert bereits: Datum 1: " & cphase.getMilestone(stdName).getDate.ToShortDateString & _
+                                                        "   , Datum 2: " & cmilestone.getDate.ToShortDateString
 
                                             End If
-
-
-
-                                        End If
-
-
-                                    End If
-
-
-
-                                ElseIf duration = 1 Then
-                                    ' hier kommt die Behandlung eines Meilensteins
-
-                                    If itemName.Length > 0 Then
-
-                                        Dim indentLevel As Integer
-                                        ' bestimme den Indent-Level 
-                                        indentLevel = pHierarchy.getLevel(origItem)
-
-                                        If indentLevel > lastDuplicateIndent Then
-                                            ' Skip , weil es sich dann um Elemente handelt, deren Parent Phase als Duplikat ignoriert wurde 
-                                            ' Protokollieren ...
-
-                                            CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
-                                                        "ist Kind eines doppelten/nicht zugelassenen Elements und wird ignoriert"
-                                            anzIgnored = anzIgnored + 1
                                         Else
 
-                                            lastDuplicateIndent = 1000000
-
-                                            Try
-
-                                                Dim bewertungsAmpel As Integer = 0
-                                                Dim explanation As String = ""
-
-                                                ' hole die Parentphase
-                                                cphase = pHierarchy.getPhaseBeforeLevel(indentLevel)
-                                                cmilestone = New clsMeilenstein(parent:=cphase)
-                                                cbewertung = New clsBewertung
-
-
-                                                ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
-                                                With cbewertung
-                                                    '.bewerterName = resultVerantwortlich
-                                                    .colorIndex = bewertungsAmpel
-                                                    .datum = Date.Now
-                                                    .description = explanation
-                                                End With
-
-
-                                                parentElemName = elemNameOfElemID(cphase.name)
-                                                ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
-
-                                                Try
-                                                    If Not MilestoneDefinitions.Contains(itemName) Then
-                                                        stdName = milestoneMappings.mapToStdName(parentElemName, itemName)
-                                                    Else
-                                                        stdName = itemName
-                                                    End If
-
-                                                Catch ex As Exception
-                                                    stdName = itemName
-                                                End Try
-
-                                                elemID = calcHryElemKey(stdName, True)
-                                                Dim ok1 As Boolean
-
-                                                ' jetzt muss geprüft werden, ob das Element in der Liste der zugelassenen Elemente enthalten ist 
-                                                If MilestoneDefinitions.Contains(stdName) Then
-
-                                                    If hproj.hierarchy.containsKey(elemID) Then
-
-                                                        Dim vglMilestone As clsMeilenstein = hproj.getMilestoneByID(elemID)
-
-                                                        If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
-                                                            ' es muss ein neuer Meilenstein mit neuer lfd Nr angelegt werden 
-
-                                                            Dim lfdNr As Integer = 2
-                                                            'Dim newName As String = stdName & " " & lfdNr.ToString
-                                                            Dim newElemID As String = calcHryElemKey(stdName, True, lfdNr)
-                                                            found = False
-
-                                                            Do While hproj.hierarchy.containsKey(newElemID) And Not found
-
-                                                                vglMilestone = hproj.getMilestoneByID(newElemID)
-
-                                                                If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
-                                                                    lfdNr = lfdNr + 1
-                                                                    newElemID = calcHryElemKey(stdName, True, lfdNr)
-                                                                Else
-                                                                    found = True
-                                                                End If
-
-
-                                                            Loop
-
-                                                            If Not found Then
-                                                                stdName = newElemID
-                                                                'listOFProjectMilestones.Add(stdName, parentPhaseName)
-                                                                ok1 = True
-                                                            Else
-                                                                ok1 = False
-                                                                logMessage = "(" & newElemID & ")" & " ist doppelt und wird ignoriert "
-                                                            End If
-
-                                                        Else
-                                                            ' es ist ein Duplikat 
-                                                            ok1 = False
-                                                            logMessage = "ist doppelt und wird ignoriert "
-                                                        End If
-
-
-                                                    Else
-                                                        'listOFProjectMilestones.Add(stdName, parentPhaseName)
-                                                        ok1 = True
-                                                    End If
-
-
-                                                Else
-
-                                                    Dim hMilestone As New clsMeilensteinDefinition
-
-                                                    With hMilestone
-                                                        .name = stdName
-                                                        .belongsTo = parentElemName
-                                                        .shortName = txtAbbrev
-                                                        .darstellungsKlasse = txtVorgangsKlasse
-                                                        .UID = milestoneIX
-                                                    End With
-
-                                                    milestoneIX = milestoneIX + 1
-
-                                                    If isVorlage Then
-
-                                                        ok1 = True
-                                                        ' in die Milestone-Definitions aufnehmen 
-                                                        Try
-                                                            MilestoneDefinitions.Add(hMilestone)
-                                                        Catch ex As Exception
-                                                        End Try
-
-                                                    Else
-                                                        ok1 = False
-                                                        logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
-
-                                                        ' in die Missing Milestone-Definitions aufnehmen 
-                                                        Try
-                                                            missingMilestoneDefinitions.Add(hMilestone)
-                                                        Catch ex As Exception
-                                                        End Try
-                                                    End If
-
-
-                                                End If
-
-
-                                                If ok1 Then
-
-
-                                                    With cmilestone
-                                                        .name = calcHryElemKey(stdName, True)
-                                                        .setDate = itemEndDate
-                                                        If Not cbewertung Is Nothing Then
-                                                            .addBewertung(cbewertung)
-                                                        End If
-                                                    End With
-
-                                                    ' Meilenstein ggf in Meilenstein Definitionen aufnehmen, 
-                                                    If Not MilestoneDefinitions.Contains(stdName) And isVorlage Then
-                                                        ' in die Milestone-Definitions aufnehmen 
-
-                                                        Dim hMilestoneDef As New clsMeilensteinDefinition
-
-                                                        With hMilestoneDef
-                                                            .name = stdName
-                                                            .belongsTo = parentElemName
-                                                            .shortName = txtAbbrev
-                                                            .darstellungsKlasse = txtVorgangsKlasse
-                                                            .UID = milestoneIX
-                                                        End With
-
-                                                        milestoneIX = milestoneIX + 1
-
-                                                        Try
-                                                            MilestoneDefinitions.Add(hMilestoneDef)
-                                                        Catch ex As Exception
-
-                                                        End Try
-
-                                                    End If
-
-                                                    If IsNothing(cphase.getMilestone(cmilestone.name)) Then
-
-                                                        With cphase
-                                                            .addMilestone(cmilestone)
-                                                        End With
-
-                                                        ' Protokollieren
-                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Value = stdName.Trim
-
-                                                        ' neuer Breadcrumb 
-                                                        'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
-                                                        Dim PTBreadCrumb As String = hproj.hierarchy.getBreadCrumb(elemID)
-                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 7), Excel.Range).Value = PTBreadCrumb
-
-                                                        ' neue Vorgangsklasse
-                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 8), Excel.Range).Value = txtVorgangsKlasse
-
-                                                        If stdName.Trim <> origItem.Trim Then
-                                                            ' es hat eine Ersetzung stattgefunden 
-                                                            CType(activeWSListe.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelGelb
-                                                            anzSubstituted = anzSubstituted + 1
-                                                        Else
-                                                            anzCorrect = anzCorrect + 1
-                                                        End If
-
-
-                                                    Else
-
-                                                        ' Meilenstein existiert in dieser Phase bereits .... 
-                                                        CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
-                                                                stdName.Trim & " existiert bereits: Datum 1: " & cphase.getMilestone(stdName).getDate.ToShortDateString & _
-                                                                "   , Datum 2: " & cmilestone.getDate.ToShortDateString
-
-                                                    End If
-                                                Else
-
-                                                    CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = logMessage
-                                                    anzIgnored = anzIgnored + 1
-
-                                                End If
-
-
-                                            Catch ex As Exception
-                                                CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
-                                                                    "Fehler in Zeile " & zeile & ", Item-Name: " & itemName
-                                            End Try
+                                            CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = logMessage
+                                            anzIgnored = anzIgnored + 1
 
                                         End If
 
 
-
-                                    Else ' Ende 
-
+                                    Catch ex As Exception
                                         CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
-                                                "leerer String wurde ignoriert  "
-                                        anzIgnored = anzIgnored + 1
-
-                                    End If
+                                                            "Fehler in Zeile " & zeile & ", Item-Name: " & itemName
+                                    End Try
 
 
                                 End If
@@ -1303,6 +1234,8 @@ Module BMWItOModul
         Dim spalte As Integer = 1
         Dim cphase As clsPhase
         Dim cmilestone As clsMeilenstein
+        Dim indentlevel As Integer = 0
+        Dim indentDelta As Integer = 3
 
         ' diese Datei muss offen sein und das aktive Workbook
         ' wenn nein, dann aktivieren ! 
@@ -1327,31 +1260,38 @@ Module BMWItOModul
         CType(ws.Rows(zeile), Excel.Range).Interior.Color = color
 
         Dim indentPhase As String = "   "
-        Dim indentMS As String = "      "
+        'Dim indentMS As String = "      "
 
         ' die erste Phase kann auch Meilensteine haben !
         cphase = hproj.getPhase(1)
+        indentlevel = hproj.hierarchy.getIndentLevel(cphase.nameID)
+
         For im = 1 To cphase.countMilestones
             zeile = zeile + 1
             cmilestone = cphase.getMilestone(im)
             startdate = cmilestone.getDate
-            If cmilestone.name.StartsWith(cphase.name & "+") Then
+            ' Änderung 20.4.15
+            ' alt: 
+            'If cmilestone.nameID.StartsWith(cphase.name & "+") Then
 
-                Dim parentName As String = cphase.name & "+"
-                curName = ""
-                Dim posStart As Integer = parentName.Length
+            '    Dim parentName As String = cphase.name & "+"
+            '    curName = ""
+            '    Dim posStart As Integer = parentName.Length
 
-                For posX As Integer = posStart + 1 To cmilestone.name.Length
-                    curName = curName & cmilestone.name.Chars(posX)
-                Next
+            '    For posX As Integer = posStart + 1 To cmilestone.nameID.Length
+            '        curName = curName & cmilestone.nameID.Chars(posX)
+            '    Next
 
-                ' hier den Original Name verwenden !? nein, aktuell noch nicht 
+            '    ' hier den Original Name verwenden !? nein, aktuell noch nicht 
 
-            Else
-                curName = cmilestone.name
-            End If
+            'Else
+            '    curName = cmilestone.nameID
+            'End If
+            ' neu:
+            curName = cmilestone.name
 
-            CType(ws.Cells(zeile, spalte), Excel.Range).Value = indentMS & curName
+            indentlevel = hproj.hierarchy.getIndentLevel(cmilestone.nameID)
+            CType(ws.Cells(zeile, spalte), Excel.Range).Value = erzeugeIndent(indentlevel) & curName
 
             If DateDiff(DateInterval.Day, StartofCalendar, startdate) > 0 Then
                 CType(ws.Cells(zeile, spalte).offset(0, 1), Excel.Range).Value = startdate.ToShortDateString
@@ -1369,9 +1309,10 @@ Module BMWItOModul
             cphase = hproj.getPhase(ip)
             startdate = cphase.getStartDate
             endDate = cphase.getEndDate
-            curName = indentPhase & cphase.name
+            curName = cphase.name
 
-            CType(ws.Cells(zeile, spalte), Excel.Range).Value = curName
+            indentlevel = hproj.hierarchy.getIndentLevel(cphase.nameID)
+            CType(ws.Cells(zeile, spalte), Excel.Range).Value = erzeugeIndent(indentlevel) & curName
 
             If DateDiff(DateInterval.Day, StartofCalendar, startdate) > 0 Then
                 CType(ws.Cells(zeile, spalte).offset(0, 1), Excel.Range).Value = startdate.ToShortDateString
@@ -1389,23 +1330,25 @@ Module BMWItOModul
                 zeile = zeile + 1
                 cmilestone = cphase.getMilestone(im)
                 startdate = cmilestone.getDate
-                If cmilestone.name.StartsWith(cphase.name & "+") Then
+                'If cmilestone.nameID.StartsWith(cphase.name & "+") Then
 
-                    Dim parentName As String = cphase.name & "+"
-                    curName = ""
-                    Dim posStart As Integer = parentName.Length
+                '    Dim parentName As String = cphase.name & "+"
+                '    curName = ""
+                '    Dim posStart As Integer = parentName.Length
 
-                    For posX As Integer = posStart + 1 To cmilestone.name.Length
-                        curName = curName & cmilestone.name.Chars(posX)
-                    Next
+                '    For posX As Integer = posStart + 1 To cmilestone.nameID.Length
+                '        curName = curName & cmilestone.nameID.Chars(posX)
+                '    Next
 
-                    ' hier den Original Name verwenden !? nein, aktuell noch nicht 
+                '    ' hier den Original Name verwenden !? nein, aktuell noch nicht 
 
-                Else
-                    curName = cmilestone.name
-                End If
+                'Else
+                '    curName = cmilestone.nameID
+                'End If
 
-                CType(ws.Cells(zeile, spalte), Excel.Range).Value = indentMS & curName
+                curName = cmilestone.name
+                indentlevel = hproj.hierarchy.getIndentLevel(cmilestone.nameID)
+                CType(ws.Cells(zeile, spalte), Excel.Range).Value = erzeugeIndent(indentlevel) & curName
 
                 If DateDiff(DateInterval.Day, StartofCalendar, startdate) > 0 Then
                     CType(ws.Cells(zeile, spalte).offset(0, 1), Excel.Range).Value = startdate.ToShortDateString
@@ -1418,7 +1361,8 @@ Module BMWItOModul
 
         Next
 
-
+        ' jetzt muss um eine Zeile weitergeschaltet werden, damit immer auf eine freie Zeile geschrieben wird
+        zeile = zeile + 1
 
     End Sub
 

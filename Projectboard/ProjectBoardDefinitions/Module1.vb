@@ -56,6 +56,7 @@ Public Module Module1
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes
 
+
     ' hier werden die Mapping Informationen abgelegt 
     Public phaseMappings As New clsNameMapping
     Public milestoneMappings As New clsNameMapping
@@ -114,6 +115,10 @@ Public Module Module1
     Public screen_correct As Double = 0.26
     Public miniWidth As Double = 126 ' wird aber noch in Abhängigkeit von maxscreenwidth gesetzt 
     Public miniHeight As Double = 70 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
+
+    ' diese Konstante legt den Namen für das Root Element , 1. Phase eines Projektes fest 
+    ' das muss mir der calcHryElemKey(".", False) übereinstimmen 
+    Public Const rootPhaseName As String = "0§.§"
 
     ' diese Konstanten werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
     Public Const summentitel1 As String = "Prognose Ergebniskennzahl"
@@ -2010,6 +2015,29 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' gibt einen String zurück, der den dem level entsprechenden Indent an Leerzeichen enthält  
+    ''' bei level = -1 wird "???" als String zurückgegeben 
+    ''' </summary>
+    ''' <param name="level"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function erzeugeIndent(ByVal level As Integer) As String
+        Dim indentDelta As String = "   "
+        Dim tmpStr As String = ""
+
+        If level = -1 Then
+            tmpStr = "???"
+        Else
+            For i As Integer = 1 To level
+                tmpStr = tmpStr & indentDelta
+            Next
+        End If
+
+        erzeugeIndent = tmpStr
+
+    End Function
+
+    ''' <summary>
     ''' berechnet den "ersten" Namen, der in der sortedList der Hierarchie auftreten würde 
     ''' </summary>
     ''' <param name="elemName"></param>
@@ -2040,24 +2068,81 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' gibt true zurück, wenn es sich bei der ElemID um die ID eines Meilensteins handelt 
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function elemIDIstMeilenstein(ByVal elemID As String) As Boolean
+        elemIDIstMeilenstein = elemID.StartsWith("1§")
+    End Function
+
+    ''' <summary>
     ''' extrahiert den Elem-Namen aus der ElemID 
     ''' ElemID=Typ§ElemName§lfd-Nr 
     ''' </summary>
     ''' <param name="ElemID"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function elemNameOfElemID(ByVal ElemID As String) As String
+    Public Function elemNameOfElemID(ByVal elemID As String) As String
         Dim tmpStr() As String
 
-        tmpStr = ElemID.Split(New Char() {CChar("§")}, 5)
-        If tmpStr.Length >= 2 Then
+        tmpStr = elemID.Split(New Char() {CChar("§")}, 5)
+        If tmpStr.Length = 3 Then
             elemNameOfElemID = tmpStr(1)
         ElseIf tmpStr.Length = 1 Then
-            elemNameOfElemID = ElemID
+            elemNameOfElemID = elemID
         Else
             elemNameOfElemID = "?"
         End If
 
+
+    End Function
+
+
+    Public Function istElemID(ByVal itemName As String) As Boolean
+
+        Dim tmpStr() As String
+
+        tmpStr = itemName.Split(New Char() {CChar("§")}, 5)
+        If tmpStr.Length = 3 Then
+            If tmpStr(0) = "1" Or tmpStr(0) = "0" Then
+                istElemID = True
+            Else
+                istElemID = False
+            End If
+        Else
+            istElemID = False
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' extrahiert die lfdNr aus der ElemID 
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function lfdNrOfElemID(ByVal elemID As String) As Integer
+        Dim tmpStr() As String
+
+        tmpStr = elemID.Split(New Char() {CChar("§")}, 5)
+        If tmpStr.Length = 3 Then
+            Try
+                If tmpStr(2) = "" Then
+                    lfdNrOfElemID = 1
+                Else
+                    lfdNrOfElemID = CInt(tmpStr(2))
+                End If
+            Catch ex As Exception
+                lfdNrOfElemID = 1
+            End Try
+
+        Else
+
+            lfdNrOfElemID = 1
+
+        End If
 
     End Function
 
