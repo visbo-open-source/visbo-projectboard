@@ -25,11 +25,14 @@ Public Class frmSelectPPTTempl
         If calledfrom = "Portfolio1" Then
             dirname = awinPath & RepPortfolioVorOrdner
             paramType = False
+            Me.einstellungen.Visible = False
         ElseIf calledfrom = "Portfolio2" Then
             dirname = awinPath & RepPortfolioVorOrdner
             paramType = True
+            Me.einstellungen.Visible = False
         ElseIf calledfrom = "Projekt" Then
             dirname = awinPath & RepProjectVorOrdner
+            Me.einstellungen.Visible = True
         End If
 
         ' jetzt werden die ProjektReport- bzw. PortfolioReport-Vorlagen ausgelesen 
@@ -95,8 +98,10 @@ Public Class frmSelectPPTTempl
             dirName = awinPath & RepProjectVorOrdner
             vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
 
+            awinSettings.eppExtendedMode = True
+
             Try
-                'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+
                 awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
             Catch ex As Exception
                 awinSelection = Nothing
@@ -108,7 +113,7 @@ Public Class frmSelectPPTTempl
                 Me.Cursor = Cursors.WaitCursor
 
                 BackgroundWorker2.RunWorkerAsync(vorlagenDateiName)
-                'Call createPPTSlidesFromConstellation(vorlagenDateiName)
+
 
             Catch ex As Exception
                 Call MsgBox(ex.Message)
@@ -234,6 +239,23 @@ Public Class frmSelectPPTTempl
     End Sub
 
     Private Sub statusNotification_TextChanged(sender As Object, e As EventArgs) Handles statusNotification.TextChanged
+
+    End Sub
+
+    ''' <summary>
+    ''' ruft das Formular auf, um die Einstellungen für das ProjektReporting vorzunehmen  
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub einstellungen_Click(sender As Object, e As EventArgs) Handles einstellungen.Click
+
+        Dim mppFrm As New frmMppSettings
+        Dim dialogreturn As DialogResult
+
+        mppFrm.calledfrom = "frmSelectPPTTempl"
+        dialogreturn = mppFrm.ShowDialog
+
 
     End Sub
 End Class

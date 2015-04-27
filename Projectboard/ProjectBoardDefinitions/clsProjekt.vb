@@ -2687,9 +2687,9 @@ Public Class clsProjekt
                 Next i      ' nächste Phase im Projekt betrachten
 
                 If anzPhases > 1 Then
-                    tmpValue = zeilenOffset
+                    tmpValue = zeilenOffset + 1     'ur: 17.04.2015:  +1 für die übrigen Meilensteine
                 Else
-                    tmpValue = 1
+                    tmpValue = 1 + 1                ' ur: 17.04.2015: +1 für die übrigen Meilensteine
                 End If
 
 
@@ -2714,9 +2714,9 @@ Public Class clsProjekt
                 Next
 
                 If Me.CountPhases > 1 Then
-                    tmpValue = zeilenOffset
+                    tmpValue = zeilenOffset + 1      ' ur: 17.04.2015: +1 für die übrigen Meilensteine
                 Else
-                    tmpValue = 1
+                    tmpValue = 1 + 1                 ' ur: 17.04.2015: +1 für die übrigen Meilensteine
                 End If
 
             Else    ' keine extended Sicht (bzw. Report) 

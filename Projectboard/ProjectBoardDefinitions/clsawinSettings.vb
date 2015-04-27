@@ -87,6 +87,10 @@
     Public Property mppOnePage As Boolean
     Public Property mppExtendedMode As Boolean
 
+    ' Settings für Einzelprojekt-Reports
+    Public Property eppExtendedMode As Boolean
+
+
 
     Property importTyp As Integer
 
@@ -157,6 +161,9 @@
         _mppSortiertDauer = False
         _mppOnePage = False
         _mppExtendedMode = False
+
+        ' Settings für Einzelprojekt-Reports
+        _eppExtendedMode = True
 
 
         If _mppSortiertDauer Then

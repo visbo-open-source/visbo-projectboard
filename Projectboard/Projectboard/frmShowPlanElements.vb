@@ -1006,6 +1006,7 @@ Public Class frmShowPlanElements
         Dim mppFrm As New frmMppSettings
         Dim dialogreturn As DialogResult
 
+        mppFrm.calledfrom = "frmShowPlanElements"
         dialogreturn = mppFrm.ShowDialog
 
 
