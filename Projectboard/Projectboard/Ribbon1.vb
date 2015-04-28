@@ -1750,7 +1750,10 @@ Imports System.Drawing
 
     Sub awinVariantenprojektReport(ByVal control As IRibbonControl)
 
+
         Dim auswahlFormular As New frmNameSelection
+        Dim awinSelection As Excel.ShapeRange
+
         Dim returnValue As DialogResult
 
         Call projektTafelInit()
@@ -1760,44 +1763,53 @@ Imports System.Drawing
 
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
         If ShowProjekte.Count > 0 Then
+            Try
+                'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+            Catch ex As Exception
+                awinSelection = Nothing
+            End Try
 
-            appInstance.ScreenUpdating = False
+            If awinSelection Is Nothing Then
+                Call MsgBox("vorher Projekt/e selektieren ...")
+            Else
 
-            With auswahlFormular
+                appInstance.ScreenUpdating = False
 
-                .rdbBU.Visible = True
-                .pictureBU.Visible = True
+                With auswahlFormular
 
-                .rdbTyp.Visible = True
-                .pictureTyp.Visible = True
+                    .rdbBU.Visible = True
+                    .pictureBU.Visible = True
 
-                .einstellungen.Visible = True
-                .Text = "Projekt-Varianten Report erzeugen"
+                    .rdbTyp.Visible = True
+                    .pictureTyp.Visible = True
 
-                '.chkbxShowObjects = False
 
-                .chkbxOneChart.Checked = False
-                .chkbxOneChart.Visible = False
+                    .einstellungen.Visible = True
+                    .Text = "Projekt-Varianten Report erzeugen"
 
-                '.chkbxCreateCharts = False
 
-                '.showModePortfolio = True
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
 
-                .repVorlagenDropbox.Visible = True
-                .labelPPTVorlage.Visible = True
+                    .repVorlagenDropbox.Visible = True
+                    .labelPPTVorlage.Visible = True
 
-                .rdbRoles.Enabled = False
-                .rdbCosts.Enabled = False
+                    .rdbRoles.Enabled = False
+                    .rdbCosts.Enabled = False
 
-                .menuOption = PTmenue.einzelprojektReport
-                .statusLabel.Text = ""
-                .OKButton.Text = "Bericht erstellen"
+                    .menuOption = PTmenue.einzelprojektReport
+                    .statusLabel.Text = ""
+                    .OKButton.Text = "Bericht erstellen"
 
-                '.Show()
-                returnValue = .ShowDialog
-            End With
+                    '.Show()
+                    returnValue = .ShowDialog
+                End With
 
-            appInstance.ScreenUpdating = True
+                appInstance.ScreenUpdating = True
+
+            End If
+
 
         ElseIf ShowProjekte.Count = 0 Then
 
@@ -1808,10 +1820,8 @@ Imports System.Drawing
 
 
 
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
-
-
+            appInstance.EnableEvents = True
+            enableOnUpdate = True
 
 
     End Sub
@@ -2217,10 +2227,50 @@ Imports System.Drawing
             appInstance.ScreenUpdating = False
             appInstance.EnableEvents = False
 
+            getReportVorlage.calledfrom = "Projekt"
+
+
+            ' sichern der awinSettings.mpp... Einstellungen
+            ' Settings für Multiprojekt-Sichten
+            ' '' '' ''Dim sav_mppShowAllIfOne As Boolean = awinSettings.mppShowAllIfOne
+            ' '' '' ''Dim sav_mppShowMsDate As Boolean = awinSettings.mppShowMsDate
+            ' '' '' ''Dim sav_mppShowMsName As Boolean = awinSettings.mppShowMsName
+            ' '' '' ''Dim sav_mppShowPhDate As Boolean = awinSettings.mppShowPhDate
+            ' '' '' ''Dim sav_mppShowPhName As Boolean = awinSettings.mppShowPhName
+            ' '' '' ''Dim sav_mppShowAmpel As Boolean = awinSettings.mppShowAmpel
+            ' '' '' ''Dim sav_mppShowProjectLine As Boolean = awinSettings.mppShowProjectLine
+            ' '' '' ''Dim sav_mppVertikalesRaster As Boolean = awinSettings.mppVertikalesRaster
+            ' '' '' ''Dim sav_mppShowLegend As Boolean = awinSettings.mppShowLegend
+            ' '' '' ''Dim sav_mppFullyContained As Boolean = awinSettings.mppFullyContained
+            ' '' '' ''Dim sav_mppSortiertDauer As Boolean = awinSettings.mppSortiertDauer
+            ' '' '' ''Dim sav_mppOnePage As Boolean = awinSettings.mppOnePage
+            Dim sav_mppExtendedMode As Boolean = awinSettings.mppExtendedMode
+            awinSettings.mppExtendedMode = True
+            ' Settings für Einzelprojekt-Reports
+            awinSettings.eppExtendedMode = True
+
+
             ' Formular zum Auswählen der Report-Vorlage wird aufgerufen
 
-            getReportVorlage.calledfrom = "Projekt"
             returnValue = getReportVorlage.ShowDialog
+
+            awinSettings.eppExtendedMode = False
+
+            ' wieder setzen der awinSettings.mpp... einstellungen
+            ' '' ''awinSettings.mppShowAllIfOne = sav_mppShowAllIfOne
+            ' '' ''awinSettings.mppShowMsDate = sav_mppShowMsDate
+            ' '' ''awinSettings.mppShowMsName = sav_mppShowMsName
+            ' '' ''awinSettings.mppShowPhDate = sav_mppShowPhDate
+            ' '' ''awinSettings.mppShowPhName = sav_mppShowPhName
+            ' '' ''awinSettings.mppShowAmpel = sav_mppShowAmpel
+            ' '' ''awinSettings.mppShowProjectLine = sav_mppShowProjectLine
+            ' '' ''awinSettings.mppVertikalesRaster = sav_mppVertikalesRaster
+            ' '' ''awinSettings.mppShowLegend = sav_mppShowLegend
+            ' '' ''awinSettings.mppFullyContained = sav_mppFullyContained
+            ' '' ''awinSettings.mppSortiertDauer = sav_mppSortiertDauer
+            ' '' ''awinSettings.mppOnePage = sav_mppOnePage
+
+            awinSettings.mppExtendedMode = sav_mppExtendedMode
 
             appInstance.EnableEvents = True
             appInstance.ScreenUpdating = True
@@ -3348,9 +3398,10 @@ Imports System.Drawing
                 appInstance.EnableEvents = False
                 appInstance.ScreenUpdating = False
 
-                ' bestimme die Anzahl Zeilen, die benötigt wird  
-                Dim anzahlZeilen As Integer = getNeededSpace(hproj)
+
                 Dim tmpCollection As New Collection
+                ' bestimme die Anzahl Zeilen, die benötigt wird 
+                Dim anzahlZeilen As Integer = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
                 Call moveShapesDown(tmpCollection, hproj.tfZeile + 1, anzahlZeilen, 0)
                 'Call ZeichneProjektinPlanTafel2(pname, hproj.tfZeile)
                 Dim listCollection As New Collection

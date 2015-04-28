@@ -7290,12 +7290,13 @@ Public Module Projekte
         Dim zeile As Integer
         Dim hproj As clsProjekt
         Dim anzahlZeilen As Integer
+        Dim tmpCollection As New Collection
 
         Dim formerEOU As Boolean = enableOnUpdate
         enableOnUpdate = False
 
         hproj = ShowProjekte.getProject(pName)
-        anzahlZeilen = getNeededSpace(hproj)
+        anzahlZeilen = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
 
 
 
@@ -7692,9 +7693,9 @@ Public Module Projekte
                         Dim chtTop As Double = chtobj.Top
                         Dim chtLeft As Double = chtobj.Left
 
-                  
+
                         chtobj.Cut()
-                      
+
                         'Dim newtestshape As Excel.ChartObject
                         currentWS.Activate()
                         currentWS.Paste()
@@ -7775,7 +7776,7 @@ Public Module Projekte
                     xlsCockpits.Close(SaveChanges:=False)
                     Throw New ArgumentException("Fehler beim Laden des Cockpits '" & cockpitname & vbLf, ex.Message)
                 End Try
-              
+
                 xlsCockpits.Close(SaveChanges:=False)
 
             Else
@@ -7885,7 +7886,7 @@ Public Module Projekte
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
                 End If
-                
+
             Catch ex As Exception
                 Call MsgBox(" Fehler in Fixierung aufheben " & pname & " , Modul: awinCancelBeauftragung")
                 Exit Sub
@@ -8965,7 +8966,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-            
+
 
         Next shp
 
@@ -9011,7 +9012,7 @@ Public Module Projekte
                 Catch ex As Exception
 
                 End Try
-                
+
             End With
         Next shp
 
@@ -9598,7 +9599,7 @@ Public Module Projekte
                             tmpConstellation.constellationName = autoSzenarioNamen(2)
                             projectConstellations.Add(tmpConstellation)
                         End If
-                        
+
 
                     End If
 
@@ -10228,17 +10229,13 @@ Public Module Projekte
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
-                    zeile = zeile + getNeededSpace(hproj)
+                    zeile = zeile + hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
 
                 Catch ex As Exception
 
                 End Try
 
-
-
             Next
-
-
 
 
         Else
@@ -10300,7 +10297,7 @@ Public Module Projekte
                     ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
-                    curZeile = lastZeile + getNeededSpace(hproj)
+                    curzeile = lastzeile + hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
 
 
                     If curZeile > max Then
@@ -10740,54 +10737,59 @@ Public Module Projekte
     End Sub
 
 
-    ''' <summary>
-    ''' gibt die Anzahl Zeilen zurück, die das Projekt im "expanded View Mode" benötigt 
-    ''' </summary>
-    ''' <param name="hproj"></param>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Function getNeededSpace(ByVal hproj As clsProjekt) As Integer
-
-        Dim zeilenOffset As Integer = 1
-        Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
-        Dim tmpValue As Integer
-
-        If awinSettings.drawphases Then
-
-            For i = 1 To hproj.CountPhases
-
-                With hproj.getPhase(i)
-
-                    If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
-                        zeilenOffset = zeilenOffset + 1
-                        lastEndDate = StartofCalendar.AddDays(-1)
-                    End If
-
-                    If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
-                        lastEndDate = .getEndDate
-                    End If
-
-                End With
+    '' '' ''' <summary>
+    '' '' ''' gibt die Anzahl Zeilen zurück, die das Projekt im "expanded View Mode" benötigt 
+    '' '' ''' </summary>
+    '' '' ''' <param name="hproj"></param>
+    '' '' ''' <returns></returns>
+    '' '' ''' <remarks></remarks>
+    '' ''Public Function calculateNeededLines(ByVal hproj As clsProjekt) As Integer
 
 
-            Next
-
-            If hproj.CountPhases > 1 Then
-                tmpValue = zeilenOffset
-            Else
-                tmpValue = 1
-            End If
+    '' ''    Dim phasenName As String
+    '' ''    Dim zeilenOffset As Integer = 1
+    '' ''    Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
+    '' ''    Dim tmpValue As Integer
 
 
-        Else
-            tmpValue = 1
-        End If
+    '' ''    If awinSettings.drawphases Then
+
+    '' ''        For i = 1 To hproj.CountPhases
+
+    '' ''            With hproj.getPhase(i)
+
+    '' ''                phasenName = .name
+    '' ''                If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+    '' ''                    zeilenOffset = zeilenOffset + 1
+    '' ''                    lastEndDate = StartofCalendar.AddDays(-1)
+    '' ''                End If
 
 
-        getNeededSpace = tmpValue
+    '' ''                If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+    '' ''                    lastEndDate = .getEndDate
+    '' ''                End If
+
+    '' ''            End With
 
 
-    End Function
+    '' ''        Next
+
+    '' ''        If hproj.CountPhases > 1 Then
+    '' ''            tmpValue = zeilenOffset
+    '' ''        Else
+    '' ''            tmpValue = 1
+    '' ''        End If
+
+
+    '' ''    Else
+    '' ''        tmpValue = 1
+    '' ''    End If
+
+
+    '' ''    calculateNeededLines = tmpValue
+
+
+    '' ''End Function
 
 
     ''' <summary>
@@ -14930,7 +14932,8 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Function calcChartKennung(ByVal typ As String, ByVal index As Integer, ByVal mycollection As Collection) As String
         Dim IDkennung As String
-        Dim cName As String
+        Dim cName As String = ""
+        Dim breadcrumb As String = ""
 
         IDkennung = typ & "#" & index.ToString
 
@@ -14947,7 +14950,8 @@ Public Module Projekte
                         Else
 
                             For i = 1 To mycollection.Count
-                                cName = CStr(mycollection.Item(i))
+                                'cName = CStr(mycollection.Item(i))
+                                Call splitHryFullnameTo2(CStr(mycollection.Item(i)), cName, breadcrumb)
                                 Try
                                     IDkennung = IDkennung & "#" & PhaseDefinitions.getPhaseDef(cName).UID.ToString
                                 Catch ex As Exception
@@ -14961,7 +14965,9 @@ Public Module Projekte
                     Case PTpfdk.Meilenstein
 
                         For i = 1 To mycollection.Count
-                            cName = CStr(mycollection.Item(i))
+                            'cName = CStr(mycollection.Item(i))
+                            ' nur bei Phasen und Rollen muss der NAme ggf gesplittet werden 
+                            Call splitHryFullnameTo2(CStr(mycollection.Item(i)), cName, breadcrumb)
                             IDkennung = IDkennung & "#" & cName
                         Next
 

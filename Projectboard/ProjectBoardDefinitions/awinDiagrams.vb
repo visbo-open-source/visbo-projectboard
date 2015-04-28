@@ -107,7 +107,7 @@ Public Module awinDiagrams
         Dim kdatenreihe() As Double ' nimmt die Kapa-Werte für das Diagramm auf
         Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
         Dim msdatenreihe(,) As Double
-        Dim prcName As String
+        Dim prcName As String = ""
         Dim startdate As Date
         Dim diff As Integer
         Dim mindone As Boolean, maxdone As Boolean
@@ -121,6 +121,7 @@ Public Module awinDiagrams
         Dim titleZeitraum As String, titleSumme As String, einheit As String
         'Dim chtTitle As String
         Dim chtobjName As String
+        Dim breadcrumb As String = ""
 
 
         ' Debugging variable 
@@ -323,13 +324,14 @@ Public Module awinDiagrams
 
                     For r = 1 To myCollection.Count
 
-                        prcName = CStr(myCollection.Item(r))
-
+                        'prcName = CStr(myCollection.Item(r))
+                        ' wird jetzt über das folgende bestimmt
+                        Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
 
                         If prcTyp = DiagrammTypen(0) Then
                             einheit = " "
                             objektFarbe = PhaseDefinitions.getPhaseDef(prcName).farbe
-                            datenreihe = ShowProjekte.getCountPhasesInMonth(prcName)
+                            datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb)
 
                         ElseIf prcTyp = DiagrammTypen(1) Then
                             einheit = " " & awinSettings.kapaEinheit
@@ -392,7 +394,7 @@ Public Module awinDiagrams
 
                             einheit = " "
                             objektFarbe = MilestoneDefinitions.getMilestoneDef(prcName).farbe
-                            msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName)
+                            msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
 
                         End If
 
@@ -435,7 +437,12 @@ Public Module awinDiagrams
                                 Next
 
                                 With .SeriesCollection.NewSeries
-                                    .name = prcName
+                                    If breadcrumb = "" Then
+                                        .name = prcName
+                                    Else
+                                        .name = breadcrumb & "#" & prcName
+                                    End If
+
                                     '.Interior.color = ampelfarbe(0)
                                     .Interior.color = objektFarbe
                                     .Values = datenreihe
@@ -477,7 +484,11 @@ Public Module awinDiagrams
                             Else
 
                                 With .SeriesCollection.NewSeries
-                                    .name = prcName
+                                    If breadcrumb = "" Then
+                                        .name = prcName
+                                    Else
+                                        .name = breadcrumb & "#" & prcName
+                                    End If
                                     .Interior.color = objektFarbe
                                     .Values = datenreihe
                                     .XValues = Xdatenreihe
@@ -821,6 +832,8 @@ Public Module awinDiagrams
         Dim kdatenreihe() As Double
         Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
         Dim prcName As String
+
+        Dim breadcrumb As String = ""
         Dim startdate As Date
         Dim diff As Integer
         Dim mindone As Boolean, maxdone As Boolean

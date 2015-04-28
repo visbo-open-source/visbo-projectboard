@@ -736,15 +736,16 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getCountMilestonesInMonth(milestoneName As String) As Double(,)
+    Public ReadOnly Property getCountMilestonesInMonth(ByVal milestoneName As String, Optional ByVal breadcrumb As String = "") As Double(,)
         Get
 
             Dim milestoneValues(,) As Double
             Dim zeitraum As Integer
             Dim anzProjekte As Integer
 
-            Dim cphase As clsPhase
-            Dim cresult As clsMeilenstein
+            'Dim cphase As clsPhase
+            'Dim cresult As clsMeilenstein
+            Dim cMilestone As clsMeilenstein
             Dim hproj As clsProjekt
             Dim ix As Integer
             Dim idFarbe As Integer
@@ -761,24 +762,22 @@ Public Class clsProjekte
 
                 hproj = kvp.Value
 
-                ' alle Phasen durchgehen und nach dem Meilenstein-Namen suchen 
-                Dim p As Integer
-                For p = 1 To hproj.CountPhases
+                ' neuer Code
+                Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumb)
 
+                For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                    cphase = hproj.getPhase(p)
-                    cresult = cphase.getMilestone(milestoneName)
+                    cMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
 
-                    If IsNothing(cresult) Then
-                    Else
+                    If Not IsNothing(cMilestone) Then
 
                         ' bestimme den monatsbezogenen Index im Array 
-                        ix = getColumnOfDate(cresult.getDate) - showRangeLeft
+                        ix = getColumnOfDate(cMilestone.getDate) - showRangeLeft
 
                         If ix >= 0 And ix <= zeitraum Then
 
-                            If cresult.bewertungsCount > 0 Then
-                                idFarbe = cresult.getBewertung(1).colorIndex
+                            If cMilestone.bewertungsCount > 0 Then
+                                idFarbe = cMilestone.getBewertung(1).colorIndex
                             Else
                                 idFarbe = 0
                             End If
@@ -790,9 +789,42 @@ Public Class clsProjekte
 
                     End If
 
-
-
                 Next
+
+                ' alter Code, vor Einführung der Hierarchie 
+
+                '' alle Phasen durchgehen und nach dem Meilenstein-Namen suchen 
+                'Dim p As Integer
+                'For p = 1 To hproj.CountPhases
+
+
+                '    cphase = hproj.getPhase(p)
+                '    cresult = cphase.getMilestone(milestoneName)
+
+                '    If IsNothing(cresult) Then
+                '    Else
+
+                '        ' bestimme den monatsbezogenen Index im Array 
+                '        ix = getColumnOfDate(cresult.getDate) - showRangeLeft
+
+                '        If ix >= 0 And ix <= zeitraum Then
+
+                '            If cresult.bewertungsCount > 0 Then
+                '                idFarbe = cresult.getBewertung(1).colorIndex
+                '            Else
+                '                idFarbe = 0
+                '            End If
+
+                '            milestoneValues(idFarbe, ix) = milestoneValues(idFarbe, ix) + 1
+
+                '        End If
+
+
+                '    End If
+
+
+
+                'Next
 
 
             Next kvp
@@ -812,7 +844,7 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns>gibt einen Array der Länge (showrangeright-showrangeleft+1) zurück </returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getCountPhasesInMonth(phaseName As String) As Double()
+    Public ReadOnly Property getCountPhasesInMonth(phaseName As String, Optional ByVal breadcrumb As String = "") As Double()
 
         Get
             Dim phasevalues() As Double
@@ -845,16 +877,15 @@ Public Class clsProjekte
 
                 hproj = kvp.Value
 
-                Dim breadcrumb As String = ""
                 Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
                 For px As Integer = 0 To phaseIndices.Length - 1
 
-                    Try
+                    If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
                         hphase = hproj.getPhase(phaseIndices(px))
-                    Catch ex As Exception
+                    Else
                         hphase = Nothing
-                    End Try
+                    End If
 
 
                     If Not hphase Is Nothing Then
@@ -863,8 +894,6 @@ Public Class clsProjekte
                             prAnfang = .Start + .StartOffset
                             prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
                         End With
-
-
 
 
                         If istBereichInTimezone(prAnfang, prEnde) Then
@@ -998,9 +1027,10 @@ Public Class clsProjekte
             Dim schwellWerte() As Double
 
             Dim hkapa As Double
-            Dim rname As String
+            Dim rname As String = ""
             Dim zeitraum As Integer
             Dim r As Integer, m As Integer
+            Dim breadcrumb As String = ""
 
 
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
@@ -1009,7 +1039,9 @@ Public Class clsProjekte
 
             For r = 1 To myCollection.Count
 
-                rname = CStr(myCollection.Item(r))
+                'rname = CStr(myCollection.Item(r))
+                ' rname wird jetzt durch das folgende bestimmt 
+                Call splitHryFullnameTo2(CStr(myCollection.Item(r)), rname, breadcrumb)
                 hkapa = PhaseDefinitions.getPhaseDef(rname).schwellWert
 
                 For m = 0 To zeitraum
@@ -1039,9 +1071,10 @@ Public Class clsProjekte
             Dim schwellWerte() As Double
 
             Dim hkapa As Double
-            Dim msName As String
+            Dim msName As String = ""
             Dim zeitraum As Integer
             Dim r As Integer, m As Integer
+            Dim breadcrumb As String = ""
 
 
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
@@ -1050,7 +1083,8 @@ Public Class clsProjekte
 
             For r = 1 To myCollection.Count
 
-                msName = CStr(myCollection.Item(r))
+                'msName = CStr(myCollection.Item(r))
+                Call splitHryFullnameTo2(CStr(myCollection.Item(r)), msName, breadcrumb)
                 hkapa = MilestoneDefinitions.getMilestoneDef(msName).schwellWert
 
                 For m = 0 To zeitraum

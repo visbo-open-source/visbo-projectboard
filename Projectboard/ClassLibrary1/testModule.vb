@@ -31,6 +31,8 @@ Public Module testModule
         Dim vglName As String = " "
         Dim pName As String, variantName As String
         Dim vorlagenDateiName As String = pptTemplate
+        Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
+        Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
         Dim tatsErstellt As Integer = 0
 
         Try
@@ -86,12 +88,28 @@ Public Module testModule
 
                     e.Result = " Report für Projekt '" & hproj.getShapeText & "' wird erstellt !"
                     worker.ReportProgress(0, e)
-                    'frmSelectPPTTempl.statusNotification.Text = " Report für Projekt '" & hproj.name & " wird erstellt !"
-                    Call createPPTSlidesFromProject(hproj, vorlagenDateiName, _
-                                                    selectedPhases, selectedMilestones, _
-                                                    selectedRoles, selectedCosts, _
-                                                    selectedBUs, selectedTyps, _
-                                                    worker, e)
+
+                    If tatsErstellt = 0 Then
+
+                        Call createPPTSlidesFromProject(hproj, vorlagenDateiName, _
+                                                        selectedPhases, selectedMilestones, _
+                                                        selectedRoles, selectedCosts, _
+                                                        selectedBUs, selectedTyps, True, _
+                                                        (awinSelection.Count = tatsErstellt + 1), zeilenhoehe, _
+                                                        legendFontSize, _
+                                                        worker, e)
+
+                    Else
+                        Call createPPTSlidesFromProject(hproj, vorlagenDateiName, _
+                                                        selectedPhases, selectedMilestones, _
+                                                        selectedRoles, selectedCosts, _
+                                                        selectedBUs, selectedTyps, False, _
+                                                        (awinSelection.Count = tatsErstellt + 1), zeilenhoehe, _
+                                                        legendFontSize, _
+                                                        worker, e)
+
+                    End If
+
                     tatsErstellt = tatsErstellt + 1
 
                 End If
@@ -121,6 +139,8 @@ Public Module testModule
                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                           ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+                                          ByRef pptFirstTime As Boolean, ByVal pptLastTime As Boolean, ByRef zeilenhoehe As Double, _
+                                          ByRef legendFontSize As Single, _
                                           ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
         Dim pptApp As pptNS.Application = Nothing
         Dim pptCurrentPresentation As pptNS.Presentation = Nothing
@@ -135,6 +155,8 @@ Public Module testModule
         Dim top As Double, left As Double, width As Double, height As Double
         Dim htop As Double, hleft As Double, hwidth As Double, hheight As Double
         Dim pptSize As Single = 18
+        ' ur: 16.04.2015: wird nun übergeben: Dim zeilenhoehe As Double = 0.0
+
         Dim auswahl As Integer
         Dim compareToID As Integer
         Dim qualifier As String = " ", qualifier2 As String = " "
@@ -218,6 +240,7 @@ Public Module testModule
 
         ' jetzt wird das template geöffnet , um festzustellen , welches Format Quer oder Hoch die Vorlage hat 
         ' und dann wird die entsprechende Titelblatt Präsentation geöffnet 
+
         Try
 
             If pptApp.Presentations.Count = 0 Then
@@ -233,34 +256,38 @@ Public Module testModule
                 pptCurrentPresentation = pptApp.ActivePresentation
                 pptTemplatePresentation = pptApp.Presentations.Open(pptTemplateName)
 
-                If pptTemplatePresentation.PageSetup.SlideOrientation = pptCurrentPresentation.PageSetup.SlideOrientation And _
-                    pptTemplatePresentation.PageSetup.SlideSize = pptCurrentPresentation.PageSetup.SlideSize Then
-                    ' also in Ordnung, es kann weiter in die Current Presentation geschrieben werden ... 
-                Else
-                    ' jetzt muss geprüft werden, ob die aktuelle Präsentation genauso heisst wie die zu öffnende ..
-                    ' wenn ja, wird beendet - der User bekommt die Aufforderung die aktuelle Präsentation erst zu speichern  
-                    Try
-                        ' jetzt wird die entsprechende Template Präsentation geöffnet 
-                        If pptTemplatePresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
-                            pptCurrentPresentation = pptApp.Presentations.Open(presentationFile)
-                        Else
-                            pptCurrentPresentation = pptApp.Presentations.Open(presentationFileH)
-                        End If
+                If pptFirstTime Then
 
-                    Catch ex As Exception
-                        ' in diesem Fall existiert schon eine geöffnete BoardDossier, allerdings mit anderem Format ...
+                    If pptTemplatePresentation.PageSetup.SlideOrientation = pptCurrentPresentation.PageSetup.SlideOrientation And _
+                        pptTemplatePresentation.PageSetup.SlideSize = pptCurrentPresentation.PageSetup.SlideSize Then
+                        ' also in Ordnung, es kann weiter in die Current Presentation geschrieben werden ... 
+                    Else
+                        ' jetzt muss geprüft werden, ob die aktuelle Präsentation genauso heisst wie die zu öffnende ..
+                        ' wenn ja, wird beendet - der User bekommt die Aufforderung die aktuelle Präsentation erst zu speichern  
+                        Try
+                            ' jetzt wird die entsprechende Template Präsentation geöffnet 
+                            If pptTemplatePresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+                                pptCurrentPresentation = pptApp.Presentations.Open(presentationFile)
+                            Else
+                                pptCurrentPresentation = pptApp.Presentations.Open(presentationFileH)
+                            End If
 
-                        pptTemplatePresentation.Saved = True
-                        pptTemplatePresentation.Close()
+                        Catch ex As Exception
+                            ' in diesem Fall existiert schon eine geöffnete BoardDossier, allerdings mit anderem Format ...
 
-                        e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
-                        If worker.WorkerReportsProgress Then
-                            worker.ReportProgress(0, e)
-                        End If
+                            pptTemplatePresentation.Saved = True
+                            pptTemplatePresentation.Close()
 
-                        Exit Sub
+                            e.Result = "Abbruch ... bitte speichern und schliessen Sie die offenen Präsentationen ... "
+                            If worker.WorkerReportsProgress Then
+                                worker.ReportProgress(0, e)
+                            End If
 
-                    End Try
+                            Exit Sub
+
+                        End Try
+
+                    End If
 
                 End If
             End If
@@ -291,7 +318,7 @@ Public Module testModule
 
         Dim reportObj As xlNS.ChartObject
         Dim obj As xlNS.ChartObject
-        Dim kennzeichnung As String
+        Dim kennzeichnung As String = ""
         Dim anzShapes As Integer
 
         Dim folieIX As Integer = 1
@@ -313,12 +340,32 @@ Public Module testModule
             End If
 
             ' jetzt wird eine Seite aus der Vorlage ergänzt 
-            Dim tmpIX As Integer
-            'tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides + folieIX - 1, _
-            '                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
 
-            tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
-                                                                          SlideStart:=folieIX, SlideEnd:=folieIX)
+            ' ur:31.03.2015
+            Dim tmpIX As Integer
+            Dim tmpslideID As Integer
+
+            'If Not pptFirstTime And kennzeichnung = "Multivariantensicht" Then
+            If Not pptFirstTime Then
+                'pptSlide.Delete()
+                pptCurrentPresentation.Slides("tmpSav").Copy()
+                tmpslideID = pptCurrentPresentation.Slides("tmpSav").SlideID
+                pptCurrentPresentation.Slides.Paste(pptCurrentPresentation.Slides.Count + 1)
+                pptSlide = pptCurrentPresentation.Slides(pptCurrentPresentation.Slides.Count)
+
+            Else
+                anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
+                tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
+                                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
+            End If
+
+            '' ''Dim tmpIX As Integer
+            ' '' ''tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides + folieIX - 1, _
+            ' '' ''                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
+
+            '' ''tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
+            '' ''                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
+
 
 
             'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
@@ -535,7 +582,40 @@ Public Module testModule
                             Case "Legenden-Tabelle"
 
                                 Try
-                                    Call prepZeichneLegendenTabelle(pptSlide, pptShape, selectedPhases, selectedMilestones)
+                                    ' Einzelprojektsicht im Extended Mode
+                                    If selectedPhases.Count = 0 _
+                                        And selectedMilestones.Count = 0 _
+                                        And selectedRoles.Count = 0 _
+                                        And selectedCosts.Count = 0 _
+                                        And selectedBUs.Count = 0 _
+                                        And awinSettings.eppExtendedMode Then
+
+                                        Dim i As Integer = 0
+                                        Dim tmpphases As New Collection
+                                        Dim tmpMilestones As New Collection
+
+                                        ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
+                                        For Each cphase In hproj.AllPhases
+                                            tmpphases.Add(cphase.name, cphase.name)
+                                        Next
+
+                                        ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
+                                        Dim mSList As SortedList(Of Date, String)
+
+                                        mSList = hproj.getMilestones
+
+                                        If mSList.Count > 0 Then
+                                            For Each kvp As KeyValuePair(Of Date, String) In mSList
+                                                tmpMilestones.Add(kvp.Value, kvp.Value)
+                                            Next
+                                        End If
+
+                                        Call prepZeichneLegendenTabelle(pptSlide, pptShape, legendFontSize, tmpphases, tmpMilestones)
+                                    Else
+
+                                        Call prepZeichneLegendenTabelle(pptSlide, pptShape, legendFontSize, selectedPhases, selectedMilestones)
+                                    End If
+
                                 Catch ex As Exception
 
                                 End Try
@@ -544,12 +624,52 @@ Public Module testModule
                             Case "Multivariantensicht"
 
                                 Try
-                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                                  objectsToDo, objectsDone, _
-                                                                  selectedPhases, selectedMilestones, _
-                                                                  selectedRoles, selectedCosts, _
-                                                                  selectedBUs, selectedTyps, _
-                                                                  worker, e, False, hproj)
+                                    ' Einzelprojektsicht im Extended Mode
+                                    If selectedPhases.Count = 0 _
+                                        And selectedMilestones.Count = 0 _
+                                        And selectedRoles.Count = 0 _
+                                        And selectedCosts.Count = 0 _
+                                        And selectedBUs.Count = 0 _
+                                        And awinSettings.eppExtendedMode Then
+
+
+                                        Dim i As Integer = 0
+                                        Dim tmpphases As New Collection
+                                        Dim tmpMilestones As New Collection
+
+                                        ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
+                                        For Each cphase In hproj.AllPhases
+                                            tmpphases.Add(cphase.name, cphase.name)
+                                        Next
+
+                                        ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
+                                        Dim mSList As SortedList(Of Date, String)
+
+                                        mSList = hproj.getMilestones
+
+                                        If mSList.Count > 0 Then
+                                            For Each kvp As KeyValuePair(Of Date, String) In mSList
+                                                tmpMilestones.Add(kvp.Value, kvp.Value)
+                                            Next
+                                        End If
+
+                                        Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
+                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                                      tmpphases, tmpMilestones, _
+                                                                      selectedRoles, selectedCosts, _
+                                                                      selectedBUs, selectedTyps, _
+                                                                      worker, e, False, hproj)
+                                    Else
+
+
+                                        Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
+                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                                      selectedPhases, selectedMilestones, _
+                                                                      selectedRoles, selectedCosts, _
+                                                                      selectedBUs, selectedTyps, _
+                                                                      worker, e, False, hproj)
+                                    End If
+
                                     .TextFrame2.TextRange.Text = ""
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
@@ -1748,16 +1868,23 @@ Public Module testModule
 
             'Next
 
-            If objectsDone >= objectsToDo Then
+            If objectsDone >= objectsToDo Or awinSettings.mppOnePage Then
                 folieIX = folieIX + 1
+                pptFirstTime = True  ' damit die Folie für die Legende geholt wird
                 objectsToDo = 0
                 objectsDone = 0
             End If
 
         End While
 
+        If pptLastTime Then
+            Try
+                pptCurrentPresentation.Slides("tmpSav").Delete()   ' Vorlage in passender Größe wird nun nicht mehr benötigt
+            Catch ex As Exception
 
+            End Try
 
+        End If
 
     End Sub
     '
@@ -1778,6 +1905,7 @@ Public Module testModule
                                                     ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                                     ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                                     ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+                                                    ByRef pptFirstTime As Boolean, _
                                                     ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
         'ByVal showNames As Boolean, ByVal showProjectLine As Boolean,
         'ByVal showAmpeln As Boolean, ByVal showDates As Boolean, ByVal strict As Boolean, _
@@ -1794,6 +1922,9 @@ Public Module testModule
         Dim top As Double, left As Double, width As Double, height As Double
         Dim htop As Double, hleft As Double, hwidth As Double, hheight As Double
         Dim pptSize As Single = 18
+        Dim zeilenhoehe As Double = 0.0
+        Dim legendFontSize As Single = 0.0
+
         'Dim hproj As clsProjekt
         'Dim pName As String
         'Dim auswahl As Integer
@@ -1914,16 +2045,13 @@ Public Module testModule
 
         While folieIX <= anzSlidesToAdd
 
-
-            'For folieIX = 1 To anzSlidesToAdd
-
             tatsErstellt = tatsErstellt + 1
             If worker.WorkerSupportsCancellation Then
 
                 If worker.CancellationPending Then
                     e.Cancel = True
                     e.Result = "Berichterstellung nach " & tatsErstellt & " Seiten abgebrochen ..."
-                    ' Exit For 
+
                     Exit While
                 End If
 
@@ -1931,12 +2059,23 @@ Public Module testModule
 
             ' jetzt wird eine Seite aus der Vorlage ergänzt 
             Dim tmpIX As Integer
-            'tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides + folieIX - 1, _
-            '                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
+            Dim tmpslideID As Integer
 
-            tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
-                                                                          SlideStart:=folieIX, SlideEnd:=folieIX)
+            ' ur:31.03.2015????
 
+            If Not pptFirstTime Then
+                '  pptSlide.Delete()
+                pptCurrentPresentation.Slides("tmpSav").Copy()
+                tmpslideID = pptCurrentPresentation.Slides("tmpSav").SlideID
+                pptCurrentPresentation.Slides.Paste(pptCurrentPresentation.Slides.Count + 1)
+                pptSlide = pptCurrentPresentation.Slides(pptCurrentPresentation.Slides.Count)
+
+
+            Else
+                anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
+                tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
+                                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
+            End If
 
 
             'frmSelectPPTTempl.statusNotification.Text = "Liste der Seiten aufgebaut ...."
@@ -1946,7 +2085,7 @@ Public Module testModule
                 worker.ReportProgress(0, e)
             End If
 
-            'pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides + folieIX)
+
             anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
             pptSlide = pptCurrentPresentation.Slides(anzahlCurrentSlides)
 
@@ -2028,8 +2167,10 @@ Public Module testModule
 
             Dim boxName As String
 
+
             For Each tmpShape As pptNS.Shape In listofShapes
 
+                Dim tmpanz As Integer = listofShapes.Count
                 pptShape = tmpShape
                 qualifier = ""
                 kennzeichnung = ""
@@ -2083,7 +2224,7 @@ Public Module testModule
                         Case "Legenden-Tabelle"
 
                             Try
-                                Call prepZeichneLegendenTabelle(pptSlide, pptShape, selectedPhases, selectedMilestones)
+                                Call prepZeichneLegendenTabelle(pptSlide, pptShape, legendFontSize, selectedPhases, selectedMilestones)
                             Catch ex As Exception
 
                             End Try
@@ -2094,7 +2235,7 @@ Public Module testModule
                             Try
                                 Dim tmpProjekt As New clsProjekt
                                 Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                              projToDo, projDone, _
+                                                              projToDo, projDone, pptFirstTime, zeilenhoehe, legendFontSize, _
                                                               selectedPhases, selectedMilestones, _
                                                               selectedRoles, selectedCosts, _
                                                               selectedBUs, selectedTyps, _
@@ -3327,10 +3468,12 @@ Public Module testModule
             Next
 
             listofShapes.Clear()
-            If projDone >= projToDo Then
+            If projDone >= projToDo Or awinSettings.mppOnePage Then
                 folieIX = folieIX + 1
+                pptFirstTime = True         ' für die LegendenVorlage
                 projToDo = 0
                 projDone = 0
+          
             End If
             ' Next 
 
@@ -3349,8 +3492,12 @@ Public Module testModule
             worker.ReportProgress(0, e)
         End If
 
-        'frmSelectPPTTempl.statusNotification.Text = " Report mit " & tatsErstellt & " Seite erstellt !"
+        ' Vorlage in passender Größe wird nun nicht mehr benötigt
+        Try
+            pptCurrentPresentation.Slides("tmpSav").Delete()
+        Catch ex As Exception
 
+        End Try
 
     End Sub
 
@@ -4599,33 +4746,42 @@ Public Module testModule
         Dim toDraw As Integer
         Dim anzTabellenElements As Integer
         Dim anzDrawn As Integer = 0
-
+        Dim modRest As Integer
         Dim copiedShape As pptNS.ShapeRange
 
 
         Try
             tabelle = pptShape.Table
+            ' alle Cells der Tabelle mit Schriftgröße von legendPhaseVorlage besetzen
+            For i = 2 To tabelle.Rows.Count
+                For j = 1 To tabelle.Columns.Count
+                    CType(tabelle.Cell(i, j), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = legendPhaseVorlage.TextFrame2.TextRange.Font.Size
+                Next j
+                tabelle.Rows(i).Height = 0.5
+            Next i
+            ' Zellenhöhe auf eine Minimum setzen, so dass Font.Size hineinpasst
         Catch ex As Exception
             Throw New Exception("Shape für Legenden-Liste hat keine Tabelle")
         End Try
 
         anzSpalten = tabelle.Columns.Count
         anzZeilen = tabelle.Rows.Count
-        If anzSpalten <> 3 Then
-            Throw New Exception("Tabelle hat nicht 3 Spalten : Symbol, Short- und Long-Name")
+        anzTabellenElements = System.Math.DivRem(anzSpalten, 3, modRest)
+
+        If modRest <> 0 Then
+            Throw New Exception("Tabelle hat keine durch 3 teilbare Anzahl Spalten" & vbLf & "Symbol, Short- und Long-Name")
         End If
 
         If anzZeilen < 2 Then
             Throw New Exception("Tabelle muss mindestens 2 Zeilen haben .... ")
         End If
 
-
-
         zeilenHoehe = tabelle.Rows(tabelle.Rows.Count).Height
         zeilenHoeheTitel = tabelle.Rows(1).Height
         anzMaxZeilen = (pptslide.CustomLayout.Height - (pptShape.Top + zeilenHoeheTitel)) / zeilenHoehe - 1
-        anzTabellenElements = anzMaxZeilen
         toDraw = selectedPhases.Count + selectedMilestones.Count
+
+        
 
 
         Dim curZeile As Integer = 2
@@ -4654,14 +4810,18 @@ Public Module testModule
                     .Fill.ForeColor.RGB = tmpBU.color
                 End With
                 ' jetzt den Business Unit Name eintragen 
-                CType(tabelle.Cell(curZeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie " & tmpBU.name
+                CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie " & tmpBU.name
 
-                curZeile = curZeile + 1
-                If curZeile > anzZeilen Then
-                    tabelle.Rows.Add()
-                    anzZeilen = anzZeilen + 1
+                curSpalte = curSpalte + 3
+                If curSpalte > anzSpalten Then
+                    curSpalte = 1
+                    curZeile = curZeile + 1
+                    If curZeile > anzZeilen Then
+                        tabelle.Rows.Add()
+                        anzZeilen = anzZeilen + 1
+                    End If
+
                 End If
-
             Next
 
             ' jetzt die undefinierte Produktlinie noch zeichnen ...
@@ -4676,14 +4836,25 @@ Public Module testModule
                 .Fill.ForeColor.RGB = awinSettings.AmpelNichtBewertet
             End With
             ' jetzt den Business Unit Name eintragen 
-            CType(tabelle.Cell(curZeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie ist undefiniert"
+            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie ist undefiniert"
 
-            curZeile = curZeile + 1
-            If curZeile > anzZeilen Then
-                tabelle.Rows.Add()
-                anzZeilen = anzZeilen + 1
+            curSpalte = curSpalte + 3
+            If curSpalte > anzSpalten Then
+                curSpalte = 1
+                curZeile = curZeile + 1
+                If curZeile > anzZeilen Then
+                    tabelle.Rows.Add()
+                    anzZeilen = anzZeilen + 1
+                End If
+
             End If
 
+        End If
+
+        ' Überprüfung, ob die restlichen Zeilen für die Legende ausreichen
+
+        If anzMaxZeilen - (curZeile - 1) < toDraw / anzTabellenElements Then
+            Throw New Exception("Anzahl Zeilen in der Tabelle sind nicht ausreichend." & vbLf & "Tabelle muss anders definiert werden .... ")
         End If
 
         For Each phaseName In selectedPhases
@@ -4703,15 +4874,21 @@ Public Module testModule
             End With
 
             ' jetzt den Abkürzungstext eintragen 
-            CType(tabelle.Cell(curZeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = shortName
+            CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = legendPhaseVorlage.TextFrame2.TextRange.Font.Size
+            CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = shortName
 
             ' jetzt den Long Name eintragen 
-            CType(tabelle.Cell(curZeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = phaseName
+            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = legendPhaseVorlage.TextFrame2.TextRange.Font.Size
+            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = phaseName
 
-            curZeile = curZeile + 1
-            If curZeile > anzZeilen Then
-                tabelle.Rows.Add()
-                anzZeilen = anzZeilen + 1
+            curSpalte = curSpalte + 3
+            If curSpalte > anzSpalten Then
+                curSpalte = 1
+                curZeile = curZeile + 1
+                If curZeile > anzZeilen Then
+                    tabelle.Rows.Add()
+                    anzZeilen = anzZeilen + 1
+                End If
             End If
 
         Next
@@ -4736,16 +4913,21 @@ Public Module testModule
             End With
 
             ' jetzt den Abkürzungstext eintragen 
-            CType(tabelle.Cell(curZeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = shortName
+            CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = legendMilestoneVorlage.TextFrame2.TextRange.Font.Size
+            CType(tabelle.Cell(curZeile, curSpalte + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = shortName
 
             ' jetzt den Long Name eintragen 
-            CType(tabelle.Cell(curZeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = milestoneName
+            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Size = legendMilestoneVorlage.TextFrame2.TextRange.Font.Size
+            CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = milestoneName
 
-
-            curZeile = curZeile + 1
-            If curZeile > anzZeilen Then
-                tabelle.Rows.Add()
-                anzZeilen = anzZeilen + 1
+            curSpalte = curSpalte + 3
+            If curSpalte > anzSpalten Then
+                curSpalte = 1
+                curZeile = curZeile + 1
+                If curZeile > anzZeilen Then
+                    tabelle.Rows.Add()
+                    anzZeilen = anzZeilen + 1
+                End If
             End If
 
         Next
@@ -7781,9 +7963,8 @@ Public Module testModule
 
     End Sub
 
-
     ''' <summary>
-    ''' erstellt die Multiprojekt Sicht 
+    ''' zeichnet die Projekte der Multiprojekt Sicht ( auch für extended Mode )
     ''' </summary>
     ''' <param name="pptslide">Powerpoint Folie</param>
     ''' <param name="projectCollection">enthält die nach der Position des Projekts auf der Projekttafel von oben nach unten, links nach rechts 
@@ -7794,7 +7975,7 @@ Public Module testModule
     ''' <param name="drawingAreaRight"></param>
     ''' <param name="drawingAreaTop"></param>
     ''' <param name="drawingAreaBottom"></param>
-    ''' <param name="projekthoehe"></param>
+    ''' <param name="zeilenhoehe"></param>
     ''' <param name="projectListLeft"></param>
     ''' <param name="selectedPhases">welche Phasen sollen dargestellt werden; auch mehrere Phasen werden alle in eine Zeile gezeichnet</param>
     ''' <param name="selectedMilestones">welche Meilensteine sollen gezeichnet werden </param>
@@ -7818,7 +7999,7 @@ Public Module testModule
                             ByRef projDone As Integer, _
                             ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
                             ByVal drawingAreaLeft As Double, ByVal drawingAreaRight As Double, ByVal drawingAreaTop As Double, ByVal drawingAreaBottom As Double, _
-                            ByVal projekthoehe As Double, _
+                            ByVal zeilenhoehe As Double, _
                             ByVal projectListLeft As Double, _
                             ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                             ByVal projectNameVorlagenShape As pptNS.Shape, _
@@ -7886,16 +8067,17 @@ Public Module testModule
         Dim buFarbe As Long
         Dim buName As String
         Dim lastProjectName As String = ""
+        Dim lastPhase As clsPhase = Nothing
 
 
 
         ' bestimme jetzt Y Start-Position für den Text bzw. die Grafik
         rowYPos = drawingAreaTop
-        projektNamenYPos = drawingAreaTop + 0.5 * (projekthoehe - projectNameVorlagenShape.Height) + addOn
-        projektGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - projectVorlagenForm.Height) + addOn
-        phasenGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - phaseVorlagenShape.Height) + addOn
-        milestoneGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - milestoneVorlagenShape.Height) + addOn
-        ampelGrafikYPos = drawingAreaTop + 0.5 * (projekthoehe - ampelVorlagenShape.Height) + addOn
+        projektNamenYPos = drawingAreaTop + 0.5 * (zeilenhoehe - projectNameVorlagenShape.Height) + addOn
+        projektGrafikYPos = drawingAreaTop + 0.5 * (zeilenhoehe - projectVorlagenForm.Height) + addOn
+        phasenGrafikYPos = drawingAreaTop + 0.5 * (zeilenhoehe - phaseVorlagenShape.Height) + addOn
+        milestoneGrafikYPos = drawingAreaTop + 0.5 * (zeilenhoehe - milestoneVorlagenShape.Height) + addOn
+        ampelGrafikYPos = drawingAreaTop + 0.5 * (zeilenhoehe - ampelVorlagenShape.Height) + addOn
 
 
         projectsToDraw = projectCollection.Count
@@ -7921,11 +8103,34 @@ Public Module testModule
             minX1 = 100000.0
             maxX2 = -100000.0
 
+            ' zurücksetzen der vergangenen Phase
+            lastPhase = Nothing
+
+
             fullName = projectCollection.ElementAt(currentProjektIndex - 1).Value
 
             If AlleProjekte.Containskey(fullName) Then
 
                 hproj = AlleProjekte.getProject(fullName)
+
+                ' ur:23.03.2015: Test darauf, ob der Rest der Seite für dieses Projekt ausreicht'
+                If awinSettings.mppExtendedMode Then
+                    Dim neededSpace As Double = hproj.calcNeededLines(selectedPhases, True, Not awinSettings.mppShowAllIfOne) * zeilenhoehe
+                    If neededSpace > drawingAreaBottom - drawingAreaTop Then
+
+                        ' Projekt kann nicht gezeichnet werden, da nicht alle Phasen auf eine Seite passen, 
+                        ' trotzdem muss das Projekt weitergezählt werden, damit das nächste zu zeichnende Projekt angegangen wird
+                        projDone = projDone + 1
+                        ' zuwenig Platz auf der Seite
+                        Throw New ArgumentException("Für Projekt '" & fullName & "' ist zuwenig Platz auf einer Seite")
+
+                    Else
+
+                        If projektGrafikYPos + hproj.calcNeededLines(selectedPhases, True, Not awinSettings.mppShowAllIfOne) * zeilenhoehe > drawingAreaBottom Then
+                            Exit For
+                        End If
+                    End If
+                End If
 
                 If worker.WorkerSupportsCancellation Then
 
@@ -7951,13 +8156,13 @@ Public Module testModule
                     With copiedShape(1)
                         .Top = CSng(rowYPos)
                         .Left = CSng(projectListLeft)
-                        .Height = projekthoehe
+                        .Height = hproj.calcNeededLines(selectedPhases, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne) * zeilenhoehe
                         .Width = drawingAreaRight + 5 - .Left
                         .Name = .Name & .Id
                     End With
                 End If
 
-                ' dadurch wird die Zeilen Markierung nur bei jedem zweiten Mal gezeichnet ... 
+                ' dadurch wird die Zeilen - bzw. Projekt - Markierung nur bei jedem zweiten Mal gezeichnet ... 
                 toggleRowDifferentiator = Not toggleRowDifferentiator
 
                 ' optionales zeichnen der BU Markierung 
@@ -7987,7 +8192,8 @@ Public Module testModule
                     With copiedShape(1)
                         .Top = CSng(rowYPos)
                         .Left = CSng(projectListLeft)
-                        .Height = projekthoehe
+                        Dim neededLines As Double = hproj.calcNeededLines(selectedPhases, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
+                        .Height = hproj.calcNeededLines(selectedPhases, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne) * zeilenhoehe
                         .Fill.ForeColor.RGB = CInt(buFarbe)
                         .Name = .Name & .Id
                         ' width ist die in der Vorlage angegebene Width 
@@ -8013,7 +8219,7 @@ Public Module testModule
                     .Name = .Name & .Id
                 End With
 
-                projektNamenYPos = projektNamenYPos + projekthoehe
+                projektNamenYPos = projektNamenYPos + zeilenhoehe
 
 
                 ' zeichne jetzt ggf die Projekt-Ampel 
@@ -8037,12 +8243,13 @@ Public Module testModule
                     With copiedShape(1)
                         .Top = CSng(ampelGrafikYPos)
                         .Left = CSng(drawingAreaLeft - (.Width + 3))
+                        .Width = .Height
                         .Line.ForeColor.RGB = CInt(statusColor)
                         .Fill.ForeColor.RGB = CInt(statusColor)
                         .Name = .Name & .Id
                     End With
 
-                    ampelGrafikYPos = ampelGrafikYPos + projekthoehe
+                    ampelGrafikYPos = ampelGrafikYPos + zeilenhoehe
 
                 End If
 
@@ -8098,17 +8305,35 @@ Public Module testModule
                 '
                 ' zeichne jetzt die Phasen 
                 '
-                Dim projektstart As Integer = hproj.Start + hproj.StartOffset
-                For Each phaseName As String In selectedPhases
 
-                    Dim breadcrumb As String = ""
-                    Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+                Dim anzZeilenGezeichnet As Integer = 1
 
-                    For px As Integer = 0 To phaseIndices.Length - 1
+                For i = 0 To hproj.CountPhases - 1
 
-                        Dim cphase As clsPhase = hproj.getPhase(phaseIndices(px))
+                    Dim cphase As clsPhase = hproj.getPhase(i + 1)
 
-                        If Not IsNothing(cphase) Then
+                    Dim phaseName As String = cphase.name
+                    If Not IsNothing(cphase) Then
+
+                        ' herausfinden, ob cphase in den selektierten Phasen enthalten ist
+                        Dim found As Boolean = False
+                        Dim j As Integer = 1
+                        Dim breadcrumb As String = ""
+                        Dim selPhaseName As String = ""
+
+                        While j <= selectedPhases.Count And Not found
+
+                            Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb)
+                            If cphase.name = selPhaseName Then
+                                found = True
+                            End If
+                            j = j + 1
+                        End While
+
+                        If found Then           ' cphase ist eine der selektierten Phasen
+
+                            Dim projektstart As Integer = hproj.Start + hproj.StartOffset
+
 
                             Dim zeichnen As Boolean = True
                             ' erst noch prüfen , ob diese Phase tatsächlich im Zeitraum enthalten ist 
@@ -8125,6 +8350,28 @@ Public Module testModule
 
 
                             If zeichnen Then
+
+                                If awinSettings.mppExtendedMode Then
+                                    'phasenName = cphase.name
+                                    If Not IsNothing(lastPhase) Then
+                                        If DateDiff(DateInterval.Day, lastPhase.getEndDate, cphase.getStartDate) < 0 Then
+                                            ' Phase muss in neue Zeile eingetragen werden
+                                            phasenGrafikYPos = phasenGrafikYPos + zeilenhoehe
+                                            ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
+                                            '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
+                                            ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
+                                            projektNamenYPos = projektNamenYPos + zeilenhoehe
+                                            ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
+                                            milestoneGrafikYPos = milestoneGrafikYPos + zeilenhoehe
+                                            ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
+                                            ampelGrafikYPos = ampelGrafikYPos + zeilenhoehe
+                                            anzZeilenGezeichnet = anzZeilenGezeichnet + 1
+                                        End If
+                                    End If
+
+                                End If
+
+
                                 phaseShape = PhaseDefinitions.getShape(phaseName)
                                 Dim phaseStart As Date = cphase.getStartDate
                                 Dim phaseEnd As Date = cphase.getEndDate
@@ -8169,8 +8416,6 @@ Public Module testModule
 
                                 End If
 
-
-
                                 ' jetzt muss ggf das Datum angebracht werden 
                                 If awinSettings.mppShowPhDate Then
                                     'Dim phDateText As String = phaseStart.ToShortDateString
@@ -8194,7 +8439,7 @@ Public Module testModule
                                         .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
 
                                         rightX = .Left + .Width
-                                        addHeight = .Height * 0.49
+                                        addHeight = .Height * 0.7
 
                                     End With
 
@@ -8245,8 +8490,6 @@ Public Module testModule
 
                                     With copiedShape(1)
 
-                                        '.Height = 0.7 * projekthoehe
-                                        '.Top = rowYPos + 0.5 * (projekthoehe - .Height)
                                         .Height = 1.3 * phaseShape.Height
                                         .Top = CSng(phasenGrafikYPos)
                                         .Left = CSng(x1) - .Width * 0.5
@@ -8260,8 +8503,6 @@ Public Module testModule
 
                                     With copiedShape(1)
 
-                                        '.Height = 0.7 * projekthoehe
-                                        '.Top = rowYPos + 0.5 * (projekthoehe - .Height)
                                         .Height = 1.3 * phaseShape.Height
                                         .Top = CSng(phasenGrafikYPos)
                                         .Left = CSng(x2) + .Width * 0.5
@@ -8270,8 +8511,6 @@ Public Module testModule
                                     End With
 
                                 End If
-
-
 
                                 ' jetzt das Shape zeichnen 
                                 phaseShape.Copy()
@@ -8287,152 +8526,309 @@ Public Module testModule
 
                                 phShapeNames.Add(copiedShape.Name)
 
+                                '  Phase merken, damit bei der nächsten zu zeichnenden Phase nachgesehen werden
+                                '  kann, ob diese überlappt
+
+                                If i < hproj.CountPhases - 1 Then
+                                    lastPhase = hproj.getPhase(i + 1)
+                                End If
+
                             End If
 
+
+
+                            ' zeichne jetzt die Meilensteine der aktuellen Phase
+                            ' ur: 19.03.2015: diese Schleife muss innerhalb der für die Phase liegen
+
+                            Dim firstMilestone As Boolean = True
+                            For Each milestoneName As String In selectedMilestones
+
+
+                                Dim ms As clsMeilenstein = cphase.getMilestone(milestoneName)
+                                If Not IsNothing(ms) Then
+
+                                    Dim msDate As Date = ms.getDate
+                                    'Dim msDate As Date = hproj.getMilestoneDate(milestoneName)
+
+                                    ' Meilenstein aus der Liste der selektieren Meilensteine entfernen, da nun bereits abgearbeitet
+                                    selectedMilestones.Remove(milestoneName)
+
+
+
+                                    Dim zeichnenMS As Boolean
+
+                                    If IsNothing(msDate) Then
+                                        zeichnenMS = False
+                                    Else
+                                        If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
+
+                                            ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+                                            If awinSettings.mppShowAllIfOne Then
+                                                zeichnenMS = True
+                                            Else
+                                                If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
+                                                    zeichnenMS = True
+                                                Else
+                                                    zeichnenMS = False
+                                                End If
+                                            End If
+                                        Else
+                                            zeichnenMS = False
+                                        End If
+                                    End If
+
+
+                                    If zeichnenMS Then
+                                        milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
+
+                                        Dim curMeilenstein As clsMeilenstein = Nothing
+                                        curMeilenstein = hproj.getMilestone(milestoneName)
+
+
+
+                                        Dim seitenverhaeltnis As Double
+                                        With milestoneTypShape
+                                            seitenverhaeltnis = .Height / .Width
+                                        End With
+
+
+                                        Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, msDate, msDate, _
+                                                            drawingAreaLeft, drawingAreaWidth, x1, x2)
+
+
+                                        If minX1 > x1 Then
+                                            minX1 = x1
+                                        End If
+
+                                        If maxX2 < x2 Then
+                                            maxX2 = x2
+                                        End If
+
+                                        ' jetzt muss ggf die Beschriftung angebracht werden 
+                                        ' die muss vor dem Meilenstein angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
+                                        ' überdeckt werden soll 
+                                        If awinSettings.mppShowMsName Then
+
+                                            Dim msShortname As String = MilestoneDefinitions.getAbbrev(milestoneName)
+
+                                            MsDescVorlagenShape.Copy()
+                                            copiedShape = pptslide.Shapes.Paste()
+                                            With copiedShape(1)
+
+                                                .TextFrame2.TextRange.Text = msShortname
+                                                .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
+                                                '.Left = CSng(x1) - .Width / 2
+                                                .Left = CSng(x1) - .Width / 2
+                                                .Name = .Name & .Id
+
+                                            End With
+
+
+                                        End If
+
+
+
+                                        ' jetzt muss ggf das Datum angebracht werden 
+                                        If awinSettings.mppShowMsDate Then
+                                            'Dim msDateText As String = msDate.ToShortDateString
+                                            Dim msDateText As String
+                                            msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
+
+                                            MsDateVorlagenShape.Copy()
+                                            copiedShape = pptslide.Shapes.Paste()
+                                            With copiedShape(1)
+
+                                                .TextFrame2.TextRange.Text = msDateText
+                                                .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToDate)
+                                                .Left = CSng(x1) - .Width / 2
+                                                .Name = .Name & .Id
+
+                                            End With
+
+                                        End If
+
+                                        ' jetzt ggf die vorhin gezeichneten Phasen in den Vordergrund bringen, damit die Texte die Phasen nicht teilweise überdecken  
+
+                                        ' Erst jetzt wird der Meilenstein gezeichnet 
+                                        milestoneTypShape.Copy()
+                                        copiedShape = pptslide.Shapes.Paste()
+
+
+
+                                        With copiedShape(1)
+                                            .Top = CSng(milestoneGrafikYPos)
+                                            .Height = milestoneVorlagenShape.Height
+                                            .Width = .Height / seitenverhaeltnis
+                                            .Left = CSng(x1) - .Width / 2
+                                            .Name = .Name & .Id
+                                            If awinSettings.mppShowAmpel Then
+                                                .Glow.Color.RGB = CInt(curMeilenstein.getBewertung(1).color)
+                                                If .Glow.Radius = 0 Then
+                                                    .Glow.Radius = 5
+                                                End If
+                                            End If
+                                        End With
+
+                                        msShapeNames.Add(copiedShape.Name)
+
+                                    End If
+                                Else
+                                    ' selektierter Meilenstein 'milestoneName' nicht in dieser Phase enthalten
+                                    ' also: nichts tun
+                                End If
+
+                            Next    ' nächsten selektieren Meilenstein überprüfen und einzeichnen
+
+
                         End If
-
-                    Next
-
+                    End If
 
 
-                Next
+                Next i      ' nächste Phase bearbeiten
 
+                ' '' '' zeichne jetzt die übrigen Meilensteine 
+                ' '' '' ur: 17.04.2015: Meilensteine für extended Mode in separate Zeile
 
-                ' zeichne jetzt die Meilensteine
+                If selectedMilestones.Count > 0 And awinSettings.mppExtendedMode Then   ' Y-Position erhöhen, da weitere Zeile hinzugefügt
 
-                Dim firstMilestone As Boolean = True
+                    ' Phase muss in neue Zeile eingetragen werden
+                    phasenGrafikYPos = phasenGrafikYPos + zeilenhoehe
+                    ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
+                    '''' ur: 20.04.2015: rowYPos = rowYPos + zeilenhoehe
+                    ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
+                    projektNamenYPos = projektNamenYPos + zeilenhoehe
+                    ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
+                    milestoneGrafikYPos = milestoneGrafikYPos + zeilenhoehe
+                    ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
+                    ampelGrafikYPos = ampelGrafikYPos + zeilenhoehe
+                    anzZeilenGezeichnet = anzZeilenGezeichnet + 1
+
+                End If
+
 
                 For Each milestoneName As String In selectedMilestones
 
-                    Dim msDate As Date
-                    Dim breadcrumb As String = ""
-                    Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumb)
-                    ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+                    Dim msDate As Date = hproj.getMilestoneDate(milestoneName)
 
-                    For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+                    Dim zeichnenMS As Boolean
+
+                    If IsNothing(msDate) Then
+                        zeichnenMS = False
+                    ElseIf DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
+
+                            ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+                            If awinSettings.mppShowAllIfOne Then
+                                zeichnenMS = True
+                            Else
+                                If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
+                                    zeichnenMS = True
+                                Else
+                                    zeichnenMS = False
+                                End If
+                            End If
+
+                    Else
+                        zeichnenMS = False
+                    End If
+
+
+
+                    If zeichnenMS Then
+                        milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
 
                         Dim curMeilenstein As clsMeilenstein = Nothing
-                        curMeilenstein = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                        curMeilenstein = hproj.getMilestone(milestoneName)
 
-                        Dim zeichnen As Boolean
+                        Dim seitenverhaeltnis As Double
+                        With milestoneTypShape
+                            seitenverhaeltnis = .Height / .Width
+                        End With
 
-                        If IsNothing(curMeilenstein) Then
-                            zeichnen = False
-                        Else
-                            msDate = curMeilenstein.getDate
-                            If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
 
-                                ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
-                                If awinSettings.mppShowAllIfOne Then
-                                    zeichnen = True
-                                Else
-                                    If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
-                                        zeichnen = True
-                                    Else
-                                        zeichnen = False
-                                    End If
-                                End If
-                            Else
-                                zeichnen = False
-                            End If
+                        Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, msDate, msDate, _
+                                            drawingAreaLeft, drawingAreaWidth, x1, x2)
+
+
+                        If minX1 > x1 Then
+                            minX1 = x1
                         End If
 
+                        If maxX2 < x2 Then
+                            maxX2 = x2
+                        End If
 
-                        If zeichnen Then
-                            milestoneTypShape = MilestoneDefinitions.getShape(curMeilenstein.name)
+                        ' jetzt muss ggf die Beschriftung angebracht werden 
+                        ' die muss vor dem Meilenstein angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
+                        ' überdeckt werden soll 
+                        If awinSettings.mppShowMsName Then
 
+                            Dim msShortname As String = MilestoneDefinitions.getAbbrev(milestoneName)
 
-                            Dim seitenverhaeltnis As Double
-                            With milestoneTypShape
-                                seitenverhaeltnis = .Height / .Width
-                            End With
-
-
-                            Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, msDate, msDate, _
-                                                drawingAreaLeft, drawingAreaWidth, x1, x2)
-
-
-                            If minX1 > x1 Then
-                                minX1 = x1
-                            End If
-
-                            If maxX2 < x2 Then
-                                maxX2 = x2
-                            End If
-
-                            ' jetzt muss ggf die Beschriftung angebracht werden 
-                            ' die muss vor dem Meilenstein angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
-                            ' überdeckt werden soll 
-                            If awinSettings.mppShowMsName Then
-
-                                Dim msShortname As String = MilestoneDefinitions.getAbbrev(milestoneName)
-
-                                MsDescVorlagenShape.Copy()
-                                copiedShape = pptslide.Shapes.Paste()
-                                With copiedShape(1)
-
-                                    .TextFrame2.TextRange.Text = msShortname
-                                    .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
-                                    '.Left = CSng(x1) - .Width / 2
-                                    .Left = CSng(x1) - .Width / 2
-                                    .Name = .Name & .Id
-
-                                End With
-
-
-                            End If
-
-
-
-                            ' jetzt muss ggf das Datum angebracht werden 
-                            If awinSettings.mppShowMsDate Then
-                                'Dim msDateText As String = msDate.ToShortDateString
-                                Dim msDateText As String
-                                msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
-
-                                MsDateVorlagenShape.Copy()
-                                copiedShape = pptslide.Shapes.Paste()
-                                With copiedShape(1)
-
-                                    .TextFrame2.TextRange.Text = msDateText
-                                    .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToDate)
-                                    .Left = CSng(x1) - .Width / 2
-                                    .Name = .Name & .Id
-
-                                End With
-
-                            End If
-
-                            ' jetzt ggf die vorhin gezeichneten Phasen in den Vordergrund bringen, damit die Texte die Phasen nicht teilweise überdecken  
-
-                            ' Erst jetzt wird der Meilenstein gezeichnet 
-                            milestoneTypShape.Copy()
+                            MsDescVorlagenShape.Copy()
                             copiedShape = pptslide.Shapes.Paste()
-
-
-
                             With copiedShape(1)
-                                .Top = CSng(milestoneGrafikYPos)
-                                .Height = milestoneVorlagenShape.Height
-                                .Width = .Height / seitenverhaeltnis
+
+                                .TextFrame2.TextRange.Text = msShortname
+                                .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
+                                '.Left = CSng(x1) - .Width / 2
                                 .Left = CSng(x1) - .Width / 2
                                 .Name = .Name & .Id
-                                If awinSettings.mppShowAmpel Then
-                                    .Glow.Color.RGB = CInt(curMeilenstein.getBewertung(1).color)
-                                    If .Glow.Radius = 0 Then
-                                        .Glow.Radius = 5
-                                    End If
-                                End If
+
                             End With
 
-                            msShapeNames.Add(copiedShape.Name)
 
                         End If
 
 
-                    Next
 
-                Next
+                        ' jetzt muss ggf das Datum angebracht werden 
+                        If awinSettings.mppShowMsDate Then
+                            'Dim msDateText As String = msDate.ToShortDateString
+                            Dim msDateText As String
+                            msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
+
+                            MsDateVorlagenShape.Copy()
+                            copiedShape = pptslide.Shapes.Paste()
+                            With copiedShape(1)
+
+                                .TextFrame2.TextRange.Text = msDateText
+                                .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToDate)
+                                .Left = CSng(x1) - .Width / 2
+                                .Name = .Name & .Id
+
+                            End With
+
+                        End If
+
+                        ' jetzt ggf die vorhin gezeichneten Phasen in den Vordergrund bringen, damit die Texte die Phasen nicht teilweise überdecken  
+
+                        ' Erst jetzt wird der Meilenstein gezeichnet 
+                        milestoneTypShape.Copy()
+                        copiedShape = pptslide.Shapes.Paste()
+
+
+
+                        With copiedShape(1)
+                            .Top = CSng(milestoneGrafikYPos)
+                            .Height = milestoneVorlagenShape.Height
+                            .Width = .Height / seitenverhaeltnis
+                            .Left = CSng(x1) - .Width / 2
+                            .Name = .Name & .Id
+                            If awinSettings.mppShowAmpel Then
+                                .Glow.Color.RGB = CInt(curMeilenstein.getBewertung(1).color)
+                                If .Glow.Radius = 0 Then
+                                    .Glow.Radius = 5
+                                End If
+                            End If
+                        End With
+
+                        msShapeNames.Add(copiedShape.Name)
+
+                    End If
+
+
+                Next    ' nächsten selektieren und übriggebliebenen Meilenstein einzeichnen
+
 
                 ' jetzt muss ggf die duration eingezeichnet werden 
                 If Not IsNothing(durationArrowShape) And Not IsNothing(durationTextShape) Then
@@ -8474,20 +8870,29 @@ Public Module testModule
 
 
                 projDone = projDone + 1
-                projektGrafikYPos = projektGrafikYPos + projekthoehe
-                phasenGrafikYPos = phasenGrafikYPos + projekthoehe
-                milestoneGrafikYPos = milestoneGrafikYPos + projekthoehe
+                If Not awinSettings.mppExtendedMode Then
+
+                    projektGrafikYPos = projektGrafikYPos + zeilenhoehe
+                    rowYPos = rowYPos + zeilenhoehe
+                Else
+
+                    projektGrafikYPos = projektGrafikYPos + anzZeilenGezeichnet * zeilenhoehe
+                    rowYPos = rowYPos + anzZeilenGezeichnet * zeilenhoehe
+
+                End If
+                phasenGrafikYPos = phasenGrafikYPos + zeilenhoehe
+                milestoneGrafikYPos = milestoneGrafikYPos + zeilenhoehe
 
                 If projektGrafikYPos > drawingAreaBottom Then
                     Exit For
                 End If
 
-                rowYPos = rowYPos + projekthoehe
+
 
             End If
-            
 
-        Next
+
+        Next            ' nächstes Projekt zeichnen
 
 
         '
@@ -8542,10 +8947,12 @@ Public Module testModule
 
 
     End Sub
+ 
 
 
     ''' <summary>
-    ''' bestimmt anhand der Shapes bzw. Einstellungen die benötigte Projekthoehe
+    ''' bestimmt anhand der Shapes bzw. Einstellungen die benötigte Zeilenhöhe
+    ''' bei "extended Mode" sonst ist es auch gleichzeitig die Projekt-Höhe
     ''' </summary>
     ''' <param name="phaseVorlagenShape"></param>
     ''' <param name="milestoneVorlagenShape"></param>
@@ -8556,145 +8963,91 @@ Public Module testModule
     ''' <param name="projectNameVorlagenShape"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Function bestimmeMppProjektHoehe(ByVal pptSlide As pptNS.Slide, _
+    Private Function bestimmeMppZeilenHoehe(ByVal pptSlide As pptNS.Slide, _
                                              ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, _
                                                  ByVal anzPhasen As Integer, ByVal anzMilestones As Integer, _
                                                  ByVal MsDescVorlagenShape As pptNS.Shape, ByVal MsDateVorlagenShape As pptNS.Shape, _
                                                  ByVal PhDescVorlagenShape As pptNS.Shape, ByVal PhDateVorlagenShape As pptNS.Shape, _
-                                                 ByVal projectNameVorlagenShape As pptNS.Shape, ByVal phaseDelimiterShape As pptNS.Shape, _
+                                                 ByVal projectNameVorlagenShape As pptNS.Shape, _
                                                  ByVal durationArrow As pptNS.Shape, ByVal durationText As pptNS.Shape) As Double
 
         'Dim versatzFaktor As Double = 0.87
 
         Dim listOfShapes As New Collection
-        Dim shapeGruppe As pptNS.ShapeRange
-        Dim arrayOFNames() As String
-        Dim anzElements As Integer
-        Dim oneShape As pptNS.Shape
+        ' '' ''Dim arrayOFNames() As String
+        ' '' ''Dim anzElements As Integer
+        Dim minTop As Double = 1.79769313486231E+308        ' Maximale Double - Wert
+        Dim maxBottom As Double = 0.0
 
 
         listOfShapes.Add(projectNameVorlagenShape.Name)
+        minTop = System.Math.Min(minTop, projectNameVorlagenShape.Top)
+        maxBottom = System.Math.Max(maxBottom, projectNameVorlagenShape.Top + projectNameVorlagenShape.Height)
 
         If anzPhasen > 0 Then
             listOfShapes.Add(phaseVorlagenShape.Name)
+            minTop = System.Math.Min(minTop, phaseVorlagenShape.Top)
+            maxBottom = System.Math.Max(maxBottom, phaseVorlagenShape.Top + phaseVorlagenShape.Height)
 
-            If Not IsNothing(phaseDelimiterShape) Then
-                listOfShapes.Add(phaseDelimiterShape.Name)
-            End If
+            ' ur:27.03.2015: die Höhe von phaseDelimiterShape wird beim Zeichnen auf 1.3 * Phaseshapehöhe gesetzt.
+            ' Also ist Zeilenhöhe nicht davon abhängig
+
+            'If Not IsNothing(phaseDelimiterShape) Then
+            '    listOfShapes.Add(phaseDelimiterShape.Name)
+            'End If
 
             If awinSettings.mppShowPhDate Then
                 listOfShapes.Add(PhDateVorlagenShape.Name)
+                minTop = System.Math.Min(minTop, PhDateVorlagenShape.Top)
+                maxBottom = System.Math.Max(maxBottom, PhDateVorlagenShape.Top + PhDateVorlagenShape.Height)
             End If
 
             If awinSettings.mppShowPhName Then
                 listOfShapes.Add(PhDescVorlagenShape.Name)
+                minTop = System.Math.Min(minTop, PhDescVorlagenShape.Top)
+                maxBottom = System.Math.Max(maxBottom, PhDescVorlagenShape.Top + PhDescVorlagenShape.Height)
             End If
         End If
 
         If anzMilestones > 0 Then
             listOfShapes.Add(milestoneVorlagenShape.Name)
+            minTop = System.Math.Min(minTop, milestoneVorlagenShape.Top)
+            maxBottom = System.Math.Max(maxBottom, milestoneVorlagenShape.Top + milestoneVorlagenShape.Height)
 
             If awinSettings.mppShowMsDate Then
                 listOfShapes.Add(MsDateVorlagenShape.Name)
+                minTop = System.Math.Min(minTop, MsDateVorlagenShape.Top)
+                maxBottom = System.Math.Max(maxBottom, MsDateVorlagenShape.Top + MsDateVorlagenShape.Height)
+
             End If
 
             If awinSettings.mppShowMsName Then
                 listOfShapes.Add(MsDescVorlagenShape.Name)
+                minTop = System.Math.Min(minTop, MsDescVorlagenShape.Top)
+                maxBottom = System.Math.Max(maxBottom, MsDescVorlagenShape.Top + MsDescVorlagenShape.Height)
+
             End If
         End If
 
-        anzElements = listOfShapes.Count
-        ReDim arrayOFNames(anzElements - 1)
+        Dim projekthoehe As Double = maxBottom - minTop
+        projekthoehe = ((maxBottom - minTop) * 13 / 15)
 
-        For i = 1 To anzElements
-            arrayOFNames(i - 1) = CStr(listOfShapes.Item(i))
-        Next
+        ' '' ''anzElements = listOfShapes.Count
+        ' '' ''ReDim arrayOFNames(anzElements - 1)
 
-        shapeGruppe = pptSlide.Shapes.Range(arrayOFNames)
-        oneShape = shapeGruppe.Group
-        Dim projekthoehe As Double = oneShape.Height * 13 / 15
-        oneShape.Ungroup()
-
-        ' jetzt die relativen Positionen zueinander bestimmen
-
-        '' Festlegung: Phase und Milestone werden zunächst immer zentriert dargestellt ; der Beschriftungstext kommt oben, zentriert hin, das Datum zentriert unten
-        '' Bestimmen, wieviele Projekte mit den gegebenen Einstellungen gezeichnet werden können
-        'Dim mindestNettoHoehe As Double = 0.0
-
-        'Dim tmpDbl(3) As Double
-        'tmpDbl(0) = phaseVorlagenShape.Height
-        'tmpDbl(1) = milestoneVorlagenShape.Height
-        'tmpDbl(2) = projectNameVorlagenShape.Height
-
-        'If Not IsNothing(phaseDelimiterShape) Then
-        '    tmpDbl(3) = phaseDelimiterShape.Height
-        'Else
-        '    tmpDbl(3) = 0.0
-        'End If
-
-        'mindestNettoHoehe = tmpDbl.Max
-        'NullLevel = mindestNettoHoehe / 2
-
-        ''tmpDbl(3) = phaseVorlagenShape.Height
-
-        ''If anzPhasen > 0 And anzMilestones > 0 Then
-        ''    mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, milestoneVorlagenShape.Height)
-        ''ElseIf anzPhasen > 0 Then
-        ''    mindestNettoHoehe = System.Math.Max(phaseVorlagenShape.Height, phaseDelimiterShape.Height)
-        ''ElseIf anzMilestones > 0 Then
-        ''    mindestNettoHoehe = milestoneVorlagenShape.Height
-        ''Else
-        ''    mindestNettoHoehe = projectNameVorlagenShape.Height
-        ''End If
+        ' '' ''For i = 1 To anzElements
+        ' '' ''    arrayOFNames(i - 1) = CStr(listOfShapes.Item(i))
+        ' '' ''Next
 
 
-        'Dim projekthoehe As Double = mindestNettoHoehe
+        ' '' ''shapeGruppe = pptSlide.Shapes.Range(arrayOFNames)
+        ' '' ''shapeGruppe.Name = "ONESHAPE"
+        ' '' ''oneShape = shapeGruppe.Group
 
-        'If anzMilestones > 0 Then
-        '    If awinSettings.mppShowMsName Then
-        '        'projekthoehe = projekthoehe + versatzFaktor * MsDescVorlagenShape.Height
-        '        If milestoneVorlagenShape.Top > MsDescVorlagenShape.Top Then
-        '            projekthoehe = projekthoehe + (milestoneVorlagenShape.Top - MsDescVorlagenShape.Top)
-        '        Else
-        '            projekthoehe = projekthoehe + (MsDescVorlagenShape.Top - milestoneVorlagenShape.Top)
-        '        End If
+        ' '' ''Dim projekthoehe As Double = (oneShape.Height * 13 / 15)
 
-        '    End If
+        ' '' ''oneShape.Ungroup()
 
-        '    If awinSettings.mppShowMsDate Then
-        '        If milestoneVorlagenShape.Top > MsDateVorlagenShape.Top Then
-        '            projekthoehe = projekthoehe + (milestoneVorlagenShape.Top - MsDateVorlagenShape.Top)
-        '        Else
-        '            projekthoehe = projekthoehe + (MsDateVorlagenShape.Top - milestoneVorlagenShape.Top)
-        '        End If
-        '    End If
-        'End If
-
-        'If anzPhasen > 0 And anzMilestones = 0 Then
-        '    If awinSettings.mppShowPhName Then
-
-        '        If phaseVorlagenShape.Top > PhDateVorlagenShape.Top Then
-        '            projekthoehe = projekthoehe + (phaseVorlagenShape.Top - MsDateVorlagenShape.Top)
-        '        Else
-        '            projekthoehe = projekthoehe + (MsDateVorlagenShape.Top - milestoneVorlagenShape.Top)
-        '        End If
-
-        '    End If
-
-        '    If awinSettings.mppShowPhDate Then
-        '        projekthoehe = projekthoehe + versatzFaktor * PhDateVorlagenShape.Height
-        '    End If
-        'End If
-
-
-
-        'If projekthoehe < projectNameVorlagenShape.Height Then
-        '    projekthoehe = projectNameVorlagenShape.Height
-        'End If
-
-        'If projekthoehe <= mindestNettoHoehe Then
-        '    projekthoehe = mindestNettoHoehe * 1.1
-        'End If
 
         ' jetzt werden noch die Höhe des Pfeiles und der Beschriftung berücksichtigt 
 
@@ -8706,7 +9059,7 @@ Public Module testModule
 
         End If
 
-        bestimmeMppProjektHoehe = projekthoehe + addOn * 13 / 15
+        bestimmeMppZeilenHoehe = projekthoehe + addOn * 13 / 15
 
     End Function
 
@@ -9528,15 +9881,21 @@ Public Module testModule
     End Function
 
     ''' <summary>
-    ''' zeichnet den Multiprojekt Sicht Container 
+    ''' zeichnet den Multiprojekt Sicht Container
     ''' </summary>
     ''' <param name="pptApp"></param>
     ''' <param name="pptCurrentPresentation"></param>
     ''' <param name="pptslide"></param>
+    ''' <param name="projToDo"></param>
+    ''' <param name="projDone"></param>
+    ''' <param name="pptFirstTime"></param>
+    ''' <param name="zeilenhoehe"></param>
     ''' <param name="selectedPhases"></param>
     ''' <param name="selectedMilestones"></param>
     ''' <param name="selectedRoles"></param>
     ''' <param name="selectedCosts"></param>
+    ''' <param name="selectedBUs"></param>
+    ''' <param name="selectedTyps"></param>
     ''' <param name="worker"></param>
     ''' <param name="e"></param>
     ''' <param name="isMultiprojektSicht">gibt an, ob es sich um eine Einzelprojekt/Varianten Sicht oder 
@@ -9544,7 +9903,8 @@ Public Module testModule
     ''' <param name="projMitVariants">das Projekt, dessen Varianten alle dargestellt werden sollen; nur besetzt wenn isMultiprojektSicht = false</param>
     ''' <remarks></remarks>
     Private Sub zeichneMultiprojektSicht(ByRef pptApp As pptNS.Application, ByRef pptCurrentPresentation As pptNS.Presentation, ByRef pptslide As pptNS.Slide, _
-                                             ByRef projToDo As Integer, ByRef projDone As Integer, _
+                                             ByRef projToDo As Integer, ByRef projDone As Integer, ByRef pptFirstTime As Boolean, _
+                                             ByRef zeilenhoehe As Double, ByRef legendFontSize As Double, _
                                              ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                              ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                              ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
@@ -9674,13 +10034,23 @@ Public Module testModule
         ' Ende Übernahme
 
         Dim format As Integer = 4
-
+        'Dim tmpslideID As Integer
 
         ' mit completeMppDefinition wird überprüft , ob alle Informationen/Shapes für das Erstellen einer Multiprojektsicht vorhanden sind
         Dim completeMppDefinition() As Integer
         ReDim completeMppDefinition(18)
 
+        ' '' ''If Not pptFirstTime Then
+        ' '' ''    pptslide.Delete()
+        ' '' ''    pptCurrentPresentation.Slides("tmpSav").Copy()
+        ' '' ''    tmpslideID = pptCurrentPresentation.Slides("tmpSav").SlideID
+        ' '' ''    pptCurrentPresentation.Slides.Paste(pptCurrentPresentation.Slides.Count + 1)
+        ' '' ''    pptslide = pptCurrentPresentation.Slides(pptCurrentPresentation.Slides.Count)
 
+
+        ' '' ''Else
+
+        ' '' ''End If
         Dim anzShapes As Integer = pptslide.Shapes.Count
         Dim pptShape As pptNS.Shape
         ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
@@ -9851,46 +10221,52 @@ Public Module testModule
             ' jetzt werden die DinA Formate gesetzt 
             ' Voraussetzung ist allerdings, dass es sich bei der Vorlage um DIN A4 handelt 
             Dim paperSizeRatio As Double
-            If pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA4Paper Then
+            If pptFirstTime Then
 
-                If querFormat Then
-                    paperSizeRatio = curFormatSize(0) / curFormatSize(1)
-                    dinFormatA(4, 0) = curFormatSize(0)
-                    dinFormatA(4, 1) = curFormatSize(1)
+
+                If pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA4Paper Then
+
+                    If querFormat Then
+                        paperSizeRatio = curFormatSize(0) / curFormatSize(1)
+                        dinFormatA(4, 0) = curFormatSize(0)
+                        dinFormatA(4, 1) = curFormatSize(1)
+                    Else
+                        paperSizeRatio = curFormatSize(1) / curFormatSize(0)
+                        dinFormatA(4, 1) = curFormatSize(0)
+                        dinFormatA(4, 0) = curFormatSize(1)
+                    End If
+
+                    dinFormatA(3, 0) = dinFormatA(4, 0) * paperSizeRatio
+                    dinFormatA(3, 1) = dinFormatA(4, 1) * paperSizeRatio
+
+                ElseIf pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA3Paper Then
+                    If querFormat Then
+                        paperSizeRatio = curFormatSize(0) / curFormatSize(1)
+                        dinFormatA(3, 0) = curFormatSize(0)
+                        dinFormatA(3, 1) = curFormatSize(1)
+
+                    Else
+                        paperSizeRatio = curFormatSize(1) / curFormatSize(0)
+                        dinFormatA(3, 1) = curFormatSize(0)
+                        dinFormatA(3, 0) = curFormatSize(1)
+                    End If
+
+                    dinFormatA(4, 0) = dinFormatA(3, 0) / paperSizeRatio
+                    dinFormatA(4, 1) = dinFormatA(3, 1) / paperSizeRatio
+
                 Else
-                    paperSizeRatio = curFormatSize(1) / curFormatSize(0)
-                    dinFormatA(4, 1) = curFormatSize(0)
-                    dinFormatA(4, 0) = curFormatSize(1)
+                    Call MsgBox("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+                    'Throw New ArgumentException("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
                 End If
 
-                dinFormatA(3, 0) = dinFormatA(4, 0) * paperSizeRatio
-                dinFormatA(3, 1) = dinFormatA(4, 1) * paperSizeRatio
 
-            ElseIf pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA3Paper Then
-                If querFormat Then
-                    paperSizeRatio = curFormatSize(0) / curFormatSize(1)
-                    dinFormatA(3, 0) = curFormatSize(0)
-                    dinFormatA(3, 1) = curFormatSize(1)
-
-                Else
-                    paperSizeRatio = curFormatSize(1) / curFormatSize(0)
-                    dinFormatA(3, 1) = curFormatSize(0)
-                    dinFormatA(3, 0) = curFormatSize(1)
-                End If
-
-                dinFormatA(4, 0) = dinFormatA(3, 0) / paperSizeRatio
-                dinFormatA(4, 1) = dinFormatA(3, 1) / paperSizeRatio
-
+                For i = 2 To 0 Step -1
+                    dinFormatA(i, 0) = dinFormatA(i + 1, 0) * paperSizeRatio
+                    dinFormatA(i, 1) = dinFormatA(i + 1, 1) * paperSizeRatio
+                Next
             Else
-
-                Throw New ArgumentException("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+                ' pptFirstTime war False, d.h. das Format wurde bereits angepasst
             End If
-
-            For i = 2 To 0 Step -1
-                dinFormatA(i, 0) = dinFormatA(i + 1, 0) * paperSizeRatio
-                dinFormatA(i, 1) = dinFormatA(i + 1, 1) * paperSizeRatio
-            Next
-
 
             ' hier wird die eigentliche Arbeit gemacht 
             ' Anfang bestimme Koordinaten der zeichenfelder
@@ -9952,15 +10328,44 @@ Public Module testModule
                                           pptStartofCalendar, pptEndOfCalendar)
 
 
-            '
-            ' bestimme die benötigte Höhe eines Projektes
+            ' bestimme die benötigte Höhe einer Zeile im Report ( nur wenn nicht schon bestimmt also zeilenhoehe <> 0
+            If pptFirstTime And zeilenhoehe = 0.0 Then
+                zeilenhoehe = bestimmeMppZeilenHoehe(pptslide, phaseVorlagenShape, milestoneVorlagenShape,
+                                                        selectedPhases.Count, selectedMilestones.Count, _
+                                                        MsDescVorlagenShape, MsDateVorlagenShape, _
+                                                        PhDescVorlagenShape, PhDateVorlagenShape,
+                                                        projectNameVorlagenShape, _
+                                                        durationArrowShape, durationTextShape)
+            End If
+
+            Dim hproj As New clsProjekt
+            Dim hhproj As New clsProjekt
+            Dim maxZeilen As Integer = 0
+            Dim anzZeilen As Integer = 0
+            Dim gesamtAnzZeilen As Integer = 0
             Dim projekthoehe As Double
-            projekthoehe = bestimmeMppProjektHoehe(pptslide, phaseVorlagenShape, milestoneVorlagenShape,
-                                                    selectedPhases.Count, selectedMilestones.Count, _
-                                                    MsDescVorlagenShape, MsDateVorlagenShape, _
-                                                    PhDescVorlagenShape, PhDateVorlagenShape,
-                                                    projectNameVorlagenShape, phaseDelimiterShape, _
-                                                    durationArrowShape, durationTextShape)
+
+            If awinSettings.mppExtendedMode Then
+
+                ' über alle ausgewählte Projekte sehen und maximale Anzahl Zeilen je Projekt bestimmen
+                For Each kvp As KeyValuePair(Of Double, String) In projCollection
+                    Try
+
+                        hproj = AlleProjekte.getProject(kvp.Value)
+                    Catch ex As Exception
+
+                    End Try
+
+                    anzZeilen = hproj.calcNeededLines(selectedPhases, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
+                    maxZeilen = System.Math.Max(maxZeilen, anzZeilen)
+                    gesamtAnzZeilen = gesamtAnzZeilen + anzZeilen
+
+                Next
+
+
+            Else
+                projekthoehe = zeilenhoehe
+            End If
 
             '
             ' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
@@ -9977,10 +10382,22 @@ Public Module testModule
             '
             ' bestimme das Format  
 
-            Dim neededSpace As Double = (projCollection.Count + 1) * projekthoehe
+            Dim neededSpace As Double
+
+            neededSpace = (projCollection.Count + 1) * projekthoehe ' für normale Berichte hier: projekthoehe = zeilenhoehe
+
+            If awinSettings.mppExtendedMode Then                    ' für Berichte im extendedMode
+                If awinSettings.mppOnePage Then
+                    neededSpace = gesamtAnzZeilen * zeilenhoehe
+                Else
+                    neededSpace = maxZeilen * zeilenhoehe
+                End If
+            End If
+
+
+
+
             Dim availableSpace As Double
-
-
             availableSpace = drawingAreaBottom - drawingAreaTop
 
             Dim oldHeight As Double
@@ -9993,8 +10410,11 @@ Public Module testModule
             Dim curHeight As Double = oldHeight
             Dim curWidth As Double = oldwidth
 
-            If availableSpace < neededSpace And _
-                awinSettings.mppOnePage Then
+
+
+            If (availableSpace < neededSpace And awinSettings.mppOnePage) Or _
+               (availableSpace < neededSpace And awinSettings.mppExtendedMode) Then
+
                 Dim ix As Integer = format
                 Dim ok As Boolean = True
                 ' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
@@ -10087,8 +10507,33 @@ Public Module testModule
                 Dim enlargeTxtFaktor As Double = curHeight / oldHeight
                 Call enlargeTxtShapes(enlargeTxtFaktor, pptslide)
 
+                ' ur: 30.03.2015:jetzt alle Beschriftungen der Phasen und Meilensteine wieder im richtigen Abstand positionieren 
+                ' 
+                PhDescVorlagenShape.Top = phaseVorlagenShape.Top + yOffsetPhToText
+                PhDateVorlagenShape.Top = phaseVorlagenShape.Top + yOffsetPhToDate
+
+                MsDescVorlagenShape.Top = milestoneVorlagenShape.Top + yOffsetMsToText
+                MsDateVorlagenShape.Top = milestoneVorlagenShape.Top + yOffsetMsToDate
             End If
 
+
+            If pptFirstTime Then
+
+                '' '' '' ur: 30.03.2015:jetzt alle Beschriftungen der Phasen und Meilensteine wieder im richtigen Abstand positionieren 
+                '' '' '' 
+                ' '' ''PhDescVorlagenShape.Top = phaseVorlagenShape.Top + yOffsetPhToText
+                ' '' ''PhDateVorlagenShape.Top = phaseVorlagenShape.Top + yOffsetPhToDate
+
+                ' '' ''MsDescVorlagenShape.Top = milestoneVorlagenShape.Top + yOffsetMsToText
+                ' '' ''MsDateVorlagenShape.Top = milestoneVorlagenShape.Top + yOffsetMsToDate
+
+                'ur: 25.03.2015: sichern der im Format veränderten Folie
+                pptslide.Copy()
+                pptCurrentPresentation.Slides.Paste(1).Name = "tmpSav"
+                pptFirstTime = False
+                legendFontSize = projectNameVorlagenShape.TextFrame2.TextRange.Font.Size
+
+            End If
 
             ' zeichne den Kalender
             Dim calendargroup As pptNS.Shape = Nothing
@@ -10116,10 +10561,11 @@ Public Module testModule
             ' zeichne die Projekte 
 
             Try
+
                 Call zeichnePPTprojects(pptslide, projCollection, projDone, _
                                     pptStartofCalendar, pptEndOfCalendar, _
                                     drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
-                                    projekthoehe, projectListLeft, _
+                                    zeilenhoehe, projectListLeft, _
                                     selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
                                     projectNameVorlagenShape, MsDescVorlagenShape, MsDateVorlagenShape, _
                                     PhDescVorlagenShape, PhDateVorlagenShape, _
@@ -10128,6 +10574,7 @@ Public Module testModule
                                     durationArrowShape, durationTextShape, _
                                     yOffsetMsToText, yOffsetMsToDate, yOffsetPhToText, yOffsetPhToDate, _
                                     worker, e)
+
 
 
             Catch ex As Exception
@@ -10227,7 +10674,7 @@ Public Module testModule
     ''' <param name="selectedPhases"></param>
     ''' <param name="selectedMilestones"></param>
     ''' <remarks></remarks>
-    Private Sub prepZeichneLegendenTabelle(ByRef pptslide As pptNS.Slide, ByRef tableShape As pptNS.Shape, _
+    Private Sub prepZeichneLegendenTabelle(ByRef pptslide As pptNS.Slide, ByRef tableShape As pptNS.Shape, ByVal legendFontSize As Single, _
                                            ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection)
 
         Dim legendPhaseVorlagenShape As pptNS.Shape = Nothing
@@ -10255,11 +10702,13 @@ Public Module testModule
 
                         Case "LegendPhase"
                             legendPhaseVorlagenShape = pptShape
+                            legendPhaseVorlagenShape.TextFrame2.TextRange.Font.Size = legendFontSize
                             completeLegendDefinition(0) = 1
 
 
                         Case "LegendMilestone"
                             legendMilestoneVorlagenShape = pptShape
+                            legendMilestoneVorlagenShape.TextFrame2.TextRange.Font.Size = legendFontSize
                             completeLegendDefinition(1) = 1
 
                         Case "Fehlermeldung"
@@ -10269,7 +10718,7 @@ Public Module testModule
                         Case "LegendBuColor"
                             ' optional
                             legendBuColorShape = pptShape
-
+                            legendBuColorShape.TextFrame2.TextRange.Font.Size = legendFontSize
                         Case Else
 
 
@@ -10294,7 +10743,8 @@ Public Module testModule
                 errorVorlagenShape.Copy()
                 errorShape = pptslide.Shapes.Paste
                 With errorShape(1)
-                    .TextFrame2.TextRange.Text = "Fehler beim Zeichnen  Legenden Symbole Phase oder Meilenstein fehlen "
+                    '.TextFrame2.TextRange.Text = "Fehler beim Zeichnen  Legenden Symbole Phase oder Meilenstein fehlen "
+                    .TextFrame2.TextRange.Text = ex.Message
                 End With
             End Try
 
@@ -10324,7 +10774,5 @@ Public Module testModule
         End Try
 
     End Sub
-
-
 
 End Module

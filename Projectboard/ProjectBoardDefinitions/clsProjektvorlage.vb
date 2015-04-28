@@ -658,7 +658,7 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getPhaseByID(elemID As String) As clsPhase
+    Public ReadOnly Property getPhaseByID(ByVal elemID As String) As clsPhase
 
         Get
 

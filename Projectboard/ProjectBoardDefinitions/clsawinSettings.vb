@@ -85,6 +85,11 @@
     Public Property mppFullyContained As Boolean
     Public Property mppSortiertDauer As Boolean
     Public Property mppOnePage As Boolean
+    Public Property mppExtendedMode As Boolean
+
+    ' Settings für Einzelprojekt-Reports
+    Public Property eppExtendedMode As Boolean
+
 
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
@@ -157,6 +162,11 @@
         _mppFullyContained = True
         _mppSortiertDauer = False
         _mppOnePage = False
+        _mppExtendedMode = False
+
+        ' Settings für Einzelprojekt-Reports
+        _eppExtendedMode = True
+
 
         If _mppSortiertDauer Then
             _mppShowAllIfOne = True

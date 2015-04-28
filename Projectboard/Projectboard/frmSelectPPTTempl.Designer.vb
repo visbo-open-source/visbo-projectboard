@@ -29,12 +29,13 @@ Partial Class frmSelectPPTTempl
         Me.BackgroundWorker1 = New System.ComponentModel.BackgroundWorker()
         Me.statusNotification = New System.Windows.Forms.TextBox()
         Me.BackgroundWorker2 = New System.ComponentModel.BackgroundWorker()
+        Me.einstellungen = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'createReport
         '
         Me.createReport.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.createReport.Location = New System.Drawing.Point(20, 79)
+        Me.createReport.Location = New System.Drawing.Point(23, 104)
         Me.createReport.Margin = New System.Windows.Forms.Padding(2)
         Me.createReport.Name = "createReport"
         Me.createReport.Size = New System.Drawing.Size(88, 25)
@@ -45,7 +46,7 @@ Partial Class frmSelectPPTTempl
         'SelectAbbruch
         '
         Me.SelectAbbruch.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.SelectAbbruch.Location = New System.Drawing.Point(186, 79)
+        Me.SelectAbbruch.Location = New System.Drawing.Point(189, 104)
         Me.SelectAbbruch.Margin = New System.Windows.Forms.Padding(2)
         Me.SelectAbbruch.Name = "SelectAbbruch"
         Me.SelectAbbruch.Size = New System.Drawing.Size(121, 25)
@@ -84,7 +85,7 @@ Partial Class frmSelectPPTTempl
         '
         'statusNotification
         '
-        Me.statusNotification.Location = New System.Drawing.Point(20, 118)
+        Me.statusNotification.Location = New System.Drawing.Point(23, 147)
         Me.statusNotification.Margin = New System.Windows.Forms.Padding(2)
         Me.statusNotification.Name = "statusNotification"
         Me.statusNotification.Size = New System.Drawing.Size(287, 20)
@@ -96,12 +97,24 @@ Partial Class frmSelectPPTTempl
         Me.BackgroundWorker2.WorkerReportsProgress = True
         Me.BackgroundWorker2.WorkerSupportsCancellation = True
         '
+        'einstellungen
+        '
+        Me.einstellungen.AutoSize = True
+        Me.einstellungen.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, CType((System.Drawing.FontStyle.Italic Or System.Drawing.FontStyle.Underline), System.Drawing.FontStyle), System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.einstellungen.ForeColor = System.Drawing.SystemColors.MenuHighlight
+        Me.einstellungen.Location = New System.Drawing.Point(237, 75)
+        Me.einstellungen.Name = "einstellungen"
+        Me.einstellungen.Size = New System.Drawing.Size(70, 13)
+        Me.einstellungen.TabIndex = 23
+        Me.einstellungen.Text = "Einstellungen"
+        '
         'frmSelectPPTTempl
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.Window
-        Me.ClientSize = New System.Drawing.Size(316, 146)
+        Me.ClientSize = New System.Drawing.Size(345, 193)
+        Me.Controls.Add(Me.einstellungen)
         Me.Controls.Add(Me.statusNotification)
         Me.Controls.Add(Me.RepVorlagenDropbox)
         Me.Controls.Add(Me.Label1)
@@ -122,4 +135,5 @@ Partial Class frmSelectPPTTempl
     Friend WithEvents BackgroundWorker1 As System.ComponentModel.BackgroundWorker
     Friend WithEvents statusNotification As System.Windows.Forms.TextBox
     Friend WithEvents BackgroundWorker2 As System.ComponentModel.BackgroundWorker
+    Friend WithEvents einstellungen As System.Windows.Forms.Label
 End Class

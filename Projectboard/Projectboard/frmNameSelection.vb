@@ -964,7 +964,7 @@ Public Class frmNameSelection
                     Call createPPTSlidesFromConstellation(vorlagenDateiName, _
                                                       selectedPhases, selectedMilestones, _
                                                       selectedRoles, selectedCosts, _
-                                                      selectedBUs, selectedTyps, _
+                                                      selectedBUs, selectedTyps, True, _
                                                       worker, e)
                 Else
                     Call createPPTReportFromProjects(vorlagenDateiName, _
@@ -1032,6 +1032,7 @@ Public Class frmNameSelection
         Dim mppFrm As New frmMppSettings
         Dim dialogreturn As DialogResult
 
+        mppFrm.calledfrom = "frmShowPlanElements"
         dialogreturn = mppFrm.ShowDialog
 
 
