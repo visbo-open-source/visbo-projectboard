@@ -139,7 +139,7 @@ Public Class clsImportFileHierarchy
     ''' <param name="level">Indentlevel</param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function getFootPrint(ByVal level As Integer) As String
+    Public Function getFootPrint(ByVal level As Integer, Optional ByVal trennString As String = " - ") As String
 
         Dim tmpValue As String = ""
 
@@ -164,7 +164,7 @@ Public Class clsImportFileHierarchy
                         'tmpValue = phaseHierarchy.ElementAt(i).Value.name.Trim
                         tmpValue = "."
                     Else
-                        tmpValue = tmpValue & " - " & phaseHierarchy.ElementAt(i).Value.name.Trim
+                        tmpValue = tmpValue & trennString & phaseHierarchy.ElementAt(i).Value.name.Trim
                     End If
                 Next
             End If

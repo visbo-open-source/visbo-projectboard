@@ -210,7 +210,50 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt true zurück, wenn der angebenene Meilenstein in der angebenen Hierarchie schon mal existiert 
+    ''' false sonst
+    ''' </summary>
+    ''' <param name="elemName"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsMilestone(ByVal elemName As String, Optional ByVal breadcrumb As String = "") As Boolean
+        Get
 
+            Dim milestoneIndices(,) As Integer = Me.getMilestoneIndices(elemName, breadcrumb)
+
+            If milestoneIndices(0, 0) > 0 And milestoneIndices(1, 0) > 0 Then
+                containsMilestone = True
+            Else
+                containsMilestone = False
+            End If
+
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt true zurück, wenn die angegebene Phase in der angegebenen Hierarchie existiert  
+    ''' </summary>
+    ''' <param name="elemName"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsPhase(ByVal elemName As String, Optional ByVal breadcrumb As String = "") As Boolean
+        Get
+            Dim phaseIndices() As Integer = Me.getPhaseIndices(elemName, breadcrumb)
+
+            If phaseIndices(0) > 0 Then
+                containsPhase = True
+            Else
+                containsPhase = False
+            End If
+
+        End Get
+    End Property
 
 
     ''' <summary>
@@ -300,6 +343,7 @@
         End Get
     End Property
 
+
     ''' <summary>
     ''' gibt den Hierarchie Knoten zurück, der in der sortierten Liste an Position Index steht 
     ''' Index läuft von 1 .. Anzahl Knoten 
@@ -319,7 +363,86 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt einen Array von Index Nummern aus der Hierarchie Liste zurück; 
+    ''' gültige Werte sind 1 .. Anzahl Hierarchie Einträge
+    ''' Wert = 0 bedeutet: Element existiert nicht 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhaseHryIndices(ByVal name As String, ByVal breadcrumb As String) As Integer()
+        Get
 
+            Dim phaseIndices() As Integer
+            Dim first As Integer, last As Integer
+            Dim elemID As String = calcHryElemKey(name, False)
+            Dim i As Integer, k As Integer
+            Dim anzahlNodes As Integer = _allNodes.Count
+
+            ' da die Liste sortiert ist, reicht es den Index des ersten und den Index des letzten Elements zu bestimmen 
+
+            ReDim phaseIndices(0)
+            If _allNodes.ContainsKey(elemID) Then
+                first = _allNodes.IndexOfKey(calcHryElemKey(name, False))
+
+                i = first + 1
+                Dim otherNamefound As Boolean = False
+
+                Do While Not otherNamefound And i <= anzahlNodes - 1
+                    If elemNameOfElemID(_allNodes.ElementAt(i).Key) <> name Then
+                        otherNamefound = True
+                    Else
+                        i = i + 1
+                    End If
+                Loop
+
+                last = i - 1
+
+                If breadcrumb = "" Then
+                    ReDim phaseIndices(last - first)
+                    For i = 0 To last - first
+                        phaseIndices(i) = first + i + 1
+                    Next
+                Else
+                    Dim tmpIndices(last - first) As Integer
+                    Dim identicalBC As Boolean = True
+                    Dim bcLevels() As String
+                    bcLevels = breadcrumb.Split((New Char() {CChar("#")}), 20)
+                    Dim anzLevel As Integer = bcLevels.Length
+
+                    ' herausfinden, welche Elemente auch den gleichen Breadcrumb haben ..
+                    ' sie können den gleichen Element-Namen haben, aber evtl ganz unterschiedliche Breadcrumbs
+                    k = 0
+                    For i = 0 To last - first
+                        Dim vglbreadCrumb As String = Me.getBreadCrumb(_allNodes.ElementAt(first + i).Key, anzLevel)
+                        If vglbreadCrumb = breadcrumb Then
+                            tmpIndices(k) = first + i + 1
+                            k = k + 1
+                        End If
+                    Next
+
+                    ' jetzt müssen die gefundenen Elemente umkopiert werden 
+                    If k > 0 Then
+                        ' es wurde mindestens ein Element gefunden 
+                        k = k - 1
+                        ReDim phaseIndices(k)
+                        For ii As Integer = 0 To k
+                            phaseIndices(ii) = tmpIndices(ii)
+                        Next
+                    End If
+
+                End If
+
+            End If
+
+            getPhaseHryIndices = phaseIndices
+
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' gibt eine Liste von Phasen-Indices zurück; jeder Index bezeichnet eine Phase, die den Elem-Namen trägt 
@@ -401,7 +524,84 @@
     End Property
 
     ''' <summary>
-    ''' gibt eine Liste von Meilenstein-Indices zurück;  Index(0,) bezeichnet die Phasen-Nummer, Index(1,) bezeichnet die Meilenstein-Nummer 
+    ''' gibt einen Array von Meilenstein Indices zurück; Index(0) bezeichnet den ersten Meilenstein in der Hierarchie, der den übergebenen NAmen und den
+    ''' übergebenen Breadcrumb trägt; Index(x) kann Werte von 1...anZahl Elemente in Hierarchie Liste sein
+    ''' Index(x) = 0 bedeutet, es gibt ihn nicht   
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneHryIndices(ByVal name As String, Optional ByVal breadcrumb As String = "") As Integer()
+        Get
+            Dim milestoneIndices() As Integer
+            Dim first As Integer, last As Integer
+            Dim elemID As String = calcHryElemKey(name, True)
+            Dim i As Integer, k As Integer
+            Dim anzahlNodes As Integer = _allNodes.Count
+            
+            ' da die Liste sortiert ist, reicht es den Index des ersten und den Index des letzten Elements zu bestimmen 
+
+            ReDim milestoneIndices(0)
+            If _allNodes.ContainsKey(elemID) Then
+                first = _allNodes.IndexOfKey(elemID)
+                i = first + 1
+
+                Dim otherNamefound As Boolean = False
+                Do While Not otherNamefound And i <= anzahlNodes - 1
+                    If elemNameOfElemID(_allNodes.ElementAt(i).Key) <> name Then
+                        otherNamefound = True
+                    Else
+                        i = i + 1
+                    End If
+                Loop
+
+                last = i - 1
+
+                If breadcrumb = "" Then
+                    ReDim milestoneIndices(last - first)
+                    For i = 0 To last - first
+                        milestoneIndices(i) = first + i + 1 ' da 1 das Elementat(0) bezeichnet 
+                    Next
+                Else
+                    Dim tmpIndices(last - first) As Integer
+                    Dim identicalBC As Boolean = True
+                    Dim bcLevels() As String
+                    bcLevels = breadcrumb.Split((New Char() {CChar("#")}), 20)
+                    Dim anzLevel As Integer = bcLevels.Length
+                    k = 0
+
+                    For i = 0 To last - first
+                        Dim vglbreadCrumb As String = Me.getBreadCrumb(_allNodes.ElementAt(first + i).Key, anzLevel)
+                        If vglbreadCrumb = breadcrumb Then
+                            tmpIndices(k) = first + i + 1 ' da 1 das ElementAt(0) bezeichnet
+                            k = k + 1
+                        End If
+                    Next
+
+                    ' jetzt muss das gefundene Ergebnis umkopiert werden  
+                    If k > 0 Then
+                        ' es wurde mindestens ein Element gefunden 
+                        k = k - 1
+                        ReDim milestoneIndices(k)
+                        For ii As Integer = 0 To k
+                            milestoneIndices(ii) = tmpIndices(ii)
+                        Next
+                    End If
+
+                End If
+
+            End If
+
+            getMilestoneHryIndices = milestoneIndices
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt eine Liste von Meilenstein-Indices zurück;  Index(0,) bezeichnet die Phasen-Nummer, Index(1,) bezeichnet die Meilenstein-Nummer im entsprechenden Projekt
     ''' es werden nur die Elemente zurückgegeben,  die mit der angegeben Hierarchie übereinstimmen; Breadcrumb kann leer sein, dann wird alles gesucht   
     ''' wenn ein 2-elementiger Array zurückgegeben wird, dessen Wert jeweils 0 ist, so existiert dieser Meilenstein nicht   
     ''' </summary>
@@ -434,7 +634,7 @@
                         i = i + 1
                     End If
                 Loop
-                
+
                 last = i - 1
 
                 If breadcrumb = "" Then
@@ -459,17 +659,17 @@
                             tmpIndices(1, k) = _allNodes.ElementAt(first + i).Value.indexOfElem
                             k = k + 1
                         End If
-                        If k > 0 Then
-                            ' es wurde mindestens ein Element gefunden 
-                            k = k - 1
-                            ReDim milestoneIndices(1, k)
-                            For ii As Integer = 0 To k
-                                milestoneIndices(0, ii) = tmpIndices(0, ii)
-                                milestoneIndices(1, ii) = tmpIndices(1, ii)
-                            Next
-                        End If
                     Next
 
+                    If k > 0 Then
+                        ' es wurde mindestens ein Element gefunden 
+                        k = k - 1
+                        ReDim milestoneIndices(1, k)
+                        For ii As Integer = 0 To k
+                            milestoneIndices(0, ii) = tmpIndices(0, ii)
+                            milestoneIndices(1, ii) = tmpIndices(1, ii)
+                        Next
+                    End If
 
                 End If
 
@@ -479,6 +679,7 @@
 
         End Get
     End Property
+
 
 
     ''' <summary>
@@ -502,14 +703,14 @@
             Dim rootkey As String = calcHryElemKey(".", False)
 
             ' sicherstellen, dass ebene keinen blödsinningen Wert hat ;
-            ' wenn der Wert < 1 ist , wird automatisch auf 1 gesetzt 
-            If ebene < 1 Then
-                ebene = 1
+            ' wenn der Wert < 0 ist , wird automatisch auf 0 gesetzt 
+            If ebene < 0 Then
+                ebene = 0
             End If
 
             Dim ok As Boolean = True
 
-            If elemID <> rootkey Then
+            If elemID <> rootkey And ebene > 0 Then
 
                 Do While tmpEbene <= ebene And Not rootReached And ok
 

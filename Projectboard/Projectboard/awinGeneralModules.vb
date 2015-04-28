@@ -4751,32 +4751,14 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <remarks></remarks>
     Friend Sub defineFilterDB()
-        Dim auswahlFormular As New frmShowPlanElements
+        Dim auswahlFormular As New frmNameSelection
         Dim returnValue As DialogResult
 
         With auswahlFormular
             .Text = "Datenbank Filter definieren"
-            .useHierarchyforSelection = awinSettings.useHierarchy
-
-
-            If .useHierarchyforSelection Then
-                .hryTreeView.Visible = True
-                .hryStufenLabel.Visible = True
-                .hryStufen.Visible = True
-                .nameListBox.Visible = False
-                .headerLine.Visible = False
-                .filterBox.Visible = False
-            Else
-                .hryTreeView.Visible = False
-                .hryStufenLabel.Visible = False
-                .hryStufen.Visible = False
-                .nameListBox.Visible = True
-                .headerLine.Visible = True
-                .filterBox.Visible = True
-            End If
-
-            .chkbxShowObjects = False
-            .chkbxCreateCharts = False
+           
+            '.chkbxShowObjects = False
+            '.chkbxCreateCharts = False
 
             .chkbxOneChart.Checked = False
             .chkbxOneChart.Visible = False
@@ -4791,7 +4773,7 @@ Public Module awinGeneralModules
             .repVorlagenDropbox.Visible = False
             .labelPPTVorlage.Visible = False
 
-            .showModePortfolio = True
+            '.showModePortfolio = True
             .menuOption = PTmenue.filterdefinieren
 
             .OKButton.Text = "Speichern"
@@ -4799,6 +4781,208 @@ Public Module awinGeneralModules
             '.Show()
             returnValue = .ShowDialog
         End With
+
+    End Sub
+
+
+    ''' <summary>
+    ''' zeichnet das Leistbarkeits-Chart 
+    ''' </summary>
+    ''' <param name="selCollection">Collection mit den Phasne-, Meilenstein, Rollen- oder Kostenarten</param>
+    ''' <param name="chTyp">Typ: es handelt sich um Phasen, rollen, etc. </param>
+    ''' <param name="chtop">auf welcher Höhe soll das Chart gezeichnet werden</param>
+    ''' <param name="chleft">auf welcher x-Koordinate soll das Chart gezeichnet werden</param>
+    ''' <remarks></remarks>
+    Friend Sub zeichneLeistbarkeitsChart(ByVal selCollection As Collection, ByVal chTyp As String, ByVal oneChart As Boolean, _
+                                              ByRef chtop As Double, ByRef chleft As Double)
+
+
+        Dim repObj As Excel.ChartObject
+        Dim myCollection As Collection
+
+        Dim chWidth As Double
+        Dim chHeight As Double
+
+        ' Window Position festlegen 
+        chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
+        chHeight = awinSettings.ChartHoehe1
+
+
+        If oneChart = True Then
+
+
+            ' alles in einem Chart anzeigen
+            myCollection = New Collection
+            For Each element As String In selCollection
+                myCollection.Add(element, element)
+            Next
+
+            repObj = Nothing
+            Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
+                                                              chWidth, chHeight, False, chTyp, False)
+
+            chtop = chtop + 5
+            chleft = chleft + 7
+        Else
+            ' für jedes ITEM ein eigenes Chart machen
+            For Each element As String In selCollection
+                ' es muss jedesmal eine neue Collection erzeugt werden - die Collection wird in DiagramList gemerkt
+                ' wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
+                myCollection = New Collection
+                myCollection.Add(element, element)
+                repObj = Nothing
+
+                Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
+                                                                   chWidth, chHeight, False, chTyp, False)
+
+                chtop = chtop + 5
+                chleft = chleft + 7
+            Next
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' erstellt das Excel Export File für die angegebenen Phasen, Meilensteine, Rollen und Kosten
+    ''' vorläufig nur für Phasen und Meilensteine realisiert
+    ''' </summary>
+    ''' <param name="filterName">gibt den Namen des Filters an, der die Collections enthält </param>
+    ''' <remarks></remarks>
+    Friend Sub createExcelExportFromSelection(ByVal filterName As String)
+
+        Dim earliestDate As Date, latestDate As Date
+        Dim phaseList As New SortedList(Of Double, String)
+        Dim milestonelist As New SortedList(Of Double, String)
+
+        Dim selphases As New Collection
+        Dim selMilestones As New Collection
+        Dim selRoles As New Collection
+        Dim selCosts As New Collection
+        Dim selBUs As New Collection
+        Dim selTyps As New Collection
+
+        Call retrieveSelections(filterName, PTmenue.excelExport, selBUs, selTyps, _
+                                 selphases, selMilestones, selRoles, selCosts)
+
+        ' initialisieren 
+        earliestDate = StartofCalendar.AddMonths(-12)
+        latestDate = StartofCalendar.AddMonths(1200)
+
+        Dim anteil As Double = 0.0
+        Dim anzahlProjekte As Integer = ShowProjekte.Count
+        Dim currentIX As Integer
+        Dim hproj As clsProjekt
+        Dim pName As String, msName As String
+        Dim cphase As clsPhase, milestone As clsMeilenstein
+        Dim anzPlanobjekte As Integer = selphases.Count + selMilestones.Count
+        Dim bestproj As String = ""
+        Dim startFaktor As Double = 1.0
+        Dim durationFaktor As Double = 0.000001
+        Dim correctFaktor As Double = 0.00000001
+        Dim schluessel As Double
+        Dim korrFaktor As Double
+        Dim refLaenge As Integer
+
+        currentIX = 1
+        Do While phaseList.Count + milestonelist.Count < selphases.Count + selMilestones.Count And _
+                 currentIX <= anzahlProjekte
+
+            hproj = ShowProjekte.getProject(currentIX)
+            Dim anzFoundElem As Integer = 0
+
+            If currentIX = 1 Then
+                korrFaktor = 1.0
+                refLaenge = hproj.dauerInDays
+            Else
+                Try
+                    korrFaktor = hproj.dauerInDays / refLaenge
+                Catch ex As Exception
+                    korrFaktor = 1.0
+                End Try
+
+            End If
+
+            If phaseList.Count < selphases.Count Then
+                For Each pObject As Object In selphases
+
+                    pName = CStr(pObject)
+                    If phaseList.ContainsValue(pName) Then
+                        ' sie ist schon eingeordnet und es muss nichts mehr gemacht werden 
+                    Else
+                        cphase = hproj.getPhase(pName)
+
+                        If Not IsNothing(cphase) Then
+
+                            anzFoundElem = anzFoundElem + 1
+                            schluessel = (cphase.startOffsetinDays * startFaktor + _
+                                            cphase.dauerInDays * durationFaktor) * korrFaktor
+
+                            Dim ok As Boolean = False
+                            Do Until ok
+
+                                If phaseList.ContainsKey(schluessel) Then
+                                    schluessel = schluessel + correctFaktor
+                                Else
+                                    phaseList.Add(schluessel, pName)
+                                    ok = True
+                                End If
+
+                            Loop
+
+
+                        End If
+                    End If
+
+                Next
+            End If
+
+
+            If milestonelist.Count < selMilestones.Count Then
+                For Each pObject As Object In selMilestones
+                    msName = CStr(pObject)
+                    If milestonelist.ContainsValue(msName) Then
+                        ' er ist schon eingeordnet und es muss nichts mehr gemacht werden 
+                    Else
+                        milestone = hproj.getMilestone(msName)
+
+                        If Not IsNothing(milestone) Then
+
+                            anzFoundElem = anzFoundElem + 1
+                            schluessel = DateDiff(DateInterval.Day, hproj.startDate, milestone.getDate) * korrFaktor
+
+                            Dim ok As Boolean = False
+                            Do Until ok
+
+                                If milestonelist.ContainsKey(schluessel) Then
+                                    schluessel = schluessel + correctFaktor
+                                Else
+                                    milestonelist.Add(schluessel, msName)
+                                    ok = True
+                                End If
+
+                            Loop
+
+
+                        End If
+                    End If
+
+                Next
+            End If
+
+            currentIX = currentIX + 1
+
+        Loop
+
+        ' jetzt sind die Elemente in der richtigen Reihenfolge eingeordnet 
+        ' jetzt werden sie rausgeschrieben 
+        Try
+            Call exportSelectionToExcel(phaseList, milestonelist)
+        Catch ex As Exception
+            Throw New Exception(ex.Message)
+        End Try
+
+
 
     End Sub
 

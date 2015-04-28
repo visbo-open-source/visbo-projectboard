@@ -142,6 +142,66 @@ Public Class clsProjekte
         End Get
     End Property
 
+    ''' <summary>
+    ''' gibt in der Ergebnis Collection alle Kind Namen von Phasen zurück 
+    ''' </summary>
+    ''' <param name="phaseName"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getPhasesOfPhase(ByVal phaseName As String, _
+                                                  Optional ByVal breadcrumb As String = "") As Collection
+        Get
+
+            Dim tmpCollection As Collection = New Collection
+            Dim zwischenresult As Collection = New Collection
+            Dim phaseIndices() As Integer
+            Dim elemID As String
+            Dim elemName As String
+            Dim childID As String
+            Dim curNode As clsHierarchyNode
+            Dim cphase As clsPhase
+
+
+            If Not IsNothing(phaseName) Then
+                If phaseName.Trim.Length > 0 Then
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                        phaseIndices = kvp.Value.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+                        For px As Integer = 0 To phaseIndices.Length - 1
+
+                            cphase = kvp.Value.getPhase(phaseIndices(px))
+                            If Not IsNothing(cphase) Then
+
+                                elemID = cphase.nameID
+                                curNode = kvp.Value.hierarchy.nodeItem(elemID)
+
+                                If Not IsNothing(curNode) Then
+                                    For ix As Integer = 1 To curNode.childCount
+                                        childID = curNode.getChild(ix)
+                                        If Not elemIDIstMeilenstein(childID) Then
+                                            elemName = elemNameOfElemID(childID)
+                                            If Not tmpCollection.Contains(elemName) And elemName.Trim.Length > 0 Then
+                                                tmpCollection.Add(elemName, elemName)
+                                            End If
+                                        End If
+                                    Next
+                                End If
+
+                            End If
+
+                        Next
+
+                    Next
+                End If
+            End If
+
+            getPhasesOfPhase = tmpCollection
+
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' gibt die Sammlung von Meilensteinen zurück, die eine Phase in irgendeinem Projekt hat  

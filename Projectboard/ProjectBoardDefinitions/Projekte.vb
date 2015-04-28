@@ -16782,4 +16782,287 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' addiert die Hierarchie hry zur bereits existierenden Super-Hierarchie
+    ''' wenn die Super Hierarchie noch leer ist, wird die Rootphase angelegt 
+    ''' </summary>
+    ''' <param name="superHry"></param>
+    ''' <remarks></remarks>
+    Public Sub addToSuperHierarchy(ByRef superHry As clsHierarchy, _
+                                   ByVal hproj As clsProjekt,
+                                   Optional vorlagenIndex As Integer = -1)
+
+        Dim superNode As clsHierarchyNode
+        Dim elemID As String
+        Dim hry As clsHierarchy = hproj.hierarchy
+
+        ' hier muss später noch ergänzt werden, dass evtl eine Vorlage übergeben werden kann 
+
+
+        ' ist es eine 
+        ' Starten mit dem Rootkey, der ist bei beiden definitiv nur einmal vorhanden und jeweils gleich 
+
+        If superHry.count = 0 Then
+            superHry = New clsHierarchy
+
+            superNode = New clsHierarchyNode
+            With superNode
+                .elemName = elemNameOfElemID(rootPhaseName)
+                .isMilestone = False
+                .indexOfElem = 1 'eigentlich nicht relevant , wird einfach immer auf 1 gesetzt
+                .parentNodeKey = ""
+                .origName = .elemName
+            End With
+
+            superHry.addNode(superNode, rootPhaseName)
+
+        End If
+
+        If IsNothing(hproj) Then
+            Exit Sub
+        ElseIf IsNothing(hry) Then
+            Exit Sub
+        ElseIf hry.count <= 1 Then
+            Exit Sub
+        End If
+
+
+        ' Schleife über alle Elemente 
+
+        For px As Integer = 1 To hproj.CountPhases
+
+            Dim cphase As clsPhase = hproj.getPhase(px)
+
+            If Not IsNothing(cphase) Then
+
+                elemID = cphase.nameID
+                Call addElementToSuperHry(hry, elemID, superHry)
+
+                For mx As Integer = 1 To cphase.countMilestones
+
+                    Dim cMilestone = cphase.getMilestone(mx)
+                    If Not IsNothing(cMilestone) Then
+                        elemID = cMilestone.nameID
+                        Call addElementToSuperHry(hry, elemID, superHry)
+                    End If
+
+                Next
+
+            End If
+            
+
+
+        Next
+        'For ix As Integer = 1 To hry.count
+
+        '    hrynode = hry.nodeItem(ix)
+        '    curElemID = hry.getIDAtIndex(ix)
+        '    curElemName = elemNameOfElemID(curElemID)
+        '    isMilestone = elemIDIstMeilenstein(curElemID)
+        '    breadcrumb = hry.getBreadCrumb(curElemID)
+        '    Dim newBreadcrumb As String = ""
+
+        '    If isMilestone Then
+        '        elemIndices = superHry.getMilestoneHryIndices(curElemName, breadcrumb)
+        '    Else
+        '        elemIndices = superHry.getPhaseHryIndices(curElemName, breadcrumb)
+        '    End If
+
+
+
+        '    If elemIndices(0) > 0 Then
+        '        ' dann wurde ein Element mit dem komplett identischen Breadcrumb gefunden; es ist also gar nichts zu tun 
+
+        '    Else
+        '        Dim ptr As Integer = 1
+        '        Dim itemExists As Boolean = True
+        '        parentNodeID = rootPhaseName
+        '        bcItems = breadcrumb.Split((New Char() {CChar("#")}), 30)
+        '        Dim anzahlEbenen As Integer = bcItems.Length - 1
+        '        Dim lastFoundID As String = rootPhaseName
+
+        '        Do While ptr <= anzahlEbenen And itemExists
+
+        '            tmpElemName = bcItems(ptr)
+        '            For i As Integer = 0 To ptr - 1
+        '                If i = 0 Then
+        '                    newBreadcrumb = "."
+        '                Else
+        '                    newBreadcrumb = newBreadcrumb & "#" & bcItems(i)
+        '                End If
+
+        '            Next
+
+        '            elemIndices = superHry.getPhaseHryIndices(tmpElemName, newBreadcrumb)
+        '            If elemIndices(0) > 0 Then
+        '                itemExists = True
+        '                ptr = ptr + 1
+        '                parentNodeID = superHry.nodeItem(elemIndices(0)).parentNodeKey
+        '                lastFoundID = superHry.getIDAtIndex(elemIndices(0))
+        '            Else
+        '                itemExists = False
+        '                parentNodeID = lastFoundID
+        '            End If
+
+        '        Loop
+
+        '        If ptr > anzahlEbenen Then
+        '            parentNodeID = lastFoundID
+        '        End If
+
+        '        ' jetzt ist man an der Stelle angelangt, wo die Phase schon nicht mehr existiert 
+        '        For i As Integer = ptr To anzahlEbenen
+        '            tmpElemName = bcItems(i)
+        '            ' lege die Phase an 
+        '            superNode = New clsHierarchyNode
+        '            With superNode
+        '                .elemName = tmpElemName
+        '                .parentNodeKey = parentNodeID
+        '                .origName = ""
+        '                .isMilestone = False ' es handelt sich hier noch um die Hierarchie-Stufen, also Phasen
+        '                .indexOfElem = 1 ' eigentlich in diesem Kontext nicht relevant 
+        '            End With
+        '            elemID = superHry.findUniqueElemKey(tmpElemName, False)
+        '            superHry.addNode(superNode, elemID)
+
+        '            ' weiterschalten 
+        '            parentNodeID = elemID
+        '        Next
+
+        '        ' jetzt muss noch das Element selber angelegt werde 
+        '        superNode = New clsHierarchyNode
+        '        With superNode
+        '            .elemName = curElemName
+        '            .parentNodeKey = parentNodeID
+        '            .origName = ""
+        '            .isMilestone = isMilestone  ' es handelt sich hier noch um die Hierarchie-Stufen, also Phasen
+        '            .indexOfElem = 1 ' eigentlich in diesem Kontext nicht relevant 
+        '        End With
+        '        elemID = superHry.findUniqueElemKey(curElemName, False)
+        '        superHry.addNode(superNode, elemID)
+
+        '    End If
+
+
+
+        'Next
+
+
+    End Sub
+
+    ''' <summary>
+    ''' trägt das Element mit der übergebenen ElemID in die Super-Hierarchie ein  
+    ''' </summary>
+    ''' <param name="hry"></param>
+    ''' <param name="elemID"></param>
+    ''' <param name="superHry"></param>
+    ''' <remarks></remarks>
+    Private Sub addElementToSuperHry(ByVal hry As clsHierarchy, ByVal elemID As String, ByRef superHry As clsHierarchy)
+
+        Dim hryNode As clsHierarchyNode
+        Dim superNode As clsHierarchyNode
+        Dim elemIndices() As Integer
+        Dim curElemID As String
+        Dim curElemName As String
+        Dim breadcrumb As String
+        Dim isMilestone As Boolean
+        Dim parentNodeID As String
+
+        Dim bcItems() As String
+        Dim tmpElemName As String
+
+
+
+        'hryNode = hry.nodeItem(ix)
+        'curElemID = hry.getIDAtIndex(ix)
+        hryNode = hry.nodeItem(elemID)
+        curElemID = elemID
+        curElemName = elemNameOfElemID(curElemID)
+        isMilestone = elemIDIstMeilenstein(curElemID)
+        breadcrumb = hry.getBreadCrumb(curElemID)
+
+        Dim newBreadcrumb As String = ""
+
+        If isMilestone Then
+            elemIndices = superHry.getMilestoneHryIndices(curElemName, breadcrumb)
+        Else
+            elemIndices = superHry.getPhaseHryIndices(curElemName, breadcrumb)
+        End If
+
+
+        If elemIndices(0) > 0 Then
+            ' dann wurde ein Element mit dem komplett identischen Breadcrumb gefunden; es ist also gar nichts zu tun 
+
+        Else
+            Dim ptr As Integer = 1
+            Dim itemExists As Boolean = True
+            parentNodeID = rootPhaseName
+            bcItems = breadcrumb.Split((New Char() {CChar("#")}), 30)
+            Dim anzahlEbenen As Integer = bcItems.Length - 1
+            Dim lastFoundID As String = rootPhaseName
+
+            Do While ptr <= anzahlEbenen And itemExists
+
+                tmpElemName = bcItems(ptr)
+                For i As Integer = 0 To ptr - 1
+                    If i = 0 Then
+                        newBreadcrumb = "."
+                    Else
+                        newBreadcrumb = newBreadcrumb & "#" & bcItems(i)
+                    End If
+
+                Next
+
+                elemIndices = superHry.getPhaseHryIndices(tmpElemName, newBreadcrumb)
+                If elemIndices(0) > 0 Then
+                    itemExists = True
+                    ptr = ptr + 1
+                    parentNodeID = superHry.nodeItem(elemIndices(0)).parentNodeKey
+                    lastFoundID = superHry.getIDAtIndex(elemIndices(0))
+                Else
+                    itemExists = False
+                    parentNodeID = lastFoundID
+                End If
+
+            Loop
+
+            If ptr > anzahlEbenen Then
+                parentNodeID = lastFoundID
+            End If
+
+            ' jetzt ist man an der Stelle angelangt, wo die Phase schon nicht mehr existiert 
+            For i As Integer = ptr To anzahlEbenen
+                tmpElemName = bcItems(i)
+                ' lege die Phase an 
+                superNode = New clsHierarchyNode
+                With superNode
+                    .elemName = tmpElemName
+                    .parentNodeKey = parentNodeID
+                    .origName = ""
+                    .isMilestone = False ' es handelt sich hier noch um die Hierarchie-Stufen, also Phasen
+                    .indexOfElem = 1 ' eigentlich in diesem Kontext nicht relevant 
+                End With
+                curElemID = superHry.findUniqueElemKey(tmpElemName, False)
+                superHry.addNode(superNode, curElemID)
+
+                ' weiterschalten 
+                parentNodeID = curElemID
+            Next
+
+            ' jetzt muss noch das Element selber angelegt werde 
+            superNode = New clsHierarchyNode
+            With superNode
+                .elemName = curElemName
+                .parentNodeKey = parentNodeID
+                .origName = ""
+                .isMilestone = isMilestone  ' es handelt sich hier noch um die Hierarchie-Stufen, also Phasen
+                .indexOfElem = 1 ' eigentlich in diesem Kontext nicht relevant 
+            End With
+            curElemID = superHry.findUniqueElemKey(curElemName, isMilestone)
+            superHry.addNode(superNode, curElemID)
+
+        End If
+
+    End Sub
+
 End Module

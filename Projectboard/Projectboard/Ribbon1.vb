@@ -1587,7 +1587,8 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub VisPlanObjects001(control As IRibbonControl)
 
-        Dim auswahlFormular As New frmShowPlanElements
+        Dim nameFormular As New frmNameSelection
+        Dim hryFormular As New frmHierarchySelection
         Dim returnValue As DialogResult
 
         Call projektTafelInit()
@@ -1599,59 +1600,65 @@ Imports System.Drawing
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
         'If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
         If ShowProjekte.Count > 0 Then
-            With auswahlFormular
-                .Text = "Plan-Elemente visualisieren"
+            If awinSettings.useHierarchy Then
+                With hryFormular
+                    .Text = "Plan-Elemente visualisieren"
 
-                .useHierarchyforSelection = awinSettings.useHierarchy
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
 
-                If .useHierarchyforSelection Then
-                    .hryTreeView.Visible = True
-                    .hryStufenLabel.Visible = True
-                    .hryStufen.Visible = True
-                    .nameListBox.Visible = False
-                    .headerLine.Visible = False
-                    .filterBox.Visible = False
-                Else
-                    .hryTreeView.Visible = False
-                    .hryStufenLabel.Visible = False
-                    .hryStufen.Visible = False
-                    .nameListBox.Visible = True
-                    .headerLine.Visible = True
-                    .filterBox.Visible = True
-                End If
-
-                .rdbBU.Visible = False
-                .pictureBU.Visible = False
-
-                .rdbTyp.Visible = False
-                .pictureTyp.Visible = False
-
-                .rdbRoles.Visible = False
-                .pictureRoles.Visible = False
-
-                .rdbCosts.Visible = False
-                .pictureCosts.Visible = False
-
-                .chkbxShowObjects = True
+                    '.chkbxCreateCharts = False
 
 
-                .chkbxOneChart.Checked = False
-                .chkbxOneChart.Visible = False
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
 
-                .chkbxCreateCharts = False
+                    '.showModePortfolio = True
+                    .menuOption = PTmenue.visualisieren
+
+                    .OKButton.Text = "Anzeigen"
+
+                    '.Show()
+                    returnValue = .ShowDialog
+                End With
+            Else
+                With nameFormular
+                    .Text = "Plan-Elemente visualisieren"
+
+                    .rdbBU.Visible = False
+                    .pictureBU.Visible = False
+
+                    .rdbTyp.Visible = False
+                    .pictureTyp.Visible = False
+
+                    .rdbRoles.Visible = False
+                    .pictureRoles.Visible = False
+
+                    .rdbCosts.Visible = False
+                    .pictureCosts.Visible = False
+
+                    '.chkbxShowObjects = True
 
 
-                .repVorlagenDropbox.Visible = False
-                .labelPPTVorlage.Visible = False
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
 
-                .showModePortfolio = True
-                .menuOption = PTmenue.visualisieren
+                    '.chkbxCreateCharts = False
 
-                .OKButton.Text = "Anzeigen"
 
-                '.Show()
-                returnValue = .ShowDialog
-            End With
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+
+                    '.showModePortfolio = True
+                    .menuOption = PTmenue.visualisieren
+
+                    .OKButton.Text = "Anzeigen"
+
+                    '.Show()
+                    returnValue = .ShowDialog
+                End With
+            End If
+
 
 
         Else
@@ -1675,7 +1682,7 @@ Imports System.Drawing
 
     Sub AnalyseLeistbarkeit(ByVal control As IRibbonControl)
 
-        Dim auswahlFormular As New frmShowPlanElements
+        Dim auswahlFormular As New frmNameSelection
         Dim returnValue As DialogResult
 
         Call projektTafelInit()
@@ -1689,24 +1696,6 @@ Imports System.Drawing
             With auswahlFormular
                 .Text = "Leistbarkeit analysieren"
 
-                .useHierarchyforSelection = awinSettings.useHierarchy
-
-                If .useHierarchyforSelection Then
-                    .hryTreeView.Visible = True
-                    .hryStufenLabel.Visible = True
-                    .hryStufen.Visible = True
-                    .nameListBox.Visible = False
-                    .headerLine.Visible = False
-                    .filterBox.Visible = False
-                Else
-                    .hryTreeView.Visible = False
-                    .hryStufenLabel.Visible = False
-                    .hryStufen.Visible = False
-                    .nameListBox.Visible = True
-                    .headerLine.Visible = True
-                    .filterBox.Visible = True
-                End If
-
                 .rdbBU.Visible = False
                 .pictureBU.Visible = False
 
@@ -1719,18 +1708,18 @@ Imports System.Drawing
                 .rdbCosts.Visible = True
                 .pictureCosts.Visible = True
 
-                .chkbxShowObjects = False
+                '.chkbxShowObjects = False
 
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = True
 
-                .chkbxCreateCharts = True
+                '.chkbxCreateCharts = True
 
 
                 .repVorlagenDropbox.Visible = False
                 .labelPPTVorlage.Visible = False
 
-                .showModePortfolio = True
+                '.showModePortfolio = True
 
                 .menuOption = PTmenue.leistbarkeitsAnalyse
                 .OKButton.Text = "Charts erstellen"
@@ -1761,7 +1750,7 @@ Imports System.Drawing
 
     Sub awinVariantenprojektReport(ByVal control As IRibbonControl)
 
-        Dim auswahlFormular As New frmShowPlanElements
+        Dim auswahlFormular As New frmNameSelection
         Dim returnValue As DialogResult
 
         Call projektTafelInit()
@@ -1776,24 +1765,6 @@ Imports System.Drawing
 
             With auswahlFormular
 
-                .useHierarchyforSelection = awinSettings.useHierarchy
-
-                If .useHierarchyforSelection Then
-                    .hryTreeView.Visible = True
-                    .hryStufenLabel.Visible = True
-                    .hryStufen.Visible = True
-                    .nameListBox.Visible = False
-                    .headerLine.Visible = False
-                    .filterBox.Visible = False
-                Else
-                    .hryTreeView.Visible = False
-                    .hryStufenLabel.Visible = False
-                    .hryStufen.Visible = False
-                    .nameListBox.Visible = True
-                    .headerLine.Visible = True
-                    .filterBox.Visible = True
-                End If
-
                 .rdbBU.Visible = True
                 .pictureBU.Visible = True
 
@@ -1803,14 +1774,14 @@ Imports System.Drawing
                 .einstellungen.Visible = True
                 .Text = "Projekt-Varianten Report erzeugen"
 
-                .chkbxShowObjects = False
+                '.chkbxShowObjects = False
 
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
-                .chkbxCreateCharts = False
+                '.chkbxCreateCharts = False
 
-                .showModePortfolio = True
+                '.showModePortfolio = True
 
                 .repVorlagenDropbox.Visible = True
                 .labelPPTVorlage.Visible = True
@@ -1848,7 +1819,7 @@ Imports System.Drawing
 
     Sub awinMultiprojektReport(ByVal control As IRibbonControl)
 
-        Dim auswahlFormular As New frmShowPlanElements
+        Dim auswahlFormular As New frmNameSelection
         Dim returnValue As DialogResult
 
         Call projektTafelInit()
@@ -1863,24 +1834,6 @@ Imports System.Drawing
 
             With auswahlFormular
 
-                .useHierarchyforSelection = awinSettings.useHierarchy
-
-                If .useHierarchyforSelection Then
-                    .hryTreeView.Visible = True
-                    .hryStufenLabel.Visible = True
-                    .hryStufen.Visible = True
-                    .nameListBox.Visible = False
-                    .headerLine.Visible = False
-                    .filterBox.Visible = False
-                Else
-                    .hryTreeView.Visible = False
-                    .hryStufenLabel.Visible = False
-                    .hryStufen.Visible = False
-                    .nameListBox.Visible = True
-                    .headerLine.Visible = True
-                    .filterBox.Visible = True
-                End If
-
                 .rdbBU.Visible = True
                 .pictureBU.Visible = True
 
@@ -1890,14 +1843,14 @@ Imports System.Drawing
                 .einstellungen.Visible = True
                 .Text = "Multiprojekt Reports erzeugen"
 
-                .chkbxShowObjects = False
+                '.chkbxShowObjects = False
 
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
-                .chkbxCreateCharts = False
+                '.chkbxCreateCharts = False
 
-                .showModePortfolio = True
+                '.showModePortfolio = True
 
                 .repVorlagenDropbox.Visible = True
                 .labelPPTVorlage.Visible = True
@@ -2626,7 +2579,7 @@ Imports System.Drawing
 
     Public Sub typIIExport(control As IRibbonControl)
 
-        Dim auswahlFormular As New frmShowPlanElements
+        Dim auswahlFormular As New frmNameSelection
         Dim returnValue As DialogResult
 
         Call projektTafelInit()
@@ -2640,24 +2593,6 @@ Imports System.Drawing
             appInstance.ScreenUpdating = False
 
             With auswahlFormular
-
-                .useHierarchyforSelection = awinSettings.useHierarchy
-
-                If .useHierarchyforSelection Then
-                    .hryTreeView.Visible = True
-                    .hryStufenLabel.Visible = True
-                    .hryStufen.Visible = True
-                    .nameListBox.Visible = False
-                    .headerLine.Visible = False
-                    .filterBox.Visible = False
-                Else
-                    .hryTreeView.Visible = False
-                    .hryStufenLabel.Visible = False
-                    .hryStufen.Visible = False
-                    .nameListBox.Visible = True
-                    .headerLine.Visible = True
-                    .filterBox.Visible = True
-                End If
 
                 .rdbBU.Visible = True
                 .pictureBU.Visible = True
@@ -2674,14 +2609,14 @@ Imports System.Drawing
                 .einstellungen.Visible = False
                 .Text = "Excel Report erzeugen"
 
-                .chkbxShowObjects = False
+                '.chkbxShowObjects = False
 
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
-                .chkbxCreateCharts = False
+                '.chkbxCreateCharts = False
 
-                .showModePortfolio = True
+                '.showModePortfolio = True
 
                 .repVorlagenDropbox.Visible = False
                 .labelPPTVorlage.Visible = False

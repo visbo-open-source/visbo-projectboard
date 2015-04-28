@@ -287,7 +287,7 @@
                 .indexOfElem = Me.indexOfElem
                 .isMilestone = Me.isMilestone
                 .parentNodeKey = Me.parentNodeKey
-                For i As Integer = 1 To .childCount
+                For i As Integer = 1 To Me.childNodeKeys.Count
                     childID = Me.childNodeKeys.Item(i - 1)
                     .addChild(childID)
                 Next

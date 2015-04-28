@@ -2068,6 +2068,56 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' berechnet den Namen, der in selectedphases bzw. selectedMilestones reinkommt, bestehend aus: 
+    ''' Breadcrumb und elemName; Breadcrumb und die einzelnen Stufen des Breadcrumbs sind getrennt durch #
+    ''' </summary>
+    ''' <param name="elemName"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcHryFullname(ByVal elemName As String, ByVal breadcrumb As String) As String
+
+        If breadcrumb = "" Then
+            calcHryFullname = elemName
+        Else
+            calcHryFullname = breadcrumb & "#" & elemName
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' gibt den Elem-Name und Breadcrumb als einzelne Strings zurück
+    ''' </summary>
+    ''' <param name="fullname"></param>
+    ''' <param name="elemName"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <remarks></remarks>
+    Public Sub splitHryFullnameTo2(ByVal fullname As String, ByRef elemName As String, ByRef breadcrumb As String)
+        Dim tmpstr() As String
+        Dim tmpBC As String = ""
+        Dim anzahl As Integer
+
+        tmpstr = fullname.Split(New Char() {CChar("#")}, 20)
+        anzahl = tmpstr.Length
+        If tmpstr.Length = 1 Then
+            elemName = tmpstr(0)
+        ElseIf tmpstr.Length > 1 Then
+            elemName = tmpstr(anzahl - 1)
+            For i As Integer = 0 To anzahl - 2
+                If i = 0 Then
+                    tmpBC = tmpstr(i)
+                Else
+                    tmpBC = tmpBC & "#" & tmpstr(i)
+                End If
+            Next
+        Else
+            elemName = "?"
+        End If
+        breadcrumb = tmpBC
+
+    End Sub
+
+    ''' <summary>
     ''' gibt true zurück, wenn es sich bei der ElemID um die ID eines Meilensteins handelt 
     ''' </summary>
     ''' <param name="elemID"></param>
@@ -2366,7 +2416,8 @@ Public Module Module1
             End If
 
             ueberdeckungsduration = DateDiff(DateInterval.Day, ueberdeckungsStart, ueberdeckungsEnde) + 1
-            ergebnis = System.Math.Max(ueberdeckungsduration / duration1, ueberdeckungsduration / duration2)
+            'ergebnis = System.Math.Max(ueberdeckungsduration / duration1, ueberdeckungsduration / duration2)
+            ergebnis = System.Math.Min(ueberdeckungsduration / duration1, ueberdeckungsduration / duration2)
 
         End If
 
@@ -2454,6 +2505,45 @@ Public Module Module1
             selFilterDefinitions.storeFilter(fName, lastFilter)
         End If
 
+
+    End Sub
+
+    ''' <summary>
+    ''' wird aus Formular NameSelection bzw. HrySelection aufgerufen
+    ''' besetzt die Vorlagen Dropbox den entsprechenden Datei-NAmen
+    ''' </summary>
+    ''' <param name="menuOption"></param>
+    ''' <param name="repVorlagenDropbox"></param>
+    ''' <remarks></remarks>
+    Public Sub frmHryNameReadPPTVorlagen(ByVal menuOption As Integer, ByRef repVorlagenDropbox As System.Windows.Forms.ComboBox)
+
+        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport Then
+
+            Dim dirname As String
+            Dim dateiName As String = ""
+
+            If menuOption = PTmenue.multiprojektReport Then
+                dirname = awinPath & RepPortfolioVorOrdner
+            Else
+                dirname = awinPath & RepProjectVorOrdner
+            End If
+
+            Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
+            Try
+
+                Dim i As Integer
+                For i = 1 To listOfVorlagen.Count
+                    dateiName = Dir(listOfVorlagen.Item(i - 1))
+                    If dateiName.Contains("Typ II") Then
+                        repVorlagenDropbox.Items.Add(dateiName)
+                    End If
+
+                Next i
+            Catch ex As Exception
+
+            End Try
+
+        End If
 
     End Sub
 

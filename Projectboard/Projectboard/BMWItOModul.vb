@@ -513,7 +513,7 @@ Module BMWItOModul
                                                 ok = True
                                             ElseIf milestoneMappings.tobeIgnored(itemName) Then
                                                 CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
-                                                                "nicht zugelassen (Ignore)"
+                                                                "nicht zugelassen (lt. Wörterbuch ignorieren)"
                                                 ok = False
                                                 lastDuplicateIndent = indentLevel
                                             Else
@@ -527,7 +527,7 @@ Module BMWItOModul
                                                 ok = True
                                             ElseIf phaseMappings.tobeIgnored(itemName) Then
                                                 CType(activeWSListe.Cells(curZeile, colProtocol + 9), Excel.Range).Value = _
-                                                                "nicht zugelassen (Ignore)"
+                                                                "nicht zugelassen (lt. Wörterbuch ignorieren)"
                                                 lastDuplicateIndent = indentLevel
                                                 ok = False
                                             Else
@@ -648,72 +648,91 @@ Module BMWItOModul
                                         stdName = itemName
                                     End Try
 
-                                    elemID = calcHryElemKey(stdName, False)
-
                                     Dim ok1 As Boolean
-                                    Dim ueberdeckung As Double
 
-                                    ' jetzt muss geprüft werden, ob der ggf bereits korrigierte Std-Name überhaupt in der 
-                                    ' Positiv Liste enthalten ist 
-                                    ' wenn nein, dann soll das Element nicht aufgenommen werden 
-
-                                    ' wenn dieses Projekt diese Phase bereits enthält ...
-
+                                    elemID = calcHryElemKey(stdName, False)
                                     If hproj.hierarchy.containsKey(elemID) Then
 
-                                        ' PT-79 toleranz für Identität von Phasen
-                                        Dim vglPhase As clsPhase = hproj.getPhaseByID(elemID)
-                                        ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
-                                                                  itemStartDate, itemEndDate)
+                                        elemID = hproj.hierarchy.findUniqueElemKey(stdName, False)
 
-                                        ' wenn diese Phase zwar den gleichen Namen aber andere Start-/Ende Daten hat ...
-                                        ' dann wird ein neues Element mit lfd_Nr erzeugt 
+                                        Dim ueberdeckung As Double
+                                        Dim breadcrumb As String = pHierarchy.getFootPrint(indentLevel, "#")
+                                        Dim parentPhase As clsPhase = pHierarchy.getPhaseBeforeLevel(indentLevel)
+                                        Dim parentphaseName As String = ""
 
-                                        If ueberdeckung < 0.95 Then
-                                            Dim lfdNr As Integer = 2
-                                            elemID = calcHryElemKey(stdName, False, lfdNr)
-                                            found = False
+                                        If Not IsNothing(parentPhase) Then
+                                            parentphaseName = parentPhase.name
+                                        End If
 
-                                            Do While hproj.hierarchy.containsKey(elemID) And Not found
-
-                                                vglPhase = hproj.getPhaseByID(elemID)
-                                                ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
-                                                                  itemStartDate, itemEndDate)
-
-                                                'If vglPhase.startOffsetinDays <> startoffset Or vglPhase.dauerInDays <> duration Then
-                                                If ueberdeckung < 0.95 Then
-                                                    lfdNr = lfdNr + 1
-                                                    elemID = calcHryElemKey(stdName, False, lfdNr)
-                                                Else
-                                                    found = True
-                                                End If
-
-                                            Loop
-
-                                            If Not found Then
-                                                ' Änderung tk 31.3.15 - nicht mehr nötig 
-                                                'stdName = newElemID
-                                                'listOfProjectPhases.Add(stdName, parentPhaseName)
+                                        If parentphaseName = stdName Then
+                                            ueberdeckung = calcPhaseUeberdeckung(parentPhase.getStartDate, parentPhase.getEndDate, _
+                                                                      itemStartDate, itemEndDate)
+                                            If ueberdeckung < 0.95 Then
                                                 ok1 = True
                                             Else
                                                 ok1 = False
-                                                logMessage = "(" & stdName & " " & lfdNr.ToString & ")" & _
-                                                    " ist doppelt und wird ignoriert "
+                                                logMessage = stdName & " ist doppelt und wird ignoriert "
                                             End If
 
-
                                         Else
-                                            ' in diesem Fall ist die Phase doppelt und soll nicht weiter berücksichtigt werden ...
-                                            ok1 = False
-                                            logMessage = "ist doppelt und wird ignoriert "
+
+                                            Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(stdName, breadcrumb)
+                                            If phaseIndices(0) > 0 Then
+                                                Dim anzahl As Integer = phaseIndices.Length
+
+                                                ' PT-79 toleranz für Identität von Phasen
+                                                Dim vglPhase As clsPhase = hproj.getPhase(phaseIndices(0))
+                                                ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
+                                                                          itemStartDate, itemEndDate)
+
+                                                ' wenn diese Phase zwar den gleichen Namen aber andere Start-/Ende Daten hat ...
+                                                ' dann wird ein neues Element mit lfd_Nr erzeugt 
+
+                                                If ueberdeckung < 0.95 Then
+                                                    Dim index As Integer = 2
+                                                    found = False
+
+                                                    Do While index <= anzahl And Not found
+
+                                                        vglPhase = hproj.getPhase(phaseIndices(index - 1))
+                                                        ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
+                                                                          itemStartDate, itemEndDate)
+
+                                                        'If vglPhase.startOffsetinDays <> startoffset Or vglPhase.dauerInDays <> duration Then
+                                                        If ueberdeckung < 0.95 Then
+                                                            index = index + 1
+                                                        Else
+                                                            found = True
+                                                        End If
+
+                                                    Loop
+
+                                                    If Not found Then
+                                                        ok1 = True
+                                                    Else
+                                                        ok1 = False
+                                                        logMessage = stdName & " ist doppelt und wird ignoriert "
+                                                    End If
+
+
+                                                Else
+                                                    ' in diesem Fall ist die Phase doppelt und soll nicht weiter berücksichtigt werden ...
+                                                    ok1 = False
+                                                    logMessage = stdName & " ist doppelt und wird ignoriert "
+                                                End If
+
+                                            Else
+                                                ok1 = True
+                                            End If
+
                                         End If
 
                                     Else
-                                        'listOfProjectPhases.Add(stdName, parentPhaseName)
                                         ok1 = True
                                     End If
 
-                                        ' jetzt muss geprüft werden, ob das Element in Std Definitions aufgenommen werden muss 
+
+                                    ' jetzt muss geprüft werden, ob das Element in Std Definitions aufgenommen werden muss 
                                     If Not PhaseDefinitions.Contains(stdName) Then
 
                                         Dim hphaseDef As clsPhasenDefinition
@@ -835,54 +854,60 @@ Module BMWItOModul
                                             stdName = itemName
                                         End Try
 
-                                        elemID = calcHryElemKey(stdName, True)
                                         Dim ok1 As Boolean
 
-                                        ' jetzt muss geprüft werden, ob das Element in der Liste der zugelassenen Elemente enthalten ist 
-
+                                        elemID = calcHryElemKey(stdName, True)
                                         If hproj.hierarchy.containsKey(elemID) Then
 
-                                            Dim vglMilestone As clsMeilenstein = hproj.getMilestoneByID(elemID)
+                                            Dim breadcrumb As String = pHierarchy.getFootPrint(indentLevel, "#")
+                                            elemID = hproj.hierarchy.findUniqueElemKey(stdName, True)
 
-                                            If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
-                                                ' es muss ein neuer Meilenstein mit neuer lfd Nr angelegt werden 
+                                            Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(stdName, breadcrumb)
 
-                                                Dim lfdNr As Integer = 2
-                                                'Dim newName As String = stdName & " " & lfdNr.ToString
-                                                Dim newElemID As String = calcHryElemKey(stdName, True, lfdNr)
-                                                found = False
+                                            If milestoneIndices(0, 0) > 0 And milestoneIndices(1, 0) > 0 Then
+                                                Dim anzahl As Integer = CInt(milestoneIndices.Length / 2)
 
-                                                Do While hproj.hierarchy.containsKey(newElemID) And Not found
+                                                ' PT-79 toleranz für Identität von Phasen
+                                                Dim vglMilestone As clsMeilenstein = hproj.getMilestone(milestoneIndices(0, 0), milestoneIndices(1, 0))
 
-                                                    vglMilestone = hproj.getMilestoneByID(newElemID)
+                                                If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
 
-                                                    If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
-                                                        lfdNr = lfdNr + 1
-                                                        newElemID = calcHryElemKey(stdName, True, lfdNr)
+                                                    Dim index As Integer = 2
+                                                    found = False
+
+                                                    Do While index <= anzahl And Not found
+                                                        vglMilestone = hproj.getMilestone(milestoneIndices(0, index - 1), milestoneIndices(1, index - 1))
+
+                                                        If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
+                                                            index = index + 1
+                                                        Else
+                                                            found = True
+                                                        End If
+                                                    Loop
+
+                                                    If found Then
+                                                        ' identisch 
+                                                        ok1 = False
+                                                        logMessage = stdName & " ist doppelt und wird ignoriert "
                                                     Else
-                                                        found = True
+                                                        ok1 = True
                                                     End If
-                                                Loop
-
-                                                If Not found Then
-                                                    elemID = newElemID
-                                                    ok1 = True
                                                 Else
+                                                    ' ist identisch 
                                                     ok1 = False
-                                                    logMessage = "(" & newElemID & ")" & " ist doppelt und wird ignoriert "
+                                                    logMessage = stdName & " ist doppelt und wird ignoriert "
                                                 End If
 
-                                            Else
-                                                ' es ist ein Duplikat 
-                                                ok1 = False
-                                                logMessage = "ist doppelt und wird ignoriert "
-                                            End If
+                                                ' wenn diese Phase zwar den gleichen Namen aber andere Start-/Ende Daten hat ...
+                                                ' dann wird ein neues Element mit lfd_Nr erzeugt 
 
+                                            Else
+                                                ok1 = True
+                                            End If
 
                                         Else
                                             ok1 = True
                                         End If
-
 
 
                                         ' jetzt muss geprüft werden, ob stdName bereits aufgenommen ist 

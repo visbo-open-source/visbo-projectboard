@@ -1,5 +1,5 @@
 ﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
-Partial Class frmShowPlanElements
+Partial Class frmNameSelection
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
@@ -22,7 +22,7 @@ Partial Class frmShowPlanElements
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmShowPlanElements))
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmNameSelection))
         Me.nameListBox = New System.Windows.Forms.ListBox()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.AbbrButton = New System.Windows.Forms.Button()
@@ -50,9 +50,6 @@ Partial Class frmShowPlanElements
         Me.addButton = New System.Windows.Forms.PictureBox()
         Me.removeButton = New System.Windows.Forms.PictureBox()
         Me.Label1 = New System.Windows.Forms.Label()
-        Me.hryTreeView = New System.Windows.Forms.TreeView()
-        Me.hryStufen = New System.Windows.Forms.NumericUpDown()
-        Me.hryStufenLabel = New System.Windows.Forms.Label()
         CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.pictureRoles, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.picturePhasen, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -61,7 +58,6 @@ Partial Class frmShowPlanElements
         CType(Me.pictureBU, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.addButton, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.removeButton, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'nameListBox
@@ -324,38 +320,11 @@ Partial Class frmShowPlanElements
         Me.Label1.TabIndex = 30
         Me.Label1.Text = "aktuelle Auswahl, auf die sich die Aktion bezieht "
         '
-        'hryTreeView
-        '
-        Me.hryTreeView.FullRowSelect = True
-        Me.hryTreeView.Location = New System.Drawing.Point(12, 109)
-        Me.hryTreeView.Name = "hryTreeView"
-        Me.hryTreeView.Size = New System.Drawing.Size(275, 196)
-        Me.hryTreeView.TabIndex = 31
-        '
-        'hryStufen
-        '
-        Me.hryStufen.Location = New System.Drawing.Point(242, 84)
-        Me.hryStufen.Name = "hryStufen"
-        Me.hryStufen.Size = New System.Drawing.Size(45, 20)
-        Me.hryStufen.TabIndex = 32
-        '
-        'hryStufenLabel
-        '
-        Me.hryStufenLabel.AutoSize = True
-        Me.hryStufenLabel.Location = New System.Drawing.Point(10, 85)
-        Me.hryStufenLabel.Name = "hryStufenLabel"
-        Me.hryStufenLabel.Size = New System.Drawing.Size(218, 13)
-        Me.hryStufenLabel.TabIndex = 33
-        Me.hryStufenLabel.Text = "Hierarchie-Stufen bei Suche berücksichtigen"
-        '
-        'frmShowPlanElements
+        'frmNameSelection
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(599, 439)
-        Me.Controls.Add(Me.hryStufenLabel)
-        Me.Controls.Add(Me.hryStufen)
-        Me.Controls.Add(Me.hryTreeView)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.removeButton)
         Me.Controls.Add(Me.addButton)
@@ -382,7 +351,7 @@ Partial Class frmShowPlanElements
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.nameListBox)
-        Me.Name = "frmShowPlanElements"
+        Me.Name = "frmNameSelection"
         Me.Text = "Visualisieren von Plan-Objekten"
         Me.TopMost = True
         CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).EndInit()
@@ -393,7 +362,6 @@ Partial Class frmShowPlanElements
         CType(Me.pictureBU, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.addButton, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.removeButton, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -425,7 +393,4 @@ Partial Class frmShowPlanElements
     Friend WithEvents addButton As System.Windows.Forms.PictureBox
     Friend WithEvents removeButton As System.Windows.Forms.PictureBox
     Friend WithEvents Label1 As System.Windows.Forms.Label
-    Friend WithEvents hryTreeView As System.Windows.Forms.TreeView
-    Friend WithEvents hryStufen As System.Windows.Forms.NumericUpDown
-    Friend WithEvents hryStufenLabel As System.Windows.Forms.Label
 End Class

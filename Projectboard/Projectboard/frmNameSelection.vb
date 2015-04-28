@@ -3,16 +3,15 @@ Imports System.ComponentModel
 Imports ClassLibrary1
 Imports Microsoft.Office.Interop.Excel
 
-Public Class frmShowPlanElements
+Public Class frmNameSelection
 
     ' kann von ausserhalb gesetzt werden; gibt an ob das ganze Portfolio angezeigt werden soll
     ' oder nur die selektierten Projekte 
-    Friend useHierarchyforSelection As Boolean
 
-    Friend showModePortfolio As Boolean
+    'Friend showModePortfolio As Boolean
     Friend menuOption As Integer
-    Friend chkbxShowObjects As Boolean
-    Friend chkbxCreateCharts As Boolean
+    'Friend chkbxShowObjects As Boolean
+    'Friend chkbxCreateCharts As Boolean
 
 
     Private allMilestones As New Collection
@@ -29,8 +28,6 @@ Public Class frmShowPlanElements
     Private selectedRoles As New Collection
     Private selectedBUs As New Collection
     Private selectedTyps As New Collection
-
-    Private hry As clsHierarchy
 
     'Private sKeyMilestones As String = ""
     'Private sKeyPhases As String = ""
@@ -51,7 +48,7 @@ Public Class frmShowPlanElements
 
     Private chTyp As String
 
-    
+
 
     ''' <summary>
     ''' Koordinaten merken 
@@ -85,11 +82,6 @@ Public Class frmShowPlanElements
         statusLabel.Text = ""
         statusLabel.Visible = True
 
-        ' es wird ein Treeview gemacht, der alles enthält: sowohl Phasen als auch Meilensteine 
-        If useHierarchyforSelection Then
-            hry = Projektvorlagen.getProject("rel 5 E-07").hierarchy
-            Call buildHryTreeView()
-        End If
         
         ' jetzt werden anhand des letzten Filters die Collections gesetzt 
         Call retrieveSelections("Last", menuOption, selectedBUs, selectedTyps, _
@@ -99,33 +91,36 @@ Public Class frmShowPlanElements
         ' jetzt werden die ProjektReport- bzw. PortfolioReport-Vorlagen ausgelesen 
         ' in diesem Fall werden nur die mit Multiprojekt angezeigt 
 
-        If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Then
+        Call frmHryNameReadPPTVorlagen(Me.menuOption, repVorlagenDropbox)
 
-            Dim dirname As String
-            Dim dateiName As String = ""
+        ' das folgende wurde bereits alles in dem Aufruf frmHryNameReadPPTVorlagen gemacht ...  
+        'If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Then
 
-            If Me.menuOption = PTmenue.multiprojektReport Then
-                dirname = awinPath & RepPortfolioVorOrdner
-            Else
-                dirname = awinPath & RepProjectVorOrdner
-            End If
+        '    Dim dirname As String
+        '    Dim dateiName As String = ""
 
-            Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
-            Try
+        '    If Me.menuOption = PTmenue.multiprojektReport Then
+        '        dirname = awinPath & RepPortfolioVorOrdner
+        '    Else
+        '        dirname = awinPath & RepProjectVorOrdner
+        '    End If
 
-                Dim i As Integer
-                For i = 1 To listOfVorlagen.Count
-                    dateiName = Dir(listOfVorlagen.Item(i - 1))
-                    If dateiName.Contains("Typ II") Then
-                        repVorlagenDropbox.Items.Add(dateiName)
-                    End If
+        '    Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
+        '    Try
 
-                Next i
-            Catch ex As Exception
-                'Call MsgBox(ex.Message & ": " & dateiName)
-            End Try
+        '        Dim i As Integer
+        '        For i = 1 To listOfVorlagen.Count
+        '            dateiName = Dir(listOfVorlagen.Item(i - 1))
+        '            If dateiName.Contains("Typ II") Then
+        '                repVorlagenDropbox.Items.Add(dateiName)
+        '            End If
 
-        End If
+        '        Next i
+        '    Catch ex As Exception
+        '        'Call MsgBox(ex.Message & ": " & dateiName)
+        '    End Try
+
+        'End If
 
         Me.rdbPhases.Checked = True
 
@@ -305,22 +300,26 @@ Public Class frmShowPlanElements
 
                 If selectedPhases.Count > 0 Then
                     chTyp = DiagrammTypen(0)
-                    Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, chtop, chleft)
+                    Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, chkbxOneChart.Checked, _
+                                                   chtop, chleft)
                 End If
 
                 If selectedMilestones.Count > 0 Then
                     chTyp = DiagrammTypen(5)
-                    Call zeichneLeistbarkeitsChart(selectedMilestones, chTyp, chtop, chleft)
+                    Call zeichneLeistbarkeitsChart(selectedMilestones, chTyp, chkbxOneChart.Checked, _
+                                                   chtop, chleft)
                 End If
 
                 If selectedRoles.Count > 0 Then
                     chTyp = DiagrammTypen(1)
-                    Call zeichneLeistbarkeitsChart(selectedRoles, chTyp, chtop, chleft)
+                    Call zeichneLeistbarkeitsChart(selectedRoles, chTyp, chkbxOneChart.Checked, _
+                                                   chtop, chleft)
                 End If
 
                 If selectedCosts.Count > 0 Then
                     chTyp = DiagrammTypen(2)
-                    Call zeichneLeistbarkeitsChart(selectedCosts, chTyp, chtop, chleft)
+                    Call zeichneLeistbarkeitsChart(selectedCosts, chTyp, chkbxOneChart.Checked, _
+                                                   chtop, chleft)
                 End If
 
                 appInstance.ScreenUpdating = formerSU
@@ -438,17 +437,14 @@ Public Class frmShowPlanElements
             chkbxOneChart.Text = "Alles in einem Chart"
 
 
-            ' wäre es nicht besser, hier alle vorkommenden Phasen zu zeigen ? 
-            ' ggf noch zu tun , Stand 150421
 
-            If Not useHierarchyforSelection Then
-                If selectedProjekte.Count > 0 Then
-                    allPhases = selectedProjekte.getPhaseNames
-                Else
-                    allPhases = ShowProjekte.getPhaseNames
-                End If
+
+            If selectedProjekte.Count > 0 Then
+                allPhases = selectedProjekte.getPhaseNames
+            Else
+                allPhases = ShowProjekte.getPhaseNames
             End If
-            
+
 
             'If allPhases.Count = 0 Then
             '    For i = 1 To PhaseDefinitions.Count
@@ -488,12 +484,11 @@ Public Class frmShowPlanElements
 
             chkbxOneChart.Text = "Alles in einem Chart"
 
-            If Not useHierarchyforSelection Then
-                If selectedProjekte.Count > 0 Then
-                    allMilestones = selectedProjekte.getMilestoneNames
-                Else
-                    allPhases = ShowProjekte.getMilestoneNames
-                End If
+
+            If selectedProjekte.Count > 0 Then
+                allMilestones = selectedProjekte.getMilestoneNames
+            Else
+                allPhases = ShowProjekte.getMilestoneNames
             End If
 
             '' hier muss alles eingetragen werden, was an Meilensteinen da ist ... 
@@ -926,18 +921,16 @@ Public Class frmShowPlanElements
 
         End Select
 
-        ' ist nur notwendig, wenn nicht useHierarchy
-        If Not useHierarchyforSelection Then
-
-            For i = 1 To listOfNames.Count
-                nameListBox.Items.Add(listOfNames.Item(i))
-            Next
-
-        End If
         
+
+        For i = 1 To listOfNames.Count
+            nameListBox.Items.Add(listOfNames.Item(i))
+        Next
+
+
         ' Filter Box Test setzen 
         filterBox.Text = ""
-        
+
         ' jetzt prüfen, ob selectedphases bereits etwas enthält
         ' wenn ja, dann werden diese Items in Listbox2 dargestellt 
         For Each element As String In tmpCollection
@@ -1054,98 +1047,19 @@ Public Class frmShowPlanElements
 
         Dim i As Integer
         Dim element As Object
-        Dim anzahlKnoten As Integer
-        Dim selectedNode As TreeNode
-        Dim elemName As String
-        Dim tmpNode As TreeNode
         Dim sammelCollection As New Collection
 
-        If useHierarchyforSelection Then
 
-            anzahlKnoten = hryTreeView.Nodes.Count
-            selectedNode = hryTreeView.SelectedNode
+        For i = 1 To nameListBox.SelectedItems.Count
+            element = nameListBox.SelectedItems.Item(i - 1)
+            If selNameListBox.Items.Contains(element) Then
+                ' nichts tun 
+            Else
+                selNameListBox.Items.Add(element)
+            End If
+        Next
 
-            With hryTreeView
-
-                For px As Integer = 1 To anzahlKnoten
-
-                    tmpNode = .Nodes.Item(px - 1)
-
-                    If tmpNode.Checked Then
-                        ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
-                        elemName = elemNameOfElemID(tmpNode.Name)
-                        tmpNode.Checked = False
-
-                        If Not elemName = "?" Then
-
-                            If Not sammelCollection.Contains(elemName) Then
-
-                                If rdbPhases.Checked Then
-                                    If Not elemIDIstMeilenstein(tmpNode.Name) Then
-                                        sammelCollection.Add(elemName, elemName)
-                                    End If
-
-                                ElseIf rdbMilestones.Checked Then
-                                    If elemIDIstMeilenstein(tmpNode.Name) Then
-                                        sammelCollection.Add(elemName, elemName)
-                                    Else
-                                        ' alle Meilensteine dieser Phase aufsammeln ...
-                                        sammelCollection = ShowProjekte.getMilestonesOfPhase(elemName)
-                                    End If
-                                End If
-
-                            End If
-                        End If
-
-                    End If
-                    
-
-                    If tmpNode.Nodes.Count > 0 Then
-                        Call pickupCheckedItems(tmpNode, sammelCollection)
-                    End If
-
-                Next
-                '' wenn jetzt noch ein zusätzliches Element selektiert war , ggf auch aufnehmen 
-
-                'If Not IsNothing(selectedNode) Then
-
-                '    elemName = elemNameOfElemID(selectedNode.Name)
-                '    If selNameListBox.Items.Contains(elemName) Then
-                '        ' nichts tun 
-                '    Else
-                '        selNameListBox.Items.Add(elemName)
-                '    End If
-
-                'End If
-
-            End With
-
-
-
-            ' jetzt muss die selNameListBox aufgebaut werden 
-            For i = 1 To sammelCollection.Count
-                element = CStr(sammelCollection.Item(i))
-                If selNameListBox.Items.Contains(element) Then
-                    ' nichts tun 
-                Else
-                    selNameListBox.Items.Add(element)
-                End If
-            Next
-
-
-
-        Else
-            For i = 1 To nameListBox.SelectedItems.Count
-                element = nameListBox.SelectedItems.Item(i - 1)
-                If selNameListBox.Items.Contains(element) Then
-                    ' nichts tun 
-                Else
-                    selNameListBox.Items.Add(element)
-                End If
-            Next
-
-            nameListBox.SelectedItems.Clear()
-        End If
+        nameListBox.SelectedItems.Clear()
 
 
 
@@ -1174,422 +1088,49 @@ Public Class frmShowPlanElements
 
     End Sub
 
-    ''' <summary>
-    ''' zeichnet das Leistbarkeits-Chart 
-    ''' </summary>
-    ''' <param name="selCollection">Collection mit den Phasne-, Meilenstein, Rollen- oder Kostenarten</param>
-    ''' <param name="chTyp">Typ: es handelt sich um Phasen, rollen, etc. </param>
-    ''' <param name="chtop">auf welcher Höhe soll das Chart gezeichnet werden</param>
-    ''' <param name="chleft">auf welcher x-Koordinate soll das Chart gezeichnet werden</param>
-    ''' <remarks></remarks>
-    Private Sub zeichneLeistbarkeitsChart(ByVal selCollection As Collection, ByVal chTyp As String, _
-                                              ByRef chtop As Double, ByRef chleft As Double)
-
-
-        Dim repObj As Excel.ChartObject
-        Dim myCollection As Collection
-
-        Dim chWidth As Double
-        Dim chHeight As Double
-
-        ' Window Position festlegen 
-        chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
-        chHeight = awinSettings.ChartHoehe1
-
-
-        If chkbxOneChart.Checked = True Then
-
-
-            ' alles in einem Chart anzeigen
-            myCollection = New Collection
-            For Each element As String In selCollection
-                myCollection.Add(element, element)
-            Next
-
-            repObj = Nothing
-            Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
-                                                              chWidth, chHeight, False, chTyp, False)
-
-            chtop = chtop + 5
-            chleft = chleft + 7
-        Else
-            ' für jedes ITEM ein eigenes Chart machen
-            For Each element As String In selCollection
-                ' es muss jedesmal eine neue Collection erzeugt werden - die Collection wird in DiagramList gemerkt
-                ' wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
-                myCollection = New Collection
-                myCollection.Add(element, element)
-                repObj = Nothing
-
-                Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
-                                                                   chWidth, chHeight, False, chTyp, False)
-
-                chtop = chtop + 5
-                chleft = chleft + 7
-            Next
-
-        End If
-
-    End Sub
-
-    ''' <summary>
-    ''' erstellt das Excel Export File für die angegebenen Phasen, Meilensteine, Rollen und Kosten
-    ''' vorläufig nur für Phasen und Meilensteine realisiert
-    ''' </summary>
-    ''' <param name="filterName">gibt den Namen des Filters an, der die Collections enthält </param>
-    ''' <remarks></remarks>
-    Private Sub createExcelExportFromSelection(ByVal filterName As String)
-
-        Dim earliestDate As Date, latestDate As Date
-        Dim phaseList As New SortedList(Of Double, String)
-        Dim milestonelist As New SortedList(Of Double, String)
-
-        Dim selphases As New Collection
-        Dim selMilestones As New Collection
-        Dim selRoles As New Collection
-        Dim selCosts As New Collection
-        Dim selBUs As New Collection
-        Dim selTyps As New Collection
-
-        Call retrieveSelections(filterName, PTmenue.excelExport, selBUs, selTyps, _
-                                 selphases, selMilestones, selRoles, selCosts)
-
-        ' initialisieren 
-        earliestDate = StartofCalendar.AddMonths(-12)
-        latestDate = StartofCalendar.AddMonths(1200)
-
-        Dim anteil As Double = 0.0
-        Dim anzahlProjekte As Integer = ShowProjekte.Count
-        Dim currentIX As Integer
-        Dim hproj As clsProjekt
-        Dim pName As String, msName As String
-        Dim cphase As clsPhase, milestone As clsMeilenstein
-        Dim anzPlanobjekte As Integer = selphases.Count + selMilestones.Count
-        Dim bestproj As String = ""
-        Dim startFaktor As Double = 1.0
-        Dim durationFaktor As Double = 0.000001
-        Dim correctFaktor As Double = 0.00000001
-        Dim schluessel As Double
-        Dim korrFaktor As Double
-        Dim refLaenge As Integer
-
-        currentIX = 1
-        Do While phaseList.Count + milestonelist.Count < selphases.Count + selMilestones.Count And _
-                 currentIX <= anzahlProjekte
-
-            hproj = ShowProjekte.getProject(currentIX)
-            Dim anzFoundElem As Integer = 0
-
-            If currentIX = 1 Then
-                korrFaktor = 1.0
-                refLaenge = hproj.dauerInDays
-            Else
-                Try
-                    korrFaktor = hproj.dauerInDays / refLaenge
-                Catch ex As Exception
-                    korrFaktor = 1.0
-                End Try
-
-            End If
-
-            If phaseList.Count < selphases.Count Then
-                For Each pObject As Object In selphases
-
-                    pName = CStr(pObject)
-                    If phaseList.ContainsValue(pName) Then
-                        ' sie ist schon eingeordnet und es muss nichts mehr gemacht werden 
-                    Else
-                        cphase = hproj.getPhase(pName)
-
-                        If Not IsNothing(cphase) Then
-
-                            anzFoundElem = anzFoundElem + 1
-                            schluessel = (cphase.startOffsetinDays * startFaktor + _
-                                            cphase.dauerInDays * durationFaktor) * korrFaktor
-
-                            Dim ok As Boolean = False
-                            Do Until ok
-
-                                If phaseList.ContainsKey(schluessel) Then
-                                    schluessel = schluessel + correctFaktor
-                                Else
-                                    phaseList.Add(schluessel, pName)
-                                    ok = True
-                                End If
-
-                            Loop
-
-
-                        End If
-                    End If
-
-                Next
-            End If
-
-
-            If milestonelist.Count < selMilestones.Count Then
-                For Each pObject As Object In selMilestones
-                    msName = CStr(pObject)
-                    If milestonelist.ContainsValue(msName) Then
-                        ' er ist schon eingeordnet und es muss nichts mehr gemacht werden 
-                    Else
-                        milestone = hproj.getMilestone(msName)
-
-                        If Not IsNothing(milestone) Then
-
-                            anzFoundElem = anzFoundElem + 1
-                            schluessel = DateDiff(DateInterval.Day, hproj.startDate, milestone.getDate) * korrFaktor
-
-                            Dim ok As Boolean = False
-                            Do Until ok
-
-                                If milestonelist.ContainsKey(schluessel) Then
-                                    schluessel = schluessel + correctFaktor
-                                Else
-                                    milestonelist.Add(schluessel, msName)
-                                    ok = True
-                                End If
-
-                            Loop
-
-
-                        End If
-                    End If
-
-                Next
-            End If
-
-            currentIX = currentIX + 1
-
-        Loop
-
-        ' jetzt sind die Elemente in der richtigen Reihenfolge eingeordnet 
-        ' jetzt werden sie rausgeschrieben 
-        Try
-            Call exportSelectionToExcel(phaseList, milestonelist)
-        Catch ex As Exception
-            Throw New Exception(ex.Message)
-        End Try
-
-
-
-    End Sub
-
+    
     Private Sub selNameListBox_MouseDoubleClick(sender As Object, e As MouseEventArgs) Handles selNameListBox.MouseDoubleClick
-        Dim elemID As String = ""
+
         Dim elemName As String = ""
+        Dim childName As String
         Dim sammelCollection As Collection
         Dim anzahl As Integer = selNameListBox.SelectedItems.Count
 
         If rdbPhases.Checked Then
 
             If anzahl = 1 Then
-                elemID = CStr(selNameListBox.SelectedItem)
+                elemName = CStr(selNameListBox.SelectedItem)
             ElseIf anzahl > 1 Then
-                elemID = CStr(selNameListBox.SelectedItems.Item(1))
+                elemName = CStr(selNameListBox.SelectedItems.Item(1))
             End If
 
-            'sammelCollection = ShowProjekte.getPhasesOfPhase(elemName)
-        End If
+            ' das Element rausnehmen 
+            selNameListBox.Items.Remove(selNameListBox.SelectedItem)
 
+            sammelCollection = ShowProjekte.getPhasesOfPhase(elemName)
 
-    End Sub
+            For i As Integer = 1 To sammelCollection.Count
 
+                childName = CStr(sammelCollection.Item(i))
+                If Not selNameListBox.Items.Contains(childName) Then
+                    selNameListBox.Items.Add(childName)
+                End If
 
-    ''' <summary>
-    ''' baut den TreeView für die Hierarchie auf , Treeview enthält sowohl Meilensteine als auch Phasen
-    ''' </summary>
-    ''' <remarks></remarks>
-    Private Sub buildHryTreeView()
+            Next
 
-        Dim hryNode As clsHierarchyNode
-        Dim anzChilds As Integer
-        Dim childNameID As String
-        Dim nodeLevel0 As TreeNode
-        Dim nodeLevel1 As TreeNode
+            If sammelCollection.Count > 0 Then
+                ' dann wurde eine Ersetzung vorgenommen 
+                ' jetzt muss bestimmt werden, ob Farben geändert werden müssen 
 
-        With hryTreeView
-            .Nodes.Clear()
-        End With
-
-        If hry.count >= 1 Then
-            hryNode = hry.nodeItem(rootPhaseName)
-
-            anzChilds = hryNode.childCount
-
-            With hryTreeView
-                .CheckBoxes = True
-
-                For i As Integer = 1 To anzChilds
-
-                    childNameID = hryNode.getChild(i)
-                    nodeLevel0 = .Nodes.Add(elemNameOfElemID(childNameID))
-                    nodeLevel0.Name = childNameID
-
-                    If elemIDIstMeilenstein(childNameID) Then
-                        nodeLevel0.BackColor = System.Drawing.Color.Azure
-
-                    End If
-
-
-                    If hry.nodeItem(childNameID).childCount > 0 Then
-                        nodeLevel0.Tag = "P"
-                        nodeLevel1 = nodeLevel0.Nodes.Add("-")
-                        nodeLevel1.Tag = "P"
-                    Else
-                        nodeLevel0.Tag = "X"
-                    End If
-
-
-                Next
-
-            End With
-
-        Else
-            Call MsgBox("es ist keine Hierarchie gegeben")
-        End If
-    End Sub
-
-    Private Sub hryTreeView_AfterSelect(sender As Object, e As TreeViewEventArgs) Handles hryTreeView.AfterSelect
-
-    End Sub
-
-    Private Sub hryTreeView_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles hryTreeView.BeforeExpand
-
-        Dim node As TreeNode
-        Dim childNode As TreeNode
-        Dim placeholder As TreeNode
-        Dim elemID As String
-        Dim hryNode As clsHierarchyNode
-        Dim anzChilds As Integer
-        Dim childNameID As String
-
-        node = e.Node
-        elemID = node.Name
-
-        ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
-        If node.Tag = "P" Then
-
-            node.Tag = "X"
-
-            ' Löschen von Platzhalter
-            node.Nodes.Clear()
-
-            hryNode = hry.nodeItem(elemID)
-
-            anzChilds = hryNode.childCount
-
-            With hryTreeView
-                .CheckBoxes = True
-
-                For i As Integer = 1 To anzChilds
-
-                    childNameID = hryNode.getChild(i)
-                    childNode = node.Nodes.Add(elemNameOfElemID(childNameID))
-                    childNode.Name = childNameID
-
-
-                    If elemIDIstMeilenstein(childNameID) Then
-                        childNode.BackColor = System.Drawing.Color.Azure
-                    End If
-
-
-                    If hry.nodeItem(childNameID).childCount > 0 Then
-                        childNode.Tag = "P"
-                        placeholder = childNode.Nodes.Add("-")
-                        placeholder.Tag = "P"
-                    Else
-                        childNode.Tag = "X"
-                    End If
-
-
-                Next
-
-            End With
-
-
-        End If
-
-    End Sub
-
-    ''' <summary>
-    ''' gibt alle Namen von Knoten, die "gecheckt" sind, in der nameList zurück  
-    ''' wird rekursiv aufgerufen 
-    ''' Achtung: wenn es Endlos Zyklen gibt, dann ist hier eine Endlos-Schleife ! 
-    ''' </summary>
-    ''' <param name="node"></param>
-    ''' <param name="sammelCollection"></param>
-    ''' <remarks></remarks>
-    Private Sub pickupCheckedItems(ByVal node As TreeNode, ByRef sammelCollection As Collection)
-
-        Dim tmpNode As TreeNode
-        Dim elemName As String
-
-        If IsNothing(node) Then
-            ' nichts tun
-        Else
-
-            Dim anzahlKnoten As Integer = node.Nodes.Count
-
-            With node
-
-                For px As Integer = 1 To anzahlKnoten
-
-                    tmpNode = .Nodes.Item(px - 1)
-                    If tmpNode.Checked Then
-
-                        tmpNode.Checked = False
-                        elemName = elemNameOfElemID(tmpNode.Name)
-
-                        If Not elemName = "?" Then
-
-                            If Not sammelCollection.Contains(elemName) Then
-
-                                If rdbPhases.Checked Then
-                                    If Not elemIDIstMeilenstein(tmpNode.Name) Then
-                                        sammelCollection.Add(elemName, elemName)
-                                    End If
-                                ElseIf rdbMilestones.Checked Then
-                                    If elemIDIstMeilenstein(tmpNode.Name) Then
-                                        sammelCollection.Add(elemName, elemName)
-                                    Else
-                                        ' alle Meilensteine dieser Phase aufsammeln ...
-                                        Dim tmpCollection As Collection
-                                        tmpCollection = ShowProjekte.getMilestonesOfPhase(elemName)
-
-                                        ' Übertragen der Ergebnisse in zwischen result
-                                        For i As Integer = 1 To tmpCollection.Count
-                                            Dim newItem As String = CStr(tmpCollection.Item(i))
-                                            If Not sammelCollection.Contains(newItem) Then
-                                                sammelCollection.Add(newItem, newItem)
-                                            End If
-                                        Next
-
-                                    End If
-                                End If
-
-                            End If
-
-                        End If
-
-                    End If
-                    
-                    If tmpNode.Nodes.Count > 0 Then
-                        Call pickupCheckedItems(tmpNode, sammelCollection)
-                    End If
-
-                Next
-
-            End With
+            End If
 
         End If
 
 
-
     End Sub
 
-   
-    Private Sub hryStufenLabel_Click(sender As Object, e As EventArgs) Handles hryStufenLabel.Click
 
-    End Sub
+    
+
+
 End Class
