@@ -4844,6 +4844,184 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
+    ''' wird aus Formular NameSelection bzw. HrySelection aufgerufen
+    ''' besetzt die Vorlagen Dropbox den entsprechenden Datei-NAmen
+    ''' </summary>
+    ''' <param name="menuOption"></param>
+    ''' <param name="repVorlagenDropbox"></param>
+    ''' <remarks></remarks>
+    Public Sub frmHryNameReadPPTVorlagen(ByVal menuOption As Integer, ByRef repVorlagenDropbox As System.Windows.Forms.ComboBox)
+
+        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport Then
+
+            Dim dirname As String
+            Dim dateiName As String = ""
+
+            If menuOption = PTmenue.multiprojektReport Then
+                dirname = awinPath & RepPortfolioVorOrdner
+            Else
+                dirname = awinPath & RepProjectVorOrdner
+            End If
+
+            Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
+            Try
+
+                Dim i As Integer
+                For i = 1 To listOfVorlagen.Count
+                    dateiName = Dir(listOfVorlagen.Item(i - 1))
+                    If dateiName.Contains("Typ II") Then
+                        repVorlagenDropbox.Items.Add(dateiName)
+                    End If
+
+                Next i
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' führt die Aktionen Visualisieren, Leistbarkeit aus dem Hierarchie bzw. Namen-Auswahl Fenster durch 
+    ''' 
+    ''' </summary>
+    ''' <param name="menueOption"></param>
+    ''' <remarks></remarks>
+    Public Sub frmHryNameActions(ByVal menueOption As Integer, _
+                                 ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+                                 ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                                 ByVal oneChart As Boolean, ByVal filtername As String)
+
+        Dim chTyp As String
+        Dim validOption As Boolean
+
+        If menueOption = PTmenue.visualisieren Or menueOption = PTmenue.einzelprojektReport Or _
+            menueOption = PTmenue.excelExport Or menueOption = PTmenue.multiprojektReport Then
+            validOption = True
+        ElseIf showRangeRight - showRangeLeft > 5 Then
+            validOption = True
+        Else
+            validOption = False
+        End If
+
+        If menueOption = PTmenue.leistbarkeitsAnalyse Then
+
+            Dim myCollection As New Collection
+
+            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
+                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
+                    And validOption Then
+
+                Dim formerSU As Boolean = appInstance.ScreenUpdating
+                appInstance.ScreenUpdating = False
+
+                ' Window Position festlegen
+                Dim chtop As Double = 50.0 + awinSettings.ChartHoehe1
+                Dim chleft As Double = (showRangeRight - 1) * boxWidth + 4
+
+                If selectedPhases.Count > 0 Then
+                    chTyp = DiagrammTypen(0)
+                    Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, oneChart, _
+                                                   chtop, chleft)
+                End If
+
+                If selectedMilestones.Count > 0 Then
+                    chTyp = DiagrammTypen(5)
+                    Call zeichneLeistbarkeitsChart(selectedMilestones, chTyp, oneChart, _
+                                                   chtop, chleft)
+                End If
+
+                If selectedRoles.Count > 0 Then
+                    chTyp = DiagrammTypen(1)
+                    Call zeichneLeistbarkeitsChart(selectedRoles, chTyp, oneChart, _
+                                                   chtop, chleft)
+                End If
+
+                If selectedCosts.Count > 0 Then
+                    chTyp = DiagrammTypen(2)
+                    Call zeichneLeistbarkeitsChart(selectedCosts, chTyp, oneChart, _
+                                                   chtop, chleft)
+                End If
+
+                appInstance.ScreenUpdating = formerSU
+
+            Else
+
+            End If
+
+        ElseIf menueOption = PTmenue.visualisieren Then
+
+
+            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
+                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
+                    And validOption Then
+
+                If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
+                    (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
+                    Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
+
+                ElseIf selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
+
+                    If selectedPhases.Count > 0 Then
+                        Call awinZeichnePhasen(selectedPhases, False, True)
+                    End If
+
+                    If selectedMilestones.Count > 0 Then
+                        ' Phasen anzeigen 
+                        Dim farbID As Integer = 4
+                        Call awinZeichneMilestones(selectedMilestones, farbID, False, True)
+
+                    End If
+
+                ElseIf selectedRoles.Count > 0 Then
+                    Call MsgBox("noch nicht implementiert")
+
+                Else
+                    Call MsgBox("noch nicht implementiert")
+                End If
+
+            Else
+                Call MsgBox("bitte mindestens ein Element aus einer der Kategorien selektieren  ")
+            End If
+
+        ElseIf menueOption = PTmenue.filterdefinieren Then
+
+            Call MsgBox("ok, Filter gespeichert")
+
+        ElseIf menueOption = PTmenue.excelExport Then
+
+            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) _
+                    And validOption Then
+
+                Try
+                    Call createExcelExportFromSelection(filterName)
+
+                    Call MsgBox("ok, Excel File in " & exportFilesOrdner & " erzeugt")
+                Catch ex As Exception
+                    Call MsgBox(ex.Message)
+                End Try
+
+
+
+
+            Else
+                Call MsgBox("bitte mindestens ein Element aus einer der Kategorien Phasen / Meilensteine selektieren  ")
+            End If
+
+
+
+
+        Else
+
+            Call MsgBox("noch nicht unterstützt")
+
+        End If
+
+    End Sub
+
+
+    ''' <summary>
     ''' erstellt das Excel Export File für die angegebenen Phasen, Meilensteine, Rollen und Kosten
     ''' vorläufig nur für Phasen und Meilensteine realisiert
     ''' </summary>

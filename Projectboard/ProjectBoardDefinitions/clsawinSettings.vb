@@ -90,6 +90,8 @@
     ' Settings für Einzelprojekt-Reports
     Public Property eppExtendedMode As Boolean
 
+    ' Settings für Überprüfung, ob Formulare offen / aktiv sind 
+    Public Property isHryNameFrmActive As Boolean
 
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
@@ -173,6 +175,7 @@
         End If
 
         _useHierarchy = True
+        _isHryNameFrmActive = False
 
         _importTyp = 1
 

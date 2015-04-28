@@ -481,24 +481,26 @@
     Public ReadOnly Property getElemIdsOf(ByVal namenListe As Collection, ByVal namesAreMilestones As Boolean) As Collection
         Get
             Dim iDCollection As New Collection
-            Dim nameItem As String
+            Dim itemName As String = ""
+            Dim itemBreadcrumb As String = ""
             Dim iDItem As String
             Dim phaseIndices() As Integer
             Dim milestoneIndices(,) As Integer
 
             For i As Integer = 1 To namenListe.Count
 
-                nameItem = CStr(namenListe.Item(i))
+                itemName = CStr(namenListe.Item(i))
+                Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb)
 
-                If istElemID(nameItem) Then
+                If istElemID(itemName) Then
 
-                    If Not iDCollection.Contains(nameItem) Then
-                        iDCollection.Add(nameItem, nameItem)
+                    If Not iDCollection.Contains(itemName) Then
+                        iDCollection.Add(itemName, itemName)
                     End If
 
                 Else
                     If namesAreMilestones Then
-                        milestoneIndices = Me.hierarchy.getMilestoneIndices(nameItem)
+                        milestoneIndices = Me.hierarchy.getMilestoneIndices(itemName, itemBreadcrumb)
 
                         For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
                             ' wenn der Wert Null ist , so existiert der Wert nicht 
@@ -512,12 +514,12 @@
                                 Catch ex As Exception
 
                                 End Try
-                                
+
                             End If
 
                         Next
                     Else
-                        phaseIndices = Me.hierarchy.getPhaseIndices(nameItem)
+                        phaseIndices = Me.hierarchy.getPhaseIndices(itemName, itemBreadcrumb)
                         For px As Integer = 0 To phaseIndices.Length - 1
 
                             If phaseIndices(px) > 0 And phaseIndices(px) <= Me.CountPhases Then
@@ -526,7 +528,7 @@
                                     iDCollection.Add(iDItem, iDItem)
                                 End If
                             End If
-                            
+
                         Next
                     End If
                 End If

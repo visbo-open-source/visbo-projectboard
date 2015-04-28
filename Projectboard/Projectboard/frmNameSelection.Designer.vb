@@ -324,6 +324,7 @@ Partial Class frmNameSelection
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScroll = True
         Me.ClientSize = New System.Drawing.Size(599, 439)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.removeButton)

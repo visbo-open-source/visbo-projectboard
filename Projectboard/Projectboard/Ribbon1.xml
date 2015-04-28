@@ -17,14 +17,19 @@
           <separator id="PTXG1s2"/>
           <button id="PTXG1B3" label="Auslastung" onAction="PT0ShowAuslastung" />
           <separator id="PTXG1s3"/>
-          <button id="PTXG1B4" label="Planelemente visualisieren" onAction="VisPlanObjects001" supertip="Meilensteine, Vorgänge, Rollen- und Kostenbedarfe visualisieren"/>
+          <menu id="PTXG1M1" label="Planelemente visualisieren" supertip="Meilensteine und Vorgänge visualisieren">
+            <button id="PTXG1B4" label="Auswahl über Namen" onAction="VisPlanObjects001" supertip="Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
+            <button id="PTXG1B5" label="Auswahl über Hierarchie" onAction="VisPlanObjects001" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie"/>   
+          </menu>
           <separator id="PTXG1s4"/>
-          <button id="PTXG1B5" label="Leistbarkeit analysieren" onAction="AnalyseLeistbarkeit"  supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren"/>
-          <separator id="PTXG1s5"/>
+          <menu id="PTXG1M2" label ="Leistbarkeit analysieren" supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren">
+            <button id="PTXG1B6" label="Auswahl über Namen" onAction="AnalyseLeistbarkeit001"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Element-Namen"/>
+            <button id="PTXG1B7" label="Auswahl über Hierarchie" onAction="AnalyseLeistbarkeit001"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Hierarchie"/>
+          </menu>
         </group>
         <group id="PTPf" label="Portfolio-Charts">
-          <button id="PTXG1B6" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
-          <button id="PTXG1B7" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />
+          <button id="PTXG1B8" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
+          <button id="PTXG1B9" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />
           <!--<button id="PTXG1B8" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />
           <separator id="PTXG1s5"/>
           <button id="PTXG1B7" label="Engpass" onAction="PTXShowEngpass" />

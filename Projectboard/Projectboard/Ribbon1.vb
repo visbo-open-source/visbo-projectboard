@@ -1600,74 +1600,134 @@ Imports System.Drawing
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
         'If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
         If ShowProjekte.Count > 0 Then
-            If awinSettings.useHierarchy Then
-                With hryFormular
-                    .Text = "Plan-Elemente visualisieren"
-
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
-
-                    '.chkbxCreateCharts = False
-
-
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
-
-                    '.showModePortfolio = True
-                    .menuOption = PTmenue.visualisieren
-
-                    .OKButton.Text = "Anzeigen"
-
-                    '.Show()
-                    returnValue = .ShowDialog
-                End With
+            If awinSettings.isHryNameFrmActive Then
+                Call MsgBox("es kann nur ein Fenster zur Hierarchie- bzw. Namenauswahl geöffnet sein ...")
             Else
-                With nameFormular
-                    .Text = "Plan-Elemente visualisieren"
 
-                    .rdbBU.Visible = False
-                    .pictureBU.Visible = False
-
-                    .rdbTyp.Visible = False
-                    .pictureTyp.Visible = False
-
-                    .rdbRoles.Visible = False
-                    .pictureRoles.Visible = False
-
-                    .rdbCosts.Visible = False
-                    .pictureCosts.Visible = False
-
-                    '.chkbxShowObjects = True
+                If control.Id = "PTXG1B4" Then
+                    ' Namen auswählen, Visualisieren
+                    awinSettings.useHierarchy = False
+                    With nameFormular
+                        .Text = "Plan-Elemente visualisieren"
+                        .OKButton.Text = "Anzeigen"
+                        .menuOption = PTmenue.visualisieren
+                        .statusLabel.Text = ""
 
 
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
+                        .rdbBU.Visible = False
+                        .pictureBU.Visible = False
+                        .rdbTyp.Visible = False
+                        .pictureTyp.Visible = False
+                        .rdbRoles.Visible = False
+                        .pictureRoles.Visible = False
+                        .rdbCosts.Visible = False
+                        .pictureCosts.Visible = False
 
-                    '.chkbxCreateCharts = False
+                        ' Leistbarkeits-Charts
+                        .chkbxOneChart.Checked = False
+                        .chkbxOneChart.Visible = False
 
+                        ' Reports 
+                        .repVorlagenDropbox.Visible = False
+                        .labelPPTVorlage.Visible = False
+                        .einstellungen.Visible = False
 
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
+                    End With
 
-                    '.showModePortfolio = True
-                    .menuOption = PTmenue.visualisieren
+                ElseIf control.Id = "PTXG1B5" Then
+                    ' Hierarchie auswählen, visualisieren
+                    awinSettings.useHierarchy = True
+                    With hryFormular
+                        .Text = "Plan-Elemente visualisieren"
+                        .OKButton.Text = "Anzeigen"
+                        .AbbrButton.Visible = False
+                        .AbbrButton.Enabled = False
+                        .menuOption = PTmenue.visualisieren
+                        .statusLabel.Text = ""
 
-                    .OKButton.Text = "Anzeigen"
+                        .chkbxOneChart.Checked = False
+                        .chkbxOneChart.Visible = False
 
-                    '.Show()
-                    returnValue = .ShowDialog
-                End With
+                        ' Reports
+                        .repVorlagenDropbox.Visible = False
+                        .labelPPTVorlage.Visible = False
+                        .einstellungen.Visible = False
+
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
+                    End With
+                ElseIf control.Id = "PTXG1B6" Then
+                    ' Namen auswählen, Leistbarkeit
+                    awinSettings.useHierarchy = False
+                    With nameFormular
+                        .Text = "Leistbarkeits-Charts erstellen"
+                        .OKButton.Text = "Charts erstellen"
+                        .menuOption = PTmenue.leistbarkeitsAnalyse
+                        .statusLabel.Text = ""
+
+                        .rdbBU.Visible = False
+                        .pictureBU.Visible = False
+                        .rdbTyp.Visible = False
+                        .pictureTyp.Visible = False
+
+                        .rdbRoles.Visible = True
+                        .pictureRoles.Visible = True
+                        .rdbCosts.Visible = True
+                        .pictureCosts.Visible = True
+
+                        ' Leistbarkeits-Charts
+                        .chkbxOneChart.Checked = False
+                        .chkbxOneChart.Visible = True
+
+                        ' Reports 
+                        .repVorlagenDropbox.Visible = False
+                        .labelPPTVorlage.Visible = False
+
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
+                    End With
+                ElseIf control.Id = "PTXG1B7" Then
+                    ' Hierarchie auswählen, Leistbarkeit
+                    awinSettings.useHierarchy = True
+                    With hryFormular
+                        .Text = "Leistbarkeits-Charts erstellen"
+                        .OKButton.Text = "Charts erstellen"
+                        .AbbrButton.Visible = False
+                        .AbbrButton.Enabled = False
+                        .menuOption = PTmenue.leistbarkeitsAnalyse
+                        .statusLabel.Text = ""
+
+                        .chkbxOneChart.Checked = False
+                        .chkbxOneChart.Visible = True
+
+                        ' Reports
+                        .repVorlagenDropbox.Visible = False
+                        .labelPPTVorlage.Visible = False
+                        .einstellungen.Visible = False
+
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
+                    End With
+
+                Else
+
+                End If
+
             End If
-
-
 
         Else
 
-            Call MsgBox("Es sind keine Projekte sichtbar!  ")
+                Call MsgBox("Es sind keine Projekte sichtbar!  ")
 
-            'ElseIf showRangeRight - showRangeLeft <= 5 Then
+                'ElseIf showRangeRight - showRangeLeft <= 5 Then
 
-            '    Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
+                '    Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
 
         End If
 
@@ -1680,9 +1740,10 @@ Imports System.Drawing
     End Sub
 
 
-    Sub AnalyseLeistbarkeit(ByVal control As IRibbonControl)
+    Sub AnalyseLeistbarkeit001(ByVal control As IRibbonControl)
 
-        Dim auswahlFormular As New frmNameSelection
+        Dim namensFormular As New frmNameSelection
+        Dim hierarchieFormular As New frmHierarchySelection
         Dim returnValue As DialogResult
 
         Call projektTafelInit()
@@ -1693,41 +1754,71 @@ Imports System.Drawing
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
         If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
 
-            With auswahlFormular
-                .Text = "Leistbarkeit analysieren"
+            If control.Id = "PTXG1B6" Then
+                ' Auswahl über Namen
 
-                .rdbBU.Visible = False
-                .pictureBU.Visible = False
+                With namensFormular
+                    .Text = "Leistbarkeit analysieren"
 
-                .rdbTyp.Visible = False
-                .pictureTyp.Visible = False
+                    .rdbBU.Visible = False
+                    .pictureBU.Visible = False
 
-                .rdbRoles.Visible = True
-                .pictureRoles.Visible = True
+                    .rdbTyp.Visible = False
+                    .pictureTyp.Visible = False
 
-                .rdbCosts.Visible = True
-                .pictureCosts.Visible = True
+                    .rdbRoles.Visible = True
+                    .pictureRoles.Visible = True
 
-                '.chkbxShowObjects = False
+                    .rdbCosts.Visible = True
+                    .pictureCosts.Visible = True
 
-                .chkbxOneChart.Checked = False
-                .chkbxOneChart.Visible = True
+                    '.chkbxShowObjects = False
 
-                '.chkbxCreateCharts = True
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = True
+
+                    '.chkbxCreateCharts = True
 
 
-                .repVorlagenDropbox.Visible = False
-                .labelPPTVorlage.Visible = False
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
 
-                '.showModePortfolio = True
+                    '.showModePortfolio = True
 
-                .menuOption = PTmenue.leistbarkeitsAnalyse
-                .OKButton.Text = "Charts erstellen"
+                    .menuOption = PTmenue.leistbarkeitsAnalyse
+                    .OKButton.Text = "Charts erstellen"
 
-                '.Show()
-                returnValue = .ShowDialog
-            End With
+                    '.Show()
+                    returnValue = .ShowDialog
+                End With
 
+
+            Else
+                ' Auswahl über Hierarchie
+                ' Hierarchie
+                awinSettings.useHierarchy = True
+                With hierarchieFormular
+                    .Text = "Leistbarkeit analysieren"
+
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = True
+
+                    '.chkbxCreateCharts = False
+
+
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+
+                    '.showModePortfolio = True
+                    .menuOption = PTmenue.leistbarkeitsAnalyse
+
+                    .OKButton.Text = "Charts erstellen"
+
+                    '.Show()
+                    returnValue = .ShowDialog
+                End With
+
+            End If
 
         ElseIf ShowProjekte.Count = 0 Then
 

@@ -32,6 +32,8 @@ Partial Class frmHierarchySelection
         Me.repVorlagenDropbox = New System.Windows.Forms.ComboBox()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.Label1 = New System.Windows.Forms.Label()
+        Me.BackgroundWorker1 = New System.ComponentModel.BackgroundWorker()
+        Me.AbbrButton = New System.Windows.Forms.Button()
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -48,9 +50,9 @@ Partial Class frmHierarchySelection
         Me.hryStufenLabel.AutoSize = True
         Me.hryStufenLabel.Location = New System.Drawing.Point(12, 24)
         Me.hryStufenLabel.Name = "hryStufenLabel"
-        Me.hryStufenLabel.Size = New System.Drawing.Size(345, 13)
+        Me.hryStufenLabel.Size = New System.Drawing.Size(300, 13)
         Me.hryStufenLabel.TabIndex = 35
-        Me.hryStufenLabel.Text = "wie viele Hierarchie-Stufen sollen bei der Suche berücksichtigt werden?"
+        Me.hryStufenLabel.Text = "wie viele ""Eltern"" sollen bei der Suche berücksichtigt werden?"
         '
         'hryStufen
         '
@@ -128,11 +130,26 @@ Partial Class frmHierarchySelection
         Me.Label1.Size = New System.Drawing.Size(0, 13)
         Me.Label1.TabIndex = 43
         '
+        'BackgroundWorker1
+        '
+        '
+        'AbbrButton
+        '
+        Me.AbbrButton.BackColor = System.Drawing.Color.FromArgb(CType(CType(255, Byte), Integer), CType(CType(128, Byte), Integer), CType(CType(0, Byte), Integer))
+        Me.AbbrButton.Location = New System.Drawing.Point(342, 418)
+        Me.AbbrButton.Name = "AbbrButton"
+        Me.AbbrButton.Size = New System.Drawing.Size(113, 23)
+        Me.AbbrButton.TabIndex = 44
+        Me.AbbrButton.Text = "Abbrechen"
+        Me.AbbrButton.UseVisualStyleBackColor = False
+        Me.AbbrButton.Visible = False
+        '
         'frmHierarchySelection
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(558, 467)
+        Me.ClientSize = New System.Drawing.Size(558, 466)
+        Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.einstellungen)
         Me.Controls.Add(Me.chkbxOneChart)
@@ -145,6 +162,7 @@ Partial Class frmHierarchySelection
         Me.Controls.Add(Me.hryTreeView)
         Me.Name = "frmHierarchySelection"
         Me.Text = "Auswahl über Hierarchie"
+        Me.TopMost = True
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
@@ -160,4 +178,6 @@ Partial Class frmHierarchySelection
     Friend WithEvents repVorlagenDropbox As System.Windows.Forms.ComboBox
     Friend WithEvents OKButton As System.Windows.Forms.Button
     Friend WithEvents Label1 As System.Windows.Forms.Label
+    Friend WithEvents BackgroundWorker1 As System.ComponentModel.BackgroundWorker
+    Friend WithEvents AbbrButton As System.Windows.Forms.Button
 End Class

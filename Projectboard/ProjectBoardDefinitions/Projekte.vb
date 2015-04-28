@@ -9859,7 +9859,7 @@ Public Module Projekte
     ''' zeichnet für alle selektierten Projekte die Phasen, die in Namelist angegeben sind;  
     ''' wenn namelist leer ist, werden alle Phasen des Projektes angezeigt
     ''' </summary>
-    ''' <param name="nameList">enthält die Namen der Phasen, die gezeichnet werden sollen; alle, wenn leer</param>
+    ''' <param name="nameList">enthält die Namen plus die Breadcrumbs der Phasen, die gezeichnet werden sollen; alle, wenn leer</param>
     ''' <param name="numberIt">gibt an, ob di ePhasen nummeriert werden sollen</param>
     ''' <param name="deleteOtherShapes">gibt an, ob die anderen Phasen-Shapes gelöscht werden sollen</param>
     ''' <remarks></remarks>

@@ -1,10 +1,17 @@
 ﻿Imports ProjectBoardDefinitions
+Imports ClassLibrary1
+Imports System.ComponentModel
+
 Public Class frmHierarchySelection
 
     Private hry As clsHierarchy
 
     Private selectedMilestones As New Collection
     Private selectedPhases As New Collection
+    Private selectedCosts As New Collection
+    Private selectedRoles As New Collection
+    Private selectedBUs As New Collection
+    Private selectedTyps As New Collection
 
     Friend menuOption As Integer
 
@@ -12,7 +19,27 @@ Public Class frmHierarchySelection
 
     End Sub
 
+    Private Sub frmHierarchySelection_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
+
+        frmCoord(PTfrm.listselP, PTpinfo.top) = Me.Top
+        frmCoord(PTfrm.listselP, PTpinfo.left) = Me.Left
+
+        awinSettings.isHryNameFrmActive = False
+
+    End Sub
+
     Private Sub frmHierarchySelection_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+
+        If frmCoord(PTfrm.listselP, PTpinfo.top) > 0 Then
+            Me.Top = CInt(frmCoord(PTfrm.listselP, PTpinfo.top))
+            Me.Left = CInt(frmCoord(PTfrm.listselP, PTpinfo.left))
+        Else
+            Me.Top = 60
+            Me.Left = 100
+        End If
+
+        awinSettings.isHryNameFrmActive = True
 
         hry = New clsHierarchy
 
@@ -27,8 +54,14 @@ Public Class frmHierarchySelection
 
     End Sub
 
-    
 
+
+    ''' <summary>
+    ''' Behandlung Drücken OK Button
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
         Dim anzahlKnoten As Integer
@@ -36,6 +69,12 @@ Public Class frmHierarchySelection
         Dim tmpNode As TreeNode
 
         Dim element As String
+
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        statusLabel.Text = ""
 
 
         anzahlKnoten = hryTreeView.Nodes.Count
@@ -80,7 +119,109 @@ Public Class frmHierarchySelection
         End With
 
 
-        Dim a As Integer = 1
+        ' jetzt wird der letzte Filter gespeichert ..
+        Dim filterName As String = "LastHry"
+        Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts)
+
+
+        ''''
+        ''
+        ''
+        ' jetzt kommt die Fall-Unterscheidung 
+        ''
+        ''
+        ''''
+
+        Dim validOption As Boolean
+        If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
+            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Then
+            validOption = True
+        ElseIf showRangeRight - showRangeLeft > 5 Then
+            validOption = True
+        Else
+            validOption = False
+        End If
+
+        If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Then
+
+            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
+                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
+                    And validOption Then
+
+                Dim vorlagenDateiName As String
+
+                If Me.menuOption = PTmenue.multiprojektReport Then
+                    vorlagenDateiName = awinPath & RepPortfolioVorOrdner & _
+                                    "\" & repVorlagenDropbox.Text
+                Else
+
+                    vorlagenDateiName = awinPath & RepProjectVorOrdner & _
+                                    "\" & repVorlagenDropbox.Text
+                End If
+
+                ' Prüfen, ob die Datei überhaupt existirt 
+                If repVorlagenDropbox.Text.Length = 0 Then
+                    Call MsgBox("bitte PPT Vorlage auswählen !")
+                ElseIf My.Computer.FileSystem.FileExists(vorlagenDateiName) Then
+
+                    Try
+
+                        OKButton.Enabled = False
+                        OKButton.Visible = False
+                        repVorlagenDropbox.Enabled = False
+
+                        With AbbrButton
+                            .Cursor = Cursors.Arrow
+                            .Enabled = True
+                            .Visible = True
+                            .Left = OKButton.Left
+                            .Top = OKButton.Top
+                        End With
+
+
+                        statusLabel.Text = ""
+                        statusLabel.Visible = True
+
+                        Me.Cursor = Cursors.WaitCursor
+                        AbbrButton.Text = "Abbrechen"
+
+                        ' Alternativ ohne Background Worker
+
+                        BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
+
+                    Catch ex As Exception
+                        Call MsgBox(ex.Message)
+                    End Try
+
+                Else
+
+                    Call MsgBox("bitte PPT Vorlage auswählen !")
+
+                End If
+
+
+
+
+            Else
+                Call MsgBox("bitte mindestens ein Element selektieren bzw. " & vbLf & _
+                             "einen Zeitraum angeben ...")
+            End If
+
+        Else
+            ' die Aktion Subroutine aufrufen 
+            Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
+                            selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, filterName)
+        End If
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
+        ' bei bestimmten Menu-Optionen das Formuzlar dann schliessen 
+        If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Then
+            MyBase.Close()
+        End If
 
 
     End Sub
@@ -94,7 +235,7 @@ Public Class frmHierarchySelection
 
     End Sub
 
-   
+
     Private Sub hryTreeView_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles hryTreeView.BeforeExpand
 
         Dim node As TreeNode
@@ -343,5 +484,62 @@ Public Class frmHierarchySelection
 
     Private Sub hryTreeView_MouseDoubleClick(sender As Object, e As MouseEventArgs) Handles hryTreeView.MouseDoubleClick
         Call MsgBox("Mouse Doppel-Klick")
+    End Sub
+
+    Private Sub BackgroundWorker1_DoWork(sender As Object, e As System.ComponentModel.DoWorkEventArgs) Handles BackgroundWorker1.DoWork
+
+        Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
+        Dim vorlagenDateiName As String = CType(e.Argument, String)
+
+        Try
+            With awinSettings
+
+                If vorlagenDateiName.Contains(RepPortfolioVorOrdner) Then
+                    Call createPPTSlidesFromConstellation(vorlagenDateiName, _
+                                                      selectedPhases, selectedMilestones, _
+                                                      selectedRoles, selectedCosts, _
+                                                      selectedBUs, selectedTyps, True, _
+                                                      worker, e)
+                Else
+                    Call createPPTReportFromProjects(vorlagenDateiName, _
+                                                     selectedPhases, selectedMilestones, _
+                                                     selectedRoles, selectedCosts, _
+                                                     selectedBUs, selectedTyps, _
+                                                     worker, e)
+                End If
+
+
+            End With
+        Catch ex As Exception
+            Call MsgBox("Fehler " & ex.Message)
+        End Try
+
+    End Sub
+
+    Private Sub BackgroundWorker1_ProgressChanged(sender As Object, e As System.ComponentModel.ProgressChangedEventArgs) Handles BackgroundWorker1.ProgressChanged
+
+        Dim re As System.ComponentModel.DoWorkEventArgs = CType(e.UserState, System.ComponentModel.DoWorkEventArgs)
+        Me.statusLabel.Text = CType(re.Result, String)
+
+    End Sub
+
+    Private Sub BackgroundWorker1_RunWorkerCompleted(sender As Object, e As System.ComponentModel.RunWorkerCompletedEventArgs) Handles BackgroundWorker1.RunWorkerCompleted
+
+        With Me.AbbrButton
+            .Text = ""
+            .Visible = False
+            .Enabled = False
+            .Left = .Left + 40
+        End With
+
+
+        Me.statusLabel.Text = "...done"
+        Me.OKButton.Visible = True
+        Me.OKButton.Enabled = True
+        Me.repVorlagenDropbox.Enabled = True
+        Me.Cursor = Cursors.Arrow
+        Me.statusLabel.Visible = True
+
+
     End Sub
 End Class

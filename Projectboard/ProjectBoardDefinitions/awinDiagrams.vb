@@ -219,6 +219,10 @@ Public Module awinDiagrams
             diagramTitle = "Übersicht"
         End If
 
+        ' jetzt den Namen aus optischen Gründen ändern 
+        If diagramTitle.Contains("#") Then
+            diagramTitle = diagramTitle.Replace("#", "-")
+        End If
 
         ' jetzt prüfen, ob es bereits gespeicherte Werte für top, left, ... gibt ;
         ' Wenn ja : übernehmen
@@ -831,7 +835,7 @@ Public Module awinDiagrams
         Dim seldatenreihe() As Double, tmpdatenreihe() As Double
         Dim kdatenreihe() As Double
         Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
-        Dim prcName As String
+        Dim prcName As String = ""
 
         Dim breadcrumb As String = ""
         Dim startdate As Date
@@ -970,6 +974,11 @@ Public Module awinDiagrams
             diagramTitle = CStr(myCollection.Item(1))
         End If
 
+        ' jetzt den Namen aus optischen Gründen ändern 
+        If diagramTitle.Contains("#") Then
+            diagramTitle = diagramTitle.Replace("#", "-")
+        End If
+
         If prcTyp = DiagrammTypen(1) Then
             kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection, False)
             kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)
@@ -995,17 +1004,18 @@ Public Module awinDiagrams
 
                 For r = 1 To myCollection.Count
 
-                    prcName = CStr(myCollection.Item(r))
+                    'prcName = CStr(myCollection.Item(r))
+                    Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
 
                     If prcTyp = DiagrammTypen(0) Then
                         einheit = " "
                         objektFarbe = PhaseDefinitions.getPhaseDef(prcName).farbe
-                        datenreihe = ShowProjekte.getCountPhasesInMonth(prcName)
+                        datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb)
                         hmxWert = datenreihe.Max
 
                         If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
                             ' Ergänzung wegen Anzeige der selektierten Objekte ... 
-                            tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName)
+                            tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName, breadcrumb)
                             For ix = 0 To bis - von
                                 datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
                                 seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
@@ -1094,7 +1104,7 @@ Public Module awinDiagrams
 
                         einheit = " "
                         objektFarbe = MilestoneDefinitions.getMilestoneDef(prcName).farbe
-                        msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName)
+                        msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
                     End If
 
                     For i = 0 To bis - von
@@ -1136,7 +1146,12 @@ Public Module awinDiagrams
                             Next
 
                             With .SeriesCollection.NewSeries
-                                .name = prcName
+                                If breadcrumb = "" Then
+                                    .name = prcName
+                                Else
+                                    .name = breadcrumb & "#" & prcName
+                                End If
+
                                 '.Interior.color = ampelfarbe(0)
                                 .Interior.color = objektFarbe
                                 .Values = datenreihe
@@ -1150,7 +1165,11 @@ Public Module awinDiagrams
                         Else
 
                             With .SeriesCollection.NewSeries
-                                .name = prcName
+                                If breadcrumb = "" Then
+                                    .name = prcName
+                                Else
+                                    .name = breadcrumb & "#" & prcName
+                                End If
                                 .Interior.color = objektFarbe
                                 .Values = datenreihe
                                 .XValues = Xdatenreihe

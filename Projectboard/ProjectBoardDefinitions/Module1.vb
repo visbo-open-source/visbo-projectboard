@@ -2509,44 +2509,7 @@ Public Module Module1
 
     End Sub
 
-    ''' <summary>
-    ''' wird aus Formular NameSelection bzw. HrySelection aufgerufen
-    ''' besetzt die Vorlagen Dropbox den entsprechenden Datei-NAmen
-    ''' </summary>
-    ''' <param name="menuOption"></param>
-    ''' <param name="repVorlagenDropbox"></param>
-    ''' <remarks></remarks>
-    Public Sub frmHryNameReadPPTVorlagen(ByVal menuOption As Integer, ByRef repVorlagenDropbox As System.Windows.Forms.ComboBox)
-
-        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport Then
-
-            Dim dirname As String
-            Dim dateiName As String = ""
-
-            If menuOption = PTmenue.multiprojektReport Then
-                dirname = awinPath & RepPortfolioVorOrdner
-            Else
-                dirname = awinPath & RepProjectVorOrdner
-            End If
-
-            Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
-            Try
-
-                Dim i As Integer
-                For i = 1 To listOfVorlagen.Count
-                    dateiName = Dir(listOfVorlagen.Item(i - 1))
-                    If dateiName.Contains("Typ II") Then
-                        repVorlagenDropbox.Items.Add(dateiName)
-                    End If
-
-                Next i
-            Catch ex As Exception
-
-            End Try
-
-        End If
-
-    End Sub
+    
 
     ''' <summary>
     ''' besetzt die Selection Collections mit den Werten des Filters mit Namen fName

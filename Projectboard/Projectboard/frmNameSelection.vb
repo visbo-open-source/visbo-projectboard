@@ -46,7 +46,6 @@ Public Class frmNameSelection
     End Enum
 
 
-    Private chTyp As String
 
 
 
@@ -60,6 +59,8 @@ Public Class frmNameSelection
 
         frmCoord(PTfrm.listselP, PTpinfo.top) = Me.Top
         frmCoord(PTfrm.listselP, PTpinfo.left) = Me.Left
+
+        awinSettings.isHryNameFrmActive = False
 
     End Sub
 
@@ -78,6 +79,8 @@ Public Class frmNameSelection
             Me.Top = 60
             Me.Left = 100
         End If
+
+        awinSettings.isHryNameFrmActive = True
 
         statusLabel.Text = ""
         statusLabel.Visible = True
@@ -283,116 +286,10 @@ Public Class frmNameSelection
                              "einen Zeitraum angeben ...")
             End If
 
-        ElseIf Me.menuOption = PTmenue.leistbarkeitsAnalyse Then
-
-            Dim myCollection As New Collection
-
-            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
-                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
-                    And validOption Then
-
-                Dim formerSU As Boolean = appInstance.ScreenUpdating
-                appInstance.ScreenUpdating = False
-
-                ' Window Position festlegen
-                Dim chtop As Double = 50.0 + awinSettings.ChartHoehe1
-                Dim chleft As Double = (showRangeRight - 1) * boxWidth + 4
-
-                If selectedPhases.Count > 0 Then
-                    chTyp = DiagrammTypen(0)
-                    Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, chkbxOneChart.Checked, _
-                                                   chtop, chleft)
-                End If
-
-                If selectedMilestones.Count > 0 Then
-                    chTyp = DiagrammTypen(5)
-                    Call zeichneLeistbarkeitsChart(selectedMilestones, chTyp, chkbxOneChart.Checked, _
-                                                   chtop, chleft)
-                End If
-
-                If selectedRoles.Count > 0 Then
-                    chTyp = DiagrammTypen(1)
-                    Call zeichneLeistbarkeitsChart(selectedRoles, chTyp, chkbxOneChart.Checked, _
-                                                   chtop, chleft)
-                End If
-
-                If selectedCosts.Count > 0 Then
-                    chTyp = DiagrammTypen(2)
-                    Call zeichneLeistbarkeitsChart(selectedCosts, chTyp, chkbxOneChart.Checked, _
-                                                   chtop, chleft)
-                End If
-
-                appInstance.ScreenUpdating = formerSU
-
-            Else
-
-            End If
-
-        ElseIf Me.menuOption = PTmenue.visualisieren Then
-
-
-            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
-                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
-                    And validOption Then
-
-                If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
-                    (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
-                    Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
-
-                ElseIf selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
-
-                    If selectedPhases.Count > 0 Then
-                        Call awinZeichnePhasen(selectedPhases, False, True)
-                    End If
-
-                    If selectedMilestones.Count > 0 Then
-                        ' Phasen anzeigen 
-                        Dim farbID As Integer = 4
-                        Call awinZeichneMilestones(selectedMilestones, farbID, False, True)
-
-                    End If
-
-                ElseIf selectedRoles.Count > 0 Then
-                    Call MsgBox("noch nicht implementiert")
-
-                Else
-                    Call MsgBox("noch nicht implementiert")
-                End If
-
-            Else
-                Call MsgBox("bitte mindestens ein Element aus einer der Kategorien selektieren  ")
-            End If
-
-        ElseIf menuOption = PTmenue.filterdefinieren Then
-
-            Call MsgBox("ok, Filter gespeichert")
-
-        ElseIf menuOption = PTmenue.excelExport Then
-
-            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) _
-                    And validOption Then
-
-                Try
-                    Call createExcelExportFromSelection(filterName)
-
-                    Call MsgBox("ok, Excel File in " & exportFilesOrdner & " erzeugt")
-                Catch ex As Exception
-                    Call MsgBox(ex.Message)
-                End Try
-
-
-
-
-            Else
-                Call MsgBox("bitte mindestens ein Element aus einer der Kategorien Phasen / Meilensteine selektieren  ")
-            End If
-
-
-
-
         Else
-
-            Call MsgBox("noch nicht unterstützt")
+            ' die Aktion Subroutine aufrufen 
+            Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
+                            selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, filterName)
 
         End If
 
@@ -402,7 +299,7 @@ Public Class frmNameSelection
         enableOnUpdate = True
 
         ' bei bestimmten Menu-Optionen das Formuzlar dann schliessen 
-        If menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Then
+        If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Then
             MyBase.Close()
         End If
 
@@ -488,7 +385,7 @@ Public Class frmNameSelection
             If selectedProjekte.Count > 0 Then
                 allMilestones = selectedProjekte.getMilestoneNames
             Else
-                allPhases = ShowProjekte.getMilestoneNames
+                allMilestones = ShowProjekte.getMilestoneNames
             End If
 
             '' hier muss alles eingetragen werden, was an Meilensteinen da ist ... 
