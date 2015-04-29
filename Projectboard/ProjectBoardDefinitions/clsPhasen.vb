@@ -41,6 +41,13 @@ Public Class clsPhasen
 
     End Property
 
+    ''' <summary>
+    ''' gibt die Phasen-Definition an der Index-Position index zurüclk: Index kann von 1 .. Anzahl Phasedefs gehen 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getPhaseDef(ByVal index As Integer) As clsPhasenDefinition
 
         Get

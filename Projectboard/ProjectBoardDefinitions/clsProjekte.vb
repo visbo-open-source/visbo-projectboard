@@ -1042,7 +1042,12 @@ Public Class clsProjekte
                 'rname = CStr(myCollection.Item(r))
                 ' rname wird jetzt durch das folgende bestimmt 
                 Call splitHryFullnameTo2(CStr(myCollection.Item(r)), rname, breadcrumb)
-                hkapa = PhaseDefinitions.getPhaseDef(rname).schwellWert
+                If PhaseDefinitions.Contains(rname) Then
+                    hkapa = PhaseDefinitions.getPhaseDef(rname).schwellWert
+                Else
+                    hkapa = 0
+                End If
+
 
                 For m = 0 To zeitraum
                     ' Änderung 31.5 Holen der Schwellwerte einer Phase 
@@ -1085,7 +1090,12 @@ Public Class clsProjekte
 
                 'msName = CStr(myCollection.Item(r))
                 Call splitHryFullnameTo2(CStr(myCollection.Item(r)), msName, breadcrumb)
-                hkapa = MilestoneDefinitions.getMilestoneDef(msName).schwellWert
+                If MilestoneDefinitions.Contains(msName) Then
+                    hkapa = MilestoneDefinitions.getMilestoneDef(msName).schwellWert
+                Else
+                    hkapa = 0
+                End If
+
 
                 For m = 0 To zeitraum
                     ' Änderung 31.5 Holen der Schwellwerte einer Phase 

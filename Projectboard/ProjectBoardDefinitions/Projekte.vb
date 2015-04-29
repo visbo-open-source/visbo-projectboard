@@ -14950,10 +14950,10 @@ Public Module Projekte
                         Else
 
                             For i = 1 To mycollection.Count
-                                'cName = CStr(mycollection.Item(i))
-                                Call splitHryFullnameTo2(CStr(mycollection.Item(i)), cName, breadcrumb)
+                                cName = CStr(mycollection.Item(i)).Replace("#", "-")
+                                ' der evtl vorhandenen Breadcrumb hat als Trennzeichen das #
                                 Try
-                                    IDkennung = IDkennung & "#" & PhaseDefinitions.getPhaseDef(cName).UID.ToString
+                                    IDkennung = IDkennung & "#" & cName
                                 Catch ex As Exception
                                     IDkennung = IDkennung & "#"
                                 End Try
@@ -14965,10 +14965,9 @@ Public Module Projekte
                     Case PTpfdk.Meilenstein
 
                         For i = 1 To mycollection.Count
-                            'cName = CStr(mycollection.Item(i))
-                            ' nur bei Phasen und Rollen muss der NAme ggf gesplittet werden 
-                            Call splitHryFullnameTo2(CStr(mycollection.Item(i)), cName, breadcrumb)
+                            cName = CStr(mycollection.Item(i)).Replace("#", "-")
                             IDkennung = IDkennung & "#" & cName
+                            
                         Next
 
                     Case PTpfdk.Rollen
