@@ -800,7 +800,6 @@
                 End If
 
                 .indexOfElem = milestoneIndex
-                .isMilestone = True
                 .parentNodeKey = phaseID
 
             End With

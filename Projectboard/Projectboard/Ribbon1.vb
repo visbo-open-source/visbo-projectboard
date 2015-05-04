@@ -1128,27 +1128,6 @@ Imports System.Drawing
 
     End Sub
 
-    ''' <summary>
-    ''' Filter definieren
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub PT5defineFilter(control As IRibbonControl)
-
-
-        Call projektTafelInit()
-
-        enableOnUpdate = False
-        appInstance.EnableEvents = False
-
-        Call defineFilterDB()
-
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
-
-
-    End Sub
-
     Sub PTDefineDependencies(control As IRibbonControl)
 
         Dim defineDependencies As New frmDependencies
@@ -1585,156 +1564,429 @@ Imports System.Drawing
     ''' </summary>
     ''' <param name="control"></param>
     ''' <remarks></remarks>
-    Sub VisPlanObjects001(control As IRibbonControl)
+    Sub NameHierarchySelAction(control As IRibbonControl)
 
         Dim nameFormular As New frmNameSelection
         Dim hryFormular As New frmHierarchySelection
-        Dim returnValue As DialogResult
+        Dim awinSelection As Excel.ShapeRange
 
         Call projektTafelInit()
 
-        enableOnUpdate = False
-        appInstance.EnableEvents = False
+        'enableOnUpdate = False
+        'appInstance.EnableEvents = False
 
 
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
         'If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
         If ShowProjekte.Count > 0 Then
+
             If awinSettings.isHryNameFrmActive Then
                 Call MsgBox("es kann nur ein Fenster zur Hierarchie- bzw. Namenauswahl geöffnet sein ...")
-            Else
+            ElseIf control.Id = "PTXG1B4" Then
+                ' Namen auswählen, Visualisieren
+                awinSettings.useHierarchy = False
+                With nameFormular
+                    .Text = "Plan-Elemente visualisieren"
+                    .OKButton.Text = "Anzeigen"
+                    .menuOption = PTmenue.visualisieren
+                    .statusLabel.Text = ""
+                    .statusLabel.Visible = True
 
-                If control.Id = "PTXG1B4" Then
-                    ' Namen auswählen, Visualisieren
-                    awinSettings.useHierarchy = False
-                    With nameFormular
-                        .Text = "Plan-Elemente visualisieren"
-                        .OKButton.Text = "Anzeigen"
-                        .menuOption = PTmenue.visualisieren
-                        .statusLabel.Text = ""
+
+                    .rdbBU.Visible = False
+                    .pictureBU.Visible = False
+                    .rdbTyp.Visible = False
+                    .pictureTyp.Visible = False
+                    .rdbRoles.Visible = False
+                    .pictureRoles.Visible = False
+                    .rdbCosts.Visible = False
+                    .pictureCosts.Visible = False
+
+                    ' Leistbarkeits-Charts
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+                    ' Reports 
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+                    .einstellungen.Visible = False
+
+                    ' Nicht Modal anzeigen
+                    .Show()
+                    'returnValue = .ShowDialog
+                End With
+
+            ElseIf control.Id = "PTXG1B5" Then
+                ' Hierarchie auswählen, visualisieren
+                awinSettings.useHierarchy = True
+                With hryFormular
+                    .Text = "Plan-Elemente visualisieren"
+                    .OKButton.Text = "Anzeigen"
+                    .AbbrButton.Visible = False
+                    .AbbrButton.Enabled = False
+                    .menuOption = PTmenue.visualisieren
+                    .statusLabel.Text = ""
+                    .statusLabel.Visible = True
+
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+                    ' Reports
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+                    .einstellungen.Visible = False
+
+                    ' Nicht Modal anzeigen
+                    .Show()
+                    'returnValue = .ShowDialog
+                End With
+            ElseIf control.Id = "PTXG1B6" Then
+                ' Namen auswählen, Leistbarkeit
+                awinSettings.useHierarchy = False
+                With nameFormular
+                    .Text = "Leistbarkeits-Charts erstellen"
+                    .OKButton.Text = "Charts erstellen"
+                    .menuOption = PTmenue.leistbarkeitsAnalyse
+                    .statusLabel.Text = ""
+                    .statusLabel.Visible = True
 
 
-                        .rdbBU.Visible = False
-                        .pictureBU.Visible = False
-                        .rdbTyp.Visible = False
-                        .pictureTyp.Visible = False
-                        .rdbRoles.Visible = False
-                        .pictureRoles.Visible = False
-                        .rdbCosts.Visible = False
-                        .pictureCosts.Visible = False
+                    .rdbBU.Visible = False
+                    .pictureBU.Visible = False
+                    .rdbTyp.Visible = False
+                    .pictureTyp.Visible = False
 
-                        ' Leistbarkeits-Charts
-                        .chkbxOneChart.Checked = False
-                        .chkbxOneChart.Visible = False
+                    .rdbRoles.Visible = True
+                    .pictureRoles.Visible = True
+                    .rdbCosts.Visible = True
+                    .pictureCosts.Visible = True
 
-                        ' Reports 
-                        .repVorlagenDropbox.Visible = False
-                        .labelPPTVorlage.Visible = False
-                        .einstellungen.Visible = False
+                    ' Leistbarkeits-Charts
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = True
 
-                        ' Nicht Modal anzeigen
-                        .ShowDialog()
-                        'returnValue = .ShowDialog
-                    End With
+                    ' Reports 
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
 
-                ElseIf control.Id = "PTXG1B5" Then
-                    ' Hierarchie auswählen, visualisieren
-                    awinSettings.useHierarchy = True
-                    With hryFormular
-                        .Text = "Plan-Elemente visualisieren"
-                        .OKButton.Text = "Anzeigen"
-                        .AbbrButton.Visible = False
-                        .AbbrButton.Enabled = False
-                        .menuOption = PTmenue.visualisieren
-                        .statusLabel.Text = ""
+                    ' Nicht Modal anzeigen
+                    .Show()
+                    'returnValue = .ShowDialog
+                End With
+            ElseIf control.Id = "PTXG1B7" Then
+                ' Hierarchie auswählen, Leistbarkeit
+                awinSettings.useHierarchy = True
+                With hryFormular
+                    .Text = "Leistbarkeits-Charts erstellen"
+                    .OKButton.Text = "Charts erstellen"
+                    .AbbrButton.Visible = False
+                    .AbbrButton.Enabled = False
+                    .menuOption = PTmenue.leistbarkeitsAnalyse
+                    .statusLabel.Text = ""
+                    .statusLabel.Visible = True
 
-                        .chkbxOneChart.Checked = False
-                        .chkbxOneChart.Visible = False
 
-                        ' Reports
-                        .repVorlagenDropbox.Visible = False
-                        .labelPPTVorlage.Visible = False
-                        .einstellungen.Visible = False
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = True
 
-                        ' Nicht Modal anzeigen
-                        .ShowDialog()
-                        'returnValue = .ShowDialog
-                    End With
-                ElseIf control.Id = "PTXG1B6" Then
-                    ' Namen auswählen, Leistbarkeit
-                    awinSettings.useHierarchy = False
-                    With nameFormular
-                        .Text = "Leistbarkeits-Charts erstellen"
-                        .OKButton.Text = "Charts erstellen"
-                        .menuOption = PTmenue.leistbarkeitsAnalyse
-                        .statusLabel.Text = ""
+                    ' Reports
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+                    .einstellungen.Visible = False
 
-                        .rdbBU.Visible = False
-                        .pictureBU.Visible = False
-                        .rdbTyp.Visible = False
-                        .pictureTyp.Visible = False
+                    ' Nicht Modal anzeigen
+                    .Show()
+                    'returnValue = .ShowDialog
+                End With
 
-                        .rdbRoles.Visible = True
-                        .pictureRoles.Visible = True
-                        .rdbCosts.Visible = True
-                        .pictureCosts.Visible = True
 
-                        ' Leistbarkeits-Charts
-                        .chkbxOneChart.Checked = False
-                        .chkbxOneChart.Visible = True
+            ElseIf control.Id = "PT1G1M1B1" Then
+                ' Namen auswählen, Einzelprojekt Berichte 
 
-                        ' Reports 
-                        .repVorlagenDropbox.Visible = False
-                        .labelPPTVorlage.Visible = False
+                Try
+                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                Catch ex As Exception
+                    awinSelection = Nothing
+                End Try
 
-                        ' Nicht Modal anzeigen
-                        .ShowDialog()
-                        'returnValue = .ShowDialog
-                    End With
-                ElseIf control.Id = "PTXG1B7" Then
-                    ' Hierarchie auswählen, Leistbarkeit
-                    awinSettings.useHierarchy = True
-                    With hryFormular
-                        .Text = "Leistbarkeits-Charts erstellen"
-                        .OKButton.Text = "Charts erstellen"
-                        .AbbrButton.Visible = False
-                        .AbbrButton.Enabled = False
-                        .menuOption = PTmenue.leistbarkeitsAnalyse
-                        .statusLabel.Text = ""
-
-                        .chkbxOneChart.Checked = False
-                        .chkbxOneChart.Visible = True
-
-                        ' Reports
-                        .repVorlagenDropbox.Visible = False
-                        .labelPPTVorlage.Visible = False
-                        .einstellungen.Visible = False
-
-                        ' Nicht Modal anzeigen
-                        .ShowDialog()
-                        'returnValue = .ShowDialog
-                    End With
-
+                If awinSelection Is Nothing Then
+                    Call MsgBox("vorher Projekt/e selektieren ...")
                 Else
 
+                    appInstance.ScreenUpdating = False
+
+                    With nameFormular
+
+                        .Text = "Projekt-Varianten Report erzeugen"
+                        .OKButton.Text = "Bericht erstellen"
+                        .menuOption = PTmenue.einzelprojektReport
+                        .statusLabel.Text = ""
+                        .statusLabel.Visible = True
+
+                        .rdbRoles.Enabled = False
+                        .rdbCosts.Enabled = False
+
+                        .rdbBU.Visible = True
+                        .pictureBU.Visible = True
+
+                        .rdbTyp.Visible = True
+                        .pictureTyp.Visible = True
+
+
+                        .einstellungen.Visible = True
+
+                        .chkbxOneChart.Checked = False
+                        .chkbxOneChart.Visible = False
+
+                        .repVorlagenDropbox.Visible = True
+                        .labelPPTVorlage.Visible = True
+
+                        '.Show()
+                        ' bei Reports mit der Background Worker Behandlung 
+                        .ShowDialog()
+                    End With
+
+                    appInstance.ScreenUpdating = True
+
                 End If
+
+            ElseIf control.Id = "PT1G1M1B2" Then
+                ' Hierarchie auswählen, Einzelprojekt Berichte 
+                appInstance.ScreenUpdating = False
+
+                awinSettings.useHierarchy = True
+                With hryFormular
+                    .Text = "Projekt-Varianten Report erzeugen"
+                    .OKButton.Text = "Bericht erstellen"
+                    .menuOption = PTmenue.einzelprojektReport
+                    .statusLabel.Text = ""
+                    .statusLabel.Visible = True
+
+                    .AbbrButton.Visible = False
+                    .AbbrButton.Enabled = False
+
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+
+                    ' Reports
+                    .repVorlagenDropbox.Visible = True
+                    .labelPPTVorlage.Visible = True
+                    .einstellungen.Visible = True
+
+                    ' bei Verwnedung Background Worker muss Modal erfolgen 
+                    '.Show()
+                    .ShowDialog()
+                    'returnValue = .ShowDialog
+                End With
+
+                appInstance.ScreenUpdating = True
+
+            ElseIf control.Id = "PT1G1M2B1" Then
+                ' Namen Auswahl, Multiprojekt Report
+                appInstance.ScreenUpdating = False
+
+                With nameFormular
+
+                    .Text = "Multiprojekt Reports erzeugen"
+                    .OKButton.Text = "Bericht erstellen"
+                    .menuOption = PTmenue.multiprojektReport
+                    .statusLabel.Text = ""
+                    .statusLabel.Visible = True
+
+                    .rdbRoles.Enabled = False
+                    .rdbCosts.Enabled = False
+
+                    .rdbBU.Visible = True
+                    .pictureBU.Visible = True
+
+                    .rdbTyp.Visible = True
+                    .pictureTyp.Visible = True
+
+
+                    .einstellungen.Visible = True
+
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+                    .repVorlagenDropbox.Visible = True
+                    .labelPPTVorlage.Visible = True
+                    ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
+                    .ShowDialog()
+                    'returnValue = .ShowDialog
+                End With
+
+                appInstance.ScreenUpdating = True
+
+
+            ElseIf control.Id = "PT1G1M2B2" Then
+                ' Hierarchie Auswahl, Multiprojekt Report
+                appInstance.ScreenUpdating = False
+
+                awinSettings.useHierarchy = True
+                With hryFormular
+
+                    .Text = "Multiprojekt Reports erzeugen"
+                    .OKButton.Text = "Bericht erstellen"
+                    .menuOption = PTmenue.multiprojektReport
+                    .statusLabel.Text = ""
+                    .statusLabel.Visible = True
+
+                    .AbbrButton.Visible = False
+                    .AbbrButton.Enabled = False
+
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+
+                    ' Reports
+                    .repVorlagenDropbox.Visible = True
+                    .labelPPTVorlage.Visible = True
+                    .einstellungen.Visible = True
+
+                    ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
+                    .ShowDialog()
+                    'returnValue = .ShowDialog
+                End With
+
+                appInstance.ScreenUpdating = True
+
+            ElseIf control.Id = "PT4G1M0B1" Then
+                ' Auswahl über Namen, Typ II Export
+                appInstance.ScreenUpdating = False
+
+                With nameFormular
+
+                    .Text = "Excel Report erzeugen"
+                    .OKButton.Text = "Report erstellen"
+                    .menuOption = PTmenue.excelExport
+                    .statusLabel.Text = ""
+
+                    .rdbRoles.Enabled = False
+                    .rdbCosts.Enabled = False
+
+                    .rdbBU.Visible = True
+                    .pictureBU.Visible = True
+
+                    .rdbTyp.Visible = True
+                    .pictureTyp.Visible = True
+
+                    .einstellungen.Visible = False
+
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+
+                    .ShowDialog()
+                    'returnValue = .ShowDialog
+                End With
+
+                appInstance.ScreenUpdating = True
+
+            ElseIf control.Id = "PT4G1M0B2" Then
+                ' Auswahl über Hierarchie, Typ II Export
+                appInstance.ScreenUpdating = False
+
+                awinSettings.useHierarchy = True
+                With hryFormular
+
+                    .Text = "Excel Report erzeugen"
+                    .OKButton.Text = "Report erstellen"
+                    .menuOption = PTmenue.excelExport
+                    .statusLabel.Text = ""
+
+                    .AbbrButton.Visible = False
+                    .AbbrButton.Enabled = False
+
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+                    ' Reports
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+                    .einstellungen.Visible = False
+
+                    ' Nicht Modal anzeigen
+                    .Show()
+                    'returnValue = .ShowDialog
+                End With
+
+            ElseIf control.Id = "Pt6G3M1B1" Then
+                ' normale, volle Auswahl des filters ; Namens-Definition
+
+                With nameFormular
+
+                    .Text = "Datenbank Filter definieren"
+                    .OKButton.Text = "Speichern"
+                    .menuOption = PTmenue.filterdefinieren
+                    .statusLabel.Text = ""
+                    .statusLabel.Visible = True
+
+                    .rdbRoles.Enabled = True
+                    .rdbCosts.Enabled = True
+
+                    .rdbBU.Visible = True
+                    .pictureBU.Visible = True
+
+                    .rdbTyp.Visible = True
+                    .pictureTyp.Visible = True
+
+                    .einstellungen.Visible = False
+
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+
+                    .Show()
+                    'returnValue = .ShowDialog
+
+                End With
+
+            ElseIf control.Id = "Pt6G3M1B2" Then
+                ' Auswahl über Hierarchie, Datenbank Filter nur Filter für Vorgänge und Meilensteine 
+                awinSettings.useHierarchy = True
+                With hryFormular
+
+                    .Text = "Datenbank Filter definieren"
+                    .OKButton.Text = "Speichern"
+                    .menuOption = PTmenue.filterdefinieren
+                    .statusLabel.Text = ""
+                    .statusLabel.Visible = True
+
+                    .AbbrButton.Visible = False
+                    .AbbrButton.Enabled = False
+
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+                    ' Reports
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+                    .einstellungen.Visible = False
+
+                    ' Nicht Modal anzeigen
+                    .Show()
+                    'returnValue = .ShowDialog
+                End With
+
+            Else
+
 
             End If
 
         Else
-
-                Call MsgBox("Es sind keine Projekte sichtbar!  ")
-
-                'ElseIf showRangeRight - showRangeLeft <= 5 Then
-
-                '    Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
-
+            Call MsgBox("Es sind keine Projekte sichtbar!  ")
         End If
+        
 
 
-
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+        ' oben ist es de-aktiviert 
+        'appInstance.EnableEvents = True
+        'enableOnUpdate = True
 
 
     End Sub
@@ -1839,154 +2091,6 @@ Imports System.Drawing
 
     End Sub
 
-    Sub awinVariantenprojektReport(ByVal control As IRibbonControl)
-
-
-        Dim auswahlFormular As New frmNameSelection
-        Dim awinSelection As Excel.ShapeRange
-
-        Dim returnValue As DialogResult
-
-        Call projektTafelInit()
-
-        enableOnUpdate = False
-        appInstance.EnableEvents = False
-
-        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
-        If ShowProjekte.Count > 0 Then
-            Try
-                'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-            Catch ex As Exception
-                awinSelection = Nothing
-            End Try
-
-            If awinSelection Is Nothing Then
-                Call MsgBox("vorher Projekt/e selektieren ...")
-            Else
-
-                appInstance.ScreenUpdating = False
-
-                With auswahlFormular
-
-                    .rdbBU.Visible = True
-                    .pictureBU.Visible = True
-
-                    .rdbTyp.Visible = True
-                    .pictureTyp.Visible = True
-
-
-                    .einstellungen.Visible = True
-                    .Text = "Projekt-Varianten Report erzeugen"
-
-
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
-
-                    .repVorlagenDropbox.Visible = True
-                    .labelPPTVorlage.Visible = True
-
-                    .rdbRoles.Enabled = False
-                    .rdbCosts.Enabled = False
-
-                    .menuOption = PTmenue.einzelprojektReport
-                    .statusLabel.Text = ""
-                    .OKButton.Text = "Bericht erstellen"
-
-                    '.Show()
-                    returnValue = .ShowDialog
-                End With
-
-                appInstance.ScreenUpdating = True
-
-            End If
-
-
-        ElseIf ShowProjekte.Count = 0 Then
-
-            Call MsgBox("Es sind keine Projekte geladen!  ")
-
-
-        End If
-
-
-
-            appInstance.EnableEvents = True
-            enableOnUpdate = True
-
-
-    End Sub
-
-
-    Sub awinMultiprojektReport(ByVal control As IRibbonControl)
-
-        Dim auswahlFormular As New frmNameSelection
-        Dim returnValue As DialogResult
-
-        Call projektTafelInit()
-
-        enableOnUpdate = False
-        appInstance.EnableEvents = False
-
-        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
-        'If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
-        If ShowProjekte.Count > 0 Then
-            appInstance.ScreenUpdating = False
-
-            With auswahlFormular
-
-                .rdbBU.Visible = True
-                .pictureBU.Visible = True
-
-                .rdbTyp.Visible = True
-                .pictureTyp.Visible = True
-
-                .einstellungen.Visible = True
-                .Text = "Multiprojekt Reports erzeugen"
-
-                '.chkbxShowObjects = False
-
-                .chkbxOneChart.Checked = False
-                .chkbxOneChart.Visible = False
-
-                '.chkbxCreateCharts = False
-
-                '.showModePortfolio = True
-
-                .repVorlagenDropbox.Visible = True
-                .labelPPTVorlage.Visible = True
-
-                .rdbRoles.Enabled = False
-                .rdbCosts.Enabled = False
-
-                .menuOption = PTmenue.multiprojektReport
-                .statusLabel.Text = ""
-                .OKButton.Text = "Bericht erstellen"
-
-                '.Show()
-                returnValue = .ShowDialog
-            End With
-
-            appInstance.ScreenUpdating = True
-
-        Else
-
-            Call MsgBox("Es sind keine Projekte geladen!  ")
-
-            'ElseIf showRangeRight - showRangeLeft <= 5 Then
-
-            '    Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
-
-        End If
-
-
-
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
-
-
-
-    End Sub
 
     ''' <summary>
     ''' Projekt ins Show zurückholen 
@@ -2718,80 +2822,6 @@ Imports System.Drawing
 
     End Sub
 
-    Public Sub typIIExport(control As IRibbonControl)
-
-        Dim auswahlFormular As New frmNameSelection
-        Dim returnValue As DialogResult
-
-        Call projektTafelInit()
-
-        enableOnUpdate = False
-        appInstance.EnableEvents = False
-
-        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
-        If ShowProjekte.Count > 0 Then
-
-            appInstance.ScreenUpdating = False
-
-            With auswahlFormular
-
-                .rdbBU.Visible = True
-                .pictureBU.Visible = True
-
-                .rdbTyp.Visible = True
-                .pictureTyp.Visible = True
-
-                ''.rdbRoles.Visible = False
-                ''.pictureRoles.Visible = False
-
-                ''.rdbCosts.Visible = False
-                ''.pictureCosts.Visible = False
-
-                .einstellungen.Visible = False
-                .Text = "Excel Report erzeugen"
-
-                '.chkbxShowObjects = False
-
-                .chkbxOneChart.Checked = False
-                .chkbxOneChart.Visible = False
-
-                '.chkbxCreateCharts = False
-
-                '.showModePortfolio = True
-
-                .repVorlagenDropbox.Visible = False
-                .labelPPTVorlage.Visible = False
-
-                .rdbRoles.Enabled = False
-                .rdbCosts.Enabled = False
-
-                .menuOption = PTmenue.excelExport
-
-                .statusLabel.Text = ""
-                .OKButton.Text = "Report erstellen"
-
-                '.Show()
-                returnValue = .ShowDialog
-            End With
-
-            appInstance.ScreenUpdating = True
-
-        ElseIf ShowProjekte.Count = 0 Then
-
-            Call MsgBox("Es sind keine Projekte geladen!  ")
-
-
-        End If
-
-
-
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
-
-
-
-
-    End Sub
 
     Public Sub Tom2G4M1Export(control As IRibbonControl)
 

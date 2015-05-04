@@ -4,7 +4,6 @@
     Private _elemName As String
     Private _origName As String
     Private _indexOfElem As Integer
-    Private _isMilestone As Boolean
     Private _parentNodeKey As String
     Private _childNodeKeys As List(Of String)
 
@@ -19,7 +18,6 @@
         _elemName = ""
         _origName = ""
         _indexOfElem = -1
-        _isMilestone = False
         _parentNodeKey = ""
         _childNodeKeys = New List(Of String)
 
@@ -32,11 +30,10 @@
     ''' <param name="elemName"></param>
     ''' <param name="origName"></param>
     ''' <param name="indexOfElem"></param>
-    ''' <param name="isMilestone"></param>
     ''' <param name="parentNodeKey"></param>
     ''' <remarks></remarks>
     Public Sub New(ByVal elemName As String, ByVal origName As String, _
-                       ByVal indexOfElem As Integer, ByVal isMilestone As Boolean, ByRef parentNodeKey As String)
+                       ByVal indexOfElem As Integer, ByRef parentNodeKey As String)
 
 
 
@@ -63,8 +60,6 @@
         Else
             Throw New ArgumentException(indexOfElem & " ist kein gültiger Phasen-Index")
         End If
-
-        _isMilestone = isMilestone
 
         If Not IsNothing(parentNodeKey) Then
             _parentNodeKey = parentNodeKey
@@ -213,21 +208,6 @@
     End Property
 
 
-    ''' <summary>
-    ''' liest oder schreibt den bool'schen Wert, ob es sich um einen Meilenstein handelt 
-    ''' oder nicht
-    ''' </summary>
-    ''' <value></value>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public Property isMilestone As Boolean
-        Get
-            isMilestone = _isMilestone
-        End Get
-        Set(value As Boolean)
-            _isMilestone = value
-        End Set
-    End Property
 
     ''' <summary>
     ''' liest / schreibt den IndexOfPhase

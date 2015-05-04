@@ -246,7 +246,6 @@
         Public elemName As String
         Public origName As String
         Public indexOfElem As Integer
-        Public isMilestone As Boolean
         Public parentNodeKey As String
         Public childNodeKeys As List(Of String)
 
@@ -263,7 +262,6 @@
                 Me.elemName = .elemName
                 Me.origName = .origName
                 Me.indexOfElem = .indexOfElem
-                Me.isMilestone = .isMilestone
                 Me.parentNodeKey = .parentNodeKey
                 For i As Integer = 1 To .childCount
                     childID = .getChild(i)
@@ -285,7 +283,6 @@
                 .elemName = Me.elemName
                 .origName = Me.origName
                 .indexOfElem = Me.indexOfElem
-                .isMilestone = Me.isMilestone
                 .parentNodeKey = Me.parentNodeKey
                 For i As Integer = 1 To Me.childNodeKeys.Count
                     childID = Me.childNodeKeys.Item(i - 1)

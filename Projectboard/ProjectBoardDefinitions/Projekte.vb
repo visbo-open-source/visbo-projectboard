@@ -14950,10 +14950,10 @@ Public Module Projekte
                         Else
 
                             For i = 1 To mycollection.Count
-                                'cName = CStr(mycollection.Item(i))
-                                Call splitHryFullnameTo2(CStr(mycollection.Item(i)), cName, breadcrumb)
+                                cName = CStr(mycollection.Item(i)).Replace("#", "-")
+                                ' der evtl vorhandenen Breadcrumb hat als Trennzeichen das #
                                 Try
-                                    IDkennung = IDkennung & "#" & PhaseDefinitions.getPhaseDef(cName).UID.ToString
+                                    IDkennung = IDkennung & "#" & cName
                                 Catch ex As Exception
                                     IDkennung = IDkennung & "#"
                                 End Try
@@ -14965,10 +14965,9 @@ Public Module Projekte
                     Case PTpfdk.Meilenstein
 
                         For i = 1 To mycollection.Count
-                            'cName = CStr(mycollection.Item(i))
-                            ' nur bei Phasen und Rollen muss der NAme ggf gesplittet werden 
-                            Call splitHryFullnameTo2(CStr(mycollection.Item(i)), cName, breadcrumb)
+                            cName = CStr(mycollection.Item(i)).Replace("#", "-")
                             IDkennung = IDkennung & "#" & cName
+                            
                         Next
 
                     Case PTpfdk.Rollen
@@ -15303,7 +15302,19 @@ Public Module Projekte
 
             If Not IsNothing(cMilestone) Then
                 ok = True
-                milestoneName = elemNameOfElemID(milestoneNameID)
+
+                If awinSettings.showOrigName Then
+                    Dim tmpNode As clsHierarchyNode
+                    tmpNode = hproj.hierarchy.nodeItem(milestoneNameID)
+                    If Not IsNothing(tmpNode) Then
+                        milestoneName = tmpNode.origName
+                    Else
+                        milestoneName = elemNameOfElemID(milestoneNameID)
+                    End If
+                Else
+                    milestoneName = elemNameOfElemID(milestoneNameID)
+                End If
+
                 breadCrumb = hproj.hierarchy.getBreadCrumb(milestoneNameID).Replace("#", "-")
                 lfdNr = lfdNrOfElemID(milestoneNameID)
                 dateText = cMilestone.getDate.ToShortDateString
@@ -15407,13 +15418,13 @@ Public Module Projekte
             .breadCrumb.Text = breadCrumb
 
             .resultDate.Text = dateText
-            .resultName.Text = elemNameOfElemID(milestoneNameID)
+            .resultName.Text = milestoneName
 
-            If lfdNr > 1 Then
-                .lfdNr.Text = lfdNr.ToString("0#")
-            Else
-                .lfdNr.Text = ""
-            End If
+            'If lfdNr > 1 Then
+            '    .lfdNr.Text = lfdNr.ToString("0#")
+            'Else
+            '    .lfdNr.Text = ""
+            'End If
 
             .bewertungsText.Text = explanation
 
@@ -15783,7 +15794,18 @@ Public Module Projekte
 
             If Not IsNothing(cPhase) Then
                 ok = True
-                phaseName = elemNameOfElemID(phaseNameID)
+                If awinSettings.showOrigName Then
+                    Dim tmpNode As clsHierarchyNode
+                    tmpNode = hproj.hierarchy.nodeItem(cPhase.nameID)
+                    If Not IsNothing(tmpNode) Then
+                        phaseName = tmpNode.origName
+                    Else
+                        phaseName = elemNameOfElemID(phaseNameID)
+                    End If
+                Else
+                    phaseName = elemNameOfElemID(phaseNameID)
+                End If
+
                 breadCrumb = hproj.hierarchy.getBreadCrumb(phaseNameID).Replace("#", "-")
                 lfdNr = lfdNrOfElemID(phaseNameID)
                 startdateText = cPhase.getStartDate.ToShortDateString
@@ -15846,11 +15868,6 @@ Public Module Projekte
 
             .phaseName.Text = phaseName
 
-            If lfdNr > 1 Then
-                .lfdNr.Text = lfdNr.ToString("0#")
-            Else
-                .lfdNr.Text = ""
-            End If
 
             .phaseStart.Text = startdateText
             .phaseStart.TextAlign = HorizontalAlignment.Left
@@ -16814,7 +16831,6 @@ Public Module Projekte
             superNode = New clsHierarchyNode
             With superNode
                 .elemName = elemNameOfElemID(rootPhaseName)
-                .isMilestone = False
                 .indexOfElem = 1 'eigentlich nicht relevant , wird einfach immer auf 1 gesetzt
                 .parentNodeKey = ""
                 .origName = .elemName
@@ -17045,7 +17061,6 @@ Public Module Projekte
                     .elemName = tmpElemName
                     .parentNodeKey = parentNodeID
                     .origName = ""
-                    .isMilestone = False ' es handelt sich hier noch um die Hierarchie-Stufen, also Phasen
                     .indexOfElem = 1 ' eigentlich in diesem Kontext nicht relevant 
                 End With
                 curElemID = superHry.findUniqueElemKey(tmpElemName, False)
@@ -17061,7 +17076,6 @@ Public Module Projekte
                 .elemName = curElemName
                 .parentNodeKey = parentNodeID
                 .origName = ""
-                .isMilestone = isMilestone  ' es handelt sich hier noch um die Hierarchie-Stufen, also Phasen
                 .indexOfElem = 1 ' eigentlich in diesem Kontext nicht relevant 
             End With
             curElemID = superHry.findUniqueElemKey(curElemName, isMilestone)

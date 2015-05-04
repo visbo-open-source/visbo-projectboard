@@ -58,6 +58,9 @@
     ' sollen Shapes aus den Update Informations-Forms heraus erzeugt werden, wenn sie noch nicht da sind 
     Public Property createIfNotThere As Boolean
 
+    ' soll der Original Name angeziegt werden 
+    Public Property showOrigName As Boolean
+
     ' Settings für die letzte User Selektion in der Tafel 
     Public Property selectedColumn As Integer
     Public Property selectedRow As Integer
@@ -138,7 +141,8 @@
         _drawphases = False
         _showValuesOfSelected = False
         _applyFilter = False
-        _createIfNotThere = True
+        _createIfNotThere = False
+        _showOrigName = False
 
         ' Settings für Import / Export 
         _EinzelRessExport = 0

@@ -32,6 +32,7 @@
         Me.Top = CInt(frmCoord(PTfrm.msInfo, PTpinfo.top))
         Me.Left = CInt(frmCoord(PTfrm.msInfo, PTpinfo.left))
 
+        Me.showOrigItem.Checked = awinSettings.showOrigName
 
         If bewertungsListe.Count > 0 Then
 
@@ -119,15 +120,15 @@
     Private Sub showOrigItem_CheckedChanged(sender As Object, e As EventArgs) Handles showOrigItem.CheckedChanged
         Dim tmpNode As clsHierarchyNode
 
+        awinSettings.showOrigName = showOrigItem.Checked
+
         If showOrigItem.Checked = True Then
             tmpNode = curProject.hierarchy.nodeItem(milestoneNameID)
             If Not IsNothing(tmpNode) Then
                 resultName.Text = tmpNode.origName
-                lfdNr.Text = ""
             End If
         Else
             resultName.Text = elemNameOfElemID(milestoneNameID)
-            lfdNr.Text = lfdNrOfElemID(milestoneNameID).ToString("0#")
         End If
     End Sub
 End Class

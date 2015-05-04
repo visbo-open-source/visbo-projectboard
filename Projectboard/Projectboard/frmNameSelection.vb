@@ -338,8 +338,15 @@ Public Class frmNameSelection
 
             If selectedProjekte.Count > 0 Then
                 allPhases = selectedProjekte.getPhaseNames
-            Else
+            ElseIf ShowProjekte.Count > 0 Then
                 allPhases = ShowProjekte.getPhaseNames
+            Else
+                For i As Integer = 1 To PhaseDefinitions.Count
+                    Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
+                    If Not allPhases.Contains(tmpName) Then
+                        allPhases.Add(tmpName, tmpName)
+                    End If
+                Next
             End If
 
 
@@ -384,8 +391,15 @@ Public Class frmNameSelection
 
             If selectedProjekte.Count > 0 Then
                 allMilestones = selectedProjekte.getMilestoneNames
-            Else
+            ElseIf ShowProjekte.Count > 0 Then
                 allMilestones = ShowProjekte.getMilestoneNames
+            Else
+                For i As Integer = 1 To MilestoneDefinitions.Count
+                    Dim tmpName As String = MilestoneDefinitions.getMilestoneDef(i).name
+                    If Not allMilestones.Contains(tmpName) Then
+                        allMilestones.Add(tmpName, tmpName)
+                    End If
+                Next
             End If
 
             '' hier muss alles eingetragen werden, was an Meilensteinen da ist ... 
@@ -396,10 +410,7 @@ Public Class frmNameSelection
             '    Next
             'End If
 
-
             Call rebuildFormerState(PTauswahlTyp.meilenstein)
-
-
 
         Else
 
