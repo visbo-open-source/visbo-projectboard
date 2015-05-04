@@ -11,6 +11,7 @@ Module BMWItOModul
         Vorgangsklasse = 4
         Produktlinie = 5
         Protocol = 6
+        Dauer = 7
     End Enum
 
 
@@ -57,6 +58,7 @@ Module BMWItOModul
 
         Dim itemName As String = ""
         Dim zufall As New Random(10)
+        Dim itemDauer As Integer
         Dim colProtocol As Integer
 
         Dim schriftGroesse As Integer
@@ -87,6 +89,7 @@ Module BMWItOModul
         Dim colName As Integer
         Dim colAnfang As Integer
         Dim colEnde As Integer
+        Dim colDauer As Integer
         Dim colProduktlinie As Integer
         Dim colAbbrev As Integer = -1
         Dim colVorgangsKlasse As Integer = -1
@@ -94,7 +97,7 @@ Module BMWItOModul
         Dim protocolRange As Excel.Range
 
 
-        Dim suchstr(6) As String
+        Dim suchstr(7) As String
         suchstr(ptNamen.Name) = "Name"
         suchstr(ptNamen.Anfang) = "Anfang"
         suchstr(ptNamen.Ende) = "Ende"
@@ -102,6 +105,7 @@ Module BMWItOModul
         suchstr(ptNamen.Vorgangsklasse) = "Vorgangsklasse"
         suchstr(ptNamen.Produktlinie) = "Spalte A"
         suchstr(ptNamen.Protocol) = "Übernommen als"
+        suchstr(ptNamen.Dauer) = "Dauer"
 
         ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen denn hier neu hinzugekommen wären 
         Dim missingPhaseDefinitions As New clsPhasen
@@ -188,6 +192,12 @@ Module BMWItOModul
             Throw New ArgumentException("Fehler im Datei Aufbau ..." & vbLf & ex.Message)
         End Try
 
+        Try
+            colDauer = firstZeile.Find(What:=suchstr(ptNamen.Dauer)).Column
+        Catch ex As Exception
+            colDauer = -1
+        End Try
+
 
         Try
             colProduktlinie = firstZeile.Find(What:=suchstr(ptNamen.Produktlinie)).Column
@@ -266,6 +276,18 @@ Module BMWItOModul
                     startDate = CDate(CType(activeWSListe.Cells(zeile, colAnfang), Excel.Range).Value)
                     endDate = CDate(CType(activeWSListe.Cells(zeile, colEnde), Excel.Range).Value)
 
+                    Dim tmpvalue As String
+                    Dim tmp2Str() As String
+
+                    If colDauer > 0 Then
+                        tmpvalue = CStr(CType(activeWSListe.Cells(zeile, colDauer), Excel.Range).Value).Trim
+                        tmp2Str = tmpvalue.Trim.Split(New Char() {CChar(" ")}, 5)
+                        Try
+                            itemDauer = CInt(tmp2Str(0))
+                        Catch ex As Exception
+                            itemDauer = -1
+                        End Try
+                    End If
 
 
                     duration = DateDiff(DateInterval.Day, startDate, endDate) + 1
@@ -627,12 +649,13 @@ Module BMWItOModul
                                 Dim parentNodeID As String
                                 Dim elemID As String
 
+                                ' If duration > 1 Or itemDauer > 0 Then
                                 If duration > 1 Then
                                     ' es handelt sich um eine Phase 
 
 
                                     parentElemName = pHierarchy.getPhaseBeforeLevel(indentLevel).name
-                                        ' das folgende wurde am 31.3. ergänzt, um die Hierarchie aufbauen zu können
+                                    ' das folgende wurde am 31.3. ergänzt, um die Hierarchie aufbauen zu können
                                     parentNodeID = pHierarchy.getIDBeforeLevel(indentLevel)
 
                                     ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 

@@ -1988,7 +1988,6 @@ Public Module awinGeneralModules
                             .changeStartandDauer(startOffset, ProjektdauerIndays)
                             Dim phaseStartdate As Date = .getStartDate
                             Dim phaseEnddate As Date = .getEndDate
-                            'projDauer = calcDauerIndays(phaseStartdate, phaseEnddate)
                             firsttime = True
                         End With
                         'Call MsgBox("Projektnamen/Phasen Konflikt in awinImportProjekt" & vbLf & "Problem wurde behoben")
@@ -2084,7 +2083,13 @@ Public Module awinGeneralModules
                                 End If
 
                                 With cphase
-                                    .nameID = phaseName
+                                    If phaseName = hproj.name Then
+                                        .nameID = rootPhaseName
+                                        ' nichts tun, die erste Phase hat dann schon ihren richtigen Namen 
+                                    Else
+                                        .nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
+                                    End If
+
                                     ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                                     Dim startOffset As Long
                                     Dim dauerIndays As Long
@@ -2222,9 +2227,9 @@ Public Module awinGeneralModules
                     With wsTermine
                         Dim lastrow As Integer
                         Dim lastcolumn As Integer
-                        Dim phaseName As String
-                        Dim resultName As String
-                        Dim resultDate As Date
+                        Dim phaseNameID As String
+                        Dim milestoneName As String
+                        Dim milestoneDate As Date
                         Dim resultVerantwortlich As String = ""
                         Dim bewertungsAmpel As Integer
                         Dim explanation As String
@@ -2265,7 +2270,7 @@ Public Module awinGeneralModules
                         For zeile = rowOffset + 1 To lastrow
 
 
-                            Dim cResult As clsMeilenstein
+                            Dim cMilestone As clsMeilenstein
                             Dim cBewertung As clsBewertung
                             Dim cphase As clsPhase
                             Dim objectName As String
@@ -2366,7 +2371,7 @@ Public Module awinGeneralModules
 
 
                                 If DateDiff(DateInterval.Day, hproj.startDate, startDate) < 0 Then
-                                    ' kein Startdatum angegeben
+                                    ' kein gültiges Startdatum angegeben
 
                                     If startDate <> Date.MinValue Then
                                         cphase = Nothing
@@ -2379,7 +2384,12 @@ Public Module awinGeneralModules
                                         'If endeDate = Date.MinValue Then
                                         '    Throw New Exception("für den Meilenstein '" & objectName & "'" & vbLf & "wurde im Projekt '" & hproj.name & "' kein Datum eingetragen!")
                                         'End If
-                                        cphase = hproj.getPhase(bezug)
+                                        If bezug = hproj.name Then
+                                            cphase = hproj.getPhaseByID(rootPhaseName)
+                                        Else
+                                            cphase = hproj.getPhase(bezug)
+                                        End If
+
                                         If IsNothing(cphase) Then
                                             If hproj.AllPhases.Count > 0 Then
                                                 cphase = hproj.getPhase(1)
@@ -2405,13 +2415,21 @@ Public Module awinGeneralModules
                                         If hproj.name <> objectName Then
                                             Throw New Exception("Phase '" & objectName & "' ist nicht definiert!" & vbLf &
                                                            "Bitte löschen Sie diese Phase aus '" & hproj.name & "'.xlsx, Tabellenblatt 'Termine'")
+
                                         End If
 
                                     End If
 
                                     ' an dieser stelle ist sichergestellt, daß der Phasen Name bekannt ist
                                     ' Prüfen, ob diese Phase bereits in hproj über das ressourcen Sheet angelegt wurde 
-                                    cphase = hproj.getPhase(objectName)
+                                    ' tk: dieser Befehl holt jetzt die erste Phase mit deisem NAmen, berücksichtigt aber noch nicht die Position ind er Hierarchie; 
+                                    ' das muss noch ergänzt werden 
+                                    If hproj.name = objectName Then
+                                        cphase = hproj.getPhaseByID(rootPhaseName)
+                                    Else
+                                        cphase = hproj.getPhase(objectName)
+                                    End If
+
                                     If IsNothing(cphase) Then
                                         cphase = New clsPhase(parent:=hproj)
                                         cphase.nameID = hproj.hierarchy.findUniqueElemKey(objectName, False)
@@ -2479,31 +2497,31 @@ Public Module awinGeneralModules
                                 Else
 
 
-                                    phaseName = cphase.nameID
-                                    cResult = New clsMeilenstein(parent:=cphase)
+                                    phaseNameID = cphase.nameID
+                                    cMilestone = New clsMeilenstein(parent:=cphase)
                                     cBewertung = New clsBewertung
 
-                                    resultName = objectName.Trim
-                                    resultDate = endeDate
+                                    milestoneName = objectName.Trim
+                                    milestoneDate = endeDate
 
                                     ' wenn der freefloat nicht zugelassen ist und der Meilenstein ausserhalb der Phasen-Grenzen liegt 
                                     ' muss abgebrochen werden 
 
                                     If Not awinSettings.milestoneFreeFloat And _
-                                        (DateDiff(DateInterval.Day, cphase.getStartDate, resultDate) < 0 Or _
-                                         DateDiff(DateInterval.Day, cphase.getEndDate, resultDate) > 0) Then
+                                        (DateDiff(DateInterval.Day, cphase.getStartDate, milestoneDate) < 0 Or _
+                                         DateDiff(DateInterval.Day, cphase.getEndDate, milestoneDate) > 0) Then
                                         Throw New Exception("Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
-                                                            resultName & " nicht innerhalb " & cphase.name & vbLf & _
+                                                            milestoneName & " nicht innerhalb " & cphase.name & vbLf & _
                                                                  "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
                                     End If
 
 
                                     ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
-                                    If DateDiff(DateInterval.Month, hproj.startDate, resultDate) < -1 Then
-                                        resultDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
+                                    If DateDiff(DateInterval.Month, hproj.startDate, milestoneDate) < -1 Then
+                                        milestoneDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
                                     Else
                                         If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
-                                            Call MsgBox("der Meilenstein '" & resultName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
+                                            Call MsgBox("der Meilenstein '" & milestoneName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
                                                         "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '" & hproj.name & ".xlsx")
                                         End If
 
@@ -2528,10 +2546,10 @@ Public Module awinGeneralModules
 
 
 
-                                    With cResult
-                                        .setDate = resultDate
+                                    With cMilestone
+                                        .setDate = milestoneDate
                                         '.verantwortlich = resultVerantwortlich
-                                        .nameID = hproj.hierarchy.findUniqueElemKey(resultName, True)
+                                        .nameID = hproj.hierarchy.findUniqueElemKey(milestoneName, True)
                                         If Not cBewertung Is Nothing Then
                                             .addBewertung(cBewertung)
                                         End If
@@ -2539,8 +2557,8 @@ Public Module awinGeneralModules
 
 
                                     Try
-                                        With hproj.getPhaseByID(phaseName)
-                                            .addMilestone(cResult)
+                                        With hproj.getPhaseByID(phaseNameID)
+                                            .addMilestone(cMilestone)
                                         End With
                                     Catch ex1 As Exception
 

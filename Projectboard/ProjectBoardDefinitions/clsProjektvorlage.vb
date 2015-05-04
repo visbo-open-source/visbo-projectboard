@@ -85,7 +85,6 @@
             End If
 
             .indexOfElem = Me.CountPhases
-            .isMilestone = False
 
             If parentID = "" Then
                 If .indexOfElem = 1 Then
@@ -122,7 +121,7 @@
 
             If Not IsNothing(currentNode) Then
 
-                If currentNode.isMilestone Then
+                If elemIDIstMeilenstein(elemID) Then
                     phaseID = currentNode.parentNodeKey
                     phIndex = Me.hierarchy.nodeItem(phaseID).indexOfElem
                     msIndex = currentNode.indexOfElem
@@ -343,7 +342,6 @@
             With copiedNode
                 .elemName = curNode.elemName
                 .indexOfElem = curNode.indexOfElem
-                .isMilestone = curNode.isMilestone
                 .origName = curNode.origName
                 .parentNodeKey = curNode.parentNodeKey
                 ' jetzt die Kinder kopieren 

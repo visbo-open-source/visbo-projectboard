@@ -28,7 +28,6 @@ Partial Class frmPhaseInformation
         Me.phaseDauer = New System.Windows.Forms.TextBox()
         Me.projectName = New System.Windows.Forms.TextBox()
         Me.breadCrumb = New System.Windows.Forms.TextBox()
-        Me.lfdNr = New System.Windows.Forms.TextBox()
         Me.showOrigItem = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
@@ -38,7 +37,7 @@ Partial Class frmPhaseInformation
         Me.phaseName.Location = New System.Drawing.Point(19, 64)
         Me.phaseName.Name = "phaseName"
         Me.phaseName.ReadOnly = True
-        Me.phaseName.Size = New System.Drawing.Size(400, 26)
+        Me.phaseName.Size = New System.Drawing.Size(448, 26)
         Me.phaseName.TabIndex = 1
         '
         'phaseStart
@@ -70,30 +69,21 @@ Partial Class frmPhaseInformation
         '
         'projectName
         '
-        Me.projectName.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.projectName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.projectName.Location = New System.Drawing.Point(19, 26)
         Me.projectName.Name = "projectName"
         Me.projectName.ReadOnly = True
-        Me.projectName.Size = New System.Drawing.Size(141, 20)
+        Me.projectName.Size = New System.Drawing.Size(141, 22)
         Me.projectName.TabIndex = 21
         '
         'breadCrumb
         '
-        Me.breadCrumb.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.breadCrumb.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.breadCrumb.Location = New System.Drawing.Point(175, 26)
         Me.breadCrumb.Name = "breadCrumb"
         Me.breadCrumb.ReadOnly = True
-        Me.breadCrumb.Size = New System.Drawing.Size(292, 20)
+        Me.breadCrumb.Size = New System.Drawing.Size(292, 22)
         Me.breadCrumb.TabIndex = 22
-        '
-        'lfdNr
-        '
-        Me.lfdNr.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lfdNr.Location = New System.Drawing.Point(425, 64)
-        Me.lfdNr.Name = "lfdNr"
-        Me.lfdNr.ReadOnly = True
-        Me.lfdNr.Size = New System.Drawing.Size(42, 26)
-        Me.lfdNr.TabIndex = 23
         '
         'showOrigItem
         '
@@ -113,7 +103,6 @@ Partial Class frmPhaseInformation
         Me.BackColor = System.Drawing.SystemColors.Window
         Me.ClientSize = New System.Drawing.Size(482, 164)
         Me.Controls.Add(Me.showOrigItem)
-        Me.Controls.Add(Me.lfdNr)
         Me.Controls.Add(Me.breadCrumb)
         Me.Controls.Add(Me.projectName)
         Me.Controls.Add(Me.phaseDauer)
@@ -133,6 +122,5 @@ Partial Class frmPhaseInformation
     Public WithEvents phaseDauer As System.Windows.Forms.TextBox
     Public WithEvents projectName As System.Windows.Forms.TextBox
     Public WithEvents breadCrumb As System.Windows.Forms.TextBox
-    Public WithEvents lfdNr As System.Windows.Forms.TextBox
     Public WithEvents showOrigItem As System.Windows.Forms.CheckBox
 End Class

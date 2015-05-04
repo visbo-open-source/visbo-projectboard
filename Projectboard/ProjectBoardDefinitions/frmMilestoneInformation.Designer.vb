@@ -27,7 +27,6 @@ Partial Class frmMilestoneInformation
         Me.projectName = New System.Windows.Forms.TextBox()
         Me.resultName = New System.Windows.Forms.TextBox()
         Me.breadCrumb = New System.Windows.Forms.TextBox()
-        Me.lfdNr = New System.Windows.Forms.TextBox()
         Me.showOrigItem = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
@@ -60,11 +59,11 @@ Partial Class frmMilestoneInformation
         '
         Me.projectName.BackColor = System.Drawing.SystemColors.Control
         Me.projectName.Enabled = False
-        Me.projectName.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.projectName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.projectName.Location = New System.Drawing.Point(26, 22)
         Me.projectName.Name = "projectName"
         Me.projectName.ReadOnly = True
-        Me.projectName.Size = New System.Drawing.Size(141, 20)
+        Me.projectName.Size = New System.Drawing.Size(141, 22)
         Me.projectName.TabIndex = 20
         '
         'resultName
@@ -75,26 +74,17 @@ Partial Class frmMilestoneInformation
         Me.resultName.Location = New System.Drawing.Point(26, 59)
         Me.resultName.Name = "resultName"
         Me.resultName.ReadOnly = True
-        Me.resultName.Size = New System.Drawing.Size(285, 26)
+        Me.resultName.Size = New System.Drawing.Size(330, 26)
         Me.resultName.TabIndex = 24
         '
         'breadCrumb
         '
-        Me.breadCrumb.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.breadCrumb.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.breadCrumb.Location = New System.Drawing.Point(182, 22)
         Me.breadCrumb.Name = "breadCrumb"
         Me.breadCrumb.ReadOnly = True
-        Me.breadCrumb.Size = New System.Drawing.Size(292, 20)
+        Me.breadCrumb.Size = New System.Drawing.Size(292, 22)
         Me.breadCrumb.TabIndex = 25
-        '
-        'lfdNr
-        '
-        Me.lfdNr.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lfdNr.Location = New System.Drawing.Point(315, 59)
-        Me.lfdNr.Name = "lfdNr"
-        Me.lfdNr.ReadOnly = True
-        Me.lfdNr.Size = New System.Drawing.Size(42, 26)
-        Me.lfdNr.TabIndex = 26
         '
         'showOrigItem
         '
@@ -114,7 +104,6 @@ Partial Class frmMilestoneInformation
         Me.BackColor = System.Drawing.SystemColors.Window
         Me.ClientSize = New System.Drawing.Size(494, 277)
         Me.Controls.Add(Me.showOrigItem)
-        Me.Controls.Add(Me.lfdNr)
         Me.Controls.Add(Me.breadCrumb)
         Me.Controls.Add(Me.resultName)
         Me.Controls.Add(Me.projectName)
@@ -134,6 +123,5 @@ Partial Class frmMilestoneInformation
     Public WithEvents resultDate As System.Windows.Forms.TextBox
     Public WithEvents bewertungsText As System.Windows.Forms.TextBox
     Public WithEvents breadCrumb As System.Windows.Forms.TextBox
-    Public WithEvents lfdNr As System.Windows.Forms.TextBox
     Public WithEvents showOrigItem As System.Windows.Forms.CheckBox
 End Class

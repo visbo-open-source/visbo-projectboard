@@ -25,6 +25,17 @@ Public Class frmHierarchySelection
         frmCoord(PTfrm.listselP, PTpinfo.left) = Me.Left
 
         awinSettings.isHryNameFrmActive = False
+        If appInstance.ScreenUpdating = False Then
+            appInstance.ScreenUpdating = True
+        End If
+
+        If appInstance.EnableEvents = False Then
+            appInstance.EnableEvents = True
+        End If
+
+        If Not enableOnUpdate Then
+            enableOnUpdate = True
+        End If
 
     End Sub
 
@@ -231,6 +242,7 @@ Public Class frmHierarchySelection
         Dim mppFrm As New frmMppSettings
         Dim dialogreturn As DialogResult
 
+        mppFrm.calledfrom = "frmShowPlanElements"
         dialogreturn = mppFrm.ShowDialog
 
     End Sub
@@ -248,6 +260,7 @@ Public Class frmHierarchySelection
 
         node = e.Node
         elemID = node.Name
+
 
         ' node.tag = P bedeutet, daß es sich noch um einen Platzhalter handelt 
         If node.Tag = "P" Then
@@ -413,8 +426,11 @@ Public Class frmHierarchySelection
     End Sub
 
     Private Sub hryTreeView_DoubleClick(sender As Object, e As EventArgs) Handles hryTreeView.DoubleClick
-        Call MsgBox("Doppel-Klick")
+
+        
+
     End Sub
+
 
     Private Sub hryTreeView_KeyPress(sender As Object, e As KeyPressEventArgs) Handles hryTreeView.KeyPress
 
@@ -482,9 +498,6 @@ Public Class frmHierarchySelection
         e.Handled = True
     End Sub
 
-    Private Sub hryTreeView_MouseDoubleClick(sender As Object, e As MouseEventArgs) Handles hryTreeView.MouseDoubleClick
-        Call MsgBox("Mouse Doppel-Klick")
-    End Sub
 
     Private Sub BackgroundWorker1_DoWork(sender As Object, e As System.ComponentModel.DoWorkEventArgs) Handles BackgroundWorker1.DoWork
 
@@ -534,12 +547,93 @@ Public Class frmHierarchySelection
 
 
         Me.statusLabel.Text = "...done"
+        Me.statusLabel.Visible = True
         Me.OKButton.Visible = True
         Me.OKButton.Enabled = True
         Me.repVorlagenDropbox.Enabled = True
         Me.Cursor = Cursors.Arrow
-        Me.statusLabel.Visible = True
 
+
+
+    End Sub
+
+    ''' <summary>
+    ''' uncheckt alle Selektionen im gesamten treeView
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub SelectionReset_Click(sender As Object, e As EventArgs) Handles SelectionReset.Click
+
+
+        Dim curNode As TreeNode
+        With hryTreeView
+
+
+            For i As Integer = 1 To .Nodes.Count
+                curNode = .Nodes.Item(i - 1)
+                If curNode.Checked Then
+                    curNode.Checked = False
+                End If
+                If curNode.Nodes.Count > 0 Then
+                    Call unCheck(curNode)
+                End If
+            Next
+
+
+        End With
+
+    End Sub
+
+    ''' <summary>
+    ''' setzt alle Knoten im TreeView auf unchecked
+    ''' </summary>
+    ''' <param name="node"></param>
+    ''' <remarks></remarks>
+    Private Sub unCheck(ByRef node As TreeNode)
+        Dim curNode As TreeNode
+
+        With node
+
+            For i As Integer = 1 To .Nodes.Count
+                curNode = .Nodes.Item(i - 1)
+                If curNode.Checked Then
+                    curNode.Checked = False
+                End If
+                If curNode.Nodes.Count > 0 Then
+                    Call unCheck(curNode)
+                End If
+            Next
+
+        End With
+
+    End Sub
+
+    ''' <summary>
+    ''' expandiert den kompletten Baum
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub expandCompletely_Click(sender As Object, e As EventArgs) Handles expandCompletely.Click
+
+        With hryTreeView
+            .ExpandAll()
+        End With
+
+    End Sub
+
+    ''' <summary>
+    ''' minimiert die dargestellte Baum-Struktur (collapse)  
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub collapseCompletely_Click(sender As Object, e As EventArgs) Handles collapseCompletely.Click
+
+        With hryTreeView
+            .CollapseAll()
+        End With
 
     End Sub
 End Class

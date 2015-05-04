@@ -20,6 +20,7 @@
         Me.Top = CInt(frmCoord(PTfrm.phaseInfo, PTpinfo.top))
         Me.Left = CInt(frmCoord(PTfrm.phaseInfo, PTpinfo.left))
 
+        Me.showOrigItem.Checked = awinSettings.showOrigName
 
     End Sub
 
@@ -52,15 +53,15 @@
     Private Sub showOrigItem_CheckedChanged(sender As Object, e As EventArgs) Handles showOrigItem.CheckedChanged
         Dim tmpNode As clsHierarchyNode
 
+        awinSettings.showOrigName = showOrigItem.Checked
+
         If showOrigItem.Checked = True Then
             tmpNode = curProject.hierarchy.nodeItem(phaseNameID)
             If Not IsNothing(tmpNode) Then
                 phaseName.Text = tmpNode.origName
-                lfdNr.Text = ""
             End If
         Else
             phaseName.Text = elemNameOfElemID(phaseNameID)
-            lfdNr.Text = lfdNrOfElemID(phaseNameID).ToString("0#")
         End If
     End Sub
 End Class

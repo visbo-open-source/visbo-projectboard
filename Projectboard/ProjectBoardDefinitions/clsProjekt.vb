@@ -396,7 +396,6 @@ Public Class clsProjekt
             End If
 
             .indexOfElem = Me.CountPhases
-            .isMilestone = False
 
             If parentID = "" Then
                 If .indexOfElem = 1 Then
@@ -424,7 +423,6 @@ Public Class clsProjekt
                 .elemName = elemNameOfElemID(cmilestone.nameID)
                 .origName = .elemName
                 .indexOfElem = m
-                .isMilestone = True
                 .parentNodeKey = phase.nameID
 
             End With

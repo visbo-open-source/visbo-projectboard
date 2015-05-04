@@ -1572,8 +1572,8 @@ Imports System.Drawing
 
         Call projektTafelInit()
 
-        enableOnUpdate = False
-        appInstance.EnableEvents = False
+        'enableOnUpdate = False
+        'appInstance.EnableEvents = False
 
 
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
@@ -1590,6 +1590,7 @@ Imports System.Drawing
                     .OKButton.Text = "Anzeigen"
                     .menuOption = PTmenue.visualisieren
                     .statusLabel.Text = ""
+                    .statusLabel.Visible = True
 
 
                     .rdbBU.Visible = False
@@ -1625,6 +1626,7 @@ Imports System.Drawing
                     .AbbrButton.Enabled = False
                     .menuOption = PTmenue.visualisieren
                     .statusLabel.Text = ""
+                    .statusLabel.Visible = True
 
                     .chkbxOneChart.Checked = False
                     .chkbxOneChart.Visible = False
@@ -1646,6 +1648,7 @@ Imports System.Drawing
                     .OKButton.Text = "Charts erstellen"
                     .menuOption = PTmenue.leistbarkeitsAnalyse
                     .statusLabel.Text = ""
+                    .statusLabel.Visible = True
 
                     .rdbBU.Visible = False
                     .pictureBU.Visible = False
@@ -1679,6 +1682,7 @@ Imports System.Drawing
                     .AbbrButton.Enabled = False
                     .menuOption = PTmenue.leistbarkeitsAnalyse
                     .statusLabel.Text = ""
+                    .statusLabel.Visible = True
 
                     .chkbxOneChart.Checked = False
                     .chkbxOneChart.Visible = True
@@ -1714,6 +1718,7 @@ Imports System.Drawing
                         .OKButton.Text = "Bericht erstellen"
                         .menuOption = PTmenue.einzelprojektReport
                         .statusLabel.Text = ""
+                        .statusLabel.Visible = True
 
                         .rdbRoles.Enabled = False
                         .rdbCosts.Enabled = False
@@ -1733,8 +1738,9 @@ Imports System.Drawing
                         .repVorlagenDropbox.Visible = True
                         .labelPPTVorlage.Visible = True
 
-                        .Show()
-                        'returnValue = .ShowDialog
+                        '.Show()
+                        ' bei Reports mit der Background Worker Behandlung 
+                        .ShowDialog()
                     End With
 
                     appInstance.ScreenUpdating = True
@@ -1743,18 +1749,21 @@ Imports System.Drawing
 
             ElseIf control.Id = "PT1G1M1B2" Then
                 ' Hierarchie auswählen, Einzelprojekt Berichte 
+                appInstance.ScreenUpdating = False
+
                 awinSettings.useHierarchy = True
                 With hryFormular
                     .Text = "Projekt-Varianten Report erzeugen"
                     .OKButton.Text = "Bericht erstellen"
                     .menuOption = PTmenue.einzelprojektReport
                     .statusLabel.Text = ""
+                    .statusLabel.Visible = True
 
                     .AbbrButton.Visible = False
                     .AbbrButton.Enabled = False
 
                     .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = True
+                    .chkbxOneChart.Visible = False
 
 
                     ' Reports
@@ -1762,10 +1771,13 @@ Imports System.Drawing
                     .labelPPTVorlage.Visible = True
                     .einstellungen.Visible = True
 
-                    ' Nicht Modal anzeigen
-                    .Show()
+                    ' bei Verwnedung Background Worker muss Modal erfolgen 
+                    '.Show()
+                    .ShowDialog()
                     'returnValue = .ShowDialog
                 End With
+
+                appInstance.ScreenUpdating = True
 
             ElseIf control.Id = "PT1G1M2B1" Then
                 ' Namen Auswahl, Multiprojekt Report
@@ -1777,6 +1789,7 @@ Imports System.Drawing
                     .OKButton.Text = "Bericht erstellen"
                     .menuOption = PTmenue.multiprojektReport
                     .statusLabel.Text = ""
+                    .statusLabel.Visible = True
 
                     .rdbRoles.Enabled = False
                     .rdbCosts.Enabled = False
@@ -1795,8 +1808,8 @@ Imports System.Drawing
 
                     .repVorlagenDropbox.Visible = True
                     .labelPPTVorlage.Visible = True
-
-                    .Show()
+                    ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
+                    .ShowDialog()
                     'returnValue = .ShowDialog
                 End With
 
@@ -1814,12 +1827,13 @@ Imports System.Drawing
                     .OKButton.Text = "Bericht erstellen"
                     .menuOption = PTmenue.multiprojektReport
                     .statusLabel.Text = ""
+                    .statusLabel.Visible = True
 
                     .AbbrButton.Visible = False
                     .AbbrButton.Enabled = False
 
                     .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = True
+                    .chkbxOneChart.Visible = False
 
 
                     ' Reports
@@ -1827,10 +1841,12 @@ Imports System.Drawing
                     .labelPPTVorlage.Visible = True
                     .einstellungen.Visible = True
 
-                    ' Nicht Modal anzeigen
-                    .Show()
+                    ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
+                    .ShowDialog()
                     'returnValue = .ShowDialog
                 End With
+
+                appInstance.ScreenUpdating = True
 
             ElseIf control.Id = "PT4G1M0B1" Then
                 ' Auswahl über Namen, Typ II Export
@@ -1860,7 +1876,7 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
 
-                    .Show()
+                    .ShowDialog()
                     'returnValue = .ShowDialog
                 End With
 
@@ -1903,6 +1919,7 @@ Imports System.Drawing
                     .OKButton.Text = "Speichern"
                     .menuOption = PTmenue.filterdefinieren
                     .statusLabel.Text = ""
+                    .statusLabel.Visible = True
 
                     .rdbRoles.Enabled = True
                     .rdbCosts.Enabled = True
@@ -1935,6 +1952,7 @@ Imports System.Drawing
                     .OKButton.Text = "Speichern"
                     .menuOption = PTmenue.filterdefinieren
                     .statusLabel.Text = ""
+                    .statusLabel.Visible = True
 
                     .AbbrButton.Visible = False
                     .AbbrButton.Enabled = False
@@ -1963,9 +1981,9 @@ Imports System.Drawing
         
 
 
-
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+        ' oben ist es de-aktiviert 
+        'appInstance.EnableEvents = True
+        'enableOnUpdate = True
 
 
     End Sub

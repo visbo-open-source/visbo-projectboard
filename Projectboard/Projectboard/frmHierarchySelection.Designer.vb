@@ -31,10 +31,15 @@ Partial Class frmHierarchySelection
         Me.statusLabel = New System.Windows.Forms.Label()
         Me.repVorlagenDropbox = New System.Windows.Forms.ComboBox()
         Me.OKButton = New System.Windows.Forms.Button()
-        Me.Label1 = New System.Windows.Forms.Label()
         Me.BackgroundWorker1 = New System.ComponentModel.BackgroundWorker()
         Me.AbbrButton = New System.Windows.Forms.Button()
+        Me.SelectionReset = New System.Windows.Forms.PictureBox()
+        Me.expandCompletely = New System.Windows.Forms.PictureBox()
+        Me.collapseCompletely = New System.Windows.Forms.PictureBox()
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'hryTreeView
@@ -98,7 +103,7 @@ Partial Class frmHierarchySelection
         'statusLabel
         '
         Me.statusLabel.AutoSize = True
-        Me.statusLabel.Location = New System.Drawing.Point(-52, 258)
+        Me.statusLabel.Location = New System.Drawing.Point(12, 444)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(39, 13)
         Me.statusLabel.TabIndex = 41
@@ -122,16 +127,10 @@ Partial Class frmHierarchySelection
         Me.OKButton.Text = "Anzeigen"
         Me.OKButton.UseVisualStyleBackColor = True
         '
-        'Label1
-        '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(12, 445)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(0, 13)
-        Me.Label1.TabIndex = 43
-        '
         'BackgroundWorker1
         '
+        Me.BackgroundWorker1.WorkerReportsProgress = True
+        Me.BackgroundWorker1.WorkerSupportsCancellation = True
         '
         'AbbrButton
         '
@@ -144,13 +143,42 @@ Partial Class frmHierarchySelection
         Me.AbbrButton.UseVisualStyleBackColor = False
         Me.AbbrButton.Visible = False
         '
+        'SelectionReset
+        '
+        Me.SelectionReset.BackColor = System.Drawing.SystemColors.Info
+        Me.SelectionReset.Location = New System.Drawing.Point(12, 349)
+        Me.SelectionReset.Name = "SelectionReset"
+        Me.SelectionReset.Size = New System.Drawing.Size(19, 18)
+        Me.SelectionReset.TabIndex = 45
+        Me.SelectionReset.TabStop = False
+        '
+        'expandCompletely
+        '
+        Me.expandCompletely.BackColor = System.Drawing.Color.OliveDrab
+        Me.expandCompletely.Location = New System.Drawing.Point(60, 349)
+        Me.expandCompletely.Name = "expandCompletely"
+        Me.expandCompletely.Size = New System.Drawing.Size(19, 18)
+        Me.expandCompletely.TabIndex = 46
+        Me.expandCompletely.TabStop = False
+        '
+        'collapseCompletely
+        '
+        Me.collapseCompletely.BackColor = System.Drawing.SystemColors.ActiveCaption
+        Me.collapseCompletely.Location = New System.Drawing.Point(85, 349)
+        Me.collapseCompletely.Name = "collapseCompletely"
+        Me.collapseCompletely.Size = New System.Drawing.Size(19, 18)
+        Me.collapseCompletely.TabIndex = 47
+        Me.collapseCompletely.TabStop = False
+        '
         'frmHierarchySelection
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(558, 466)
+        Me.Controls.Add(Me.collapseCompletely)
+        Me.Controls.Add(Me.expandCompletely)
+        Me.Controls.Add(Me.SelectionReset)
         Me.Controls.Add(Me.AbbrButton)
-        Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.einstellungen)
         Me.Controls.Add(Me.chkbxOneChart)
         Me.Controls.Add(Me.labelPPTVorlage)
@@ -164,6 +192,9 @@ Partial Class frmHierarchySelection
         Me.Text = "Auswahl über Hierarchie"
         Me.TopMost = True
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -177,7 +208,9 @@ Partial Class frmHierarchySelection
     Friend WithEvents statusLabel As System.Windows.Forms.Label
     Friend WithEvents repVorlagenDropbox As System.Windows.Forms.ComboBox
     Friend WithEvents OKButton As System.Windows.Forms.Button
-    Friend WithEvents Label1 As System.Windows.Forms.Label
     Friend WithEvents BackgroundWorker1 As System.ComponentModel.BackgroundWorker
     Friend WithEvents AbbrButton As System.Windows.Forms.Button
+    Friend WithEvents SelectionReset As System.Windows.Forms.PictureBox
+    Friend WithEvents expandCompletely As System.Windows.Forms.PictureBox
+    Friend WithEvents collapseCompletely As System.Windows.Forms.PictureBox
 End Class
