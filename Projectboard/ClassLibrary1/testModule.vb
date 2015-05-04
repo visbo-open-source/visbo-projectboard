@@ -589,24 +589,29 @@ Public Module testModule
                                         And selectedCosts.Count = 0 _
                                         And selectedBUs.Count = 0 _
                                         And awinSettings.eppExtendedMode Then
-
                                         Dim i As Integer = 0
                                         Dim tmpphases As New Collection
                                         Dim tmpMilestones As New Collection
 
                                         ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
                                         For Each cphase In hproj.AllPhases
-                                            tmpphases.Add(cphase.name, cphase.name)
+
+                                            Dim tmpstr = hproj.hierarchy.getBreadCrumb(cphase.nameID) & "#" & cphase.name
+                                            tmpphases.Add(tmpstr, tmpstr)
+
                                         Next
 
                                         ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
                                         Dim mSList As SortedList(Of Date, String)
 
-                                        mSList = hproj.getMilestones
+                                        mSList = hproj.getMilestones        ' holt alle Meilensteine in Form ihrer nameID sortiert nach Datum
 
                                         If mSList.Count > 0 Then
                                             For Each kvp As KeyValuePair(Of Date, String) In mSList
-                                                tmpMilestones.Add(kvp.Value, kvp.Value)
+
+                                                Dim tmpstr = hproj.hierarchy.getBreadCrumb(kvp.Value) & "#" & hproj.getMilestoneByID(kvp.Value).name
+                                                tmpMilestones.Add(tmpstr, tmpstr)
+
                                             Next
                                         End If
 
@@ -639,17 +644,23 @@ Public Module testModule
 
                                         ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
                                         For Each cphase In hproj.AllPhases
-                                            tmpphases.Add(cphase.name, cphase.name)
+
+                                            Dim tmpstr = hproj.hierarchy.getBreadCrumb(cphase.nameID) & "#" & cphase.name
+                                            tmpphases.Add(tmpstr, tmpstr)
+
                                         Next
 
                                         ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
                                         Dim mSList As SortedList(Of Date, String)
 
-                                        mSList = hproj.getMilestones
+                                        mSList = hproj.getMilestones        ' holt alle Meilensteine in Form ihrer nameID sortiert nach Datum
 
                                         If mSList.Count > 0 Then
                                             For Each kvp As KeyValuePair(Of Date, String) In mSList
-                                                tmpMilestones.Add(kvp.Value, kvp.Value)
+
+                                                Dim tmpstr = hproj.hierarchy.getBreadCrumb(kvp.Value) & "#" & hproj.getMilestoneByID(kvp.Value).name
+                                                tmpMilestones.Add(tmpstr, tmpstr)
+
                                             Next
                                         End If
 
@@ -4789,8 +4800,10 @@ Public Module testModule
 
         Dim phaseShape As xlNS.Shape
         Dim milestoneShape As xlNS.Shape
-        Dim phaseName As String
-        Dim milestoneName As String
+        Dim phaseName As String = ""
+        Dim breadcrumb As String = ""
+        Dim milestoneName As String = ""
+        Dim breadcrumbMS As String = ""
         Dim shortName As String
         Dim factor As Double
         Dim tmpBU As clsBusinessUnit
@@ -4857,7 +4870,10 @@ Public Module testModule
             Throw New Exception("Anzahl Zeilen in der Tabelle sind nicht ausreichend." & vbLf & "Tabelle muss anders definiert werden .... ")
         End If
 
-        For Each phaseName In selectedPhases
+
+        For j = 1 To selectedPhases.Count
+
+            Call splitHryFullnameTo2(CStr(selectedPhases(j)), phaseName, breadcrumb)
 
             phaseShape = PhaseDefinitions.getShape(phaseName)
             shortName = PhaseDefinitions.getAbbrev(phaseName)
@@ -4891,11 +4907,14 @@ Public Module testModule
                 End If
             End If
 
-        Next
+        Next j ' nächste selektierte Phase bearbeiten
 
 
         ' jetzt die Meilensteine eintragen 
-        For Each milestoneName In selectedMilestones
+        For j = 1 To selectedMilestones.Count
+
+
+            Call splitHryFullnameTo2(CStr(selectedMilestones(j)), milestoneName, breadcrumbMS)
 
             milestoneShape = MilestoneDefinitions.getShape(milestoneName)
             factor = milestoneShape.Width / milestoneShape.Height
@@ -8031,6 +8050,7 @@ Public Module testModule
         Dim copiedShape As pptNS.ShapeRange
         Dim fullName As String
         Dim hproj As clsProjekt
+
         Dim phaseShape As xlNS.Shape
         Dim milestoneTypShape As xlNS.Shape
         Dim currentProjektIndex As Integer
@@ -8111,7 +8131,10 @@ Public Module testModule
 
             If AlleProjekte.Containskey(fullName) Then
 
+                Dim msToDraw As New Collection      ' hier sind alle selektierten Meilensteine mit zugehörigen Phasen enthalten
+
                 hproj = AlleProjekte.getProject(fullName)
+
 
                 ' ur:23.03.2015: Test darauf, ob der Rest der Seite für dieses Projekt ausreicht'
                 If awinSettings.mppExtendedMode Then
@@ -8538,147 +8561,199 @@ Public Module testModule
 
 
                             ' zeichne jetzt die Meilensteine der aktuellen Phase
+                            ' ur: 29.04.2015: und baue eine Collection auf, die alle selektierten Meilensteine aus den unterschiedlichen Phasen beinhaltet.
+                            ' Sobald der Meilenstein/Phase gezeichnet wurde, wird er daraus gelöscht.
                             ' ur: 19.03.2015: diese Schleife muss innerhalb der für die Phase liegen
 
-                            Dim firstMilestone As Boolean = True
-                            For Each milestoneName As String In selectedMilestones
+                            Dim milestoneName As String = ""
+                            Dim ms As clsMeilenstein = Nothing
+                            Dim phase_MS As String
+
+                            For ix As Integer = 1 To selectedMilestones.Count
+
+                                Dim breadcrumbMS As String = ""
+
+                                Call splitHryFullnameTo2(CStr(selectedMilestones.Item(ix)), milestoneName, breadcrumbMS)
 
 
-                                Dim ms As clsMeilenstein = cphase.getMilestone(milestoneName)
-                                If Not IsNothing(ms) Then
+                                ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+                                Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumbMS)
 
-                                    Dim msDate As Date = ms.getDate
-                                    'Dim msDate As Date = hproj.getMilestoneDate(milestoneName)
-
-                                    ' Meilenstein aus der Liste der selektieren Meilensteine entfernen, da nun bereits abgearbeitet
-                                    selectedMilestones.Remove(milestoneName)
+                                Dim phaseNameID As String = ""
 
 
+                                For msindex = 0 To CInt(milestoneIndices.Length / 2) - 1
 
-                                    Dim zeichnenMS As Boolean
+                                    If milestoneIndices(0, msindex) > 0 And milestoneIndices(1, msindex) > 0 Then       ' Meilenstein in diesem Projekt nicht vorhanden
 
-                                    If IsNothing(msDate) Then
-                                        zeichnenMS = False
-                                    Else
-                                        If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
+                                        phase_MS = milestoneIndices(0, msindex).ToString & "#" & milestoneIndices(1, msindex).ToString
 
-                                            ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
-                                            If awinSettings.mppShowAllIfOne Then
-                                                zeichnenMS = True
+                                        If Not msToDraw.Contains(phase_MS) Then
+                                            msToDraw.Add(phase_MS, phase_MS)
+                                        End If
+
+
+                                    End If
+
+                                Next
+
+
+
+                                For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+
+                                    ms = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+
+
+                                    If Not IsNothing(ms) Then
+
+                                        Dim msDate As Date = ms.getDate
+
+                                        Dim phaseNameID1 As String = hproj.hierarchy.getParentIDOfID(ms.nameID)
+
+                                        phaseNameID = hproj.getPhase(milestoneIndices(0, mx)).nameID
+
+                                        If phaseNameID <> phaseNameID1 Then
+                                            Call MsgBox(" Schleife über Meilensteine,  Fehler in zeichnePPTprojects,")
+                                        End If
+
+                                        If phaseNameID = cphase.nameID Then
+
+                                            Dim zeichnenMS As Boolean
+
+                                            If IsNothing(msDate) Then
+                                                zeichnenMS = False
                                             Else
-                                                If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
-                                                    zeichnenMS = True
+                                                If DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
+
+                                                    ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+                                                    If awinSettings.mppShowAllIfOne Then
+                                                        zeichnenMS = True
+                                                    Else
+                                                        If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
+                                                            zeichnenMS = True
+                                                        Else
+                                                            zeichnenMS = False
+                                                        End If
+                                                    End If
                                                 Else
                                                     zeichnenMS = False
                                                 End If
                                             End If
-                                        Else
-                                            zeichnenMS = False
-                                        End If
-                                    End If
 
 
-                                    If zeichnenMS Then
-                                        milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
+                                            If zeichnenMS Then
+                                                milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
 
-                                        Dim curMeilenstein As clsMeilenstein = Nothing
-                                        curMeilenstein = hproj.getMilestone(milestoneName)
+                                                Dim curMeilenstein As clsMeilenstein = Nothing
+                                                curMeilenstein = hproj.getMilestone(milestoneName)
 
 
 
-                                        Dim seitenverhaeltnis As Double
-                                        With milestoneTypShape
-                                            seitenverhaeltnis = .Height / .Width
-                                        End With
+                                                Dim seitenverhaeltnis As Double
+                                                With milestoneTypShape
+                                                    seitenverhaeltnis = .Height / .Width
+                                                End With
 
 
-                                        Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, msDate, msDate, _
-                                                            drawingAreaLeft, drawingAreaWidth, x1, x2)
+                                                Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, msDate, msDate, _
+                                                                    drawingAreaLeft, drawingAreaWidth, x1, x2)
 
 
-                                        If minX1 > x1 Then
-                                            minX1 = x1
-                                        End If
-
-                                        If maxX2 < x2 Then
-                                            maxX2 = x2
-                                        End If
-
-                                        ' jetzt muss ggf die Beschriftung angebracht werden 
-                                        ' die muss vor dem Meilenstein angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
-                                        ' überdeckt werden soll 
-                                        If awinSettings.mppShowMsName Then
-
-                                            Dim msShortname As String = MilestoneDefinitions.getAbbrev(milestoneName)
-
-                                            MsDescVorlagenShape.Copy()
-                                            copiedShape = pptslide.Shapes.Paste()
-                                            With copiedShape(1)
-
-                                                .TextFrame2.TextRange.Text = msShortname
-                                                .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
-                                                '.Left = CSng(x1) - .Width / 2
-                                                .Left = CSng(x1) - .Width / 2
-                                                .Name = .Name & .Id
-
-                                            End With
-
-
-                                        End If
-
-
-
-                                        ' jetzt muss ggf das Datum angebracht werden 
-                                        If awinSettings.mppShowMsDate Then
-                                            'Dim msDateText As String = msDate.ToShortDateString
-                                            Dim msDateText As String
-                                            msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
-
-                                            MsDateVorlagenShape.Copy()
-                                            copiedShape = pptslide.Shapes.Paste()
-                                            With copiedShape(1)
-
-                                                .TextFrame2.TextRange.Text = msDateText
-                                                .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToDate)
-                                                .Left = CSng(x1) - .Width / 2
-                                                .Name = .Name & .Id
-
-                                            End With
-
-                                        End If
-
-                                        ' jetzt ggf die vorhin gezeichneten Phasen in den Vordergrund bringen, damit die Texte die Phasen nicht teilweise überdecken  
-
-                                        ' Erst jetzt wird der Meilenstein gezeichnet 
-                                        milestoneTypShape.Copy()
-                                        copiedShape = pptslide.Shapes.Paste()
-
-
-
-                                        With copiedShape(1)
-                                            .Top = CSng(milestoneGrafikYPos)
-                                            .Height = milestoneVorlagenShape.Height
-                                            .Width = .Height / seitenverhaeltnis
-                                            .Left = CSng(x1) - .Width / 2
-                                            .Name = .Name & .Id
-                                            If awinSettings.mppShowAmpel Then
-                                                .Glow.Color.RGB = CInt(curMeilenstein.getBewertung(1).color)
-                                                If .Glow.Radius = 0 Then
-                                                    .Glow.Radius = 5
+                                                If minX1 > x1 Then
+                                                    minX1 = x1
                                                 End If
-                                            End If
-                                        End With
 
-                                        msShapeNames.Add(copiedShape.Name)
+                                                If maxX2 < x2 Then
+                                                    maxX2 = x2
+                                                End If
+
+                                                ' jetzt muss ggf die Beschriftung angebracht werden 
+                                                ' die muss vor dem Meilenstein angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
+                                                ' überdeckt werden soll 
+                                                If awinSettings.mppShowMsName Then
+
+                                                    Dim msShortname As String = MilestoneDefinitions.getAbbrev(milestoneName)
+
+                                                    MsDescVorlagenShape.Copy()
+                                                    copiedShape = pptslide.Shapes.Paste()
+                                                    With copiedShape(1)
+
+                                                        .TextFrame2.TextRange.Text = msShortname
+                                                        .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
+                                                        '.Left = CSng(x1) - .Width / 2
+                                                        .Left = CSng(x1) - .Width / 2
+                                                        .Name = .Name & .Id
+
+                                                    End With
+
+
+                                                End If
+
+
+
+                                                ' jetzt muss ggf das Datum angebracht werden 
+                                                If awinSettings.mppShowMsDate Then
+                                                    'Dim msDateText As String = msDate.ToShortDateString
+                                                    Dim msDateText As String
+                                                    msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
+
+                                                    MsDateVorlagenShape.Copy()
+                                                    copiedShape = pptslide.Shapes.Paste()
+                                                    With copiedShape(1)
+
+                                                        .TextFrame2.TextRange.Text = msDateText
+                                                        .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToDate)
+                                                        .Left = CSng(x1) - .Width / 2
+                                                        .Name = .Name & .Id
+
+                                                    End With
+
+                                                End If
+
+                                                ' jetzt ggf die vorhin gezeichneten Phasen in den Vordergrund bringen, damit die Texte die Phasen nicht teilweise überdecken  
+
+                                                ' Erst jetzt wird der Meilenstein gezeichnet 
+                                                milestoneTypShape.Copy()
+                                                copiedShape = pptslide.Shapes.Paste()
+
+
+
+                                                With copiedShape(1)
+                                                    .Top = CSng(milestoneGrafikYPos)
+                                                    .Height = milestoneVorlagenShape.Height
+                                                    .Width = .Height / seitenverhaeltnis
+                                                    .Left = CSng(x1) - .Width / 2
+                                                    .Name = .Name & .Id
+                                                    If awinSettings.mppShowAmpel Then
+                                                        .Glow.Color.RGB = CInt(curMeilenstein.getBewertung(1).color)
+                                                        If .Glow.Radius = 0 Then
+                                                            .Glow.Radius = 5
+                                                        End If
+                                                    End If
+                                                End With
+
+                                                msShapeNames.Add(copiedShape.Name)
+
+                                                ' Meilenstein aus der Liste der selektieren Meilensteine entfernen, da nun bereits abgearbeitet
+                                                ' ur: 29.04.2015: selectedMilestones.Remove(milestoneName)
+                                                phase_MS = milestoneIndices(0, mx).ToString & "#" & milestoneIndices(1, mx).ToString
+                                                msToDraw.Remove(phase_MS)
+
+
+                                            End If
+
+
+                                        Else
+                                            ' selektierter Meilenstein 'milestoneName' nicht in dieser Phase enthalten
+                                            ' also: nichts tun
+                                        End If
 
                                     End If
-                                Else
-                                    ' selektierter Meilenstein 'milestoneName' nicht in dieser Phase enthalten
-                                    ' also: nichts tun
-                                End If
 
-                            Next    ' nächsten selektieren Meilenstein überprüfen und einzeichnen
 
+                                Next mx
+
+                            Next ix  ' nächsten selektieren Meilenstein überprüfen und einzeichnen 
 
                         End If
                     End If
@@ -8689,7 +8764,7 @@ Public Module testModule
                 ' '' '' zeichne jetzt die übrigen Meilensteine 
                 ' '' '' ur: 17.04.2015: Meilensteine für extended Mode in separate Zeile
 
-                If selectedMilestones.Count > 0 And awinSettings.mppExtendedMode Then   ' Y-Position erhöhen, da weitere Zeile hinzugefügt
+                If msToDraw.Count > 0 And awinSettings.mppExtendedMode Then   ' Y-Position erhöhen, da weitere Zeile hinzugefügt
 
                     ' Phase muss in neue Zeile eingetragen werden
                     phasenGrafikYPos = phasenGrafikYPos + zeilenhoehe
@@ -8706,9 +8781,20 @@ Public Module testModule
                 End If
 
 
-                For Each milestoneName As String In selectedMilestones
+                For Each ms_ph As String In msToDraw
 
-                    Dim msDate As Date = hproj.getMilestoneDate(milestoneName)
+                   
+                    Dim tmpstr() As String
+                    tmpstr = Split(ms_ph, "#", 2)
+
+                    Dim ms As clsMeilenstein = Nothing
+                    ms = hproj.getMilestone(CInt(tmpstr(0)), CInt(tmpstr(1)))
+
+                    Dim msDate As Date = Nothing
+
+                    If Not IsNothing(ms) Then
+                        msDate = ms.getDate
+                    End If
 
                     Dim zeichnenMS As Boolean
 
@@ -8716,16 +8802,16 @@ Public Module testModule
                         zeichnenMS = False
                     ElseIf DateDiff(DateInterval.Day, StartofCalendar, msDate) >= 0 Then
 
-                            ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
-                            If awinSettings.mppShowAllIfOne Then
+                        ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+                        If awinSettings.mppShowAllIfOne Then
+                            zeichnenMS = True
+                        Else
+                            If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
                                 zeichnenMS = True
                             Else
-                                If milestoneWithinTimeFrame(msDate, showRangeLeft, showRangeRight) Then
-                                    zeichnenMS = True
-                                Else
-                                    zeichnenMS = False
-                                End If
+                                zeichnenMS = False
                             End If
+                        End If
 
                     Else
                         zeichnenMS = False
@@ -8734,10 +8820,10 @@ Public Module testModule
 
 
                     If zeichnenMS Then
-                        milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
+                        milestoneTypShape = MilestoneDefinitions.getShape(ms.name)
 
                         Dim curMeilenstein As clsMeilenstein = Nothing
-                        curMeilenstein = hproj.getMilestone(milestoneName)
+                        curMeilenstein = hproj.getMilestone(ms.name)
 
                         Dim seitenverhaeltnis As Double
                         With milestoneTypShape
@@ -8762,7 +8848,7 @@ Public Module testModule
                         ' überdeckt werden soll 
                         If awinSettings.mppShowMsName Then
 
-                            Dim msShortname As String = MilestoneDefinitions.getAbbrev(milestoneName)
+                            Dim msShortname As String = MilestoneDefinitions.getAbbrev(ms.name)
 
                             MsDescVorlagenShape.Copy()
                             copiedShape = pptslide.Shapes.Paste()
@@ -8974,8 +9060,7 @@ Public Module testModule
         'Dim versatzFaktor As Double = 0.87
 
         Dim listOfShapes As New Collection
-        ' '' ''Dim arrayOFNames() As String
-        ' '' ''Dim anzElements As Integer
+    
         Dim minTop As Double = 1.79769313486231E+308        ' Maximale Double - Wert
         Dim maxBottom As Double = 0.0
 
@@ -9032,23 +9117,7 @@ Public Module testModule
         Dim projekthoehe As Double = maxBottom - minTop
         projekthoehe = ((maxBottom - minTop) * 13 / 15)
 
-        ' '' ''anzElements = listOfShapes.Count
-        ' '' ''ReDim arrayOFNames(anzElements - 1)
-
-        ' '' ''For i = 1 To anzElements
-        ' '' ''    arrayOFNames(i - 1) = CStr(listOfShapes.Item(i))
-        ' '' ''Next
-
-
-        ' '' ''shapeGruppe = pptSlide.Shapes.Range(arrayOFNames)
-        ' '' ''shapeGruppe.Name = "ONESHAPE"
-        ' '' ''oneShape = shapeGruppe.Group
-
-        ' '' ''Dim projekthoehe As Double = (oneShape.Height * 13 / 15)
-
-        ' '' ''oneShape.Ungroup()
-
-
+     
         ' jetzt werden noch die Höhe des Pfeiles und der Beschriftung berücksichtigt 
 
         Dim addOn As Double = 0.0

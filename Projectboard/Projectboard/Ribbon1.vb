@@ -1633,7 +1633,7 @@ Imports System.Drawing
                         .einstellungen.Visible = False
 
                         ' Nicht Modal anzeigen
-                        .Show()
+                        .ShowDialog()
                         'returnValue = .ShowDialog
                     End With
 
@@ -1657,7 +1657,7 @@ Imports System.Drawing
                         .einstellungen.Visible = False
 
                         ' Nicht Modal anzeigen
-                        .Show()
+                        .ShowDialog()
                         'returnValue = .ShowDialog
                     End With
                 ElseIf control.Id = "PTXG1B6" Then
@@ -1688,7 +1688,7 @@ Imports System.Drawing
                         .labelPPTVorlage.Visible = False
 
                         ' Nicht Modal anzeigen
-                        .Show()
+                        .ShowDialog()
                         'returnValue = .ShowDialog
                     End With
                 ElseIf control.Id = "PTXG1B7" Then
@@ -1711,7 +1711,7 @@ Imports System.Drawing
                         .einstellungen.Visible = False
 
                         ' Nicht Modal anzeigen
-                        .Show()
+                        .ShowDialog()
                         'returnValue = .ShowDialog
                     End With
 
