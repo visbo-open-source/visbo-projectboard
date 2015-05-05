@@ -8325,6 +8325,40 @@ Public Module testModule
                 End If
 
 
+                'Aufbau der Liste mit allen Meilensteinen (msToDraw) wird nur zu Beginn gemacht.
+
+                For ix As Integer = 1 To selectedMilestones.Count
+                    Dim milestoneName As String = ""
+                    Dim breadcrumbMS As String = ""
+                    Dim phaseMS As String = ""
+
+                    Call splitHryFullnameTo2(CStr(selectedMilestones.Item(ix)), milestoneName, breadcrumbMS)
+
+
+                    ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+                    Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(milestoneName, breadcrumbMS)
+
+                    Dim phaseNameID As String = ""
+
+                    For msindex As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+
+                        If milestoneIndices(0, msindex) > 0 And milestoneIndices(1, msindex) > 0 Then       ' Meilenstein in diesem Projekt nicht vorhanden
+
+                            phaseMS = milestoneIndices(0, msindex).ToString & "#" & milestoneIndices(1, msindex).ToString
+
+                            If Not msToDraw.Contains(phaseMS) Then
+                                msToDraw.Add(phaseMS, phaseMS)
+                            End If
+
+
+                        End If
+
+                    Next
+                Next ix         'nächster MeilenStein in die msToDraw
+
+
+
+
                 '
                 ' zeichne jetzt die Phasen 
                 '
@@ -8581,35 +8615,15 @@ Public Module testModule
 
                                 Dim phaseNameID As String = ""
 
-
-                                For msindex = 0 To CInt(milestoneIndices.Length / 2) - 1
-
-                                    If milestoneIndices(0, msindex) > 0 And milestoneIndices(1, msindex) > 0 Then       ' Meilenstein in diesem Projekt nicht vorhanden
-
-                                        phase_MS = milestoneIndices(0, msindex).ToString & "#" & milestoneIndices(1, msindex).ToString
-
-                                        If Not msToDraw.Contains(phase_MS) Then
-                                            msToDraw.Add(phase_MS, phase_MS)
-                                        End If
-
-
-                                    End If
-
-                                Next
-
-
-
                                 For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
 
                                     ms = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
-
 
                                     If Not IsNothing(ms) Then
 
                                         Dim msDate As Date = ms.getDate
 
                                         Dim phaseNameID1 As String = hproj.hierarchy.getParentIDOfID(ms.nameID)
-
                                         phaseNameID = hproj.getPhase(milestoneIndices(0, mx)).nameID
 
                                         If phaseNameID <> phaseNameID1 Then
@@ -8617,7 +8631,6 @@ Public Module testModule
                                         End If
 
                                         If phaseNameID = cphase.nameID Then
-
                                             Dim zeichnenMS As Boolean
 
                                             If IsNothing(msDate) Then
@@ -8737,7 +8750,10 @@ Public Module testModule
                                                 ' Meilenstein aus der Liste der selektieren Meilensteine entfernen, da nun bereits abgearbeitet
                                                 ' ur: 29.04.2015: selectedMilestones.Remove(milestoneName)
                                                 phase_MS = milestoneIndices(0, mx).ToString & "#" & milestoneIndices(1, mx).ToString
-                                                msToDraw.Remove(phase_MS)
+                                                If msToDraw.Contains(phase_MS) Then
+                                                    msToDraw.Remove(phase_MS)
+                                                End If
+
 
 
                                             End If
@@ -8764,7 +8780,8 @@ Public Module testModule
                 ' '' '' zeichne jetzt die übrigen Meilensteine 
                 ' '' '' ur: 17.04.2015: Meilensteine für extended Mode in separate Zeile
 
-                If msToDraw.Count > 0 And awinSettings.mppExtendedMode Then   ' Y-Position erhöhen, da weitere Zeile hinzugefügt
+
+                If awinSettings.mppExtendedMode Then   ' Y-Position erhöhen, da weitere Zeile hinzugefügt
 
                     ' Phase muss in neue Zeile eingetragen werden
                     phasenGrafikYPos = phasenGrafikYPos + zeilenhoehe
@@ -8783,7 +8800,7 @@ Public Module testModule
 
                 For Each ms_ph As String In msToDraw
 
-                   
+
                     Dim tmpstr() As String
                     tmpstr = Split(ms_ph, "#", 2)
 
@@ -8914,6 +8931,8 @@ Public Module testModule
 
 
                 Next    ' nächsten selektieren und übriggebliebenen Meilenstein einzeichnen
+
+
 
 
                 ' jetzt muss ggf die duration eingezeichnet werden 
@@ -9291,12 +9310,17 @@ Public Module testModule
 
         ' jetzt ggf die Phasen-Legende zeichnen 
         Dim phaseShape As xlNS.Shape
-        Dim phaseName As String
+        Dim phaseName As String = ""
         Dim maxBreite As Double = 0.0
+
+        Dim breadcrumb As String = ""
+        Dim selPhaseName As String = ""
+
 
         For i = 1 To selectedPhases.Count
 
-            phaseName = selectedPhases.Item(i)
+            Call splitHryFullnameTo2(CStr(selectedPhases(i)), phaseName, breadcrumb)
+
             phaseShape = PhaseDefinitions.getShape(phaseName)
 
             ' Phasen-Shape 
@@ -9328,6 +9352,9 @@ Public Module testModule
 
             If i Mod maxZeilen = 0 And i < selectedPhases.Count Then
                 xCursor = xCursor + maxBreite + 10
+                If xCursor >= legendAreaRight Then
+                    Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                End If
                 maxBreite = 0.0
                 yCursor = legendAreaTop
             Else
@@ -9345,13 +9372,17 @@ Public Module testModule
 
         ' jetzt ggf die Meilenstein-Legende zeichnen 
         Dim meilensteinShape As xlNS.Shape
-        Dim msName As String
         Dim msShortname As String
         maxBreite = 0.0
 
+        Dim msName As String = ""
+        Dim breadcrumbMS As String = ""
+
         For i = 1 To selectedMilestones.Count
 
-            msName = selectedMilestones.Item(i)
+            Call splitHryFullnameTo2(CStr(selectedMilestones.Item(i)), msName, breadcrumbMS)
+
+
             msShortname = MilestoneDefinitions.getAbbrev(msName)
             meilensteinShape = MilestoneDefinitions.getShape(msName)
 
@@ -9382,6 +9413,9 @@ Public Module testModule
 
             If i Mod maxZeilen = 0 And i < selectedMilestones.Count Then
                 xCursor = xCursor + maxBreite + 10
+                If xCursor >= legendAreaRight Then
+                    Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                End If
                 yCursor = legendAreaTop
                 maxBreite = 0.0
             Else
@@ -9394,6 +9428,9 @@ Public Module testModule
 
         If selectedMilestones.Count > 0 Then
             xCursor = xCursor + maxBreite + 15
+            If xCursor >= legendAreaRight Then
+                Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+            End If
         End If
         yCursor = legendAreaTop
 
