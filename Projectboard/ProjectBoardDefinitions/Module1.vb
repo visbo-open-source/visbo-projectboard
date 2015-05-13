@@ -2059,7 +2059,7 @@ Public Module Module1
         If lfdNr <= 1 Then
             elemKey = elemTyp & "§" & elemName & "§"
         Else
-            elemKey = elemTyp & "§" & elemName & "§" & lfdNr.ToString("0#")
+            elemKey = elemTyp & "§" & elemName & "§" & lfdNr.ToString("000#")
         End If
 
 
@@ -2115,6 +2115,43 @@ Public Module Module1
             elemName = "?"
         End If
         breadcrumb = tmpBC
+
+    End Sub
+
+    ''' <summary>
+    ''' zerteilt einen String, der folgendes Format hat: breadcrumb#elemName#lfdnr in seine Bestandteile 
+    ''' </summary>
+    ''' <param name="fullname"></param>
+    ''' <param name="elemName"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <param name="lfdNr"></param>
+    ''' <remarks></remarks>
+    Public Sub splitBreadCrumbFullnameTo3(ByVal fullname As String, ByRef elemName As String, ByRef breadcrumb As String, ByRef lfdNr As Integer)
+        Dim tmpstr() As String
+        Dim tmpBC As String = ""
+        Dim anzahl As Integer
+
+        tmpstr = fullname.Split(New Char() {CChar("#")}, 20)
+        anzahl = tmpstr.Length
+        If tmpstr.Length = 1 Then
+            elemName = tmpstr(0)
+            breadcrumb = ""
+            lfdNr = 1
+        ElseIf tmpstr.Length > 1 Then
+            lfdNr = CInt(tmpstr(anzahl - 1))
+            For i As Integer = 0 To anzahl - 2
+                If i = 0 Then
+                    tmpBC = tmpstr(i)
+                Else
+                    tmpBC = tmpBC & "#" & tmpstr(i)
+                End If
+            Next
+            Call splitHryFullnameTo2(tmpBC, elemName, breadcrumb)
+        Else
+            elemName = "?"
+            breadcrumb = ""
+            lfdNr = 0
+        End If
 
     End Sub
 

@@ -1569,6 +1569,7 @@ Imports System.Drawing
         Dim nameFormular As New frmNameSelection
         Dim hryFormular As New frmHierarchySelection
         Dim awinSelection As Excel.ShapeRange
+        Dim returnValue As DialogResult
 
         Call projektTafelInit()
 
@@ -1578,7 +1579,67 @@ Imports System.Drawing
 
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
         'If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
-        If ShowProjekte.Count > 0 Then
+
+        If control.Id = "Pt6G3M1B1" Then
+            ' normale, volle Auswahl des filters ; Namens-Definition
+
+            With nameFormular
+
+                .Text = "Datenbank Filter definieren"
+                .OKButton.Text = "Speichern"
+                .menuOption = PTmenue.filterdefinieren
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .rdbRoles.Enabled = True
+                .rdbCosts.Enabled = True
+
+                .rdbBU.Visible = True
+                .pictureBU.Visible = True
+
+                .rdbTyp.Visible = True
+                .pictureTyp.Visible = True
+
+                .einstellungen.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                returnValue = .ShowDialog
+
+            End With
+
+        ElseIf control.Id = "Pt6G3M1B2" Then
+
+            awinSettings.useHierarchy = True
+
+            With hryFormular
+
+                .Text = "Datenbank Filter definieren"
+                .OKButton.Text = "Speichern"
+                .menuOption = PTmenue.filterdefinieren
+                .statusLabel.Text = ""
+                .statusLabel.Visible = True
+
+                .AbbrButton.Visible = False
+                .AbbrButton.Enabled = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                returnValue = .ShowDialog
+            End With
+
+
+        ElseIf ShowProjekte.Count > 0 Then
 
             If awinSettings.isHryNameFrmActive Then
                 Call MsgBox("es kann nur ein Fenster zur Hierarchie- bzw. Namenauswahl geöffnet sein ...")
@@ -1740,7 +1801,7 @@ Imports System.Drawing
 
                         '.Show()
                         ' bei Reports mit der Background Worker Behandlung 
-                        .ShowDialog()
+                        returnValue = .ShowDialog()
                     End With
 
                     appInstance.ScreenUpdating = True
@@ -1773,8 +1834,7 @@ Imports System.Drawing
 
                     ' bei Verwnedung Background Worker muss Modal erfolgen 
                     '.Show()
-                    .ShowDialog()
-                    'returnValue = .ShowDialog
+                    returnValue = .ShowDialog
                 End With
 
                 appInstance.ScreenUpdating = True
@@ -1809,8 +1869,7 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = True
                     .labelPPTVorlage.Visible = True
                     ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
-                    .ShowDialog()
-                    'returnValue = .ShowDialog
+                    returnValue = .ShowDialog
                 End With
 
                 appInstance.ScreenUpdating = True
@@ -1842,8 +1901,7 @@ Imports System.Drawing
                     .einstellungen.Visible = True
 
                     ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
-                    .ShowDialog()
-                    'returnValue = .ShowDialog
+                    returnValue = .ShowDialog
                 End With
 
                 appInstance.ScreenUpdating = True
@@ -1876,8 +1934,7 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
 
-                    .ShowDialog()
-                    'returnValue = .ShowDialog
+                    returnValue = .ShowDialog
                 End With
 
                 appInstance.ScreenUpdating = True
@@ -1910,75 +1967,12 @@ Imports System.Drawing
                     'returnValue = .ShowDialog
                 End With
 
-            ElseIf control.Id = "Pt6G3M1B1" Then
-                ' normale, volle Auswahl des filters ; Namens-Definition
-
-                With nameFormular
-
-                    .Text = "Datenbank Filter definieren"
-                    .OKButton.Text = "Speichern"
-                    .menuOption = PTmenue.filterdefinieren
-                    .statusLabel.Text = ""
-                    .statusLabel.Visible = True
-
-                    .rdbRoles.Enabled = True
-                    .rdbCosts.Enabled = True
-
-                    .rdbBU.Visible = True
-                    .pictureBU.Visible = True
-
-                    .rdbTyp.Visible = True
-                    .pictureTyp.Visible = True
-
-                    .einstellungen.Visible = False
-
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
-
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
-
-                    .Show()
-                    'returnValue = .ShowDialog
-
-                End With
-
-            ElseIf control.Id = "Pt6G3M1B2" Then
-                ' Auswahl über Hierarchie, Datenbank Filter nur Filter für Vorgänge und Meilensteine 
-                awinSettings.useHierarchy = True
-                With hryFormular
-
-                    .Text = "Datenbank Filter definieren"
-                    .OKButton.Text = "Speichern"
-                    .menuOption = PTmenue.filterdefinieren
-                    .statusLabel.Text = ""
-                    .statusLabel.Visible = True
-
-                    .AbbrButton.Visible = False
-                    .AbbrButton.Enabled = False
-
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
-
-                    ' Reports
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
-                    .einstellungen.Visible = False
-
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
-                End With
-
-            Else
-
-
             End If
 
         Else
             Call MsgBox("Es sind keine Projekte sichtbar!  ")
         End If
-        
+
 
 
         ' oben ist es de-aktiviert 

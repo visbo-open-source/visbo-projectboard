@@ -488,7 +488,6 @@
             For i As Integer = 1 To namenListe.Count
 
                 itemName = CStr(namenListe.Item(i))
-                Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb)
 
                 If istElemID(itemName) Then
 
@@ -497,6 +496,8 @@
                     End If
 
                 Else
+                    Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb)
+
                     If namesAreMilestones Then
                         milestoneIndices = Me.hierarchy.getMilestoneIndices(itemName, itemBreadcrumb)
 

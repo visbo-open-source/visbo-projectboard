@@ -1974,7 +1974,8 @@ Public Module awinGeneralModules
 
                     rng = .Range("Phasen_des_Projekts")
 
-                    If CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value) <> hproj.name Then
+                    If Not (CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value) = hproj.name Or _
+                           CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value) = ".") Then
 
                         ' ProjektPhase wird hinzugefügt
                         cphase = New clsPhase(parent:=hproj)
@@ -2001,8 +2002,11 @@ Public Module awinGeneralModules
                         zeile = zeile + 1
 
                         ' nachsehen, ob Phase angegeben oder Rolle/Kosten
-                        If Len(CType(zelle.Value, String)) > 1 Then
+                        If Len(CType(zelle.Value, String)) > 0 Then
                             phaseName = CType(zelle.Value, String).Trim
+                            If phaseName = "." Then
+                                phaseName = rootPhaseName
+                            End If
                         Else
                             phaseName = ""
                         End If
@@ -2083,7 +2087,7 @@ Public Module awinGeneralModules
                                 End If
 
                                 With cphase
-                                    If phaseName = hproj.name Then
+                                    If phaseName = hproj.name Or phaseName = rootPhaseName Then
                                         .nameID = rootPhaseName
                                         ' nichts tun, die erste Phase hat dann schon ihren richtigen Namen 
                                     Else
@@ -2329,7 +2333,7 @@ Public Module awinGeneralModules
                                     isPhase = True
                                     isMeilenstein = False
                                 Else
-                                    If objectName = hproj.name Then
+                                    If objectName = "." Or objectName = hproj.name Then
                                         isPhase = True
                                         isMeilenstein = False
                                     Else
@@ -2384,7 +2388,7 @@ Public Module awinGeneralModules
                                         'If endeDate = Date.MinValue Then
                                         '    Throw New Exception("für den Meilenstein '" & objectName & "'" & vbLf & "wurde im Projekt '" & hproj.name & "' kein Datum eingetragen!")
                                         'End If
-                                        If bezug = hproj.name Then
+                                        If bezug = "." Or bezug = hproj.name Then
                                             cphase = hproj.getPhaseByID(rootPhaseName)
                                         Else
                                             cphase = hproj.getPhase(bezug)
@@ -2412,7 +2416,7 @@ Public Module awinGeneralModules
                                     If Not PhaseDefinitions.Contains(objectName) Then
 
                                         ' jetzt noch prüfen, ob es sich um die Phase (1) handelt, dann kann sie ja nicht in der PhaseDefinitions enthalten sein  ..
-                                        If hproj.name <> objectName Then
+                                        If Not (hproj.name = objectName Or objectName = ".") Then
                                             Throw New Exception("Phase '" & objectName & "' ist nicht definiert!" & vbLf &
                                                            "Bitte löschen Sie diese Phase aus '" & hproj.name & "'.xlsx, Tabellenblatt 'Termine'")
 
@@ -2424,7 +2428,7 @@ Public Module awinGeneralModules
                                     ' Prüfen, ob diese Phase bereits in hproj über das ressourcen Sheet angelegt wurde 
                                     ' tk: dieser Befehl holt jetzt die erste Phase mit deisem NAmen, berücksichtigt aber noch nicht die Position ind er Hierarchie; 
                                     ' das muss noch ergänzt werden 
-                                    If hproj.name = objectName Then
+                                    If hproj.name = objectName Or objectName = "." Then
                                         cphase = hproj.getPhaseByID(rootPhaseName)
                                     Else
                                         cphase = hproj.getPhase(objectName)
@@ -4463,10 +4467,16 @@ Public Module awinGeneralModules
     ''' <param name="phaseList"></param>
     ''' <param name="milestoneList"></param>
     ''' <remarks></remarks>
-    Public Sub exportSelectionToExcel(ByVal phaseList As SortedList(Of Double, String), _
-                                            ByVal milestoneList As SortedList(Of Double, String))
+    Public Sub exportSelectionToExcel(ByVal phaseList As SortedList(Of String, String), _
+                                            ByVal milestoneList As SortedList(Of String, String))
 
         Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim elemName As String = ""
+        Dim breadcrumb As String = ""
+        Dim lfdNr As Integer = 1
+        Dim fullName As String
+        Dim ext As String = ""
+
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
@@ -4508,28 +4518,60 @@ Public Module awinGeneralModules
             CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "Projekt-Typ"
 
             spalte = spalte + 2
-            Dim phaseName As String
 
 
-            ' hier muss noch orrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses NAmens gibt, so 
+            ' hier muss noch orrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses Namens und Breadcrumbs gibt, so 
             ' muss das in dieser Liste auch vorgesehen werden 
             For ix As Integer = 1 To phaseList.Count
 
                 Try
-                    phaseName = CStr(phaseList.ElementAt(ix - 1).Value)
+                    fullName = CStr(phaseList.ElementAt(ix - 1).Value)
                 Catch ex As Exception
-                    phaseName = ""
+                    fullName = ""
                 End Try
 
-                CType(.Cells(zeile, spalte + ix), Excel.Range).Value = phaseName
+                Call splitBreadCrumbFullnameTo3(fullName, elemName, breadcrumb, lfdNr)
+
+                If lfdNr > 1 Then
+                    ext = " " & lfdNr.ToString
+                Else
+                    ext = ""
+                End If
+                If breadcrumb = "" Then
+                    CType(.Cells(zeile, spalte + ix), Excel.Range).Value = elemName & ext
+                Else
+                    CType(.Cells(zeile, spalte + ix), Excel.Range).Value = breadcrumb.Replace("#", "-") & elemName & ext
+                End If
+
             Next
 
             spalte = spalte + phaseList.Count
 
             ' hier muss noch orrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses NAmens gibt, so 
             ' muss das in dieser Liste auch vorgesehen werden 
+
             For ix As Integer = 1 To milestoneList.Count
-                CType(.Cells(zeile, spalte + ix), Excel.Range).Value = CStr(milestoneList.ElementAt(ix - 1).Value)
+
+                Try
+                    fullName = CStr(milestoneList.ElementAt(ix - 1).Value)
+                Catch ex As Exception
+                    fullName = ""
+                End Try
+
+                Call splitBreadCrumbFullnameTo3(fullName, elemName, breadcrumb, lfdNr)
+
+                If lfdNr > 1 Then
+                    ext = " " & lfdNr.ToString
+                Else
+                    ext = ""
+                End If
+                If breadcrumb = "" Then
+                    CType(.Cells(zeile, spalte + ix), Excel.Range).Value = elemName & ext
+                Else
+                    CType(.Cells(zeile, spalte + ix), Excel.Range).Value = breadcrumb.Replace("#", "-") & elemName & ext
+                End If
+
+
             Next
 
 
@@ -4581,7 +4623,7 @@ Public Module awinGeneralModules
                 Catch ex As Exception
                     CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
                 End Try
-                
+
 
                 ' Name schreiben 
                 CType(.Cells(zeile, spalte + 1), Excel.Range).Value = kvp.Value.name
@@ -4596,110 +4638,107 @@ Public Module awinGeneralModules
                 Catch ex As Exception
                     CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "-"
                 End Try
-                
+
 
                 ' Phasen Information schreiben
 
-                Dim pName As String
                 Dim cphase As clsPhase
                 spalte = spalte + 3
 
                 For ix As Integer = 1 To phaseList.Count
 
-                    pName = CStr(phaseList.ElementAt(ix - 1).Value)
-
-                    Dim breadcrumb As String = ""
-                    Dim phaseIndices() As Integer = kvp.Value.hierarchy.getPhaseIndices(pName, breadcrumb)
-
-                    For px As Integer = 0 To phaseIndices.Length - 1
-
-                        cphase = kvp.Value.getPhase(phaseIndices(px))
-
-                        If Not IsNothing(cphase) Then
-                            Try
-                                startDate = cphase.getStartDate
-                                endDate = cphase.getEndDate
-
-                                atleastOne = True
-
-                                If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
-                                    earliestDate = startDate
-                                    minCol = spalte
-                                End If
-
-                                If DateDiff(DateInterval.Day, latestDate, endDate) > 0 Then
-                                    latestDate = endDate
-                                    maxCol = spalte
-                                End If
-
-                                CType(.Cells(zeile, spalte), Excel.Range).Value = startDate.ToShortDateString & " - " & endDate.ToShortDateString
-
-                            Catch ex As Exception
-                                CType(.Cells(zeile, spalte), Excel.Range).Value = "?"
-
-                            End Try
-                        Else
-
-                            CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+                    fullName = CStr(phaseList.ElementAt(ix - 1).Value)
+                    elemName = ""
+                    breadcrumb = ""
+                    lfdNr = 0
+                    Call splitBreadCrumbFullnameTo3(fullName, elemName, breadcrumb, lfdNr)
 
 
-                        End If
+                    cphase = kvp.Value.getPhase(elemName, breadcrumb, lfdNr)
 
-                        spalte = spalte + 1
+                    If Not IsNothing(cphase) Then
+                        Try
+                            startDate = cphase.getStartDate
+                            endDate = cphase.getEndDate
 
-                    Next
+                            atleastOne = True
+
+                            If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
+                                earliestDate = startDate
+                                minCol = spalte
+                            End If
+
+                            If DateDiff(DateInterval.Day, latestDate, endDate) > 0 Then
+                                latestDate = endDate
+                                maxCol = spalte
+                            End If
+
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = startDate.ToShortDateString & " - " & endDate.ToShortDateString
+
+                        Catch ex As Exception
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = "?"
+
+                        End Try
+                    Else
+
+                        CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+
+
+                    End If
+
+                    spalte = spalte + 1
+
+
 
                 Next
 
 
                 ' Meilensteine schreiben 
 
-                Dim msName As String
                 Dim milestone As clsMeilenstein = Nothing
 
                 For ix As Integer = 1 To milestoneList.Count
 
-                    msName = CStr(milestoneList.ElementAt(ix - 1).Value)
-                    Dim breadcrumb As String = ""
-                    Dim milestoneIndices(,) As Integer = kvp.Value.hierarchy.getMilestoneIndices(msName, breadcrumb)
-                    ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
+                    fullName = CStr(milestoneList.ElementAt(ix - 1).Value)
+                    elemName = ""
+                    breadcrumb = ""
+                    lfdNr = 0
+                    Call splitBreadCrumbFullnameTo3(fullName, elemName, breadcrumb, lfdNr)
 
-                    For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+                    milestone = kvp.Value.getMilestone(elemName, breadcrumb, lfdNr)
 
-                        milestone = kvp.Value.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+                    If Not IsNothing(milestone) Then
+                        Try
+                            startDate = milestone.getDate
 
-                        If Not IsNothing(milestone) Then
-                            Try
-                                startDate = milestone.getDate
+                            atleastOne = True
 
-                                atleastOne = True
+                            If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
+                                earliestDate = startDate
+                                minCol = spalte
+                            End If
 
-                                If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
-                                    earliestDate = startDate
-                                    minCol = spalte
-                                End If
+                            If DateDiff(DateInterval.Day, latestDate, startDate) > 0 Then
+                                latestDate = startDate
+                                maxCol = spalte
+                            End If
 
-                                If DateDiff(DateInterval.Day, latestDate, startDate) > 0 Then
-                                    latestDate = startDate
-                                    maxCol = spalte
-                                End If
-
-                                CType(.Cells(zeile, spalte), Excel.Range).Value = startDate
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = startDate
 
 
-                            Catch ex As Exception
-                                CType(.Cells(zeile, spalte), Excel.Range).Value = "?"
-                                CType(.Cells(zeile, spalte), Excel.Range).Value = "?"
-                            End Try
-                        Else
+                        Catch ex As Exception
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = "?"
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = "?"
+                        End Try
+                    Else
 
-                            CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
-                            CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+                        CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+                        CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
 
-                        End If
+                    End If
 
-                        spalte = spalte + 1
-                    Next
+                    spalte = spalte + 1
+
                 Next
 
                 Dim dauerT As Long
@@ -5048,8 +5087,8 @@ Public Module awinGeneralModules
     Friend Sub createExcelExportFromSelection(ByVal filterName As String)
 
         Dim earliestDate As Date, latestDate As Date
-        Dim phaseList As New SortedList(Of Double, String)
-        Dim milestonelist As New SortedList(Of Double, String)
+        Dim phaseList As New SortedList(Of String, String)
+        Dim milestonelist As New SortedList(Of String, String)
 
         Dim selphases As New Collection
         Dim selMilestones As New Collection
@@ -5070,22 +5109,24 @@ Public Module awinGeneralModules
         Dim currentIX As Integer
         Dim hproj As clsProjekt
         Dim pName As String, msName As String
-        Dim cphase As clsPhase, milestone As clsMeilenstein
+
         Dim anzPlanobjekte As Integer = selphases.Count + selMilestones.Count
         Dim bestproj As String = ""
         Dim startFaktor As Double = 1.0
         Dim durationFaktor As Double = 0.000001
         Dim correctFaktor As Double = 0.00000001
-        Dim schluessel As Double
         Dim korrFaktor As Double
         Dim refLaenge As Integer
+        Dim fullName As String = ""
+        Dim breadcrumb As String = ""
+        Dim listName As String = ""
+
+        ' die selphases und selMilestones enthalten jetzt 
 
         currentIX = 1
-        Do While phaseList.Count + milestonelist.Count < selphases.Count + selMilestones.Count And _
-                 currentIX <= anzahlProjekte
+        Do While currentIX <= anzahlProjekte
 
             hproj = ShowProjekte.getProject(currentIX)
-            Dim anzFoundElem As Integer = 0
 
             If currentIX = 1 Then
                 korrFaktor = 1.0
@@ -5099,72 +5140,66 @@ Public Module awinGeneralModules
 
             End If
 
-            If phaseList.Count < selphases.Count Then
-                For Each pObject As Object In selphases
+            ' es wird einfach der Reihenfolge nach eingetragen
+            ' eine vorherige Überprüfung, welche Meilensteine grundsätzlich vorne stehen, wird nicht mehr gemacht 
 
-                    pName = CStr(pObject)
-                    If phaseList.ContainsValue(pName) Then
-                        ' sie ist schon eingeordnet und es muss nichts mehr gemacht werden 
+            For Each pObject As Object In selphases
+
+                pName = ""
+                breadcrumb = ""
+                fullName = CStr(pObject)
+                Call splitHryFullnameTo2(fullName, pName, breadcrumb)
+
+                ' jetzt muss eine Schleife gemacht werden über alle Vorkommen dieses Namens
+                Dim anzahlElements As Integer = hproj.hierarchy.getPhaseIndices(pName, breadcrumb).Length
+
+                For ce As Integer = 1 To anzahlElements
+
+                    listName = fullName & "#" & ce.ToString("00#")
+
+                    If phaseList.ContainsKey(listName) Then
+                        ' nichts tun, dann ist sie schon eingeordnet 
                     Else
-                        cphase = hproj.getPhase(pName)
 
-                        If Not IsNothing(cphase) Then
-
-                            anzFoundElem = anzFoundElem + 1
-                            schluessel = (cphase.startOffsetinDays * startFaktor + _
-                                            cphase.dauerInDays * durationFaktor) * korrFaktor
-
-                            Dim ok As Boolean = False
-                            Do Until ok
-
-                                If phaseList.ContainsKey(schluessel) Then
-                                    schluessel = schluessel + correctFaktor
-                                Else
-                                    phaseList.Add(schluessel, pName)
-                                    ok = True
-                                End If
-
-                            Loop
+                        ' schlüssel kann gar nicht mehrfach vorkommen) 
+                        phaseList.Add(listName, listName)
 
 
-                        End If
+                    End If
+                Next
+            Next
+
+
+            For Each pObject As Object In selMilestones
+
+                msName = ""
+                breadcrumb = ""
+                fullName = CStr(pObject)
+                Call splitHryFullnameTo2(fullName, msName, breadcrumb)
+
+                ' jetzt muss eine Schleife gemacht werden über alle Vorkommen dieses Namens
+                Dim anzahlElements As Integer = hproj.hierarchy.getMilestoneIndices(msName, breadcrumb).Length
+
+
+                For ce As Integer = 1 To anzahlElements
+
+                    listName = fullName & "#" & ce.ToString("00#")
+
+                    If milestonelist.ContainsKey(listName) Then
+                        ' nichts tun, dann ist sie schon eingeordnet 
+                    Else
+
+                        ' schlüssel kann gar nicht mehrfach vorkommen) 
+                        milestonelist.Add(listName, listName)
+
                     End If
 
                 Next
-            End If
 
+                ' alt 
 
-            If milestonelist.Count < selMilestones.Count Then
-                For Each pObject As Object In selMilestones
-                    msName = CStr(pObject)
-                    If milestonelist.ContainsValue(msName) Then
-                        ' er ist schon eingeordnet und es muss nichts mehr gemacht werden 
-                    Else
-                        milestone = hproj.getMilestone(msName)
+            Next
 
-                        If Not IsNothing(milestone) Then
-
-                            anzFoundElem = anzFoundElem + 1
-                            schluessel = DateDiff(DateInterval.Day, hproj.startDate, milestone.getDate) * korrFaktor
-
-                            Dim ok As Boolean = False
-                            Do Until ok
-
-                                If milestonelist.ContainsKey(schluessel) Then
-                                    schluessel = schluessel + correctFaktor
-                                Else
-                                    milestonelist.Add(schluessel, msName)
-                                    ok = True
-                                End If
-
-                            Loop
-
-
-                        End If
-                    End If
-
-                Next
-            End If
 
             currentIX = currentIX + 1
 

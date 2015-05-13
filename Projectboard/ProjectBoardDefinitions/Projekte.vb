@@ -10132,6 +10132,11 @@ Public Module Projekte
         Dim worksheetShapes As Excel.Shapes
         Dim chtobj As Excel.ChartObject
 
+        ' sicherstellen, dass projectshape auch etwas enthält ... 
+        If IsNothing(projectShape) Then
+            Exit Sub
+        End If
+
         Try
 
             worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
@@ -10728,8 +10733,13 @@ Public Module Projekte
             End With
         End If
 
-        ' jetzt müssen die Charts, die vom Projekt evtl überdeckt werden in den Vordergrund geholt werden 
-        Call bringChartsToFront(projectShape)
+        If drawPhaseList.Count = 0 And drawMilestoneList.Count = 0 Then
+            ' jetzt müssen die Charts, die vom Projekt evtl überdeckt werden in den Vordergrund geholt werden 
+            ' das muss jedoch nur gemacht werden, wenn nicht vorher schon zeichnePhasenInProjekt oder zeichneMilestonesInProjekt aufgerufen wurde 
+            Call bringChartsToFront(projectShape)
+        End If
+        
+
 
         appInstance.EnableEvents = formerEE
         enableOnUpdate = True

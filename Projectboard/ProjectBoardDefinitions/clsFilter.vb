@@ -236,6 +236,7 @@
             Dim tmpMilestone As clsMeilenstein
             Dim tmpPhase As clsPhase
             Dim ix As Integer
+            Dim fullName As String
 
             If Not IsNothing(Me) Then
 
@@ -270,6 +271,8 @@
 
 
                 stillOK = containsBU
+
+                ' überprüfe Typ
 
                 If stillOK Then
                     If filterTyp.Count = 0 Then
@@ -320,8 +323,13 @@
 
                         While ix <= filterMilestone.Count And Not containsMS
 
-                            Dim curMsName As String = CStr(filterMilestone.Item(ix))
+                            fullName = CStr(filterMilestone.Item(ix))
+                            Dim curMsName As String = ""
                             Dim breadcrumb As String = ""
+
+                            ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
+                            Call splitHryFullnameTo2(fullName, curMsName, breadcrumb)
+
                             Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(curMsName, breadcrumb)
                             ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
 
@@ -370,8 +378,13 @@
 
                             While ix <= filterPhase.Count And Not containsPH
 
-                                Dim pName As String = CStr(filterPhase.Item(ix))
+                                fullName = CStr(filterPhase.Item(ix))
+                                Dim pName As String = ""
                                 Dim breadcrumb As String = ""
+
+                                ' hier wird der Eintrag in filterMilestone aufgesplittet in curMsName und breadcrumb) 
+                                Call splitHryFullnameTo2(fullName, pName, breadcrumb)
+
                                 Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(pName, breadcrumb)
 
                                 For px As Integer = 0 To phaseIndices.Length - 1

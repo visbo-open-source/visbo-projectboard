@@ -54,9 +54,19 @@ Public Class frmHierarchySelection
 
         hry = New clsHierarchy
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-            Call addToSuperHierarchy(hry, kvp.Value)
-        Next
+        If menuOption = PTmenue.filterdefinieren Then
+            For Each kvp As KeyValuePair(Of String, clsProjektvorlage) In Projektvorlagen.Liste
+                Dim hproj As New clsProjekt
+                kvp.Value.copyAttrTo(hproj)
+                kvp.Value.copyTo(hproj)
+                Call addToSuperHierarchy(hry, hproj)
+            Next
+        Else
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                Call addToSuperHierarchy(hry, kvp.Value)
+            Next
+        End If
+        
 
         Call buildHryTreeView()
 
