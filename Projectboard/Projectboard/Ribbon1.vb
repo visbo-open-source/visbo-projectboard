@@ -1711,6 +1711,7 @@ Imports System.Drawing
                     .statusLabel.Text = ""
                     .statusLabel.Visible = True
 
+
                     .rdbBU.Visible = False
                     .pictureBU.Visible = False
                     .rdbTyp.Visible = False
@@ -1745,6 +1746,7 @@ Imports System.Drawing
                     .statusLabel.Text = ""
                     .statusLabel.Visible = True
 
+
                     .chkbxOneChart.Checked = False
                     .chkbxOneChart.Visible = True
 
@@ -1757,6 +1759,7 @@ Imports System.Drawing
                     .Show()
                     'returnValue = .ShowDialog
                 End With
+
 
             ElseIf control.Id = "PT1G1M1B1" Then
                 ' Namen auswählen, Einzelprojekt Berichte 
@@ -2430,6 +2433,8 @@ Imports System.Drawing
             ' '' '' ''Dim sav_mppFullyContained As Boolean = awinSettings.mppFullyContained
             ' '' '' ''Dim sav_mppSortiertDauer As Boolean = awinSettings.mppSortiertDauer
             ' '' '' ''Dim sav_mppOnePage As Boolean = awinSettings.mppOnePage
+            Dim sav_mppShowAllIfOne As Boolean = awinSettings.mppShowAllIfOne
+            awinSettings.mppShowAllIfOne = True
             Dim sav_mppExtendedMode As Boolean = awinSettings.mppExtendedMode
             awinSettings.mppExtendedMode = True
             ' Settings für Einzelprojekt-Reports
@@ -2457,6 +2462,7 @@ Imports System.Drawing
             ' '' ''awinSettings.mppOnePage = sav_mppOnePage
 
             awinSettings.mppExtendedMode = sav_mppExtendedMode
+            awinSettings.mppShowAllIfOne = sav_mppShowAllIfOne
 
             appInstance.EnableEvents = True
             appInstance.ScreenUpdating = True
