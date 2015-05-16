@@ -10,7 +10,20 @@ Imports System.Windows
 
 Public Module awinGeneralModules
 
-
+    Private Enum ptInventurSpalten
+        Name = 0
+        Vorlage = 1
+        Start = 2
+        Ende = 3
+        Dauer = 4
+        Budget = 5
+        Risiko = 6
+        Strategie = 7
+        Volumen = 8
+        Komplexitaet = 9
+        Businessunit = 10
+        Beschreibung = 11
+    End Enum
 
 
     ''' <summary>
@@ -1303,8 +1316,7 @@ Public Module awinGeneralModules
         Dim farbKennung As Integer
         Dim responsible As String
 
-
-
+        
         ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
 
         zeile = 2
@@ -1326,6 +1338,8 @@ Public Module awinGeneralModules
                 Catch ex As Exception
                     projektFarbe = CType(activeWSListe.Cells(2, 1), Excel.Range).Interior.ColorIndex
                 End Try
+
+                ' hier werden jetzt die Columns bestimmt 
 
 
                 lastRow = System.Math.Max(CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row, _
@@ -1654,22 +1668,26 @@ Public Module awinGeneralModules
 
     Public Sub awinImportProjektInventur(ByRef myCollection As Collection)
         Dim zeile As Integer, spalte As Integer
-        Dim pName As String
-        Dim vName As String
+        Dim pName As String = ""
+        Dim vName As String = ""
         Dim start As Date
         Dim ende As Date
         Dim budget As Double
+        Dim dauer As Integer = 0
         Dim sfit As Double, risk As Double
         Dim volume As Double, complexity As Double
-        Dim description As String
-        Dim businessUnit As String
+        Dim description As String = ""
+        Dim businessUnit As String = ""
         Dim lastRow As Integer
         'Dim startSpalte As Integer
-        Dim vglName As String
+        Dim vglName As String = ""
         Dim hproj As clsProjekt
         Dim vproj As clsProjektvorlage
         Dim geleseneProjekte As Integer
         Dim ProjektdauerIndays As Integer = 0
+        Dim ok As Boolean = False
+
+        Dim firstZeile As Excel.Range
 
         ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
 
@@ -1677,15 +1695,46 @@ Public Module awinGeneralModules
         spalte = 1
         geleseneProjekte = 0
 
+        Dim suchstr(11) As String
+        suchstr(ptInventurSpalten.Name) = "Name"
+        suchstr(ptInventurSpalten.Vorlage) = "Vorlage"
+        suchstr(ptInventurSpalten.Start) = "Start-Datum"
+        suchstr(ptInventurSpalten.Ende) = "Ende-Datum"
+        suchstr(ptInventurSpalten.Dauer) = "Dauer [Tage]"
+        suchstr(ptInventurSpalten.Budget) = "Budget [T€]"
+        suchstr(ptInventurSpalten.Risiko) = "Risiko"
+        suchstr(ptInventurSpalten.Strategie) = "Strategie"
+        suchstr(ptInventurSpalten.Volumen) = "Volumen"
+        suchstr(ptInventurSpalten.Komplexitaet) = "Komplexität"
+        suchstr(ptInventurSpalten.Businessunit) = "Business Unit"
+        suchstr(ptInventurSpalten.Beschreibung) = "Beschreibung"
+
+
+        Dim inputColumns(11) As Integer
+
+
 
         Try
             Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Liste"), _
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
             With activeWSListe
 
+                firstZeile = CType(.Rows(1), Excel.Range)
+
+                ' jetzt werden die Spalten bestimmt 
+                Try
+                    For i As Integer = 0 To 11
+                        inputColumns(i) = firstZeile.Find(What:=suchstr(i)).Column
+                    Next
+                Catch ex As Exception
+
+                End Try
+
+
                 lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
                 While zeile <= lastRow
+                    ok = False
 
                     pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
                     vName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
@@ -1693,50 +1742,105 @@ Public Module awinGeneralModules
                     If Projektvorlagen.Liste.ContainsKey(vName) Then
 
                         vproj = Projektvorlagen.getProject(vName)
+                        Try
 
-                        start = CDate(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        'ende = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        budget = CDbl(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        risk = CDbl(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        sfit = CDbl(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        volume = CDbl(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        complexity = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        businessUnit = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        description = CStr(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        'vglName = pName.Trim & "#" & ""
-                        vglName = calcProjektKey(pName.Trim, "")
+                            start = CDate(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            ende = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            dauer = CInt(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            budget = CDbl(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            risk = CDbl(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            sfit = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            volume = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            complexity = CDbl(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            businessUnit = CStr(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            description = CStr(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            'vglName = pName.Trim & "#" & ""
+                            vglName = calcProjektKey(pName.Trim, "")
 
 
-                        If getColumnOfDate(start) >= 1 Then
-                            ProjektdauerIndays = vproj.dauerInDays
-                            ende = calcDatum(start, vproj.dauerInDays)
+                            If DateDiff(DateInterval.Day, StartofCalendar, start) >= 0 Then
 
-                            If AlleProjekte.Containskey(vglName) Then
-                                ' nichts tun ...
-                                Call MsgBox("Projekt aus Inventur Liste existiert bereits - keine Neuanlage")
-                            Else
-                                'Projekt anlegen ,Verschiebung um 
-                                hproj = New clsProjekt(start, start.AddMonths(-3), start.AddMonths(3))
-
-                                Call erstelleInventurProjekt(hproj, pName, vName, start, ende, budget, zeile, sfit, risk, _
-                                                             volume, complexity, businessUnit, description)
-                                If Not hproj Is Nothing Then
-                                    Try
-                                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                                        myCollection.Add(calcProjektKey(hproj))
-                                    Catch ex As Exception
-
-                                    End Try
-
+                                If DateDiff(DateInterval.Day, start, ende) > 0 Then
+                                    ' nichts tun , Ende-Datum ist ein gültiges Datum
+                                    ok = True
+                                ElseIf DateDiff(DateInterval.Day, StartofCalendar, ende) >= 0 Then
+                                    ' auch Ende ist ein gültiges Datum , liegt nur vor Start
+                                    ' also vertauschen der beiden 
+                                    Dim tmpDate As Date = ende
+                                    ende = start
+                                    start = tmpDate
+                                    ok = True
+                                Else
+                                    ' Ende Datum wird anhand der Laufzeit der Vorlage oder der Dauer berechnet
+                                    If dauer > 0 Then
+                                        ProjektdauerIndays = dauer
+                                    Else
+                                        ProjektdauerIndays = vproj.dauerInDays
+                                    End If
+                                    ende = calcDatum(start, ProjektdauerIndays)
+                                    ok = True
                                 End If
 
+                            ElseIf DateDiff(DateInterval.Day, StartofCalendar, ende) >= 0 Then
+                                ' hier ist Start kein gültiges Datum innerhalb der Projekt-Tafel 
+                                ' Start Datum wird anhand der Laufzeit der Vorlage berechnet
+                                If dauer > 0 Then
+                                    ProjektdauerIndays = -1 * dauer
+                                Else
+                                    ProjektdauerIndays = -1 * vproj.dauerInDays
+                                End If
+
+                                start = calcDatum(ende, ProjektdauerIndays)
+
+                                If DateDiff(DateInterval.Day, StartofCalendar, start) >= 0 Then
+                                    ' Start ist ein korrektes Datum 
+                                    ok = True
+                                Else
+                                    CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "Start liegt vor Kalender-Start "
+                                    ok = False
+                                End If
+
+                            Else
+                                CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = "ungültiges Start- und Ende-Datum"
+                                ok = False
                             End If
-                        End If
+
+                        Catch ex As Exception
+                            CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
+                            ok = False
+                        End Try
+
 
                     Else
                         CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
-
+                        ok = False
                     End If
+
+                    ' jetzt die Aktion durchführen, wenn alles ok 
+                    If ok Then
+                        If AlleProjekte.Containskey(vglName) Then
+                            ' nichts tun ...
+                            Call MsgBox("Projekt aus Inventur Liste existiert bereits - keine Neuanlage")
+                        Else
+                            'Projekt anlegen ,Verschiebung um 
+                            hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
+
+                            Call erstelleInventurProjekt(hproj, pName, vName, start, ende, budget, zeile, sfit, risk, _
+                                                         volume, complexity, businessUnit, description)
+                            If Not hproj Is Nothing Then
+                                Try
+                                    ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                                    myCollection.Add(calcProjektKey(hproj))
+                                Catch ex As Exception
+
+                                End Try
+
+                            End If
+
+                        End If
+                    End If
+
+
 
                     zeile = zeile + 1
 
@@ -4760,15 +4864,20 @@ Public Module awinGeneralModules
                 End Try
 
 
-                CType(.Cells(zeile, spalte + 1), Excel.Range).Value = dauerT
-                CType(.Cells(zeile, spalte + 2), Excel.Range).Value = dauerM
+                CType(.Cells(zeile, spalte), Excel.Range).Value = dauerT
+                CType(.Cells(zeile, spalte + 1), Excel.Range).Value = dauerM
 
                 ' jetzt einfärben, welche Daten zu der Dauer geführt haben 
-                If minCol = maxCol Then
+                If minCol = maxCol And minCol > 0 Then
                     CType(.Cells(zeile, minCol), Excel.Range).Interior.Color = awinSettings.AmpelGruen
                 Else
-                    CType(.Cells(zeile, minCol), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
-                    CType(.Cells(zeile, maxCol), Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                    If minCol > 0 Then
+                        CType(.Cells(zeile, minCol), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                    End If
+                    If maxCol > 0 Then
+                        CType(.Cells(zeile, maxCol), Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                    End If
+
                 End If
 
 
@@ -5178,7 +5287,7 @@ Public Module awinGeneralModules
                 Call splitHryFullnameTo2(fullName, msName, breadcrumb)
 
                 ' jetzt muss eine Schleife gemacht werden über alle Vorkommen dieses Namens
-                Dim anzahlElements As Integer = hproj.hierarchy.getMilestoneIndices(msName, breadcrumb).Length
+                Dim anzahlElements As Integer = CInt(hproj.hierarchy.getMilestoneIndices(msName, breadcrumb).Length / 2)
 
 
                 For ce As Integer = 1 To anzahlElements

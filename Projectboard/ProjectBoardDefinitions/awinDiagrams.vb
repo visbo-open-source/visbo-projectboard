@@ -3996,7 +3996,7 @@ Public Module awinDiagrams
                         Case 8 ' Selection hat sich geändert 
 
                             If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                                istPhasenDiagramm(chtobj) Then
+                                istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
                                 Call awinUpdateprcCollectionDiagram(chtobj)
 

@@ -280,9 +280,10 @@ Module BMWItOModul
                     Dim tmp2Str() As String
 
                     If colDauer > 0 Then
-                        tmpvalue = CStr(CType(activeWSListe.Cells(zeile, colDauer), Excel.Range).Value).Trim
-                        tmp2Str = tmpvalue.Trim.Split(New Char() {CChar(" ")}, 5)
+                        
                         Try
+                            tmpvalue = CStr(CType(activeWSListe.Cells(zeile, colDauer), Excel.Range).Value).Trim
+                            tmp2Str = tmpvalue.Trim.Split(New Char() {CChar(" ")}, 5)
                             itemDauer = CInt(tmp2Str(0))
                         Catch ex As Exception
                             itemDauer = -1
