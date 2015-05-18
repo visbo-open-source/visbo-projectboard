@@ -387,11 +387,11 @@
     Public ReadOnly Property Farbe As Object
         Get
             Try
-                Farbe = PhaseDefinitions.getPhaseDef(_name).farbe
+                Farbe = PhaseDefinitions.getPhaseDef(name).farbe
             Catch ex As Exception
                 ' in diesem Fall ist es wahrscheinlich der Name der Projektvorlage 
                 Try
-                    Farbe = Projektvorlagen.getProject(_name).farbe
+                    Farbe = Projektvorlagen.getProject(name).farbe
                 Catch ex1 As Exception
                     Farbe = 0
                     Throw New ArgumentException("Phasen-Name nicht bekannt ...")
