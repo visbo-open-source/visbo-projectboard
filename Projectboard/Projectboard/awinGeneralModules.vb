@@ -144,6 +144,8 @@ Public Module awinGeneralModules
 
             Next mPh
 
+            missingPhaseDefinitions.Clear()
+
         End If
 
         ' jetzt noch die Meilensteine schreiben 
@@ -235,6 +237,7 @@ Public Module awinGeneralModules
                 End If
 
             Next mMs
+            missingMilestoneDefinitions.Clear()
 
         End If
 
@@ -967,6 +970,8 @@ Public Module awinGeneralModules
 
 
                         End If
+                        ' ur: Test
+                        Dim anzphase As Integer = PhaseDefinitions.Count
 
                         appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 

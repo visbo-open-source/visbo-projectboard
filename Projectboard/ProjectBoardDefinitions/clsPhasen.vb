@@ -122,5 +122,9 @@ Public Class clsPhasen
         AllPhasen = New SortedList(Of String, clsPhasenDefinition)
 
     End Sub
+    Public Sub Clear()
 
+        AllPhasen.Clear()
+
+    End Sub
 End Class
