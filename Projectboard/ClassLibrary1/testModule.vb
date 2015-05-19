@@ -662,13 +662,12 @@ Public Module testModule
                                                     tmpphases.Add(tmpstr, tmpstr)
                                                 End If
 
-
-                                                ' ''Else
-                                                ' ''    tmpstr = rootPhaseName
                                             End If
 
 
                                         Next
+
+
 
                                         ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
                                         Dim mSList As SortedList(Of Date, String)
@@ -764,7 +763,7 @@ Public Module testModule
 
 
                                                 End If
-                                                
+
                                             Next
 
                                         Next
