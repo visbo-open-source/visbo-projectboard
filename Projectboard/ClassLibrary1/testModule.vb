@@ -596,8 +596,14 @@ Public Module testModule
                                         ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
                                         For Each cphase In hproj.AllPhases
 
-                                            Dim tmpstr = hproj.hierarchy.getBreadCrumb(cphase.nameID) & "#" & cphase.name
-                                            tmpphases.Add(tmpstr, tmpstr)
+                                            Dim tmpstr = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                            If tmpstr <> "" Then
+                                                tmpstr = tmpstr & "#" & cphase.name
+                                                If Not tmpphases.Contains(tmpstr) Then
+                                                    tmpphases.Add(tmpstr, tmpstr)
+                                                End If
+                                            End If
+
 
                                         Next
 
@@ -610,7 +616,10 @@ Public Module testModule
                                             For Each kvp As KeyValuePair(Of Date, String) In mSList
 
                                                 Dim tmpstr = hproj.hierarchy.getBreadCrumb(kvp.Value) & "#" & hproj.getMilestoneByID(kvp.Value).name
-                                                tmpMilestones.Add(tmpstr, tmpstr)
+                                                If Not tmpMilestones.Contains(tmpstr) Then
+                                                    tmpMilestones.Add(tmpstr, tmpstr)
+                                                End If
+
 
                                             Next
                                         End If
@@ -627,6 +636,7 @@ Public Module testModule
 
 
                             Case "Multivariantensicht"
+
 
                                 Try
                                     ' Einzelprojektsicht im Extended Mode
@@ -645,8 +655,18 @@ Public Module testModule
                                         ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
                                         For Each cphase In hproj.AllPhases
 
-                                            Dim tmpstr = hproj.hierarchy.getBreadCrumb(cphase.nameID) & "#" & cphase.name
-                                            tmpphases.Add(tmpstr, tmpstr)
+                                            Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                            If tmpstr <> "" Then
+                                                tmpstr = tmpstr & "#" & cphase.name
+                                                If Not tmpphases.Contains(tmpstr) Then
+                                                    tmpphases.Add(tmpstr, tmpstr)
+                                                End If
+
+
+                                                ' ''Else
+                                                ' ''    tmpstr = rootPhaseName
+                                            End If
+
 
                                         Next
 
@@ -659,7 +679,9 @@ Public Module testModule
                                             For Each kvp As KeyValuePair(Of Date, String) In mSList
 
                                                 Dim tmpstr = hproj.hierarchy.getBreadCrumb(kvp.Value) & "#" & hproj.getMilestoneByID(kvp.Value).name
-                                                tmpMilestones.Add(tmpstr, tmpstr)
+                                                If Not tmpMilestones.Contains(tmpstr) Then
+                                                    tmpMilestones.Add(tmpstr, tmpstr)
+                                                End If
 
                                             Next
                                         End If
