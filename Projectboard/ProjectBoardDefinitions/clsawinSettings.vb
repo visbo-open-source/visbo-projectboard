@@ -99,7 +99,9 @@
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
 
+    ' im BMW Import Kontext wichtiges Settings
     Property importTyp As Integer
+    Property eliminateDuplicates As Boolean
 
     Sub New()
 
@@ -148,7 +150,6 @@
         _EinzelRessExport = 0
 
 
-
         ' Settings für Besser/Schlechter Diagramm 
         _timeToleranzRel = 0.02
         _timeToleranzAbs = 3
@@ -181,7 +182,9 @@
         _useHierarchy = True
         _isHryNameFrmActive = False
 
+        ' im Kontext BMW Import wichtige Settings
         _importTyp = 1
+        _eliminateDuplicates = True
 
 
     End Sub

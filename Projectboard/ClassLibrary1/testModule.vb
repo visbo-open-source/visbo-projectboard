@@ -8234,9 +8234,11 @@ Public Module testModule
                     .Top = CSng(projektNamenYPos)
                     .Left = CSng(projektNamenXPos)
                     If currentProjektIndex > 1 And lastProjectName = hproj.name Then
-                        .TextFrame2.TextRange.Text = "... " & hproj.variantName & " " & hproj.VorlagenName
+                        '.TextFrame2.TextRange.Text = "... " & hproj.variantName & " " & hproj.VorlagenName
+                        .TextFrame2.TextRange.Text = "... " & hproj.variantName
                     Else
-                        .TextFrame2.TextRange.Text = hproj.getShapeText & " " & hproj.VorlagenName
+                        '.TextFrame2.TextRange.Text = hproj.getShapeText & " " & hproj.VorlagenName
+                        .TextFrame2.TextRange.Text = hproj.getShapeText
                     End If
                     lastProjectName = hproj.name
                     .Name = .Name & .Id

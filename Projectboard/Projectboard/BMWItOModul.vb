@@ -688,45 +688,54 @@ Module BMWItOModul
                                             parentphaseName = parentPhase.name
                                         End If
 
-                                        If parentphaseName = stdName Then
-                                            ueberdeckung = calcPhaseUeberdeckung(parentPhase.getStartDate, parentPhase.getEndDate, _
-                                                                      itemStartDate, itemEndDate)
-                                            If ueberdeckung < 0.95 Then
-                                                ok1 = True
-                                            Else
-                                                ok1 = False
-                                                logMessage = stdName & " ist doppelt und wird ignoriert "
-                                            End If
+                                        If awinSettings.eliminateDuplicates Then
 
-                                        Else
-
-                                            Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(stdName, breadcrumb)
-                                            If phaseIndices(0) > 0 Then
-                                                Dim anzahl As Integer = phaseIndices.Length
-
-                                                ' PT-79 toleranz für Identität von Phasen
-                                                Dim vglPhase As clsPhase = hproj.getPhase(phaseIndices(0))
-                                                ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
+                                            If parentphaseName = stdName Then
+                                                ueberdeckung = calcPhaseUeberdeckung(parentPhase.getStartDate, parentPhase.getEndDate, _
                                                                           itemStartDate, itemEndDate)
+                                                If ueberdeckung < 0.97 Then
+                                                    ok1 = True
+                                                Else
+                                                    ok1 = False
+                                                    logMessage = stdName & " ist doppelt und wird ignoriert "
+                                                End If
 
-                                                ' wenn diese Phase zwar den gleichen Namen aber andere Start-/Ende Daten hat ...
-                                                ' dann wird ein neues Element mit lfd_Nr erzeugt 
+                                            Else
+                                                ' tk: 20.5.15
+                                                ' nur wenn explizit gefordert, wird nach Duplikaten gesucht, die auf der gleichen Hierarchie Stufe sind 
+                                                ' und den gleichen Parent haben 
+                                                ' die zu ignorieren ist eigentlich nicht gut, wir sollten nicht versuchen, den Eingabe Schrott zu korrigieren
+                                                ' da werden dann ggf Elemente ignoriert, die nicht ignoriert werden sollten 
+                                                ' deshalb wird diese Prüfung nur noch optional gemacht ... 
 
-                                                If ueberdeckung < 0.95 Then
-                                                    Dim index As Integer = 2
+                                                Dim phaseIndices() As Integer
+                                                phaseIndices = hproj.hierarchy.getPhaseIndices(stdName, breadcrumb)
+                                                If phaseIndices(0) > 0 Then
+                                                    Dim anzahl As Integer = phaseIndices.Length
+
+                                                    ' PT-79 toleranz für Identität von Phasen
+                                                    Dim vglPhase As clsPhase
+
+                                                    Dim index As Integer = 1
                                                     found = False
 
                                                     Do While index <= anzahl And Not found
 
                                                         vglPhase = hproj.getPhase(phaseIndices(index - 1))
-                                                        ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
+
+                                                        ' haben die beiden Phasen den gleichen Vater ?
+                                                        If parentPhase.nameID = hproj.hierarchy.getParentIDOfID(vglPhase.nameID) Then
+                                                            ueberdeckung = calcPhaseUeberdeckung(vglPhase.getStartDate, vglPhase.getEndDate, _
                                                                           itemStartDate, itemEndDate)
 
-                                                        'If vglPhase.startOffsetinDays <> startoffset Or vglPhase.dauerInDays <> duration Then
-                                                        If ueberdeckung < 0.95 Then
-                                                            index = index + 1
+                                                            'If vglPhase.startOffsetinDays <> startoffset Or vglPhase.dauerInDays <> duration Then
+                                                            If ueberdeckung < 0.95 Then
+                                                                index = index + 1
+                                                            Else
+                                                                found = True
+                                                            End If
                                                         Else
-                                                            found = True
+                                                            index = index + 1
                                                         End If
 
                                                     Loop
@@ -738,18 +747,16 @@ Module BMWItOModul
                                                         logMessage = stdName & " ist doppelt und wird ignoriert "
                                                     End If
 
-
                                                 Else
-                                                    ' in diesem Fall ist die Phase doppelt und soll nicht weiter berücksichtigt werden ...
-                                                    ok1 = False
-                                                    logMessage = stdName & " ist doppelt und wird ignoriert "
+                                                    ok1 = True
                                                 End If
 
-                                            Else
-                                                ok1 = True
                                             End If
 
+                                        Else
+                                            ok1 = True
                                         End If
+
 
                                     Else
                                         ok1 = True
@@ -886,27 +893,34 @@ Module BMWItOModul
                                             Dim breadcrumb As String = pHierarchy.getFootPrint(indentLevel, "#")
                                             elemID = hproj.hierarchy.findUniqueElemKey(stdName, True)
 
-                                            Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(stdName, breadcrumb)
+                                            If awinSettings.eliminateDuplicates Then
 
-                                            If milestoneIndices(0, 0) > 0 And milestoneIndices(1, 0) > 0 Then
-                                                Dim anzahl As Integer = CInt(milestoneIndices.Length / 2)
+                                                Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(stdName, breadcrumb)
 
-                                                ' PT-79 toleranz für Identität von Phasen
-                                                Dim vglMilestone As clsMeilenstein = hproj.getMilestone(milestoneIndices(0, 0), milestoneIndices(1, 0))
+                                                If milestoneIndices(0, 0) > 0 And milestoneIndices(1, 0) > 0 Then
+                                                    Dim anzahl As Integer = CInt(milestoneIndices.Length / 2)
 
-                                                If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
+                                                    ' PT-79 toleranz für Identität von Meilensteinen
+                                                    Dim vglMilestone As clsMeilenstein
 
-                                                    Dim index As Integer = 2
+                                                    ' nur wenn sie den gleich Vater haben 
+                                                    Dim index As Integer = 1
                                                     found = False
 
                                                     Do While index <= anzahl And Not found
-                                                        vglMilestone = hproj.getMilestone(milestoneIndices(0, index - 1), milestoneIndices(1, index - 1))
 
-                                                        If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
-                                                            index = index + 1
+                                                        vglMilestone = hproj.getMilestone(milestoneIndices(0, index - 1), milestoneIndices(1, index - 1))
+                                                        If cphase.nameID = hproj.hierarchy.getParentIDOfID(vglMilestone.nameID) Then
+
+                                                            If DateDiff(DateInterval.Day, vglMilestone.getDate, itemStartDate) <> 0 Then
+                                                                index = index + 1
+                                                            Else
+                                                                found = True
+                                                            End If
                                                         Else
-                                                            found = True
+                                                            index = index + 1
                                                         End If
+
                                                     Loop
 
                                                     If found Then
@@ -916,14 +930,10 @@ Module BMWItOModul
                                                     Else
                                                         ok1 = True
                                                     End If
-                                                Else
-                                                    ' ist identisch 
-                                                    ok1 = False
-                                                    logMessage = stdName & " ist doppelt und wird ignoriert "
-                                                End If
 
-                                                ' wenn diese Phase zwar den gleichen Namen aber andere Start-/Ende Daten hat ...
-                                                ' dann wird ein neues Element mit lfd_Nr erzeugt 
+                                                Else
+                                                    ok1 = True
+                                                End If
 
                                             Else
                                                 ok1 = True
