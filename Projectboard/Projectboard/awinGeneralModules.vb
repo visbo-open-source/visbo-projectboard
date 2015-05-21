@@ -917,10 +917,15 @@ Public Module awinGeneralModules
 
 
                             Dim projVorlage As New clsProjektvorlage
-                            Call awinImportProject(Nothing, projVorlage, True, Date.Now)
+
                             ' Auslesen der Projektvorlage wird wie das Importieren eines Projekts behandelt, nur am Ende in die Liste der Projektvorlagen eingehängt
                             ' Kennzeichen für Projektvorlage ist der 3.Parameter im Aufruf (isTemplate)
 
+                            Call awinImportProjectmitHrchy(Nothing, projVorlage, True, Date.Now)
+
+                            ' ur: 21.05.2015: Vorlagen nun neues Format, mit Hierarchie
+                            ' Call awinImportProject(Nothing, projVorlage, True, Date.Now)
+                           
                             Projektvorlagen.Add(projVorlage)
 
 
