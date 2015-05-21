@@ -67,6 +67,8 @@
 
     ' Settings für Import / Export
     Public Property EinzelRessExport As Integer
+    ' Settings ob die fehlenden Phase- und Meilenstein-Namen in die Customization eingetragen werden sollen
+    Public Property addMissingPhaseMilestoneDef As Boolean
 
     ' Settings für ToleranzKorridor TimeCost
     Public Property timeToleranzRel As Double
@@ -148,7 +150,7 @@
 
         ' Settings für Import / Export 
         _EinzelRessExport = 0
-
+        _addMissingPhaseMilestoneDef = False
 
         ' Settings für Besser/Schlechter Diagramm 
         _timeToleranzRel = 0.02

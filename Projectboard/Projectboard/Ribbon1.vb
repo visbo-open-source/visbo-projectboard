@@ -2551,6 +2551,8 @@ Imports System.Drawing
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
                 Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
 
+                Call awinWritePhaseDefinitions()
+
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
                 Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
@@ -2624,7 +2626,7 @@ Imports System.Drawing
                     pname = ""
                     hproj = New clsProjekt
                     Try
-                        Call awinImportProject(hproj, Nothing, False, importDate)
+                        Call awinImportProjectmitHrchy(hproj, Nothing, False, importDate)
 
                         Try
                             Dim keyStr As String = calcProjektKey(hproj)
@@ -2864,7 +2866,9 @@ Imports System.Drawing
 
                                 ' jetzt wird dieses Projekt exportiert ... 
                                 Try
-                                    Call awinExportProject(hproj)
+                                    Call awinExportProjectmitHrchy(hproj)
+                                    ' ur: 06.05.2015: zu Testzwecken mit Hierarchie
+                                    ' Call awinExportProject(hproj)
                                     outputString = outputString & hproj.getShapeText & " erfolgreich .." & vbLf
                                 Catch ex As Exception
                                     outputString = outputString & hproj.getShapeText & " nicht erfolgreich .." & vbLf & _
@@ -7325,8 +7329,20 @@ Imports System.Drawing
         'Call MsgBox("Betriebssystem: " & appInstance.OperatingSystem & Chr(10) & _
         '"Excel-Version: " & My.Settings.ExcelVersion, vbInformation, "Info")
     End Sub
+    Sub PTAddMissingInit(control As IRibbonControl, ByRef pressed As Boolean)
 
+        pressed = awinSettings.addMissingPhaseMilestoneDef
 
+    End Sub
+    Sub PTAddMissingDefinitions(control As IRibbonControl, ByRef pressed As Boolean)
+
+        If pressed Then
+            awinSettings.addMissingPhaseMilestoneDef = True
+        Else
+            awinSettings.addMissingPhaseMilestoneDef = False
+        End If
+
+    End Sub
     Sub PTTestFunktion1(control As IRibbonControl)
 
         Call MsgBox("Enable Events ist " & appInstance.EnableEvents.ToString)

@@ -107,10 +107,6 @@ Module BMWItOModul
         suchstr(ptNamen.Protocol) = "Übernommen als"
         suchstr(ptNamen.Dauer) = "Dauer"
 
-        ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen denn hier neu hinzugekommen wären 
-        Dim missingPhaseDefinitions As New clsPhasen
-        Dim missingMilestoneDefinitions As New clsMeilensteine
-
 
         zeile = 2
         spalte = 5
@@ -1271,7 +1267,6 @@ Module BMWItOModul
             Throw New Exception("Fehler in Datei BMW Import ITO15 " & vbLf & ex.Message & vbLf & _
                                  pName & vbLf)
         End Try
-
 
 
     End Sub

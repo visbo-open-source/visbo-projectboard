@@ -81,6 +81,11 @@ Public Module Module1
     ' Welche Business-Units gibt es ? 
     Public businessUnitDefinitions As SortedList(Of Integer, clsBusinessUnit)
 
+    ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
+    Public missingPhaseDefinitions As New clsPhasen
+    Public missingMilestoneDefinitions As New clsMeilensteine
+
+
     ' diese Collection nimmt alle Filter Definitionen auf 
     Public filterDefinitions As New clsFilterDefinitions
     Public selFilterDefinitions As New clsFilterDefinitions
@@ -117,8 +122,11 @@ Public Module Module1
     Public miniHeight As Double = 70 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
 
     ' diese Konstante legt den Namen für das Root Element , 1. Phase eines Projektes fest 
-    ' das muss mir der calcHryElemKey(".", False) übereinstimmen 
+    ' das muss mit der calcHryElemKey(".", False) übereinstimmen 
     Public Const rootPhaseName As String = "0§.§"
+
+    ' diese Konstante legt die Einrücktiefe fest. Das wird benötigt beim Exportieren von Projekte in ein File, ebenso beim Importieren von Datei
+    Public Const einrückTiefe As Integer = 2
 
     ' diese Konstanten werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
     Public Const summentitel1 As String = "Prognose Ergebniskennzahl"
