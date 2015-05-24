@@ -1812,102 +1812,131 @@ Imports System.Drawing
                 End If
 
             ElseIf control.Id = "PT1G1M1B2" Then
-                ' Hierarchie auswählen, Einzelprojekt Berichte 
-                appInstance.ScreenUpdating = False
 
-                awinSettings.useHierarchy = True
-                With hryFormular
-                    .Text = "Projekt-Varianten Report erzeugen"
-                    .OKButton.Text = "Bericht erstellen"
-                    .menuOption = PTmenue.einzelprojektReport
-                    .statusLabel.Text = ""
-                    .statusLabel.Visible = True
+                Try
+                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                Catch ex As Exception
+                    awinSelection = Nothing
+                End Try
 
-                    .AbbrButton.Visible = False
-                    .AbbrButton.Enabled = False
-
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
+                If awinSelection Is Nothing Then
+                    Call MsgBox("vorher Projekt/e selektieren ...")
+                Else
 
 
-                    ' Reports
-                    .repVorlagenDropbox.Visible = True
-                    .labelPPTVorlage.Visible = True
-                    .einstellungen.Visible = True
+                    ' Hierarchie auswählen, Einzelprojekt Berichte 
+                    appInstance.ScreenUpdating = False
 
-                    ' bei Verwnedung Background Worker muss Modal erfolgen 
-                    '.Show()
-                    returnValue = .ShowDialog
-                End With
+                    awinSettings.useHierarchy = True
+                    With hryFormular
+                        .Text = "Projekt-Varianten Report erzeugen"
+                        .OKButton.Text = "Bericht erstellen"
+                        .menuOption = PTmenue.einzelprojektReport
+                        .statusLabel.Text = ""
+                        .statusLabel.Visible = True
 
-                appInstance.ScreenUpdating = True
+                        .AbbrButton.Visible = False
+                        .AbbrButton.Enabled = False
+
+                        .chkbxOneChart.Checked = False
+                        .chkbxOneChart.Visible = False
+
+
+                        ' Reports
+                        .repVorlagenDropbox.Visible = True
+                        .labelPPTVorlage.Visible = True
+                        .einstellungen.Visible = True
+
+                        ' bei Verwnedung Background Worker muss Modal erfolgen 
+                        '.Show()
+                        returnValue = .ShowDialog
+                    End With
+
+                    appInstance.ScreenUpdating = True
+
+                End If
 
             ElseIf control.Id = "PT1G1M2B1" Then
-                ' Namen Auswahl, Multiprojekt Report
-                appInstance.ScreenUpdating = False
 
-                With nameFormular
-
-                    .Text = "Multiprojekt Reports erzeugen"
-                    .OKButton.Text = "Bericht erstellen"
-                    .menuOption = PTmenue.multiprojektReport
-                    .statusLabel.Text = ""
-                    .statusLabel.Visible = True
-
-                    .rdbRoles.Enabled = False
-                    .rdbCosts.Enabled = False
-
-                    .rdbBU.Visible = True
-                    .pictureBU.Visible = True
-
-                    .rdbTyp.Visible = True
-                    .pictureTyp.Visible = True
+                If showRangeRight - showRangeLeft <= 6 Then
+                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+                Else
 
 
-                    .einstellungen.Visible = True
+                    ' Namen Auswahl, Multiprojekt Report
+                    appInstance.ScreenUpdating = False
 
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
+                    With nameFormular
 
-                    .repVorlagenDropbox.Visible = True
-                    .labelPPTVorlage.Visible = True
-                    ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
-                    returnValue = .ShowDialog
-                End With
+                        .Text = "Multiprojekt Reports erzeugen"
+                        .OKButton.Text = "Bericht erstellen"
+                        .menuOption = PTmenue.multiprojektReport
+                        .statusLabel.Text = ""
+                        .statusLabel.Visible = True
 
-                appInstance.ScreenUpdating = True
+                        .rdbRoles.Enabled = False
+                        .rdbCosts.Enabled = False
 
+                        .rdbBU.Visible = True
+                        .pictureBU.Visible = True
+
+                        .rdbTyp.Visible = True
+                        .pictureTyp.Visible = True
+
+
+                        .einstellungen.Visible = True
+
+                        .chkbxOneChart.Checked = False
+                        .chkbxOneChart.Visible = False
+
+                        .repVorlagenDropbox.Visible = True
+                        .labelPPTVorlage.Visible = True
+                        ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
+                        returnValue = .ShowDialog
+                    End With
+
+                    appInstance.ScreenUpdating = True
+
+                End If
 
             ElseIf control.Id = "PT1G1M2B2" Then
-                ' Hierarchie Auswahl, Multiprojekt Report
-                appInstance.ScreenUpdating = False
 
-                awinSettings.useHierarchy = True
-                With hryFormular
-
-                    .Text = "Multiprojekt Reports erzeugen"
-                    .OKButton.Text = "Bericht erstellen"
-                    .menuOption = PTmenue.multiprojektReport
-                    .statusLabel.Text = ""
-                    .statusLabel.Visible = True
-
-                    .AbbrButton.Visible = False
-                    .AbbrButton.Enabled = False
-
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
+                If showRangeRight - showRangeLeft <= 6 Then
+                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+                Else
 
 
-                    ' Reports
-                    .repVorlagenDropbox.Visible = True
-                    .labelPPTVorlage.Visible = True
-                    .einstellungen.Visible = True
+                    ' Hierarchie Auswahl, Multiprojekt Report
+                    appInstance.ScreenUpdating = False
 
-                    ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
-                    returnValue = .ShowDialog
-                End With
+                    awinSettings.useHierarchy = True
+                    With hryFormular
 
-                appInstance.ScreenUpdating = True
+                        .Text = "Multiprojekt Reports erzeugen"
+                        .OKButton.Text = "Bericht erstellen"
+                        .menuOption = PTmenue.multiprojektReport
+                        .statusLabel.Text = ""
+                        .statusLabel.Visible = True
+
+                        .AbbrButton.Visible = False
+                        .AbbrButton.Enabled = False
+
+                        .chkbxOneChart.Checked = False
+                        .chkbxOneChart.Visible = False
+
+
+                        ' Reports
+                        .repVorlagenDropbox.Visible = True
+                        .labelPPTVorlage.Visible = True
+                        .einstellungen.Visible = True
+
+                        ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
+                        returnValue = .ShowDialog
+                    End With
+
+                    appInstance.ScreenUpdating = True
+
+                End If
 
             ElseIf control.Id = "PT4G1M0B1" Then
                 ' Auswahl über Namen, Typ II Export
@@ -1943,34 +1972,34 @@ Imports System.Drawing
                 appInstance.ScreenUpdating = True
 
             ElseIf control.Id = "PT4G1M0B2" Then
-                ' Auswahl über Hierarchie, Typ II Export
-                appInstance.ScreenUpdating = False
+                    ' Auswahl über Hierarchie, Typ II Export
+                    appInstance.ScreenUpdating = False
 
-                awinSettings.useHierarchy = True
-                With hryFormular
+                    awinSettings.useHierarchy = True
+                    With hryFormular
 
-                    .Text = "Excel Report erzeugen"
-                    .OKButton.Text = "Report erstellen"
-                    .menuOption = PTmenue.excelExport
-                    .statusLabel.Text = ""
+                        .Text = "Excel Report erzeugen"
+                        .OKButton.Text = "Report erstellen"
+                        .menuOption = PTmenue.excelExport
+                        .statusLabel.Text = ""
 
-                    .AbbrButton.Visible = False
-                    .AbbrButton.Enabled = False
+                        .AbbrButton.Visible = False
+                        .AbbrButton.Enabled = False
 
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
+                        .chkbxOneChart.Checked = False
+                        .chkbxOneChart.Visible = False
 
-                    ' Reports
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
-                    .einstellungen.Visible = False
+                        ' Reports
+                        .repVorlagenDropbox.Visible = False
+                        .labelPPTVorlage.Visible = False
+                        .einstellungen.Visible = False
 
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
-                End With
+                        ' Nicht Modal anzeigen
+                        .Show()
+                        'returnValue = .ShowDialog
+                    End With
 
-            End If
+                End If
 
         Else
             Call MsgBox("Es sind keine Projekte sichtbar!  ")

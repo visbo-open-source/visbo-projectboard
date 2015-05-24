@@ -264,7 +264,7 @@ Public Class frmNameSelection
                         Me.Cursor = Cursors.WaitCursor
                         AbbrButton.Text = "Abbrechen"
 
-                        ' Alternativ ohne Background Worker
+                        backgroundRunning = True
 
                         BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 
@@ -620,7 +620,8 @@ Public Class frmNameSelection
     Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
 
 
-        If menuOption = (PTmenue.multiprojektReport Or PTmenue.einzelprojektReport) And backgroundRunning Then
+        If (menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport) _
+            And backgroundRunning Then
 
             rdbMilestones.Enabled = True
             rdbPhases.Enabled = True
@@ -639,6 +640,7 @@ Public Class frmNameSelection
             Try
                 Me.BackgroundWorker1.CancelAsync()
             Catch ex As Exception
+                backgroundRunning = True
 
             End Try
 
@@ -924,8 +926,7 @@ Public Class frmNameSelection
         '                                           selectedPhases, selectedMilestones, _
         '                                           selectedRoles, selectedCosts)
 
-
-
+        backgroundRunning = False
     End Sub
 
 
