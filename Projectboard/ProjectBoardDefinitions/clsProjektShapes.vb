@@ -312,6 +312,7 @@ Public Class clsProjektShapes
     ''' <summary>
     ''' fügt das Shape der Shapeslist hinzu; wenn es schon existiert, wird der alte Eintrag gelöscht und der neue 
     ''' wird eingetragen
+    ''' nur relevant für projekt-, Meilenstein und Phasen Shapes 
     ''' </summary>
     ''' <param name="shpElement"></param>
     ''' <remarks></remarks>

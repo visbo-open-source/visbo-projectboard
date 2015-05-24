@@ -387,16 +387,28 @@
     Public ReadOnly Property Farbe As Object
         Get
             Try
-                Farbe = PhaseDefinitions.getPhaseDef(name).farbe
+                If _name = "." Then
+                    Farbe = Projektvorlagen.getProject(_name).farbe
+                Else
+                    Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(_name)
+                    If IsNothing(tmpPhaseDef) Then
+                        If appearanceDefinitions.ContainsKey("Phasen Default") Then
+                            Farbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                        Else
+                            Farbe = awinSettings.AmpelNichtBewertet
+                        End If
+
+                    Else
+                        Farbe = tmpPhaseDef.farbe
+                    End If
+
+                End If
+
             Catch ex As Exception
-                ' in diesem Fall ist es wahrscheinlich der Name der Projektvorlage 
-                Try
-                    Farbe = Projektvorlagen.getProject(name).farbe
-                Catch ex1 As Exception
-                    Farbe = 0
-                    Throw New ArgumentException("Phasen-Name nicht bekannt ...")
-                End Try
+                ' in diesem Fall wird ein Standard Farbe genommen 
+                Farbe = awinSettings.AmpelNichtBewertet
             End Try
+
         End Get
     End Property
 

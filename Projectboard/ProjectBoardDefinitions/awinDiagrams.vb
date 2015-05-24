@@ -334,7 +334,18 @@ Public Module awinDiagrams
 
                         If prcTyp = DiagrammTypen(0) Then
                             einheit = " "
-                            objektFarbe = PhaseDefinitions.getPhaseDef(prcName).farbe
+                            Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(prcName)
+                            If IsNothing(tmpPhaseDef) Then
+                                If appearanceDefinitions.ContainsKey("Phasen Default") Then
+                                    objektFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                                Else
+                                    objektFarbe = awinSettings.AmpelNichtBewertet
+                                End If
+
+                            Else
+                                objektFarbe = tmpPhaseDef.farbe
+                            End If
+
                             datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb)
 
                         ElseIf prcTyp = DiagrammTypen(1) Then
@@ -397,7 +408,19 @@ Public Module awinDiagrams
                         ElseIf prcTyp = DiagrammTypen(5) Then
 
                             einheit = " "
-                            objektFarbe = MilestoneDefinitions.getMilestoneDef(prcName).farbe
+
+                            Dim tmpMilestoneDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(prcName)
+                            If IsNothing(tmpMilestoneDef) Then
+                                If appearanceDefinitions.ContainsKey("Meilenstein Default") Then
+                                    objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                                Else
+                                    objektFarbe = awinSettings.AmpelNichtBewertet
+                                End If
+
+                            Else
+                                objektFarbe = tmpMilestoneDef.farbe
+                            End If
+
                             msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
 
                         End If
@@ -1009,7 +1032,20 @@ Public Module awinDiagrams
 
                     If prcTyp = DiagrammTypen(0) Then
                         einheit = " "
-                        objektFarbe = PhaseDefinitions.getPhaseDef(prcName).farbe
+
+                        Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(prcName)
+
+                        If IsNothing(tmpPhaseDef) Then
+                            If appearanceDefinitions.ContainsKey("Phasen Default") Then
+                                objektFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                            Else
+                                objektFarbe = awinSettings.AmpelNichtBewertet
+                            End If
+
+                        Else
+                            objektFarbe = tmpPhaseDef.farbe
+                        End If
+
                         datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb)
                         hmxWert = datenreihe.Max
 
@@ -1103,7 +1139,17 @@ Public Module awinDiagrams
                     ElseIf prcTyp = DiagrammTypen(5) Then
 
                         einheit = " "
-                        objektFarbe = MilestoneDefinitions.getMilestoneDef(prcName).farbe
+                        Dim tmpMilestoneDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(prcName)
+                        If IsNothing(tmpMilestoneDef) Then
+                            If appearanceDefinitions.ContainsKey("Meilenstein Default") Then
+                                objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                            Else
+                                objektFarbe = awinSettings.AmpelNichtBewertet
+                            End If
+
+                        Else
+                            objektFarbe = tmpMilestoneDef.farbe
+                        End If
                         msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
                     End If
 
