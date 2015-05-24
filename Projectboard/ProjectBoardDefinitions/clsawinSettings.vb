@@ -40,6 +40,11 @@
     Public Property offsetEinheit As String
     Public Property drawphases As Boolean
     Public Property applyFilter As Boolean
+    ' bestimmt ob das Project als Balken dargestellt wird oder einfach als Linie 
+    Public Property drawProjectLine As Boolean
+    ' bestimmt, ob die Beschriftungen von Meilensteinen und Phasen auf der Projekt-Tafel angezeigt werden sollen
+    Public Property showElementNames As Boolean
+
     ' sollen Meilensteine auch ausserhalb des Projekts liegen dürfen ? 
     Public Property milestoneFreeFloat As Boolean
     ' sollen Bedarfe automatisch in der Array Länge angepasst werden, wenn sich das Projekt verschiebt und in Folge die array Länge 
@@ -147,6 +152,8 @@
         _applyFilter = False
         _createIfNotThere = False
         _showOrigName = False
+        _drawProjectLine = True
+        _showElementNames = False
 
         ' Settings für Import / Export 
         _EinzelRessExport = 0
