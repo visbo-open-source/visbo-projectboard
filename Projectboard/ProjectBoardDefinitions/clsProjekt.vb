@@ -2378,7 +2378,12 @@ Public Class clsProjekt
         End If
 
         If Me.tfZeile > 1 And Me.tfspalte >= 1 And Me.anzahlRasterElemente > 0 Then
-            top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight
+            If awinSettings.drawProjectLine Then
+                top = topOfMagicBoard + (Me.tfZeile - 0.6) * boxHeight
+            Else
+                top = topOfMagicBoard + (Me.tfZeile - 0.95) * boxHeight
+            End If
+
             left = (startpunkt / 365) * boxWidth * 12
             width = ((projektlaenge) / 365) * boxWidth * 12
             height = 0.8 * boxHeight

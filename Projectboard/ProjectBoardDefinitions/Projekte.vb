@@ -8955,13 +8955,7 @@ Public Module Projekte
                     ' do nothing, sollen ja erhalten bleiben 
                 Else
                     shp.Delete()
-                    'With shp
-                    '    If shp.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                    '        shp.AutoShapeType = MsoAutoShapeType.msoShapeIsoscelesTriangle Or _
-                    '        shp.AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
-                    '        .Delete()
-                    '    End If
-                    'End With
+                    
                 End If
             Catch ex As Exception
 
@@ -9900,8 +9894,6 @@ Public Module Projekte
                 With singleShp
                     If isProjectType(kindOfShape(singleShp)) Then
 
-                        'If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Or _
-                        '    .AutoShapeType = MsoAutoShapeType.msoShapeMixed Then
 
                         Try
                             hproj = ShowProjekte.getProject(singleShp.Name)
@@ -10476,6 +10468,7 @@ Public Module Projekte
 
 
             Else
+
                 Call defineShapeAppearance(hproj, projectShape)
 
             End If
@@ -10500,6 +10493,7 @@ Public Module Projekte
                 Dim projectShapesCollection As New Collection
 
 
+
                 'oldShape = Nothing
                 phaseShape = Nothing
 
@@ -10514,24 +10508,34 @@ Public Module Projekte
 
                     End With
 
-                    vorlagenShape = PhaseDefinitions.getShape(elemNameOfElemID(phasenNameID))
+
 
                     Try
                         zeilenOffset = 0
                         Call hproj.calculateShapeCoord(i, zeilenOffset, top, left, width, height)
-                        'phaseShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
-                        '        Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
 
                         If i = 1 Then
-                            phaseShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
-                                Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+
+                            If awinSettings.drawProjectLine Then
+
+                                phaseShape = worksheetShapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left), CSng(top), _
+                                                                            CSng(left + width), CSng(top))
+                            Else
+
+                                phaseShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
+                                                        Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                            End If
+
                         Else
+                            vorlagenShape = PhaseDefinitions.getShape(elemNameOfElemID(phasenNameID))
+
                             phaseShape = worksheetShapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
                                 Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
+                            vorlagenShape.PickUp()
+                            phaseShape.Apply()
                         End If
 
-                        vorlagenShape.PickUp()
-                        phaseShape.Apply()
+                            
 
                     Catch ex As Exception
                         Throw New Exception("in zeichneProjektinPlantafel2 : keine Shape-Erstellung möglich ...  ")
@@ -10545,7 +10549,12 @@ Public Module Projekte
                         .AlternativeText = CInt(PTshty.phaseE).ToString
                     End With
 
-                    Call defineShapeAppearance(hproj, phaseShape, i)
+                    If i = 1 And awinSettings.drawProjectLine Then
+                        Call defineShapeAppearance(hproj, phaseShape)
+                    Else
+                        Call defineShapeAppearance(hproj, phaseShape, i)
+                    End If
+
 
                     ' jetzt der Liste der ProjectboardShapes hinzufügen
                     projectboardShapes.add(phaseShape)
@@ -10684,13 +10693,19 @@ Public Module Projekte
                     .tfZeile = zeile
                 End With
 
-                projectShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
+                If awinSettings.drawProjectLine Then
+
+                    projectShape = worksheetShapes.AddConnector(MsoConnectorType.msoConnectorStraight, CSng(left), CSng(top), _
+                                                                CSng(left + width), CSng(top))
+
+                Else
+                    projectShape = worksheetShapes.AddShape(Type:=Microsoft.Office.Core.MsoAutoShapeType.msoShapeRoundedRectangle, _
                         Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
 
+                End If
 
                 projectShape.Name = pname
                 Call defineShapeAppearance(hproj, projectShape)
-
 
             End If
 
@@ -10701,7 +10716,12 @@ Public Module Projekte
             If drawphases Then
                 .AlternativeText = CInt(PTshty.projektE).ToString
             Else
-                .AlternativeText = CInt(PTshty.projektN).ToString
+                If awinSettings.drawProjectLine Then
+                    .AlternativeText = CInt(PTshty.projektL).ToString
+                Else
+                    .AlternativeText = CInt(PTshty.projektN).ToString
+                End If
+
             End If
 
             hproj.shpUID = .ID.ToString
@@ -10724,6 +10744,11 @@ Public Module Projekte
         msNumber = 0
         If drawMilestoneList.Count > 0 And Not drawphases Then
             Call zeichneMilestonesInProjekt(hproj, drawMilestoneList, 4, 0, 0, False, msNumber, False)
+        End If
+
+        ' zu guter Letzt muss der Projekt-Name gezeichnet werden 
+        If awinSettings.drawProjectLine Then
+            Call zeichneNameInProjekt(hproj)
         End If
 
 
@@ -11180,7 +11205,8 @@ Public Module Projekte
             If found Then
 
                 ' jetzt muss die Liste an Shapes aufgebaut werden 
-                If projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                If projectShape.AlternativeText = CInt(PTshty.projektL).ToString Or _
+                    projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
 
                     listOFShapes.Add(projectShape.Name)
 
@@ -11298,6 +11324,136 @@ Public Module Projekte
 
         ' jetzt müssen ggf die Charts wieder in den Vordergrund gebracht werden 
         Call bringChartsToFront(projectShape)
+
+    End Sub
+
+    ''' <summary>
+    ''' trägt bei Projektlinie den Namen ein ... 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <remarks></remarks>
+    Public Sub zeichneNameInProjekt(ByVal hproj As clsProjekt)
+
+        Dim projectTop As Single, projectLeft As Single, projectHeight As Single, projectWidth As Single
+        Dim txtTop As Single, txtLeft As Single, txtwidth As Single, txtHeight As Single
+        Dim pNameShape As Excel.Shape
+        Dim worksheetShapes As Excel.Shapes
+
+        Dim projectShape As Excel.Shape
+        Dim shapeGruppe As Excel.ShapeRange
+
+        Dim listOFShapes As New Collection
+        Dim found As Boolean = True
+
+
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+
+            worksheetShapes = .Shapes
+            ' Änderung 12.7.14 Alle Milestone Shapes in ein gruppiertes Shape
+            ' jetzt muss das Projekt-Shape gesucht werden
+            Try
+                projectShape = worksheetShapes.Item(hproj.name)
+            Catch ex As Exception
+                found = False
+                projectShape = Nothing
+            End Try
+
+
+            ' found=true bedeutet, dass das Shape bereits angezeigt wird  
+            If found Then
+
+
+
+                ' Merken der Koordinaten 
+                ' bestimmen der Text Koordinaten 
+                With projectShape
+                    projectTop = .Top
+                    projectLeft = .Left
+                    projectWidth = .Width
+                    projectHeight = .Height
+                End With
+
+                txtTop = projectTop
+                txtLeft = projectLeft + 7
+                txtwidth = 30
+                txtHeight = 30
+
+                ' jetzt muss die Liste an Shapes aufgebaut werden 
+
+                If projectShape.AlternativeText = CInt(PTshty.projektL).ToString Or _
+                    projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                    listOFShapes.Add(projectShape.Name)
+                Else
+                    shapeGruppe = projectShape.Ungroup
+                    Dim anzElements As Integer = shapeGruppe.Count
+
+                    Dim i As Integer
+                    For i = 1 To anzElements
+                        listOFShapes.Add(shapeGruppe.Item(i).Name)
+                    Next
+                End If
+
+                ' ab jetzt darf auf projectShape nicht mehr zugegriffen werden, da es ggf bereits im Else-Zweig aufgelöst wurde ...
+
+
+                ' jetzt muss das Textshape erzeugt werden 
+                pNameShape = worksheetShapes.AddLabel(MsoTextOrientation.msoTextOrientationHorizontal, _
+                                                        txtLeft, txtTop, txtwidth, txtHeight)
+
+                With pNameShape
+                    .TextFrame2.AutoSize = MsoAutoSize.msoAutoSizeShapeToFitText
+                    .TextFrame2.WordWrap = MsoTriState.msoFalse
+                    .TextFrame2.TextRange.Text = hproj.getShapeText
+                    .TextFrame2.TextRange.Font.Size = hproj.Schrift
+                    .TextFrame2.MarginLeft = 0
+                    .TextFrame2.MarginRight = 0
+                    .TextFrame2.MarginTop = 0
+                    .TextFrame2.MarginBottom = 0
+                    .TextFrame2.VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
+                    .TextFrame2.HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
+
+                    .Fill.Visible = MsoTriState.msoTrue
+                    .Fill.ForeColor.RGB = RGB(255, 255, 255)
+                    .Fill.Transparency = 0
+                    .Fill.Solid()
+
+                End With
+
+                ' jetzt muss das Shape noch in der Höhe richtig positioniert werden 
+                Dim diff As Single
+                If awinSettings.drawphases Then
+                    diff = CSng(0.3 * boxHeight)
+                Else
+                    diff = (pNameShape.Height - projectHeight) / 2
+                End If
+                pNameShape.Top = projectTop - diff
+
+                If pNameShape.Width > projectWidth Then
+                    pNameShape.TextFrame2.TextRange.Text = ""
+                End If
+
+                ' jetzt wird das Shape aufgenommen 
+                listOFShapes.Add(pNameShape.Name)
+
+
+            End If
+
+
+            If listOFShapes.Count > 1 Then
+                ' hier werden die Shapes gruppiert
+                projectShape = projectboardShapes.groupShapes(listOFShapes, hproj.name)
+
+                ' jetzt der Liste der ProjectboardShapes hinzufügen
+                projectboardShapes.add(projectShape)
+            End If
+
+
+        End With
+
+
+        ' jetzt müssen ggf die Charts wieder in den Vordergrund gebracht werden 
+        Call bringChartsToFront(projectShape)
+
 
     End Sub
 
@@ -11954,7 +12110,8 @@ Public Module Projekte
             If found Then
 
                 ' jetzt muss die Liste an Shapes aufgebaut werden 
-                If projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                If projectShape.AlternativeText = CInt(PTshty.projektL).ToString Or _
+                    projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
 
                     listOFShapes.Add(projectShape.Name)
 
@@ -12283,12 +12440,13 @@ Public Module Projekte
         Dim showResults As Boolean = True
         Dim myshape As Excel.Shape
 
+
         Try
-            If projectShape.GroupItems.Count > 1 Then
-                ' es handelt sich um die Darstellung inkl der Meilensteine
-                myshape = CType(projectShape.GroupItems.Item(1), Excel.Shape)
-            Else
+            If projectShape.AlternativeText = CInt(PTshty.projektL).ToString Or _
+                    projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
                 myshape = projectShape
+            Else
+                myshape = CType(projectShape.GroupItems.Item(1), Excel.Shape)
             End If
         Catch ex As Exception
             myshape = projectShape
@@ -12332,86 +12490,125 @@ Public Module Projekte
             End Try
 
 
-            'With .Line
-            '    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-            '    'If pMarge < 0 Then
-            '    '    .ForeColor.RGB = RGB(255, 0, 0)
-            '    '    .Weight = 2.0
-            '    'Else
-            '    '    .ForeColor.RGB = pcolor
-            '    'End If
-            '    .ForeColor.RGB = CInt(pcolor)
-            '    .Transparency = 0
-            'End With
+            ' hier muss jetzt unterschieden werden, ob die Projektlinie gezeichnet wurde oder der Balken 
 
-            Try
-                With .Fill
-                    '.Visible = msoTrue
-                    .ForeColor.RGB = CInt(pcolor)
-                    .ForeColor.TintAndShade = 0
-                    .ForeColor.Brightness = -0.25
+            If awinSettings.drawProjectLine Then
+
+                Try
+                    With .Line
+                        .ForeColor.RGB = CInt(pcolor)
+                        .Transparency = 0
+                        .Weight = 4.0
+                        .DashStyle = MsoLineDashStyle.msoLineDash
+                    End With
+                Catch ex As Exception
+
+                End Try
+
+                ' Darstellung, fixiert oder nicht fixiert 
+
+                Try
+
+                    With .Line
+                        If status = ProjektStatus(0) Then
+                            .BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadOval
+                            .EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadOval
+                        Else
+                            .BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadDiamond
+                            .EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadDiamond
+                        End If
+
+                    End With
+
+
+
+                Catch ex As Exception
+
+                End Try
+
+            Else
+
+                Try
+                    With .Fill
+                        '.Visible = msoTrue
+                        .ForeColor.RGB = CInt(pcolor)
+                        .ForeColor.TintAndShade = 0
+                        .ForeColor.Brightness = -0.25
+
+                        If roentgenBlick.isOn Then
+                            .Transparency = 0.8
+                        Else
+                            .Transparency = 0.0
+                        End If
+
+                        .Solid()
+
+                    End With
+                Catch ex As Exception
+
+                End Try
+
+
+                Try
+                    With .TextFrame2
+                        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
+                        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
+                        .TextRange.Font.Size = schriftGroesse
+                        .TextRange.Font.Fill.ForeColor.RGB = CInt(schriftFarbe)
+                    End With
 
                     If roentgenBlick.isOn Then
-                        .Transparency = 0.8
+
+                        .TextFrame2.TextRange.Text = ""
+
+
                     Else
-                        .Transparency = 0.0
+                        ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
+
+                        .TextFrame2.TextRange.Text = myproject.getShapeText
+
+                        ' Ende Änderung 13.10.14
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+                ' nur verändern, wenn es auch veränderbar ist 
+                Try
+
+                    If .Adjustments.Count > 0 Then
+                        If status = ProjektStatus(0) Then
+                            .Adjustments.Item(1) = 0.5
+                        Else
+                            .Adjustments.Item(1) = 0.25
+                        End If
                     End If
 
-                    .Solid()
+                Catch ex As Exception
 
-                End With
-            Catch ex As Exception
-
-            End Try
+                End Try
 
 
-            Try
-                With .TextFrame2
-                    .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                    .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
-                    .TextRange.Font.Size = schriftGroesse
-                    .TextRange.Font.Fill.ForeColor.RGB = CInt(schriftFarbe)
-                End With
-
-                If roentgenBlick.isOn Then
-
-                    .TextFrame2.TextRange.Text = ""
 
 
-                Else
-                    ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
-
-                    .TextFrame2.TextRange.Text = myproject.getShapeText
-
-                    ' Ende Änderung 13.10.14
-                End If
-            Catch ex As Exception
-
-            End Try
-
-            ' nur verändern, wenn es auch veränderbar ist 
-            Try
-
-                If .Adjustments.Count > 0 Then
-                    If status = ProjektStatus(0) Then
-                        .Adjustments.Item(1) = 0.5
-                    Else
-                        .Adjustments.Item(1) = 0.25
-                    End If
-                End If
-
-            Catch ex As Exception
-
-            End Try
 
 
+            End If
 
         End With
 
 
     End Sub
 
-    Public Sub defineShapeAppearance(ByRef myproject As clsProjekt, ByRef projectShape As Excel.Shape, ByVal phasenIndex As Integer)
+    ''' <summary>
+    ''' definiert das Aussehen eines Shapes im Modus , wenn alles Shapes gezeichnet werden 
+    ''' </summary>
+    ''' <param name="myproject"></param>
+    ''' <param name="projectShape"></param>
+    ''' <param name="phasenIndex"></param>
+    ''' <remarks></remarks>
+    Public Sub defineShapeAppearance(ByVal myproject As clsProjekt, ByRef projectShape As Excel.Shape, ByVal phasenIndex As Integer)
+
         Dim projectColor As Object = Nothing, phaseColor As Object = RGB(255, 255, 255)
         Dim whiteColor As Object = RGB(255, 255, 255)
         Dim status As String = ""
@@ -14794,6 +14991,14 @@ Public Module Projekte
         '                StartofCalendar.AddMonths(ende - 1).ToString("MMM yy")
     End Function
 
+    ''' <summary>
+    ''' gibt die Rasterspalte der Projekt-Tafel zurück, in der sich das angegebene Datum befindet 
+    ''' die Einstellung awinsettings.zeiteinheit gibt dabei an, ob Monate , Wochen oder Tage das Raster sind
+    ''' Aktuell werden nur Monate unterstützt
+    ''' </summary>
+    ''' <param name="datum"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Function getColumnOfDate(ByVal datum As Date) As Integer
         Dim spalte As Integer = 1
 
@@ -14977,7 +15182,7 @@ Public Module Projekte
                         For i = 1 To mycollection.Count
                             cName = CStr(mycollection.Item(i)).Replace("#", "-")
                             IDkennung = IDkennung & "#" & cName
-                            
+
                         Next
 
                     Case PTpfdk.Rollen
@@ -15533,7 +15738,7 @@ Public Module Projekte
 
                     phaseNr = CInt(tmpstr(2))
                     zeilenoffset = 0
-                    Call hproj.calculateShapeCoord(phaseNr, zeilenoffset, sollTop, sollLeft, sollWidth, sollHeight)
+                    Call hproj.CalculateShapeCoord(phaseNr, zeilenoffset, sollTop, sollLeft, sollWidth, sollHeight)
 
                     'Dim korrfaktorleft As Double = istLeft - sollLeft
                     'Dim korrfakttorwidth As Double = istWidth - sollWidth
@@ -15831,7 +16036,7 @@ Public Module Projekte
                 enddateText = "-"
                 dauerText = "-"
             End If
-            
+
 
 
         Catch ex As Exception
@@ -16683,7 +16888,7 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Function isProjectType(ByVal type As Integer) As Boolean
 
-        If type = PTshty.projektE Or type = PTshty.projektN Or type = PTshty.projektC Then
+        If type = PTshty.projektE Or type = PTshty.projektN Or type = PTshty.projektC Or type = PTshty.projektL Then
             isProjectType = True
         Else
             isProjectType = False
@@ -16719,7 +16924,7 @@ Public Module Projekte
                 within = True
             End If
         End If
-        
+
 
         phaseWithinTimeFrame = within
 
@@ -16881,7 +17086,7 @@ Public Module Projekte
                 Next
 
             End If
-            
+
 
 
         Next

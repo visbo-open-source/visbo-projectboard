@@ -34,7 +34,8 @@ Public Class clsPhasen
             If AllPhasen.ContainsKey(myitem) Then
                 getPhaseDef = CType(AllPhasen.Item(myitem), clsPhasenDefinition)
             Else
-                getPhaseDef = AllPhasen.First.Value
+                'getPhaseDef = AllPhasen.First.Value
+                getPhaseDef = Nothing
             End If
 
         End Get

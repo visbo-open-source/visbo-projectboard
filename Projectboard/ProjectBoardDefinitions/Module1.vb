@@ -77,6 +77,8 @@ Public Module Module1
     Public RoleDefinitions As New clsRollen
     Public PhaseDefinitions As New clsPhasen
     Public MilestoneDefinitions As New clsMeilensteine
+   
+
     Public CostDefinitions As New clsKostenarten
     ' Welche Business-Units gibt es ? 
     Public businessUnitDefinitions As SortedList(Of Integer, clsBusinessUnit)
@@ -190,19 +192,21 @@ Public Module Module1
         Dependencies = 16
     End Enum
 
-    ' 0=projektN; 1= projektE, 2= phase; 3= milestone;  4= status; 5=dependency
+    ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 
+    ' darüber können Abhängigkeites-Connectoren dann auch von Dependency Konnektoren unterschieden werden 
     ' Enumertaion, um in Onupdate, etc. den Typ des Shapes feststellen zu können 
     Public Enum PTshty
         projektN = 0
         projektC = 1
         projektE = 2
-        phaseN = 3
-        phaseE = 4
-        phase1 = 5
-        milestoneN = 6
-        milestoneE = 7
-        status = 8
-        dependency = 9
+        projektL = 3
+        phaseN = 4
+        phaseE = 5
+        phase1 = 6
+        milestoneN = 7
+        milestoneE = 8
+        status = 9
+        dependency = 10
     End Enum
 
     ' Enumeration History Change Criteria: um anzugeben, welche Veränderung man in der History eines Projektes sucht 
@@ -2323,8 +2327,14 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Function calcYCoordToZeile(ByVal YCoord As Double) As Integer
         Dim tmpValue As Integer
+        'Dim chkValue As Integer
 
-        tmpValue = 1 + CInt((YCoord - topOfMagicBoard) / boxHeight)
+        'chkValue = 1 + CInt((YCoord - topOfMagicBoard) / boxHeight)
+        tmpValue = 1 + CInt(Truncate((YCoord - topOfMagicBoard) / boxHeight))
+
+        'If chkValue <> tmpValue Then
+        '    Call MsgBox("Fehler in calcYCoordToZeile")
+        'End If
 
         calcYCoordToZeile = tmpValue
 

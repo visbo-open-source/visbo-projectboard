@@ -48,15 +48,17 @@
     ''' <remarks></remarks>
     Public Property farbe As Long
         Get
-            Try
+            'Try
 
-                If appearanceDefinitions.ContainsKey(_darstellungsKlasse) Then
-                    _farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
-                End If
+            If appearanceDefinitions.ContainsKey(_darstellungsKlasse) Then
+                _farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
+            Else
+                _farbe = awinSettings.AmpelNichtBewertet
+            End If
 
-            Catch ex As Exception
-                _farbe = appearanceDefinitions.Item(defaultName).form.Fill.ForeColor.RGB
-            End Try
+            'Catch ex As Exception
+            '    _farbe = awinSettings.AmpelNichtBewertet
+            'End Try
 
             farbe = _farbe
 
