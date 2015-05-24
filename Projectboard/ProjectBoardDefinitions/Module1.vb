@@ -215,6 +215,7 @@ Public Module Module1
         milestoneE = 8
         status = 9
         dependency = 10
+        beschriftung = 11
     End Enum
 
     ' Enumeration History Change Criteria: um anzugeben, welche Veränderung man in der History eines Projektes sucht 
@@ -1689,6 +1690,53 @@ Public Module Module1
         appInstance.EnableEvents = formerEE
         enableOnUpdate = formereO
 
+    End Sub
+
+    ''' <summary>
+    ''' löscht die Beschriftungen in der Projekt-Tafel 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub deleteBeschriftungen(Optional ByVal pName As String = "")
+        ' jetzt werden die Aktionen gemacht 
+        Dim worksheetShapes As Excel.Shapes
+        Dim shpElement As Excel.Shape
+
+        Dim descriptionShapeName As String = "Description#" & pName
+
+        enableOnUpdate = False
+
+
+        Try
+            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+
+            If pName = "" Then
+                For Each shpElement In worksheetShapes
+
+                    If shpElement.AlternativeText = CInt(PTshty.beschriftung).ToString Then
+                        shpElement.Delete()
+                    End If
+
+                Next
+            Else
+                Try
+                    shpElement = worksheetShapes.Item(descriptionShapeName)
+                    If Not IsNothing(shpElement) Then
+                        shpElement.Delete()
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+
+            End If
+
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+
+
+        enableOnUpdate = True
     End Sub
 
 

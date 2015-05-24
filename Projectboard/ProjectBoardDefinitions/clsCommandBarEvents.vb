@@ -575,6 +575,8 @@ Public Class clsCommandBarEvents
             If ChartsNeedUpdate Then
                 enableOnUpdate = False
                 Call awinNeuZeichnenDiagramme(updateKennung)
+                ' deletebeschriftungen
+                Call deleteBeschriftungen()
                 enableOnUpdate = True
             End If
 

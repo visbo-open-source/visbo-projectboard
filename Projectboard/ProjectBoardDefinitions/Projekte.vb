@@ -12047,6 +12047,7 @@ Public Module Projekte
         Dim shpName As String
         Dim todoListe As New Collection
         Dim realNameList As New Collection
+        Dim phasenSchriftgroesse As Double = 5.0
 
         Dim onlyFew As Boolean
         Dim projectShape As xlNS.Shape
@@ -16225,6 +16226,297 @@ Public Module Projekte
     End Function
 
     ''' <summary>
+    ''' beschriftet ein Projekt mit seinen Phasen und / oder Meilenstein Namen
+    ''' orientiert sich an dem Shape des Projektes , es wird nur beschriftet, was im Shape vorhanden ist
+    ''' es kann angegeben werden, ob die Original- oder die Standard-Namen angezeigt werden sollen 
+    ''' Alle Beschriftungen zusammen werden als ein zusammengesetztes Shape erzeugt
+    ''' </summary>
+    ''' <param name="projectShape"></param>
+    ''' <param name="annotatePhases"></param>
+    ''' <param name="annotateMilestones"></param>
+    ''' <param name="showStdNames"></param>
+    ''' <remarks></remarks>
+    Public Sub annotateProject(ByVal projectShape As Excel.Shape, ByVal annotatePhases As Boolean, ByVal annotateMilestones As Boolean, _
+                                   ByVal showStdNames As Boolean, ByVal showAbbrev As Boolean)
+
+
+        Dim shapeSammlung As Excel.ShapeRange
+        Dim descriptionGruppe As Excel.ShapeRange
+        Dim descriptionShape As Excel.Shape
+        Dim descriptionShapeName As String = "Description#" & projectShape.Name
+        ' nimmt die Namen der Shapes auf, die zur Project Description gemacht werden sollen 
+        Dim arrayOfNames() As String
+        Dim anzahlElements As Integer
+
+        Dim oldAlternativeText As String
+        Dim oldTitle As String
+        Dim oldName As String
+        Dim hproj As clsProjekt
+        Dim elemShape As Excel.Shape
+        Dim txtShape As Excel.Shape
+        Dim top As Single, left As Single, width As Single, height As Single
+        Dim worksheetShapes As Excel.Shapes
+        Dim nameID As String
+        Dim description As String = ""
+        Dim ok As Boolean
+        Dim index As Integer = 0
+
+
+
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            worksheetShapes = .Shapes
+        End With
+
+        ' prüfen , ob es bereits ein Description Shape für dieses Projekt gibt; wenn ja, dann löschen
+        Try
+            descriptionShape = worksheetShapes.Item(descriptionShapeName)
+            If Not IsNothing(descriptionShape) Then
+                descriptionShape.Delete()
+            End If
+        Catch ex As Exception
+
+        End Try
+
+        With projectShape
+            oldAlternativeText = .AlternativeText
+            oldTitle = .Title
+            oldName = .Name
+        End With
+
+        hproj = ShowProjekte.getProject(oldName)
+
+        If isSingleProjectShape(projectShape) Then
+
+            Call MsgBox("es gibt keine Phasen oder Meilensteine zu beschriften ...")
+
+        Else
+            Try
+                anzahlElements = projectShape.GroupItems.Count
+                ReDim arrayOfNames(anzahlElements - 1)
+
+                shapeSammlung = projectShape.Ungroup()
+
+                ' hier muss dann die Aktion passieren
+                index = 0
+                For Each elemShape In shapeSammlung
+
+                    ok = False
+
+                    If istMeilensteinShape(elemShape) And annotateMilestones Then
+
+                        ok = True
+
+                        nameID = extractName(elemShape.Name, PTshty.milestoneN)
+                        If showStdNames Then
+                            If showAbbrev Then
+                                Dim msName As String = elemNameOfElemID(nameID)
+                                Dim msDef As clsMeilensteinDefinition
+                                msDef = MilestoneDefinitions.getMilestoneDef(msName)
+                                If IsNothing(msDef) Then
+                                    description = "-"
+                                Else
+                                    description = msDef.shortName
+                                    If IsNothing(description) Then
+                                        description = "-"
+                                    Else
+                                        If description = "" Then
+                                            description = "-"
+                                        End If
+
+                                    End If
+                                End If
+
+                            Else
+                                description = elemNameOfElemID(nameID)
+                            End If
+
+                        Else
+                            description = hproj.hierarchy.nodeItem(nameID).origName
+                        End If
+
+
+                    ElseIf istPhasenShape(elemShape) And annotatePhases Then
+
+
+
+                        nameID = extractName(elemShape.Name, PTshty.milestoneN)
+
+                        If nameID <> rootPhaseName Then
+
+                            ok = True
+                            If showStdNames Then
+
+                                If showAbbrev Then
+                                    Dim phName As String = elemNameOfElemID(nameID)
+                                    Dim phDef As clsPhasenDefinition
+                                    phDef = PhaseDefinitions.getPhaseDef(phName)
+                                    If IsNothing(phDef) Then
+                                        description = "-"
+                                    Else
+                                        description = phDef.shortName
+                                        If IsNothing(description) Then
+                                            description = "-"
+                                        Else
+                                            If description = "" Then
+                                                description = "-"
+                                            End If
+                                        End If
+                                    End If
+
+                                Else
+                                    description = elemNameOfElemID(nameID)
+                                End If
+
+                            Else
+                                description = hproj.hierarchy.nodeItem(nameID).origName
+                            End If
+                        End If
+
+                        
+
+                    End If
+
+                    ' jetzt wird das Description Shape erzeugt 
+                    If ok Then
+                        ' nur, wenn es entweder ein Meilenstein oder eine Phase war ... 
+
+                        top = elemShape.Top
+                        left = elemShape.Left
+                        width = 30
+                        height = 30
+
+                        txtShape = worksheetShapes.AddLabel(MsoTextOrientation.msoTextOrientationHorizontal, _
+                                                                left, top, width, height)
+
+                        With txtShape
+                            .TextFrame2.AutoSize = MsoAutoSize.msoAutoSizeShapeToFitText
+                            .TextFrame2.WordWrap = MsoTriState.msoFalse
+                            .TextFrame2.TextRange.Text = description
+                            .TextFrame2.TextRange.Font.Size = hproj.Schrift - 2
+                            .TextFrame2.MarginLeft = 0.05
+                            .TextFrame2.MarginRight = 0.05
+                            .TextFrame2.MarginTop = 0
+                            .TextFrame2.MarginBottom = 0
+                            .TextFrame2.VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
+                            .TextFrame2.HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
+
+                            If description = "-" Then
+                                .Fill.Visible = MsoTriState.msoFalse
+                            Else
+                                .Fill.Visible = MsoTriState.msoTrue
+                                .Fill.ForeColor.RGB = RGB(255, 255, 255)
+                                .Fill.Transparency = 0
+                                .Fill.Solid()
+                            End If
+                            
+
+                        End With
+
+                        ' jetzt muss das Shape noch in der Höhe richtig positioniert werden 
+                        Dim diff As Single
+                        Dim zeile As Integer
+
+                        If istMeilensteinShape(elemShape) Then
+                            'zeile = calcYCoordToZeile(elemShape.Top)
+                            'txtShape.Top = CSng(calcZeileToYCoord(zeile)) + 1
+                            txtShape.Top = elemShape.Top - txtShape.Height - 1
+                            diff = (txtShape.Width - elemShape.Width) / 2
+                            txtShape.Left = elemShape.Left - diff
+                        Else
+                            zeile = calcYCoordToZeile(elemShape.Top)
+                            txtShape.Top = CSng(calcZeileToYCoord(zeile + 1)) - txtShape.Height - 1
+                            'txtShape.Top = elemShape.Top + elemShape.Height
+                            txtShape.Left = elemShape.Left
+                        End If
+
+                        ' jetzt wird das Shape aufgenommen 
+                        arrayOfNames(index) = txtShape.Name
+                        index = index + 1
+
+                    End If
+
+                Next
+
+                If index < anzahlElements Then
+                    anzahlElements = index
+                    ReDim Preserve arrayOfNames(anzahlElements - 1)
+                End If
+
+                ' jetzt wird das neue zusammengesetzte Beschriftungs-Shape erzeugt ... 
+                descriptionGruppe = worksheetShapes.Range(arrayOfNames)
+                descriptionShape = descriptionGruppe.Group
+
+                With descriptionShape
+                    .Name = descriptionShapeName
+                    .AlternativeText = CInt(PTshty.beschriftung).ToString
+                End With
+
+                ' hier muss das alte Shape wieder restauriert werden 
+                projectShape = shapeSammlung.Group
+
+                With projectShape
+                    .Name = oldName
+                    .AlternativeText = oldAlternativeText
+                    .Title = oldTitle
+                    hproj.shpUID = .ID.ToString
+                End With
+
+                ' jetzt muss das auch in der Liste Showprojekte eingetragen werden 
+                ShowProjekte.AddShape(hproj.name, hproj.shpUID)
+
+            Catch ex As Exception
+                Call MsgBox(ex.Message & vbLf & "... keine Phasen oder Meilensteine zu beschriften ...")
+            End Try
+
+
+        End If
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt true zurück, wenn es sich bei dem Element um einen Projekt-Meilenstein handelt 
+    ''' false, sonst
+    ''' </summary>
+    ''' <param name="elemShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function istMeilensteinShape(ByVal elemShape As Excel.Shape) As Boolean
+
+        With elemShape
+            If .AlternativeText = CInt(PTshty.milestoneN).ToString Or _
+                .AlternativeText = CInt(PTshty.milestoneE).ToString Then
+                istMeilensteinShape = True
+            Else
+                istMeilensteinShape = False
+            End If
+        End With
+
+    End Function
+
+    ''' <summary>
+    ''' gibt true zurück, wenn es sich bei dem Element um eine Projekt-Phase handelt
+    ''' false, sonst
+    ''' </summary>
+    ''' <param name="elemShape"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function istPhasenShape(ByVal elemShape As Excel.Shape) As Boolean
+
+        With elemShape
+            If .AlternativeText = CInt(PTshty.phase1).ToString Or _
+                    .AlternativeText = CInt(PTshty.phaseN).ToString Or _
+                    .AlternativeText = CInt(PTshty.phaseE).ToString Then
+                istPhasenShape = True
+            Else
+                istPhasenShape = False
+            End If
+        End With
+
+    End Function
+
+    ''' <summary>
     ''' aktualisiert bzw. zeigt das Status Fenster zur Ampel-Erläuterung eines Projektes 
     ''' </summary>
     ''' <param name="hproj">übergeben wird das betreffende Projekt</param>
@@ -17717,6 +18009,31 @@ Public Module Projekte
         Else
             isProjectType = False
         End If
+
+    End Function
+
+    ''' <summary>
+    ''' gibt true zurück , wenn es sich um ein einzelnes , d.h nicht gruppiertes Projekt-Shape handelt
+    ''' false in allen anderen Fällen
+    ''' </summary>
+    ''' <param name="shpElement"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isSingleProjectShape(ByVal shpElement As Excel.Shape) As Boolean
+
+        Dim tmpErg As Boolean = False
+
+        With shpElement
+            If .AlternativeText = CInt(PTshty.projektL).ToString Then
+                tmpErg = True
+            ElseIf .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                If .AlternativeText = CInt(PTshty.projektN).ToString Then
+                    tmpErg = True
+                End If
+            End If
+        End With
+
+        isSingleProjectShape = tmpErg
 
     End Function
 

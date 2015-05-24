@@ -50,6 +50,8 @@ Public Class frmHierarchySelection
             Me.Left = 100
         End If
 
+        Cursor = Cursors.WaitCursor
+
         awinSettings.isHryNameFrmActive = True
 
         hry = New clsHierarchy
@@ -69,6 +71,8 @@ Public Class frmHierarchySelection
         
 
         Call buildHryTreeView()
+
+        Cursor = Cursors.Default
 
         ' die Vorlagen einlesen
         Call frmHryNameReadPPTVorlagen(Me.menuOption, repVorlagenDropbox)

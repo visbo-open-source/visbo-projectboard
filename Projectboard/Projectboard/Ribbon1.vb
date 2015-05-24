@@ -375,6 +375,26 @@ Imports System.Drawing
 
     End Sub
 
+    ''' <summary>
+    ''' löscht alle Beschriftungen in der PRojekt-Tafel 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT6DeleteBeschriftung(control As IRibbonControl)
+
+        Dim todoList As New Collection
+        
+        Call projektTafelInit()
+
+
+        Call deleteBeschriftungen()
+
+
+
+    End Sub
+
+
+
     Sub PT6DeleteCharts(control As IRibbonControl)
 
         Dim anzDiagrams As Integer
@@ -939,6 +959,43 @@ Imports System.Drawing
         enableOnUpdate = True
 
 
+
+    End Sub
+
+    ''' <summary>
+    ''' beschriftet die ausgewählten Projekte 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTBeschriften(control As IRibbonControl)
+
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            If awinSelection.Count >= 1 Then
+
+                Dim annotateFrm As New frmAnnotateProject
+                annotateFrm.Show()
+
+            Else
+                Call MsgBox("bitte mindestens ein Projekt selektieren ...")
+            End If
+        Else
+            Call MsgBox("bitte mindestens ein Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
 
     End Sub
 
@@ -3152,6 +3209,11 @@ Imports System.Drawing
 
         Call projektTafelInit()
 
+        Cursor.Current = Cursors.WaitCursor
+
+        ' erstmal alle Beschriftungen löschen 
+        Call deleteBeschriftungen()
+
         If pressed Then
             ' jetzt werden die Projekt-Symbole inkl Phasen Darstellung gezeichnet
             awinSettings.drawphases = True
@@ -3164,6 +3226,8 @@ Imports System.Drawing
             Call awinClearPlanTafel()
             Call awinZeichnePlanTafel(False)
         End If
+
+        Cursor.Current = Cursors.Default
 
     End Sub
 

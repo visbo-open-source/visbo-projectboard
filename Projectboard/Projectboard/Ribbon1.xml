@@ -159,8 +159,10 @@
           <!--<button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />-->
           <button id="PT2G1B2" label="Fixieren" onAction="Tom2G1Beauftragen" supertip ="mit dem Fixieren können Termine von Phasen oder Meilensteinen und zugehörige Rollen- und Kostenbedarfe des Projektes nicht mehr verändert werden. Visuell ist ein fixiertes Projekt durch die eckigere Projektbalken Darstellung zu erkennen"/>
           <button id="PT2G1B3" label="Fixierung aufheben" onAction="Tom2GXBeauftragen" supertip ="mit dem Aufheben der Fixierung können Projekte bzw. Varianten in ihren Terminen und zugehörigen Rollen- und Kostenbedarfe verändert werden. Visuell ist ein nicht fixiertes Projekt durch die rundere Projektbalken Darstellung zu erkennen"/>
-          <!--<separator id="PT2G1s3"/>
-          <button id="PT2G1B4" label="in Warteschlange stellen" onAction="Tom2G1NoShow" />
+          <separator id="PT2G1s3"/>
+          <button id="PT2G1B4" label="Beschriften" onAction="PTBeschriften" />
+          <button id="PT2G1B5" label="Beschriftungen löschen" onAction="PTDeleteBeschriftung" />
+          <!--<button id="PT2G1B4" label="in Warteschlange stellen" onAction="Tom2G1NoShow" />
           <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />
           <separator id="PT2G1s4"/>
           <button id="PT2G1B6" label="Umbenennen" onAction="Tom2G1Rename" />-->
@@ -179,8 +181,9 @@
             <button id="PT2G3M3B2" label="Projekte und Varianten" onAction="Tom2G1Loeschen" supertip ="ausgewählte Projekte und Varianten können aus der Session gelöscht werden. Diese Aktion hat keinen Einfluss auf die Datenbank"/>
           </menu>
           <separator id="PT2G3s1"/>
-          <menu id="PT2G3M2" label ="Symbole löschen">
-            <button id="PT2G3M4B1" label="Meilensteine, Phasen, Stati"  onAction="Tom2G2M5B3NoShowSymbols" supertip ="alle visuellen Darstellungen von Projekt-Stati, Phasen oder Meilensteinen werden aus der Session gelöscht; das hat jedoch keinerlei Einfluss auf die Phasen und Meilensteine der Projekte in der Session; die bleiben weiterhin erhalten"/>
+          <menu id="PT2G3M2" label ="Zeichen-Elemente löschen">
+            <button id="PT2G3M4B1" label="Meilensteine, Phasen, Stati"  onAction="Tom2G2M5B3NoShowSymbols" supertip ="alle visuellen Darstellungen von Projekt-Stati, Phasen oder Meilensteinen werden aus der Session gelöscht; das hat jedoch keinerlei Einfluss auf die Phasen und Meilensteine der Projekte in der Session; die bleiben weiterhin erhalten (gilt nicht für Extended Mode)"/>
+            <button id="PT2G3M4B3" label="Beschriftungen"  onAction="PT6DeleteBeschriftung" supertip ="alle aktuell angezeigten Beschriftungen werden gelöscht"/>
             <button id="PT2G3M4B2" label="Charts"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
           </menu>
         </group>

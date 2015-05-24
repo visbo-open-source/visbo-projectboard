@@ -248,7 +248,6 @@ Public Class clsProjektShapes
         End Get
     End Property
 
-
     ''' <summary>
     ''' berechnet für die Phase phaseName des Projekts pName den Shape-Namen und gibt ihn zurück
     ''' </summary>

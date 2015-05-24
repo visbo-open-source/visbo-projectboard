@@ -3704,6 +3704,8 @@ Public Module awinGeneralModules
     End Sub
 
 
+    
+
     ''' <summary>
     ''' lädt die jeweils letzten PName/Variante Projekte aus MongoDB in alleProjekte
     ''' lädt ausserdem alle definierten Konstellationen
@@ -5908,7 +5910,7 @@ Public Module awinGeneralModules
 
         With auswahlFormular
             .Text = "Datenbank Filter definieren"
-           
+
             '.chkbxShowObjects = False
             '.chkbxCreateCharts = False
 
@@ -6147,7 +6149,7 @@ Public Module awinGeneralModules
                     And validOption Then
 
                 Try
-                    Call createExcelExportFromSelection(filterName)
+                    Call createExcelExportFromSelection(filtername)
 
                     Call MsgBox("ok, Excel File in " & exportFilesOrdner & " erzeugt")
                 Catch ex As Exception

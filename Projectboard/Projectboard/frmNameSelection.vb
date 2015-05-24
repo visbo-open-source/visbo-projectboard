@@ -266,6 +266,7 @@ Public Class frmNameSelection
 
                         ' Alternativ ohne Background Worker
 
+
                         BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 
                     Catch ex As Exception
@@ -1038,8 +1039,6 @@ Public Class frmNameSelection
 
     End Sub
 
-
-    
 
 
 End Class

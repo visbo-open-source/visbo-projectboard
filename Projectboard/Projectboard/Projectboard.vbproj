@@ -151,6 +151,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
+    <Compile Include="frmAnnotateProject.Designer.vb">
+      <DependentUpon>frmAnnotateProject.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmAnnotateProject.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmHierarchySelection.Designer.vb">
       <DependentUpon>frmHierarchySelection.vb</DependentUpon>
     </Compile>
@@ -280,6 +286,9 @@
     <Compile Include="ThisWorkbook.vb">
       <DependentUpon>Projectboard.xlsx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="frmAnnotateProject.resx">
+      <DependentUpon>frmAnnotateProject.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmHierarchySelection.resx">
       <DependentUpon>frmHierarchySelection.vb</DependentUpon>
     </EmbeddedResource>
