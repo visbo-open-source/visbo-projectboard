@@ -387,10 +387,11 @@
     Public ReadOnly Property Farbe As Object
         Get
             Try
-                If _name = "." Then
-                    Farbe = Projektvorlagen.getProject(_name).farbe
+                Dim itemName As String = elemNameOfElemID(_name)
+                If _name = rootPhaseName Then
+                    Farbe = Me.Parent.farbe             ' Farbe der Projektes, da Projekt der Parent der RootPhase ist
                 Else
-                    Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(_name)
+                    Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(elemNameOfElemID(_name))
                     If IsNothing(tmpPhaseDef) Then
                         If appearanceDefinitions.ContainsKey("Phasen Default") Then
                             Farbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
