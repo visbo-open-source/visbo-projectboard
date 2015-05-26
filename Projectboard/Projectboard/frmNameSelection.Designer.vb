@@ -93,6 +93,7 @@ Partial Class frmNameSelection
         'filterBox
         '
         Me.filterBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.filterBox.HideSelection = False
         Me.filterBox.Location = New System.Drawing.Point(137, 76)
         Me.filterBox.Name = "filterBox"
         Me.filterBox.Size = New System.Drawing.Size(150, 22)

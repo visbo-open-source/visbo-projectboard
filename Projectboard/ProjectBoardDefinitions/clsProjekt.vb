@@ -74,7 +74,8 @@ Public Class clsProjekt
         Dim latestfound As Boolean = False
         Dim tmpStartDate As Date
         Dim tmpEndDate As Date
-        Dim phaseName As String
+        Dim phaseName As String = ""
+        Dim fullPhaseName As String
         Dim cphase As clsPhase
 
         ' Phasen Information untersuchen 
@@ -82,9 +83,10 @@ Public Class clsProjekt
 
         For ix As Integer = 1 To selPhases.Count
 
-            phaseName = CStr(selPhases.Item(ix))
+            fullPhaseName = CStr(selPhases.Item(ix))
 
             Dim breadcrumb As String = ""
+            Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb)
             Dim phaseIndices() As Integer = Me.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
             For px As Integer = 0 To phaseIndices.Length - 1
@@ -120,13 +122,15 @@ Public Class clsProjekt
 
 
         ' Meilensteine schreiben 
-        Dim msName As String
+        Dim fullMsName As String
+        Dim msName As String = ""
         Dim milestone As clsMeilenstein = Nothing
 
         For ix As Integer = 1 To selMilestones.Count
-            msName = CStr(selMilestones.Item(ix))
+            fullMsName = CStr(selMilestones.Item(ix))
 
             Dim breadcrumb As String = ""
+            Call splitHryFullnameTo2(fullMsName, msName, breadcrumb)
             Dim milestoneIndices(,) As Integer = Me.hierarchy.getMilestoneIndices(msName, breadcrumb)
             ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
 

@@ -745,8 +745,10 @@ Public Module testModule
                                         ' die ListofItems muss die eindeutigen IDs beeinhalten
                                         For i = 1 To tmpStr.Length
 
-                                            Dim msName As String = tmpStr(i - 1).Trim
+                                            Dim fullmsName As String = tmpStr(i - 1).Trim
+                                            Dim msName As String = ""
                                             Dim breadcrumb As String = ""
+                                            Call splitHryFullnameTo2(fullmsName, msName, breadcrumb)
                                             Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(msName, breadcrumb)
                                             Dim msItem As String
 
@@ -7451,7 +7453,7 @@ Public Module testModule
 
         If isMultiprojektSicht Then
 
-            If noTimespanDefined = 0 Then
+            If noTimespanDefined Then
                 tmpMinimum = StartofCalendar.AddYears(500)
                 tmpMaximum = StartofCalendar.AddYears(-500)
             Else
@@ -7512,9 +7514,12 @@ Public Module testModule
             projektstart = hproj.Start + hproj.StartOffset
 
             ' Phasen checken 
-            For Each phaseName As String In selectedPhases
+            For Each fullPhaseName As String In selectedPhases
 
                 Dim breadcrumb As String = ""
+                Dim phaseName As String = ""
+
+                Call splitHryFullnameTo2(fullPhaseName, phaseName, breadcrumb)
                 Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
                 For px As Integer = 0 To phaseIndices.Length - 1
@@ -7560,9 +7565,12 @@ Public Module testModule
             ' das muss nur gemacht werden, wenn showAllIfOne=true 
             If awinSettings.mppShowAllIfOne Or noTimespanDefined Then
 
-                For Each msName As String In selectedMilestones
+                For Each fullMsName As String In selectedMilestones
 
                     Dim breadcrumb As String = ""
+                    Dim msName As String = ""
+                    Call splitHryFullnameTo2(fullMsName, msName, breadcrumb)
+
                     Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(msName, breadcrumb)
                     ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
 
@@ -7587,9 +7595,9 @@ Public Module testModule
                             Catch ex As Exception
 
                             End Try
-                            
+
                         End If
-                        
+
                     Next
                 Next
             End If

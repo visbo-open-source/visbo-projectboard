@@ -102,7 +102,7 @@ Public Module awinGeneralModules
                 lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
                 CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = phColor
+                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
 
             End If
@@ -135,7 +135,7 @@ Public Module awinGeneralModules
                     lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
                     CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = phColor
+                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
                     PhaseDefinitions.Add(missPhaseDef)
 
@@ -199,6 +199,7 @@ Public Module awinGeneralModules
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 4).Value = belongsTo
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
+                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
                
             End If
 
@@ -232,6 +233,7 @@ Public Module awinGeneralModules
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 4).Value = belongsTo
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
+                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
                     MilestoneDefinitions.Add(msDef)
 
                 End If

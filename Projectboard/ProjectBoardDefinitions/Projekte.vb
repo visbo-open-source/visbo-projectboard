@@ -16287,7 +16287,7 @@ Public Module Projekte
 
         If isSingleProjectShape(projectShape) Then
 
-            Call MsgBox("es gibt keine Phasen oder Meilensteine zu beschriften ...")
+            'Call MsgBox("es gibt keine Phasen oder Meilensteine zu beschriften ...")
 
         Else
             Try
@@ -16300,6 +16300,7 @@ Public Module Projekte
                 index = 0
                 For Each elemShape In shapeSammlung
 
+                    txtShape = Nothing
                     ok = False
 
                     If istMeilensteinShape(elemShape) And annotateMilestones Then
@@ -16370,6 +16371,7 @@ Public Module Projekte
                             Else
                                 description = hproj.hierarchy.nodeItem(nameID).origName
                             End If
+                        
                         End If
 
                         
@@ -16437,20 +16439,32 @@ Public Module Projekte
 
                 Next
 
-                If index < anzahlElements Then
-                    anzahlElements = index
-                    ReDim Preserve arrayOfNames(anzahlElements - 1)
-                End If
+                Try
+                    If index > 0 Then
+                        If index < anzahlElements Then
+                            anzahlElements = index
+                            ReDim Preserve arrayOfNames(anzahlElements - 1)
+                        End If
 
-                ' jetzt wird das neue zusammengesetzte Beschriftungs-Shape erzeugt ... 
-                descriptionGruppe = worksheetShapes.Range(arrayOfNames)
-                descriptionShape = descriptionGruppe.Group
+                        If anzahlElements > 1 Then
+                            ' jetzt wird das neue zusammengesetzte Beschriftungs-Shape erzeugt ... 
+                            descriptionGruppe = worksheetShapes.Range(arrayOfNames)
+                            descriptionShape = descriptionGruppe.Group
+                        Else
+                            descriptionShape = worksheetShapes.Item(arrayOfNames(0))
+                        End If
 
-                With descriptionShape
-                    .Name = descriptionShapeName
-                    .AlternativeText = CInt(PTshty.beschriftung).ToString
-                End With
+                        If Not IsNothing(descriptionShape) Then
+                            With descriptionShape
+                                .Name = descriptionShapeName
+                                .AlternativeText = CInt(PTshty.beschriftung).ToString
+                            End With
+                        End If
+                    End If
+                Catch ex As Exception
 
+                End Try
+                
                 ' hier muss das alte Shape wieder restauriert werden 
                 projectShape = shapeSammlung.Group
 
@@ -16465,7 +16479,7 @@ Public Module Projekte
                 ShowProjekte.AddShape(hproj.name, hproj.shpUID)
 
             Catch ex As Exception
-                Call MsgBox(ex.Message & vbLf & "... keine Phasen oder Meilensteine zu beschriften ...")
+                'Call MsgBox(ex.Message & vbLf & "... keine Phasen oder Meilensteine zu beschriften ...")
             End Try
 
 

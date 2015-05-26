@@ -324,6 +324,7 @@ Public Class frmNameSelection
 
         'Dim i As Integer
         statusLabel.Text = ""
+        filterBox.Enabled = True
 
         If Me.rdbPhases.Checked Then
             ' clear Listbox1 
@@ -332,7 +333,7 @@ Public Class frmNameSelection
             selNameListBox.Items.Clear()
             filterBox.Text = ""
 
-            chkbxOneChart.Text = "Alles in einem Chart"
+            'chkbxOneChart.Text = "Alles in einem Chart"
 
 
 
@@ -378,6 +379,7 @@ Public Class frmNameSelection
     Private Sub rdbMilestones_CheckedChanged(sender As Object, e As EventArgs) Handles rdbMilestones.CheckedChanged
 
         statusLabel.Text = ""
+        filterBox.Enabled = True
 
         If Me.rdbMilestones.Checked Then
             ' clear Listbox1 
@@ -387,7 +389,7 @@ Public Class frmNameSelection
 
             filterBox.Text = ""
 
-            chkbxOneChart.Text = "Alles in einem Chart"
+            'chkbxOneChart.Text = "Alles in einem Chart"
 
 
             If selectedProjekte.Count > 0 Then
@@ -436,6 +438,7 @@ Public Class frmNameSelection
         Dim i As Integer
 
         statusLabel.Text = ""
+        filterBox.Enabled = True
 
         If RoleDefinitions.Count = 0 Then
             Call MsgBox("es sind keine Kostenarten definiert !")
@@ -446,7 +449,7 @@ Public Class frmNameSelection
                 nameListBox.Items.Clear()
                 selNameListBox.Items.Clear()
                 filterBox.Text = ""
-                chkbxOneChart.Text = "Alles in einem Chart"
+                'chkbxOneChart.Text = "Alles in einem Chart"
 
 
                 If allRoles.Count = 0 Then
@@ -485,6 +488,7 @@ Public Class frmNameSelection
         Dim i As Integer
 
         statusLabel.Text = ""
+        filterBox.Enabled = True
 
         If CostDefinitions.Count = 0 Then
             Call MsgBox("es sind keine Kostenarten definiert !")
@@ -495,7 +499,7 @@ Public Class frmNameSelection
                 nameListBox.Items.Clear()
                 selNameListBox.Items.Clear()
                 filterBox.Text = ""
-                chkbxOneChart.Text = "Alles in einem Chart"
+                'chkbxOneChart.Text = "Alles in einem Chart"
 
                 If allCosts.Count = 0 Then
                     For i = 1 To CostDefinitions.Count
@@ -530,6 +534,7 @@ Public Class frmNameSelection
         Dim i As Integer
 
         statusLabel.Text = ""
+        filterBox.Enabled = True
 
         If businessUnitDefinitions.Count = 0 Then
             Call MsgBox("es sind keine Business Units definiert !")
@@ -575,18 +580,19 @@ Public Class frmNameSelection
         Dim i As Integer
 
         statusLabel.Text = ""
+        filterBox.Enabled = True
 
         If Projektvorlagen.Count = 0 Then
             Call MsgBox("es sind keine Projektvorlagen definiert !")
         Else
             If Me.rdbTyp.Checked Then
                 ' clear Listbox1 
-                headerLine.Text = "Projektvorlagen / Generik"
+                headerLine.Text = "Generik"
                 nameListBox.Items.Clear()
                 selNameListBox.Items.Clear()
 
                 filterBox.Text = ""
-                chkbxOneChart.Text = "Alles in einem Chart"
+                'chkbxOneChart.Text = "Alles in einem Chart"
 
                 If allTyps.Count = 0 Then
 

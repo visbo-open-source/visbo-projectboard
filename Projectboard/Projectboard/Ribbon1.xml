@@ -161,7 +161,7 @@
           <button id="PT2G1B3" label="Fixierung aufheben" onAction="Tom2GXBeauftragen" supertip ="mit dem Aufheben der Fixierung können Projekte bzw. Varianten in ihren Terminen und zugehörigen Rollen- und Kostenbedarfe verändert werden. Visuell ist ein nicht fixiertes Projekt durch die rundere Projektbalken Darstellung zu erkennen"/>
           <separator id="PT2G1s3"/>
           <button id="PT2G1B4" label="Beschriften" onAction="PTBeschriften" />
-          <button id="PT2G1B5" label="Beschriftungen löschen" onAction="PTDeleteBeschriftung" />
+          <button id="PT2G1B5" label="Beschriftungen löschen" onAction="PT6DeleteBeschriftung" />
           <!--<button id="PT2G1B4" label="in Warteschlange stellen" onAction="Tom2G1NoShow" />
           <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />
           <separator id="PT2G1s4"/>

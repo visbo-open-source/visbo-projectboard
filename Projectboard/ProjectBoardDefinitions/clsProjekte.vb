@@ -640,9 +640,11 @@ Public Class clsProjekte
 
                     Else
 
-                        For Each phaseName As String In selItems1
+                        For Each fullphaseName As String In selItems1
 
                             Dim breadcrumb As String = ""
+                            Dim phaseName As String = ""
+                            Call splitHryFullnameTo2(fullphaseName, phaseName, breadcrumb)
                             Dim phaseIndices() As Integer = kvp.Value.hierarchy.getPhaseIndices(phaseName, breadcrumb)
 
                             For px As Integer = 0 To phaseIndices.Length - 1
@@ -684,9 +686,11 @@ Public Class clsProjekte
                         ' wenn noch keine Phase gefunen wurde 
 
                         If Not found Then
-                            For Each milestoneName As String In selItems2
+                            For Each fullmilestoneName As String In selItems2
 
                                 Dim breadcrumb As String = ""
+                                Dim milestoneName As String = ""
+                                Call splitHryFullnameTo2(fullmilestoneName, milestoneName, breadcrumb)
                                 Dim milestoneIndices(,) As Integer = kvp.Value.hierarchy.getMilestoneIndices(milestoneName, breadcrumb)
                                 ' in milestoneIndices sind jetzt die Phasen- und Meilenstein Index der Phasen bzw Meilenstein Liste
 

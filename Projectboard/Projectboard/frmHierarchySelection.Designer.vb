@@ -33,13 +33,13 @@ Partial Class frmHierarchySelection
         Me.OKButton = New System.Windows.Forms.Button()
         Me.BackgroundWorker1 = New System.ComponentModel.BackgroundWorker()
         Me.AbbrButton = New System.Windows.Forms.Button()
-        Me.SelectionReset = New System.Windows.Forms.PictureBox()
-        Me.expandCompletely = New System.Windows.Forms.PictureBox()
         Me.collapseCompletely = New System.Windows.Forms.PictureBox()
+        Me.expandCompletely = New System.Windows.Forms.PictureBox()
+        Me.SelectionReset = New System.Windows.Forms.PictureBox()
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'hryTreeView
@@ -144,32 +144,36 @@ Partial Class frmHierarchySelection
         Me.AbbrButton.UseVisualStyleBackColor = False
         Me.AbbrButton.Visible = False
         '
-        'SelectionReset
+        'collapseCompletely
         '
-        Me.SelectionReset.BackColor = System.Drawing.SystemColors.Info
-        Me.SelectionReset.Location = New System.Drawing.Point(12, 349)
-        Me.SelectionReset.Name = "SelectionReset"
-        Me.SelectionReset.Size = New System.Drawing.Size(19, 18)
-        Me.SelectionReset.TabIndex = 45
-        Me.SelectionReset.TabStop = False
+        Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
+        Me.collapseCompletely.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_beginning
+        Me.collapseCompletely.Location = New System.Drawing.Point(35, 349)
+        Me.collapseCompletely.Name = "collapseCompletely"
+        Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.collapseCompletely.TabIndex = 47
+        Me.collapseCompletely.TabStop = False
         '
         'expandCompletely
         '
-        Me.expandCompletely.BackColor = System.Drawing.Color.OliveDrab
-        Me.expandCompletely.Location = New System.Drawing.Point(60, 349)
+        Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
+        Me.expandCompletely.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_end
+        Me.expandCompletely.Location = New System.Drawing.Point(57, 349)
         Me.expandCompletely.Name = "expandCompletely"
-        Me.expandCompletely.Size = New System.Drawing.Size(19, 18)
+        Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
         Me.expandCompletely.TabIndex = 46
         Me.expandCompletely.TabStop = False
         '
-        'collapseCompletely
+        'SelectionReset
         '
-        Me.collapseCompletely.BackColor = System.Drawing.SystemColors.ActiveCaption
-        Me.collapseCompletely.Location = New System.Drawing.Point(85, 349)
-        Me.collapseCompletely.Name = "collapseCompletely"
-        Me.collapseCompletely.Size = New System.Drawing.Size(19, 18)
-        Me.collapseCompletely.TabIndex = 47
-        Me.collapseCompletely.TabStop = False
+        Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
+        Me.SelectionReset.Image = Global.ExcelWorkbook1.My.Resources.Resources.selection_delete
+        Me.SelectionReset.InitialImage = Nothing
+        Me.SelectionReset.Location = New System.Drawing.Point(12, 349)
+        Me.SelectionReset.Name = "SelectionReset"
+        Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionReset.TabIndex = 45
+        Me.SelectionReset.TabStop = False
         '
         'frmHierarchySelection
         '
@@ -193,9 +197,9 @@ Partial Class frmHierarchySelection
         Me.Text = "Auswahl über Hierarchie"
         Me.TopMost = True
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
