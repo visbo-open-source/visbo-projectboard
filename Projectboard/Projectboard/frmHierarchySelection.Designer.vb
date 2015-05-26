@@ -44,6 +44,7 @@ Partial Class frmHierarchySelection
         '
         'hryTreeView
         '
+        Me.hryTreeView.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.hryTreeView.FullRowSelect = True
         Me.hryTreeView.Location = New System.Drawing.Point(12, 50)
         Me.hryTreeView.Name = "hryTreeView"
