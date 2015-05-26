@@ -385,7 +385,6 @@ Partial Class frmNameSelection
     Friend WithEvents repVorlagenDropbox As System.Windows.Forms.ComboBox
     Friend WithEvents labelPPTVorlage As System.Windows.Forms.Label
     Friend WithEvents statusLabel As System.Windows.Forms.Label
-    Friend WithEvents BackgroundWorker1 As System.ComponentModel.BackgroundWorker
     Friend WithEvents einstellungen As System.Windows.Forms.Label
     Public WithEvents selNameListBox As System.Windows.Forms.ListBox
     Friend WithEvents pictureTyp As System.Windows.Forms.PictureBox
@@ -395,4 +394,5 @@ Partial Class frmNameSelection
     Friend WithEvents addButton As System.Windows.Forms.PictureBox
     Friend WithEvents removeButton As System.Windows.Forms.PictureBox
     Friend WithEvents Label1 As System.Windows.Forms.Label
+    Public WithEvents BackgroundWorker1 As System.ComponentModel.BackgroundWorker
 End Class
