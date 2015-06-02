@@ -2506,19 +2506,7 @@ Imports System.Drawing
 
 
             ' sichern der awinSettings.mpp... Einstellungen
-            ' Settings für Multiprojekt-Sichten
-            ' '' '' ''Dim sav_mppShowAllIfOne As Boolean = awinSettings.mppShowAllIfOne
-            ' '' '' ''Dim sav_mppShowMsDate As Boolean = awinSettings.mppShowMsDate
-            ' '' '' ''Dim sav_mppShowMsName As Boolean = awinSettings.mppShowMsName
-            ' '' '' ''Dim sav_mppShowPhDate As Boolean = awinSettings.mppShowPhDate
-            ' '' '' ''Dim sav_mppShowPhName As Boolean = awinSettings.mppShowPhName
-            ' '' '' ''Dim sav_mppShowAmpel As Boolean = awinSettings.mppShowAmpel
-            ' '' '' ''Dim sav_mppShowProjectLine As Boolean = awinSettings.mppShowProjectLine
-            ' '' '' ''Dim sav_mppVertikalesRaster As Boolean = awinSettings.mppVertikalesRaster
-            ' '' '' ''Dim sav_mppShowLegend As Boolean = awinSettings.mppShowLegend
-            ' '' '' ''Dim sav_mppFullyContained As Boolean = awinSettings.mppFullyContained
-            ' '' '' ''Dim sav_mppSortiertDauer As Boolean = awinSettings.mppSortiertDauer
-            ' '' '' ''Dim sav_mppOnePage As Boolean = awinSettings.mppOnePage
+          
             Dim sav_mppShowAllIfOne As Boolean = awinSettings.mppShowAllIfOne
             awinSettings.mppShowAllIfOne = True
             Dim sav_mppExtendedMode As Boolean = awinSettings.mppExtendedMode
@@ -2533,19 +2521,7 @@ Imports System.Drawing
 
             awinSettings.eppExtendedMode = False
 
-            ' wieder setzen der awinSettings.mpp... einstellungen
-            ' '' ''awinSettings.mppShowAllIfOne = sav_mppShowAllIfOne
-            ' '' ''awinSettings.mppShowMsDate = sav_mppShowMsDate
-            ' '' ''awinSettings.mppShowMsName = sav_mppShowMsName
-            ' '' ''awinSettings.mppShowPhDate = sav_mppShowPhDate
-            ' '' ''awinSettings.mppShowPhName = sav_mppShowPhName
-            ' '' ''awinSettings.mppShowAmpel = sav_mppShowAmpel
-            ' '' ''awinSettings.mppShowProjectLine = sav_mppShowProjectLine
-            ' '' ''awinSettings.mppVertikalesRaster = sav_mppVertikalesRaster
-            ' '' ''awinSettings.mppShowLegend = sav_mppShowLegend
-            ' '' ''awinSettings.mppFullyContained = sav_mppFullyContained
-            ' '' ''awinSettings.mppSortiertDauer = sav_mppSortiertDauer
-            ' '' ''awinSettings.mppOnePage = sav_mppOnePage
+            ' Zurücksetzen der gesicherten und veränderten Einstellungen
 
             awinSettings.mppExtendedMode = sav_mppExtendedMode
             awinSettings.mppShowAllIfOne = sav_mppShowAllIfOne

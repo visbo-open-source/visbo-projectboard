@@ -25,17 +25,18 @@ namespace MongoDbAccess
         public MongoCollection CollectionConstellations { get; set; }
         public MongoCollection CollectionDependencies { get; set; }
 
-        public Request()
-        {
-            var connectionString = "mongodb://localhost";
-            /**var connectionString = "mongodb://ute:Mopsi@localhost"; Aufruf mit MongoDB mit Authentication */
-            Client = new MongoClient(connectionString);
-            Server = Client.GetServer();
-            Database = Server.GetDatabase("projectboard");
-            CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
-            CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
-            CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
-        }
+        //////public Request()
+        //////{
+          
+        //////   var connectionString = "mongodb://localhost";
+        //////    /**var connectionString = "mongodb://ute:Mopsi@localhost"; Aufruf mit MongoDB mit Authentication */
+        //////    Client = new MongoClient(connectionString);
+        //////    Server = Client.GetServer();
+        //////    Database = Server.GetDatabase("projectboard");
+        //////    CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
+        //////    CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
+        //////    CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
+        //////}
 
         public Request(string databaseName, string username, string dbPasswort)
         {
@@ -48,6 +49,7 @@ namespace MongoDbAccess
             else
             {
                 var connectionString = "mongodb://" + username + ":" + dbPasswort + "@localhost";  /*Aufruf mit MongoDB mit Authentication  */
+                /*Azure**var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";  /*Aufruf mit Azure mit Authentication  */
                 Client = new MongoClient(connectionString);
             }
             

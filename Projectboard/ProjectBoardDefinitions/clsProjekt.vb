@@ -2792,6 +2792,69 @@ Public Class clsProjekt
 
     End Property
 
+    ''' <summary>
+    ''' gibt die Anzahl Zeilen zurück, die das aktuelle Projekt im "Extended Drawing Mode" benötigt, wenn alle zughörigen Phasen gezeichnet werden
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property calcNeededLines() As Integer
+        Get
+
+            Dim phasenName As String = ""
+            Dim zeilenOffset As Integer = 1
+            Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
+            Dim tmpValue As Integer
+            Dim breadcrumb As String = ""
+
+            Dim anzPhases As Integer = 0
+            Dim cphase As clsPhase = Nothing
+
+            For i = 1 To Me.CountPhases ' Schleife über alle Phasen eines Projektes
+                Try
+                    cphase = Me.getPhase(i)
+                    If Not IsNothing(cphase) Then
+
+                        'Call splitHryFullnameTo2(CStr(cphase.nameID), phasenName, breadcrumb)
+
+                        With Me.getPhase(i)
+
+                            'phasenName = .name
+                            If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+                                zeilenOffset = zeilenOffset + 1
+                                lastEndDate = StartofCalendar.AddDays(-1)
+                            End If
+
+                            If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+                                lastEndDate = .getEndDate
+                            End If
+
+                        End With
+
+                        anzPhases = anzPhases + 1
+                        
+                    End If
+
+
+                Catch ex As Exception
+
+                End Try
+
+
+            Next i      ' nächste Phase im Projekt betrachten
+
+            If anzPhases > 1 Then
+                tmpValue = zeilenOffset + 1     'ur: 17.04.2015:  +1 für die übrigen Meilensteine
+            Else
+                tmpValue = 1 + 1                ' ur: 17.04.2015: +1 für die übrigen Meilensteine
+            End If
+
+
+            calcNeededLines = tmpValue
+
+        End Get
+
+    End Property
+
     Public Sub New()
 
         AllPhases = New List(Of clsPhase)

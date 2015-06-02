@@ -3246,7 +3246,36 @@ Public Module awinGeneralModules
                                         If firsttime Then
                                             firsttime = False
                                         Else 'beim 2. mal: letzte Phase hinzufügen; ENDE von For-Schleife for each Zelle
-                                            hproj.AddPhase(cphase)
+                                            '''''hproj.AddPhase(cphase)
+
+                                            Dim hrchynode As New clsHierarchyNode
+                                            hrchynode.elemName = cphase.name
+
+
+                                            If cphaseLevel = 0 Then
+                                                hrchynode.parentNodeKey = ""
+
+                                            ElseIf cphaseLevel = 1 Then
+                                                hrchynode.parentNodeKey = rootPhaseName
+
+                                            ElseIf cphaseLevel - lastlevel = 1 Then
+                                                hrchynode.parentNodeKey = lastelemID
+
+                                            ElseIf cphaseLevel - lastlevel = 0 Then
+                                                hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(lastelemID)
+
+                                            ElseIf lastlevel - cphaseLevel >= 1 Then
+                                                Dim hilfselemID As String = lastelemID
+                                                For l As Integer = 1 To lastlevel - cphaseLevel
+                                                    hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                                                Next l
+                                                hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                                            Else
+                                                Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
+                                            End If
+
+                                            hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
+
                                             Exit For
                                         End If
 
@@ -3423,6 +3452,14 @@ Public Module awinGeneralModules
                                                      "Bitte korrigieren Sie dies in der Datei'" & hproj.name & ".xlsx'")
                                     Else
                                         ' objectName ist ein Meilenstein
+
+                                        'ur: 1.6.2015   Meilenstein hat den Namen einer Phase
+                                        If PhaseDefinitions.Contains(objectName) _
+                                            And startDate = Date.MinValue Then
+
+                                            isPhase = False
+                                            isMeilenstein = True
+                                        End If
 
                                         'ur:12.05.2015:
                                         ' '' '' ''If IsNothing(cphase) Then
@@ -3697,6 +3734,7 @@ Public Module awinGeneralModules
             projVorlage.earliestStart = -6
             projVorlage.latestStart = 6
             projVorlage.AllPhases = hproj.AllPhases
+            projVorlage.hierarchy = hproj.hierarchy
             hprojTemp = projVorlage
 
         Else
