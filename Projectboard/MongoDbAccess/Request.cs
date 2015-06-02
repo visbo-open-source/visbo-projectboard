@@ -43,11 +43,13 @@ namespace MongoDbAccess
             if (String.IsNullOrEmpty(username) && String.IsNullOrEmpty(dbPasswort))
             {
                 var connectionString = "mongodb://localhost";
+                //var connectionString = "mongodb://@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
             }
             else
             {
                 var connectionString = "mongodb://" + username + ":" + dbPasswort + "@localhost";  /*Aufruf mit MongoDB mit Authentication  */
+                //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
             }
             

@@ -23,6 +23,7 @@
 
     ' Settings für die Projekteingabe
     Public Property lastProjektTyp As String
+    Public Property lastModulTyp As String
     Public Property isEndDate As Boolean
     Public Property tryBestFit As Boolean
     Public Property selDate As Date
@@ -130,6 +131,7 @@
 
         ' Projekteingabe Settings
         _lastProjektTyp = ""
+        _lastModulTyp = ""
         _isEndDate = False
         _tryBestFit = False
         _selDate = Date.Now

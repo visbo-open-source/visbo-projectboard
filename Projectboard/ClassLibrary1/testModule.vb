@@ -8065,7 +8065,8 @@ Public Module testModule
 
         If Not IsNothing(durationArrowShape) And Not IsNothing(durationTextShape) Then
 
-            addOn = System.Math.Max(durationArrowShape.Height, durationTextShape.Height) * 11 / 15
+            'addOn = System.Math.Max(durationArrowShape.Height, durationTextShape.Height) * 11 / 15
+            addOn = System.Math.Max(durationArrowShape.Height, durationTextShape.Height) ' tk Änderung 
 
         End If
 
@@ -9165,7 +9166,8 @@ Public Module testModule
         End If
 
         Dim projekthoehe As Double = maxBottom - minTop
-        projekthoehe = ((maxBottom - minTop) * 13 / 15)
+        ' Änderung tk: in der Vorlage sind die Margins top und Bottom jeweils auf 0 gesetzt
+        'projekthoehe = ((maxBottom - minTop) * 13 / 15)
 
      
         ' jetzt werden noch die Höhe des Pfeiles und der Beschriftung berücksichtigt 
@@ -9178,6 +9180,7 @@ Public Module testModule
 
         End If
 
+        'bestimmeMppZeilenHoehe = projekthoehe + addOn * 13 / 15
         bestimmeMppZeilenHoehe = projekthoehe + addOn * 13 / 15
 
     End Function
@@ -10515,6 +10518,11 @@ Public Module testModule
             Dim yOffsetPhToDate As Double
             yOffsetPhToText = PhDescVorlagenShape.Top - phaseVorlagenShape.Top
             yOffsetPhToDate = PhDateVorlagenShape.Top - phaseVorlagenShape.Top
+
+
+            Dim controlHoehe1 As Double = -1 * yOffsetPhToText + yOffsetPhToDate + PhDateVorlagenShape.Height
+            Dim controlHoehe2 As Double = -1 * yOffsetMsToText + yOffsetMsToDate + MsDateVorlagenShape.Height
+            Dim controlHoehe As Double = System.Math.Max(controlHoehe1, controlHoehe2)
 
             '
             ' bestimme das Format  

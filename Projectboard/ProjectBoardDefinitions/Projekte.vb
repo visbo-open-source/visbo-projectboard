@@ -7206,8 +7206,6 @@ Public Module Projekte
         Dim pStatus As String = ProjektStatus(1) ' jedes Projekt soll zu Beginn als beauftragtes Projekt importiert werden 
         Dim zeile As Integer = tafelZeile
         Dim spalte As Integer = getColumnOfDate(startdate)
-        'Dim plen As Integer
-        'Dim pcolor As Object
         Dim heute As Date = Now
         Dim key As String = pname & "#"
 
@@ -7271,18 +7269,59 @@ Public Module Projekte
 
     End Sub
 
-    '
-    '
-    '
+
     ''' <summary>
-    ''' löscht das angegebene Projekt mit Name pName inkl all seiner Varianten 
+    ''' fügt dem Projekt hproj das Modul mit Namen vorlagenName hinzu
+    ''' alternativ können ParentID einer Phase oder parentName und startOffset, endoffset angegeben werden
+    ''' Achtung: ergänzen zu einer ParentID wird noch nicht unterstützt  - hier muss noch behandelt werden, dass
+    ''' die neu hinzugefügten Phasen ja am Ende der AllPhases List angefügt werden; andererseits werden beim Darstellen des Extended Mode die Phasen eines 
+    ''' nach dem anderen gezeichnet; notwendig wäre hier eine zusätzliche Struktur, die die Reihenfolge beeinhaltet oder AllPhases und die Hierarchie Struktur muss neu afgebaut bzw. geändert werden 
     ''' </summary>
-    ''' <param name="pName">
-    ''' gibt an , ob es der erste Aufruf war
-    ''' wenn ja, kommt erst der Bestätigungs-Dialog 
-    ''' wenn nein, wird ohne Aufforderung zur Bestätigung gelöscht 
-    ''' </param>
+    ''' <param name="hproj"></param>
+    ''' <param name="parentNameID"></param>
+    ''' <param name="parentName"></param>
+    ''' <param name="vorlagenName"></param>
+    ''' <param name="startOffset"></param>
+    ''' <param name="endOffset"></param>
     ''' <remarks></remarks>
+    Public Sub addModuleToProjekt(ByRef hproj As clsProjekt, ByVal vorlagenName As String, _
+                                      ByVal parentNameID As String, ByVal parentName As String, _
+                                      ByVal startOffset As Integer, ByVal endOffset As Integer, _
+                                      ByVal dontStretch As Boolean)
+
+        Dim modulVorlage As clsProjektvorlage
+        If ModulVorlagen.Contains(vorlagenName) Then
+
+            If parentNameID.Length > 0 Then
+                Throw New ArgumentException("wird noch nicht unterstützt ...")
+            ElseIf parentName.Length = 0 Then
+                Throw New ArgumentException("Name muss mindestens ein Zeichen enthalten ")
+            ElseIf startOffset <= 0 Or endOffset <= 0 Or endOffset - startOffset <= 0 Then
+                Throw New ArgumentException("ungültige Start-/Ende Angaben: " & startOffset & " , " & endOffset)
+            Else
+                ' jetzt kann die Aktion durchgeführt werden 
+                modulVorlage = ModulVorlagen.getProject(vorlagenName)
+                modulVorlage.moduleCopyTo(project:=hproj, parentID:="", moduleName:=parentName, _
+                                           startOffset:=startOffset, endOffset:=endOffset, dontStretch:=dontStretch)
+            End If
+
+        Else
+            Throw New ArgumentException("Vorlage " & vorlagenName & " existiert nicht")
+        End If
+
+    End Sub
+        '
+        '
+        '
+        ''' <summary>
+        ''' löscht das angegebene Projekt mit Name pName inkl all seiner Varianten 
+        ''' </summary>
+        ''' <param name="pName">
+        ''' gibt an , ob es der erste Aufruf war
+        ''' wenn ja, kommt erst der Bestätigungs-Dialog 
+        ''' wenn nein, wird ohne Aufforderung zur Bestätigung gelöscht 
+        ''' </param>
+        ''' <remarks></remarks>
     Public Sub awinDeleteProjectInSession(ByVal pName As String)
 
 

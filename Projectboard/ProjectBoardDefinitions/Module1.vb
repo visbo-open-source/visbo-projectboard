@@ -44,6 +44,7 @@ Public Module Module1
     'Public mongoDBaktiv = False
 
     Public Projektvorlagen As New clsProjektvorlagen
+    Public ModulVorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte
     Public noShowProjekte As New clsProjekte
     Public selectedProjekte As New clsProjekte
@@ -387,6 +388,7 @@ Public Module Module1
     Public excelExportVorlage As String = "export Vorlage.xlsx"
 
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"
+    Public modulVorlagenOrdner As String = requirementsOrdner & "ModuleTemplates"
     ' Public projektDetail As String = "Project Detail.xlsx"
     Public projektAustausch As String = requirementsOrdner & "Projekt-Steckbrief.xlsx"
     Public projektRessOrdner As String = requirementsOrdner & "Ressource Manager"
