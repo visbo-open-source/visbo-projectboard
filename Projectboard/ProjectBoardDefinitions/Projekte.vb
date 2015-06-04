@@ -16297,6 +16297,10 @@ Public Module Projekte
         Dim worksheetShapes As Excel.Shapes
         Dim nameID As String
         Dim description As String = ""
+        ' description1 nimmt ggf den kürzesten, sinnvoleln Breadcrumb auf 
+        Dim description1 As String = ""
+        ' description2 ist der eigentliche Name, abgekürzt, Original oder Standard-Name
+        Dim description2 As String = ""
         Dim ok As Boolean
         Dim index As Integer = 0
 
@@ -16349,29 +16353,47 @@ Public Module Projekte
                         nameID = extractName(elemShape.Name, PTshty.milestoneN)
                         If showStdNames Then
                             If showAbbrev Then
+
+                                If awinSettings.showBestName And Not awinSettings.drawphases Then
+                                    ' den bestmöglichen, also den kürzesten Breadcrumb Namen, der (möglichst) eindeutig ist
+                                    ' anzeigen; aber nur, wenn im Ein-Zeile-Modus beschriftet wird, weil dann der Kontext fehlt ... 
+                                    description = hproj.hierarchy.getBestNameOfID(nameID)
+                                    Call splitHryFullnameTo2(description, description2, description1)
+                                End If
+
                                 Dim msName As String = elemNameOfElemID(nameID)
                                 Dim msDef As clsMeilensteinDefinition
                                 msDef = MilestoneDefinitions.getMilestoneDef(msName)
                                 If IsNothing(msDef) Then
-                                    description = "-"
+                                    description2 = "-"
                                 Else
-                                    description = msDef.shortName
-                                    If IsNothing(description) Then
-                                        description = "-"
+                                    description2 = msDef.shortName
+                                    If IsNothing(description2) Then
+                                        description2 = "-"
                                     Else
-                                        If description = "" Then
-                                            description = "-"
+                                        If description2 = "" Then
+                                            description2 = "-"
                                         End If
 
                                     End If
                                 End If
 
+
+
                             Else
-                                description = elemNameOfElemID(nameID)
+                                If awinSettings.showBestName And Not awinSettings.drawphases Then
+                                    ' den bestmöglichen, also den kürzesten Breadcrumb Namen, der (möglichst) eindeutig ist
+                                    ' anzeigen; aber nur, wenn im Ein-Zeile-Modus beschriftet wird, weil dann der Kontext fehlt ... 
+                                    description = hproj.hierarchy.getBestNameOfID(nameID)
+                                    Call splitHryFullnameTo2(description, description2, description1)
+                                Else
+                                    description2 = elemNameOfElemID(nameID)
+                                End If
+
                             End If
 
                         Else
-                            description = hproj.hierarchy.nodeItem(nameID).origName
+                            description2 = hproj.hierarchy.nodeItem(nameID).origName
                         End If
 
 
@@ -16387,6 +16409,15 @@ Public Module Projekte
                             If showStdNames Then
 
                                 If showAbbrev Then
+
+                                    If awinSettings.showBestName And Not awinSettings.drawphases Then
+                                        ' den bestmöglichen, also den kürzesten Breadcrumb Namen, der (möglichst) eindeutig ist
+                                        ' anzeigen; aber nur, wenn im Ein-Zeile-Modus beschriftet wird, weil dann der Kontext fehlt ... 
+                                        description = hproj.hierarchy.getBestNameOfID(nameID)
+                                        Call splitHryFullnameTo2(description, description2, description1)
+                                    End If
+
+
                                     Dim phName As String = elemNameOfElemID(nameID)
                                     Dim phDef As clsPhasenDefinition
                                     phDef = PhaseDefinitions.getPhaseDef(phName)
@@ -16404,11 +16435,20 @@ Public Module Projekte
                                     End If
 
                                 Else
-                                    description = elemNameOfElemID(nameID)
+
+                                    If awinSettings.showBestName And Not awinSettings.drawphases Then
+                                        ' den bestmöglichen, also den kürzesten Breadcrumb Namen, der (möglichst) eindeutig ist
+                                        ' anzeigen; aber nur, wenn im Ein-Zeile-Modus beschriftet wird, weil dann der Kontext fehlt ... 
+                                        description = hproj.hierarchy.getBestNameOfID(nameID)
+                                        Call splitHryFullnameTo2(description, description2, description1)
+                                    Else
+                                        description2 = elemNameOfElemID(nameID)
+                                    End If
+
                                 End If
 
                             Else
-                                description = hproj.hierarchy.nodeItem(nameID).origName
+                                description2 = hproj.hierarchy.nodeItem(nameID).origName
                             End If
                         
                         End If
@@ -16416,6 +16456,13 @@ Public Module Projekte
                         
 
                     End If
+
+                    Try
+                        description = calcHryFullname(description2, description1)
+                    Catch ex As Exception
+
+                    End Try
+
 
                     ' jetzt wird das Description Shape erzeugt 
                     If ok Then
@@ -16434,8 +16481,8 @@ Public Module Projekte
                             .TextFrame2.WordWrap = MsoTriState.msoFalse
                             .TextFrame2.TextRange.Text = description
                             .TextFrame2.TextRange.Font.Size = hproj.Schrift - 2
-                            .TextFrame2.MarginLeft = 0.05
-                            .TextFrame2.MarginRight = 0.05
+                            .TextFrame2.MarginLeft = 0.1
+                            .TextFrame2.MarginRight = 0.1
                             .TextFrame2.MarginTop = 0
                             .TextFrame2.MarginBottom = 0
                             .TextFrame2.VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
@@ -16449,7 +16496,7 @@ Public Module Projekte
                                 .Fill.Transparency = 0
                                 .Fill.Solid()
                             End If
-                            
+
 
                         End With
 
@@ -16503,7 +16550,7 @@ Public Module Projekte
                 Catch ex As Exception
 
                 End Try
-                
+
                 ' hier muss das alte Shape wieder restauriert werden 
                 projectShape = shapeSammlung.Group
 
@@ -18491,6 +18538,160 @@ Public Module Projekte
             superHry.addNode(superNode, curElemID)
 
         End If
+
+    End Sub
+
+    ''' <summary>
+    ''' wird nur zum Aufsetzen von zufälligen Bewertungen in Demo-Szenarien benötigt ... 
+    ''' 
+    ''' </summary>
+    ''' <param name="yellowPercentage">gibt an wieviele Meilensteine gelb bewertet werden sollen</param>
+    ''' <param name="redPercentage">gibt an, wieviele Meilensteine rot bewertet werden sollen</param>
+    ''' <param name="heute">gibt das Datum an, das als das heutige gelten soll</param> 
+    ''' <remarks></remarks>
+    Public Sub createInitialRandomBewertungen(ByVal yellowPercentage As Double, ByVal redPercentage As Double, ByVal heute As Date)
+
+        Dim expl As String = "Erläuterung ..."
+        Dim redBaseValue As Double = 0.3
+        Dim yellowBaseValue As Double = 0.7
+        Dim zufall As New Random(10)
+
+
+        Dim allMilestones As Integer
+        Dim redMilestones As Integer
+        Dim yellowMilestones As Integer
+        Dim greenMilestones As Integer
+        Dim firstMS As Integer
+        Dim lastMS As Integer
+        Dim currentValue As Double
+        Dim heuteColumn As Integer = getColumnOfDate(heute)
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            allMilestones = 0
+            redMilestones = 0
+            yellowMilestones = 0
+            greenMilestones = 0
+
+            With kvp.Value
+                firstMS = .hierarchy.getIndexOf1stMilestone
+                lastMS = .hierarchy.count
+
+                For i As Integer = firstMS To lastMS
+                    Dim msID As String = .hierarchy.getIDAtIndex(i)
+                    Dim milestone As clsMeilenstein = .getMilestoneByID(msID)
+                    Dim msColumn As Integer = getColumnOfDate(milestone.getDate)
+
+                    If msColumn <= heuteColumn + 6 Then
+
+                       
+
+                        currentValue = zufall.NextDouble
+                        With milestone
+                            If currentValue >= redBaseValue And _
+                                currentValue <= redBaseValue + redPercentage Then
+
+                                Dim b As clsBewertung
+
+                                If .bewertungsCount = 0 Then
+                                    b = New clsBewertung
+                                    b.description = "Erläuterung für die rote Ampel ..."
+                                    b.color = awinSettings.AmpelRot
+                                    .addBewertung(b)
+                                Else
+                                    b = .getBewertung(1)
+                                    b.description = "Erläuterung für die rote Ampel ..."
+                                    b.color = awinSettings.AmpelRot
+                                End If
+                                
+                                If msColumn > heuteColumn Then
+                                    redMilestones = redMilestones + 1
+                                End If
+
+
+
+                            ElseIf currentValue >= yellowBaseValue And _
+                                currentValue <= yellowBaseValue + yellowPercentage Then
+                                Dim b As clsBewertung
+
+                                If .bewertungsCount = 0 Then
+                                    b = New clsBewertung
+                                    b.description = "Erläuterung für die gelbe Ampel ..."
+                                    b.color = awinSettings.AmpelGelb
+                                    .addBewertung(b)
+                                Else
+                                    b = .getBewertung(1)
+                                    b.description = "Erläuterung für die gelbe Ampel ..."
+                                    b.color = awinSettings.AmpelGelb
+                                End If
+
+                                If msColumn > heuteColumn Then
+                                    yellowMilestones = yellowMilestones + 1
+                                End If
+
+
+
+                            Else
+                                Dim b As clsBewertung
+
+                                If .bewertungsCount = 0 Then
+                                    b = New clsBewertung
+                                    b.description = "aktuell alles i.O.  ..."
+                                    b.color = awinSettings.AmpelGruen
+                                    .addBewertung(b)
+                                Else
+                                    b = .getBewertung(1)
+                                    b.description = "aktuell alles i.O.  ..."
+                                    b.color = awinSettings.AmpelGruen
+                                End If
+
+                                If msColumn > heuteColumn Then
+                                    greenMilestones = greenMilestones + 1
+                                End If
+
+                            End If
+
+
+                        End With
+                    Else
+                        ' nichts tun, alles unverändert lassen 
+                    End If
+
+
+                Next
+
+                ' jetzt noch die Ampel-Farbe setzen 
+                If redMilestones > 0 Then
+                    If redMilestones / greenMilestones > 0.02 Then
+                        .ampelErlaeuterung = "Erläuterung des Projektleiters ... "
+                        .ampelStatus = 3
+                    Else
+                        .ampelErlaeuterung = "Erläuterung für gelbe Bewertung (u.a mind. eine rote Ampel) ..."
+                        .ampelStatus = 2
+                    End If
+
+                ElseIf yellowMilestones > 0 Then
+                    If greenMilestones > 0 Then
+
+                        If yellowMilestones / greenMilestones > 0.05 Then
+                            .ampelErlaeuterung = "Erläuterung des Projektleiters ... "
+                            .ampelStatus = 2
+                        Else
+                            .ampelErlaeuterung = "aktuell alles i.O ..."
+                            .ampelStatus = 1
+                        End If
+                    Else
+                        .ampelErlaeuterung = "Erläuterung des Projektleiters ... "
+                        .ampelStatus = 2
+                    End If
+                Else
+                    .ampelErlaeuterung = "aktuell alles i.O ..."
+                    .ampelStatus = 1
+                End If
+
+            End With
+
+        Next
 
     End Sub
 

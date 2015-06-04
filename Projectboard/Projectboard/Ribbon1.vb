@@ -981,19 +981,26 @@ Imports System.Drawing
             awinSelection = Nothing
         End Try
 
-        If Not awinSelection Is Nothing Then
 
-            If awinSelection.Count >= 1 Then
+        ' wenn nichts selektiert ist, sollen alle beschriftet werden 
 
-                Dim annotateFrm As New frmAnnotateProject
-                annotateFrm.Show()
+        Dim annotateFrm As New frmAnnotateProject
+        annotateFrm.Show()
 
-            Else
-                Call MsgBox("bitte mindestens ein Projekt selektieren ...")
-            End If
-        Else
-            Call MsgBox("bitte mindestens ein Projekt selektieren ...")
-        End If
+
+        'If Not awinSelection Is Nothing Then
+
+        '    If awinSelection.Count >= 1 Then
+
+        '        Dim annotateFrm As New frmAnnotateProject
+        '        annotateFrm.Show()
+
+        '    Else
+        '        Call MsgBox("bitte mindestens ein Projekt selektieren ...")
+        '    End If
+        'Else
+        '    Call MsgBox("bitte mindestens ein Projekt selektieren ...")
+        'End If
 
         enableOnUpdate = True
 
@@ -2057,6 +2064,70 @@ Imports System.Drawing
                     End With
 
                 End If
+        ElseIf control.Id = "PT4G1M2B1" Then
+            ' Auswahl über Namen, Vorlagen erzeugen
+            appInstance.ScreenUpdating = False
+
+            With nameFormular
+
+                .Text = "modulare Vorlagen erzeugen"
+                .OKButton.Text = "Vorlage erstellen"
+                .menuOption = PTmenue.vorlageErstellen
+                .statusLabel.Text = ""
+
+                .rdbRoles.Enabled = False
+                .rdbCosts.Enabled = False
+
+                .rdbBU.Visible = False
+                .pictureBU.Visible = False
+
+                .rdbTyp.Visible = False
+                .pictureTyp.Visible = False
+
+                .einstellungen.Visible = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+
+                returnValue = .ShowDialog
+            End With
+
+            appInstance.ScreenUpdating = True
+
+
+        ElseIf control.Id = "PT4G1M2B2" Then
+            ' Auswahl über Hierarchie, Vorlagen Export
+            appInstance.ScreenUpdating = False
+
+            awinSettings.useHierarchy = True
+            With hryFormular
+
+                .Text = "modulare Vorlagen erzeugen"
+                .OKButton.Text = "Vorlage erstellen"
+                .menuOption = PTmenue.vorlageErstellen
+                .statusLabel.Text = ""
+
+                .AbbrButton.Visible = False
+                .AbbrButton.Enabled = False
+
+                .chkbxOneChart.Checked = False
+                .chkbxOneChart.Visible = False
+
+                ' Reports
+                .repVorlagenDropbox.Visible = False
+                .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Nicht Modal anzeigen
+                '.Show()
+                returnValue = .ShowDialog
+            End With
+
+
+
 
         Else
             Call MsgBox("Es sind keine Projekte sichtbar!  ")
@@ -3992,7 +4063,7 @@ Imports System.Drawing
                 End With
             Next
             Dim obj As Excel.ChartObject = Nothing
-            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
         End If
@@ -4048,7 +4119,7 @@ Imports System.Drawing
             Next
             Dim obj As Excel.ChartObject = Nothing
 
-            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
+            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
             'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, True, False, True, True, top, left, width, height)
         Else
             Call MsgBox("vorher Projekt selektieren ...")
@@ -4137,7 +4208,7 @@ Imports System.Drawing
 
             If myCollection.Count > 0 Then
                 Dim obj As Excel.ChartObject = Nothing
-                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.Dependencies, 0, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.Dependencies, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
             Else
                 Call MsgBox("diese Projekte haben keine Abhängigkeiten")
             End If
@@ -4215,7 +4286,7 @@ Imports System.Drawing
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
             Catch ex As Exception
 
             End Try
@@ -5491,6 +5562,8 @@ Imports System.Drawing
         Dim chtObject As Excel.ChartObject = Nothing
         'Dim top As Double, left As Double, width As Double, height As Double
         Dim future As Integer = 0
+        Dim formerAmpelSetting As Boolean = awinSettings.mppShowAmpel
+        awinSettings.mppShowAmpel = True
 
         Dim myCollection As New Collection
         myCollection.Add("Ziele")
@@ -5561,6 +5634,8 @@ Imports System.Drawing
             Call MsgBox("Es sind keine Projekte geladen!")
         End If
 
+        awinSettings.mppShowAmpel = formerAmpelSetting
+
         appInstance.EnableEvents = True
         enableOnUpdate = True
 
@@ -5604,7 +5679,7 @@ Imports System.Drawing
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, 0, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
             Catch ex As Exception
 
             End Try
@@ -5666,7 +5741,7 @@ Imports System.Drawing
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, 0, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoVol, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
                 'Call awinCreateStratRiskVolumeDiagramm(myCollection, obj, False, False, True, True, top, left, width, height)
             Catch ex As Exception
 
@@ -5762,7 +5837,7 @@ Imports System.Drawing
 
             Try
                 If myCollection.Count > 0 Then
-                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.Dependencies, 0, False, True, True, top, left, width, height)
+                    Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.Dependencies, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
                 Else
                     Call MsgBox(" es gibt in diesem Zeitraum keine Projekte mit Abhängigkeiten")
                 End If
@@ -6004,7 +6079,7 @@ Imports System.Drawing
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, 0, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ComplexRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
             Catch ex As Exception
 
             End Try
@@ -6068,7 +6143,7 @@ Imports System.Drawing
             Dim obj As Excel.ChartObject = Nothing
 
             Try
-                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ZeitRisiko, 0, False, True, True, top, left, width, height)
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.ZeitRisiko, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
             Catch ex As Exception
 
             End Try
@@ -7710,6 +7785,22 @@ Imports System.Drawing
 
 
     End Sub
+
+    Public Sub PTTestFunktion4(control As IRibbonControl)
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+        Dim yellows As Double = 0.07
+        Dim reds As Double = 0.02
+        Call createInitialRandomBewertungen(yellows, reds, Date.Now)
+
+        enableOnUpdate = True
+
+
+    End Sub
+
 
 #End Region
 

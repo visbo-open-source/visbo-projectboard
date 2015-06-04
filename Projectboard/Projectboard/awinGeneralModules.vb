@@ -5707,6 +5707,354 @@ Public Module awinGeneralModules
     End Function
 
     ''' <summary>
+    ''' erstellt das Vorlagen File aus der Liste der Phasen 
+    ''' </summary>
+    ''' <param name="phaseList"></param>
+    ''' <param name="milestoneList"></param>
+    ''' <remarks></remarks>
+    Public Sub createVorlageFromSelection(ByVal phaseList As SortedList(Of String, String), _
+                                              ByVal milestoneList As SortedList(Of String, String))
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        Dim elemName As String = ""
+        Dim breadcrumb As String = ""
+        Dim lfdNr As Integer = 1
+        Dim fullName As String
+        Dim ext As String = ""
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+
+        ' hier muss jetzt das entsprechende File aufgemacht werden ...
+        ' das File 
+        Try
+            'appInstance.Workbooks.Open(awinPath & requirementsOrdner & excelExportVorlage)
+            appInstance.Workbooks.Add()
+
+
+        Catch ex As Exception
+            appInstance.EnableEvents = formerEE
+            enableOnUpdate = True
+            Throw New ArgumentException("Excel Export nicht gefunden - Abbruch")
+        End Try
+
+        'appInstance.Workbooks(myCustomizationFile).Activate()
+        Dim wsName As Excel.Worksheet = CType(appInstance.ActiveSheet, _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+
+        Dim zeile As Integer = 1
+        Dim spalte As Integer = 1
+
+        Dim startDate As Date, endDate As Date
+        Dim earliestDate As Date, latestDate As Date
+        Dim tmpRange As Excel.Range
+        Dim anzahlProjekte As Integer = ShowProjekte.Count
+
+        With wsName
+            ' jetzt werden alle Spalten auf Breite 25 gesetzt 
+            tmpRange = CType(.Range(.Cells(zeile, spalte), .Cells(zeile, spalte).offset(0, 200)), Excel.Range)
+            tmpRange.ColumnWidth = 25
+
+            ' jetzt wird der Header geschrieben 
+            CType(.Cells(zeile, spalte), Excel.Range).Value = "Produktlinie"
+            CType(.Cells(zeile, spalte + 1), Excel.Range).Value = "Name"
+            CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "Projekt-Typ"
+
+            spalte = spalte + 2
+
+
+            ' hier muss noch orrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses Namens und Breadcrumbs gibt, so 
+            ' muss das in dieser Liste auch vorgesehen werden 
+            For ix As Integer = 1 To phaseList.Count
+
+                Try
+                    fullName = CStr(phaseList.ElementAt(ix - 1).Value)
+                Catch ex As Exception
+                    fullName = ""
+                End Try
+
+                Call splitBreadCrumbFullnameTo3(fullName, elemName, breadcrumb, lfdNr)
+
+                If lfdNr > 1 Then
+                    ext = " " & lfdNr.ToString
+                Else
+                    ext = ""
+                End If
+                If breadcrumb = "" Then
+                    CType(.Cells(zeile, spalte + ix), Excel.Range).Value = elemName & ext
+                Else
+                    CType(.Cells(zeile, spalte + ix), Excel.Range).Value = breadcrumb.Replace("#", "-") & elemName & ext
+                End If
+
+            Next
+
+            spalte = spalte + phaseList.Count
+
+            ' hier muss noch orrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses NAmens gibt, so 
+            ' muss das in dieser Liste auch vorgesehen werden 
+
+            For ix As Integer = 1 To milestoneList.Count
+
+                Try
+                    fullName = CStr(milestoneList.ElementAt(ix - 1).Value)
+                Catch ex As Exception
+                    fullName = ""
+                End Try
+
+                Call splitBreadCrumbFullnameTo3(fullName, elemName, breadcrumb, lfdNr)
+
+                If lfdNr > 1 Then
+                    ext = " " & lfdNr.ToString
+                Else
+                    ext = ""
+                End If
+                If breadcrumb = "" Then
+                    CType(.Cells(zeile, spalte + ix), Excel.Range).Value = elemName & ext
+                Else
+                    CType(.Cells(zeile, spalte + ix), Excel.Range).Value = breadcrumb.Replace("#", "-") & elemName & ext
+                End If
+
+
+            Next
+
+
+            ' Datumsformat einstellen 
+            Dim s1 As Integer = 4 + phaseList.Count
+            Dim o1 As Integer = milestoneList.Count - 1
+
+            ' mittig darstellen 
+            tmpRange = CType(.Range(.Cells(zeile, 4), .Cells(zeile, 4).offset(anzahlProjekte, s1 + o1 - 4)), Excel.Range)
+            tmpRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+
+            tmpRange = CType(.Range(.Cells(zeile + 1, s1), .Cells(zeile + 1, s1).offset(anzahlProjekte - 1, o1)), Excel.Range)
+            tmpRange.NumberFormat = "dd/mm/yy;@"
+
+            spalte = spalte + milestoneList.Count
+
+            CType(.Cells(zeile, spalte + 1), Excel.Range).Value = "Dauer (T)"
+            CType(.Range(.Cells(zeile + 1, spalte + 1), .Cells(zeile + 1, spalte + 1).offset(anzahlProjekte - 1, 0)), Excel.Range).NumberFormat = "0"
+
+            CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "Dauer (M)"
+            CType(.Range(.Cells(zeile + 1, spalte + 2), .Cells(zeile + 1, spalte + 2).offset(anzahlProjekte - 1, 0)), Excel.Range).NumberFormat = "0.0"
+
+        End With
+
+
+        zeile = 2
+        spalte = 1
+        Dim minCol As Integer
+        Dim maxCol As Integer
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            earliestDate = kvp.Value.endeDate
+            latestDate = kvp.Value.startDate
+
+            ' wird benötigt, um festzustellen, ob überhaupt eines der Elemente im aktuell 
+            ' betrachteten Projekt vorkommt 
+            Dim atleastOne As Boolean = False
+
+            With wsName
+                ' Produktlinie schreiben 
+
+                Try
+                    If kvp.Value.businessUnit.Length > 0 Then
+                        CType(.Cells(zeile, spalte), Excel.Range).Value = kvp.Value.businessUnit
+                    Else
+                        CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+                    End If
+                Catch ex As Exception
+                    CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+                End Try
+
+
+                ' Name schreiben 
+                CType(.Cells(zeile, spalte + 1), Excel.Range).Value = kvp.Value.name
+
+                ' Projekt-Typ schreiben 
+                Try
+                    If kvp.Value.VorlagenName.Length > 0 Then
+                        CType(.Cells(zeile, spalte + 2), Excel.Range).Value = kvp.Value.VorlagenName
+                    Else
+                        CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "-"
+                    End If
+                Catch ex As Exception
+                    CType(.Cells(zeile, spalte + 2), Excel.Range).Value = "-"
+                End Try
+
+
+                ' Phasen Information schreiben
+
+                Dim cphase As clsPhase
+                spalte = spalte + 3
+
+                For ix As Integer = 1 To phaseList.Count
+
+                    fullName = CStr(phaseList.ElementAt(ix - 1).Value)
+                    elemName = ""
+                    breadcrumb = ""
+                    lfdNr = 0
+                    Call splitBreadCrumbFullnameTo3(fullName, elemName, breadcrumb, lfdNr)
+
+
+                    cphase = kvp.Value.getPhase(elemName, breadcrumb, lfdNr)
+
+                    If Not IsNothing(cphase) Then
+                        Try
+                            startDate = cphase.getStartDate
+                            endDate = cphase.getEndDate
+
+                            atleastOne = True
+
+                            If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
+                                earliestDate = startDate
+                                minCol = spalte
+                            End If
+
+                            If DateDiff(DateInterval.Day, latestDate, endDate) > 0 Then
+                                latestDate = endDate
+                                maxCol = spalte
+                            End If
+
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = startDate.ToShortDateString & " - " & endDate.ToShortDateString
+
+                        Catch ex As Exception
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = "?"
+
+                        End Try
+                    Else
+
+                        CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+
+
+                    End If
+
+                    spalte = spalte + 1
+
+
+
+                Next
+
+
+                ' Meilensteine schreiben 
+
+                Dim milestone As clsMeilenstein = Nothing
+
+                For ix As Integer = 1 To milestoneList.Count
+
+                    fullName = CStr(milestoneList.ElementAt(ix - 1).Value)
+                    elemName = ""
+                    breadcrumb = ""
+                    lfdNr = 0
+                    Call splitBreadCrumbFullnameTo3(fullName, elemName, breadcrumb, lfdNr)
+
+                    milestone = kvp.Value.getMilestone(elemName, breadcrumb, lfdNr)
+
+                    If Not IsNothing(milestone) Then
+                        Try
+                            startDate = milestone.getDate
+
+                            atleastOne = True
+
+                            If DateDiff(DateInterval.Day, startDate, earliestDate) > 0 Then
+                                earliestDate = startDate
+                                minCol = spalte
+                            End If
+
+                            If DateDiff(DateInterval.Day, latestDate, startDate) > 0 Then
+                                latestDate = startDate
+                                maxCol = spalte
+                            End If
+
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = startDate
+
+
+                        Catch ex As Exception
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = "?"
+                            CType(.Cells(zeile, spalte), Excel.Range).Value = "?"
+                        End Try
+                    Else
+
+                        CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+                        CType(.Cells(zeile, spalte), Excel.Range).Value = "-"
+
+                    End If
+
+                    spalte = spalte + 1
+
+                Next
+
+                Dim dauerT As Long
+                Dim dauerM As Double
+
+                ' Dauer in Tagen schreiben 
+
+                Try
+                    If atleastOne Then
+                        dauerT = DateDiff(DateInterval.Day, earliestDate, latestDate)
+                        dauerM = 12 * dauerT / 365
+                    Else
+                        dauerT = 0
+                        dauerM = 0.0
+                    End If
+                Catch ex As Exception
+                    dauerT = 0
+                    dauerM = 0.0
+                End Try
+
+
+                CType(.Cells(zeile, spalte), Excel.Range).Value = dauerT
+                CType(.Cells(zeile, spalte + 1), Excel.Range).Value = dauerM
+
+                ' jetzt einfärben, welche Daten zu der Dauer geführt haben 
+                If minCol = maxCol And minCol > 0 Then
+                    CType(.Cells(zeile, minCol), Excel.Range).Interior.Color = awinSettings.AmpelGruen
+                Else
+                    If minCol > 0 Then
+                        CType(.Cells(zeile, minCol), Excel.Range).Interior.Color = awinSettings.AmpelNichtBewertet
+                    End If
+                    If maxCol > 0 Then
+                        CType(.Cells(zeile, maxCol), Excel.Range).Interior.Color = awinSettings.AmpelGelb
+                    End If
+
+                End If
+
+
+
+            End With
+
+            zeile = zeile + 1
+            spalte = 1
+
+        Next
+
+        Dim expFName As String = awinPath & exportFilesOrdner & _
+            "\Report_" & Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+
+
+        Try
+            appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
+        Catch ex As Exception
+
+        End Try
+
+        Try
+            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+        Catch ex As Exception
+
+        End Try
+
+        appInstance.EnableEvents = True
+
+
+
+    End Sub
+
+
+    ''' <summary>
     ''' schreibt die übergebenen Phasen und Meilensteine in eine Excel Datei 
     ''' </summary>
     ''' <param name="phaseList"></param>
@@ -6204,7 +6552,8 @@ Public Module awinGeneralModules
         Dim validOption As Boolean
 
         If menueOption = PTmenue.visualisieren Or menueOption = PTmenue.einzelprojektReport Or _
-            menueOption = PTmenue.excelExport Or menueOption = PTmenue.multiprojektReport Then
+            menueOption = PTmenue.excelExport Or menueOption = PTmenue.multiprojektReport Or _
+            menueOption = PTmenue.vorlageErstellen Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft > 5 Then
             validOption = True
@@ -6296,13 +6645,13 @@ Public Module awinGeneralModules
 
             Call MsgBox("ok, Filter gespeichert")
 
-        ElseIf menueOption = PTmenue.excelExport Then
+        ElseIf menueOption = PTmenue.excelExport Or menueOption = PTmenue.vorlageErstellen Then
 
             If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) _
                     And validOption Then
 
                 Try
-                    Call createExcelExportFromSelection(filtername)
+                    Call createDateiFromSelection(filtername, menueOption)
 
                     Call MsgBox("ok, Excel File in " & exportFilesOrdner & " erzeugt")
                 Catch ex As Exception
@@ -6311,12 +6660,29 @@ Public Module awinGeneralModules
 
 
 
-
             Else
                 Call MsgBox("bitte mindestens ein Element aus einer der Kategorien Phasen / Meilensteine selektieren  ")
             End If
 
 
+        ElseIf menueOption = PTmenue.vorlageErstellen Then
+
+            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) _
+                    And validOption Then
+
+                Try
+                    Call createExcelVorlageFromSelection(filtername)
+
+                    Call MsgBox("ok, Vorlagen Datei in " & exportFilesOrdner & " erzeugt")
+                Catch ex As Exception
+                    Call MsgBox(ex.Message)
+                End Try
+
+
+
+            Else
+                Call MsgBox("bitte mindestens ein Element aus einer der Kategorien Phasen / Meilensteine selektieren  ")
+            End If
 
 
         Else
@@ -6327,14 +6693,23 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' erstellt das modulare Vorlagen File 
+    ''' </summary>
+    ''' <param name="filterName"></param>
+    ''' <remarks></remarks>
+    Friend Sub createExcelVorlageFromSelection(ByVal filterName As String)
+
+    End Sub
+
 
     ''' <summary>
-    ''' erstellt das Excel Export File für die angegebenen Phasen, Meilensteine, Rollen und Kosten
+    ''' erstellt das Excel Export bzw. Vorlagen  File für die angegebenen Phasen, Meilensteine, Rollen und Kosten
     ''' vorläufig nur für Phasen und Meilensteine realisiert
     ''' </summary>
     ''' <param name="filterName">gibt den Namen des Filters an, der die Collections enthält </param>
     ''' <remarks></remarks>
-    Friend Sub createExcelExportFromSelection(ByVal filterName As String)
+    Friend Sub createDateiFromSelection(ByVal filterName As String, ByVal menueOption As Integer)
 
         Dim earliestDate As Date, latestDate As Date
         Dim phaseList As New SortedList(Of String, String)
@@ -6347,7 +6722,7 @@ Public Module awinGeneralModules
         Dim selBUs As New Collection
         Dim selTyps As New Collection
 
-        Call retrieveSelections(filterName, PTmenue.excelExport, selBUs, selTyps, _
+        Call retrieveSelections(filterName, menueOption, selBUs, selTyps, _
                                  selphases, selMilestones, selRoles, selCosts)
 
         ' initialisieren 
@@ -6458,7 +6833,12 @@ Public Module awinGeneralModules
         ' jetzt sind die Elemente in der richtigen Reihenfolge eingeordnet 
         ' jetzt werden sie rausgeschrieben 
         Try
-            Call exportSelectionToExcel(phaseList, milestonelist)
+            If menueOption = PTmenue.excelExport Then
+                Call exportSelectionToExcel(phaseList, milestonelist)
+            Else
+                Call createVorlageFromSelection(phaseList, milestonelist)
+            End If
+
         Catch ex As Exception
             Throw New Exception(ex.Message)
         End Try

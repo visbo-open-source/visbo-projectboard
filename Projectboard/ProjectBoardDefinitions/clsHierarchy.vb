@@ -289,6 +289,104 @@
     End Property
 
     ''' <summary>
+    ''' gibt den eindeutigsten Namen für das element zurück, der sich finden lässt
+    ''' entweder den das Element eindeutig machenden Breadcrumb Namen oder den Breadcrumb Namen, mit dem am wenigsten Mehrdeutigkeiten existieren
+    ''' wenn das Element eh eindeutig ist im Projekt, dann wird nur der Elem-Name zurückgegeben 
+    ''' </summary>
+    ''' <param name="nameID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBestNameOfID(ByVal nameID As String) As String
+        Get
+            Dim elemName As String = elemNameOfElemID(nameID)
+            Dim isMilestone As Boolean
+            Dim curBC As String = ""
+            Dim oldBC As String = ""
+            Dim anzElements As Integer
+            Dim anzElementsBefore As Integer
+            Dim level As Integer = 1
+            Dim tmpName As String = elemName
+            Dim rootreached As Boolean = False
+            isMilestone = elemIDIstMeilenstein(nameID)
+
+            Try
+                If isMilestone Then
+
+                    Dim milestoneIndices(,) As Integer = Me.getMilestoneIndices(elemName, "")
+                    anzElements = CInt(milestoneIndices.Length / 2)
+
+                    If anzElements > 1 Then
+
+                        anzElementsBefore = anzElements
+
+                        Do Until anzElements = 1 Or rootreached
+                            curBC = Me.getBreadCrumb(nameID, level)
+
+                            If oldBC = curBC Then
+                                rootreached = True
+                            Else
+                                oldBC = curBC
+                            End If
+
+                            If Not rootreached Then
+                                milestoneIndices = Me.getMilestoneIndices(elemName, curBC)
+                                anzElements = CInt(milestoneIndices.Length / 2)
+                                If anzElements < anzElementsBefore Then
+                                    anzElementsBefore = anzElements
+                                    tmpName = calcHryFullname(elemName, curBC)
+                                End If
+                            End If
+
+
+                        Loop
+                    Else
+                        tmpName = elemName
+                    End If
+                Else
+                    ' es handelt sich um eine Phase
+                    Dim phaseIndices() As Integer = Me.getPhaseIndices(elemName, "")
+                    anzElements = phaseIndices.Length
+
+                    If anzElements > 1 Then
+
+                        anzElementsBefore = anzElements
+
+                        Do Until anzElements = 1 Or rootreached
+                            curBC = Me.getBreadCrumb(nameID, level)
+
+                            If oldBC = curBC Then
+                                rootreached = True
+                            Else
+                                oldBC = curBC
+                            End If
+
+                            If Not rootreached Then
+                                phaseIndices = Me.getPhaseIndices(elemName, curBC)
+                                anzElements = phaseIndices.Length
+                                If anzElements < anzElementsBefore Then
+                                    anzElementsBefore = anzElements
+                                    tmpName = calcHryFullname(elemName, curBC)
+                                End If
+                            End If
+
+
+                        Loop
+                    Else
+                        tmpName = elemName
+                    End If
+                End If
+            Catch ex As Exception
+
+            End Try
+            
+
+
+            getBestNameOfID = tmpName
+
+        End Get
+    End Property
+    ''' <summary>
     ''' gibt den Index in der Hierarchie zurück, den das Element mit uniqueID hat
     ''' wenn uniqueID nicht existiert, dann wird als Wert 0 zurückgegeben  
     ''' </summary>

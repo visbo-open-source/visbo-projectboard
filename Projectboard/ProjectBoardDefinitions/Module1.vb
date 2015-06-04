@@ -269,6 +269,7 @@ Public Module Module1
         filterdefinieren = 3
         einzelprojektReport = 4
         excelExport = 5
+        vorlageErstellen = 6
     End Enum
 
 
@@ -2595,15 +2596,31 @@ Public Module Module1
     Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
                                               ByVal fBU As Collection, ByVal fTyp As Collection, _
                                               ByVal fPhase As Collection, ByVal fMilestone As Collection, _
-                                              ByVal fRole As Collection, ByVal fCost As Collection)
+                                              ByVal fRole As Collection, ByVal fCost As Collection, _
+                                              ByVal calledFromHry As Boolean)
 
         Dim lastFilter As clsFilter
 
 
-        lastFilter = New clsFilter(fName, fBU, fTyp, _
+        If calledFromHry Then
+            Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
+
+            If Not IsNothing(nameLastFilter) Then
+                With nameLastFilter
+                    lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
+                End With
+            Else
+                lastFilter = New clsFilter(fName, fBU, fTyp, _
                                   fPhase, fMilestone, _
                                  fRole, fCost)
+            End If
 
+
+        Else
+            lastFilter = New clsFilter(fName, fBU, fTyp, _
+                                  fPhase, fMilestone, _
+                                 fRole, fCost)
+        End If
 
         If menuOption = PTmenue.filterdefinieren Then
             filterDefinitions.storeFilter(fName, lastFilter)

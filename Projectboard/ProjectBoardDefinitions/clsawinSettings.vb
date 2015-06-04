@@ -67,6 +67,9 @@
     ' soll der Original Name angeziegt werden 
     Public Property showOrigName As Boolean
 
+    ' soll der Best-Name (Name mit kürzest-möglichem Breadcrumb um eindeutig zu sein 
+    Public Property showBestName As Boolean
+
     ' Settings für die letzte User Selektion in der Tafel 
     Public Property selectedColumn As Integer
     Public Property selectedRow As Integer
@@ -154,6 +157,7 @@
         _applyFilter = False
         _createIfNotThere = False
         _showOrigName = False
+        _showBestName = True
         _drawProjectLine = True
         _showElementNames = False
 

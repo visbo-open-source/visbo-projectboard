@@ -4075,7 +4075,7 @@ Public Module awinDiagrams
                                        p = PTpfdk.ZeitRisiko Or _
                                        p = PTpfdk.ComplexRisiko Then
 
-                                    Call awinUpdatePortfolioDiagrams(chtobj, 0)
+                                    Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
 
                                 ElseIf p = PTpfdk.Auslastung Then
                                     Try
