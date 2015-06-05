@@ -338,7 +338,7 @@
         Dim moduleDauerInDays As Integer
         Dim correctFactor As Double
         Dim newphase As clsPhase
-        Dim parentPhase As clsPhase
+        Dim headPhase As clsPhase
         Dim elemID As String
 
 
@@ -355,12 +355,12 @@
         If Not IsNothing(moduleName) Then
 
             If moduleName.Length > 0 Then
-                parentPhase = New clsPhase(parent:=project)
+                headPhase = New clsPhase(parent:=project)
                 elemID = project.hierarchy.findUniqueElemKey(moduleName, False)
-                parentPhase.nameID = elemID
-                parentPhase.changeStartandDauer(startOffset, moduleDauerInDays)
+                headPhase.nameID = elemID
+                headPhase.changeStartandDauer(startOffset, CLng(Me.dauerInDays * correctFactor))
 
-                project.AddPhase(parentPhase, origName:=moduleName, _
+                project.AddPhase(headPhase, origName:=moduleName, _
                        parentID:=parentID)
 
                 parentID = elemID
@@ -382,9 +382,12 @@
             phaseID = project.hierarchy.findUniqueElemKey(cphase.name, False)
             parentNameIDs(currentLevel) = phaseID
             newphase = New clsPhase(project)
-            newphase.nameID = phaseID
 
-            AllPhases.Item(p).korrCopyTo(newphase, correctFactor)
+            ' die Namenszuweisung muss über diesen optionalen Parameter erfolgen . damit die Meilensteine richtig zugeordnet werden 
+            AllPhases.Item(p).korrCopyTo(newphase, correctFactor, phaseID)
+            ' jetzt muss diese Phase entsprechend im Projekt positioniert werden 
+
+            newphase.changeStartandDauer(startOffset, newphase.dauerInDays)
 
             If currentLevel - 1 < 0 Then
                 tmpParentID = parentID

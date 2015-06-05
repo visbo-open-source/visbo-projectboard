@@ -338,6 +338,7 @@
                                 End If
                             End If
 
+                            level = level + 1
 
                         Loop
                     Else
@@ -370,6 +371,7 @@
                                 End If
                             End If
 
+                            level = level + 1
 
                         Loop
                     Else

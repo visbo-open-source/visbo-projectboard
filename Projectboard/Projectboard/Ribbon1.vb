@@ -2062,71 +2062,68 @@ Imports System.Drawing
                         .Show()
                         'returnValue = .ShowDialog
                     End With
+            ElseIf control.Id = "PT4G1M2B1" Then
+                ' Auswahl über Namen, Vorlagen erzeugen
+                appInstance.ScreenUpdating = False
 
+                With nameFormular
+
+                    .Text = "modulare Vorlagen erzeugen"
+                    .OKButton.Text = "Vorlage erstellen"
+                    .menuOption = PTmenue.vorlageErstellen
+                    .statusLabel.Text = ""
+
+                    .rdbRoles.Enabled = False
+                    .rdbCosts.Enabled = False
+
+                    .rdbBU.Visible = False
+                    .pictureBU.Visible = False
+
+                    .rdbTyp.Visible = False
+                    .pictureTyp.Visible = False
+
+                    .einstellungen.Visible = False
+
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+
+                    returnValue = .ShowDialog
+                End With
+
+                appInstance.ScreenUpdating = True
+
+
+            ElseIf control.Id = "PT4G1M2B2" Then
+                ' Auswahl über Hierarchie, Vorlagen Export
+                appInstance.ScreenUpdating = False
+
+                awinSettings.useHierarchy = True
+                With hryFormular
+
+                    .Text = "modulare Vorlagen erzeugen"
+                    .OKButton.Text = "Vorlage erstellen"
+                    .menuOption = PTmenue.vorlageErstellen
+                    .statusLabel.Text = ""
+
+                    .AbbrButton.Visible = False
+                    .AbbrButton.Enabled = False
+
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+                    ' Reports
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+                    .einstellungen.Visible = False
+
+                    ' Nicht Modal anzeigen
+                    '.Show()
+                    returnValue = .ShowDialog
+                End With
                 End If
-        ElseIf control.Id = "PT4G1M2B1" Then
-            ' Auswahl über Namen, Vorlagen erzeugen
-            appInstance.ScreenUpdating = False
-
-            With nameFormular
-
-                .Text = "modulare Vorlagen erzeugen"
-                .OKButton.Text = "Vorlage erstellen"
-                .menuOption = PTmenue.vorlageErstellen
-                .statusLabel.Text = ""
-
-                .rdbRoles.Enabled = False
-                .rdbCosts.Enabled = False
-
-                .rdbBU.Visible = False
-                .pictureBU.Visible = False
-
-                .rdbTyp.Visible = False
-                .pictureTyp.Visible = False
-
-                .einstellungen.Visible = False
-
-                .chkbxOneChart.Checked = False
-                .chkbxOneChart.Visible = False
-
-                .repVorlagenDropbox.Visible = False
-                .labelPPTVorlage.Visible = False
-
-                returnValue = .ShowDialog
-            End With
-
-            appInstance.ScreenUpdating = True
-
-
-        ElseIf control.Id = "PT4G1M2B2" Then
-            ' Auswahl über Hierarchie, Vorlagen Export
-            appInstance.ScreenUpdating = False
-
-            awinSettings.useHierarchy = True
-            With hryFormular
-
-                .Text = "modulare Vorlagen erzeugen"
-                .OKButton.Text = "Vorlage erstellen"
-                .menuOption = PTmenue.vorlageErstellen
-                .statusLabel.Text = ""
-
-                .AbbrButton.Visible = False
-                .AbbrButton.Enabled = False
-
-                .chkbxOneChart.Checked = False
-                .chkbxOneChart.Visible = False
-
-                ' Reports
-                .repVorlagenDropbox.Visible = False
-                .labelPPTVorlage.Visible = False
-                .einstellungen.Visible = False
-
-                ' Nicht Modal anzeigen
-                '.Show()
-                returnValue = .ShowDialog
-            End With
-
-
 
 
         Else
@@ -2639,6 +2636,59 @@ Imports System.Drawing
 
         Try
             Call importProjekteEintragen(myCollection, importDate, ProjektStatus(0))
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
+        End Try
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+    End Sub
+
+    ''' <summary>
+    ''' importiert die Modul Batch Datei und legt entsprechende PRojekte an 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Public Sub Tom2G4B1ModulImport(control As IRibbonControl)
+
+        Dim modulInventurFile As String = requirementsOrdner & "Module-Import Batch.xlsx"
+        Dim dateiName As String
+        Dim myCollection As New Collection
+        Dim importDate As Date = Date.Now
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        dateiName = awinPath & modulInventurFile
+
+        Try
+
+            appInstance.Workbooks.Open(dateiName)
+            ' alle Import Projekte erstmal löschen
+            ImportProjekte.Clear()
+            Call awinImportModule(myCollection)
+            'Call bmwImportProjektInventur(myCollection)
+
+            appInstance.ActiveWorkbook.Save()
+            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+
+
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+            enableOnUpdate = True
+            Exit Sub
+        End Try
+
+        Try
+            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
         Catch ex As Exception
             Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
         End Try

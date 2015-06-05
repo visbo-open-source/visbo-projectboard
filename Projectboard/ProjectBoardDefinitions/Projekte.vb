@@ -10391,6 +10391,7 @@ Public Module Projekte
         Dim vorlagenShape As xlNS.Shape
 
         Dim shpExists As Boolean
+        Dim oldAlternativeText As String
 
 
         Try
@@ -10423,6 +10424,8 @@ Public Module Projekte
             Try
                 projectShape = worksheetShapes.Item(pname)
                 shpExists = True
+                ' merken, weil bei Variante erzeugen der Alternative Text nicht geändert werden soll 
+                oldAlternativeText = projectShape.AlternativeText
             Catch ex As Exception
                 shpExists = False
                 projectShape = Nothing
@@ -10752,16 +10755,20 @@ Public Module Projekte
         End If
 
         With projectShape
-            If drawphases Then
-                .AlternativeText = CInt(PTshty.projektE).ToString
+            If shpExists Then
+                .AlternativeText = oldAlternativeText
             Else
-                If awinSettings.drawProjectLine Then
-                    .AlternativeText = CInt(PTshty.projektL).ToString
+                If drawphases Then
+                    .AlternativeText = CInt(PTshty.projektE).ToString
                 Else
-                    .AlternativeText = CInt(PTshty.projektN).ToString
+                    If awinSettings.drawProjectLine Then
+                        .AlternativeText = CInt(PTshty.projektL).ToString
+                    Else
+                        .AlternativeText = CInt(PTshty.projektN).ToString
+                    End If
                 End If
-
             End If
+            
 
             hproj.shpUID = .ID.ToString
             hproj.tfZeile = calcYCoordToZeile(projectShape.Top)

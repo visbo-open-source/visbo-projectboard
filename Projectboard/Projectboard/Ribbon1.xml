@@ -30,10 +30,10 @@
         <group id="PTPf" label="Portfolio-Charts">
           <button id="PTXG1B8" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
           <button id="PTXG1B9" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />
-          <!--<button id="PTXG1B8" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />
+          <!--<button id="PTXG1B8" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />-->
           <separator id="PTXG1s5"/>
-          <button id="PTXG1B7" label="Engpass" onAction="PTXShowEngpass" />
-          <separator id="PTXG1s6"/>
+          <button id="PTXG1B10" label="Engpass" onAction="PTXShowEngpass" />
+          <!--<separator id="PTXG1s6"/>
           <button id="PTXG1B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowSymbols" />-->
         </group>
         <group id="PTFK" label ="Finanz-Kennzahlen">
@@ -222,7 +222,8 @@
       </tab>
       <tab id ="PT4" label="Austauschen">
         <group id="PT4G1" label=" ">
-          <button id="PT4G1B1" label="Import Projekt-Inventur" onAction="Tom2G4B1InventurImport" />
+          <button id="PT4G1B1" label="Import Projekte (Batch)" onAction="Tom2G4B1InventurImport" />
+          <button id="PT4G1B9" label="Import Module (Batch)" onAction="Tom2G4B1ModulImport" />
           <button id="PT4G1B2" label="Import RPLAN Projekte" onAction="Tom2G4B1RPLANImport" supertip ="es kann jeweils eine RPLAN Excel Datei aus dem Folder RPLANImport eingelesen werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
           <button id="PT4G1B7" label="Exportieren FC-52" onAction="bmwFC52Export" supertip ="alle geladenen Projekte bzw. Varianten in der Session werden gemaß der FC52 Vorlage exportiert; die neue Datei liegt im Folder Export Dateien"/>
           <button id="PT4G1B8" label="Exportieren Excel/RPLAN" onAction="bmwExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner Export Dateien"/>
@@ -230,10 +231,10 @@
             <button id="PT4G1M0B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Element-Namen"/>
             <button id="PT4G1M0B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Hierarchie"/>
           </menu>
-          <!--<menu id="PT4G1M2" label ="Modulare Vorlagen erzeugen" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt"/>
+          <menu id="PT4G1M2" label ="Modulare Vorlagen erzeugen" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt">
             <button id="PT4G1M2B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Element-Namen"/>
             <button id="PT4G1M2B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Hierarchie"/>
-          </menu>-->
+          </menu>
           <separator id="PT4G1s1"/>
           <menu id="PT4G1M1" label ="Projekt Steckbriefe">
             <button id="PT4G1M1B1" label="Importieren" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
