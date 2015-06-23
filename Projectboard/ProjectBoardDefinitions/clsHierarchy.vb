@@ -297,7 +297,8 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getBestNameOfID(ByVal nameID As String) As String
+    Public ReadOnly Property getBestNameOfID(ByVal nameID As String, _
+                                             ByVal ShowStdNames As Boolean, ByVal showAbbrev As Boolean) As String
         Get
             Dim elemName As String = elemNameOfElemID(nameID)
             Dim isMilestone As Boolean
@@ -308,6 +309,9 @@
             Dim level As Integer = 1
             Dim tmpName As String = elemName
             Dim rootreached As Boolean = False
+            Dim description1 As String = "", description2 As String = ""
+            Dim phDef As clsPhasenDefinition
+
             isMilestone = elemIDIstMeilenstein(nameID)
 
             Try
@@ -344,6 +348,8 @@
                     Else
                         tmpName = elemName
                     End If
+
+
                 Else
                     ' es handelt sich um eine Phase
                     Dim phaseIndices() As Integer = Me.getPhaseIndices(elemName, "")
@@ -381,10 +387,170 @@
             Catch ex As Exception
 
             End Try
-            
+
+            ' jetzt wird unterschieden, ob Abbrev gezeigt werden soll oder Standard Name ... 
+            If showStdNames Then
+                If showAbbrev Then
+
+                    If awinSettings.showBestName And Not awinSettings.drawphases Then
+                        ' den bestmöglichen, also den kürzesten Breadcrumb Namen, der (möglichst) eindeutig ist
+                        ' anzeigen; aber nur, wenn im Ein-Zeile-Modus beschriftet wird, weil dann der Kontext fehlt ... 
+                        Call splitHryFullnameTo2(tmpName, description2, description1)
+
+                        Dim tmpStr() As String = description1.Split(New Char() {CChar("#")}, 20)
+
+                        ' jetzt den Abbrev String zusammensetzen 
+                        Dim newDesc1 As String = ""
+                        For i As Integer = 1 To tmpStr.Length
+                            Dim tmpPhName As String = tmpStr(i - 1)
+                            phDef = PhaseDefinitions.getPhaseDef(tmpPhName)
+
+                            If IsNothing(phDef) Then
+                                If i = 1 And tmpPhName <> elemNameOfElemID(rootPhaseName) And tmpPhName <> "" Then
+                                    newDesc1 = "?"
+                                ElseIf i > 1 Then
+                                    newDesc1 = newDesc1 & "-?"
+                                End If
+
+                            Else
+                                If i = 1 Then
+                                    If phDef.shortName = "" Then
+                                        newDesc1 = "?"
+                                    Else
+                                        newDesc1 = phDef.shortName
+                                    End If
+
+                                Else
+                                    If phDef.shortName = "" Then
+                                        newDesc1 = newDesc1 & "-?"
+                                    Else
+                                        newDesc1 = newDesc1 & "-" & phDef.shortName
+                                    End If
+
+                                End If
+                            End If
+
+                        Next
+                        description1 = newDesc1
+
+                        If isMilestone Then
+
+                            Dim msDef As clsMeilensteinDefinition
+                            msDef = MilestoneDefinitions.getMilestoneDef(description2)
+                            If IsNothing(msDef) Then
+                                description2 = "-"
+                            Else
+                                description2 = msDef.shortName
+                                If IsNothing(description2) Then
+                                    description2 = "-"
+                                Else
+                                    If description2 = "" Then
+                                        description2 = "-"
+                                    End If
+
+                                End If
+                            End If
+
+                        Else
+
+                            phDef = PhaseDefinitions.getPhaseDef(description2)
+                            If IsNothing(phDef) Then
+                                description2 = "-"
+                            Else
+                                description2 = phDef.shortName
+                                If IsNothing(description2) Then
+                                    description2 = "-"
+                                Else
+                                    If description2 = "" Then
+                                        description2 = "-"
+                                    End If
+
+                                End If
+                            End If
+
+                        End If
+                    Else
+                        description1 = ""
+
+                        If isMilestone Then
+
+                            Dim msDef As clsMeilensteinDefinition
+                            msDef = MilestoneDefinitions.getMilestoneDef(description2)
+                            If IsNothing(msDef) Then
+                                description2 = "-"
+                            Else
+                                description2 = msDef.shortName
+                                If IsNothing(description2) Then
+                                    description2 = "-"
+                                Else
+                                    If description2 = "" Then
+                                        description2 = "-"
+                                    End If
+
+                                End If
+                            End If
+
+                        Else
+                            phDef = PhaseDefinitions.getPhaseDef(description2)
+                            If IsNothing(phDef) Then
+                                description2 = "-"
+                            Else
+                                description2 = phDef.shortName
+                                If IsNothing(description2) Then
+                                    description2 = "-"
+                                Else
+                                    If description2 = "" Then
+                                        description2 = "-"
+                                    End If
+
+                                End If
+                            End If
+
+                        End If
 
 
-            getBestNameOfID = tmpName
+                    End If
+                Else
+
+                    Call splitHryFullnameTo2(tmpName, description2, description1)
+                    Dim tmpStr() As String = description1.Split(New Char() {CChar("#")}, 20)
+
+                    ' jetzt den Std-Name zusammensetzen 
+                    Dim newDesc1 As String = ""
+                    For i As Integer = 1 To tmpStr.Length
+                        Dim tmpPhName As String = tmpStr(i - 1)
+
+                        If i = 1 Then
+                            If tmpPhName = elemNameOfElemID(rootPhaseName) Then
+                                ' nichts tun
+                            Else
+                                newDesc1 = tmpPhName
+                            End If
+                        ElseIf i > 1 Then
+                            newDesc1 = newDesc1 & "-" & tmpPhName
+                        End If
+
+                    Next
+                    description1 = newDesc1
+
+
+                End If
+            Else
+                description2 = Me.nodeItem(nameID).origName
+            End If
+
+            Dim description As String = ""
+            Try
+                If description1 <> "" Then
+                    description = description1 & "-" & description2
+                Else
+                    description = description2
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            getBestNameOfID = description
 
         End Get
     End Property

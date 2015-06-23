@@ -15,14 +15,16 @@ Public Module awinGeneralModules
         Vorlage = 1
         Start = 2
         Ende = 3
-        Dauer = 4
-        Budget = 5
-        Risiko = 6
-        Strategie = 7
-        Volumen = 8
-        Komplexitaet = 9
-        Businessunit = 10
-        Beschreibung = 11
+        startElement = 4
+        endElement = 5
+        Dauer = 6
+        Budget = 7
+        Risiko = 8
+        Strategie = 9
+        Volumen = 10
+        Komplexitaet = 11
+        Businessunit = 12
+        Beschreibung = 13
     End Enum
 
     Private Enum ptModuleSpalten
@@ -269,9 +271,27 @@ Public Module awinGeneralModules
         Dim i As Integer
         Dim xlsCustomization As Excel.Workbook = Nothing
 
+        ReDim importOrdnerNames(4)
+        ReDim exportOrdnerNames(4)
 
 
+
+        ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
         awinPath = appInstance.ActiveWorkbook.Path & "\"
+
+        importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
+        importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
+        importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
+        importOrdnerNames(PTImpExp.simpleScen) = awinPath & "Import\einfache Szenarien"
+        importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\modulare Szenarien"
+
+        exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
+        exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
+        exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
+        exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
+        exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
+
+
         StartofCalendar = StartofCalendar.Date
 
         ProjektStatus(0) = "geplant"
@@ -505,10 +525,10 @@ Public Module awinGeneralModules
                 Call readRessourcenDetails()
 
 
-                ' jetzt werden die Projekt-Vorlagen ausgelesen 
+                ' jetzt werden die Modul-Vorlagen ausgelesen 
                 Call readVorlagen(True)
 
-                ' jetzt werden die Modul-Vorlagen ausgelesen 
+                ' jetzt werden die Projekt-Vorlagen ausgelesen 
                 Call readVorlagen(False)
 
                 Dim a As Integer = Projektvorlagen.Count
@@ -1330,15 +1350,12 @@ Public Module awinGeneralModules
 
         If showRangeLeft <> von Or showRangeRight <> bis Or _
             AlleProjekte.Count = 0 Then
-
-
             '
             ' wenn roentgenblick.ison , werden Bedarfe angezeigt - die müssen hier ausgeblendet werden - nachher mit den neuen Werten eingeblendet werden
             '
             If roentgenBlick.isOn And ShowProjekte.Count > 0 Then
                 Call awinNoshowProjectNeeds()
             End If
-
 
             '
             ' aktualisieren der Showtime zone, erst die alte ausblenden , dann die neue einblenden
@@ -1803,9 +1820,11 @@ Public Module awinGeneralModules
     Public Sub awinImportProjektInventur(ByRef myCollection As Collection)
         Dim zeile As Integer, spalte As Integer
         Dim pName As String = ""
-        Dim vName As String = ""
-        Dim start As Date
-        Dim ende As Date
+        Dim vorlageName As String = ""
+        Dim start As Date, inputStart As Date
+        Dim startElem As String = ""
+        Dim endElem As String = ""
+        Dim ende As Date, inputEnde As Date
         Dim budget As Double
         Dim dauer As Integer = 0
         Dim sfit As Double, risk As Double
@@ -1820,8 +1839,25 @@ Public Module awinGeneralModules
         Dim geleseneProjekte As Integer
         Dim ProjektdauerIndays As Integer = 0
         Dim ok As Boolean = False
+        Dim refDauer As Double
+        Dim vorgabeDauer As Double
+        Dim abstandAnfang As Double
+        Dim abstandEnde As Double
+
+        Dim dauerFaktor As Double = 1.0
+        Dim refProj As New clsProjekt
 
         Dim firstZeile As Excel.Range
+        Dim scenarioName As String = appInstance.ActiveWorkbook.Name
+        Dim tmpName As String = ""
+
+        ' bestimme den Namen des Szenarios - das ist gleich der NAme der Excel Datei 
+        Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
+        tmpName = ""
+        For ih As Integer = 0 To positionIX
+            tmpName = tmpName & scenarioName.Chars(ih)
+        Next
+        scenarioName = tmpName.Trim
 
         ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
 
@@ -1829,11 +1865,13 @@ Public Module awinGeneralModules
         spalte = 1
         geleseneProjekte = 0
 
-        Dim suchstr(11) As String
+        Dim suchstr(13) As String
         suchstr(ptInventurSpalten.Name) = "Name"
         suchstr(ptInventurSpalten.Vorlage) = "Vorlage"
         suchstr(ptInventurSpalten.Start) = "Start-Datum"
         suchstr(ptInventurSpalten.Ende) = "Ende-Datum"
+        suchstr(ptInventurSpalten.startElement) = "Bezug Start"
+        suchstr(ptInventurSpalten.endElement) = "Bezug Ende"
         suchstr(ptInventurSpalten.Dauer) = "Dauer [Tage]"
         suchstr(ptInventurSpalten.Budget) = "Budget [T€]"
         suchstr(ptInventurSpalten.Risiko) = "Risiko"
@@ -1869,28 +1907,37 @@ Public Module awinGeneralModules
 
                 While zeile <= lastRow
                     ok = False
+                    Dim sMilestone As clsMeilenstein = Nothing
+                    Dim eMilestone As clsMeilenstein = Nothing
 
                     pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                    vName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    vorlageName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
-                    If Projektvorlagen.Liste.ContainsKey(vName) Then
+                    If Projektvorlagen.Liste.ContainsKey(vorlageName) Then
 
-                        vproj = Projektvorlagen.getProject(vName)
+                        vproj = Projektvorlagen.getProject(vorlageName)
+                        refProj = New clsProjekt
+                        vproj.copyTo(refProj)
+                        refProj.startDate = Date.Now
+
                         Try
 
                             start = CDate(CType(.Cells(zeile, spalte + 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             ende = CDate(CType(.Cells(zeile, spalte + 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            dauer = CInt(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            budget = CDbl(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            risk = CDbl(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            sfit = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            volume = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            complexity = CDbl(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            businessUnit = CStr(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            description = CStr(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            startElem = CStr(CType(.Cells(zeile, spalte + 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            endElem = CStr(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            dauer = CInt(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            budget = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            risk = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            sfit = CDbl(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            volume = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            complexity = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            businessUnit = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            description = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             'vglName = pName.Trim & "#" & ""
-                            vglName = calcProjektKey(pName.Trim, "")
-
+                            vglName = calcProjektKey(pName.Trim, scenarioName)
+                            inputStart = start
+                            inputEnde = ende
 
                             If DateDiff(DateInterval.Day, StartofCalendar, start) >= 0 Then
 
@@ -1944,6 +1991,61 @@ Public Module awinGeneralModules
                             ok = False
                         End Try
 
+                        ' jetzt die Daten richtig berechnen, falls Bezug Start , Bezug Ende angegeben ist 
+
+                        vorgabeDauer = calcDauerIndays(start, ende)
+                        Try
+                            
+                            If Not IsNothing(startElem) Then
+                                If startElem.Trim.Length > 0 Then
+                                    sMilestone = refProj.getMilestone(startElem)
+                                End If
+                            End If
+
+                            If Not IsNothing(endElem) Then
+                                If endElem.Trim.Length > 0 Then
+                                    eMilestone = refProj.getMilestone(endElem)
+                                End If
+                            End If
+
+                            ' jetzt werden Start und Ende ggf neu bestimmt, so dass die Bezugs-Elemente genau so liegen 
+                            If Not IsNothing(sMilestone) Then
+                                abstandAnfang = DateDiff(DateInterval.Day, refProj.startDate, sMilestone.getDate) * -1
+                                If Not IsNothing(eMilestone) Then
+                                    abstandEnde = DateDiff(DateInterval.Day, eMilestone.getDate, refProj.endeDate)
+                                    refDauer = calcDauerIndays(sMilestone.getDate, eMilestone.getDate)
+                                Else
+                                    refDauer = calcDauerIndays(sMilestone.getDate, refProj.endeDate)
+                                End If
+                            Else
+                                If Not IsNothing(eMilestone) Then
+                                    abstandEnde = DateDiff(DateInterval.Day, eMilestone.getDate, refProj.endeDate)
+                                    refDauer = calcDauerIndays(refProj.startDate, eMilestone.getDate)
+                                Else
+                                    refDauer = vorgabeDauer
+                                End If
+                            End If
+
+                            If refDauer < 0 Then
+                                refDauer = -1 * refDauer
+                            ElseIf refDauer = 0 Then
+                                refDauer = vorgabeDauer
+                            End If
+
+                            dauerFaktor = vorgabeDauer / refDauer
+
+                            ' rechne den neuen Start aus 
+                            If Not IsNothing(sMilestone) Then
+                                start = start.AddDays(CInt(dauerFaktor * abstandAnfang))
+                                ende = start.AddDays(CInt(dauerFaktor * vproj.dauerInDays - 1))
+                            ElseIf Not IsNothing(eMilestone) Then
+                                ende = start.AddDays(CInt(dauerFaktor * vproj.dauerInDays - 1))
+                            End If
+
+                        Catch ex As Exception
+
+                        End Try
+                        
 
                     Else
                         CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
@@ -1959,8 +2061,29 @@ Public Module awinGeneralModules
                             'Projekt anlegen ,Verschiebung um 
                             hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
 
-                            Call erstelleInventurProjekt(hproj, pName, vName, start, ende, budget, zeile, sfit, risk, _
+                            Dim variantName As String
+                            If scenarioName = "Init" Then
+                                variantName = ""
+                            Else
+                                variantName = scenarioName
+                            End If
+                            Call erstelleInventurProjekt(hproj, pName, vorlageName, variantName, _
+                                                         start, ende, budget, zeile, sfit, risk, _
                                                          volume, complexity, businessUnit, description)
+
+                            'prüfen ob Rundungsfehler bei Setzen Meilenstein passiert sind ... 
+                            If Not IsNothing(sMilestone) Then
+                                If DateDiff(DateInterval.Day, hproj.getMilestone(startElem).getDate, inputStart) <> 0 Then
+                                    hproj.getMilestone(startElem).setDate = inputStart
+                                End If
+                            End If
+
+                            If Not IsNothing(eMilestone) Then
+                                If DateDiff(DateInterval.Day, hproj.getMilestone(endElem).getDate, inputEnde) <> 0 Then
+                                    hproj.getMilestone(endElem).setDate = inputEnde
+                                End If
+                            End If
+
                             If Not hproj Is Nothing Then
                                 Try
                                     ImportProjekte.Add(calcProjektKey(hproj), hproj)
@@ -1986,10 +2109,13 @@ Public Module awinGeneralModules
 
             End With
         Catch ex As Exception
-            Throw New Exception("Fehler in Datei Projekt-Inventur")
+            Throw New Exception("Fehler in Szenario-Datei")
         End Try
 
-
+        ' jetzt noch ein Szenario anlegen, wenn ImportProjekte was enthält 
+        If ImportProjekte.Count > 0 Then
+            Call storeSessionConstellation(ShowProjekte, scenarioName, ImportProjekte)
+        End If
 
     End Sub
 
@@ -1997,7 +2123,7 @@ Public Module awinGeneralModules
 
         Dim zeile As Integer, spalte As Integer
         Dim pName As String = ""
-        Dim vName As String = ""
+        Dim vorlagenName As String = ""
         Dim start As Date
         Dim ende As Date
         Dim budget As Double
@@ -2017,6 +2143,17 @@ Public Module awinGeneralModules
         Dim ok As Boolean = False
 
         Dim firstZeile As Excel.Range
+
+        Dim scenarioName As String = appInstance.ActiveWorkbook.Name
+        Dim tmpName As String = ""
+
+        ' bestimme den Namen des Szenarios - das ist gleich der NAme der Excel Datei 
+        Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
+        tmpName = ""
+        For ih As Integer = 0 To positionIX
+            tmpName = tmpName & scenarioName.Chars(ih)
+        Next
+        scenarioName = tmpName.Trim
 
         ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
 
@@ -2059,14 +2196,14 @@ Public Module awinGeneralModules
                 lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
 
-               
+
 
 
                 While zeile <= lastRow
                     ok = False
 
                     pName = CStr(CType(.Cells(zeile, inputColumns(ptModuleSpalten.name)), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                    vName = "Projekt-Platzhalter"
+                    vorlagenName = "Projekt-Platzhalter"
 
                     ' jetzt muss das Start bzw. Ende Date für das Projekt bestimmt werden
                     ' es ist bestimmt durch das erste auftretende Datum bzw. das letzte auftretende Datum
@@ -2091,9 +2228,9 @@ Public Module awinGeneralModules
                     Next
 
 
-                    If Projektvorlagen.Liste.ContainsKey(vName) Then
+                    If Projektvorlagen.Liste.ContainsKey(vorlagenName) Then
 
-                        vproj = Projektvorlagen.getProject(vName)
+                        vproj = Projektvorlagen.getProject(vorlagenName)
                         Try
 
                             start = projectStartDate
@@ -2107,7 +2244,7 @@ Public Module awinGeneralModules
                             businessUnit = CStr(CType(.Cells(zeile, inputColumns(ptModuleSpalten.produktlinie)), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             description = ""
                             'vglName = pName.Trim & "#" & ""
-                            vglName = calcProjektKey(pName.Trim, "")
+                            vglName = calcProjektKey(pName.Trim, scenarioName)
 
 
                             If DateDiff(DateInterval.Day, StartofCalendar, start) >= 0 Then
@@ -2177,7 +2314,8 @@ Public Module awinGeneralModules
                             'Projekt anlegen ,Verschiebung um 
                             hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
 
-                            Call erstelleInventurProjekt(hproj, pName, vName, start, ende, budget, zeile, sfit, risk, _
+                            Call erstelleInventurProjekt(hproj, pName, vorlagenName, scenarioName, _
+                                                         start, ende, budget, zeile, sfit, risk, _
                                                          volume, complexity, businessUnit, description)
                             projectStartDate = start
                             projectEndDate = ende
@@ -2215,10 +2353,10 @@ Public Module awinGeneralModules
                             If ModulVorlagen.Contains(moduleName) Then
                                 planModul = ModulVorlagen.getProject(moduleName)
                                 Dim parentID As String = rootPhaseName
-                                
+
                                 Dim parentPhase As clsPhase
                                 Dim elemID As String = ""
-                                
+
                                 If Not IsNothing(phaseName) Then
 
                                     If phaseName.Length > 0 Then
@@ -2267,11 +2405,16 @@ Public Module awinGeneralModules
 
             End With
         Catch ex As Exception
-            Throw New Exception("Fehler in Datei Projekt-Inventur")
+            Throw New Exception("Fehler in Datei Module Import ...")
         End Try
 
 
+        ' jetzt noch ein Szenario anlegen, wenn ImportProjekte was enthält 
+        If ImportProjekte.Count > 0 Then
+            Call storeSessionConstellation(ShowProjekte, scenarioName, ImportProjekte)
+        End If
 
+        currentConstellation = scenarioName
 
     End Sub
 
@@ -4764,62 +4907,7 @@ Public Module awinGeneralModules
         End If
 
     End Sub
-    ' ''' <summary>
-    ' ''' 
-    ' ''' </summary>
-    ' ''' <param name="constellationName"></param>
-    ' ''' <remarks></remarks>
-    Public Sub awinStoreConstellation(ByVal constellationName As String)
-
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
-        ' prüfen, ob diese Constellation bereits existiert ..
-        If projectConstellations.Contains(constellationName) Then
-
-            Try
-                projectConstellations.Remove(constellationName)
-            Catch ex As Exception
-
-            End Try
-
-        End If
-
-        Dim newC As New clsConstellation
-        With newC
-            .constellationName = constellationName
-        End With
-
-        Dim newConstellationItem As clsConstellationItem
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-            newConstellationItem = New clsConstellationItem
-            With newConstellationItem
-                .projectName = kvp.Key
-                .show = True
-                .Start = kvp.Value.startDate
-                .variantName = kvp.Value.variantName
-                .zeile = kvp.Value.tfZeile
-            End With
-            newC.Add(newConstellationItem)
-        Next
-
-
-        Try
-            projectConstellations.Add(newC)
-
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
-        End Try
-
-        ' Portfolio in die Datenbank speichern
-        If request.pingMongoDb() Then
-            If Not request.storeConstellationToDB(newC) Then
-                Call MsgBox("Fehler beim Speichern der projektConstellation '" & newC.constellationName & "' in die Datenbank")
-            End If
-        Else
-            Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!")
-        End If
-
-    End Sub
-
+    
 
 
 
@@ -6132,7 +6220,7 @@ Public Module awinGeneralModules
 
 
                     cphase = kvp.Value.getPhase(elemName, breadcrumb, lfdNr)
-                    Dim phaseName As String = kvp.Value.hierarchy.getBestNameOfID(cphase.nameID)
+                    Dim phaseName As String = kvp.Value.hierarchy.getBestNameOfID(cphase.nameID, True, False)
 
                     If Not IsNothing(cphase) Then
                         Try
@@ -6169,10 +6257,11 @@ Public Module awinGeneralModules
 
         Next
 
-        Dim expFName As String = awinPath & exportFilesOrdner & _
+        'Dim expFName As String = awinPath & exportFilesOrdner & _
+        '    "\Vorlage_" & Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.modulScen) & _
             "\Vorlage_" & Date.Now.ToString.Replace(":", ".") & ".xlsx"
-
-
 
         Try
             appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
@@ -6517,10 +6606,11 @@ Public Module awinGeneralModules
 
         Next
 
-        Dim expFName As String = awinPath & exportFilesOrdner & _
+        'Dim expFName As String = awinPath & exportFilesOrdner & _
+        '    "\Report_" & Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.rplan) & _
             "\Report_" & Date.Now.ToString.Replace(":", ".") & ".xlsx"
-
-
 
         Try
             appInstance.ActiveWorkbook.SaveAs(Filename:=expFName, ConflictResolution:=Excel.XlSaveConflictResolution.xlLocalSessionChanges)
@@ -6791,8 +6881,12 @@ Public Module awinGeneralModules
 
                 Try
                     Call createDateiFromSelection(filtername, menueOption)
+                    If menueOption = PTmenue.excelExport Then
+                        Call MsgBox("ok, Excel File in " & exportOrdnerNames(PTImpExp.rplan) & " erzeugt")
+                    Else
+                        Call MsgBox("ok, Excel File in " & exportOrdnerNames(PTImpExp.modulScen) & " erzeugt")
+                    End If
 
-                    Call MsgBox("ok, Excel File in " & exportFilesOrdner & " erzeugt")
                 Catch ex As Exception
                     Call MsgBox(ex.Message)
                 End Try

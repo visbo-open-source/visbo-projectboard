@@ -169,7 +169,7 @@
         </group>
         <!---->
         <group id="PT2G2" label="Portfolio">
-          <button id="PT2G2B1" label="Neu/Aktualisieren" onAction="PTNeueKonstellation" supertip ="die aktuelle Session wird als Szenario in der Datenbank gespeichert. Wenn ein Szenario-Name eingegeben wird, der noch nicht existiert, so wird das Szenario unter diesem neuen Namen erstellt. Wird ein existierender Name angegeben, so wird die alte Szenario Definition hiermit überschrieben"/>
+          <button id="PT2G2B1" label="Neu/Aktualisieren" onAction="PTNeueKonstellation" supertip ="die aktuelle Session wird als Szenario in der Session gespeichert. Wenn ein Szenario-Name eingegeben wird, der noch nicht existiert, so wird das Szenario unter diesem neuen Namen erstellt. Wird ein existierender Name angegeben, so wird die alte Szenario Definition hiermit überschrieben"/>
           <separator id="PT2G2s1"/>
           <button id="PT2G2B2" label="Laden" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Szenario ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Szenario geladen. Vorsicht: vor kurzem in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren"/>
           <separator id="PT2G2s2"/>
@@ -223,7 +223,7 @@
       <tab id ="PT4" label="Austauschen">
         <group id="PT4G1" label=" ">
           <button id="PT4G1B1" label="Import Projekte (Batch)" onAction="Tom2G4B1InventurImport" />
-          <button id="PT4G1B9" label="Import Module (Batch)" onAction="Tom2G4B1ModulImport" />
+          <button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" />
           <button id="PT4G1B2" label="Import RPLAN Projekte" onAction="Tom2G4B1RPLANImport" supertip ="es kann jeweils eine RPLAN Excel Datei aus dem Folder RPLANImport eingelesen werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
           <button id="PT4G1B7" label="Exportieren FC-52" onAction="bmwFC52Export" supertip ="alle geladenen Projekte bzw. Varianten in der Session werden gemaß der FC52 Vorlage exportiert; die neue Datei liegt im Folder Export Dateien"/>
           <button id="PT4G1B8" label="Exportieren Excel/RPLAN" onAction="bmwExcelExport" supertip ="alle selektierten Projekte bzw Varianten in der Session werden gemaß der Export Vorlage exportiert; die neue Datei liegt im Ordner Export Dateien"/>
@@ -231,7 +231,7 @@
             <button id="PT4G1M0B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Element-Namen"/>
             <button id="PT4G1M0B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Hierarchie"/>
           </menu>
-          <menu id="PT4G1M2" label ="Modulare Vorlagen erzeugen" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt">
+          <menu id="PT4G1M2" label ="Batch-Vorlage für modulare Projekterzeugung" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt">
             <button id="PT4G1M2B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Element-Namen"/>
             <button id="PT4G1M2B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für die Modul-Vorlagen erfolgt über die Hierarchie"/>
           </menu>
@@ -282,7 +282,7 @@
             <button id="Pt6G3M1B1" label="Alle Filter definieren" onAction="NameHierarchySelAction" supertip ="für folgende Kategorien können Filter definiert werden: Plan-Elemente (Phasen und Meilensteine), Ressourcen Bedarfe, Kostenbedarfe, Produktlinien und Projekt-Typen. Dabei gilt: das Projekt passiert den Filter , das eines der angegebenen Planelemente im angegebenen Zeitraum enthält, und jeweils mindestens ein Kriterium in den anderen gesetzen Kategorien erfüllt. Ist gar kein Kriterium in einer Kategorie gesetzt, so gilt diese Kategorie als nicht gesetzt, es findet damit durch diese Kategorie keine Ausfilterung statt"/>
             <button id="Pt6G3M1B2" label="Element-Filter über Hierarchie definieren" onAction="NameHierarchySelAction" supertip ="für folgende Kategorien können Filter definiert werden: Plan-Elemente (Phasen und Meilensteine), Ressourcen Bedarfe, Kostenbedarfe, Produktlinien und Projekt-Typen. Dabei gilt: das Projekt passiert den Filter , das eines der angegebenen Planelemente im angegebenen Zeitraum enthält, und jeweils mindestens ein Kriterium in den anderen gesetzen Kategorien erfüllt. Ist gar kein Kriterium in einer Kategorie gesetzt, so gilt diese Kategorie als nicht gesetzt, es findet damit durch diese Kategorie keine Ausfilterung statt"/>
           </menu>
-          <button id="Pt6G3B3" label="Zeitraum Filter" onAction="PT5changeTimeSpan" supertip ="mit diesem Formular kann das Zeitraumfenster jeweils um einen Monat nach rechts bzw. links verschoben werden; so kann man sich bei der Anzeige von Leistbarkeits-Charts einen schnellen Eindruck verschaffen, wie sich die Leistbarkeitskurve über die Zeit verändert"/>
+          <button id="Pt6G3B3" label="Zeitraum verschieben" onAction="PT5changeTimeSpan" supertip ="mit diesem Formular kann das Zeitraumfenster jeweils um einen Monat nach rechts bzw. links verschoben werden; so kann man sich bei der Anzeige von Leistbarkeits-Charts einen schnellen Eindruck verschaffen, wie sich die Leistbarkeitskurve über die Zeit verändert"/>
         </group>
         <!--<group id ="PT6G4" label ="Multiprojekt Sichten">
           <checkBox id="PT6G4B1" label="Strikte Zeitraum-Orientierung" getPressed="PT6StriktPressed" onAction ="PT6SetStrict"/>

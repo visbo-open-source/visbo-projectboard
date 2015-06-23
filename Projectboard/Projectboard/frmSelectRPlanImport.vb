@@ -8,23 +8,32 @@ Imports System.ComponentModel
 
 Public Class frmSelectRPlanImport
 
-
-    Public RPLANdateiName As String = ""
+    Public menueAswhl As Integer
+    Public dateiOrdner As String
+    Public selectedDateiName As String = ""
 
     Private Sub frmSelectRPlanImport_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         Dim dateiName As String = ""
         Dim dirname As String = ""
 
-        dirname = awinPath & rplanimportFilesOrdner
+        'dirname = awinPath & rplanimportFilesOrdner
+        If menueAswhl = PTImpExp.rplan Then
+            dirname = importOrdnerNames(PTImpExp.rplan)
+        ElseIf menueAswhl = PTImpExp.simpleScen Then
+            dirname = importOrdnerNames(PTImpExp.simpleScen)
+        ElseIf menueAswhl = PTImpExp.modulScen Then
+            dirname = importOrdnerNames(PTImpExp.modulScen)
+        End If
+
 
         ' jetzt werden die RPLANImportfiles ausgelesen 
 
-        Dim listOfRPLANImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
+        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
         Try
             Dim i As Integer
-            For i = 1 To listOfRPLANImportfiles.Count
-                dateiName = Dir(listOfRPLANImportfiles.Item(i - 1))
+            For i = 1 To listOfImportfiles.Count
+                dateiName = Dir(listOfImportfiles.Item(i - 1))
                 RPLANImportDropbox.Items.Add(dateiName)
             Next i
         Catch ex As Exception
@@ -39,10 +48,17 @@ Public Class frmSelectRPlanImport
         Dim vglName As String = " "
         Dim myCollection As New Collection
 
-        Dim dirName As String
+        Dim dirName As String = ""
 
-        dirName = awinPath & rplanimportFilesOrdner
-        RPLANdateiName = dirName & "\" & RPLANImportDropbox.Text
+        'dirName = awinPath & rplanimportFilesOrdner
+        If menueAswhl = PTImpExp.rplan Then
+            dirName = importOrdnerNames(PTImpExp.rplan)
+        ElseIf menueAswhl = PTImpExp.simpleScen Then
+            dirName = importOrdnerNames(PTImpExp.simpleScen)
+        ElseIf menueAswhl = PTImpExp.modulScen Then
+            dirName = importOrdnerNames(PTImpExp.modulScen)
+        End If
+        selectedDateiName = dirName & "\" & RPLANImportDropbox.Text
 
         MyBase.Close()
     End Sub

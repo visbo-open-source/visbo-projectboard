@@ -7198,7 +7198,8 @@ Public Module Projekte
     '
     ' Sub trägt ein individuelles Projekt ein
     '
-    Public Sub erstelleInventurProjekt(ByRef hproj As clsProjekt, ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, ByVal endedate As Date, _
+    Public Sub erstelleInventurProjekt(ByRef hproj As clsProjekt, ByVal pname As String, ByVal vorlagenName As String, ByVal variantName As String, _
+                                       ByVal startdate As Date, ByVal endedate As Date, _
                                        ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
                                        ByVal volume As Double, ByVal complexity As Double, ByVal businessUnit As String, ByVal description As String)
 
@@ -7214,7 +7215,9 @@ Public Module Projekte
         '
         ' ein neues Projekt wird als Objekt angelegt ....
         '
-
+        If IsNothing(variantName) Then
+            variantName = ""
+        End If
 
         Try
             Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate)
@@ -7227,6 +7230,7 @@ Public Module Projekte
         Try
             With hproj
                 .name = pname
+                .variantName = variantName
                 '.getPhase(1).name = pname
                 .getPhase(1).nameID = rootPhaseName
                 .VorlagenName = vorlagenName
@@ -7302,7 +7306,7 @@ Public Module Projekte
                 ' jetzt kann die Aktion durchgeführt werden 
                 modulVorlage = ModulVorlagen.getProject(vorlagenName)
                 modulVorlage.moduleCopyTo(project:=hproj, parentID:="", moduleName:=parentName, _
-                                           startOffset:=startOffset, endOffset:=endOffset, dontStretch:=dontStretch)
+                                           modulStartOffset:=startOffset, endOffset:=endOffset, dontStretch:=dontStretch)
             End If
 
         Else
@@ -10391,7 +10395,7 @@ Public Module Projekte
         Dim vorlagenShape As xlNS.Shape
 
         Dim shpExists As Boolean
-        Dim oldAlternativeText As String
+        Dim oldAlternativeText As String = ""
 
 
         Try
@@ -13315,7 +13319,8 @@ Public Module Projekte
         fileName = cleanFileName(fileName)
 
         ' fileName wird nun ergänzt mit dem passenden Pfad
-        fileName = awinPath & projektFilesOrdner & "\" & fileName
+        'fileName = awinPath & projektFilesOrdner & "\" & fileName
+        fileName = exportOrdnerNames(PTImpExp.visbo) & "\" & fileName
 
 
         ' -------------------------------------------------
@@ -14049,8 +14054,8 @@ Public Module Projekte
         fileName = cleanFileName(fileName)
 
         ' fileName wird nun ergänzt mit dem passenden Pfad
-        fileName = awinPath & projektFilesOrdner & "\" & fileName
-
+        'fileName = awinPath & projektFilesOrdner & "\" & fileName
+        fileName = exportOrdnerNames(PTImpExp.visbo) & "\" & fileName
 
         ' -------------------------------------------------
         ' hier werden die einzelnen Stamm-Daten in das entsprechende File geschrieben 
@@ -16304,10 +16309,7 @@ Public Module Projekte
         Dim worksheetShapes As Excel.Shapes
         Dim nameID As String
         Dim description As String = ""
-        ' description1 nimmt ggf den kürzesten, sinnvoleln Breadcrumb auf 
-        Dim description1 As String = ""
-        ' description2 ist der eigentliche Name, abgekürzt, Original oder Standard-Name
-        Dim description2 As String = ""
+        
         Dim ok As Boolean
         Dim index As Integer = 0
 
@@ -16350,130 +16352,32 @@ Public Module Projekte
                 index = 0
                 For Each elemShape In shapeSammlung
 
+                    ' zurücksetzen 
+                    description = ""
                     txtShape = Nothing
                     ok = False
+                    nameID = ""
 
-                    If istMeilensteinShape(elemShape) And annotateMilestones Then
 
+                    If isPhaseType(kindOfShape(elemShape)) And annotatePhases Then
+                        nameID = extractName(elemShape.Name, PTshty.phaseN)
                         ok = True
 
+                    ElseIf isMilestoneType(kindOfShape(elemShape)) And annotateMilestones Then
                         nameID = extractName(elemShape.Name, PTshty.milestoneN)
-                        If showStdNames Then
-                            If showAbbrev Then
-
-                                If awinSettings.showBestName And Not awinSettings.drawphases Then
-                                    ' den bestmöglichen, also den kürzesten Breadcrumb Namen, der (möglichst) eindeutig ist
-                                    ' anzeigen; aber nur, wenn im Ein-Zeile-Modus beschriftet wird, weil dann der Kontext fehlt ... 
-                                    description = hproj.hierarchy.getBestNameOfID(nameID)
-                                    Call splitHryFullnameTo2(description, description2, description1)
-                                End If
-
-                                Dim msName As String = elemNameOfElemID(nameID)
-                                Dim msDef As clsMeilensteinDefinition
-                                msDef = MilestoneDefinitions.getMilestoneDef(msName)
-                                If IsNothing(msDef) Then
-                                    description2 = "-"
-                                Else
-                                    description2 = msDef.shortName
-                                    If IsNothing(description2) Then
-                                        description2 = "-"
-                                    Else
-                                        If description2 = "" Then
-                                            description2 = "-"
-                                        End If
-
-                                    End If
-                                End If
-
-
-
-                            Else
-                                If awinSettings.showBestName And Not awinSettings.drawphases Then
-                                    ' den bestmöglichen, also den kürzesten Breadcrumb Namen, der (möglichst) eindeutig ist
-                                    ' anzeigen; aber nur, wenn im Ein-Zeile-Modus beschriftet wird, weil dann der Kontext fehlt ... 
-                                    description = hproj.hierarchy.getBestNameOfID(nameID)
-                                    Call splitHryFullnameTo2(description, description2, description1)
-                                Else
-                                    description2 = elemNameOfElemID(nameID)
-                                End If
-
-                            End If
-
-                        Else
-                            description2 = hproj.hierarchy.nodeItem(nameID).origName
-                        End If
-
-
-                    ElseIf istPhasenShape(elemShape) And annotatePhases Then
-
-
-
-                        nameID = extractName(elemShape.Name, PTshty.milestoneN)
-
-                        If nameID <> rootPhaseName Then
-
-                            ok = True
-                            If showStdNames Then
-
-                                If showAbbrev Then
-
-                                    If awinSettings.showBestName And Not awinSettings.drawphases Then
-                                        ' den bestmöglichen, also den kürzesten Breadcrumb Namen, der (möglichst) eindeutig ist
-                                        ' anzeigen; aber nur, wenn im Ein-Zeile-Modus beschriftet wird, weil dann der Kontext fehlt ... 
-                                        description = hproj.hierarchy.getBestNameOfID(nameID)
-                                        Call splitHryFullnameTo2(description, description2, description1)
-                                    End If
-
-
-                                    Dim phName As String = elemNameOfElemID(nameID)
-                                    Dim phDef As clsPhasenDefinition
-                                    phDef = PhaseDefinitions.getPhaseDef(phName)
-                                    If IsNothing(phDef) Then
-                                        description = "-"
-                                    Else
-                                        description = phDef.shortName
-                                        If IsNothing(description) Then
-                                            description = "-"
-                                        Else
-                                            If description = "" Then
-                                                description = "-"
-                                            End If
-                                        End If
-                                    End If
-
-                                Else
-
-                                    If awinSettings.showBestName And Not awinSettings.drawphases Then
-                                        ' den bestmöglichen, also den kürzesten Breadcrumb Namen, der (möglichst) eindeutig ist
-                                        ' anzeigen; aber nur, wenn im Ein-Zeile-Modus beschriftet wird, weil dann der Kontext fehlt ... 
-                                        description = hproj.hierarchy.getBestNameOfID(nameID)
-                                        Call splitHryFullnameTo2(description, description2, description1)
-                                    Else
-                                        description2 = elemNameOfElemID(nameID)
-                                    End If
-
-                                End If
-
-                            Else
-                                description2 = hproj.hierarchy.nodeItem(nameID).origName
-                            End If
-                        
-                        End If
-
-                        
+                        ok = True
 
                     End If
 
-                    Try
-                        description = calcHryFullname(description2, description1)
-                    Catch ex As Exception
-
-                    End Try
-
+                    If nameID = rootPhaseName Then
+                        ok = False
+                    End If
 
                     ' jetzt wird das Description Shape erzeugt 
                     If ok Then
                         ' nur, wenn es entweder ein Meilenstein oder eine Phase war ... 
+
+                        description = hproj.hierarchy.getBestNameOfID(nameID, showStdNames, showAbbrev)
 
                         top = elemShape.Top
                         left = elemShape.Left
@@ -17397,10 +17301,12 @@ Public Module Projekte
 
     ''' <summary>
     ''' speichert die aktuelle Konstellation in currentProjektListe in eine Konstellation
+    ''' wenn die ImportProjekte vom Typ clsProjekteAlle übergeben wird, dann wird die hergenommen, um die Constellation aufzubauen 
     ''' </summary>
     ''' <param name="constellationName"></param>
     ''' <remarks></remarks>
-    Public Sub storeSessionConstellation(ByRef currentProjektListe As clsProjekte, ByVal constellationName As String)
+    Public Sub storeSessionConstellation(ByRef currentProjektListe As clsProjekte, ByVal constellationName As String, _
+                                         Optional ByVal ImportProjekte As clsProjekteAlle = Nothing)
 
         'Dim request As New Request(awinSettings.databaseName)
 
@@ -17422,17 +17328,33 @@ Public Module Projekte
         End With
 
         Dim newConstellationItem As clsConstellationItem
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In currentProjektListe.Liste
-            newConstellationItem = New clsConstellationItem
-            With newConstellationItem
-                .projectName = kvp.Key
-                .show = True
-                .Start = kvp.Value.startDate
-                .variantName = kvp.Value.variantName
-                .zeile = kvp.Value.tfZeile
-            End With
-            newC.Add(newConstellationItem)
-        Next
+
+        If Not IsNothing(ImportProjekte) Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+                newConstellationItem = New clsConstellationItem
+                With newConstellationItem
+                    .projectName = kvp.Value.name
+                    .show = True
+                    .Start = kvp.Value.startDate
+                    .variantName = kvp.Value.variantName
+                    .zeile = kvp.Value.tfZeile
+                End With
+                newC.Add(newConstellationItem)
+            Next
+        Else
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In currentProjektListe.Liste
+                newConstellationItem = New clsConstellationItem
+                With newConstellationItem
+                    .projectName = kvp.Key
+                    .show = True
+                    .Start = kvp.Value.startDate
+                    .variantName = kvp.Value.variantName
+                    .zeile = kvp.Value.tfZeile
+                End With
+                newC.Add(newConstellationItem)
+            Next
+        End If
+
 
 
         Try
@@ -17442,16 +17364,8 @@ Public Module Projekte
             Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
         End Try
 
-        ' Portfolio in die Datenbank speichern
-        ' 2.11.14 wird nicht automatisch in der Datenbank gespeichert 
-        ' erst mit dem expliziten Speichern in die Datenbank werden die Portfolios auch mitgespeichert  
-        'If request.pingMongoDb() Then
-        '    If Not request.storeConstellationToDB(newC) Then
-        '        Call MsgBox("Fehler beim Speichern der projektConstellation '" & newC.constellationName & "' in die Datenbank")
-        '    End If
-        'Else
-        '    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!")
-        'End If
+
+
 
     End Sub
 
@@ -17534,7 +17448,7 @@ Public Module Projekte
             End If
 
         Else
-            Throw New ArgumentException("Projektvariante existiert nicht")
+            'Throw New ArgumentException("Projektvariante existiert nicht")
         End If
 
 
@@ -17550,8 +17464,10 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="myCollection"></param>
     ''' <param name="importDate"></param>
+    ''' <param name="scenarioName">wenn scenarioName einen wert hat, dann werden für bereits existierende Projekte Varianten mit dem Namen des Szenario-Namens erzeugt </param>
     ''' <remarks></remarks>
-    Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date, ByVal pStatus As String)
+    Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date, ByVal pStatus As String, _
+                                       Optional ByVal scenarioName As String = "")
 
         Dim hproj As New clsProjekt, cproj As New clsProjekt
         Dim fullName As String, vglName As String
@@ -18115,6 +18031,38 @@ Public Module Projekte
             isProjectType = True
         Else
             isProjectType = False
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' gibt zurück, ob es sich bei dem angegebenen Shape um einen Meilenstein handelt 
+    ''' </summary>
+    ''' <param name="type"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isMilestoneType(ByVal type As Integer) As Boolean
+
+        If type = PTshty.milestoneN Or type = PTshty.milestoneE Then
+            isMilestoneType = True
+        Else
+            isMilestoneType = False
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' gibt zurück, ob es sich bei dem angegebenen Shape um eine Phase handelt 
+    ''' </summary>
+    ''' <param name="type"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isPhaseType(ByVal type As Integer) As Boolean
+
+        If type = PTshty.phase1 Or type = PTshty.phaseE Or type = PTshty.phaseN Then
+            isPhaseType = True
+        Else
+            isPhaseType = False
         End If
 
     End Function

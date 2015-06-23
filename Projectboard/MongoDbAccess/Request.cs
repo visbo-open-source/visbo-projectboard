@@ -144,10 +144,18 @@ namespace MongoDbAccess
 
         public bool storeProjectToDB(clsProjekt projekt)
         {
-            var projektDB = new clsProjektDB();
-            projektDB.copyfrom(projekt);
-            projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString();
-            return CollectionProjects.Save(projektDB).Ok;      
+            try
+            {
+                var projektDB = new clsProjektDB();
+                projektDB.copyfrom(projekt);
+                projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString();
+                return CollectionProjects.Save(projektDB).Ok;    
+            }
+            catch
+            {
+                return false;
+            }
+              
 
 
             //projektDB.copyfrom(ref projekt); wenn von kopiert wird, muss das nicht per Ref übergeben werden 

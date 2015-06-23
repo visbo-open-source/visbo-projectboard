@@ -457,7 +457,7 @@ Public Module awinGUI
                             With .Format.Glow
                                 .Color.RGB = CInt(ampelValues(i - 1))
                                 .Transparency = 0
-                                .Radius = 10
+                                .Radius = 3
                             End With
 
                         End If
@@ -1202,7 +1202,7 @@ Public Module awinGUI
                             With .Format.Glow
                                 .Color.RGB = CInt(ampelValues(i - 1))
                                 .Transparency = 0
-                                .Radius = 10
+                                .Radius = 3
                             End With
 
                         End If

@@ -1570,7 +1570,10 @@ Module BMWItOModul
 
         Next
 
-        Dim expFName As String = awinPath & exportFilesOrdner & "\Report_" & _
+        'Dim expFName As String = awinPath & exportFilesOrdner & "\Report_" & _
+        '    Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.rplan) & "\Report_" & _
             Date.Now.ToString.Replace(":", ".") & ".xlsx"
 
         Try

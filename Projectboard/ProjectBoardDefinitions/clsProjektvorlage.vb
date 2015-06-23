@@ -329,20 +329,21 @@
     ''' <param name="project">gibt das Projekt an, unter dem das Modul angelegt werden soll</param>
     ''' <param name="parentID">gibt die Parent-ID an, unter der das Modul angelegt werden soll</param>
     ''' <param name="moduleName">wenn ein Name angegeben ist, wird eine übergeordnete Phase mit diesem Namen angelegt </param>
-    ''' <param name="startoffset">gibt die Anzahl Tage an, die der Start des Moduls vom ProjektStart entfernt ist</param>
+    ''' <param name="modulStartoffset">gibt die Anzahl Tage an, die der Start des Moduls vom ProjektStart entfernt ist</param>
     ''' <param name="endoffset">gibt die Anzahl Tage an, die das Ende des Moduls vom ProjektStart entfernt ist</param>
     ''' <remarks></remarks>
     Public Sub moduleCopyTo(ByRef project As clsProjekt, ByVal parentID As String, ByVal moduleName As String, _
-                                ByVal startOffset As Integer, ByVal endOffset As Integer, ByVal dontStretch As Boolean)
+                                ByVal modulStartOffset As Integer, ByVal endOffset As Integer, ByVal dontStretch As Boolean)
 
         Dim moduleDauerInDays As Integer
+        Dim phaseStartOffset As Integer = 0
         Dim correctFactor As Double
         Dim newphase As clsPhase
         Dim headPhase As clsPhase
         Dim elemID As String
 
 
-        moduleDauerInDays = endOffset - startOffset + 1
+        moduleDauerInDays = endOffset - modulStartOffset + 1
         correctFactor = moduleDauerInDays / Me.dauerInDays
 
         If correctFactor > 1.0 And dontStretch Then
@@ -358,7 +359,7 @@
                 headPhase = New clsPhase(parent:=project)
                 elemID = project.hierarchy.findUniqueElemKey(moduleName, False)
                 headPhase.nameID = elemID
-                headPhase.changeStartandDauer(startOffset, CLng(Me.dauerInDays * correctFactor))
+                headPhase.changeStartandDauer(modulStartOffset, CLng(Me.dauerInDays * correctFactor))
 
                 project.AddPhase(headPhase, origName:=moduleName, _
                        parentID:=parentID)
@@ -366,7 +367,7 @@
                 parentID = elemID
             End If
         End If
-        
+
         ' jetzt werden alle Phasen des Moduls übernommen
         Dim parentNameIDs(40) As String ' 41 Hierarchie-Stufen sollten genug sein 
         Dim currentLevel As Integer = 0
@@ -387,7 +388,8 @@
             AllPhases.Item(p).korrCopyTo(newphase, correctFactor, phaseID)
             ' jetzt muss diese Phase entsprechend im Projekt positioniert werden 
 
-            newphase.changeStartandDauer(startOffset, newphase.dauerInDays)
+            phaseStartOffset = modulStartOffset + newphase.startOffsetinDays
+            newphase.changeStartandDauer(phaseStartOffset, newphase.dauerInDays)
 
             If currentLevel - 1 < 0 Then
                 tmpParentID = parentID

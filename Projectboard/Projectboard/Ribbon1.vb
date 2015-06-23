@@ -56,51 +56,14 @@ Imports System.Drawing
         Dim constellationName As String
         Dim speichernDatenbank As String = "Pt5G2B1"
         Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
-
+        Dim storeToDB As Boolean = False
         Dim newConstellationForm As New frmProjPortfolioAdmin
 
 
 
         Call projektTafelInit()
 
-        'If control.Id = speichernDatenbank Then
-        '    ' Wenn das Speichern eines Portfolios aus dem Menu Datenbank aufgerufen wird, so werden erneut alle Portfolios aus der Datenbank geholt
-
-        '    If request.pingMongoDb() Then
-        '        projectConstellations = request.retrieveConstellationsFromDB()
-        '    Else
-        '        Call MsgBox("Datenbank-Verbindung ist unterbrochen !")
-        '    End If
-        'End If
-
-        'Try
-
-        '    With newConstellationForm
-        '        .Text = "Portfolio erstellen bzw. ändern"
-        '        .portfolioName.Text = currentConstellation
-        '        .portfolioName.Visible = True
-        '        .Label1.Visible = True
-        '        .aKtionskennung = PTtvactions.definePortfolioSE
-        '    End With
-
-        '    returnValue = newConstellationForm.ShowDialog
-
-        '    If returnValue = DialogResult.OK Then
-        '        'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
-
-        '    Else
-        '        ' returnValue = DialogResult.Cancel
-
-        '    End If
-
-        'Catch ex As Exception
-
-        '    Call MsgBox(ex.Message)
-        'End Try
-
-
-        '
-        ' alte Version ; vor dem 26.10.14
+        
         '
         If AlleProjekte.Count > 0 Then
             returnValue = storeConstellationFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Portfolios
@@ -108,7 +71,10 @@ Imports System.Drawing
             If returnValue = DialogResult.OK Then
                 constellationName = storeConstellationFrm.ComboBox1.Text
 
-                Call awinStoreConstellation(constellationName)
+                If control.Id = speichernDatenbank Then
+                    storeToDB = True
+                End If
+                Call storeSessionConstellation(ShowProjekte, constellationName)
 
                 ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
                 currentConstellation = constellationName
@@ -119,7 +85,9 @@ Imports System.Drawing
         End If
         ' 
         ' Ende alte Version; vor dem 26.10.14
-        '
+
+        
+        
         enableOnUpdate = True
 
     End Sub
@@ -164,25 +132,23 @@ Imports System.Drawing
                 constellationName = loadConstellationFrm.ListBox1.Text
                 Call awinLoadConstellation(constellationName, successMessage)
 
-                appInstance.ScreenUpdating = False
-                'Call diagramsVisible(False)
-                Call awinClearPlanTafel()
-                Call awinZeichnePlanTafel(False)
-                Call awinNeuZeichnenDiagramme(2)
-                'Call diagramsVisible(True)
-                appInstance.ScreenUpdating = True
-
-                If successMessage.Length > initMessage.Length Then
-                    Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
-                Else
-                    'Call MsgBox(constellationName & " wurde geladen ...")
-                End If
-
                 ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
                 currentConstellation = constellationName
             End If
 
+            appInstance.ScreenUpdating = False
+            'Call diagramsVisible(False)
+            Call awinClearPlanTafel()
+            Call awinZeichnePlanTafel(False)
+            Call awinNeuZeichnenDiagramme(2)
+            'Call diagramsVisible(True)
+            appInstance.ScreenUpdating = True
 
+            'If successMessage.Length > initMessage.Length Then
+            '    Call MsgBox(constellationName & " wurde geladen ..." & vbLf & vbLf & successMessage)
+            'Else
+            '    'Call MsgBox(constellationName & " wurde geladen ...")
+            'End If
 
         End If
         enableOnUpdate = True
@@ -2602,48 +2568,53 @@ Imports System.Drawing
     End Sub
 
     Public Sub Tom2G4B1InventurImport(control As IRibbonControl)
+        ' Übernahme 
 
-
-        Dim projektInventurFile As String = requirementsOrdner & "Projekt-Inventur.xlsx"
         Dim dateiName As String
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
-
+        Dim returnValue As DialogResult
+        Dim getInventurImport As New frmSelectRPlanImport
+        
         Call projektTafelInit()
 
         appInstance.EnableEvents = False
         appInstance.ScreenUpdating = False
         enableOnUpdate = False
 
-        dateiName = awinPath & projektInventurFile
+        'dateiName = awinPath & projektInventurFile
 
-        Try
+        getInventurImport.menueAswhl = PTImpExp.simpleScen
+        returnValue = getInventurImport.ShowDialog
 
-            appInstance.Workbooks.Open(dateiName)
-            ' alle Import Projekte erstmal löschen
-            ImportProjekte.Clear()
-            Call awinImportProjektInventur(myCollection)
-            'Call bmwImportProjektInventur(myCollection)
+        If returnValue = DialogResult.OK Then
+            dateiName = getInventurImport.selectedDateiName
 
-            appInstance.ActiveWorkbook.Save()
-            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+            Try
+                appInstance.Workbooks.Open(dateiName)
 
+                ' alle Import Projekte erstmal löschen
+                ImportProjekte.Clear()
+                Call awinImportProjektInventur(myCollection)
+                appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
-            Exit Sub
-        End Try
+                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
 
-        Try
-            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(0))
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
-        End Try
+            Catch ex As Exception
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+            End Try
+        Else
+            Call MsgBox(" Import Scenario wurde abgebrochen")
+        End If
+
 
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
+
+
 
     End Sub
 
@@ -2654,61 +2625,11 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Public Sub Tom2G4B1ModulImport(control As IRibbonControl)
 
-        Dim modulInventurFile As String = requirementsOrdner & "Module-Import Batch.xlsx"
-        Dim dateiName As String
-        Dim myCollection As New Collection
-        Dim importDate As Date = Date.Now
-
-        Call projektTafelInit()
-
-        appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
-        enableOnUpdate = False
-
-        dateiName = awinPath & modulInventurFile
-
-        Try
-
-            appInstance.Workbooks.Open(dateiName)
-            ' alle Import Projekte erstmal löschen
-            ImportProjekte.Clear()
-            Call awinImportModule(myCollection)
-            'Call bmwImportProjektInventur(myCollection)
-
-            appInstance.ActiveWorkbook.Save()
-            appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-
-
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
-            appInstance.EnableEvents = True
-            appInstance.ScreenUpdating = True
-            enableOnUpdate = True
-            Exit Sub
-        End Try
-
-        Try
-            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
-        End Try
-
-
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
-        appInstance.ScreenUpdating = True
-
-    End Sub
-
-    Public Sub Tom2G4B1RPLANImport(control As IRibbonControl)
-
-
-        'Dim projektInventurFile As String = requirementsOrdner & "RPLAN Projekte.xlsx"
         Dim dateiName As String
         Dim myCollection As New Collection
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
-        Dim getRPLANImport As New frmSelectRPlanImport
+        Dim getModuleImport As New frmSelectRPlanImport
 
         Call projektTafelInit()
 
@@ -2718,11 +2639,61 @@ Imports System.Drawing
 
         'dateiName = awinPath & projektInventurFile
 
+        getModuleImport.menueAswhl = PTImpExp.modulScen
+        returnValue = getModuleImport.ShowDialog
 
+        If returnValue = DialogResult.OK Then
+            dateiName = getModuleImport.selectedDateiName
+
+            Try
+                appInstance.Workbooks.Open(dateiName)
+
+                ' alle Import Projekte erstmal löschen
+                ImportProjekte.Clear()
+                Call awinImportModule(myCollection)
+                appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+
+            Catch ex As Exception
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+            End Try
+        Else
+            Call MsgBox(" Import Scenario wurde abgebrochen")
+        End If
+
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
+    End Sub
+
+    Public Sub Tom2G4B1RPLANImport(control As IRibbonControl)
+
+
+        Dim dateiName As String
+        Dim myCollection As New Collection
+        Dim importDate As Date = Date.Now
+        Dim returnValue As DialogResult
+        Dim getRPLANImport As New frmSelectRPlanImport
+       
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        'dateiName = awinPath & projektInventurFile
+
+        getRPLANImport.menueAswhl = PTImpExp.rplan
         returnValue = getRPLANImport.ShowDialog
 
         If returnValue = DialogResult.OK Then
-            dateiName = getRPLANImport.RPLANdateiName
+            dateiName = getRPLANImport.selectedDateiName
 
             Try
                 appInstance.Workbooks.Open(dateiName)
@@ -2778,7 +2749,8 @@ Imports System.Drawing
 
 
 
-        dirName = awinPath & projektFilesOrdner
+        'dirName = awinPath & projektFilesOrdner
+        dirName = importOrdnerNames(PTImpExp.visbo)
         listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
 
         ' alle Import Projekte erstmal löschen
@@ -2960,7 +2932,9 @@ Imports System.Drawing
 
             Try
                 ' Schließen der Export Datei unter neuem Namen, original Zustand bleibt erhalten
-                appInstance.ActiveWorkbook.Close(SaveChanges:=True, Filename:=awinPath & exportFilesOrdner & "\" & _
+                'appInstance.ActiveWorkbook.Close(SaveChanges:=True, Filename:=awinPath & exportFilesOrdner & "\" & _
+                '                                 exportFileName)
+                appInstance.ActiveWorkbook.Close(SaveChanges:=True, Filename:=exportOrdnerNames(PTImpExp.rplan) & "\" & _
                                                  exportFileName)
                 Call MsgBox(outputString & "exportiert !")
             Catch ex As Exception
@@ -5102,8 +5076,14 @@ Imports System.Drawing
     End Sub
 
     Sub Tom2G2M5B3NoShowSymbols(control As IRibbonControl)
+
         Call projektTafelInit()
         Call awinDeleteProjectChildShapes(0)
+        Call deleteBeschriftungen()
+
+        If visboZustaende.showTimeZoneBalken And showRangeLeft > 0 And showRangeRight > 0 Then
+            Call awinShowtimezone(showRangeLeft, showRangeRight, True)
+        End If
     End Sub
 
 

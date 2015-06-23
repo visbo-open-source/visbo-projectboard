@@ -20,6 +20,7 @@ Public Module Module1
     Public loginErfolgreich As Boolean = False
 
     Public awinSettings As New clsawinSettings
+    Public visboZustaende As New clsVisboZustaende
     Public magicBoardCmdBar As New clsCommandBarEvents
     Public anzahlCalls As Integer = 0
     Public iProjektFarbe As Object
@@ -270,6 +271,7 @@ Public Module Module1
         einzelprojektReport = 4
         excelExport = 5
         vorlageErstellen = 6
+        rplan = 7
     End Enum
 
 
@@ -327,6 +329,14 @@ Public Module Module1
         deleteV = 7
     End Enum
 
+    Public Enum PTImpExp
+        visbo = 0
+        rplan = 1
+        msproject = 2
+        simpleScen = 3
+        modulScen = 4
+    End Enum
+
    
     Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
 
@@ -380,17 +390,19 @@ Public Module Module1
 
     ' nimmt den Pfad Namen auf - also wo liegen Customization File und Projekt-Details
     Public awinPath As String
+    Public importOrdnerNames() As String
+    Public exportOrdnerNames() As String
+
+    'Public projektFilesOrdner As String = "ProjectFiles"
+    'Public rplanimportFilesOrdner As String = "RPLANImport"
+    'Public exportFilesOrdner As String = "Export Dateien"
+
+    Public excelExportVorlage As String = "export Vorlage.xlsx"
     Public requirementsOrdner As String = "requirements\"
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
-    Public projektFilesOrdner As String = "ProjectFiles"
-    Public rplanimportFilesOrdner As String = "RPLANImport"
-    Public exportFilesOrdner As String = "Export Dateien"
-    Public excelExportVorlage As String = "export Vorlage.xlsx"
-
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"
     Public modulVorlagenOrdner As String = requirementsOrdner & "ModuleTemplates"
-    ' Public projektDetail As String = "Project Detail.xlsx"
     Public projektAustausch As String = requirementsOrdner & "Projekt-Steckbrief.xlsx"
     Public projektRessOrdner As String = requirementsOrdner & "Ressource Manager"
     Public RepProjectVorOrdner As String = requirementsOrdner & "ReportTemplatesProject"
@@ -426,6 +438,7 @@ Public Module Module1
                 .ScreenUpdating = True
             End If
         End With
+
 
     End Sub
 
