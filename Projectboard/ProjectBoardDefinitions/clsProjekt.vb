@@ -855,6 +855,7 @@ Public Class clsProjekt
             'Dim numberOfDays As Integer
             Dim anteil As Double
             Dim daysPMonth(12) As Integer
+            Dim anzTage As Integer
 
             daysPMonth(0) = 0
             daysPMonth(1) = 31
@@ -898,6 +899,13 @@ Public Class clsProjekt
                                     If i = 0 Then
 
                                         If awinSettings.phasesProzentual Then
+
+                                            If .relEnde = .relStart Then
+                                                anzTage = CInt(DateDiff(DateInterval.Day, phaseStart, phaseEnd)) + 1
+                                            Else
+                                                anzTage = daysPMonth(phaseStart.Month) - phaseStart.Day + 1
+                                            End If
+
                                             anteil = (daysPMonth(phaseStart.Month) - phaseStart.Day + 1) / daysPMonth(phaseStart.Month)
                                             phaseValues(.relStart - 1 + i) = anteil
                                         Else
@@ -2783,6 +2791,69 @@ Public Class clsProjekt
 
             Else    ' keine extended Sicht (bzw. Report) 
                 tmpValue = 1
+            End If
+
+
+            calcNeededLines = tmpValue
+
+        End Get
+
+    End Property
+
+    ''' <summary>
+    ''' gibt die Anzahl Zeilen zurück, die das aktuelle Projekt im "Extended Drawing Mode" benötigt, wenn alle zughörigen Phasen gezeichnet werden
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property calcNeededLines() As Integer
+        Get
+
+            Dim phasenName As String = ""
+            Dim zeilenOffset As Integer = 1
+            Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
+            Dim tmpValue As Integer
+            Dim breadcrumb As String = ""
+
+            Dim anzPhases As Integer = 0
+            Dim cphase As clsPhase = Nothing
+
+            For i = 1 To Me.CountPhases ' Schleife über alle Phasen eines Projektes
+                Try
+                    cphase = Me.getPhase(i)
+                    If Not IsNothing(cphase) Then
+
+                        'Call splitHryFullnameTo2(CStr(cphase.nameID), phasenName, breadcrumb)
+
+                        With Me.getPhase(i)
+
+                            'phasenName = .name
+                            If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+                                zeilenOffset = zeilenOffset + 1
+                                lastEndDate = StartofCalendar.AddDays(-1)
+                            End If
+
+                            If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+                                lastEndDate = .getEndDate
+                            End If
+
+                        End With
+
+                        anzPhases = anzPhases + 1
+                        
+                    End If
+
+
+                Catch ex As Exception
+
+                End Try
+
+
+            Next i      ' nächste Phase im Projekt betrachten
+
+            If anzPhases > 1 Then
+                tmpValue = zeilenOffset + 1     'ur: 17.04.2015:  +1 für die übrigen Meilensteine
+            Else
+                tmpValue = 1 + 1                ' ur: 17.04.2015: +1 für die übrigen Meilensteine
             End If
 
 

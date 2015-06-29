@@ -6,12 +6,10 @@ Imports Microsoft.Office.Core
 Public Module awinDiagrams
 
     '
-    ' zeigt im Planungshorizont die Time Zone an - oder blendet sie aus, abhängg vom Wert showzone
+    ' zeigt im Planungshorizont die Time Zone an - oder blendet sie aus, abhängig vom Wert showzone
     '
     Sub awinShowtimezone(ByVal von As Integer, ByVal bis As Integer, ByVal showzone As Boolean)
         Dim laenge As Integer
-
-
 
         laenge = bis - von
 
@@ -41,13 +39,53 @@ Public Module awinDiagrams
 
             End With
 
+            visboZustaende.showTimeZoneBalken = False
+
+        End If
+
+    End Sub
+
+    '
+    ' zeigt im selektierten Zeitraum den Monat an, der gerade in einem Chart angeklickt wurde, so dass dass die 
+    ' dort liegenden Elemente gezeigt werden 
+    '
+    Sub awinShowSelectedMonth(ByVal mon As Integer)
+        Dim laenge As Integer
+        Dim von As Integer = showRangeLeft
+        Dim bis As Integer = showRangeRight
+
+        Dim lastZeile As Integer = projectboardShapes.getMaxZeile
+
+        If showRangeLeft = 0 Or showRangeRight = 0 Or showRangeLeft > showRangeRight Then
+            Exit Sub
+        End If
+
+        laenge = showRangeRight - showRangeLeft
+
+        If mon >= showRangeLeft And mon <= showRangeRight Then
+
+            With appInstance.Worksheets(arrWsNames(3))
+
+                '
+                ' erst den Bereich einfärben  
+                '
+                .Range(.Cells(1, von), .Cells(1, von).Offset(0, laenge)).Interior.color = showtimezone_color
+                If awinSettings.showTimeSpanInPT Then
+                    .Range(.Cells(2, von), .Cells(5000, von).Offset(0, laenge)).Interior.color = awinSettings.timeSpanColor
+                    .range(.cells(2, mon), .cells(lastZeile, mon)).interior.color = awinSettings.glowColor
+                End If
+
+
+
+            End With
+
+            visboZustaende.showTimeZoneBalken = True
 
         End If
 
 
 
     End Sub
-
     ''' <summary>
     ''' löscht Window und Cockpit Window vom Typ "prcTyp"
     ''' </summary>
@@ -467,7 +505,7 @@ Public Module awinDiagrams
                                     If breadcrumb = "" Then
                                         .name = prcName
                                     Else
-                                        .name = breadcrumb & "#" & prcName
+                                        .name = breadcrumb & "-" & prcName
                                     End If
 
                                     '.Interior.color = ampelfarbe(0)
@@ -514,7 +552,7 @@ Public Module awinDiagrams
                                     If breadcrumb = "" Then
                                         .name = prcName
                                     Else
-                                        .name = breadcrumb & "#" & prcName
+                                        .name = breadcrumb & "-" & prcName
                                     End If
                                     .Interior.color = objektFarbe
                                     .Values = datenreihe
@@ -1195,7 +1233,7 @@ Public Module awinDiagrams
                                 If breadcrumb = "" Then
                                     .name = prcName
                                 Else
-                                    .name = breadcrumb & "#" & prcName
+                                    .name = breadcrumb & "-" & prcName
                                 End If
 
                                 '.Interior.color = ampelfarbe(0)
@@ -1214,7 +1252,7 @@ Public Module awinDiagrams
                                 If breadcrumb = "" Then
                                     .name = prcName
                                 Else
-                                    .name = breadcrumb & "#" & prcName
+                                    .name = breadcrumb & "-" & prcName
                                 End If
                                 .Interior.color = objektFarbe
                                 .Values = datenreihe
@@ -4075,7 +4113,7 @@ Public Module awinDiagrams
                                        p = PTpfdk.ZeitRisiko Or _
                                        p = PTpfdk.ComplexRisiko Then
 
-                                    Call awinUpdatePortfolioDiagrams(chtobj, 0)
+                                    Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
 
                                 ElseIf p = PTpfdk.Auslastung Then
                                     Try

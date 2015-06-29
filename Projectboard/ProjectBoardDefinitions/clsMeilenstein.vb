@@ -154,13 +154,17 @@
     End Sub
 
 
-    Public Sub CopyTo(ByRef newResult As clsMeilenstein)
+    Public Sub CopyTo(ByRef newResult As clsMeilenstein, Optional nameID As String = "")
         Dim i As Integer
         Dim newb As New clsBewertung
 
         With newResult
 
-            .nameID = Me.nameID
+            If nameID = "" Then
+                .nameID = Me.nameID
+            Else
+                .nameID = nameID
+            End If
             .verantwortlich = Me.verantwortlich
             .offset = Me.offset
 
