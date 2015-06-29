@@ -2074,12 +2074,14 @@ Public Module awinGeneralModules
                             'prüfen ob Rundungsfehler bei Setzen Meilenstein passiert sind ... 
                             If Not IsNothing(sMilestone) Then
                                 If DateDiff(DateInterval.Day, hproj.getMilestone(startElem).getDate, inputStart) <> 0 Then
+                                    'Call MsgBox("Differenz Start:" & DateDiff(DateInterval.Day, hproj.getMilestone(startElem).getDate, inputStart))
                                     hproj.getMilestone(startElem).setDate = inputStart
                                 End If
                             End If
 
                             If Not IsNothing(eMilestone) Then
                                 If DateDiff(DateInterval.Day, hproj.getMilestone(endElem).getDate, inputEnde) <> 0 Then
+                                    'Call MsgBox("Differenz Ende:" & DateDiff(DateInterval.Day, hproj.getMilestone(endElem).getDate, inputEnde))
                                     hproj.getMilestone(endElem).setDate = inputEnde
                                 End If
                             End If

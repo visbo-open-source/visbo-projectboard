@@ -269,8 +269,8 @@
           <checkBox id="PT6G1B5" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln" supertip ="ist diese Option aktiviert, so werden die Ampeln mit einem Schatten dargestellt, dessen Farbe der gesetzten Ampelfarbe des Meilensteines entspricht. So kann man schnell erkennen, wo die roten Ampeln liegen. Durch Klicken auf den Meilenstein wird eine Erläuterung des Projektleiters zur Meilensteinbewertung angezeigt"/>
           <button id="PT6G1B6" label="Windows u. Excel-Version"  onAction ="PTShowVersions" />
           <checkBox id="PT6G1B7" label="MissingDefinitions hinzufügen" getPressed="PTAddMissingInit" onAction ="PTAddMissingDefinitions" supertip ="fehlende Phasen- oder Meilenstein-Namen werden im CustomizationFile ergänzt"/>
-          <button id="PT6G1B8" label="Test-Funktionen"  onAction ="PTTestFunktion3" />
-          <button id="PT6G1B9" label="Demo-Funktionen"  onAction ="PTTestFunktion4" />
+          <!--<button id="PT6G1B8" label="Test-Funktionen"  onAction ="PTTestFunktion3" />
+          <button id="PT6G1B9" label="Demo-Funktionen"  onAction ="PTTestFunktion4" />-->
         </group>
         <group id ="PT6G2" label="Berechnung">
           <checkBox id="PT6G2B1" label="Bei Dehnen/Stauchen proportional anpassen" getPressed="PTPropAnpassen" onAction ="awinSetPropAnpass" supertip ="diese Option wirkt nur auf Ressourcenbedarfe und Kostenbedarfe; ist diese Option aktiviert, so werden die Ressourcen und Kostenbedarfe proportional angepasst, wenn das Projekt / die Phase durch Dehnen oder Stauchen verlängert bzw. verkürzt wird. Das Budget bleibt allerdings unverändert !"/>

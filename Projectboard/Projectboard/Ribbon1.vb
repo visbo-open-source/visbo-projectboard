@@ -3212,7 +3212,7 @@ Imports System.Drawing
 
             If ok Then
 
-                Dim curFilename As String = roleName & " Projekt-Zuordnung" & " " & Date.Now.ToString("MMM yy")
+                Dim curFilename As String = roleName & " Projekt-Zuordnung" & " " & Date.Now.ToString("MMM yy") & ".xlsx"
 
 
                 Try

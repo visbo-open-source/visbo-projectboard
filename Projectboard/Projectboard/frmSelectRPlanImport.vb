@@ -34,7 +34,10 @@ Public Class frmSelectRPlanImport
             Dim i As Integer
             For i = 1 To listOfImportfiles.Count
                 dateiName = Dir(listOfImportfiles.Item(i - 1))
-                RPLANImportDropbox.Items.Add(dateiName)
+                If Not IsNothing(dateiName) Then
+                    RPLANImportDropbox.Items.Add(dateiName)
+                End If
+
             Next i
         Catch ex As Exception
             Call MsgBox(ex.Message & ": " & dateiName)
