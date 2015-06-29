@@ -497,6 +497,7 @@ Public Module testModule
                     If kennzeichnung = "Projekt-Name" Or _
                         kennzeichnung = "Soll-Ist & Prognose" Or _
                         kennzeichnung = "Multivariantensicht" Or _
+                        kennzeichnung = "AllePlanElemente" Or _
                         kennzeichnung = "Legenden-Tabelle" Or _
                         kennzeichnung = "Projekt-Grafik" Or _
                         kennzeichnung = "Meilenstein Trendanalyse" Or _
@@ -721,74 +722,72 @@ Public Module testModule
 
                                 End Try
 
+                            Case "AllePlanElemente"
+
+
+                                Try
+                                    Dim i As Integer = 0
+                                    Dim tmpphases As New Collection
+                                    Dim tmpMilestones As New Collection
+
+                                    ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
+                                    For Each cphase In hproj.AllPhases
+
+                                        Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                        If tmpstr <> "" Then
+                                            tmpstr = tmpstr & "#" & cphase.name
+                                            If Not tmpphases.Contains(tmpstr) Then
+                                                tmpphases.Add(tmpstr, tmpstr)
+                                            End If
+
+                                        End If
+
+
+                                    Next
+
+
+
+                                    ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
+                                    Dim mSList As SortedList(Of Date, String)
+
+                                    mSList = hproj.getMilestones        ' holt alle Meilensteine in Form ihrer nameID sortiert nach Datum
+
+                                    If mSList.Count > 0 Then
+                                        For Each kvp As KeyValuePair(Of Date, String) In mSList
+
+                                            Dim tmpstr = hproj.hierarchy.getBreadCrumb(kvp.Value) & "#" & hproj.getMilestoneByID(kvp.Value).name
+                                            If Not tmpMilestones.Contains(tmpstr) Then
+                                                tmpMilestones.Add(tmpstr, tmpstr)
+                                            End If
+
+                                        Next
+                                    End If
+
+                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
+                                                                  objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                                  tmpphases, tmpMilestones, _
+                                                                  selectedRoles, selectedCosts, _
+                                                                  selectedBUs, selectedTyps, _
+                                                                  worker, e, False, hproj)
+                                    .TextFrame2.TextRange.Text = ""
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                    objectsDone = objectsToDo
+
+                                End Try
+                                
 
                             Case "Multivariantensicht"
 
 
                                 Try
-                                    ' Einzelprojektsicht im Extended Mode
-                                    If selectedPhases.Count = 0 _
-                                        And selectedMilestones.Count = 0 _
-                                        And selectedRoles.Count = 0 _
-                                        And selectedCosts.Count = 0 _
-                                        And selectedBUs.Count = 0 _
-                                        And awinSettings.eppExtendedMode Then
 
-
-                                        Dim i As Integer = 0
-                                        Dim tmpphases As New Collection
-                                        Dim tmpMilestones As New Collection
-
-                                        ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
-                                        For Each cphase In hproj.AllPhases
-
-                                            Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
-                                            If tmpstr <> "" Then
-                                                tmpstr = tmpstr & "#" & cphase.name
-                                                If Not tmpphases.Contains(tmpstr) Then
-                                                    tmpphases.Add(tmpstr, tmpstr)
-                                                End If
-
-                                            End If
-
-
-                                        Next
-
-
-
-                                        ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
-                                        Dim mSList As SortedList(Of Date, String)
-
-                                        mSList = hproj.getMilestones        ' holt alle Meilensteine in Form ihrer nameID sortiert nach Datum
-
-                                        If mSList.Count > 0 Then
-                                            For Each kvp As KeyValuePair(Of Date, String) In mSList
-
-                                                Dim tmpstr = hproj.hierarchy.getBreadCrumb(kvp.Value) & "#" & hproj.getMilestoneByID(kvp.Value).name
-                                                If Not tmpMilestones.Contains(tmpstr) Then
-                                                    tmpMilestones.Add(tmpstr, tmpstr)
-                                                End If
-
-                                            Next
-                                        End If
-
-                                        Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
-                                                                      tmpphases, tmpMilestones, _
-                                                                      selectedRoles, selectedCosts, _
-                                                                      selectedBUs, selectedTyps, _
-                                                                      worker, e, False, hproj)
-                                    Else
-
-
-                                        Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
+                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
                                                                       selectedPhases, selectedMilestones, _
                                                                       selectedRoles, selectedCosts, _
                                                                       selectedBUs, selectedTyps, _
                                                                       worker, e, False, hproj)
-                                    End If
-
                                     .TextFrame2.TextRange.Text = ""
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
@@ -10738,6 +10737,10 @@ Public Module testModule
                             completeMppDefinition(14) = 1
 
                         Case "Multivariantensicht"
+                            multiprojektContainerShape = pptShape
+                            completeMppDefinition(14) = 1
+
+                        Case "AllePlanElemente"
                             multiprojektContainerShape = pptShape
                             completeMppDefinition(14) = 1
 
