@@ -20,6 +20,7 @@ Public Module Module1
     Public loginErfolgreich As Boolean = False
 
     Public awinSettings As New clsawinSettings
+    Public visboZustaende As New clsVisboZustaende
     Public magicBoardCmdBar As New clsCommandBarEvents
     Public anzahlCalls As Integer = 0
     Public iProjektFarbe As Object
@@ -44,6 +45,7 @@ Public Module Module1
     'Public mongoDBaktiv = False
 
     Public Projektvorlagen As New clsProjektvorlagen
+    Public ModulVorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte
     Public noShowProjekte As New clsProjekte
     Public selectedProjekte As New clsProjekte
@@ -55,6 +57,7 @@ Public Module Module1
     Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
     Public allDependencies As New clsDependencies
     Public projectboardShapes As New clsProjektShapes
+
 
     ' hier werden die Mapping Informationen abgelegt 
     Public phaseMappings As New clsNameMapping
@@ -76,9 +79,16 @@ Public Module Module1
     Public RoleDefinitions As New clsRollen
     Public PhaseDefinitions As New clsPhasen
     Public MilestoneDefinitions As New clsMeilensteine
+   
+
     Public CostDefinitions As New clsKostenarten
     ' Welche Business-Units gibt es ? 
     Public businessUnitDefinitions As SortedList(Of Integer, clsBusinessUnit)
+
+    ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
+    Public missingPhaseDefinitions As New clsPhasen
+    Public missingMilestoneDefinitions As New clsMeilensteine
+
 
     ' diese Collection nimmt alle Filter Definitionen auf 
     Public filterDefinitions As New clsFilterDefinitions
@@ -114,6 +124,13 @@ Public Module Module1
     Public screen_correct As Double = 0.26
     Public miniWidth As Double = 126 ' wird aber noch in Abhängigkeit von maxscreenwidth gesetzt 
     Public miniHeight As Double = 70 ' wird aber noch in abhängigkeit von maxscreenheight gesetzt
+
+    ' diese Konstante legt den Namen für das Root Element , 1. Phase eines Projektes fest 
+    ' das muss mit der calcHryElemKey(".", False) übereinstimmen 
+    Public Const rootPhaseName As String = "0§.§"
+
+    ' diese Konstante legt die Einrücktiefe fest. Das wird benötigt beim Exportieren von Projekte in ein File, ebenso beim Importieren von Datei
+    Public Const einrückTiefe As Integer = 2
 
     ' diese Konstanten werden benötigt, um die Diagramme gemäß des gewählten Zeitraums richtig zu positionieren
     Public Const summentitel1 As String = "Prognose Ergebniskennzahl"
@@ -185,19 +202,22 @@ Public Module Module1
         Dependencies = 16
     End Enum
 
-    ' 0=projektN; 1= projektE, 2= phase; 3= milestone;  4= status; 5=dependency
+    ' projektL bezeichnet die Projekt-Linie , die auch vom Typ mixed ist 
+    ' darüber können Abhängigkeites-Connectoren dann auch von Dependency Konnektoren unterschieden werden 
     ' Enumertaion, um in Onupdate, etc. den Typ des Shapes feststellen zu können 
     Public Enum PTshty
         projektN = 0
         projektC = 1
         projektE = 2
-        phaseN = 3
-        phaseE = 4
-        phase1 = 5
-        milestoneN = 6
-        milestoneE = 7
-        status = 8
-        dependency = 9
+        projektL = 3
+        phaseN = 4
+        phaseE = 5
+        phase1 = 6
+        milestoneN = 7
+        milestoneE = 8
+        status = 9
+        dependency = 10
+        beschriftung = 11
     End Enum
 
     ' Enumeration History Change Criteria: um anzugeben, welche Veränderung man in der History eines Projektes sucht 
@@ -250,6 +270,8 @@ Public Module Module1
         filterdefinieren = 3
         einzelprojektReport = 4
         excelExport = 5
+        vorlageErstellen = 6
+        rplan = 7
     End Enum
 
 
@@ -307,6 +329,14 @@ Public Module Module1
         deleteV = 7
     End Enum
 
+    Public Enum PTImpExp
+        visbo = 0
+        rplan = 1
+        msproject = 2
+        simpleScen = 3
+        modulScen = 4
+    End Enum
+
    
     Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
 
@@ -360,16 +390,19 @@ Public Module Module1
 
     ' nimmt den Pfad Namen auf - also wo liegen Customization File und Projekt-Details
     Public awinPath As String
+    Public importOrdnerNames() As String
+    Public exportOrdnerNames() As String
+
+    'Public projektFilesOrdner As String = "ProjectFiles"
+    'Public rplanimportFilesOrdner As String = "RPLANImport"
+    'Public exportFilesOrdner As String = "Export Dateien"
+
+    Public excelExportVorlage As String = "export Vorlage.xlsx"
     Public requirementsOrdner As String = "requirements\"
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
-    Public projektFilesOrdner As String = "ProjectFiles"
-    Public rplanimportFilesOrdner As String = "RPLANImport"
-    Public exportFilesOrdner As String = "Export Dateien"
-    Public excelExportVorlage As String = "export Vorlage.xlsx"
-
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"
-    ' Public projektDetail As String = "Project Detail.xlsx"
+    Public modulVorlagenOrdner As String = requirementsOrdner & "ModuleTemplates"
     Public projektAustausch As String = requirementsOrdner & "Projekt-Steckbrief.xlsx"
     Public projektRessOrdner As String = requirementsOrdner & "Ressource Manager"
     Public RepProjectVorOrdner As String = requirementsOrdner & "ReportTemplatesProject"
@@ -405,6 +438,7 @@ Public Module Module1
                 .ScreenUpdating = True
             End If
         End With
+
 
     End Sub
 
@@ -1429,7 +1463,8 @@ Public Module Module1
     ''' <remarks></remarks>
     Sub awinDeSelect()
         Dim srow As Integer = 1
-        Dim ziel As Integer
+        Dim hziel As Integer
+        Dim vziel As Integer
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents
@@ -1450,11 +1485,16 @@ Public Module Module1
         '
         Try
             With appInstance.ActiveWindow
-                ziel = CInt((.VisibleRange.Left + .VisibleRange.Width / 2) / boxWidth)
+                hziel = CInt((.VisibleRange.Left + .VisibleRange.Width / 2) / boxWidth)
+                vziel = CInt((.VisibleRange.Top + .VisibleRange.Height / 2) / boxHeight)
+                If vziel < 2 Then
+                    vziel = 2
+                End If
             End With
 
             With appInstance.ActiveSheet
-                .Cells(2, ziel).Select()
+                '.Cells(2, hziel).Select()
+                .Cells(vziel, hziel).Select()
             End With
         Catch ex As Exception
 
@@ -1474,13 +1514,14 @@ Public Module Module1
         Dim istfrei = True
         Dim ix As Integer = 1
         Dim anzahlP As Integer = ShowProjekte.Count
+        Dim tmpCollection As New Collection
 
         If zeile >= 2 Then
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
                 With kvp.Value
-                    If zeile >= .tfZeile And zeile < .tfZeile + getNeededSpace(kvp.Value) Then
+                    If zeile >= .tfZeile And zeile < .tfZeile + kvp.Value.calcNeededLines(tmpCollection, awinSettings.drawphases, False) Then
                         istfrei = False
                         Exit For
                     End If
@@ -1493,7 +1534,7 @@ Public Module Module1
             istfrei = False
 
         End If
-        
+
         magicBoardZeileIstFrei = istfrei
     End Function
 
@@ -1532,12 +1573,12 @@ Public Module Module1
         Dim lookDown As Boolean = True
         Dim tryoben As Integer, tryunten As Integer
         Dim anzahlzeilen As Integer
-
+        Dim tmpCollection As New Collection
 
 
         Try
             Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
-            anzahlzeilen = getNeededSpace(hproj)
+            anzahlzeilen = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
 
             ' Konsistenzbedingung prüfen ... 
             If zeile < 2 Then
@@ -1575,7 +1616,7 @@ Public Module Module1
         Catch ex As Exception
 
         End Try
-        
+
 
         findeMagicBoardPosition = zeile
 
@@ -1665,6 +1706,53 @@ Public Module Module1
         appInstance.EnableEvents = formerEE
         enableOnUpdate = formereO
 
+    End Sub
+
+    ''' <summary>
+    ''' löscht die Beschriftungen in der Projekt-Tafel 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub deleteBeschriftungen(Optional ByVal pName As String = "")
+        ' jetzt werden die Aktionen gemacht 
+        Dim worksheetShapes As Excel.Shapes
+        Dim shpElement As Excel.Shape
+
+        Dim descriptionShapeName As String = "Description#" & pName
+
+        enableOnUpdate = False
+
+
+        Try
+            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+
+            If pName = "" Then
+                For Each shpElement In worksheetShapes
+
+                    If shpElement.AlternativeText = CInt(PTshty.beschriftung).ToString Then
+                        shpElement.Delete()
+                    End If
+
+                Next
+            Else
+                Try
+                    shpElement = worksheetShapes.Item(descriptionShapeName)
+                    If Not IsNothing(shpElement) Then
+                        shpElement.Delete()
+                    End If
+                Catch ex As Exception
+
+                End Try
+
+
+            End If
+
+        Catch ex As Exception
+            Call MsgBox(ex.Message)
+        End Try
+
+
+
+        enableOnUpdate = True
     End Sub
 
 
@@ -1946,9 +2034,9 @@ Public Module Module1
     Public Function calcDauerIndays(ByVal startDatum As Date, ByVal endeDatum As Date) As Integer
 
         If startDatum.Date > endeDatum.Date Then
-            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) - 1)
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum.Date, endeDatum.Date) - 1)
         Else
-            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) + 1)
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum.Date, endeDatum.Date) + 1)
         End If
 
     End Function
@@ -1999,6 +2087,225 @@ Public Module Module1
             calcDatum = datum.AddDays(dauerInDays + 1)
         Else
             Throw New Exception("Dauer von Null ist unzulässig ..")
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' gibt einen String zurück, der den dem level entsprechenden Indent an Leerzeichen enthält  
+    ''' bei level = -1 wird "???" als String zurückgegeben 
+    ''' </summary>
+    ''' <param name="level"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function erzeugeIndent(ByVal level As Integer) As String
+        Dim indentDelta As String = "   "
+        Dim tmpStr As String = ""
+
+        If level = -1 Then
+            tmpStr = "???"
+        Else
+            For i As Integer = 1 To level
+                tmpStr = tmpStr & indentDelta
+            Next
+        End If
+
+        erzeugeIndent = tmpStr
+
+    End Function
+
+    ''' <summary>
+    ''' berechnet den "ersten" Namen, der in der sortedList der Hierarchie auftreten würde 
+    ''' </summary>
+    ''' <param name="elemName"></param>
+    ''' <param name="isMilestone"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcHryElemKey(ByVal elemName As String, ByVal isMilestone As Boolean, Optional ByVal lfdNr As Integer = 0) As String
+
+        Dim elemKey As String
+        Dim elemTyp As String
+
+        If isMilestone Then
+            elemTyp = "1"
+        Else
+            elemTyp = "0"
+        End If
+
+        If lfdNr <= 1 Then
+            elemKey = elemTyp & "§" & elemName & "§"
+        Else
+            elemKey = elemTyp & "§" & elemName & "§" & lfdNr.ToString("000#")
+        End If
+
+
+        calcHryElemKey = elemKey
+
+
+    End Function
+
+    ''' <summary>
+    ''' berechnet den Namen, der in selectedphases bzw. selectedMilestones reinkommt, bestehend aus: 
+    ''' Breadcrumb und elemName; Breadcrumb und die einzelnen Stufen des Breadcrumbs sind getrennt durch #
+    ''' </summary>
+    ''' <param name="elemName"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcHryFullname(ByVal elemName As String, ByVal breadcrumb As String) As String
+
+        If breadcrumb = "" Then
+            calcHryFullname = elemName
+        Else
+            calcHryFullname = breadcrumb & "#" & elemName
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' gibt den Elem-Name und Breadcrumb als einzelne Strings zurück
+    ''' </summary>
+    ''' <param name="fullname"></param>
+    ''' <param name="elemName"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <remarks></remarks>
+    Public Sub splitHryFullnameTo2(ByVal fullname As String, ByRef elemName As String, ByRef breadcrumb As String)
+        Dim tmpstr() As String
+        Dim tmpBC As String = ""
+        Dim anzahl As Integer
+
+        tmpstr = fullname.Split(New Char() {CChar("#")}, 20)
+        anzahl = tmpstr.Length
+        If tmpstr.Length = 1 Then
+            elemName = tmpstr(0)
+        ElseIf tmpstr.Length > 1 Then
+            elemName = tmpstr(anzahl - 1)
+            For i As Integer = 0 To anzahl - 2
+                If i = 0 Then
+                    tmpBC = tmpstr(i)
+                Else
+                    tmpBC = tmpBC & "#" & tmpstr(i)
+                End If
+            Next
+        Else
+            elemName = "?"
+        End If
+        breadcrumb = tmpBC
+
+    End Sub
+
+    ''' <summary>
+    ''' zerteilt einen String, der folgendes Format hat: breadcrumb#elemName#lfdnr in seine Bestandteile 
+    ''' </summary>
+    ''' <param name="fullname"></param>
+    ''' <param name="elemName"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <param name="lfdNr"></param>
+    ''' <remarks></remarks>
+    Public Sub splitBreadCrumbFullnameTo3(ByVal fullname As String, ByRef elemName As String, ByRef breadcrumb As String, ByRef lfdNr As Integer)
+        Dim tmpstr() As String
+        Dim tmpBC As String = ""
+        Dim anzahl As Integer
+
+        tmpstr = fullname.Split(New Char() {CChar("#")}, 20)
+        anzahl = tmpstr.Length
+        If tmpstr.Length = 1 Then
+            elemName = tmpstr(0)
+            breadcrumb = ""
+            lfdNr = 1
+        ElseIf tmpstr.Length > 1 Then
+            lfdNr = CInt(tmpstr(anzahl - 1))
+            For i As Integer = 0 To anzahl - 2
+                If i = 0 Then
+                    tmpBC = tmpstr(i)
+                Else
+                    tmpBC = tmpBC & "#" & tmpstr(i)
+                End If
+            Next
+            Call splitHryFullnameTo2(tmpBC, elemName, breadcrumb)
+        Else
+            elemName = "?"
+            breadcrumb = ""
+            lfdNr = 0
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt true zurück, wenn es sich bei der ElemID um die ID eines Meilensteins handelt 
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function elemIDIstMeilenstein(ByVal elemID As String) As Boolean
+        elemIDIstMeilenstein = elemID.StartsWith("1§")
+    End Function
+
+    ''' <summary>
+    ''' extrahiert den Elem-Namen aus der ElemID 
+    ''' ElemID=Typ§ElemName§lfd-Nr 
+    ''' </summary>
+    ''' <param name="ElemID"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function elemNameOfElemID(ByVal elemID As String) As String
+        Dim tmpStr() As String
+
+        tmpStr = elemID.Split(New Char() {CChar("§")}, 5)
+        If tmpStr.Length = 3 Then
+            elemNameOfElemID = tmpStr(1)
+        ElseIf tmpStr.Length = 1 Then
+            elemNameOfElemID = elemID
+        Else
+            elemNameOfElemID = "?"
+        End If
+
+
+    End Function
+
+
+    Public Function istElemID(ByVal itemName As String) As Boolean
+
+        Dim tmpStr() As String
+
+        tmpStr = itemName.Split(New Char() {CChar("§")}, 5)
+        If tmpStr.Length = 3 Then
+            If tmpStr(0) = "1" Or tmpStr(0) = "0" Then
+                istElemID = True
+            Else
+                istElemID = False
+            End If
+        Else
+            istElemID = False
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' extrahiert die lfdNr aus der ElemID 
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function lfdNrOfElemID(ByVal elemID As String) As Integer
+        Dim tmpStr() As String
+
+        tmpStr = elemID.Split(New Char() {CChar("§")}, 5)
+        If tmpStr.Length = 3 Then
+            Try
+                If tmpStr(2) = "" Then
+                    lfdNrOfElemID = 1
+                Else
+                    lfdNrOfElemID = CInt(tmpStr(2))
+                End If
+            Catch ex As Exception
+                lfdNrOfElemID = 1
+            End Try
+
+        Else
+
+            lfdNrOfElemID = 1
+
         End If
 
     End Function
@@ -2092,8 +2399,14 @@ Public Module Module1
     ''' <remarks></remarks>
     Public Function calcYCoordToZeile(ByVal YCoord As Double) As Integer
         Dim tmpValue As Integer
+        'Dim chkValue As Integer
 
-        tmpValue = 1 + CInt((YCoord - topOfMagicBoard) / boxHeight)
+        'chkValue = 1 + CInt((YCoord - topOfMagicBoard) / boxHeight)
+        tmpValue = 1 + CInt(Truncate((YCoord - topOfMagicBoard) / boxHeight))
+
+        'If chkValue <> tmpValue Then
+        '    Call MsgBox("Fehler in calcYCoordToZeile")
+        'End If
 
         calcYCoordToZeile = tmpValue
 
@@ -2179,7 +2492,7 @@ Public Module Module1
         End If
 
         tmpValue = anzahlTage * 12 * boxWidth / 365
-        
+
         calcDateToXCoord = tmpValue
 
 
@@ -2223,7 +2536,8 @@ Public Module Module1
             End If
 
             ueberdeckungsduration = DateDiff(DateInterval.Day, ueberdeckungsStart, ueberdeckungsEnde) + 1
-            ergebnis = System.Math.Max(ueberdeckungsduration / duration1, ueberdeckungsduration / duration2)
+            'ergebnis = System.Math.Max(ueberdeckungsduration / duration1, ueberdeckungsduration / duration2)
+            ergebnis = System.Math.Min(ueberdeckungsduration / duration1, ueberdeckungsduration / duration2)
 
         End If
 
@@ -2244,7 +2558,7 @@ Public Module Module1
         If Len(strName) < 2 Then
             ' ProjektName soll mehr als 1 Zeichen haben
             found = True
-        ElseIf AlleProjekte.ContainsKey(key) Then
+        ElseIf AlleProjekte.Containskey(key) Then
             found = True
             'ElseIf request.pingMongoDb() Then
 
@@ -2271,7 +2585,7 @@ Public Module Module1
         Dim index As Integer = 0
         Dim anzElements As Integer = appearanceDefinitions.Count
 
-        
+
         Do While Not found And index <= anzElements - 1
 
             If completeText.Contains(appearanceDefinitions.ElementAt(index).Key.Trim) And _
@@ -2295,15 +2609,31 @@ Public Module Module1
     Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
                                               ByVal fBU As Collection, ByVal fTyp As Collection, _
                                               ByVal fPhase As Collection, ByVal fMilestone As Collection, _
-                                              ByVal fRole As Collection, ByVal fCost As Collection)
+                                              ByVal fRole As Collection, ByVal fCost As Collection, _
+                                              ByVal calledFromHry As Boolean)
 
         Dim lastFilter As clsFilter
 
 
-        lastFilter = New clsFilter(fName, fBU, fTyp, _
+        If calledFromHry Then
+            Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
+
+            If Not IsNothing(nameLastFilter) Then
+                With nameLastFilter
+                    lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
+                End With
+            Else
+                lastFilter = New clsFilter(fName, fBU, fTyp, _
                                   fPhase, fMilestone, _
                                  fRole, fCost)
+            End If
 
+
+        Else
+            lastFilter = New clsFilter(fName, fBU, fTyp, _
+                                  fPhase, fMilestone, _
+                                 fRole, fCost)
+        End If
 
         If menuOption = PTmenue.filterdefinieren Then
             filterDefinitions.storeFilter(fName, lastFilter)
@@ -2313,6 +2643,8 @@ Public Module Module1
 
 
     End Sub
+
+    
 
     ''' <summary>
     ''' besetzt die Selection Collections mit den Werten des Filters mit Namen fName
@@ -2370,5 +2702,5 @@ Public Module Module1
 
     End Sub
 
-    
+
 End Module

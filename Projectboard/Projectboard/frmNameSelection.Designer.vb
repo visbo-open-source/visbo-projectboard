@@ -1,5 +1,5 @@
 ﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
-Partial Class frmShowPlanElements
+Partial Class frmNameSelection
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
@@ -22,8 +22,8 @@ Partial Class frmShowPlanElements
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmShowPlanElements))
-        Me.ListBox1 = New System.Windows.Forms.ListBox()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmNameSelection))
+        Me.nameListBox = New System.Windows.Forms.ListBox()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.AbbrButton = New System.Windows.Forms.Button()
         Me.filterBox = New System.Windows.Forms.TextBox()
@@ -42,7 +42,7 @@ Partial Class frmShowPlanElements
         Me.statusLabel = New System.Windows.Forms.Label()
         Me.BackgroundWorker1 = New System.ComponentModel.BackgroundWorker()
         Me.einstellungen = New System.Windows.Forms.Label()
-        Me.ListBox2 = New System.Windows.Forms.ListBox()
+        Me.selNameListBox = New System.Windows.Forms.ListBox()
         Me.pictureTyp = New System.Windows.Forms.PictureBox()
         Me.rdbTyp = New System.Windows.Forms.RadioButton()
         Me.rdbBU = New System.Windows.Forms.RadioButton()
@@ -60,17 +60,17 @@ Partial Class frmShowPlanElements
         CType(Me.removeButton, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
-        'ListBox1
+        'nameListBox
         '
-        Me.ListBox1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.ListBox1.FormattingEnabled = True
-        Me.ListBox1.ItemHeight = 16
-        Me.ListBox1.Location = New System.Drawing.Point(12, 109)
-        Me.ListBox1.Name = "ListBox1"
-        Me.ListBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-        Me.ListBox1.Size = New System.Drawing.Size(275, 196)
-        Me.ListBox1.Sorted = True
-        Me.ListBox1.TabIndex = 0
+        Me.nameListBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.nameListBox.FormattingEnabled = True
+        Me.nameListBox.ItemHeight = 16
+        Me.nameListBox.Location = New System.Drawing.Point(12, 109)
+        Me.nameListBox.Name = "nameListBox"
+        Me.nameListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
+        Me.nameListBox.Size = New System.Drawing.Size(275, 196)
+        Me.nameListBox.Sorted = True
+        Me.nameListBox.TabIndex = 0
         '
         'OKButton
         '
@@ -93,6 +93,7 @@ Partial Class frmShowPlanElements
         'filterBox
         '
         Me.filterBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.filterBox.HideSelection = False
         Me.filterBox.Location = New System.Drawing.Point(137, 76)
         Me.filterBox.Name = "filterBox"
         Me.filterBox.Size = New System.Drawing.Size(150, 22)
@@ -241,17 +242,17 @@ Partial Class frmShowPlanElements
         Me.einstellungen.Text = "Einstellungen"
         Me.einstellungen.Visible = False
         '
-        'ListBox2
+        'selNameListBox
         '
-        Me.ListBox2.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.ListBox2.FormattingEnabled = True
-        Me.ListBox2.ItemHeight = 16
-        Me.ListBox2.Location = New System.Drawing.Point(312, 109)
-        Me.ListBox2.Name = "ListBox2"
-        Me.ListBox2.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
-        Me.ListBox2.Size = New System.Drawing.Size(275, 196)
-        Me.ListBox2.Sorted = True
-        Me.ListBox2.TabIndex = 23
+        Me.selNameListBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.selNameListBox.FormattingEnabled = True
+        Me.selNameListBox.ItemHeight = 16
+        Me.selNameListBox.Location = New System.Drawing.Point(312, 109)
+        Me.selNameListBox.Name = "selNameListBox"
+        Me.selNameListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended
+        Me.selNameListBox.Size = New System.Drawing.Size(275, 196)
+        Me.selNameListBox.Sorted = True
+        Me.selNameListBox.TabIndex = 23
         '
         'pictureTyp
         '
@@ -314,16 +315,17 @@ Partial Class frmShowPlanElements
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(312, 84)
+        Me.Label1.Location = New System.Drawing.Point(312, 85)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(237, 13)
         Me.Label1.TabIndex = 30
         Me.Label1.Text = "aktuelle Auswahl, auf die sich die Aktion bezieht "
         '
-        'frmShowPlanElements
+        'frmNameSelection
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.AutoScroll = True
         Me.ClientSize = New System.Drawing.Size(599, 439)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.removeButton)
@@ -332,7 +334,7 @@ Partial Class frmShowPlanElements
         Me.Controls.Add(Me.rdbBU)
         Me.Controls.Add(Me.rdbTyp)
         Me.Controls.Add(Me.pictureTyp)
-        Me.Controls.Add(Me.ListBox2)
+        Me.Controls.Add(Me.selNameListBox)
         Me.Controls.Add(Me.einstellungen)
         Me.Controls.Add(Me.pictureMilestones)
         Me.Controls.Add(Me.chkbxOneChart)
@@ -350,8 +352,8 @@ Partial Class frmShowPlanElements
         Me.Controls.Add(Me.filterBox)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
-        Me.Controls.Add(Me.ListBox1)
-        Me.Name = "frmShowPlanElements"
+        Me.Controls.Add(Me.nameListBox)
+        Me.Name = "frmNameSelection"
         Me.Text = "Visualisieren von Plan-Objekten"
         Me.TopMost = True
         CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).EndInit()
@@ -366,7 +368,7 @@ Partial Class frmShowPlanElements
         Me.PerformLayout()
 
     End Sub
-    Public WithEvents ListBox1 As System.Windows.Forms.ListBox
+    Public WithEvents nameListBox As System.Windows.Forms.ListBox
     Friend WithEvents OKButton As System.Windows.Forms.Button
     Friend WithEvents AbbrButton As System.Windows.Forms.Button
     Friend WithEvents filterBox As System.Windows.Forms.TextBox
@@ -383,9 +385,8 @@ Partial Class frmShowPlanElements
     Friend WithEvents repVorlagenDropbox As System.Windows.Forms.ComboBox
     Friend WithEvents labelPPTVorlage As System.Windows.Forms.Label
     Friend WithEvents statusLabel As System.Windows.Forms.Label
-    Friend WithEvents BackgroundWorker1 As System.ComponentModel.BackgroundWorker
     Friend WithEvents einstellungen As System.Windows.Forms.Label
-    Public WithEvents ListBox2 As System.Windows.Forms.ListBox
+    Public WithEvents selNameListBox As System.Windows.Forms.ListBox
     Friend WithEvents pictureTyp As System.Windows.Forms.PictureBox
     Friend WithEvents rdbTyp As System.Windows.Forms.RadioButton
     Friend WithEvents rdbBU As System.Windows.Forms.RadioButton
@@ -393,4 +394,5 @@ Partial Class frmShowPlanElements
     Friend WithEvents addButton As System.Windows.Forms.PictureBox
     Friend WithEvents removeButton As System.Windows.Forms.PictureBox
     Friend WithEvents Label1 As System.Windows.Forms.Label
+    Public WithEvents BackgroundWorker1 As System.ComponentModel.BackgroundWorker
 End Class

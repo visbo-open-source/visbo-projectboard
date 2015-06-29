@@ -60,6 +60,8 @@ Partial Class frmLoadConstellation
         'addToSession
         '
         Me.addToSession.AutoSize = True
+        Me.addToSession.Checked = True
+        Me.addToSession.CheckState = System.Windows.Forms.CheckState.Checked
         Me.addToSession.Cursor = System.Windows.Forms.Cursors.Default
         Me.addToSession.Location = New System.Drawing.Point(13, 207)
         Me.addToSession.Name = "addToSession"

@@ -75,6 +75,9 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsVisboZustaende.vb" />
+    <Compile Include="clsHierarchy.vb" />
+    <Compile Include="clsHierarchyNode.vb" />
     <Compile Include="clsBusinessUnit.vb" />
     <Compile Include="clsFilterDefinitions.vb" />
     <Compile Include="clsFilter.vb" />
@@ -107,7 +110,6 @@
     <Compile Include="clsDiagramme.vb" />
     <Compile Include="clsEventsPfCharts.vb" />
     <Compile Include="clsEventsPrcCharts.vb" />
-    <Compile Include="clsEventsPrjCharts.vb" />
     <Compile Include="clsKeyboardEvents.vb" />
     <Compile Include="clsKostenart.vb" />
     <Compile Include="clsKostenartDefinition.vb" />

@@ -225,26 +225,26 @@ Public Class clsCommandBarEvents
                             ' ein kopiertes Projekt sollte jetzt in der nächsten Zeile platziert werden 
                             'zeile = findeMagicBoardPosition(selCollection, pname, zeile, spalte, laengeInMon)
 
-
-                            pname = shpelement.Name & " - Kopie " & zaehler
-
                             Dim anzahlZeilen As Integer
                             Dim oldproj As clsProjekt
+                            Dim tmpCollection As New Collection
                             Try
                                 oldproj = ShowProjekte.getProject(shpName) ' der shpName ist identisch mit dem Projekt-Namen aus dem kopiert wurde
 
                                 ' Änderung 25.3.14 wegen Kopiertes Projekt soll einfach in der nächsten Zeile gezeichnet werden  
-                                anzahlZeilen = getNeededSpace(oldproj)
+                                anzahlZeilen = oldproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
                                 zeile = oldproj.tfZeile + 1
-                                Dim tmpCollection As New Collection
                                 Call moveShapesDown(tmpCollection, zeile, anzahlZeilen, 0) ' Stoppzeile 0: alle Elemente werden verschoben  
                             Catch ex As Exception
                                 Throw New ArgumentException("Projekt in OnUpdate nicht gefunden: " & shpName)
                                 Exit Sub
                             End Try
 
+                            ' Name der Kopie soll auch die Variantenbezeichnung enthalten ...  
+                            pname = oldproj.getShapeText & " - Kopie " & zaehler
+
                             hproj = New clsProjekt
-                            oldproj.CopyTo(hproj)
+                            oldproj.copyTo(hproj)
 
                             With hproj
                                 .name = pname
@@ -291,7 +291,7 @@ Public Class clsCommandBarEvents
                                     successful = True
                                 Catch ex As Exception
                                     zaehler = zaehler + 1
-                                    pname = shpelement.Name & " - Kopie " & zaehler
+                                    pname = oldproj.getShapeText & " - Kopie " & zaehler
                                     hproj.name = pname
                                 End Try
                             End While
@@ -326,7 +326,7 @@ Public Class clsCommandBarEvents
 
                                 ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
                                 ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                                Dim tmpCollection As New Collection
+
                                 Call ZeichneProjektinPlanTafel(tmpCollection, pname, hproj.tfZeile, tmpCollection, tmpCollection)
 
                                 enableOnUpdate = True
@@ -376,11 +376,11 @@ Public Class clsCommandBarEvents
                         ' es darf nur ein Shape von diesem Typ selektiert sein ... 
                         If awinSelection.Count = 1 Then
 
-                            Dim phaseName As String
+                            Dim phaseNameID As String
                             somethingChanged = projectboardShapes.hasAchanged(shpelement)
 
                             pname = extractName(shpelement.Name, PTshty.projektN)
-                            phaseName = extractName(shpelement.Name, PTshty.phaseN)
+                            phaseNameID = extractName(shpelement.Name, PTshty.phaseN)
                             hproj = ShowProjekte.getProject(pname)
 
                             If somethingChanged Then
@@ -414,7 +414,7 @@ Public Class clsCommandBarEvents
                             End If
 
                             'Call updatePhaseInformation(shpelement)
-                            Call updatePhaseInformation(hproj, phaseName)
+                            Call updatePhaseInformation(hproj, phaseNameID)
 
                         Else
                             Call MsgBox("bitte nur ein Element bzw. eine Phase selektieren ...")
@@ -431,13 +431,11 @@ Public Class clsCommandBarEvents
                         ' es darf nur ein Shape von diesem Typ selektiert sein ... 
                         If awinSelection.Count = 1 Then
 
-                            Dim phaseName As String
-                            Dim resultName As String
+                            Dim milestoneNameID As String
                             somethingChanged = projectboardShapes.hasAchanged(shpelement)
 
                             pname = extractName(shpelement.Name, PTshty.projektN)
-                            phaseName = extractName(shpelement.Name, PTshty.phaseN)
-                            resultName = shpelement.Title
+                            milestoneNameID = extractName(shpelement.Name, PTshty.milestoneN)
                             hproj = ShowProjekte.getProject(pname)
 
                             If somethingChanged Then
@@ -469,8 +467,7 @@ Public Class clsCommandBarEvents
                                 End If
                             End If
 
-                            'Call updateMilestoneInformation(shpelement)
-                            Call updateMilestoneInformation(hproj, phaseName, resultName)
+                            Call updateMilestoneInformation(hproj, milestoneNameID)
 
                         Else
 
@@ -578,6 +575,8 @@ Public Class clsCommandBarEvents
             If ChartsNeedUpdate Then
                 enableOnUpdate = False
                 Call awinNeuZeichnenDiagramme(updateKennung)
+                ' deletebeschriftungen
+                'Call deleteBeschriftungen()
                 enableOnUpdate = True
             End If
 
@@ -607,7 +606,7 @@ Public Class clsCommandBarEvents
                     End If
                 Next
             End If
-            
+
 
         End If
         projectSelectionChanged = tmpVar

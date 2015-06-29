@@ -1,10 +1,8 @@
 ﻿Public Class frmPhaseInformation
 
-    Private oldStart As Date, oldEnd As Date
-    Private newStart As Date, newEnd As Date
-    Private oldDauer As Integer, newDauer As Integer
 
-
+    Public phaseNameID As String
+    Public curProject As clsProjekt
 
     Private Sub frmPhaseInformation_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
 
@@ -22,15 +20,11 @@
         Me.Top = CInt(frmCoord(PTfrm.phaseInfo, PTpinfo.top))
         Me.Left = CInt(frmCoord(PTfrm.phaseInfo, PTpinfo.left))
 
-        oldStart = CDate(phaseStart.Text)
-        oldEnd = CDate(phaseEnde.Text)
+        Me.showOrigItem.Checked = awinSettings.showOrigName
 
     End Sub
 
-    Private Sub phaseStart_GotFocus(sender As Object, e As EventArgs) Handles phaseStart.GotFocus
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-    End Sub
+    
 
     'Private Sub phaseStart_Leave(sender As Object, e As EventArgs) Handles phaseStart.Leave
     '    appInstance.EnableEvents = True
@@ -38,28 +32,7 @@
     '    Call MsgBox("Leave!")
     'End Sub
 
-    Private Sub phaseStart_LostFocus(sender As Object, e As EventArgs) Handles phaseStart.LostFocus
-        Dim validChange As Boolean = False
-        Dim hproj As clsProjekt
-        Dim cPhase As clsPhase
-
-
-        Try
-            hproj = ShowProjekte.getProject(projectName.Text)
-            cPhase = hproj.getPhase(phaseName.Text)
-
-            newStart = CDate(phaseStart.Text)
-            newEnd = CDate(phaseEnde.Text)
-            newDauer = calcDauerIndays(newStart, newEnd)
-        Catch ex As Exception
-
-        End Try
-
-        ' jetzt wieder zurücksetzen der Event Behandlung 
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
-
-    End Sub
+    
 
     Public Sub New()
 
@@ -68,5 +41,27 @@
 
         ' Add any initialization after the InitializeComponent() call.
 
+    End Sub
+
+
+    ''' <summary>
+    ''' zeigt den urspünglichen Phasen-Namen aus Rplan oder anderem PM-System an 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub showOrigItem_CheckedChanged(sender As Object, e As EventArgs) Handles showOrigItem.CheckedChanged
+        Dim tmpNode As clsHierarchyNode
+
+        awinSettings.showOrigName = showOrigItem.Checked
+
+        If showOrigItem.Checked = True Then
+            tmpNode = curProject.hierarchy.nodeItem(phaseNameID)
+            If Not IsNothing(tmpNode) Then
+                phaseName.Text = tmpNode.origName
+            End If
+        Else
+            phaseName.Text = elemNameOfElemID(phaseNameID)
+        End If
     End Sub
 End Class

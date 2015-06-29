@@ -23,6 +23,7 @@
 
     ' Settings für die Projekteingabe
     Public Property lastProjektTyp As String
+    Public Property lastModulTyp As String
     Public Property isEndDate As Boolean
     Public Property tryBestFit As Boolean
     Public Property selDate As Date
@@ -40,6 +41,11 @@
     Public Property offsetEinheit As String
     Public Property drawphases As Boolean
     Public Property applyFilter As Boolean
+    ' bestimmt ob das Project als Balken dargestellt wird oder einfach als Linie 
+    Public Property drawProjectLine As Boolean
+    ' bestimmt, ob die Beschriftungen von Meilensteinen und Phasen auf der Projekt-Tafel angezeigt werden sollen
+    Public Property showElementNames As Boolean
+
     ' sollen Meilensteine auch ausserhalb des Projekts liegen dürfen ? 
     Public Property milestoneFreeFloat As Boolean
     ' sollen Bedarfe automatisch in der Array Länge angepasst werden, wenn sich das Projekt verschiebt und in Folge die array Länge 
@@ -58,12 +64,20 @@
     ' sollen Shapes aus den Update Informations-Forms heraus erzeugt werden, wenn sie noch nicht da sind 
     Public Property createIfNotThere As Boolean
 
+    ' soll der Original Name angeziegt werden 
+    Public Property showOrigName As Boolean
+
+    ' soll der Best-Name (Name mit kürzest-möglichem Breadcrumb um eindeutig zu sein 
+    Public Property showBestName As Boolean
+
     ' Settings für die letzte User Selektion in der Tafel 
     Public Property selectedColumn As Integer
     Public Property selectedRow As Integer
 
     ' Settings für Import / Export
     Public Property EinzelRessExport As Integer
+    ' Settings ob die fehlenden Phase- und Meilenstein-Namen in die Customization eingetragen werden sollen
+    Public Property addMissingPhaseMilestoneDef As Boolean
 
     ' Settings für ToleranzKorridor TimeCost
     Public Property timeToleranzRel As Double
@@ -85,9 +99,20 @@
     Public Property mppFullyContained As Boolean
     Public Property mppSortiertDauer As Boolean
     Public Property mppOnePage As Boolean
+    Public Property mppExtendedMode As Boolean
 
+    ' Settings für Einzelprojekt-Reports
+    Public Property eppExtendedMode As Boolean
 
+    ' Settings für Überprüfung, ob Formulare offen / aktiv sind 
+    Public Property isHryNameFrmActive As Boolean
+
+    ' Settings für Auswahl-Dialog 
+    Public Property useHierarchy As Boolean
+
+    ' im BMW Import Kontext wichtiges Settings
     Property importTyp As Integer
+    Property eliminateDuplicates As Boolean
 
     Sub New()
 
@@ -109,6 +134,7 @@
 
         ' Projekteingabe Settings
         _lastProjektTyp = ""
+        _lastModulTyp = ""
         _isEndDate = False
         _tryBestFit = False
         _selDate = Date.Now
@@ -129,12 +155,15 @@
         _drawphases = False
         _showValuesOfSelected = False
         _applyFilter = False
-        _createIfNotThere = True
+        _createIfNotThere = False
+        _showOrigName = False
+        _showBestName = True
+        _drawProjectLine = True
+        _showElementNames = False
 
         ' Settings für Import / Export 
         _EinzelRessExport = 0
-
-
+        _addMissingPhaseMilestoneDef = False
 
         ' Settings für Besser/Schlechter Diagramm 
         _timeToleranzRel = 0.02
@@ -152,15 +181,25 @@
         _mppShowProjectLine = True
         _mppVertikalesRaster = False
         _mppShowLegend = False
-        _mppFullyContained = False
+        _mppFullyContained = True
         _mppSortiertDauer = False
         _mppOnePage = False
+        _mppExtendedMode = False
+
+        ' Settings für Einzelprojekt-Reports
+        _eppExtendedMode = True
+
 
         If _mppSortiertDauer Then
             _mppShowAllIfOne = True
         End If
 
+        _useHierarchy = True
+        _isHryNameFrmActive = False
+
+        ' im Kontext BMW Import wichtige Settings
         _importTyp = 1
+        _eliminateDuplicates = True
 
 
     End Sub

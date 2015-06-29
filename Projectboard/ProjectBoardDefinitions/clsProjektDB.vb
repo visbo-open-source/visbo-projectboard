@@ -24,6 +24,7 @@
     Public VorlagenName As String
     Public Dauer As Integer
     Public AllPhases As List(Of clsPhaseDB)
+    Public hierarchy As clsHierarchyDB
     Public Id As String
     Public timestamp As Date
     ' ergänzt am 16.11.13
@@ -84,12 +85,15 @@
             Me.description = .description
             Me.businessUnit = .businessUnit
 
+            Me.hierarchy.copyFrom(projekt.hierarchy)
 
             For i = 1 To .CountPhases
                 Dim newPhase As New clsPhaseDB
                 newPhase.copyFrom(.getPhase(i), .farbe)
                 AllPhases.Add(newPhase)
             Next
+
+
 
         End With
 
@@ -164,17 +168,138 @@
 
             End Try
 
+            Me.hierarchy.copyTo(projekt.hierarchy)
+
             '.Dauer = Me.Dauer
             For i = 1 To Me.AllPhases.Count
                 Dim newPhase As New clsPhase(projekt)
-                AllPhases.Item(i - 1).copyto(newPhase)
+                AllPhases.Item(i - 1).copyto(newPhase, i)
                 .AddPhase(newPhase)
             Next
+
+
+
 
         End With
 
     End Sub
-   
+
+    Public Class clsHierarchyDB
+        Public allNodes As SortedList(Of String, clsHierarchyNodeDB)
+
+        ''' <summary>
+        ''' kopiert aus einem HSP-Element in ein DB-Element
+        ''' </summary>
+        ''' <param name="hry"></param>
+        ''' <remarks></remarks>
+        Sub copyFrom(ByVal hry As clsHierarchy)
+
+            Dim hryNode As clsHierarchyNode
+            Dim elemID As String
+            Dim hryNodeDB As clsHierarchyNodeDB
+
+            For i = 1 To hry.count
+
+                hryNodeDB = New clsHierarchyNodeDB
+
+                elemID = hry.getIDAtIndex(i)
+                hryNode = hry.nodeItem(i)
+                hryNodeDB.copyFrom(hryNode)
+
+                Me.allNodes.Add(elemID, hryNodeDB)
+
+            Next
+
+        End Sub
+
+        ''' <summary>
+        ''' kopiert aus einem DB Element in ein HSP Element 
+        ''' </summary>
+        ''' <param name="hry"></param>
+        ''' <remarks></remarks>
+        Sub copyTo(ByRef hry As clsHierarchy)
+
+            Dim hryNode As clsHierarchyNode
+            Dim elemID As String
+            Dim hryNodeDB As clsHierarchyNodeDB
+
+            For i = 1 To Me.allNodes.Count
+
+                hryNode = New clsHierarchyNode
+
+                elemID = Me.allNodes.ElementAt(i - 1).Key
+                hryNodeDB = Me.allNodes.ElementAt(i - 1).Value
+                hryNodeDB.copyTo(hryNode)
+
+                hry.copyNode(hryNode, elemID)
+
+            Next
+
+        End Sub
+
+        Sub New()
+            allNodes = New SortedList(Of String, clsHierarchyNodeDB)
+        End Sub
+    End Class
+
+    Public Class clsHierarchyNodeDB
+        Public elemName As String
+        Public origName As String
+        Public indexOfElem As Integer
+        Public parentNodeKey As String
+        Public childNodeKeys As List(Of String)
+
+        ' 
+        ''' <summary>
+        ''' kopiert einen HAuptspeicher Hierarchie Knoten in einen DB Hierarchie Knoten 
+        ''' </summary>
+        ''' <param name="hryNode"></param>
+        ''' <remarks></remarks>
+        Sub copyFrom(ByVal hryNode As clsHierarchyNode)
+
+            Dim childID As String
+            With hryNode
+                Me.elemName = .elemName
+                Me.origName = .origName
+                Me.indexOfElem = .indexOfElem
+                Me.parentNodeKey = .parentNodeKey
+                For i As Integer = 1 To .childCount
+                    childID = .getChild(i)
+                    Me.childNodeKeys.Add(childID)
+                Next
+            End With
+
+        End Sub
+
+        ''' <summary>
+        ''' kopiert einen DB Hierarchie-Knoten in einen Hauptspeicher Hierarchie Knoten 
+        ''' </summary>
+        ''' <param name="hryNode"></param>
+        ''' <remarks></remarks>
+        Sub copyTo(ByRef hryNode As clsHierarchyNode)
+
+            Dim childID As String
+            With hryNode
+                .elemName = Me.elemName
+                .origName = Me.origName
+                .indexOfElem = Me.indexOfElem
+                .parentNodeKey = Me.parentNodeKey
+                For i As Integer = 1 To Me.childNodeKeys.Count
+                    childID = Me.childNodeKeys.Item(i - 1)
+                    .addChild(childID)
+                Next
+            End With
+
+        End Sub
+
+        Sub New()
+
+            childNodeKeys = New List(Of String)
+
+        End Sub
+
+    End Class
+
     Public Class clsPhaseDB
         Public AllRoles As List(Of clsRolleDB)
         Public AllCosts As List(Of clsKostenartDB)
@@ -192,10 +317,10 @@
         Public name As String
         Public farbe As Object
 
-        Public ReadOnly Property getResult(ByVal index As Integer) As clsResultDB
+        Public ReadOnly Property getMilestone(ByVal index As Integer) As clsResultDB
 
             Get
-                getResult = AllResults.Item(index - 1)
+                getMilestone = AllResults.Item(index - 1)
             End Get
 
         End Property
@@ -213,7 +338,7 @@
                 Me.relEnde = .relEnde
                 Me.startOffsetinDays = .startOffsetinDays
                 Me.dauerInDays = .dauerInDays
-                Me.name = .name
+                Me.name = .nameID
                 Dim dimension As Integer
 
                 ' Änderung 18.6 , weil Querschnittsphasen Namen jetzt der Projekt-Name ist ...
@@ -224,7 +349,7 @@
                 End Try
 
 
-                For r = 1 To .CountRoles
+                For r = 1 To .countRoles
                     'Dim newRole As New clsRolleDB(.relEnde - .relStart)
                     dimension = .getRole(r).getDimension
                     Dim newRole As New clsRolleDB(dimension)
@@ -232,11 +357,11 @@
                     AllRoles.Add(newRole)
                 Next
 
-                For r = 1 To .CountResults
+                For r = 1 To .countMilestones
                     Dim newResult As New clsResultDB
 
                     Try
-                        newResult.CopyFrom(.getResult(r))
+                        newResult.CopyFrom(.getMilestone(r))
                         AllResults.Add(newResult)
                     Catch ex As Exception
 
@@ -244,7 +369,7 @@
 
                 Next
 
-                For k = 1 To .CountCosts
+                For k = 1 To .countCosts
                     'Dim newCost As New clsKostenartDB(.relEnde - relStart)
                     dimension = .getCost(k).getDimension
                     Dim newCost As New clsKostenartDB(dimension)
@@ -256,64 +381,8 @@
 
         End Sub
 
-        'Sub copyto(ByRef phase As clsPhase, ByVal ProjektStartdate As Date)
 
-        '    Dim r As Integer, k As Integer
-
-        '    With phase
-        '        .earliestStart = Me.earliestStart
-        '        .latestStart = Me.latestStart
-        '        .minDauer = Me.minDauer
-        '        .maxDauer = Me.maxDauer
-        '        .relStart = Me.relStart
-        '        .relEnde = Me.relEnde
-        '        ' das Projektstartdatum muss mit übergeben werden, weil in dieser Methode
-        '        ' die Werte für relstart und relende gesetzt werden 
-        '        .startOffsetinDays = .startOffsetinDays
-        '        .dauerInDays = .dauerInDays
-
-        '        .name = Me.name
-
-        '        For r = 1 To Me.AllRoles.Count
-        '            Dim newRole As New clsRolle(.relEnde - .relStart)
-        '            Me.AllRoles.Item(r - 1).copyto(newRole)
-        '            .AddRole(newRole)
-
-        '        Next
-
-        '        Try
-        '            Dim tstAnzahl As Integer = Me.AllResults.Count
-        '            For r = 1 To tstAnzahl
-
-        '                Dim newresult As New clsResult(parent:=phase)
-
-        '                Try
-        '                    Me.getResult(r).CopyTo(newresult)
-        '                    .AddResult(newresult)
-        '                Catch ex As Exception
-
-        '                End Try
-
-        '            Next
-        '        Catch ex As Exception
-
-        '        End Try
-
-
-
-        '        For k = 1 To Me.AllCosts.Count
-        '            Dim newCost As New clsKostenart(.relEnde - relStart)
-        '            Me.AllCosts.Item(k - 1).copyto(newCost)
-        '            .AddCost(newCost)
-        '        Next
-
-        '    End With
-
-
-        'End Sub
-
-
-        Sub copyto(ByRef phase As clsPhase)
+        Sub copyto(ByRef phase As clsPhase, Optional phaseNr As Integer = 100)
             Dim r As Integer, k As Integer
             Dim dauer As Integer, startoffset As Integer
 
@@ -325,7 +394,20 @@
                 ' Änderung 28.11. relstart , relende ist nur noch readonly ; jetzt wird exaktes Datum mitgeführt
                 '.relStart = Me.relStart
                 '.relEnde = Me.relEnde
-                .name = Me.name
+
+                ' Änderung tk 20.4.2015
+                ' damit alte Datenbank Einträge ohne Hierarchie auch noch gelesen werden können ..
+                If Not istElemID(Me.name) Then
+                    If phaseNr = 1 Then
+                        .nameID = rootPhaseName
+                    Else
+                        .nameID = calcHryElemKey(Me.name, False)
+                    End If
+
+                Else
+                    .nameID = Me.name
+                End If
+
 
                 ' notwendig, da in älteren Versionen in der Datenbank evtl nur der wert für relende, relstart in Monaten gepeichert ist
                 ' nicht aber der Wert für dauerindays oder startoffset
@@ -348,7 +430,7 @@
                     dimension = Me.AllRoles.Item(r - 1).Bedarf.Length - 1
                     Dim newRole As New clsRolle(dimension)
                     Me.AllRoles.Item(r - 1).copyto(newRole)
-                    .AddRole(newRole)
+                    .addRole(newRole)
 
                 Next
 
@@ -369,8 +451,8 @@
                         Dim newresult As New clsMeilenstein(parent:=phase)
 
                         Try
-                            Me.getResult(r).CopyTo(newresult)
-                            .AddResult(newresult)
+                            Me.getMilestone(r).CopyTo(newresult)
+                            .addMilestone(newresult)
                         Catch ex As Exception
 
                         End Try
@@ -515,7 +597,14 @@
             Try
                 With newResult
 
-                    .name = Me.name
+                    ' Änderung tk 20.4.2015
+                    ' damit alte Datenbank Einträge ohne Hierarchie auch noch gelesen werden können ..
+                    If Not istElemID(Me.name) Then
+                        .nameID = calcHryElemKey(Me.name, True)
+                    Else
+                        .nameID = Me.name
+                    End If
+
                     .verantwortlich = Me.verantwortlich
                     .offset = Me.offset
 
@@ -547,7 +636,7 @@
 
             With newResult
 
-                Me.name = .name
+                Me.name = .nameID
                 Me.verantwortlich = .verantwortlich
                 Me.offset = .offset
 
@@ -662,6 +751,7 @@
     Public Sub New()
 
         AllPhases = New List(Of clsPhaseDB)
+        hierarchy = New clsHierarchyDB
 
     End Sub
 

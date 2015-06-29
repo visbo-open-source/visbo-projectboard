@@ -1,8 +1,8 @@
 ﻿Imports System.Math
 Imports xlNS = Microsoft.Office.Interop.Excel
-Imports Microsoft.Office.Core
+Imports Microsoft.Office.Interop
 Imports System.Windows.Forms
-
+Imports Microsoft.Office.Core
 'Imports System.Int32
 
 Public Class clsEventsPrcCharts
@@ -49,105 +49,6 @@ Public Class clsEventsPrcCharts
             'Call MsgBox("konnte das Chart nicht in der Diagramm-Liste finden ...")
         End Try
 
-
-
-        'Dim i As Integer, p As Integer
-        'Dim von As Integer, bis As Integer
-        'Dim left As Double, top As Double, height As Double, width As Double
-        'Dim found As Boolean
-        'Dim diagrammTyp As String
-        'Dim myCollection As New Collection
-        'Dim chtobj As ChartObject
-        ''Dim chtTitle As String
-        'Dim repObj As Object = Nothing
-        'Dim IDkennung As String
-
-        'Cancel = True
-        'diagrammTyp = " "
-        ''
-        '' die Werte des Charts bestimmen, aus dem heraus der Event aufgerufen wurde ...
-        'Try
-        '    chtobj = Me.PrcChartEvents.Parent
-        '    IDkennung = chtobj.Name
-        'Catch ex As NullReferenceException
-        '    Call MsgBox("in PRC ChartEvents, BeforeDoubleClick: kein Chart-Objekt ...")
-        '    Exit Sub
-        'End Try
-
-
-        '' ist es überhaupt ein Cockpit chart ?
-        'If Not istCockpitDiagramm(chtobj) Then
-        '    Exit Sub
-        'End If
-
-        'von = showRangeLeft
-        'bis = showRangeRight
-
-        'If istSummenDiagramm(chtobj, p) Then
-
-        '    height = 2 * miniHeight
-        '    top = WertfuerTop() + awinSettings.ChartHoehe1
-        '    left = linkerRandCpPfChart + 5 * miniWidth
-        '    width = 300
-        '    Call awinCreatePersCostStructureDiagramm(top, left, width, height, False)
-
-
-        'Else
-        '    '
-        '    ' Bestimmen der Breite und Position des Diagrammes
-        '    '
-        '    ' start_top = WertfuerTop + HoehePrcChart
-
-        '    height = awinSettings.ChartHoehe1
-        '    top = WertfuerTop()
-        '    If von > 1 Then
-        '        left = ((von - 1) / 3 - 1) * 3 * boxWidth + 32.8 + von * screen_correct
-        '    Else
-        '        left = 0
-        '    End If
-
-        '    width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-
-
-        '    i = 1
-        '    found = False
-
-        '    Dim foundDiagramm As clsDiagramm
-
-        '    'Try
-        '    '    chtTitle = chtobj.Chart.ChartTitle.Text
-        '    'Catch ex As Exception
-        '    '    chtTitle = " "
-        '    'End Try
-
-        '    'While i <= DiagramList.Count And Not found
-        '    '    If chtTitle Like (DiagramList.getDiagramm(i).DiagrammTitel & "*") Then
-        '    '        diagrammTyp = DiagramList.getDiagramm(i).diagrammTyp
-        '    '        myCollection = DiagramList.getDiagramm(i).gsCollection
-        '    '        found = True
-        '    '    Else
-        '    '        i = i + 1
-        '    '    End If
-        '    'End While
-
-
-        '    Try
-        '        foundDiagramm = DiagramList.getDiagramm(IDkennung)
-        '        diagrammTyp = foundDiagramm.diagrammTyp
-        '        myCollection = foundDiagramm.gsCollection
-        '        found = True
-        '    Catch ex As Exception
-
-        '    End Try
-
-        '    If found Then
-        '        Call awinCreateprcCollectionDiagram(myCollection, repObj, top, left, width, height, False, diagrammTyp)
-        '    End If
-
-        '    'myCollection.Clear()
-        'End If
-
-        ''chtobj = Nothing
 
     End Sub
 
@@ -346,22 +247,10 @@ Public Class clsEventsPrcCharts
                                             Call .syncXWertePhases()
                                         End If
 
-                                        'shpElement = ShowProjekte.getShape(.name)
-
-                                        'Dim typCollection As New Collection
-                                        'typCollection.Add(CInt(PTshty.phaseN).ToString, CInt(PTshty.phaseN).ToString)
-                                        'typCollection.Add(CInt(PTshty.phaseE).ToString, CInt(PTshty.phaseE).ToString)
-                                        'Dim phaseList As Collection = projectboardShapes.getAllChildswithType(shpElement, typCollection)
+                                        
                                         Dim phaseList As Collection = projectboardShapes.getPhaseList(.name)
-
-                                        'typCollection.Clear()
-                                        'typCollection.Add(CInt(PTshty.milestoneN).ToString, CInt(PTshty.milestoneN).ToString)
-                                        'typCollection.Add(CInt(PTshty.milestoneE).ToString, CInt(PTshty.milestoneE).ToString)
                                         Dim milestoneList As Collection = projectboardShapes.getMilestoneList(.name)
 
-
-
-                                        ' jetzt wird das Shape in der Plantafel gelöscht 
                                         Call clearProjektinPlantafel(.name)
 
                                         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
@@ -418,8 +307,9 @@ Public Class clsEventsPrcCharts
         Dim chtobj As xlNS.ChartObject, chtobj1 As xlNS.ChartObject
         Dim IDKennung As String
         Dim foundDiagram As clsDiagramm
-
-
+        Dim kFontsize As Double
+        Dim achsenFontsize As Double
+        Dim axisTitleFontsize As Double
         Try
             chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
             Try
@@ -430,6 +320,81 @@ Public Class clsEventsPrcCharts
 
             IDKennung = chtobj.Name
             foundDiagram = DiagramList.getDiagramm(IDKennung)
+
+            kFontsize = (chtobj.Width / foundDiagram.width)
+            'kHeight = (chtobj.Height / foundDiagram.height)
+
+            With chtobj.Chart
+
+                ' Schriftgröße der Überschrift anpassen
+                If .HasTitle Then
+                    .ChartTitle.Format.TextFrame2.TextRange.Font.Size = CType(.ChartTitle.Format.TextFrame2.TextRange.Font.Size * kFontsize, Single)
+                End If
+
+                ' Schriftgröße der Legende anpassen
+                If .HasLegend Then
+                    With .Legend
+                        .Format.TextFrame2.TextRange.Font.Size = CType(.Format.TextFrame2.TextRange.Font.Size * kFontsize, Single)
+                    End With
+                End If
+
+                ' Schriftgröße der x-Achse anpassen
+                Try
+                    With CType(.Axes(Microsoft.Office.Interop.Excel.XlAxisType.xlCategory, Microsoft.Office.Interop.Excel.XlAxisGroup.xlPrimary), Excel.Axis)
+                        achsenFontsize = CType(.Ticklabels.Font.Size * kFontsize, Double)
+                        .TickLabels.Font.Size = .TickLabels.Font.Size * kFontsize
+                        If .HasTitle Then
+                            With .AxisTitle
+                                axisTitleFontsize = CType(.Characters.Font.Size * kFontsize, Double)
+                                .Characters.Font.Size = .Characters.Font.Size * kFontsize
+                            End With
+                        End If
+                    End With
+                Catch ex As Exception
+
+                End Try
+
+
+                ' Schriftgröße der y-Achse anpassen
+                Try
+                    With CType(.Axes(Microsoft.Office.Interop.Excel.XlAxisType.xlValue, Microsoft.Office.Interop.Excel.XlAxisGroup.xlPrimary), Excel.Axis)
+                        '.TickLabels.Font.Size = .Ticklabels.Font.Size * kFontsize
+                        .TickLabels.Font.Size = achsenFontsize
+                        If .HasTitle Then
+                            With .AxisTitle
+                                .Characters.Font.Size = axisTitleFontsize
+                            End With
+                        End If
+                     
+                    End With
+                Catch ex As Exception
+
+                End Try
+
+                ' Schriftgröße der eingezeichenten Daten bestimmen
+                If .SeriesCollection.Count > 0 Then
+
+                    For j = 1 To .SeriesCollection.Count
+
+                        With .SeriesCollection(j)
+                            If .HasDataLabels = True Then
+                                .ApplyDataLabels()
+                                For i = 1 To .Points.count
+                                    With .Points(i)
+                                        .DataLabel.Font.Size = .DataLabel.Font.Size * kFontsize
+                                    End With
+                                Next i
+                            End If
+
+                        End With
+
+                    Next j
+
+                End If
+
+            End With
+
+
             With foundDiagram
                 .top = chtobj.Top
                 .left = chtobj.Left
@@ -440,58 +405,7 @@ Public Class clsEventsPrcCharts
             'Call MsgBox("konnte das Chart nicht in der Diagramm-Liste finden ...")
         End Try
 
-
-        'Dim chtobj As ChartObject
-        ''Dim spanDiff As Integer
-
-
-
-        'Try
-        '    chtobj = Me.PrcChartEvents.Parent
-        '    With chtobj
-        '        Call MsgBox("top: " & .Top & vbLf & _
-        '                     "left: " & .Left & vbLf & _
-        '                     "width: " & .Width & vbLf & _
-        '                     "height: " & .Height)
-        '    End With
-
-        'Catch ex As Exception
-        '    Exit Sub
-        'End Try
-
-        'With chtobj
-        '    width = .Width
-        '    left = .Left
-        'End With
-
-
-        'If width <> previousWidth Then
-        '    If left = previousLeft Then
-        '        ' es wurde der rechte Rand verändert 
-        '        spanDiff = (width - previousWidth) / boxWidth
-        '        If spanDiff <> 0 Then
-        '            Call awinChangeTimeSpan(showRangeLeft, showRangeRight + spanDiff)
-        '        End If
-
-        '    Else
-        '        ' es wurde der linke Rand verändert 
-        '        spanDiff = (width - previousWidth) / boxWidth
-        '        If spanDiff <> 0 Then
-        '            Call awinChangeTimeSpan(showRangeLeft + spanDiff, showRangeRight)
-        '        End If
-
-        '    End If
-
-        'End If
-
-        'With chtobj
-        '    previousLeft = .Left
-        '    previousTop = .Top
-        '    previousWidth = .Width
-        '    previousHeight = .Height
-        'End With
-
-
+        enableOnUpdate = True
 
     End Sub
 
@@ -532,7 +446,7 @@ Public Class clsEventsPrcCharts
 
 
                 '
-                ' nur bei Phasen wird aktuell etwas gemacht 
+                ' nur bei Phasen und Meilensteinen wird aktuell etwas gemacht 
                 '
                 If diagOBJ.diagrammTyp = DiagrammTypen(0) And diagOBJ.gsCollection.Count > 0 Then
 
@@ -540,9 +454,13 @@ Public Class clsEventsPrcCharts
 
                     For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                        Call zeichnePhasenInProjekt(kvp.Value, diagOBJ.gsCollection, selMonth, selMonth, False, msNumber)
+                        Call zeichnePhasenInProjekt(kvp.Value, diagOBJ.gsCollection, False, msNumber, selMonth, selMonth)
 
                     Next
+
+                    ' jetzt den selektierten Balken im ShowTimeZone anzeigen 
+                    Call awinShowSelectedMonth(selMonth)
+
 
                 ElseIf diagOBJ.diagrammTyp = DiagrammTypen(5) And diagOBJ.gsCollection.Count > 0 Then
 
@@ -550,9 +468,15 @@ Public Class clsEventsPrcCharts
 
                     For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                        Call zeichneResultMilestonesInProjekt(kvp.Value, diagOBJ.gsCollection, 4, selMonth, selMonth, False, msNumber, False)
+                        ' hier wird die zeichneMilestones aufgerufen mit den Element-Namen und nicht den Element-IDs
+                        ' d.h es ist wichtig, daß die Zeichen-Routine so schlau ist, im Falle des Aufrufes mit den Namen alle 
+                        ' Namen durch ihre auftretenden IDs zu ersetzen.  
+                        Call zeichneMilestonesInProjekt(kvp.Value, diagOBJ.gsCollection, 4, selMonth, selMonth, False, msNumber, False)
 
                     Next
+
+                    ' jetzt den selektierten Balken im ShowTimeZone anzeigen 
+                    Call awinShowSelectedMonth(selMonth)
 
                 End If
 
@@ -568,4 +492,6 @@ Public Class clsEventsPrcCharts
 
 
     End Sub
+
+  
 End Class

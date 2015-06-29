@@ -43,11 +43,13 @@ namespace MongoDbAccess
             if (String.IsNullOrEmpty(username) && String.IsNullOrEmpty(dbPasswort))
             {
                 var connectionString = "mongodb://localhost";
+                //var connectionString = "mongodb://@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
             }
             else
             {
                 var connectionString = "mongodb://" + username + ":" + dbPasswort + "@localhost";  /*Aufruf mit MongoDB mit Authentication  */
+                //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
             }
             
@@ -142,10 +144,18 @@ namespace MongoDbAccess
 
         public bool storeProjectToDB(clsProjekt projekt)
         {
-            var projektDB = new clsProjektDB();
-            projektDB.copyfrom(projekt);
-            projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString();
-            return CollectionProjects.Save(projektDB).Ok;      
+            try
+            {
+                var projektDB = new clsProjektDB();
+                projektDB.copyfrom(projekt);
+                projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString();
+                return CollectionProjects.Save(projektDB).Ok;    
+            }
+            catch
+            {
+                return false;
+            }
+              
 
 
             //projektDB.copyfrom(ref projekt); wenn von kopiert wird, muss das nicht per Ref übergeben werden 

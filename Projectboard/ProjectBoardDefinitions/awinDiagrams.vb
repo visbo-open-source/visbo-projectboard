@@ -6,12 +6,10 @@ Imports Microsoft.Office.Core
 Public Module awinDiagrams
 
     '
-    ' zeigt im Planungshorizont die Time Zone an - oder blendet sie aus, abhängg vom Wert showzone
+    ' zeigt im Planungshorizont die Time Zone an - oder blendet sie aus, abhängig vom Wert showzone
     '
     Sub awinShowtimezone(ByVal von As Integer, ByVal bis As Integer, ByVal showzone As Boolean)
         Dim laenge As Integer
-
-
 
         laenge = bis - von
 
@@ -41,13 +39,53 @@ Public Module awinDiagrams
 
             End With
 
+            visboZustaende.showTimeZoneBalken = False
+
+        End If
+
+    End Sub
+
+    '
+    ' zeigt im selektierten Zeitraum den Monat an, der gerade in einem Chart angeklickt wurde, so dass dass die 
+    ' dort liegenden Elemente gezeigt werden 
+    '
+    Sub awinShowSelectedMonth(ByVal mon As Integer)
+        Dim laenge As Integer
+        Dim von As Integer = showRangeLeft
+        Dim bis As Integer = showRangeRight
+
+        Dim lastZeile As Integer = projectboardShapes.getMaxZeile
+
+        If showRangeLeft = 0 Or showRangeRight = 0 Or showRangeLeft > showRangeRight Then
+            Exit Sub
+        End If
+
+        laenge = showRangeRight - showRangeLeft
+
+        If mon >= showRangeLeft And mon <= showRangeRight Then
+
+            With appInstance.Worksheets(arrWsNames(3))
+
+                '
+                ' erst den Bereich einfärben  
+                '
+                .Range(.Cells(1, von), .Cells(1, von).Offset(0, laenge)).Interior.color = showtimezone_color
+                If awinSettings.showTimeSpanInPT Then
+                    .Range(.Cells(2, von), .Cells(5000, von).Offset(0, laenge)).Interior.color = awinSettings.timeSpanColor
+                    .range(.cells(2, mon), .cells(lastZeile, mon)).interior.color = awinSettings.glowColor
+                End If
+
+
+
+            End With
+
+            visboZustaende.showTimeZoneBalken = True
 
         End If
 
 
 
     End Sub
-
     ''' <summary>
     ''' löscht Window und Cockpit Window vom Typ "prcTyp"
     ''' </summary>
@@ -107,7 +145,7 @@ Public Module awinDiagrams
         Dim kdatenreihe() As Double ' nimmt die Kapa-Werte für das Diagramm auf
         Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
         Dim msdatenreihe(,) As Double
-        Dim prcName As String
+        Dim prcName As String = ""
         Dim startdate As Date
         Dim diff As Integer
         Dim mindone As Boolean, maxdone As Boolean
@@ -121,6 +159,8 @@ Public Module awinDiagrams
         Dim titleZeitraum As String, titleSumme As String, einheit As String
         'Dim chtTitle As String
         Dim chtobjName As String
+        Dim breadcrumb As String = ""
+
 
         ' Debugging variable 
         Dim HDiagramList As clsDiagramme
@@ -217,6 +257,10 @@ Public Module awinDiagrams
             diagramTitle = "Übersicht"
         End If
 
+        ' jetzt den Namen aus optischen Gründen ändern 
+        If diagramTitle.Contains("#") Then
+            diagramTitle = diagramTitle.Replace("#", "-")
+        End If
 
         ' jetzt prüfen, ob es bereits gespeicherte Werte für top, left, ... gibt ;
         ' Wenn ja : übernehmen
@@ -245,6 +289,22 @@ Public Module awinDiagrams
             Catch ex As Exception
 
             End Try
+
+            ' Änderung tk 26.3.15 
+            ' wenn die Koordinaten ausserhalb des aktuell sichtbaren Windows sind, dann sollen sie 
+            ' ins Sichtbare gerückt werden 
+            
+            With CType(appInstance.ActiveWindow, Excel.Window)
+
+                If top < CDbl(.VisibleRange.Top) Or top + height > CDbl(.VisibleRange.Top + .VisibleRange.Height) Then
+                    top = CDbl(.VisibleRange.Top) + 10
+                End If
+
+                If left < CDbl(.VisibleRange.Left) Or left + width > CDbl(.VisibleRange.Left + .VisibleRange.Width) Then
+                    left = CDbl(.VisibleRange.Left) + 10
+                End If
+
+            End With
 
         End If
 
@@ -306,13 +366,25 @@ Public Module awinDiagrams
 
                     For r = 1 To myCollection.Count
 
-                        prcName = CStr(myCollection.Item(r))
-
+                        'prcName = CStr(myCollection.Item(r))
+                        ' wird jetzt über das folgende bestimmt
+                        Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
 
                         If prcTyp = DiagrammTypen(0) Then
                             einheit = " "
-                            objektFarbe = PhaseDefinitions.getPhaseDef(prcName).farbe
-                            datenreihe = ShowProjekte.getCountPhasesInMonth(prcName)
+                            Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(prcName)
+                            If IsNothing(tmpPhaseDef) Then
+                                If appearanceDefinitions.ContainsKey("Phasen Default") Then
+                                    objektFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                                Else
+                                    objektFarbe = awinSettings.AmpelNichtBewertet
+                                End If
+
+                            Else
+                                objektFarbe = tmpPhaseDef.farbe
+                            End If
+
+                            datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb)
 
                         ElseIf prcTyp = DiagrammTypen(1) Then
                             einheit = " " & awinSettings.kapaEinheit
@@ -374,8 +446,20 @@ Public Module awinDiagrams
                         ElseIf prcTyp = DiagrammTypen(5) Then
 
                             einheit = " "
-                            objektFarbe = MilestoneDefinitions.getMilestoneDef(prcName).farbe
-                            msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName)
+
+                            Dim tmpMilestoneDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(prcName)
+                            If IsNothing(tmpMilestoneDef) Then
+                                If appearanceDefinitions.ContainsKey("Meilenstein Default") Then
+                                    objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                                Else
+                                    objektFarbe = awinSettings.AmpelNichtBewertet
+                                End If
+
+                            Else
+                                objektFarbe = tmpMilestoneDef.farbe
+                            End If
+
+                            msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
 
                         End If
 
@@ -418,7 +502,12 @@ Public Module awinDiagrams
                                 Next
 
                                 With .SeriesCollection.NewSeries
-                                    .name = prcName
+                                    If breadcrumb = "" Then
+                                        .name = prcName
+                                    Else
+                                        .name = breadcrumb & "-" & prcName
+                                    End If
+
                                     '.Interior.color = ampelfarbe(0)
                                     .Interior.color = objektFarbe
                                     .Values = datenreihe
@@ -460,7 +549,11 @@ Public Module awinDiagrams
                             Else
 
                                 With .SeriesCollection.NewSeries
-                                    .name = prcName
+                                    If breadcrumb = "" Then
+                                        .name = prcName
+                                    Else
+                                        .name = breadcrumb & "-" & prcName
+                                    End If
                                     .Interior.color = objektFarbe
                                     .Values = datenreihe
                                     .XValues = Xdatenreihe
@@ -611,7 +704,7 @@ Public Module awinDiagrams
                             .HasDataLabels = False
 
                             If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
-                                .name = "Schwellwert"
+                                .name = "Leistbarkeitsgrenze"
                             Else
                                 .name = "Interne Kapazität"
                             End If
@@ -656,6 +749,8 @@ Public Module awinDiagrams
                     End If
 
                     .ChartTitle.Text = diagramTitle & titleSumme
+                    ' lastSC muss  bestimmt werden 
+                    lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
                     If isCockpitChart Then
 
@@ -667,8 +762,6 @@ Public Module awinDiagrams
                         .HasLegend = True
 
                         .Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
-
-
                         .Legend.Font.Size = awinSettings.fontsizeLegend
                     Else
                         .HasLegend = False
@@ -742,8 +835,9 @@ Public Module awinDiagrams
                         .top = top
                         .left = left
                         .kennung = chtobjName
-                        '.width = width
-                        '.height = height
+                        ' ur:09.03.2015: wegen Chart-Resize geändert
+                        .width = width
+                        .height = height
 
                     End With
 
@@ -802,7 +896,9 @@ Public Module awinDiagrams
         Dim seldatenreihe() As Double, tmpdatenreihe() As Double
         Dim kdatenreihe() As Double
         Dim kdatenreihePlus() As Double ' nimmt die Kapa Werte inkl bereits beauftragter externer Ressourcen auf 
-        Dim prcName As String
+        Dim prcName As String = ""
+
+        Dim breadcrumb As String = ""
         Dim startdate As Date
         Dim diff As Integer
         Dim mindone As Boolean, maxdone As Boolean
@@ -939,6 +1035,11 @@ Public Module awinDiagrams
             diagramTitle = CStr(myCollection.Item(1))
         End If
 
+        ' jetzt den Namen aus optischen Gründen ändern 
+        If diagramTitle.Contains("#") Then
+            diagramTitle = diagramTitle.Replace("#", "-")
+        End If
+
         If prcTyp = DiagrammTypen(1) Then
             kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection, False)
             kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)
@@ -964,17 +1065,31 @@ Public Module awinDiagrams
 
                 For r = 1 To myCollection.Count
 
-                    prcName = CStr(myCollection.Item(r))
+                    'prcName = CStr(myCollection.Item(r))
+                    Call splitHryFullnameTo2(CStr(myCollection.Item(r)), prcName, breadcrumb)
 
                     If prcTyp = DiagrammTypen(0) Then
                         einheit = " "
-                        objektFarbe = PhaseDefinitions.getPhaseDef(prcName).farbe
-                        datenreihe = ShowProjekte.getCountPhasesInMonth(prcName)
+
+                        Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(prcName)
+
+                        If IsNothing(tmpPhaseDef) Then
+                            If appearanceDefinitions.ContainsKey("Phasen Default") Then
+                                objektFarbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                            Else
+                                objektFarbe = awinSettings.AmpelNichtBewertet
+                            End If
+
+                        Else
+                            objektFarbe = tmpPhaseDef.farbe
+                        End If
+
+                        datenreihe = ShowProjekte.getCountPhasesInMonth(prcName, breadcrumb)
                         hmxWert = datenreihe.Max
 
                         If awinSettings.showValuesOfSelected And myCollection.Count = 1 Then
                             ' Ergänzung wegen Anzeige der selektierten Objekte ... 
-                            tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName)
+                            tmpdatenreihe = selectedProjekte.getCountPhasesInMonth(prcName, breadcrumb)
                             For ix = 0 To bis - von
                                 datenreihe(ix) = datenreihe(ix) - tmpdatenreihe(ix)
                                 seldatenreihe(ix) = seldatenreihe(ix) + tmpdatenreihe(ix)
@@ -1062,8 +1177,18 @@ Public Module awinDiagrams
                     ElseIf prcTyp = DiagrammTypen(5) Then
 
                         einheit = " "
-                        objektFarbe = MilestoneDefinitions.getMilestoneDef(prcName).farbe
-                        msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName)
+                        Dim tmpMilestoneDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(prcName)
+                        If IsNothing(tmpMilestoneDef) Then
+                            If appearanceDefinitions.ContainsKey("Meilenstein Default") Then
+                                objektFarbe = appearanceDefinitions.Item("Meilenstein Default").form.Fill.ForeColor.RGB
+                            Else
+                                objektFarbe = awinSettings.AmpelNichtBewertet
+                            End If
+
+                        Else
+                            objektFarbe = tmpMilestoneDef.farbe
+                        End If
+                        msdatenreihe = ShowProjekte.getCountMilestonesInMonth(prcName, breadcrumb)
                     End If
 
                     For i = 0 To bis - von
@@ -1105,7 +1230,12 @@ Public Module awinDiagrams
                             Next
 
                             With .SeriesCollection.NewSeries
-                                .name = prcName
+                                If breadcrumb = "" Then
+                                    .name = prcName
+                                Else
+                                    .name = breadcrumb & "-" & prcName
+                                End If
+
                                 '.Interior.color = ampelfarbe(0)
                                 .Interior.color = objektFarbe
                                 .Values = datenreihe
@@ -1116,39 +1246,14 @@ Public Module awinDiagrams
 
 
 
-
-                            ' Alt: jetzt werden die Summe der Meilensteine angezeigt 
-                            'For c = 0 To 3
-
-                            '    For i = 0 To bis - von
-                            '        datenreihe(i) = msdatenreihe(c, i)
-                            '        seriesSumDatenreihe(i) = seriesSumDatenreihe(i) + datenreihe(i)
-                            '    Next
-
-                            '    With .SeriesCollection.NewSeries
-                            '        If c = 0 Then
-                            '            .name = prcName & ", ohne Ampel"
-                            '        ElseIf c = 1 Then
-                            '            .name = prcName & ", grüne Ampel"
-                            '        ElseIf c = 2 Then
-                            '            .name = prcName & ", gelbe Ampel"
-                            '        Else
-                            '            .name = prcName & ", rote Ampel"
-                            '        End If
-                            '        .Interior.color = ampelfarbe(c)
-                            '        .Values = datenreihe
-                            '        .XValues = Xdatenreihe
-                            '        .ChartType = Excel.XlChartType.xlColumnStacked
-                            '        .HasDataLabels = False
-                            '    End With
-
-
-                            'Next
-
                         Else
 
                             With .SeriesCollection.NewSeries
-                                .name = prcName
+                                If breadcrumb = "" Then
+                                    .name = prcName
+                                Else
+                                    .name = breadcrumb & "-" & prcName
+                                End If
                                 .Interior.color = objektFarbe
                                 .Values = datenreihe
                                 .XValues = Xdatenreihe
@@ -1317,7 +1422,7 @@ Public Module awinDiagrams
                         .HasDataLabels = False
 
                         If prcTyp = DiagrammTypen(0) Or prcTyp = DiagrammTypen(5) Then
-                            .name = "Schwellwert"
+                            .name = "Leistbarkeitsgrenze"
                         Else
                             .name = "Interne Kapazität"
                         End If
@@ -1382,17 +1487,22 @@ Public Module awinDiagrams
 
 
                 .ChartTitle.Text = diagramTitle & titleSumme
+                ' lastSC muss  bestimmt werden 
+                lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
-                If isCockpitChart Then
-                    .HasLegend = False
-                ElseIf lastSC > 1 And seldatenreihe.Sum = 0 Then
-                    .HasLegend = True
-                    .Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
-                    .Legend.Font.Size = awinSettings.fontsizeLegend
-                Else
 
-                    .HasLegend = False
-                End If
+                ' Änderung 18.3.15 tk: bei einem Update muss überhaupt nix geändert werden, was LEgende angeht ; 
+                ' die ist entweder da und soll da bleiben oder sie ist nicht da und soll auch nicht kommen 
+                'If isCockpitChart Then
+                '    .HasLegend = False
+                'ElseIf lastSC > 1 And seldatenreihe.Sum = 0 Then
+                '    .HasLegend = True
+                '    'ur: 11.03.2015: wenn ein Chart eine Legende hat, so soll sie bleiben wie zuletzt definiert, nicht jedesmal auf Ursprungszustand zurückgesetzt werden
+                '    '.Legend.Position = Excel.XlLegendPosition.xlLegendPositionTop
+                '    '.Legend.Font.Size = awinSettings.fontsizeLegend
+                'Else
+                '    .HasLegend = False
+                'End If
 
             End With
 
@@ -3970,7 +4080,7 @@ Public Module awinDiagrams
                         Case 8 ' Selection hat sich geändert 
 
                             If istRollenDiagramm(chtobj) Or istKostenartDiagramm(chtobj) Or _
-                                istPhasenDiagramm(chtobj) Then
+                                istPhasenDiagramm(chtobj) Or istMileStoneDiagramm(chtobj) Then
 
                                 Call awinUpdateprcCollectionDiagram(chtobj)
 
@@ -4003,7 +4113,7 @@ Public Module awinDiagrams
                                        p = PTpfdk.ZeitRisiko Or _
                                        p = PTpfdk.ComplexRisiko Then
 
-                                    Call awinUpdatePortfolioDiagrams(chtobj, 0)
+                                    Call awinUpdatePortfolioDiagrams(chtobj, PTpfdk.ProjektFarbe)
 
                                 ElseIf p = PTpfdk.Auslastung Then
                                     Try

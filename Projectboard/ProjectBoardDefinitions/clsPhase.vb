@@ -3,7 +3,7 @@
     ' earliestStart und latestStart sind absolute Werte im "koordinaten-System" des Projektes
     ' von daher ist es anders gelöst als in clsProjekt, wo earlieststart und latestStart relative Angaben sind 
 
-    Private AllResults As List(Of clsMeilenstein)
+    Private AllMilestones As List(Of clsMeilenstein)
     Private AllRoles As List(Of clsRolle)
     Private AllCosts As List(Of clsKostenart)
     Private _Offset As Integer
@@ -42,14 +42,14 @@
 
             dimension = getColumnOfDate(phaseEnd) - getColumnOfDate(phaseStart)
 
-            While tmpValue And r <= Me.CountRoles
+            While tmpValue And r <= Me.countRoles
                 If dimension <> Me.getRole(r).Xwerte.Length - 1 Then
                     tmpValue = False
                 End If
                 r = r + 1
             End While
 
-            While tmpValue And k <= Me.CountCosts
+            While tmpValue And k <= Me.countCosts
                 If dimension <> Me.getCost(k).Xwerte.Length - 1 Then
                     tmpValue = False
                 End If
@@ -127,7 +127,7 @@
                 ' dieser Aufruf korrigiert notfalls die intern gehaltene
 
                 Try
-                    If Me.name <> Me.Parent.getPhase(1).name Then
+                    If Me.nameID <> Me.Parent.getPhase(1).nameID Then
                         ' wenn es nicht die erste Phase ist, die gerade behandelt wird, dann soll die erste Phase auf Konsistenz geprüft werden 
                         Me.Parent.keepPhase1consistent(Me.startOffsetinDays + Me.dauerInDays)
                     End If
@@ -145,7 +145,7 @@
                     dimension = _relEnde - _relStart
                     ReDim newvalues(dimension)
 
-                    If Me.CountRoles > 0 Then
+                    If Me.countRoles > 0 Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
                         Call Me.calcNewXwerte(dimension, faktor)
@@ -153,7 +153,7 @@
 
                     End If
 
-                    If Me.CountCosts > 0 And notYetDone Then
+                    If Me.countCosts > 0 And notYetDone Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
                         Call Me.calcNewXwerte(dimension, 1)
@@ -262,7 +262,7 @@
                     dimension = _relEnde - _relStart
                     ReDim newvalues(dimension)
 
-                    If Me.CountRoles > 0 Then
+                    If Me.countRoles > 0 Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
                         Call Me.calcNewXwerte(dimension, faktor)
@@ -270,7 +270,7 @@
 
                     End If
 
-                    If Me.CountCosts > 0 And notYetDone Then
+                    If Me.countCosts > 0 And notYetDone Then
 
                         ' hier müssen jetzt die Xwerte neu gesetzt werden 
                         Call Me.calcNewXwerte(dimension, 1)
@@ -377,7 +377,8 @@
             If _dauerInDays > 0 Then
                 getEndDate = Me.Parent.startDate.AddDays(_startOffsetinDays + _dauerInDays - 1)
             Else
-                Throw New Exception("Dauer muss mindestens 1 Tag sein ...")
+                'Throw New Exception("Dauer muss mindestens 1 Tag sein ...")
+                getEndDate = Me.Parent.startDate.AddDays(_startOffsetinDays)
             End If
 
         End Get
@@ -387,16 +388,29 @@
     Public ReadOnly Property Farbe As Object
         Get
             Try
-                Farbe = PhaseDefinitions.getPhaseDef(_name).farbe
+                Dim itemName As String = elemNameOfElemID(_name)
+                If _name = rootPhaseName Then
+                    Farbe = Me.Parent.farbe             ' Farbe der Projektes, da Projekt der Parent der RootPhase ist
+                Else
+                    Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(elemNameOfElemID(_name))
+                    If IsNothing(tmpPhaseDef) Then
+                        If appearanceDefinitions.ContainsKey("Phasen Default") Then
+                            Farbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
+                        Else
+                            Farbe = awinSettings.AmpelNichtBewertet
+                        End If
+
+                    Else
+                        Farbe = tmpPhaseDef.farbe
+                    End If
+
+                End If
+
             Catch ex As Exception
-                ' in diesem Fall ist es wahrscheinlich der Name der Projektvorlage 
-                Try
-                    Farbe = Projektvorlagen.getProject(_name).farbe
-                Catch ex1 As Exception
-                    Farbe = 0
-                    Throw New ArgumentException("Phasen-Name nicht bekannt ...")
-                End Try
+                ' in diesem Fall wird ein Standard Farbe genommen 
+                Farbe = awinSettings.AmpelNichtBewertet
             End Try
+
         End Get
     End Property
 
@@ -571,18 +585,45 @@
 
     End Property
 
-    Public Property name As String
+    ''' <summary>
+    ''' setzt bzw liest die NamensID einer Phase; die NamensID setzt sich zusammen aus 
+    ''' dem Kennzeichen Phase/Meilenstein 0/1, dem eigentlichen Namen der Phase und der laufenden Nummer. 
+    ''' Getrennt sind die Elemente durch das Zeichen § 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property nameID As String
         Get
-            name = _name
+            nameID = _name
         End Get
         Set(value As String)
-            If Len(value) > 1 Then
-                _name = value
+            Dim tmpstr() As String
+            tmpstr = value.Split(New Char() {CChar("§")}, 3)
+            If Len(value) > 0 Then
+                If value.StartsWith("0§") And tmpstr.Length >= 2 Then
+                    _name = value
+                Else
+                    Throw New ApplicationException("unzulässige Namens-ID: " & value)
+                End If
+
             Else
-                Throw New ApplicationException("Name muss mindestens zwei Zeichen lang sein ...")
+                Throw New ApplicationException("Name darf nicht leer sein ...")
             End If
 
         End Set
+    End Property
+
+    ''' <summary>
+    ''' liest den Namensteil der NamensID 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property name As String
+        Get
+            name = elemNameOfElemID(_name)
+        End Get
     End Property
 
     ''' <summary>
@@ -593,7 +634,7 @@
     ''' <param name="width"></param>
     ''' <param name="height"></param>
     ''' <remarks></remarks>
-    Public Sub CalculatePhaseShapeCoord(ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
+    Public Sub calculatePhaseShapeCoord(ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
 
         Try
 
@@ -620,11 +661,11 @@
                 height = 0.23 * boxHeight
 
             Else
-                Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
+                Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.nameID)
             End If
 
         Catch ex As Exception
-            Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.name)
+            Throw New ArgumentException("es kann kein Shape berechnet werden für : " & Me.nameID)
         End Try
 
 
@@ -694,7 +735,7 @@
 
 
     'End Sub
-    Public Sub AddRole(ByVal role As clsRolle)
+    Public Sub addRole(ByVal role As clsRolle)
 
         AllRoles.Add(role)
 
@@ -704,17 +745,20 @@
     ''' es wird überprüft, ob der Meilenstein-Name schon existiert 
     ''' wenn er bereits existiert, wird eine ArgumentException geworfen  
     ''' </summary>
-    ''' <param name="result"></param>
+    ''' <param name="milestone"></param>
     ''' <remarks></remarks>
-    Public Sub addresult(ByVal result As clsMeilenstein)
+    Public Sub addMilestone(ByVal milestone As clsMeilenstein,
+                            Optional ByVal origName As String = "")
 
 
-        Dim anzElements As Integer = AllResults.Count - 1
+        Dim anzElements As Integer = AllMilestones.Count - 1
         Dim ix As Integer = 0
         Dim found As Boolean = False
 
+        Dim elemName As String = elemNameOfElemID(milestone.nameID)
+
         Do While ix <= anzElements And Not found
-            If AllResults.Item(ix).name = result.name Then
+            If AllMilestones.Item(ix).nameID = milestone.nameID Then
                 found = True
             Else
                 ix = ix + 1
@@ -722,51 +766,107 @@
         Loop
 
         If found Then
-            Throw New ArgumentException("Meilenstein existiert bereits !" & result.name)
+            Throw New ArgumentException("Meilenstein existiert bereits in dieser Phase!" & milestone.nameID)
         Else
-            AllResults.Add(result)
+            AllMilestones.Add(milestone)
+        End If
+
+        ' jetzt muss der Meilenstein in die Projekt-Hierarchie aufgenommen werden , 
+        ' aber nur, wenn die Phase bereits in der Projekt-Hierarchie vorhanden ist ... 
+        Dim elemID As String = milestone.nameID
+        Dim currentElementNode As New clsHierarchyNode
+        Dim hproj As New clsProjekt, vproj As New clsProjektvorlage
+        Dim parentIsVorlage As Boolean
+        Dim milestoneIndex As Integer = AllMilestones.Count
+        Dim phaseID As String = Me.nameID
+        Dim ok As Boolean = False
+
+        If Not istElemID(elemID) Then
+            elemID = vproj.hierarchy.findUniqueElemKey(elemName, True)
+        End If
+
+        If IsNothing(Me.Parent) Then
+            parentIsVorlage = True
+            vproj = Me.VorlagenParent
+            If vproj.hierarchy.containsKey(phaseID) Then
+                ' Phase ist bereits in der Projekt-Hierarchie eingetragen
+                ok = True
+            End If
+        Else
+            parentIsVorlage = False
+            hproj = Me.Parent
+            If hproj.hierarchy.containsKey(phaseID) Then
+                ' Phase ist bereits in der Projekt-Hierarchie eingetragen
+                ok = True
+            End If
+        End If
+
+        If ok Then
+
+            With currentElementNode
+
+                .elemName = elemName
+
+                If origName = "" Then
+                    .origName = .elemName
+                Else
+                    .origName = origName
+                End If
+
+                .indexOfElem = milestoneIndex
+                .parentNodeKey = phaseID
+
+            End With
+
+            If parentIsVorlage Then
+                vproj.hierarchy.addNode(currentElementNode, elemID)
+            Else
+                hproj.hierarchy.addNode(currentElementNode, elemID)
+            End If
+
+
         End If
 
 
     End Sub
 
-    Public ReadOnly Property RollenListe() As List(Of clsRolle)
+    Public ReadOnly Property rollenListe() As List(Of clsRolle)
 
         Get
-            RollenListe = AllRoles
+            rollenListe = AllRoles
         End Get
 
     End Property
 
-    Public ReadOnly Property ResultListe() As List(Of clsMeilenstein)
+    Public ReadOnly Property meilensteinListe() As List(Of clsMeilenstein)
 
         Get
-            ResultListe = AllResults
+            meilensteinListe = AllMilestones
         End Get
 
     End Property
 
-    Public ReadOnly Property KostenListe() As List(Of clsKostenart)
+    Public ReadOnly Property kostenListe() As List(Of clsKostenart)
 
         Get
-            KostenListe = AllCosts
+            kostenListe = AllCosts
         End Get
 
     End Property
 
 
-    Public ReadOnly Property CountRoles() As Integer
+    Public ReadOnly Property countRoles() As Integer
 
         Get
-            CountRoles = AllRoles.Count
+            countRoles = AllRoles.Count
         End Get
 
     End Property
 
-    Public ReadOnly Property CountResults() As Integer
+    Public ReadOnly Property countMilestones() As Integer
 
         Get
-            CountResults = AllResults.Count
+            countMilestones = AllMilestones.Count
         End Get
 
     End Property
@@ -792,19 +892,19 @@
 
 
 
-            .name = _name
+            .nameID = _name
 
-            For r = 1 To Me.CountRoles
+            For r = 1 To Me.countRoles
                 'newrole = New clsRolle(relEnde - relStart)
 
                 dimension = Me.getRole(r).getDimension
                 newrole = New clsRolle(dimension)
                 Me.getRole(r).CopyTo(newrole)
-                .AddRole(newrole)
+                .addRole(newrole)
             Next r
 
 
-            For k = 1 To Me.CountCosts
+            For k = 1 To Me.countCosts
                 'newcost = New clsKostenart(relEnde - relStart)
 
                 dimension = Me.getCost(k).getDimension
@@ -820,12 +920,12 @@
 
             .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
-            For r = 1 To Me.AllResults.Count
+            For r = 1 To Me.AllMilestones.Count
                 newresult = New clsMeilenstein(parent:=newphase)
-                Me.getResult(r).CopyTo(newresult)
+                Me.getMilestone(r).CopyTo(newresult)
 
                 Try
-                    .addresult(newresult)
+                    .addMilestone(newresult)
                 Catch ex As Exception
 
                 End Try
@@ -835,7 +935,7 @@
         End With
 
     End Sub
-    Public Sub korrCopyTo(ByRef newphase As clsPhase, ByVal corrFactor As Double)
+    Public Sub korrCopyTo(ByRef newphase As clsPhase, ByVal corrFactor As Double, Optional newPhaseNameID As String = "")
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle, oldrole As clsRolle
         Dim newcost As clsKostenart, oldcost As clsKostenart
@@ -856,11 +956,16 @@
             .latestStart = Me._latestStart
             .Offset = Me._Offset
 
-            .name = _name
+            If newPhaseNameID = "" Then
+                .nameID = _name
+            Else
+                .nameID = newPhaseNameID
+            End If
+
 
             .changeStartandDauer(CInt(Me._startOffsetinDays * corrFactor), CInt(Me._dauerInDays * corrFactor))
 
-            For r = 1 To Me.CountRoles
+            For r = 1 To Me.countRoles
                 Try
 
                     oldrole = Me.getRole(r)
@@ -876,7 +981,7 @@
                         .Xwerte = newXwerte
                     End With
                     With newphase
-                        .AddRole(newrole)
+                        .addRole(newrole)
                     End With
                 Catch ex As Exception
 
@@ -887,7 +992,7 @@
             Next r
 
 
-            For k = 1 To Me.CountCosts
+            For k = 1 To Me.countCosts
                 Try
                     oldcost = Me.getCost(k)
                     newcost = New clsKostenart(newphase.relEnde - newphase.relStart)
@@ -919,14 +1024,20 @@
 
             ' alt .changeStartandDauer(Me._startOffsetinDays, Me._dauerInDays)
 
-            For r = 1 To Me.AllResults.Count
+            For r = 1 To Me.AllMilestones.Count
                 newresult = New clsMeilenstein(parent:=newphase)
-                Me.getResult(r).CopyTo(newresult)
+                If newPhaseNameID = "" Then
+                    Me.getMilestone(r).CopyTo(newresult)
+                Else
+                    Dim newMSNameID As String = newphase.Parent.hierarchy.findUniqueElemKey(Me.getMilestone(r).name, True)
+                    Me.getMilestone(r).CopyTo(newresult, newMSNameID)
+                End If
+
                 ' korrigiert den Offset der Meilensteine 
-                newresult.offset = CLng(System.Math.Round(CLng(Me.getResult(r).offset * corrFactor)))
+                newresult.offset = CLng(System.Math.Round(CLng(Me.getMilestone(r).offset * corrFactor)))
 
                 Try
-                    .addresult(newresult)
+                    .addMilestone(newresult)
                 Catch ex As Exception
 
                 End Try
@@ -943,12 +1054,13 @@
     ''' </summary>
     ''' <param name="faktor"></param>
     ''' <remarks></remarks>
+
     Public Sub adjustMilestones(ByVal faktor As Double)
         Dim newOffset As Integer
-        For r = 1 To Me.AllResults.Count
+        For r = 1 To Me.AllMilestones.Count
 
             ' korrigiert den Offset der Meilensteine 
-            newOffset = CInt(System.Math.Round(CLng(Me.getResult(r).offset * faktor)))
+            newOffset = CInt(System.Math.Round(CLng(Me.getMilestone(r).offset * faktor)))
 
             If newOffset < 0 Then
                 newOffset = 0
@@ -956,7 +1068,7 @@
                 newOffset = Me.dauerInDays - 1
             End If
 
-            Me.getResult(r).offset = newOffset
+            Me.getMilestone(r).offset = newOffset
         Next
 
     End Sub
@@ -991,16 +1103,22 @@
 
     End Property
 
-    Public ReadOnly Property getResult(ByVal index As Integer) As clsMeilenstein
+    Public ReadOnly Property getMilestone(ByVal index As Integer) As clsMeilenstein
 
         Get
-            getResult = AllResults.Item(index - 1)
+            If index < 1 Or index > AllMilestones.Count Then
+                getMilestone = Nothing
+            Else
+                getMilestone = AllMilestones.Item(index - 1)
+            End If
+
         End Get
 
     End Property
 
     ''' <summary>
-    ''' gibt das Objekt Meilenstein mit dem angegebenen NAmen zurück. 
+    ''' gibt das Objekt Meilenstein mit der angegebenen ElemID zurück. 
+    ''' beim Key kann es sich um eine ElemID handeln oder aber um einen Meilenstein-Namen, optional mit Nummer 
     ''' Wenn der Meilenstein nicht existiert, wird Nothing zurückgegeben 
     ''' </summary>
     ''' <param name="key">Name des Meilensteines</param>
@@ -1008,25 +1126,53 @@
     ''' <returns>Objekt vom Typ Result</returns>
     ''' <remarks>
     ''' Rückgabe von Nothing ist schneller als über Throw Exception zu arbeiten</remarks>
-    Public ReadOnly Property getResult(ByVal key As String) As clsMeilenstein
+    Public ReadOnly Property getMilestone(ByVal key As String, Optional ByVal lfdNr As Integer = 1) As clsMeilenstein
 
         Get
-            Dim tmpResult As clsMeilenstein = Nothing
+            Dim tmpMilestone As clsMeilenstein = Nothing
             Dim found As Boolean = False
-            Dim r As Integer = 1
+            Dim anzahl As Integer = 0
+            Dim index As Integer
+            Dim hryNode As clsHierarchyNode
 
-            While r <= Me.CountResults And Not found
 
-                If AllResults.Item(r - 1).name = key Then
-                    found = True
-                    tmpResult = AllResults.Item(r - 1)
-                Else
-                    r = r + 1
+            ' fedtlegen, worum es sich handelt: elemID oder Name
+
+            If istElemID(key) Then
+
+                hryNode = Me.Parent.hierarchy.nodeItem(key)
+                If Not IsNothing(hryNode) Then
+
+                    ' prüfen, ob der Meilenstein überhaupt zu dieser Phase gehört 
+                    If hryNode.parentNodeKey = Me.nameID Then
+                        index = hryNode.indexOfElem
+                        tmpMilestone = AllMilestones.Item(index - 1)
+                    End If
+
                 End If
 
-            End While
 
-            getResult = tmpResult
+            Else
+
+                Dim r As Integer = 1
+                While r <= Me.countMilestones And Not found
+
+                    If elemNameOfElemID(AllMilestones.Item(r - 1).nameID) = key Then
+                        anzahl = anzahl + 1
+                        If anzahl >= lfdNr Then
+                            found = True
+                            tmpMilestone = AllMilestones.Item(r - 1)
+                        End If
+                    Else
+                        r = r + 1
+                    End If
+
+                End While
+
+            End If
+
+
+            getMilestone = tmpMilestone
 
 
         End Get
@@ -1037,18 +1183,18 @@
     ''' gibt die laufende Nummer des Meilensteins in der Phase zurück
     ''' 0: wenn nicht gefunden
     ''' </summary>
-    ''' <param name="msName"></param>
+    ''' <param name="msNameID"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getlfdNr(ByVal msName As String) As Integer
+    Public ReadOnly Property getlfdNr(ByVal msNameID As String) As Integer
         Get
             Dim r As Integer = 1
             Dim found As Boolean = False
             Dim tmpValue As Integer = 0
 
-            While r <= Me.CountResults And Not found
-                If Me.getResult(r).name = msName Then
+            While r <= Me.countMilestones And Not found
+                If Me.getMilestone(r).nameID = msNameID Then
                     found = True
                     tmpValue = r
                 Else
@@ -1068,10 +1214,10 @@
     End Sub
 
 
-    Public ReadOnly Property CountCosts() As Integer
+    Public ReadOnly Property countCosts() As Integer
 
         Get
-            CountCosts = AllCosts.Count
+            countCosts = AllCosts.Count
         End Get
 
     End Property
@@ -1101,7 +1247,7 @@
 
         AllRoles = New List(Of clsRolle)
         AllCosts = New List(Of clsKostenart)
-        AllResults = New List(Of clsMeilenstein)
+        AllMilestones = New List(Of clsMeilenstein)
         _minDauer = 1
         _maxDauer = 60
         _Offset = 0
@@ -1120,7 +1266,7 @@
 
         AllRoles = New List(Of clsRolle)
         AllCosts = New List(Of clsKostenart)
-        AllResults = New List(Of clsMeilenstein)
+        AllMilestones = New List(Of clsMeilenstein)
         _minDauer = 1
         _maxDauer = 60
         _Offset = 0
@@ -1143,14 +1289,14 @@
 
         Dim r As Integer, k As Integer
 
-        For r = 1 To Me.CountRoles
+        For r = 1 To Me.countRoles
             oldXwerte = Me.getRole(r).Xwerte
             ReDim newXwerte(dimension)
             Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)
             Me.getRole(r).Xwerte = newXwerte
         Next
 
-        For k = 1 To Me.CountCosts
+        For k = 1 To Me.countCosts
             oldXwerte = Me.getCost(k).Xwerte
             ReDim newXwerte(dimension)
             Call berechneBedarfe(Me.getStartDate.Date, Me.getEndDate.Date, oldXwerte, faktor, newXwerte)

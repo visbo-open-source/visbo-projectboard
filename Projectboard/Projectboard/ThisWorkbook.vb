@@ -36,7 +36,7 @@ Public Class ThisWorkbook
             .SplitRow = 0
             .DisplayWorkbookTabs = True
             .GridlineColor = RGB(220, 220, 220)
-            .FreezePanes = True
+            .FreezePanes = False
             .DisplayHeadings = True
         End With
 
@@ -262,7 +262,7 @@ Public Class ThisWorkbook
             .SplitRow = 0
             .DisplayWorkbookTabs = True
             .GridlineColor = RGB(220, 220, 220)
-            .FreezePanes = True
+            .FreezePanes = False
             .DisplayHeadings = True
         End With
 

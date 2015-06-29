@@ -4,9 +4,13 @@ Public Class clsPhasen
     Private AllPhasen As SortedList(Of String, clsPhasenDefinition)
 
 
-    Public Sub Add(phase As clsPhasenDefinition)
+    Public Sub Add(phaseDef As clsPhasenDefinition)
 
-        AllPhasen.Add(phase.name, phase)
+
+        If Not AllPhasen.ContainsKey(phaseDef.name) Then
+            AllPhasen.Add(phaseDef.name, phaseDef)
+        End If
+
 
     End Sub
 
@@ -30,13 +34,21 @@ Public Class clsPhasen
             If AllPhasen.ContainsKey(myitem) Then
                 getPhaseDef = CType(AllPhasen.Item(myitem), clsPhasenDefinition)
             Else
-                getPhaseDef = AllPhasen.First.Value
+                'getPhaseDef = AllPhasen.First.Value
+                getPhaseDef = Nothing
             End If
 
         End Get
 
     End Property
 
+    ''' <summary>
+    ''' gibt die Phasen-Definition an der Index-Position index zurüclk: Index kann von 1 .. Anzahl Phasedefs gehen 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getPhaseDef(ByVal index As Integer) As clsPhasenDefinition
 
         Get
@@ -111,5 +123,9 @@ Public Class clsPhasen
         AllPhasen = New SortedList(Of String, clsPhasenDefinition)
 
     End Sub
+    Public Sub Clear()
 
+        AllPhasen.Clear()
+
+    End Sub
 End Class

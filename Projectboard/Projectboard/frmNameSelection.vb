@@ -3,14 +3,15 @@ Imports System.ComponentModel
 Imports ClassLibrary1
 Imports Microsoft.Office.Interop.Excel
 
-Public Class frmShowPlanElements
+Public Class frmNameSelection
 
     ' kann von ausserhalb gesetzt werden; gibt an ob das ganze Portfolio angezeigt werden soll
     ' oder nur die selektierten Projekte 
-    Friend showModePortfolio As Boolean
+
+    'Friend showModePortfolio As Boolean
     Friend menuOption As Integer
-    Friend chkbxShowObjects As Boolean
-    Friend chkbxCreateCharts As Boolean
+    'Friend chkbxShowObjects As Boolean
+    'Friend chkbxCreateCharts As Boolean
 
 
     Private allMilestones As New Collection
@@ -45,9 +46,8 @@ Public Class frmShowPlanElements
     End Enum
 
 
-    Private chTyp As String
 
-    
+
 
     ''' <summary>
     ''' Koordinaten merken 
@@ -59,6 +59,8 @@ Public Class frmShowPlanElements
 
         frmCoord(PTfrm.listselP, PTpinfo.top) = Me.Top
         frmCoord(PTfrm.listselP, PTpinfo.left) = Me.Left
+
+        awinSettings.isHryNameFrmActive = False
 
     End Sub
 
@@ -78,12 +80,12 @@ Public Class frmShowPlanElements
             Me.Left = 100
         End If
 
+        awinSettings.isHryNameFrmActive = True
+
         statusLabel.Text = ""
         statusLabel.Visible = True
 
-        Dim nrShapes As Integer = appearanceDefinitions.Count
-
-
+        
         ' jetzt werden anhand des letzten Filters die Collections gesetzt 
         Call retrieveSelections("Last", menuOption, selectedBUs, selectedTyps, _
                                 selectedPhases, selectedMilestones, _
@@ -92,33 +94,36 @@ Public Class frmShowPlanElements
         ' jetzt werden die ProjektReport- bzw. PortfolioReport-Vorlagen ausgelesen 
         ' in diesem Fall werden nur die mit Multiprojekt angezeigt 
 
-        If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Then
+        Call frmHryNameReadPPTVorlagen(Me.menuOption, repVorlagenDropbox)
 
-            Dim dirname As String
-            Dim dateiName As String = ""
+        ' das folgende wurde bereits alles in dem Aufruf frmHryNameReadPPTVorlagen gemacht ...  
+        'If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Then
 
-            If Me.menuOption = PTmenue.multiprojektReport Then
-                dirname = awinPath & RepPortfolioVorOrdner
-            Else
-                dirname = awinPath & RepProjectVorOrdner
-            End If
+        '    Dim dirname As String
+        '    Dim dateiName As String = ""
 
-            Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
-            Try
+        '    If Me.menuOption = PTmenue.multiprojektReport Then
+        '        dirname = awinPath & RepPortfolioVorOrdner
+        '    Else
+        '        dirname = awinPath & RepProjectVorOrdner
+        '    End If
 
-                Dim i As Integer
-                For i = 1 To listOfVorlagen.Count
-                    dateiName = Dir(listOfVorlagen.Item(i - 1))
-                    If dateiName.Contains("Typ II") Then
-                        repVorlagenDropbox.Items.Add(dateiName)
-                    End If
+        '    Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
+        '    Try
 
-                Next i
-            Catch ex As Exception
-                'Call MsgBox(ex.Message & ": " & dateiName)
-            End Try
+        '        Dim i As Integer
+        '        For i = 1 To listOfVorlagen.Count
+        '            dateiName = Dir(listOfVorlagen.Item(i - 1))
+        '            If dateiName.Contains("Typ II") Then
+        '                repVorlagenDropbox.Items.Add(dateiName)
+        '            End If
 
-        End If
+        '        Next i
+        '    Catch ex As Exception
+        '        'Call MsgBox(ex.Message & ": " & dateiName)
+        '    End Try
+
+        'End If
 
         Me.rdbPhases.Checked = True
 
@@ -142,7 +147,7 @@ Public Class frmShowPlanElements
         If Me.rdbPhases.Checked = True Then
 
             selectedPhases.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 If Not selectedPhases.Contains(element) Then
                     selectedPhases.Add(element, element)
                 End If
@@ -152,7 +157,7 @@ Public Class frmShowPlanElements
         ElseIf Me.rdbMilestones.Checked = True Then
 
             selectedMilestones.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 If Not selectedMilestones.Contains(element) Then
                     selectedMilestones.Add(element, element)
                 End If
@@ -161,7 +166,7 @@ Public Class frmShowPlanElements
         ElseIf rdbRoles.Checked = True Then
 
             selectedRoles.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 If Not selectedRoles.Contains(element) Then
                     selectedRoles.Add(element, element)
                 End If
@@ -170,7 +175,7 @@ Public Class frmShowPlanElements
         ElseIf rdbCosts.Checked = True Then
 
             selectedCosts.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 If Not selectedCosts.Contains(element) Then
                     selectedCosts.Add(element, element)
                 End If
@@ -179,7 +184,7 @@ Public Class frmShowPlanElements
         ElseIf rdbBU.Checked = True Then
 
             selectedBUs.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 If Not selectedBUs.Contains(element) Then
                     selectedBUs.Add(element, element)
                 End If
@@ -188,7 +193,7 @@ Public Class frmShowPlanElements
         ElseIf rdbTyp.Checked = True Then
 
             selectedTyps.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 If Not selectedTyps.Contains(element) Then
                     selectedTyps.Add(element, element)
                 End If
@@ -199,7 +204,7 @@ Public Class frmShowPlanElements
         ' jetzt wird der letzte Filter gespeichert ..
         Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
-                                                   selectedRoles, selectedCosts)
+                                                   selectedRoles, selectedCosts, False)
 
         ''''
         ''
@@ -211,7 +216,8 @@ Public Class frmShowPlanElements
 
         Dim validOption As Boolean
         If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
-            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Then
+            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Or _
+            Me.menuOption = PTmenue.vorlageErstellen Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft > 5 Then
             validOption = True
@@ -248,7 +254,7 @@ Public Class frmShowPlanElements
                         rdbRoles.Enabled = False
                         rdbCosts.Enabled = False
                         filterBox.Enabled = False
-                        ListBox1.Enabled = False
+                        nameListBox.Enabled = False
                         OKButton.Enabled = False
                         repVorlagenDropbox.Enabled = False
                         AbbrButton.Cursor = Cursors.Arrow
@@ -259,7 +265,8 @@ Public Class frmShowPlanElements
                         Me.Cursor = Cursors.WaitCursor
                         AbbrButton.Text = "Abbrechen"
 
-                        ' Alternativ ohne Background Worker
+                        backgroundRunning = True
+
 
                         BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 
@@ -273,7 +280,7 @@ Public Class frmShowPlanElements
 
                 End If
 
-                
+
 
 
             Else
@@ -281,112 +288,10 @@ Public Class frmShowPlanElements
                              "einen Zeitraum angeben ...")
             End If
 
-        ElseIf Me.menuOption = PTmenue.leistbarkeitsAnalyse Then
-
-            Dim myCollection As New Collection
-
-            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
-                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
-                    And validOption Then
-
-                Dim formerSU As Boolean = appInstance.ScreenUpdating
-                appInstance.ScreenUpdating = False
-
-                ' Window Position festlegen
-                Dim chtop As Double = 50.0 + awinSettings.ChartHoehe1
-                Dim chleft As Double = (showRangeRight - 1) * boxWidth + 4
-
-                If selectedPhases.Count > 0 Then
-                    chTyp = DiagrammTypen(0)
-                    Call zeichneLeistbarkeitsChart(selectedPhases, chTyp, chtop, chleft)
-                End If
-
-                If selectedMilestones.Count > 0 Then
-                    chTyp = DiagrammTypen(5)
-                    Call zeichneLeistbarkeitsChart(selectedMilestones, chTyp, chtop, chleft)
-                End If
-
-                If selectedRoles.Count > 0 Then
-                    chTyp = DiagrammTypen(1)
-                    Call zeichneLeistbarkeitsChart(selectedRoles, chTyp, chtop, chleft)
-                End If
-
-                If selectedCosts.Count > 0 Then
-                    chTyp = DiagrammTypen(2)
-                    Call zeichneLeistbarkeitsChart(selectedCosts, chTyp, chtop, chleft)
-                End If
-
-                appInstance.ScreenUpdating = formerSU
-
-            Else
-
-            End If
-
-        ElseIf Me.menuOption = PTmenue.visualisieren Then
-
-
-            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
-                    Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
-                    And validOption Then
-
-                If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
-                    (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
-                    Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
-
-                ElseIf selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
-
-                    If selectedPhases.Count > 0 Then
-                        Call awinZeichnePhasen(selectedPhases, False, True)
-                    End If
-
-                    If selectedMilestones.Count > 0 Then
-                        ' Phasen anzeigen 
-                        Dim farbID As Integer = 4
-                        Call awinZeichneMilestones(selectedMilestones, farbID, False, True)
-
-                    End If
-
-                ElseIf selectedRoles.Count > 0 Then
-                    Call MsgBox("noch nicht implementiert")
-
-                Else
-                    Call MsgBox("noch nicht implementiert")
-                End If
-
-            Else
-                Call MsgBox("bitte mindestens ein Element aus einer der Kategorien selektieren  ")
-            End If
-
-        ElseIf menuOption = PTmenue.filterdefinieren Then
-
-            Call MsgBox("ok, Filter gespeichert")
-
-        ElseIf menuOption = PTmenue.excelExport Then
-
-            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) _
-                    And validOption Then
-
-                Try
-                    Call createExcelExportFromSelection(filterName) 
-
-                    Call MsgBox("ok, Excel File in " & exportFilesOrdner & " erzeugt")
-                Catch ex As Exception
-                    Call MsgBox(ex.Message)
-                End Try
-                
-
-
-
-            Else
-                Call MsgBox("bitte mindestens ein Element aus einer der Kategorien Phasen / Meilensteine selektieren  ")
-            End If
-
-
-
-
         Else
-
-            Call MsgBox("noch nicht unterstützt")
+            ' die Aktion Subroutine aufrufen 
+            Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
+                            selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, filterName)
 
         End If
 
@@ -396,7 +301,7 @@ Public Class frmShowPlanElements
         enableOnUpdate = True
 
         ' bei bestimmten Menu-Optionen das Formuzlar dann schliessen 
-        If menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Then
+        If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Then
             MyBase.Close()
         End If
 
@@ -418,24 +323,41 @@ Public Class frmShowPlanElements
     ''' <remarks></remarks>
     Private Sub rdbPhases_CheckedChanged(sender As Object, e As EventArgs) Handles rdbPhases.CheckedChanged
 
-        Dim i As Integer
+        'Dim i As Integer
         statusLabel.Text = ""
+        filterBox.Enabled = True
 
         If Me.rdbPhases.Checked Then
             ' clear Listbox1 
             headerLine.Text = "Phasen"
-            ListBox1.Items.Clear()
-            ListBox2.Items.Clear()
+            nameListBox.Items.Clear()
+            selNameListBox.Items.Clear()
             filterBox.Text = ""
 
-            chkbxOneChart.Text = "Alles in einem Chart"
+            'chkbxOneChart.Text = "Alles in einem Chart"
 
 
-            If allPhases.Count = 0 Then
-                For i = 1 To PhaseDefinitions.Count
-                    allPhases.Add(CStr(PhaseDefinitions.getPhaseDef(i).name))
+
+
+            If selectedProjekte.Count > 0 Then
+                allPhases = selectedProjekte.getPhaseNames
+            ElseIf ShowProjekte.Count > 0 Then
+                allPhases = ShowProjekte.getPhaseNames
+            Else
+                For i As Integer = 1 To PhaseDefinitions.Count
+                    Dim tmpName As String = PhaseDefinitions.getPhaseDef(i).name
+                    If Not allPhases.Contains(tmpName) Then
+                        allPhases.Add(tmpName, tmpName)
+                    End If
                 Next
             End If
+
+
+            'If allPhases.Count = 0 Then
+            '    For i = 1 To PhaseDefinitions.Count
+            '        allPhases.Add(CStr(PhaseDefinitions.getPhaseDef(i).name))
+            '    Next
+            'End If
 
 
             Call rebuildFormerState(PTauswahlTyp.phase)
@@ -447,7 +369,7 @@ Public Class frmShowPlanElements
 
             ' Merken welches die selektierten Phasen waren 
             selectedPhases.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 selectedPhases.Add(element, element)
             Next
 
@@ -458,34 +380,47 @@ Public Class frmShowPlanElements
     Private Sub rdbMilestones_CheckedChanged(sender As Object, e As EventArgs) Handles rdbMilestones.CheckedChanged
 
         statusLabel.Text = ""
+        filterBox.Enabled = True
 
         If Me.rdbMilestones.Checked Then
             ' clear Listbox1 
             headerLine.Text = "Meilensteine"
-            ListBox1.Items.Clear()
-            ListBox2.Items.Clear()
+            nameListBox.Items.Clear()
+            selNameListBox.Items.Clear()
 
             filterBox.Text = ""
 
-            chkbxOneChart.Text = "Alles in einem Chart"
+            'chkbxOneChart.Text = "Alles in einem Chart"
 
-            If allMilestones.Count = 0 Then
 
+            If selectedProjekte.Count > 0 Then
+                allMilestones = selectedProjekte.getMilestoneNames
+            ElseIf ShowProjekte.Count > 0 Then
+                allMilestones = ShowProjekte.getMilestoneNames
+            Else
                 For i As Integer = 1 To MilestoneDefinitions.Count
-                    allMilestones.Add(MilestoneDefinitions.elementAt(i - 1).name)
+                    Dim tmpName As String = MilestoneDefinitions.getMilestoneDef(i).name
+                    If Not allMilestones.Contains(tmpName) Then
+                        allMilestones.Add(tmpName, tmpName)
+                    End If
                 Next
             End If
 
+            '' hier muss alles eingetragen werden, was an Meilensteinen da ist ... 
+            'If allMilestones.Count = 0 Then
+
+            '    For i As Integer = 1 To MilestoneDefinitions.Count
+            '        allMilestones.Add(MilestoneDefinitions.elementAt(i - 1).name)
+            '    Next
+            'End If
 
             Call rebuildFormerState(PTauswahlTyp.meilenstein)
-
-
 
         Else
 
             ' Merken welches die selektierten Phasen waren 
             selectedMilestones.Clear()
-            For Each element As String In ListBox2.Items
+            For Each element As String In selNameListBox.Items
                 selectedMilestones.Add(element, element)
             Next
 
@@ -504,6 +439,7 @@ Public Class frmShowPlanElements
         Dim i As Integer
 
         statusLabel.Text = ""
+        filterBox.Enabled = True
 
         If RoleDefinitions.Count = 0 Then
             Call MsgBox("es sind keine Kostenarten definiert !")
@@ -511,10 +447,10 @@ Public Class frmShowPlanElements
             If Me.rdbRoles.Checked Then
                 ' clear Listbox1 
                 headerLine.Text = "Rollen"
-                ListBox1.Items.Clear()
-                ListBox2.Items.Clear()
+                nameListBox.Items.Clear()
+                selNameListBox.Items.Clear()
                 filterBox.Text = ""
-                chkbxOneChart.Text = "Alles in einem Chart"
+                'chkbxOneChart.Text = "Alles in einem Chart"
 
 
                 If allRoles.Count = 0 Then
@@ -534,7 +470,7 @@ Public Class frmShowPlanElements
 
                 ' Merken welches die selektierten Phasen waren 
                 selectedRoles.Clear()
-                For Each element As String In ListBox2.Items
+                For Each element As String In selNameListBox.Items
                     selectedRoles.Add(element, element)
                 Next
 
@@ -553,6 +489,7 @@ Public Class frmShowPlanElements
         Dim i As Integer
 
         statusLabel.Text = ""
+        filterBox.Enabled = True
 
         If CostDefinitions.Count = 0 Then
             Call MsgBox("es sind keine Kostenarten definiert !")
@@ -560,10 +497,10 @@ Public Class frmShowPlanElements
             If Me.rdbCosts.Checked Then
                 ' clear Listbox1 
                 headerLine.Text = "Kostenarten"
-                ListBox1.Items.Clear()
-                ListBox2.Items.Clear()
+                nameListBox.Items.Clear()
+                selNameListBox.Items.Clear()
                 filterBox.Text = ""
-                chkbxOneChart.Text = "Alles in einem Chart"
+                'chkbxOneChart.Text = "Alles in einem Chart"
 
                 If allCosts.Count = 0 Then
                     For i = 1 To CostDefinitions.Count
@@ -578,7 +515,7 @@ Public Class frmShowPlanElements
                 ' Merken welches die selektierten Phasen waren 
                 selectedCosts.Clear()
                 'For Each element As String In ListBox1.SelectedItems
-                For Each element As String In ListBox2.Items
+                For Each element As String In selNameListBox.Items
                     selectedCosts.Add(element, element)
                 Next
 
@@ -598,6 +535,7 @@ Public Class frmShowPlanElements
         Dim i As Integer
 
         statusLabel.Text = ""
+        filterBox.Enabled = True
 
         If businessUnitDefinitions.Count = 0 Then
             Call MsgBox("es sind keine Business Units definiert !")
@@ -605,8 +543,8 @@ Public Class frmShowPlanElements
             If Me.rdbBU.Checked Then
                 ' clear Listbox1 
                 headerLine.Text = "Business Units"
-                ListBox1.Items.Clear()
-                ListBox2.Items.Clear()
+                nameListBox.Items.Clear()
+                selNameListBox.Items.Clear()
                 filterBox.Text = ""
 
                 If allBUs.Count = 0 Then
@@ -628,7 +566,7 @@ Public Class frmShowPlanElements
                 ' Merken welches die selektierten Phasen waren 
                 selectedBUs.Clear()
 
-                For Each element As String In ListBox2.Items
+                For Each element As String In selNameListBox.Items
                     selectedBUs.Add(element, element)
                 Next
 
@@ -643,18 +581,19 @@ Public Class frmShowPlanElements
         Dim i As Integer
 
         statusLabel.Text = ""
+        filterBox.Enabled = True
 
         If Projektvorlagen.Count = 0 Then
             Call MsgBox("es sind keine Projektvorlagen definiert !")
         Else
             If Me.rdbTyp.Checked Then
                 ' clear Listbox1 
-                headerLine.Text = "Projektvorlagen / Generik"
-                ListBox1.Items.Clear()
-                ListBox2.Items.Clear()
+                headerLine.Text = "Generik"
+                nameListBox.Items.Clear()
+                selNameListBox.Items.Clear()
 
                 filterBox.Text = ""
-                chkbxOneChart.Text = "Alles in einem Chart"
+                'chkbxOneChart.Text = "Alles in einem Chart"
 
                 If allTyps.Count = 0 Then
 
@@ -676,7 +615,7 @@ Public Class frmShowPlanElements
                 ' Merken welches die selektierten Phasen waren 
                 selectedTyps.Clear()
 
-                For Each element As String In ListBox2.Items
+                For Each element As String In selNameListBox.Items
                     selectedTyps.Add(element, element)
                 Next
 
@@ -689,14 +628,15 @@ Public Class frmShowPlanElements
     Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
 
 
-        If menuOption = (PTmenue.multiprojektReport Or PTmenue.einzelprojektReport) And backgroundRunning Then
+        If (menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport) _
+            And backgroundRunning Then
 
             rdbMilestones.Enabled = True
             rdbPhases.Enabled = True
             rdbRoles.Enabled = True
             rdbCosts.Enabled = True
             filterBox.Enabled = True
-            ListBox1.Enabled = True
+            nameListBox.Enabled = True
             OKButton.Enabled = True
             AbbrButton.Text = "Zurücksetzen"
             repVorlagenDropbox.Enabled = True
@@ -708,13 +648,14 @@ Public Class frmShowPlanElements
             Try
                 Me.BackgroundWorker1.CancelAsync()
             Catch ex As Exception
+                backgroundRunning = True
 
             End Try
 
 
         Else
-            ListBox1.SelectedItems.Clear()
-            ListBox2.Items.Clear()
+            nameListBox.SelectedItems.Clear()
+            selNameListBox.Items.Clear()
             filterBox.Text = ""
 
             If rdbPhases.Checked Then
@@ -765,15 +706,15 @@ Public Class frmShowPlanElements
 
 
         If filterBox.Text = "" Then
-            ListBox1.Items.Clear()
+            nameListBox.Items.Clear()
             For Each s As String In currentNames
-                ListBox1.Items.Add(s)
+                nameListBox.Items.Add(s)
             Next
         Else
-            ListBox1.Items.Clear()
+            nameListBox.Items.Clear()
             For Each s As String In currentNames
                 If s.Contains(suchstr) Then
-                    ListBox1.Items.Add(s)
+                    nameListBox.Items.Add(s)
                 End If
             Next
         End If
@@ -898,19 +839,22 @@ Public Class frmShowPlanElements
 
         End Select
 
+        
+
+        For i = 1 To listOfNames.Count
+            nameListBox.Items.Add(listOfNames.Item(i))
+        Next
 
 
         ' Filter Box Test setzen 
-        For i = 1 To listOfNames.Count
-            ListBox1.Items.Add(listOfNames.Item(i))
-        Next
         filterBox.Text = ""
 
         ' jetzt prüfen, ob selectedphases bereits etwas enthält
         ' wenn ja, dann werden diese Items in Listbox2 dargestellt 
         For Each element As String In tmpCollection
-            ListBox2.Items.Add(element)
+            selNameListBox.Items.Add(element)
         Next
+
     End Sub
 
     Private Sub BackgroundWorker1_Disposed(sender As Object, e As EventArgs) Handles BackgroundWorker1.Disposed
@@ -938,7 +882,7 @@ Public Class frmShowPlanElements
                     Call createPPTSlidesFromConstellation(vorlagenDateiName, _
                                                       selectedPhases, selectedMilestones, _
                                                       selectedRoles, selectedCosts, _
-                                                      selectedBUs, selectedTyps, _
+                                                      selectedBUs, selectedTyps, True, _
                                                       worker, e)
                 Else
                     Call createPPTReportFromProjects(vorlagenDateiName, _
@@ -979,7 +923,7 @@ Public Class frmShowPlanElements
         Me.rdbRoles.Enabled = True
         Me.rdbCosts.Enabled = True
         Me.filterBox.Enabled = True
-        Me.ListBox1.Enabled = True
+        Me.nameListBox.Enabled = True
         Me.OKButton.Enabled = True
         Me.repVorlagenDropbox.Enabled = True
         Me.Cursor = Cursors.Arrow
@@ -990,8 +934,7 @@ Public Class frmShowPlanElements
         '                                           selectedPhases, selectedMilestones, _
         '                                           selectedRoles, selectedCosts)
 
-
-
+        backgroundRunning = False
     End Sub
 
 
@@ -1006,6 +949,7 @@ Public Class frmShowPlanElements
         Dim mppFrm As New frmMppSettings
         Dim dialogreturn As DialogResult
 
+        mppFrm.calledfrom = "frmShowPlanElements"
         dialogreturn = mppFrm.ShowDialog
 
 
@@ -1021,18 +965,22 @@ Public Class frmShowPlanElements
 
         Dim i As Integer
         Dim element As Object
+        Dim sammelCollection As New Collection
 
-        For i = 1 To ListBox1.SelectedItems.Count
-            element = ListBox1.SelectedItems.Item(i - 1)
-            If ListBox2.Items.Contains(element) Then
+
+        For i = 1 To nameListBox.SelectedItems.Count
+            element = nameListBox.SelectedItems.Item(i - 1)
+            If selNameListBox.Items.Contains(element) Then
                 ' nichts tun 
             Else
-                ListBox2.Items.Add(element)
+                selNameListBox.Items.Add(element)
             End If
         Next
 
+        nameListBox.SelectedItems.Clear()
 
-        ListBox1.SelectedItems.Clear()
+
+
 
     End Sub
 
@@ -1047,217 +995,58 @@ Public Class frmShowPlanElements
         Dim element As Object
         Dim removeCollection As New Collection
 
-        For i = 1 To ListBox2.SelectedItems.Count
-            element = ListBox2.SelectedItems.Item(i - 1)
+        For i = 1 To selNameListBox.SelectedItems.Count
+            element = selNameListBox.SelectedItems.Item(i - 1)
             removeCollection.Add(element)
         Next
 
         For Each element In removeCollection
-            ListBox2.Items.Remove(element)
+            selNameListBox.Items.Remove(element)
         Next
 
     End Sub
 
-    ''' <summary>
-    ''' zeichnet das Leistbarkeits-Chart 
-    ''' </summary>
-    ''' <param name="selCollection">Collection mit den Phasne-, Meilenstein, Rollen- oder Kostenarten</param>
-    ''' <param name="chTyp">Typ: es handelt sich um Phasen, rollen, etc. </param>
-    ''' <param name="chtop">auf welcher Höhe soll das Chart gezeichnet werden</param>
-    ''' <param name="chleft">auf welcher x-Koordinate soll das Chart gezeichnet werden</param>
-    ''' <remarks></remarks>
-    Private Sub zeichneLeistbarkeitsChart(ByVal selCollection As Collection, ByVal chTyp As String, _
-                                              ByRef chtop As Double, ByRef chleft As Double)
+    
+    Private Sub selNameListBox_MouseDoubleClick(sender As Object, e As MouseEventArgs) Handles selNameListBox.MouseDoubleClick
 
+        Dim elemName As String = ""
+        Dim childName As String
+        Dim sammelCollection As Collection
+        Dim anzahl As Integer = selNameListBox.SelectedItems.Count
 
-        Dim repObj As Excel.ChartObject
-        Dim myCollection As Collection
+        If rdbPhases.Checked Then
 
-        Dim chWidth As Double
-        Dim chHeight As Double
+            If anzahl = 1 Then
+                elemName = CStr(selNameListBox.SelectedItem)
+            ElseIf anzahl > 1 Then
+                elemName = CStr(selNameListBox.SelectedItems.Item(1))
+            End If
 
-        ' Window Position festlegen 
-        chWidth = 265 + (showRangeRight - showRangeLeft - 12 + 1) * boxWidth + (showRangeRight - showRangeLeft) * screen_correct
-        chHeight = awinSettings.ChartHoehe1
+            ' das Element rausnehmen 
+            selNameListBox.Items.Remove(selNameListBox.SelectedItem)
 
+            sammelCollection = ShowProjekte.getPhasesOfPhase(elemName)
 
-        If chkbxOneChart.Checked = True Then
+            For i As Integer = 1 To sammelCollection.Count
 
+                childName = CStr(sammelCollection.Item(i))
+                If Not selNameListBox.Items.Contains(childName) Then
+                    selNameListBox.Items.Add(childName)
+                End If
 
-            ' alles in einem Chart anzeigen
-            myCollection = New Collection
-            For Each element As String In selCollection
-                myCollection.Add(element, element)
             Next
 
-            repObj = Nothing
-            Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
-                                                              chWidth, chHeight, False, chTyp, False)
+            If sammelCollection.Count > 0 Then
+                ' dann wurde eine Ersetzung vorgenommen 
+                ' jetzt muss bestimmt werden, ob Farben geändert werden müssen 
 
-            chtop = chtop + 5
-            chleft = chleft + 7
-        Else
-            ' für jedes ITEM ein eigenes Chart machen
-            For Each element As String In selCollection
-                ' es muss jedesmal eine neue Collection erzeugt werden - die Collection wird in DiagramList gemerkt
-                ' wenn die mit Clear leer gemacht wird, funktioniert der Diagram Update nicht mehr ....
-                myCollection = New Collection
-                myCollection.Add(element, element)
-                repObj = Nothing
-
-                Call awinCreateprcCollectionDiagram(myCollection, repObj, chtop, chleft,
-                                                                   chWidth, chHeight, False, chTyp, False)
-
-                chtop = chtop + 5
-                chleft = chleft + 7
-            Next
+            End If
 
         End If
 
-    End Sub
-
-    ''' <summary>
-    ''' erstellt das Excel Export File für die angegebenen Phasen, Meilensteine, Rollen und Kosten
-    ''' vorläufig nur für Phasen und Rollen realisiert
-    ''' </summary>
-    ''' <param name="filterName">gibt den Namen des Filters an, der die Collections enthält </param>
-    ''' <remarks></remarks>
-    Private Sub createExcelExportFromSelection(ByVal filterName As String)
-
-        Dim earliestDate As Date, latestDate As Date
-        Dim phaseList As New SortedList(Of Double, String)
-        Dim milestonelist As New SortedList(Of Double, String)
-
-        Dim selphases As New Collection
-        Dim selMilestones As New Collection
-        Dim selRoles As New Collection
-        Dim selCosts As New Collection
-        Dim selBUs As New Collection
-        Dim selTyps As New Collection
-
-        Call retrieveSelections(filterName, PTmenue.excelExport, selBUs, selTyps, _
-                                 selphases, selMilestones, selRoles, selCosts)
-
-        ' initialisieren 
-        earliestDate = StartofCalendar.AddMonths(-12)
-        latestDate = StartofCalendar.AddMonths(1200)
-
-        Dim anteil As Double = 0.0
-        Dim anzahlProjekte As Integer = ShowProjekte.Count
-        Dim currentIX As Integer
-        Dim hproj As clsProjekt
-        Dim pName As String, msName As String
-        Dim cphase As clsPhase, milestone As clsMeilenstein
-        Dim anzPlanobjekte As Integer = selphases.Count + selMilestones.Count
-        Dim bestproj As String = ""
-        Dim startFaktor As Double = 1.0
-        Dim durationFaktor As Double = 0.000001
-        Dim correctFaktor As Double = 0.00000001
-        Dim schluessel As Double
-        Dim korrFaktor As Double
-        Dim refLaenge As Integer
-
-        currentIX = 1
-        Do While phaseList.Count + milestonelist.Count < selphases.Count + selMilestones.Count And _
-                 currentIX <= anzahlProjekte
-
-            hproj = ShowProjekte.getProject(currentIX)
-            Dim anzFoundElem As Integer = 0
-
-            If currentIX = 1 Then
-                korrFaktor = 1.0
-                refLaenge = hproj.dauerInDays
-            Else
-                Try
-                    korrFaktor = hproj.dauerInDays / refLaenge
-                Catch ex As Exception
-                    korrFaktor = 1.0
-                End Try
-
-            End If
-
-            If phaseList.Count < selphases.Count Then
-                For Each pObject As Object In selphases
-                    pName = CStr(pObject)
-                    If phaseList.ContainsValue(pName) Then
-                        ' sie ist schon eingeordnet und es muss nichts mehr gemacht werden 
-                    Else
-                        cphase = hproj.getPhase(pName)
-
-                        If Not IsNothing(cphase) Then
-
-                            anzFoundElem = anzFoundElem + 1
-                            schluessel = (cphase.startOffsetinDays * startFaktor + _
-                                            cphase.dauerInDays * durationFaktor) * korrFaktor
-
-                            Dim ok As Boolean = False
-                            Do Until ok
-
-                                If phaseList.ContainsKey(schluessel) Then
-                                    schluessel = schluessel + correctFaktor
-                                Else
-                                    phaseList.Add(schluessel, pName)
-                                    ok = True
-                                End If
-
-                            Loop
-
-
-                        End If
-                    End If
-
-                Next
-            End If
-
-
-            If milestonelist.Count < selMilestones.Count Then
-                For Each pObject As Object In selMilestones
-                    msName = CStr(pObject)
-                    If milestonelist.ContainsValue(msName) Then
-                        ' er ist schon eingeordnet und es muss nichts mehr gemacht werden 
-                    Else
-                        milestone = hproj.getMilestone(msName)
-
-                        If Not IsNothing(milestone) Then
-
-                            anzFoundElem = anzFoundElem + 1
-                            schluessel = DateDiff(DateInterval.Day, hproj.startDate, milestone.getDate) * korrFaktor
-
-                            Dim ok As Boolean = False
-                            Do Until ok
-
-                                If milestonelist.ContainsKey(schluessel) Then
-                                    schluessel = schluessel + correctFaktor
-                                Else
-                                    milestonelist.Add(schluessel, msName)
-                                    ok = True
-                                End If
-
-                            Loop
-
-
-                        End If
-                    End If
-
-                Next
-            End If
-
-            currentIX = currentIX + 1
-
-        Loop
-
-        ' jetzt sind die Elemente in der richtigen Reihenfolge eingeordnet 
-        ' jetzt werden sie rausgeschrieben 
-        Try
-            Call exportSelectionToExcel(phaseList, milestonelist)
-        Catch ex As Exception
-            Throw New Exception(ex.Message)
-        End Try
-
-
 
     End Sub
 
-    
+
 
 End Class

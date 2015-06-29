@@ -5,6 +5,7 @@
 Public Class clsImportFileHierarchy
 
     Private phaseHierarchy As SortedList(Of Integer, clsPhase)
+    Private IDHierarchy As SortedList(Of Integer, String)
 
     ' ''' <summary>
     ' ''' liefert true zurück, wenn der übergebene Name bereits so in der Phasen Hierarchie vorhanden war 
@@ -114,6 +115,66 @@ Public Class clsImportFileHierarchy
 
     End Function
 
+    ''' <summary>
+    ''' gibt den Namen der aktuellen Ebene mit Nummer ebenenNr zurück 
+    ''' kann den Wert 0 .. count-1 haben  
+    ''' </summary>
+    ''' <param name="ebenenNr"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getEbenenName(ByVal ebenenNr As Integer) As String
+
+        If ebenenNr >= 0 And ebenenNr < phaseHierarchy.Count Then
+            getEbenenName = phaseHierarchy.ElementAt(ebenenNr).Value.name
+        Else
+            getEbenenName = ""
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' ''' gibt den aktuellen Footprint bis zur Ebene mit IndentLevel kleiner level zurück 
+    ''' der Hierarchie zurück 
+    ''' </summary>
+    ''' <param name="level">Indentlevel</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getFootPrint(ByVal level As Integer, Optional ByVal trennString As String = " - ") As String
+
+        Dim tmpValue As String = ""
+
+        If phaseHierarchy.Count > 0 Then
+
+            Dim index As Integer = 0
+            Dim found As Boolean = False
+
+            While index <= phaseHierarchy.Count - 1 And Not found
+                If phaseHierarchy.ElementAt(index).Key < level Then
+                    index = index + 1
+                Else
+                    found = True
+                End If
+            End While
+
+            If index = 0 Then
+                tmpValue = ""
+            Else
+                For i As Integer = 0 To index - 1
+                    If i = 0 Then
+                        'tmpValue = phaseHierarchy.ElementAt(i).Value.name.Trim
+                        tmpValue = "."
+                    Else
+                        tmpValue = tmpValue & trennString & phaseHierarchy.ElementAt(i).Value.name.Trim
+                    End If
+                Next
+            End If
+
+        End If
+
+        getFootPrint = tmpValue
+
+    End Function
+
 
     ''' <summary>
     ''' nName ist bereits normiert sein. d.h alle leading, trailing und Anzahl>1 Blanks in der Mitte wurden entfernt
@@ -123,21 +184,27 @@ Public Class clsImportFileHierarchy
     ''' <param name="phase">Phase</param>
     ''' <param name="level"></param>
     ''' <remarks></remarks>
-    Public Sub add(ByVal phase As clsPhase, ByVal level As Integer)
+    Public Sub add(ByVal phase As clsPhase, ByVal elemKey As String, ByVal level As Integer)
 
 
         If Not IsNothing(phase) And level >= 0 Then
 
             If phaseHierarchy.ContainsKey(level) Then
                 phaseHierarchy.Item(level) = phase
+                IDHierarchy.Item(level) = elemKey
             Else
                 phaseHierarchy.Add(level, phase)
+                IDHierarchy.Add(level, elemKey)
             End If
 
+
+
             Do While phaseHierarchy.Last.Key > level
-
                 phaseHierarchy.Remove(phaseHierarchy.Last.Key)
+            Loop
 
+            Do While IDHierarchy.Last.Key > level
+                IDHierarchy.Remove(IDHierarchy.Last.Key)
             Loop
 
         End If
@@ -175,6 +242,52 @@ Public Class clsImportFileHierarchy
     End Property
 
     ''' <summary>
+    ''' gibt den ElemKey zurück, der der letzte der angegebenen Ebene war
+    ''' wenn die nicht exakt existiert, die Elemkey der nächst tieferen Ebene
+    ''' </summary>
+    ''' <param name="level"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getIDBeforeLevel(ByVal level As Integer) As String
+        Get
+
+            Dim ix As Integer = IDHierarchy.Count - 1
+
+            If IDHierarchy.Count = 0 Then
+                getIDBeforeLevel = ""
+
+            Else
+                Do While IDHierarchy.ElementAt(ix).Key >= level And ix > 0
+                    ix = ix - 1
+                Loop
+
+                getIDBeforeLevel = IDHierarchy.ElementAt(ix).Value
+
+            End If
+
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Indent der letzten Hierarchie Stufe zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCurrentLevel As Integer
+        Get
+            If phaseHierarchy.Count > 0 Then
+                getCurrentLevel = phaseHierarchy.Last.Key
+            Else
+                getCurrentLevel = -1
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt die Anzahl Einträge in der sortierten Liste zurück 
     ''' entspricht der Anzahl Hierarchie-Ebenen  
     ''' </summary>
@@ -190,6 +303,8 @@ Public Class clsImportFileHierarchy
 
     Sub New()
         phaseHierarchy = New SortedList(Of Integer, clsPhase)
+        IDHierarchy = New SortedList(Of Integer, String)
+
     End Sub
 
 

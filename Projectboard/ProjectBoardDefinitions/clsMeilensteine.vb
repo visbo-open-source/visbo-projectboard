@@ -146,16 +146,35 @@ Public Class clsMeilensteine
     End Property
 
     ''' <summary>
-    ''' gibt die Shape Definition für den angegebenen Meilenstein zurück 
-    ''' wenn es die Kombination name, belongsto nicht gibt, wird nur Name als Suchkriterium verwendet 
-    ''' wenn es auch den nicht gibt, wird die Default Milestone Klasse verwendet 
+    ''' gibt den Meilenstein an Position Index zurück
+    ''' Index muss Zahl zwischen 1 und Anzahl Elemente sein
+    ''' wenn Zahl ausserhalb liegt, wird die leere Menge zurückgegegen 
     ''' </summary>
-    ''' <param name="name"></param>
-    ''' <param name="belongsTo"></param>
+    ''' <param name="index"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getShape(ByVal name As String, ByVal belongsTo As String) As xlNS.Shape
+    Public ReadOnly Property getMilestoneDef(ByVal index As Integer) As clsMeilensteinDefinition
+        Get
+
+            If index > 0 And index <= allMilestones.Count Then
+                getMilestoneDef = allMilestones.ElementAt(index - 1).Value
+            Else
+                getMilestoneDef = Nothing
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Shape Definition für den angegebenen Meilenstein zurück 
+    ''' wenn es den nicht gibt, wird die Default Milestone Klasse verwendet 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getShape(ByVal name As String) As xlNS.Shape
         Get
             Dim appearanceID As String
             Dim defaultMilestoneAppearance As String = "Meilenstein Default"
@@ -200,56 +219,12 @@ Public Class clsMeilensteine
         End Get
     End Property
 
-    ' ''' <summary>
-    ' ''' gibt die Abkürzung zu einem gegebenen Meilenstein zurück; eine Phase muss nicht angegegen werden; er sucht und findet das erste Vorkommen
-    ' ''' diese Vorgehensweise liefert nur korrekte Ergebnisse, wenn sichergestellt ist, daß keine Duplikate in den Namen vorkommen 
-    ' ''' </summary>
-    ' ''' <param name="msName"></param>
-    ' ''' <value></value>
-    ' ''' <returns></returns>
-    ' ''' <remarks></remarks>
-    'Public ReadOnly Property getAbbrev(ByVal msName As String) As String
-    '    Get
-    '        Dim msAbbrev As String = "n.a."
-    '        Dim i As Integer = 0
-    '        Dim anzahl As Integer = allMilestones.Count - 1
-    '        Dim found As Boolean = False
-    '        Dim msDefinition As clsMeilensteinDefinition
-
-    '        While i <= anzahl And Not found
-    '            msDefinition = allMilestones.ElementAt(i).Value
-    '            If msDefinition.name = msName Then
-    '                found = True
-    '                msAbbrev = msDefinition.shortName
-    '            End If
-    '            i = i + 1
-    '        End While
-
-    '        getAbbrev = msAbbrev
-
-    '    End Get
-    'End Property
-
     Public Sub New()
         allMilestones = New SortedList(Of String, clsMeilensteinDefinition)
     End Sub
 
-    'Private Function calcKey(ByVal name As String, ByVal belongsTo As String) As String
-
-
-    '    If IsNothing(belongsTo) Then
-    '        belongsTo = ""
-    '    End If
-
-    '    If belongsTo = "" Then
-    '        calcKey = name
-    '    Else
-    '        calcKey = belongsTo & "+" & name
-    '    End If
-
-
-    'End Function
-
-
+    Public Sub Clear()
+        allMilestones.Clear()
+    End Sub
 
 End Class

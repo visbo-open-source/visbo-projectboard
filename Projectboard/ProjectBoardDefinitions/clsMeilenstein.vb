@@ -2,6 +2,7 @@
 
     Private bewertungen As SortedList(Of String, clsBewertung)
     Private _Parent As clsPhase
+    Private _name As String
 
     Public ReadOnly Property Parent() As clsPhase
         Get
@@ -9,8 +10,46 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' liest den Namensteil der NamensID 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property name As String
+        Get
+            name = elemNameOfElemID(_name)
+        End Get
+    End Property
 
-    Public Property name As String
+    ''' <summary>
+    ''' setzt bzw liest die NamensID eines Meilensteins; die NamensID setzt sich zusammen aus 
+    ''' dem Kennzeichen Phase/Meilenstein 0/1, dem eigentlichen Namen des Meilensteins und der laufenden Nummer. 
+    ''' Getrennt sind die Elemente durch das Zeichen § 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property nameID As String
+        Get
+            nameID = _name
+        End Get
+        Set(value As String)
+            Dim tmpstr() As String
+            tmpstr = value.Split(New Char() {CChar("§")}, 3)
+            If Len(value) > 0 Then
+                If value.StartsWith("1§") And tmpstr.Length >= 2 Then
+                    _name = value
+                Else
+                    Throw New ApplicationException("unzulässige Namens-ID: " & value)
+                End If
+
+            Else
+                Throw New ApplicationException("Name darf nicht leer sein ...")
+            End If
+
+        End Set
+    End Property
 
     Public Property verantwortlich As String
 
@@ -106,7 +145,7 @@
 
         With newResult
 
-            .name = Me.name
+            .nameID = Me.nameID
             .verantwortlich = Me.verantwortlich
             .offset = Me.offset
 
@@ -115,13 +154,17 @@
     End Sub
 
 
-    Public Sub CopyTo(ByRef newResult As clsMeilenstein)
+    Public Sub CopyTo(ByRef newResult As clsMeilenstein, Optional nameID As String = "")
         Dim i As Integer
         Dim newb As New clsBewertung
 
         With newResult
 
-            .name = Me.name
+            If nameID = "" Then
+                .nameID = Me.nameID
+            Else
+                .nameID = nameID
+            End If
             .verantwortlich = Me.verantwortlich
             .offset = Me.offset
 

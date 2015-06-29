@@ -101,4 +101,32 @@ Public Class frmAuthentication
     Private Sub abbrButton_Click(sender As Object, e As EventArgs) Handles abbrButton.Click
 
     End Sub
+
+    Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
+
+        Dim pwd As String
+        Dim user As String
+        Dim projexist As Boolean
+
+        user = benutzer.Text
+        pwd = maskedPwd.Text
+
+
+        Try
+            Dim request As New Request(awinSettings.databaseName, user, pwd)
+            projexist = request.projectNameAlreadyExists("TestProjekt", "v1")
+            dbUsername = benutzer.Text
+            dbPasswort = maskedPwd.Text
+            messageBox.Text = ""
+            DialogResult = System.Windows.Forms.DialogResult.OK
+        Catch ex As Exception
+            messageBox.Text = "Benutzername oder Passwort fehlerhaft!"
+            benutzer.Text = ""
+            maskedPwd.Text = ""
+            dbUsername = benutzer.Text
+            dbPasswort = maskedPwd.Text
+            benutzer.Focus()
+            DialogResult = System.Windows.Forms.DialogResult.Retry
+        End Try
+    End Sub
 End Class
