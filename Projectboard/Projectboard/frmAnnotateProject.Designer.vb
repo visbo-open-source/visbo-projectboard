@@ -78,11 +78,11 @@ Partial Class frmAnnotateProject
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(77, 138)
+        Me.OKButton.Location = New System.Drawing.Point(52, 138)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(75, 23)
+        Me.OKButton.Size = New System.Drawing.Size(131, 23)
         Me.OKButton.TabIndex = 4
-        Me.OKButton.Text = "Anzeigen"
+        Me.OKButton.Text = "Beschriften"
         Me.OKButton.UseVisualStyleBackColor = True
         '
         'showAbbrev

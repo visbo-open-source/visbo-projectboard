@@ -23,6 +23,7 @@
 
     ' Settings für die Projekteingabe
     Public Property lastProjektTyp As String
+    Public Property lastModulTyp As String
     Public Property isEndDate As Boolean
     Public Property tryBestFit As Boolean
     Public Property selDate As Date
@@ -65,6 +66,9 @@
 
     ' soll der Original Name angeziegt werden 
     Public Property showOrigName As Boolean
+
+    ' soll der Best-Name (Name mit kürzest-möglichem Breadcrumb um eindeutig zu sein 
+    Public Property showBestName As Boolean
 
     ' Settings für die letzte User Selektion in der Tafel 
     Public Property selectedColumn As Integer
@@ -130,6 +134,7 @@
 
         ' Projekteingabe Settings
         _lastProjektTyp = ""
+        _lastModulTyp = ""
         _isEndDate = False
         _tryBestFit = False
         _selDate = Date.Now
@@ -152,6 +157,7 @@
         _applyFilter = False
         _createIfNotThere = False
         _showOrigName = False
+        _showBestName = True
         _drawProjectLine = True
         _showElementNames = False
 

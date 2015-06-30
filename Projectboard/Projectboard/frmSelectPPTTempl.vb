@@ -43,7 +43,10 @@ Public Class frmSelectPPTTempl
             For i = 1 To listOfVorlagen.Count
                 dateiName = Dir(listOfVorlagen.Item(i - 1))
                 If calledfrom = "Projekt" Then
-                    RepVorlagenDropbox.Items.Add(dateiName)
+                    If Not dateiName.Contains("Typ II") Then
+                        RepVorlagenDropbox.Items.Add(dateiName)
+                    End If
+                    'RepVorlagenDropbox.Items.Add(dateiName)
                 ElseIf calledfrom = "Portfolio1" Then
                     If Not dateiName.Contains("Typ II") Then
                         RepVorlagenDropbox.Items.Add(dateiName)

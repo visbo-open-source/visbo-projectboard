@@ -855,6 +855,7 @@ Public Class clsProjekt
             'Dim numberOfDays As Integer
             Dim anteil As Double
             Dim daysPMonth(12) As Integer
+            Dim anzTage As Integer
 
             daysPMonth(0) = 0
             daysPMonth(1) = 31
@@ -898,6 +899,13 @@ Public Class clsProjekt
                                     If i = 0 Then
 
                                         If awinSettings.phasesProzentual Then
+
+                                            If .relEnde = .relStart Then
+                                                anzTage = CInt(DateDiff(DateInterval.Day, phaseStart, phaseEnd)) + 1
+                                            Else
+                                                anzTage = daysPMonth(phaseStart.Month) - phaseStart.Day + 1
+                                            End If
+
                                             anteil = (daysPMonth(phaseStart.Month) - phaseStart.Day + 1) / daysPMonth(phaseStart.Month)
                                             phaseValues(.relStart - 1 + i) = anteil
                                         Else
