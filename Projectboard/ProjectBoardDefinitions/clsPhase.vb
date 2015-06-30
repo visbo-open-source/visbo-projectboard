@@ -377,7 +377,8 @@
             If _dauerInDays > 0 Then
                 getEndDate = Me.Parent.startDate.AddDays(_startOffsetinDays + _dauerInDays - 1)
             Else
-                Throw New Exception("Dauer muss mindestens 1 Tag sein ...")
+                'Throw New Exception("Dauer muss mindestens 1 Tag sein ...")
+                getEndDate = Me.Parent.startDate.AddDays(_startOffsetinDays)
             End If
 
         End Get
@@ -934,7 +935,7 @@
         End With
 
     End Sub
-    Public Sub korrCopyTo(ByRef newphase As clsPhase, ByVal corrFactor As Double)
+    Public Sub korrCopyTo(ByRef newphase As clsPhase, ByVal corrFactor As Double, Optional newPhaseNameID As String = "")
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle, oldrole As clsRolle
         Dim newcost As clsKostenart, oldcost As clsKostenart
@@ -955,7 +956,12 @@
             .latestStart = Me._latestStart
             .Offset = Me._Offset
 
-            .nameID = _name
+            If newPhaseNameID = "" Then
+                .nameID = _name
+            Else
+                .nameID = newPhaseNameID
+            End If
+
 
             .changeStartandDauer(CInt(Me._startOffsetinDays * corrFactor), CInt(Me._dauerInDays * corrFactor))
 
@@ -1020,7 +1026,13 @@
 
             For r = 1 To Me.AllMilestones.Count
                 newresult = New clsMeilenstein(parent:=newphase)
-                Me.getMilestone(r).CopyTo(newresult)
+                If newPhaseNameID = "" Then
+                    Me.getMilestone(r).CopyTo(newresult)
+                Else
+                    Dim newMSNameID As String = newphase.Parent.hierarchy.findUniqueElemKey(Me.getMilestone(r).name, True)
+                    Me.getMilestone(r).CopyTo(newresult, newMSNameID)
+                End If
+
                 ' korrigiert den Offset der Meilensteine 
                 newresult.offset = CLng(System.Math.Round(CLng(Me.getMilestone(r).offset * corrFactor)))
 
@@ -1042,6 +1054,7 @@
     ''' </summary>
     ''' <param name="faktor"></param>
     ''' <remarks></remarks>
+
     Public Sub adjustMilestones(ByVal faktor As Double)
         Dim newOffset As Integer
         For r = 1 To Me.AllMilestones.Count
