@@ -236,6 +236,11 @@
             <button id="PT4G1M1B2" label="Exportieren" onAction="Tom2G4M1Export" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner ProjectFiles"/>
           </menu>
           <separator id="PT4G1s2"/>
+          <menu id="PT4G1M2" label ="Projekte v. MSProject">
+            <button id="PT4G1M2B1" label="Importieren" onAction="Tom2G4M2ImportMSProject" supertip ="alle Projekte, die in MSProject definiert wurden und im Folder MSProjectFiles liegen, werden importiert; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
+            <!--<button id="PT4G1M2B2" label="Exportieren" onAction="Tom2G4M2ExportMSProject" supertip ="alle selektierten Projekte in der Session werden gemaß der VISBO Steckbrief Vorlage exportiert; die neue Datei liegt im Ordner ProjectFiles"/>-->
+          </menu>
+          <separator id="PT4G1s3"/>
           <button id="PT4G1B5" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />
         </group>
       </tab>
@@ -264,7 +269,7 @@
           <checkBox id="PT6G1B5" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln" supertip ="ist diese Option aktiviert, so werden die Ampeln mit einem Schatten dargestellt, dessen Farbe der gesetzten Ampelfarbe des Meilensteines entspricht. So kann man schnell erkennen, wo die roten Ampeln liegen. Durch Klicken auf den Meilenstein wird eine Erläuterung des Projektleiters zur Meilensteinbewertung angezeigt"/>
           <button id="PT6G1B6" label="Windows u. Excel-Version"  onAction ="PTShowVersions" />
           <checkBox id="PT6G1B7" label="MissingDefinitions hinzufügen" getPressed="PTAddMissingInit" onAction ="PTAddMissingDefinitions" supertip ="fehlende Phasen- oder Meilenstein-Namen werden im CustomizationFile ergänzt"/>
-          <button id="PT6G1B8" label="Test-Funktionen"  onAction ="PTTestFunktion3" />
+           <!--<button id="PT6G1B8" label="Test-Funktionen"  onAction ="PTTestFunktion3" />-->
         </group>
         <group id ="PT6G2" label="Berechnung">
           <checkBox id="PT6G2B1" label="Bei Dehnen/Stauchen proportional anpassen" getPressed="PTPropAnpassen" onAction ="awinSetPropAnpass" supertip ="diese Option wirkt nur auf Ressourcenbedarfe und Kostenbedarfe; ist diese Option aktiviert, so werden die Ressourcen und Kostenbedarfe proportional angepasst, wenn das Projekt / die Phase durch Dehnen oder Stauchen verlängert bzw. verkürzt wird. Das Budget bleibt allerdings unverändert !"/>
@@ -286,11 +291,13 @@
           <checkBox id="PT6G4B5" label="Projekt-Linie anzeigen" getPressed="PT6ProjectLinePressed" onAction ="PT6SetShowProjectLine"/>
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
-        </group>
-        <group id ="PT6G5" label ="Testfunktionen">
-          <button id="Pt6G5B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
-          <button id="Pt6G5B1" label="Aufbau Histories"  onAction="PTTestFunktion2" />
         </group>-->
+        <group id ="PT6G5" label ="Testfunktionen">
+          <button id="PT6G5B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
+          <button id="PT6G5B1" label="Aufbau Histories"  onAction="PTTestFunktion2" />
+          <button id="PT6G1B8" label="Hierarchie-Test"  onAction ="PTTestFunktion3" />
+         <button id="PT6G5B3" label="MicrosoftProject Anbindung"  onAction ="awinImportMSProject" />
+        </group>
       </tab>
     </tabs>
   </ribbon>

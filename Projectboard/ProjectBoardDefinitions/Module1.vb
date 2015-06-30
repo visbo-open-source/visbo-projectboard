@@ -83,9 +83,11 @@ Public Module Module1
     ' Welche Business-Units gibt es ? 
     Public businessUnitDefinitions As SortedList(Of Integer, clsBusinessUnit)
 
-    ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
+    ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen, Rollen, Kostenarten  im CustomizationFile noch nicht enthalten sind. 
     Public missingPhaseDefinitions As New clsPhasen
     Public missingMilestoneDefinitions As New clsMeilensteine
+    Public missingRoleDefinitions As New clsRollen
+    Public missingCostDefinitions As New clsKostenarten
 
 
     ' diese Collection nimmt alle Filter Definitionen auf 
@@ -382,6 +384,7 @@ Public Module Module1
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
     Public projektFilesOrdner As String = "ProjectFiles"
+    Public msprojectFilesOrdner As String = "MSProject-Files"
     Public rplanimportFilesOrdner As String = "RPLANImport"
     Public exportFilesOrdner As String = "Export Dateien"
     Public excelExportVorlage As String = "export Vorlage.xlsx"
@@ -2018,9 +2021,9 @@ Public Module Module1
     Public Function calcDauerIndays(ByVal startDatum As Date, ByVal endeDatum As Date) As Integer
 
         If startDatum.Date > endeDatum.Date Then
-            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) - 1)
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum.Date, endeDatum.Date) - 1)
         Else
-            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) + 1)
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum.Date, endeDatum.Date) + 1)
         End If
 
     End Function
