@@ -42,6 +42,7 @@ Public Module awinGUI
         Dim bubbleValues() As Double, tempArray() As Double
         Dim nameValues() As String
         Dim colorValues() As Object
+        Dim ampelValues() As Long
         Dim positionValues() As String
         Dim diagramTitle As String = ""
         Dim pfDiagram As clsDiagramm
@@ -190,6 +191,7 @@ Public Module awinGUI
             ReDim bubbleValues(ProjektListe.Count - 1)
             ReDim nameValues(ProjektListe.Count - 1)
             ReDim colorValues(ProjektListe.Count - 1)
+            ReDim ampelValues(ProjektListe.Count - 1)
             ReDim PfChartBubbleNames(ProjektListe.Count - 1)
             ReDim positionValues(ProjektListe.Count - 1)
         Catch ex As Exception
@@ -258,6 +260,22 @@ Public Module awinGUI
                                 colorValues(anzBubbles) = awinSettings.AmpelRot
                         End Select
                     End If
+
+                    ' Änderung tk: in ampelValues werden jetzt die Ampelfarben gespeichert 
+                    Select Case hproj.ampelStatus
+                        Case 0
+                            '"Ampel nicht bewertet"
+                            ampelValues(anzBubbles) = awinSettings.AmpelNichtBewertet
+                        Case 1
+                            '"Ampel Grün"
+                            ampelValues(anzBubbles) = awinSettings.AmpelGruen
+                        Case 2
+                            '"Ampel Gelb"
+                            ampelValues(anzBubbles) = awinSettings.AmpelGelb
+                        Case 3
+                            '"Ampel Rot"
+                            ampelValues(anzBubbles) = awinSettings.AmpelRot
+                    End Select
 
                     Select Case charttype
                         Case PTpfdk.FitRisiko
@@ -432,6 +450,17 @@ Public Module awinGUI
                         End If
 
                         .Interior.Color = colorValues(i - 1)
+
+                        ' Änderung wenn ampeln gezeigt werden sollen ...
+                        If awinSettings.mppShowAmpel Then
+
+                            With .Format.Glow
+                                .Color.RGB = CInt(ampelValues(i - 1))
+                                .Transparency = 0
+                                .Radius = 3
+                            End With
+
+                        End If
 
                         ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
                         If bubbleValues(i - 1) < 0 Then
@@ -749,6 +778,7 @@ Public Module awinGUI
         Dim xAchsenValues() As Double
         Dim nameValues() As String
         Dim colorValues() As Object
+        Dim ampelValues() As Long
         Dim positionValues() As String
         Dim diagramTitle As String
         Dim showLabels As Boolean
@@ -799,6 +829,7 @@ Public Module awinGUI
             ReDim bubbleValues(ShowProjekte.Count - 1)
             ReDim nameValues(ShowProjekte.Count - 1)
             ReDim colorValues(ShowProjekte.Count - 1)
+            ReDim ampelValues(ShowProjekte.Count - 1)
             ReDim PfChartBubbleNames(ShowProjekte.Count - 1)
             ReDim positionValues(ShowProjekte.Count - 1)
         Catch ex As Exception
@@ -862,6 +893,23 @@ Public Module awinGUI
                     Else
                         riskValues(anzBubbles) = .Risiko
                     End If
+
+                    ' Änderung tk 2.6.15 es wird immer die Projektfarbe gezeigt, Ampelfarbe nur bei Anforderung
+                    Select Case .ampelStatus
+                        Case 0
+                            '"Ampel nicht bewertet"
+                            ampelValues(anzBubbles) = awinSettings.AmpelNichtBewertet
+                        Case 1
+                            '"Ampel Grün"
+                            ampelValues(anzBubbles) = awinSettings.AmpelGruen
+                        Case 2
+                            '"Ampel Gelb"
+                            ampelValues(anzBubbles) = awinSettings.AmpelGelb
+                        Case 3
+                            '"Ampel Rot"
+                            ampelValues(anzBubbles) = awinSettings.AmpelRot
+                    End Select
+
 
                     If bubbleColor = PTpfdk.ProjektFarbe Then
 
@@ -1147,6 +1195,19 @@ Public Module awinGUI
 
                         .Interior.Color = colorValues(i - 1)
 
+                        ' Änderung wenn ampeln gezeigt werden sollen ...
+
+                        If awinSettings.mppShowAmpel Then
+
+                            With .Format.Glow
+                                .Color.RGB = CInt(ampelValues(i - 1))
+                                .Transparency = 0
+                                .Radius = 3
+                            End With
+
+                        End If
+
+                        
                         ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
                         If bubbleValues(i - 1) < 0 Then
                             .DataLabel.Font.Color = awinSettings.AmpelRot

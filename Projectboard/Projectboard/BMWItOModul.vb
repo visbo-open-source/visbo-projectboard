@@ -1457,6 +1457,7 @@ Module BMWItOModul
 
     End Sub
 
+
     ''' <summary>
     ''' schreibt gemäß der FC-52 Vorlage die aktuell geladenen Projekte in eine Datei im Export Directory
     ''' </summary>
@@ -1569,7 +1570,10 @@ Module BMWItOModul
 
         Next
 
-        Dim expFName As String = awinPath & exportFilesOrdner & "\Report_" & _
+        'Dim expFName As String = awinPath & exportFilesOrdner & "\Report_" & _
+        '    Date.Now.ToString.Replace(":", ".") & ".xlsx"
+
+        Dim expFName As String = exportOrdnerNames(PTImpExp.rplan) & "\Report_" & _
             Date.Now.ToString.Replace(":", ".") & ".xlsx"
 
         Try

@@ -25,18 +25,17 @@ namespace MongoDbAccess
         public MongoCollection CollectionConstellations { get; set; }
         public MongoCollection CollectionDependencies { get; set; }
 
-        //////public Request()
-        //////{
-          
-        //////   var connectionString = "mongodb://localhost";
-        //////    /**var connectionString = "mongodb://ute:Mopsi@localhost"; Aufruf mit MongoDB mit Authentication */
-        //////    Client = new MongoClient(connectionString);
-        //////    Server = Client.GetServer();
-        //////    Database = Server.GetDatabase("projectboard");
-        //////    CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
-        //////    CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
-        //////    CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
-        //////}
+        public Request()
+        {
+            var connectionString = "mongodb://localhost";
+            /**var connectionString = "mongodb://ute:Mopsi@localhost"; Aufruf mit MongoDB mit Authentication */
+            Client = new MongoClient(connectionString);
+            Server = Client.GetServer();
+            Database = Server.GetDatabase("projectboard");
+            CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
+            CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
+            CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
+        }
 
         public Request(string databaseName, string username, string dbPasswort)
         {
@@ -44,12 +43,13 @@ namespace MongoDbAccess
             if (String.IsNullOrEmpty(username) && String.IsNullOrEmpty(dbPasswort))
             {
                 var connectionString = "mongodb://localhost";
+                //var connectionString = "mongodb://@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
             }
             else
             {
                 var connectionString = "mongodb://" + username + ":" + dbPasswort + "@localhost";  /*Aufruf mit MongoDB mit Authentication  */
-                /*Azure**var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";  /*Aufruf mit Azure mit Authentication  */
+                //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
             }
             
@@ -144,10 +144,18 @@ namespace MongoDbAccess
 
         public bool storeProjectToDB(clsProjekt projekt)
         {
-            var projektDB = new clsProjektDB();
-            projektDB.copyfrom(projekt);
-            projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString();
-            return CollectionProjects.Save(projektDB).Ok;      
+            try
+            {
+                var projektDB = new clsProjektDB();
+                projektDB.copyfrom(projekt);
+                projektDB.Id = projektDB.name + "#" + projektDB.variantName + "#" + projektDB.timestamp.ToString();
+                return CollectionProjects.Save(projektDB).Ok;    
+            }
+            catch
+            {
+                return false;
+            }
+              
 
 
             //projektDB.copyfrom(ref projekt); wenn von kopiert wird, muss das nicht per Ref übergeben werden 

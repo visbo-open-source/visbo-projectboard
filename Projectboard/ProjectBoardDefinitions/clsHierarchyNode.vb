@@ -35,9 +35,6 @@
     Public Sub New(ByVal elemName As String, ByVal origName As String, _
                        ByVal indexOfElem As Integer, ByRef parentNodeKey As String)
 
-
-
-
         If Not IsNothing(elemName) Then
             If elemName.Trim.Length > 0 Then
                 _elemName = elemName

@@ -204,7 +204,7 @@ Public Class frmNameSelection
         ' jetzt wird der letzte Filter gespeichert ..
         Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
-                                                   selectedRoles, selectedCosts)
+                                                   selectedRoles, selectedCosts, False)
 
         ''''
         ''
@@ -216,7 +216,8 @@ Public Class frmNameSelection
 
         Dim validOption As Boolean
         If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
-            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Then
+            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Or _
+            Me.menuOption = PTmenue.vorlageErstellen Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft > 5 Then
             validOption = True
