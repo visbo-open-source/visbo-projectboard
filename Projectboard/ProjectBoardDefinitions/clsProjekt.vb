@@ -283,7 +283,7 @@ Public Class clsProjekt
 
     ''' <summary>
     ''' setzt den Namen des Projektes fest oder gibt ihn zurück
-    ''' gleichzeitig wird auch der Name der Phase(1), sofern sie bereits existiert, auf diesen Namen festgesetzt 
+    ''' gleichzeitig wird auch der Name der Phase(1),  auf den Namen "rootPhaseName" festgesetzt 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
