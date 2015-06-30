@@ -6363,7 +6363,7 @@ Public Module awinGeneralModules
                 If breadcrumb = "" Then
                     CType(.Cells(zeile, spalte + ix), Excel.Range).Value = elemName & ext
                 Else
-                    CType(.Cells(zeile, spalte + ix), Excel.Range).Value = breadcrumb.Replace("#", "-") & elemName & ext
+                    CType(.Cells(zeile, spalte + ix), Excel.Range).Value = breadcrumb.Replace("#", "-") & "-" & elemName & ext
                 End If
 
             Next
@@ -6391,7 +6391,7 @@ Public Module awinGeneralModules
                 If breadcrumb = "" Then
                     CType(.Cells(zeile, spalte + ix), Excel.Range).Value = elemName & ext
                 Else
-                    CType(.Cells(zeile, spalte + ix), Excel.Range).Value = breadcrumb.Replace("#", "-") & elemName & ext
+                    CType(.Cells(zeile, spalte + ix), Excel.Range).Value = breadcrumb.Replace("#", "-") & "-" & elemName & ext
                 End If
 
 
