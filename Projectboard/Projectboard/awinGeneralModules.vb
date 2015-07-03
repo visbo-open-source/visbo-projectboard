@@ -1826,7 +1826,15 @@ Public Module awinGeneralModules
         Dim lastelemID As String = ""
         Dim lastlevel As Integer = 0
         Dim Xwerte() As Double
+
+        ' hier wird eingetragen, welches vordefinierte Flag das customized Field VISBO repräsentiert
+        Dim visboflag As MSProject.PjField = Nothing
+
+        ' Liste, die aufgebaut wird beim Einlesen der Tasks. Hier wird vermerkt, welche Task das Visbo-Flag mit YES und welche mit NO
+        ' gesetzt hat d.h. berücksichtigt werden soll
+        ' Diese Liste enthält keine Elemente, wenn das VISBO-Flag nicht definiert ist
         Dim visboFlagListe As New SortedList(Of String, Boolean)
+
         Try
 
             'On Error Resume Next
@@ -1843,22 +1851,24 @@ Public Module awinGeneralModules
 
 
             Dim anzProj As Integer = prj.Projects.Count
-            Dim visboflag As MSProject.PjField = Nothing
+
+
+            ' VISBO-Flag dient dazu, Tasks, die nicht benötigt werden in der MultiprojektPlanung nicht mit einzulesen
+            ' in die Projekt-Tafel
+
+            ' Ist dieses VISBO-Flag definiert?
 
             Try
                 visboflag = CType(prj.FieldNameToFieldConstant("VISBO", MSProject.PjFieldType.pjTask), MSProject.PjField)
             Catch ex As Exception
                 visboflag = 0
             End Try
-          
+
 
             ' Einlesen der Projekt-Daten
 
             msproj = prj.Projects.Item(anzProj)
 
-            Dim flagVISBO As String = prj.CustomFieldGetName(188743752)
-            Dim arraycf(19) As MSProject.PjCustomField
-            arraycf(0) = MSProject.PjCustomField.pjCustomTaskFlag1
 
             hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.Start), CDate(msproj.Finish))
 
@@ -1918,7 +1928,7 @@ Public Module awinGeneralModules
                 Dim msTask As MSProject.Task
 
                 Dim cphase As New clsPhase(parent:=hproj)
-                
+
 
                 msTask = msproj.Tasks.Item(i)
 
@@ -1955,7 +1965,7 @@ Public Module awinGeneralModules
                             .nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, False)
                         End If
 
-                        If visboflag <> 0 Then
+                        If visboflag <> 0 Then          ' VISBO-Flag ist definiert
 
                             ' Liste, ob Task in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
                             visboFlagListe.Add(.nameID, msTask.GetField(visboflag) = "Yes")
@@ -2250,7 +2260,7 @@ Public Module awinGeneralModules
                     Else
                         Throw New ArgumentException("Fehler: Meilenstein konnte nicht gefunden werden")
                     End If
-                    End If
+                End If
 
                 '' Testweise hier eingetragen
 
@@ -2312,43 +2322,10 @@ Public Module awinGeneralModules
 
                 Else
                     ' Element elemID wurde bereits entfernt '
-                    Call MsgBox("das Element elemID= " & elemID & " wurde bereits entfernt")
+                    ' Call MsgBox("das Element elemID= " & elemID & " wurde bereits entfernt")
                 End If
 
             Next
-
-            ' '' '' '' ''Liste der Phase durchsehen, ob visbo-Flag gesetzt ist, wenn nicht, so wird geprüft, ob diese Phase gelöscht werden kann, oder ob
-            ' '' '' '' ''hierarchisch darunterliegende Phasen oder Meilensteine benötigt werden
-            '' '' '' ''For ele_i = 0 To msStart - 1
-            '' '' '' ''    If Not visboFlagListe.ElementAt(ele_i).Value Then
-
-            '' '' '' ''        ' Phase soll eliminiert werden, da sie nicht betrachtet werden soll
-
-            '' '' '' ''        Dim elemID As String = visboFlagListe.ElementAt(ele_i).Key
-
-            '' '' '' ''        If hproj.hierarchy.containsKey(elemID) Then
-            '' '' '' ''            If isRemovable(elemID, hproj, visboFlagListe) Then
-
-            '' '' '' ''                ' es wird die Phase elemID mit allen seinen Kindern gelöscht
-            '' '' '' ''                hproj.removePhase(elemID, True)
-
-            '' '' '' ''                ' ''Call MsgBox("isRemovable = true" & vbLf & _
-            '' '' '' ''                ' ''            elemID & " kann entfernt werden")
-            '' '' '' ''            Else
-
-            '' '' '' ''                '' ''Call MsgBox("isRemovable = false" & vbLf & _
-            '' '' '' ''                '' ''            elemID & " kann nicht entfernt werden ")
-
-            '' '' '' ''            End If
-            '' '' '' ''        Else
-            '' '' '' ''            ' Element elemID wurde bereits entfernt '
-            '' '' '' ''            Call MsgBox("das Element elemID= " & elemID & " wurde bereits entfernt")
-            '' '' '' ''        End If
-            '' '' '' ''    Else
-            '' '' '' ''        ' Phase bleibt erhalten
-            '' '' '' ''    End If
-
-            '' '' '' ''Next
 
 
 
