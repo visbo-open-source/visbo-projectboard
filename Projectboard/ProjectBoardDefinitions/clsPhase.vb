@@ -830,6 +830,30 @@
 
     End Sub
 
+    ''' <summary>
+    ''' löscht den Meilenstein an Position index; Index kann Werte 1 .. Anzahl Meilensteine haben 
+    ''' wenn checkname ungleich "" ist , so wird der Meilenstein nur dann gelöscht, wenn die NameID mit checkname übereinstimmt  
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <param name="checkID"></param>
+    ''' <remarks></remarks>
+    Public Sub removeMilestoneAt(ByVal index As Integer, Optional ByVal checkID As String = "")
+        Dim ok As Boolean = True
+
+        If checkID <> "" Then
+            If AllMilestones.ElementAt(index - 1).nameID = checkID Then
+                ok = True
+            Else
+                ok = False
+            End If
+        End If
+
+        If ok Then
+            AllMilestones.RemoveAt(index - 1)
+        End If
+
+    End Sub
+
     Public ReadOnly Property rollenListe() As List(Of clsRolle)
 
         Get
