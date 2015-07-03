@@ -1843,11 +1843,22 @@ Public Module awinGeneralModules
 
 
             Dim anzProj As Integer = prj.Projects.Count
+            Dim visboflag As MSProject.PjField = Nothing
+
+            Try
+                visboflag = CType(prj.FieldNameToFieldConstant("VISBO", MSProject.PjFieldType.pjTask), MSProject.PjField)
+            Catch ex As Exception
+                visboflag = 0
+            End Try
+          
 
             ' Einlesen der Projekt-Daten
 
             msproj = prj.Projects.Item(anzProj)
 
+            Dim flagVISBO As String = prj.CustomFieldGetName(188743752)
+            Dim arraycf(19) As MSProject.PjCustomField
+            arraycf(0) = MSProject.PjCustomField.pjCustomTaskFlag1
 
             hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.Start), CDate(msproj.Finish))
 
@@ -1944,11 +1955,12 @@ Public Module awinGeneralModules
                             .nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, False)
                         End If
 
-                        ' Liste, ob Task in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
-                        If Not CType(msTask.Flag1, Boolean) Then
-                            visboFlagListe.Add(.nameID, CType(msTask.Flag1, Boolean))
-                        End If
+                        If visboflag <> 0 Then
 
+                            ' Liste, ob Task in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
+                            visboFlagListe.Add(.nameID, msTask.GetField(visboflag) = "Yes")
+
+                        End If
 
                         ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
                         Dim cphaseStartOffset As Long
@@ -2220,11 +2232,13 @@ Public Module awinGeneralModules
                         msBewertung.description = msTask.Notes
                         cmilestone.addBewertung(msBewertung)
 
-                        ' Liste, ob Task in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
-                        If Not CType(msTask.Flag1, Boolean) Then
-                            visboFlagListe.Add(cmilestone.nameID, CType(msTask.Flag1, Boolean))
-                        End If
 
+                        If visboflag <> 0 Then        ' Ist VISBO-flag definiert?
+
+                            ' Liste, ob Meilenstein in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
+                            visboFlagListe.Add(cmilestone.nameID, msTask.GetField(visboflag) = "Yes")
+
+                        End If
 
                         Try
                             With msPhase
@@ -2255,49 +2269,86 @@ Public Module awinGeneralModules
             Dim ele_i As Integer = 0
             Dim msStart As Integer = hproj.hierarchy.getIndexOf1stMilestone
 
-            ' Liste der Meilensteine durchgehen und die Meilensteine den den visbo-Flag nicht gesetzt haben aus der Hierarchie löschen
-            For ele_i = msStart To visboFlagListe.Count - 1
+            ' Liste der Phasen/Meilensteine durchgehen und die Phasen/Meilensteine die den visbo-Flag nicht gesetzt haben aus der Hierarchie löschen
+            For ele_i = 0 To visboFlagListe.Count - 1
 
-                If Not visboFlagListe.ElementAt(ele_i).Value Then
+                Dim elemID As String = visboFlagListe.ElementAt(ele_i).Key
+                If hproj.hierarchy.containsKey(elemID) Then
 
-                    ' Meilenstein muss entfernt werden
-                    Dim elemID As String = visboFlagListe.ElementAt(ele_i).Key
-                    Dim hrchynode As clsHierarchyNode = hproj.hierarchy.nodeItem(elemID)
-                    If hrchynode.childCount > 0 Then
-                        Call MsgBox("Knoten " & elemNameOfElemID(elemID) & " kann nicht aus der Hierarchie entfernt werden")
+                    If Not visboFlagListe.ElementAt(ele_i).Value Then
+
+                        If elemIDIstMeilenstein(elemID) Then
+
+                            ' Meilenstein muss entfernt werden
+
+                            Dim hrchynode As clsHierarchyNode = hproj.hierarchy.nodeItem(elemID)
+                            If hrchynode.childCount > 0 Then
+                                Call MsgBox("Knoten " & elemNameOfElemID(elemID) & " kann nicht aus der Hierarchie entfernt werden")
+                            Else
+                                hproj.removeMeilenstein(elemID)
+                            End If
+
+                        Else        ' Element elemID ist eine Phase
+
+
+                            If isRemovable(elemID, hproj, visboFlagListe) Then
+
+                                ' es wird die Phase elemID mit allen seinen Kindern gelöscht
+                                hproj.removePhase(elemID, True)
+
+                                ' ''Call MsgBox("isRemovable = true" & vbLf & _
+                                ' ''            elemID & " kann entfernt werden")
+                            Else
+
+                                '' ''Call MsgBox("isRemovable = false" & vbLf & _
+                                '' ''            elemID & " kann nicht entfernt werden ")
+
+                            End If
+                        End If
+
                     Else
-                        'hproj.removeMeilenstein(elemID)
+                        ' Phase/Meilenstein bleibt erhalten
                     End If
+
                 Else
-                    '     Meilenstein bleibt erhalten
-                End If
-            Next
-
-            'Liste der Phase durchsehen, ob visbo-Flag gesetzt ist, wenn nicht, so wird geprüft, ob diese Phase gelöscht werden kann, oder ob
-            'hierarchisch darunterliegende Phasen oder Meilensteine benötigt werden
-            For ele_i = 0 To msStart - 1
-                If Not visboFlagListe.ElementAt(ele_i).Value Then
-
-                    ' Phase soll eliminiert werden, da sie nicht betrachtet werden soll
-
-                    Dim elemID As String = visboFlagListe.ElementAt(ele_i).Key
-                    If isRemovable(elemID, hproj, visboFlagListe) Then
-
-                        ' es wird die Phase elemID mit allen seinen Kindern gelöscht
-                        'hproj.removePhase(elemID, True)
-
-                        ' ''Call MsgBox("isRemovable = true" & vbLf & _
-                        ' ''            elemID & " kann entfernt werden")
-
-                    Else
-
-                        '' ''Call MsgBox("isRemovable = false" & vbLf & _
-                        '' ''            elemID & " kann nicht entfernt werden")
-                    End If
-
+                    ' Element elemID wurde bereits entfernt '
+                    Call MsgBox("das Element elemID= " & elemID & " wurde bereits entfernt")
                 End If
 
             Next
+
+            ' '' '' '' ''Liste der Phase durchsehen, ob visbo-Flag gesetzt ist, wenn nicht, so wird geprüft, ob diese Phase gelöscht werden kann, oder ob
+            ' '' '' '' ''hierarchisch darunterliegende Phasen oder Meilensteine benötigt werden
+            '' '' '' ''For ele_i = 0 To msStart - 1
+            '' '' '' ''    If Not visboFlagListe.ElementAt(ele_i).Value Then
+
+            '' '' '' ''        ' Phase soll eliminiert werden, da sie nicht betrachtet werden soll
+
+            '' '' '' ''        Dim elemID As String = visboFlagListe.ElementAt(ele_i).Key
+
+            '' '' '' ''        If hproj.hierarchy.containsKey(elemID) Then
+            '' '' '' ''            If isRemovable(elemID, hproj, visboFlagListe) Then
+
+            '' '' '' ''                ' es wird die Phase elemID mit allen seinen Kindern gelöscht
+            '' '' '' ''                hproj.removePhase(elemID, True)
+
+            '' '' '' ''                ' ''Call MsgBox("isRemovable = true" & vbLf & _
+            '' '' '' ''                ' ''            elemID & " kann entfernt werden")
+            '' '' '' ''            Else
+
+            '' '' '' ''                '' ''Call MsgBox("isRemovable = false" & vbLf & _
+            '' '' '' ''                '' ''            elemID & " kann nicht entfernt werden ")
+
+            '' '' '' ''            End If
+            '' '' '' ''        Else
+            '' '' '' ''            ' Element elemID wurde bereits entfernt '
+            '' '' '' ''            Call MsgBox("das Element elemID= " & elemID & " wurde bereits entfernt")
+            '' '' '' ''        End If
+            '' '' '' ''    Else
+            '' '' '' ''        ' Phase bleibt erhalten
+            '' '' '' ''    End If
+
+            '' '' '' ''Next
 
 
 
@@ -2325,20 +2376,29 @@ Public Module awinGeneralModules
     Public ReadOnly Property isRemovable(ByVal elemID As String, ByVal hproj As clsProjekt, ByVal liste As SortedList(Of String, Boolean)) As Boolean
         Get
             Dim ind As Integer = 1
-            Dim hrchynode As clsHierarchyNode = hproj.hierarchy.nodeItem(elemID)
+            Dim hrchynode As clsHierarchyNode = Nothing
 
             isRemovable = True
-            If hrchynode.childCount = 0 Then
-                isRemovable = isRemovable And True
-            End If
-            If hrchynode.childCount > 0 Then
-                For ind = 1 To hrchynode.childCount
-                    Dim nodeID As String = hrchynode.getChild(ind)
-                    isRemovable = isRemovable And liste.ContainsKey(nodeID)
-                    isRemovable = isRemovable And isRemovable(hrchynode.getChild(ind), hproj, liste)
-                Next
 
-            End If
+            Try
+
+                hrchynode = hproj.hierarchy.nodeItem(elemID)
+                If hrchynode.childCount = 0 Then
+                    isRemovable = isRemovable And True
+                End If
+                If hrchynode.childCount > 0 Then
+                    For ind = 1 To hrchynode.childCount
+                        Dim nodeID As String = hrchynode.getChild(ind)
+                        isRemovable = isRemovable And liste.ContainsKey(nodeID)
+                        isRemovable = isRemovable And isRemovable(hrchynode.getChild(ind), hproj, liste)
+                    Next
+
+                End If
+
+            Catch ex As Exception
+                Call MsgBox("Fehler bei der Prüfung, ob das Element elemID= " & elemID & " entfernt werden kann")
+                Throw New ArgumentException("Fehler bei der Prüfung, ob das Element elemID entfernt werden kann")
+            End Try
 
         End Get
 

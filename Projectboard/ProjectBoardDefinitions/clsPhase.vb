@@ -841,7 +841,7 @@
         Dim ok As Boolean = True
 
         If checkID <> "" Then
-            If AllMilestones.ElementAt(index - 1).nameID = checkID Then
+            If AllMilestones.ElementAt(index).nameID = checkID Then
                 ok = True
             Else
                 ok = False
@@ -849,7 +849,7 @@
         End If
 
         If ok Then
-            AllMilestones.RemoveAt(index - 1)
+            AllMilestones.RemoveAt(index)
         End If
 
     End Sub

@@ -149,16 +149,31 @@
 
         If deleteAllChilds Then
 
-            ' jetzt alle Kinder löschen  
-            For i As Integer = 1 To elemNode.childCount
-                childNodeID = elemNode.getChild(i)
+            Dim k As Integer = 1
+
+
+            ' jetzt alle Kinder löschen
+            While elemNode.childCount > 0
+
+                childNodeID = elemNode.getChild(k)
                 If elemIDIstMeilenstein(childNodeID) Then
                     ' lösche Meilenstein 
                     Me.removeMeilenstein(childNodeID)
                 Else
                     Me.removePhase(childNodeID, True)
+
                 End If
-            Next
+            End While
+
+            '' '' ''For i As Integer = 1 To elemNode.childCount
+            '' '' ''    childNodeID = elemNode.getChild(i)
+            '' '' ''    If elemIDIstMeilenstein(childNodeID) Then
+            '' '' ''         lösche Meilenstein 
+            '' '' ''        Me.removeMeilenstein(childNodeID)
+            '' '' ''    Else
+            '' '' ''        Me.removePhase(childNodeID, True)
+            '' '' ''    End If
+            '' '' ''Next
         Else
             ' hier alle Kinder umhängen: die bekommen die ParentID statt nameID als ihren neuen Vater 
             For i As Integer = 1 To elemNode.childCount
@@ -223,7 +238,7 @@
         ' in der Hierarchie-Liste löschen 
         Me.hierarchy.removeAt(indexInHierarchy - 1)
 
-        Dim cPhase As clsPhase = Me.getPhase(parentID)
+        Dim cPhase As clsPhase = Me.getPhaseByID(parentID)
 
         ' in der Meilenstein-Liste der Phase löschen 
         cPhase.removeMilestoneAt(indexInMilestoneList - 1)
