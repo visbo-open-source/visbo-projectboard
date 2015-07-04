@@ -840,16 +840,21 @@
     Public Sub removeMilestoneAt(ByVal index As Integer, Optional ByVal checkID As String = "")
         Dim ok As Boolean = True
 
-        If checkID <> "" Then
-            If AllMilestones.ElementAt(index - 1).nameID = checkID Then
-                ok = True
-            Else
-                ok = False
+        If index >= 0 And index <= AllMilestones.Count - 1 Then
+            If checkID <> "" Then
+                If AllMilestones.ElementAt(index).nameID = checkID Then
+                    ok = True
+                Else
+                    ok = False
+                End If
             End If
+        Else
+            ok = False
         End If
+        
 
         If ok Then
-            AllMilestones.RemoveAt(index - 1)
+            AllMilestones.RemoveAt(index)
         End If
 
     End Sub

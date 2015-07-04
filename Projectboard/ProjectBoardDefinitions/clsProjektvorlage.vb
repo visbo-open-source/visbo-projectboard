@@ -236,7 +236,7 @@
 
     ''' <summary>
     ''' gibt den Meilenstein mit Element-ID elemID zurück 
-    ''' Nothing, wenn sie nicht existiert 
+    ''' Nothing, wenn der Meilenstein nicht existiert 
     ''' </summary>
     ''' <param name="elemID"></param>
     ''' <value></value>

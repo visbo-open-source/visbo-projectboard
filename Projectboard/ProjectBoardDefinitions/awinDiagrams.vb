@@ -3813,10 +3813,42 @@ Public Module awinDiagrams
 
         Try
             shpelement = tmpshapes.Item(projektname)
+            ' jetzt muss unterschieden werden, um welche Art es sich handelt 
+
             With shpelement
-                .Fill.Transparency = 0.8
-                '.Shadow.Transparency = 0.8
-                .TextFrame2.TextRange.Text = ""
+
+                Try
+                    If .GroupItems.Count > 1 Then
+
+                        If CBool(.GroupItems.Item(1).TextFrame2.HasText) And Not awinSettings.drawProjectLine Then
+                            .GroupItems.Item(1).TextFrame2.TextRange.Text = ""
+                        End If
+
+                        For i = 1 To .GroupItems.Count
+
+                            If awinSettings.drawProjectLine And i = 1 Then
+
+                                .GroupItems.Item(i).Line.Transparency = 0.8
+
+                            Else
+
+                                .GroupItems.Item(i).Fill.Transparency = 0.8
+                                
+                            End If
+
+                        Next
+                    Else
+                        .Fill.Transparency = 0.8
+                        .TextFrame2.TextRange.Text = ""
+                    End If
+
+                Catch ex1 As Exception
+
+                    .Fill.Transparency = 0.8
+                    .TextFrame2.TextRange.Text = ""
+
+                End Try
+
             End With
 
         Catch ex As Exception
@@ -3844,12 +3876,13 @@ Public Module awinDiagrams
 
             With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
 
-
+                Dim atleastOne As Boolean = False
                 For m = 1 To l
                     If tempArray(m - 1) > 0 And istInTimezone(k + m - 1) Then
 
                         Try
                             .Cells(i, k).Offset(0, m - 1).Value = tempArray(m - 1)
+                            atleastOne = True
                         Catch ex As Exception
 
                         End Try
@@ -3865,8 +3898,18 @@ Public Module awinDiagrams
                 Else
                     tmpgroesse = sgroesse
                 End If
-                .Range(.Cells(i, k), .Cells(i, k).Offset(0, l - 1)).Font.Color = sfarbe
-                .Range(.Cells(i, k), .Cells(i, k).Offset(0, l - 1)).Font.Size = tmpgroesse
+
+                If atleastOne Then
+
+                    Try
+                        .Range(.Cells(i, k), .Cells(i, k).Offset(0, l - 1)).Font.Color = sfarbe
+                        .Range(.Cells(i, k), .Cells(i, k).Offset(0, l - 1)).Font.Size = tmpgroesse
+                    Catch ex As Exception
+
+                    End Try
+                    
+                End If
+                
             End With
 
             appInstance.EnableEvents = formerEE
@@ -3917,16 +3960,24 @@ Public Module awinDiagrams
                 Try
                     If .GroupItems.Count > 1 Then
 
-                        If CBool(.GroupItems.Item(1).TextFrame2.HasText) Then
+                        If CBool(.GroupItems.Item(1).TextFrame2.HasText) And Not awinSettings.drawProjectLine Then
                             .GroupItems.Item(1).TextFrame2.TextRange.Text = projektname
                         End If
 
                         For i = 1 To .GroupItems.Count
-                            If pStatus = ProjektStatus(0) Then
-                                .GroupItems.Item(i).Fill.Transparency = 0.35
+
+                            If awinSettings.drawProjectLine And i = 1 Then
+
+                                .GroupItems.Item(i).Line.Transparency = 0.0
+
                             Else
-                                .GroupItems.Item(i).Fill.Transparency = 0.0
+                                If pStatus = ProjektStatus(0) Then
+                                    .GroupItems.Item(i).Fill.Transparency = 0.35
+                                Else
+                                    .GroupItems.Item(i).Fill.Transparency = 0.0
+                                End If
                             End If
+
                         Next
                     Else
 
