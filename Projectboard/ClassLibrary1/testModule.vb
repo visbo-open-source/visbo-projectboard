@@ -174,7 +174,7 @@ Public Module testModule
                                                         selectedPhases, selectedMilestones, _
                                                         selectedRoles, selectedCosts, _
                                                         selectedBUs, selectedTyps, True, _
-                                                        (awinSelection.Count = tatsErstellt + 1), zeilenhoehe, _
+                                                        (todoListe.Count = tatsErstellt + 1), zeilenhoehe, _
                                                         legendFontSize, _
                                                         worker, e)
 
@@ -183,7 +183,7 @@ Public Module testModule
                                                         selectedPhases, selectedMilestones, _
                                                         selectedRoles, selectedCosts, _
                                                         selectedBUs, selectedTyps, False, _
-                                                        (awinSelection.Count = tatsErstellt + 1), zeilenhoehe, _
+                                                        (todoListe.Count = tatsErstellt + 1), zeilenhoehe, _
                                                         legendFontSize, _
                                                         worker, e)
 
@@ -432,18 +432,22 @@ Public Module testModule
             Dim tmpIX As Integer
             Dim tmpslideID As Integer
 
-            'If Not pptFirstTime And kennzeichnung = "Multivariantensicht" Then
-            If Not pptFirstTime Then
+            'If Not pptFirstTime And kennzeichnung = "Multivariantensicht" Multiprojektsicht Then
+            If pptFirstTime Or _
+                Not (kennzeichnung = "Multivariantensicht" _
+                Or kennzeichnung = "Multiprojektsicht" _
+                Or kennzeichnung = "AllePlanElement") Then
+                anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
+                tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
+                                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
+            Else
                 'pptSlide.Delete()
                 pptCurrentPresentation.Slides("tmpSav").Copy()
                 tmpslideID = pptCurrentPresentation.Slides("tmpSav").SlideID
                 pptCurrentPresentation.Slides.Paste(pptCurrentPresentation.Slides.Count + 1)
                 pptSlide = pptCurrentPresentation.Slides(pptCurrentPresentation.Slides.Count)
 
-            Else
-                anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
-                tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
-                                                                              SlideStart:=folieIX, SlideEnd:=folieIX)
+
             End If
 
             '' ''Dim tmpIX As Integer
@@ -1999,7 +2003,9 @@ Public Module testModule
 
         If pptLastTime Then
             Try
-                pptCurrentPresentation.Slides("tmpSav").Delete()   ' Vorlage in passender Größe wird nun nicht mehr benötigt
+                If Not IsNothing(pptCurrentPresentation.Slides("tmpSav")) Then
+                    pptCurrentPresentation.Slides("tmpSav").Delete()   ' Vorlage in passender Größe wird nun nicht mehr benötigt
+                End If
             Catch ex As Exception
 
             End Try
