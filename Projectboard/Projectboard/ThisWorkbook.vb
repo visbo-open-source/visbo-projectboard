@@ -19,6 +19,7 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_ActivateEvent() Handles Me.ActivateEvent
 
+        Application.DisplayFormulaBar = False
         'Application.Worksheets(arrWsNames(3)).Activate()
 
     End Sub

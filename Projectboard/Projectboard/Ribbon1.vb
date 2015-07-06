@@ -394,12 +394,17 @@ Imports System.Drawing
         Dim returnValue As DialogResult
         Dim cockpitName As String
         Try
+            
 
             Call projektTafelInit()
+
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
 
             Call awinDeSelect()
 
             Dim anzDiagrams As Integer = CType(appInstance.Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
+
 
             If anzDiagrams > 0 Then
 
@@ -412,19 +417,16 @@ Imports System.Drawing
 
                     cockpitName = storeCockpitFrm.ComboBox1.Text
 
-                    appInstance.ScreenUpdating = False
-
-                    enableOnUpdate = False
-
                     Call awinStoreCockpit(cockpitName)
 
-                    enableOnUpdate = True
-
-                    appInstance.ScreenUpdating = True
                 Else
 
+                    appInstance.ScreenUpdating = True
+                    enableOnUpdate = True
 
                 End If
+
+                
                 ' hier muss eventuell ein Neuzeichnen erfolgen
             Else
                 Call MsgBox("Es ist kein Chart angezeigt")

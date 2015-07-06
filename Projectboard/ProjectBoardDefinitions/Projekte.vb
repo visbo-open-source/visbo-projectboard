@@ -7597,6 +7597,10 @@ Public Module Projekte
                     End While
 
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                    enableOnUpdate = True
+                    appInstance.ScreenUpdating = True
+
                     Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
                     'xlsCockpits.Close(SaveChanges:=True)
 
@@ -7846,10 +7850,17 @@ Public Module Projekte
         Dim ws As Excel.Worksheet
         Dim shc As Excel.Shapes
         Dim sh As Excel.Shape
-        zo = cho.ZOrder
+        Dim found As Boolean = False
+        Dim i As Integer = 0
         ws = CType(cho.Parent, Excel.Worksheet)
         shc = ws.Shapes
-        sh = shc.Item(zo)
+        While Not found And i <= shc.Count
+            i = i + 1
+            found = cho.Name = shc.Item(i).Name
+        End While
+
+        sh = shc.Item(i)
+
         chtobj2shape = sh
 
     End Function
@@ -11980,14 +11991,14 @@ Public Module Projekte
                                 'ur:12.03.2015
                                 ' Diagramlist auf den neuesten Stand bringen, damit der Resize der Charts funktioniert
 
-                                founddiagram = DiagramList.getDiagramm(chtobj.Name)
-                                DiagramList.Remove(chtobj.Name)
-                                With founddiagram
-                                    tmpArray(2) = vglName
-                                    IDkennung = Join(tmpArray, "#")
-                                    .kennung = IDkennung
-                                End With
-                                DiagramList.Add(founddiagram)
+                                ' '' ''founddiagram = DiagramList.getDiagramm(chtobj.Name)
+                                ' '' ''DiagramList.Remove(chtobj.Name)
+                                ' '' ''With founddiagram
+                                ' '' ''    tmpArray(2) = vglName
+                                ' '' ''    IDkennung = Join(tmpArray, "#")
+                                ' '' ''    .kennung = IDkennung
+                                ' '' ''End With
+                                ' '' ''DiagramList.Add(founddiagram)
                                 ' VORSICHT: das Diagram 'founddiagram' ist von den Inhalten in der DiagramList inkonsistenz.
                                 '           DiagramTitle und die myCollection stimmen nicht mit dem selektierten Projekt überein.
                                 ' TODO: den in den update-Routinen zusammengesetzen DiagramTitle und die aktuelle myCollection müssen noch in das ListenElement richtig eingetragen werden.
