@@ -7596,6 +7596,10 @@ Public Module Projekte
                     End While
 
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                    enableOnUpdate = True
+                    appInstance.ScreenUpdating = True
+
                     Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
                     'xlsCockpits.Close(SaveChanges:=True)
 
@@ -7845,10 +7849,17 @@ Public Module Projekte
         Dim ws As Excel.Worksheet
         Dim shc As Excel.Shapes
         Dim sh As Excel.Shape
-        zo = cho.ZOrder
+        Dim found As Boolean = False
+        Dim i As Integer = 0
         ws = CType(cho.Parent, Excel.Worksheet)
         shc = ws.Shapes
-        sh = shc.Item(zo)
+        While Not found And i <= shc.Count
+            i = i + 1
+            found = cho.Name = shc.Item(i).Name
+        End While
+
+        sh = shc.Item(i)
+
         chtobj2shape = sh
 
     End Function
@@ -10212,7 +10223,7 @@ Public Module Projekte
         For Each chtobj In CType(CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
 
             Try
-                With chtobj
+            With chtobj
                     If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
                         (.Top >= projectShape.Top And .Top <= projectShape.Top + projectShape.Height)) And _
                         ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
@@ -10225,7 +10236,7 @@ Public Module Projekte
             Catch ex As Exception
 
             End Try
-           
+
 
         Next
 
@@ -10614,7 +10625,7 @@ Public Module Projekte
                             phaseShape.Apply()
                         End If
 
-                            
+
 
                     Catch ex As Exception
                         Throw New Exception("in zeichneProjektinPlantafel2 : keine Shape-Erstellung möglich ...  ")
@@ -10805,7 +10816,7 @@ Public Module Projekte
                     End If
                 End If
             End If
-            
+
 
             hproj.shpUID = .ID.ToString
             hproj.tfZeile = calcYCoordToZeile(projectShape.Top)
@@ -10846,7 +10857,7 @@ Public Module Projekte
             ' das muss jedoch nur gemacht werden, wenn nicht vorher schon zeichnePhasenInProjekt oder zeichneMilestonesInProjekt aufgerufen wurde 
             Call bringChartsToFront(projectShape)
         End If
-        
+
 
 
         appInstance.EnableEvents = formerEE
@@ -11529,7 +11540,7 @@ Public Module Projekte
                             listOFShapes.Add(tmpshape.Name)
                         End If
                     Next
-                    
+
                     ' jetzt muss der alte Text gelöscht werden ...
                     If Not IsNothing(oldTxtxShape) Then
                         oldTxtxShape.Delete()
@@ -11584,16 +11595,16 @@ Public Module Projekte
                 listOFShapes.Add(pNameShape.Name)
 
 
-                End If
+            End If
 
 
-                If listOFShapes.Count > 1 Then
-                    ' hier werden die Shapes gruppiert
-                    projectShape = projectboardShapes.groupShapes(listOFShapes, hproj.name)
+            If listOFShapes.Count > 1 Then
+                ' hier werden die Shapes gruppiert
+                projectShape = projectboardShapes.groupShapes(listOFShapes, hproj.name)
 
-                    ' jetzt der Liste der ProjectboardShapes hinzufügen
-                    projectboardShapes.add(projectShape)
-                End If
+                ' jetzt der Liste der ProjectboardShapes hinzufügen
+                projectboardShapes.add(projectShape)
+            End If
 
 
         End With
@@ -12080,14 +12091,14 @@ Public Module Projekte
                                 'ur:12.03.2015
                                 ' Diagramlist auf den neuesten Stand bringen, damit der Resize der Charts funktioniert
 
-                                ' ''founddiagram = DiagramList.getDiagramm(chtobj.Name)
-                                ' ''DiagramList.Remove(chtobj.Name)
-                                ' ''With founddiagram
-                                ' ''    tmpArray(2) = vglName
-                                ' ''    IDkennung = Join(tmpArray, "#")
-                                ' ''    .kennung = IDkennung
-                                ' ''End With
-                                ' ''DiagramList.Add(founddiagram)
+                                ' '' ''founddiagram = DiagramList.getDiagramm(chtobj.Name)
+                                ' '' ''DiagramList.Remove(chtobj.Name)
+                                ' '' ''With founddiagram
+                                ' '' ''    tmpArray(2) = vglName
+                                ' '' ''    IDkennung = Join(tmpArray, "#")
+                                ' '' ''    .kennung = IDkennung
+                                ' '' ''End With
+                                ' '' ''DiagramList.Add(founddiagram)
                                 ' VORSICHT: das Diagram 'founddiagram' ist von den Inhalten in der DiagramList inkonsistenz.
                                 '           DiagramTitle und die myCollection stimmen nicht mit dem selektierten Projekt überein.
                                 ' TODO: den in den update-Routinen zusammengesetzen DiagramTitle und die aktuelle myCollection müssen noch in das ListenElement richtig eingetragen werden.

@@ -1307,87 +1307,87 @@ Public Module awinDiagrams
 
                 lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
-                If isCockpitChart Then
-                    ' jetzt muss eine Dummy Series Collection eingeführt werde, damit das Datalabel über dem Balken angezeigt wird
-                    If lastSC > 1 Then
+                ' '' ''If isCockpitChart Then
+                ' '' ''    ' jetzt muss eine Dummy Series Collection eingeführt werde, damit das Datalabel über dem Balken angezeigt wird
+                ' '' ''    If lastSC > 1 Then
 
-                        maxwert = appInstance.WorksheetFunction.Max(seriesSumDatenreihe)
+                ' '' ''        maxwert = appInstance.WorksheetFunction.Max(seriesSumDatenreihe)
 
-                        For i = 0 To bis - von
-                            VarValues(i) = 0.5 * maxwert
-                        Next i
+                ' '' ''        For i = 0 To bis - von
+                ' '' ''            VarValues(i) = 0.5 * maxwert
+                ' '' ''        Next i
 
-                        With .SeriesCollection.NewSeries
-                            .name = "Dummy"
-                            .Interior.color = RGB(255, 255, 255)
-                            .Values = VarValues
-                            .XValues = Xdatenreihe
-                            .ChartType = Excel.XlChartType.xlColumnStacked
-                            .HasDataLabels = False
-                        End With
-                        lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
+                ' '' ''        With .SeriesCollection.NewSeries
+                ' '' ''            .name = "Dummy"
+                ' '' ''            .Interior.color = RGB(255, 255, 255)
+                ' '' ''            .Values = VarValues
+                ' '' ''            .XValues = Xdatenreihe
+                ' '' ''            .ChartType = Excel.XlChartType.xlColumnStacked
+                ' '' ''            .HasDataLabels = False
+                ' '' ''        End With
+                ' '' ''        lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
-                    End If
-                    With .SeriesCollection(lastSC)
-                        .HasDataLabels = False
-                        VarValues = seriesSumDatenreihe
-                        nr_pts = CType(.Points, Excel.Points).Count
-                        minwert = VarValues.Min
-                        maxwert = VarValues.Max
+                ' '' ''    End If
+                ' '' ''    With .SeriesCollection(lastSC)
+                ' '' ''        .HasDataLabels = False
+                ' '' ''        VarValues = seriesSumDatenreihe
+                ' '' ''        nr_pts = CType(.Points, Excel.Points).Count
+                ' '' ''        minwert = VarValues.Min
+                ' '' ''        maxwert = VarValues.Max
 
-                        mindone = False
-                        maxdone = False
-                        i = 1
-                        While i <= nr_pts And (mindone = False Or maxdone = False)
+                ' '' ''        mindone = False
+                ' '' ''        maxdone = False
+                ' '' ''        i = 1
+                ' '' ''        While i <= nr_pts And (mindone = False Or maxdone = False)
 
-                            If VarValues(i - 1) = minwert And Not mindone Then
-                                mindone = True
-                                With .Points(i)
-                                    .HasDataLabel = True
-                                    .DataLabel.text = Format(minwert, "##,##0")
+                ' '' ''            If VarValues(i - 1) = minwert And Not mindone Then
+                ' '' ''                mindone = True
+                ' '' ''                With .Points(i)
+                ' '' ''                    .HasDataLabel = True
+                ' '' ''                    .DataLabel.text = Format(minwert, "##,##0")
 
-                                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
-                                    Try
+                ' '' ''                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
+                ' '' ''                    Try
 
-                                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
-                                    Catch ex As Exception
-                                    End Try
+                ' '' ''                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
+                ' '' ''                    Catch ex As Exception
+                ' '' ''                    End Try
 
 
-                                End With
-                            ElseIf VarValues(i - 1) = maxwert And Not maxdone Then
-                                maxdone = True
-                                With .Points(i)
-                                    .HasDataLabel = True
-                                    .DataLabel.text = Format(maxwert, "##,##0")
+                ' '' ''                End With
+                ' '' ''            ElseIf VarValues(i - 1) = maxwert And Not maxdone Then
+                ' '' ''                maxdone = True
+                ' '' ''                With .Points(i)
+                ' '' ''                    .HasDataLabel = True
+                ' '' ''                    .DataLabel.text = Format(maxwert, "##,##0")
 
-                                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
-                                    Try
+                ' '' ''                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
+                ' '' ''                    Try
 
-                                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
-                                    Catch ex As Exception
-                                    End Try
+                ' '' ''                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
+                ' '' ''                    Catch ex As Exception
+                ' '' ''                    End Try
 
-                                End With
+                ' '' ''                End With
 
-                            End If
-                            i = i + 1
-                        End While
-                    End With
+                ' '' ''            End If
+                ' '' ''            i = i + 1
+                ' '' ''        End While
+                ' '' ''    End With
 
-                    ' es ist ein Mini-Diagramm, deswegen müssen folgende Einstellungen gelten:
+                ' '' ''    ' es ist ein Mini-Diagramm, deswegen müssen folgende Einstellungen gelten:
 
-                    .HasLegend = False
-                    .HasAxis(Excel.XlAxisType.xlCategory) = False
-                    .HasAxis(Excel.XlAxisType.xlValue) = False
-                    .Axes(Excel.XlAxisType.xlCategory).HasMajorGridlines = False
-                    With .Axes(Excel.XlAxisType.xlValue)
-                        .HasMajorGridlines = False
-                    End With
+                ' '' ''    .HasLegend = False
+                ' '' ''    .HasAxis(Excel.XlAxisType.xlCategory) = False
+                ' '' ''    .HasAxis(Excel.XlAxisType.xlValue) = False
+                ' '' ''    .Axes(Excel.XlAxisType.xlCategory).HasMajorGridlines = False
+                ' '' ''    With .Axes(Excel.XlAxisType.xlValue)
+                ' '' ''        .HasMajorGridlines = False
+                ' '' ''    End With
 
-                ElseIf myCollection.Count > 1 Then
+                ' '' ''ElseIf myCollection.Count > 1 Then
 
-                End If
+                ' '' ''End If
 
 
                 ' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
