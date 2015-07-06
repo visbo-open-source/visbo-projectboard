@@ -6864,18 +6864,37 @@ Public Module awinGeneralModules
                 ElseIf selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
 
                     If selectedPhases.Count > 0 Then
+                        Call deleteBeschriftungen()
+                        If roentgenBlick.isOn Then
+                            Call awinNoshowProjectNeeds()
+                            roentgenBlick.isOn = False
+                        End If
                         Call awinZeichnePhasen(selectedPhases, False, True)
                     End If
 
                     If selectedMilestones.Count > 0 Then
                         ' Phasen anzeigen 
                         Dim farbID As Integer = 4
+                        Call deleteBeschriftungen()
+                        If roentgenBlick.isOn Then
+                            Call awinNoshowProjectNeeds()
+                            roentgenBlick.isOn = False
+                        End If
                         Call awinZeichneMilestones(selectedMilestones, farbID, False, True)
 
                     End If
 
                 ElseIf selectedRoles.Count > 0 Then
-                    Call MsgBox("noch nicht implementiert")
+
+                    Call awinDeleteProjectChildShapes(0)
+                    Call deleteBeschriftungen()
+                    Call awinZeichneBedarfe(selectedRoles, DiagrammTypen(1))
+
+                ElseIf selectedCosts.Count > 0 Then
+
+                    Call awinDeleteProjectChildShapes(0)
+                    Call deleteBeschriftungen()
+                    Call awinZeichneBedarfe(selectedCosts, DiagrammTypen(2))
 
                 Else
                     Call MsgBox("noch nicht implementiert")

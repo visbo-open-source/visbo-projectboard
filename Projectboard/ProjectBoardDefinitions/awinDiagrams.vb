@@ -3749,14 +3749,10 @@ Public Module awinDiagrams
     ' löscht für alle Projekte die Bedarfe für die jeweilige Rolle an
     '
     Sub awinNoshowProjectNeeds()
-        Dim updateScreenWasTrue As Boolean
 
-        If appInstance.ScreenUpdating = True Then
-            updateScreenWasTrue = True
-            appInstance.ScreenUpdating = False
-        Else
-            updateScreenWasTrue = False
-        End If
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        appInstance.ScreenUpdating = False
+        
 
         Call diagramsVisible(False)
 
@@ -3766,9 +3762,9 @@ Public Module awinDiagrams
 
         Call diagramsVisible(True)
 
-        If updateScreenWasTrue Then
-            appInstance.ScreenUpdating = True
-        End If
+
+        appInstance.ScreenUpdating = formerSU
+
 
     End Sub
 
@@ -3826,15 +3822,23 @@ Public Module awinDiagrams
 
                         For i = 1 To .GroupItems.Count
 
-                            If awinSettings.drawProjectLine And i = 1 Then
-
+                            If .GroupItems.Item(i).AlternativeText = "(Projektname)" Then
                                 .GroupItems.Item(i).Line.Transparency = 0.8
-
+                                .GroupItems.Item(i).Fill.Transparency = 1.0
+                                .TextFrame2.TextRange.Text = ""
                             Else
+                                If awinSettings.drawProjectLine And i = 1 Then
 
-                                .GroupItems.Item(i).Fill.Transparency = 0.8
-                                
+                                    .GroupItems.Item(i).Line.Transparency = 0.8
+
+                                Else
+
+                                    .GroupItems.Item(i).Fill.Transparency = 0.8
+
+                                End If
                             End If
+
+                            
 
                         Next
                     Else
@@ -3966,7 +3970,12 @@ Public Module awinDiagrams
 
                         For i = 1 To .GroupItems.Count
 
-                            If awinSettings.drawProjectLine And i = 1 Then
+                            If .GroupItems.Item(i).AlternativeText = "(Projektname)" Then
+                                .GroupItems.Item(i).Line.Transparency = 0.0
+                                .GroupItems.Item(i).Fill.Transparency = 0.0
+                                .TextFrame2.TextRange.Text = hproj.getShapeText
+
+                            ElseIf awinSettings.drawProjectLine And i = 1 Then
 
                                 .GroupItems.Item(i).Line.Transparency = 0.0
 
@@ -4052,7 +4061,9 @@ Public Module awinDiagrams
     ''' <remarks></remarks>
     Function istInTimezone(ByVal spalte As Integer) As Boolean
 
-        If spalte >= showRangeLeft And spalte <= showRangeRight Then
+        If showRangeLeft <= 0 And showRangeRight <= 0 Then
+            istInTimezone = True
+        ElseIf spalte >= showRangeLeft And spalte <= showRangeRight Then
             istInTimezone = True
         Else
             istInTimezone = False

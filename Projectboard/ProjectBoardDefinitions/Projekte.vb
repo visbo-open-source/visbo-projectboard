@@ -10022,7 +10022,36 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' zeichnet die Ressourcen- bzw. Kostenbedarfe in die Projekt-Tafel 
+    ''' </summary>
+    ''' <param name="nameList"></param>
+    ''' <param name="prcTyp"></param>
+    ''' <remarks></remarks>
+    Public Sub awinZeichneBedarfe(ByVal nameList As Collection, ByVal prcTyp As String)
 
+        Dim tmpName As String = ""
+
+        If nameList.Count < 1 Then
+            tmpName = ""
+        ElseIf nameList.Count = 1 Then
+            tmpName = CStr(nameList.Item(1))
+        ElseIf nameList.Count > 1 Then
+            tmpName = "Collection"
+            
+        End If
+
+        With roentgenBlick
+            If .isOn Then
+                Call awinNoshowProjectNeeds()
+            End If
+            .isOn = True
+            .name = tmpName
+            .myCollection = nameList
+            .type = prcTyp
+            Call awinShowProjectNeeds1(nameList, prcTyp)
+        End With
+    End Sub
 
     ''' <summary>
     ''' zeichnet für interaktiven wie Report Modus die Milestones 
@@ -17694,7 +17723,8 @@ Public Module Projekte
                                 If .Status = ProjektStatus(1) Then
                                     .Status = ProjektStatus(2)
                                 End If
-
+                            Else
+                                .diffToPrev = False
                             End If
 
                         End With
@@ -17706,22 +17736,12 @@ Public Module Projekte
 
 
                     Try
-                        ' Änderung tk 18.1.15 nachher soll die Projekt-Tafel komplett gelöscht und neu aufgebaut werden, deshalb wird das hier rausgenomme
-                        '
-                        'If ShowProjekte.contains(pname) Then
-
-                        '    phaseList = projectboardShapes.getPhaseList(pname)
-                        '    milestoneList = projectboardShapes.getMilestoneList(pname)
-
-                        '    ' Shape wird auf der Plan-Tafel gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
-                        '    Call clearProjektinPlantafel(hproj.name)
-
-                        '    ShowProjekte.Remove(pname)
-
-
-                        'End If
 
                         AlleProjekte.Remove(vglName)
+                        If ShowProjekte.contains(hproj.name) Then
+                            ShowProjekte.Remove(hproj.name)
+                        End If
+
 
                     Catch ex1 As Exception
                         Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)

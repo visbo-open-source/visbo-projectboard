@@ -1701,10 +1701,10 @@ Imports System.Drawing
                     .pictureBU.Visible = False
                     .rdbTyp.Visible = False
                     .pictureTyp.Visible = False
-                    .rdbRoles.Visible = False
-                    .pictureRoles.Visible = False
-                    .rdbCosts.Visible = False
-                    .pictureCosts.Visible = False
+                    .rdbRoles.Visible = True
+                    .pictureRoles.Visible = True
+                    .rdbCosts.Visible = True
+                    .pictureCosts.Visible = True
 
                     ' Leistbarkeits-Charts
                     .chkbxOneChart.Checked = False
@@ -1917,8 +1917,8 @@ Imports System.Drawing
                         .statusLabel.Text = ""
                         .statusLabel.Visible = True
 
-                        .rdbRoles.Enabled = False
-                        .rdbCosts.Enabled = False
+                        .rdbRoles.Enabled = True
+                        .rdbCosts.Enabled = True
 
                         .rdbBU.Visible = True
                         .pictureBU.Visible = True
