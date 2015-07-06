@@ -957,6 +957,7 @@ Public Class frmNameSelection
 
     ''' <summary>
     ''' fügt das selektierte Element der Listbox2 hinzu
+    ''' es muss unterschieden werden: 
     ''' </summary>
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
@@ -978,6 +979,20 @@ Public Class frmNameSelection
         Next
 
         nameListBox.SelectedItems.Clear()
+
+        ' Konsistenzbedingungen einhalten: 
+        If (rdbPhases.Checked = True Or rdbMilestones.Checked = True) And selNameListBox.Items.Count > 0 Then
+            selectedCosts.Clear()
+            selectedRoles.Clear()
+        ElseIf rdbRoles.Checked = True Then
+            selectedCosts.Clear()
+            selectedMilestones.Clear()
+            selectedPhases.Clear()
+        ElseIf rdbCosts.Checked = True Then
+            selectedRoles.Clear()
+            selectedMilestones.Clear()
+            selectedPhases.Clear()
+        End If
 
 
 

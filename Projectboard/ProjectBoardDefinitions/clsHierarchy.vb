@@ -438,7 +438,7 @@
             Dim level As Integer = 1
             Dim tmpName As String = elemName
             Dim rootreached As Boolean = False
-            Dim description1 As String = "", description2 As String = ""
+            Dim description1 As String = "", description2 As String = elemName
             Dim phDef As clsPhasenDefinition
 
             isMilestone = elemIDIstMeilenstein(nameID)
