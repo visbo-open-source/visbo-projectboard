@@ -583,7 +583,7 @@ Public Module Module1
     ' prüft , ob übergebenes Diagramm ein Cockpit Diagramm ist
     '
     Function istCockpitDiagramm(ByRef chtobj As ChartObject) As Boolean
-        Dim ergebnis As Boolean = False
+        Dim ergebnis As Boolean = True
 
         ' Änderung 31.7 es gibt keine Cockpit Diagramme mehr, deswegen wird immer falsch zurückgegeben 
         'Dim Sc As Microsoft.Office.Interop.Excel.SeriesCollection
