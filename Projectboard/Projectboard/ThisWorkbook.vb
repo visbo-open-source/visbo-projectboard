@@ -36,7 +36,12 @@ Public Class ThisWorkbook
             .SplitRow = 0
             .DisplayWorkbookTabs = True
             .GridlineColor = RGB(220, 220, 220)
-            .FreezePanes = False
+            Try
+                .FreezePanes = False
+            Catch ex As Exception
+
+            End Try
+
             .DisplayHeadings = True
         End With
 
@@ -254,16 +259,45 @@ Public Class ThisWorkbook
         'Call MsgBox(" in shutdown")
 
 
+        Try
+            Application.DisplayFormulaBar = True
+        Catch ex As Exception
 
-        Application.DisplayFormulaBar = True
+        End Try
+
 
         With Application.ActiveWindow
-            .SplitColumn = 0
-            .SplitRow = 0
-            .DisplayWorkbookTabs = True
-            .GridlineColor = RGB(220, 220, 220)
-            .FreezePanes = False
-            .DisplayHeadings = True
+            Try
+                .SplitColumn = 0
+                .SplitRow = 0
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                .DisplayWorkbookTabs = True
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                .GridlineColor = RGB(220, 220, 220)
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                .FreezePanes = False
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                .DisplayHeadings = True
+            Catch ex As Exception
+
+            End Try
+
         End With
 
         appInstance.ShowChartTipNames = True
@@ -274,7 +308,7 @@ Public Class ThisWorkbook
 
         appInstance.ScreenUpdating = True
         
-        'appInstance.Quit()
+
 
 
     End Sub
