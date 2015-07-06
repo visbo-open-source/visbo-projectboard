@@ -413,16 +413,15 @@ Public Class clsEventsPrcCharts
     Private Sub PrcChartEvents_Select(ElementID As Integer, Arg1 As Integer, Arg2 As Integer) Handles PrcChartEvents.Select
 
 
-        ' in ARG2 steht, das wievielte Element selektiert wurde ...
+        Dim chtobjname As String
+        Dim diagOBJ As clsDiagramm
+        Dim msNumber As Integer = 1
+        Dim chtobj As xlNS.ChartObject
 
-        'If (ElementID = xlNS.XlChartItem.xlSeries) And Arg1 = 1 And Arg2 > 0 Then
         If (ElementID = xlNS.XlChartItem.xlSeries) And Arg2 > 0 Then
             'Dim i As Integer
-            Dim chtobjname As String
-            Dim diagOBJ As clsDiagramm
-            Dim msNumber As Integer = 1
             Dim selMonth As Integer = showRangeLeft + Arg2 - 1
-            Dim chtobj As xlNS.ChartObject
+
 
             'Dim formerUpdate As Boolean = appInstance.ScreenUpdating
             'appInstance.ScreenUpdating = False
@@ -461,6 +460,19 @@ Public Class clsEventsPrcCharts
                     ' jetzt den selektierten Balken im ShowTimeZone anzeigen 
                     Call awinShowSelectedMonth(selMonth)
 
+                ElseIf (diagOBJ.diagrammTyp = DiagrammTypen(1) Or diagOBJ.diagrammTyp = DiagrammTypen(2)) And _
+                    diagOBJ.gsCollection.Count > 0 Then
+
+                    'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+
+                    '    Call zeichneRollenKostenWerteInProjekt(kvp.Value, diagOBJ.gsCollection, selMonth, selMonth, diagOBJ.diagrammTyp)
+
+                    'Next
+
+                    ' jetzt den selektierten Balken im ShowTimeZone anzeigen 
+                    Call awinShowSelectedMonth(selMonth)
+
 
                 ElseIf diagOBJ.diagrammTyp = DiagrammTypen(5) And diagOBJ.gsCollection.Count > 0 Then
 
@@ -486,6 +498,70 @@ Public Class clsEventsPrcCharts
 
             End Try
 
+
+        ElseIf (ElementID = xlNS.XlChartItem.xlSeries) And Arg2 = -1 Then
+
+            ' ggf Röntgenblick einschalten 
+            ' jetzt sind alle Balken selektiert 
+            ' im Falle Rolle / Kostenarten wird jetzt Röntgenblick eingeschaltet 
+
+            Try
+
+                chtobjname = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject).Name
+
+                chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
+                Dim IDKennung As String
+                IDKennung = chtobj.Name
+
+
+                diagOBJ = DiagramList.getDiagramm(chtobjname)
+
+                If (diagOBJ.diagrammTyp = DiagrammTypen(1) Or diagOBJ.diagrammTyp = DiagrammTypen(2)) And _
+                    diagOBJ.gsCollection.Count > 0 Then
+
+                    ' jetzt den Röntgenblick einschalten 
+                    Dim screenUpdateFormerState As Boolean = appInstance.ScreenUpdating
+                    Dim name As String = ""
+                    appInstance.ScreenUpdating = False
+
+                    If diagOBJ.gsCollection.Count < 1 Then
+                        name = ""
+                    ElseIf diagOBJ.gsCollection.Count = 1 Then
+                        name = CStr(diagOBJ.gsCollection.Item(1))
+                    ElseIf diagOBJ.gsCollection.Count > 1 Then
+                        name = "Collection"
+                        Dim myCollection As New Collection
+
+                    End If
+
+
+                    With roentgenBlick
+                        'If .isOn And .name = name And .type = diagOBJ.diagrammTyp Then
+                        '    .isOn = False
+                        '    .name = ""
+                        '    .myCollection = Nothing
+                        '    .type = ""
+                        '    Call awinNoshowProjectNeeds()
+                        'Else
+                        If .isOn Then
+                            Call awinNoshowProjectNeeds()
+                        End If
+                        .isOn = True
+                        .name = name
+                        .myCollection = diagOBJ.gsCollection
+                        .type = diagOBJ.diagrammTyp
+                        Call awinShowProjectNeeds1(diagOBJ.gsCollection, diagOBJ.diagrammTyp)
+                        'End If
+                    End With
+
+
+                    appInstance.ScreenUpdating = screenUpdateFormerState
+
+
+                End If
+            Catch ex As Exception
+
+            End Try
 
 
         End If

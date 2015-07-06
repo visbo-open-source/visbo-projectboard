@@ -1367,61 +1367,74 @@ Public Module awinGeneralModules
                 showRangeLeft = 0
                 showRangeRight = 0
 
-            Else
-                Call awinShowtimezone(von, bis, True)
+                ' jetzt prüfen, ob Röntgenblick an ist
+                ' wenn ja: ausscalten 
+                With roentgenBlick
+                    If roentgenBlick.isOn Then
+                        .isOn = False
+                        .name = ""
+                        .myCollection = Nothing
+                        .type = ""
+                        Call awinNoshowProjectNeeds()
+                    End If
+                End With
+                
+
+                Else
+                    Call awinShowtimezone(von, bis, True)
 
 
-                showRangeLeft = von
-                showRangeRight = bis
+                    showRangeLeft = von
+                    showRangeRight = bis
 
 
-                ' jetzt werden - falls nötig die Projekte nachgeladen ... 
-                Try
-                    If awinSettings.applyFilter Then
-                        ' vorher hiess das loadprojectsonChange - jetzt ist es so: 
-                        ' wenn applyFilter = true, dann soll nachgeladen werden unter Anwendung 
-                        ' des Filters "Last"
-                        Dim filter As New clsFilter
-                        filter = filterDefinitions.retrieveFilter("Last")
-                        Call awinProjekteImZeitraumLaden(awinSettings.databaseName, filter)
+                    ' jetzt werden - falls nötig die Projekte nachgeladen ... 
+                    Try
+                        If awinSettings.applyFilter Then
+                            ' vorher hiess das loadprojectsonChange - jetzt ist es so: 
+                            ' wenn applyFilter = true, dann soll nachgeladen werden unter Anwendung 
+                            ' des Filters "Last"
+                            Dim filter As New clsFilter
+                            filter = filterDefinitions.retrieveFilter("Last")
+                            Call awinProjekteImZeitraumLaden(awinSettings.databaseName, filter)
 
-                        '' jetzt sind wieder alle Projekte des Zeitraums da - deswegen muss nicht ggf nachgeladen werden 
-                        'DeletedProjekte.Clear()
+                            '' jetzt sind wieder alle Projekte des Zeitraums da - deswegen muss nicht ggf nachgeladen werden 
+                            'DeletedProjekte.Clear()
 
-                        '
-                        '   wenn "selectedRoleNeeds" ungleich Null ist, werden Bedarfe angezeigt - die müssen hier wieder - mit den neuen Daten für show_range_lefet, .._right eingeblendet werden
-                        '
-                        If roentgenBlick.isOn Then
-                            With roentgenBlick
-                                Call awinShowProjectNeeds1(mycollection:=.myCollection, type:=.type)
-                            End With
+                            '
+                            '   wenn "selectedRoleNeeds" ungleich Null ist, werden Bedarfe angezeigt - die müssen hier wieder - mit den neuen Daten für show_range_lefet, .._right eingeblendet werden
+                            '
+                            If roentgenBlick.isOn Then
+                                With roentgenBlick
+                                    Call awinShowProjectNeeds1(mycollection:=.myCollection, type:=.type)
+                                End With
+                            End If
+
+
+
+                            '
+                            ' wenn diagramme angezeigt sind - aktualisieren dieser Diagramme
+                            '
+
+
+
                         End If
 
+                        ' betrachteter Zeitraum wurde geändert - typus = 4
+                        Call awinNeuZeichnenDiagramme(4)
 
 
-                        '
-                        ' wenn diagramme angezeigt sind - aktualisieren dieser Diagramme
-                        '
+                    Catch ex As Exception
+                        Call MsgBox(ex.Message)
+                    End Try
+                End If
 
 
 
-                    End If
-
-                    ' betrachteter Zeitraum wurde geändert - typus = 4
-                    Call awinNeuZeichnenDiagramme(4)
 
 
-                Catch ex As Exception
-                    Call MsgBox(ex.Message)
-                End Try
+
             End If
-
-
-
-
-
-
-        End If
 
 
 
@@ -6851,18 +6864,37 @@ Public Module awinGeneralModules
                 ElseIf selectedPhases.Count > 0 Or selectedMilestones.Count > 0 Then
 
                     If selectedPhases.Count > 0 Then
+                        Call deleteBeschriftungen()
+                        If roentgenBlick.isOn Then
+                            Call awinNoshowProjectNeeds()
+                            roentgenBlick.isOn = False
+                        End If
                         Call awinZeichnePhasen(selectedPhases, False, True)
                     End If
 
                     If selectedMilestones.Count > 0 Then
                         ' Phasen anzeigen 
                         Dim farbID As Integer = 4
+                        Call deleteBeschriftungen()
+                        If roentgenBlick.isOn Then
+                            Call awinNoshowProjectNeeds()
+                            roentgenBlick.isOn = False
+                        End If
                         Call awinZeichneMilestones(selectedMilestones, farbID, False, True)
 
                     End If
 
                 ElseIf selectedRoles.Count > 0 Then
-                    Call MsgBox("noch nicht implementiert")
+
+                    Call awinDeleteProjectChildShapes(0)
+                    Call deleteBeschriftungen()
+                    Call awinZeichneBedarfe(selectedRoles, DiagrammTypen(1))
+
+                ElseIf selectedCosts.Count > 0 Then
+
+                    Call awinDeleteProjectChildShapes(0)
+                    Call deleteBeschriftungen()
+                    Call awinZeichneBedarfe(selectedCosts, DiagrammTypen(2))
 
                 Else
                     Call MsgBox("noch nicht implementiert")
