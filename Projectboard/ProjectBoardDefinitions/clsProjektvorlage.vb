@@ -251,7 +251,7 @@
 
     ''' <summary>
     ''' gibt den Meilenstein mit Element-ID elemID zurück 
-    ''' Nothing, wenn sie nicht existiert 
+    ''' Nothing, wenn der Meilenstein nicht existiert 
     ''' </summary>
     ''' <param name="elemID"></param>
     ''' <value></value>
@@ -703,6 +703,8 @@
     Public ReadOnly Property getElemIdsOf(ByVal namenListe As Collection, ByVal namesAreMilestones As Boolean) As Collection
         Get
             Dim iDCollection As New Collection
+            Dim tmpSortList As New SortedList(Of DateTime, String)
+            Dim sortDate As DateTime
             Dim itemName As String = ""
             Dim itemBreadcrumb As String = ""
             Dim iDItem As String
@@ -715,9 +717,24 @@
 
                 If istElemID(itemName) Then
 
-                    If Not iDCollection.Contains(itemName) Then
-                        iDCollection.Add(itemName, itemName)
+                    If namesAreMilestones Then
+                        sortDate = Me.getMilestoneByID(itemName).getDate
+                    Else
+                        sortDate = Me.getPhaseByID(itemName).getStartDate
                     End If
+
+                    If Not tmpSortList.ContainsValue(itemName) Then
+
+                        Do While tmpSortList.ContainsKey(sortDate)
+                            sortDate = sortDate.AddMilliseconds(1)
+                        Loop
+
+                        tmpSortList.Add(sortDate, itemName)
+
+                    End If
+                    'If Not iDCollection.Contains(itemName) Then
+                    '    iDCollection.Add(itemName, itemName)
+                    'End If
 
                 Else
                     Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb)
@@ -731,9 +748,24 @@
 
                                 Try
                                     iDItem = Me.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx)).nameID
-                                    If Not iDCollection.Contains(iDItem) Then
-                                        iDCollection.Add(iDItem, iDItem)
+                                    sortDate = Me.getMilestoneByID(iDItem).getDate
+
+                                    If Not tmpSortList.ContainsValue(iDItem) Then
+
+                                        Do While tmpSortList.ContainsKey(sortDate)
+                                            sortDate = sortDate.AddMilliseconds(1)
+                                        Loop
+
+
+                                        tmpSortList.Add(sortDate, iDItem)
+
+
                                     End If
+
+                                    'If Not iDCollection.Contains(iDItem) Then
+                                    '    iDCollection.Add(iDItem, iDItem)
+                                    'End If
+
                                 Catch ex As Exception
 
                                 End Try
@@ -747,15 +779,35 @@
 
                             If phaseIndices(px) > 0 And phaseIndices(px) <= Me.CountPhases Then
                                 iDItem = Me.getPhase(phaseIndices(px)).nameID
-                                If Not iDCollection.Contains(iDItem) Then
-                                    iDCollection.Add(iDItem, iDItem)
+
+                                sortDate = Me.getPhaseByID(iDItem).getStartDate
+
+                                If Not tmpSortList.ContainsValue(iDItem) Then
+
+                                    Do While tmpSortList.ContainsKey(sortDate)
+                                        sortDate = sortDate.AddMilliseconds(1)
+                                    Loop
+
+
+                                    tmpSortList.Add(sortDate, iDItem)
+
+
                                 End If
+
+                                'If Not iDCollection.Contains(iDItem) Then
+                                '    iDCollection.Add(iDItem, iDItem)
+                                'End If
                             End If
 
                         Next
                     End If
                 End If
 
+            Next
+
+            ' jetzt muss umkopiert werden 
+            For Each kvp As KeyValuePair(Of DateTime, String) In tmpSortList
+                iDCollection.Add(kvp.Value, kvp.Value)
             Next
 
             getElemIdsOf = iDCollection
@@ -776,6 +828,8 @@
     Public ReadOnly Property getAllElemIDs(ByVal lookingForMS As Boolean) As Collection
         Get
             Dim iDCollection As New Collection
+            Dim tmpSortList As New SortedList(Of DateTime, String)
+            Dim sortDate As DateTime
             Dim firstIX As Integer, lastIX As Integer
             Dim elemID As String
 
@@ -787,9 +841,21 @@
                 Else
                     For mx = firstIX To lastIX
                         elemID = Me.hierarchy.getIDAtIndex(mx)
-                        If Not iDCollection.Contains(elemID) Then
-                            iDCollection.Add(elemID, elemID)
+
+                        sortDate = Me.getMilestoneByID(elemID).getDate
+                        If Not tmpSortList.ContainsValue(elemID) Then
+
+                            Do While tmpSortList.ContainsKey(sortDate)
+                                sortDate = sortDate.AddMilliseconds(1)
+                            Loop
+
+                            tmpSortList.Add(sortDate, elemID)
+
                         End If
+
+                        'If Not iDCollection.Contains(elemID) Then
+                        '    iDCollection.Add(elemID, elemID)
+                        'End If
                     Next
                 End If
             Else
@@ -804,12 +870,32 @@
 
                 For mx = firstIX To lastIX
                     elemID = Me.hierarchy.getIDAtIndex(mx)
-                    If Not iDCollection.Contains(elemID) Then
-                        iDCollection.Add(elemID, elemID)
+
+                    sortDate = Me.getPhaseByID(elemID).getStartDate
+
+                    If Not tmpSortList.ContainsValue(elemID) Then
+
+                        Do While tmpSortList.ContainsKey(sortDate)
+                            sortDate = sortDate.AddMilliseconds(1)
+                        Loop
+
+
+                        tmpSortList.Add(sortDate, elemID)
+
+
                     End If
+
+                    'If Not iDCollection.Contains(elemID) Then
+                    '    iDCollection.Add(elemID, elemID)
+                    'End If
                 Next
 
             End If
+
+            ' jetzt muss umkopiert werden 
+            For Each kvp As KeyValuePair(Of DateTime, String) In tmpSortList
+                iDCollection.Add(kvp.Value, kvp.Value)
+            Next
 
             getAllElemIDs = iDCollection
 

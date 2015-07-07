@@ -5108,7 +5108,6 @@ Public Module Projekte
             repObj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
 
 
-
         End With
 
 
@@ -7597,6 +7596,10 @@ Public Module Projekte
                     End While
 
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                    enableOnUpdate = True
+                    appInstance.ScreenUpdating = True
+
                     Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
                     'xlsCockpits.Close(SaveChanges:=True)
 
@@ -7846,10 +7849,17 @@ Public Module Projekte
         Dim ws As Excel.Worksheet
         Dim shc As Excel.Shapes
         Dim sh As Excel.Shape
-        zo = cho.ZOrder
+        Dim found As Boolean = False
+        Dim i As Integer = 0
         ws = CType(cho.Parent, Excel.Worksheet)
         shc = ws.Shapes
-        sh = shc.Item(zo)
+        While Not found And i <= shc.Count
+            i = i + 1
+            found = cho.Name = shc.Item(i).Name
+        End While
+
+        sh = shc.Item(i)
+
         chtobj2shape = sh
 
     End Function
@@ -10023,7 +10033,36 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' zeichnet die Ressourcen- bzw. Kostenbedarfe in die Projekt-Tafel 
+    ''' </summary>
+    ''' <param name="nameList"></param>
+    ''' <param name="prcTyp"></param>
+    ''' <remarks></remarks>
+    Public Sub awinZeichneBedarfe(ByVal nameList As Collection, ByVal prcTyp As String)
 
+        Dim tmpName As String = ""
+
+        If nameList.Count < 1 Then
+            tmpName = ""
+        ElseIf nameList.Count = 1 Then
+            tmpName = CStr(nameList.Item(1))
+        ElseIf nameList.Count > 1 Then
+            tmpName = "Collection"
+            
+        End If
+
+        With roentgenBlick
+            If .isOn Then
+                Call awinNoshowProjectNeeds()
+            End If
+            .isOn = True
+            .name = tmpName
+            .myCollection = nameList
+            .type = prcTyp
+            Call awinShowProjectNeeds1(nameList, prcTyp)
+        End With
+    End Sub
 
     ''' <summary>
     ''' zeichnet für interaktiven wie Report Modus die Milestones 
@@ -10183,16 +10222,21 @@ Public Module Projekte
 
         For Each chtobj In CType(CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
 
+            Try
             With chtobj
-                If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
-                    (.Top >= projectShape.Top And .Top <= projectShape.Top + projectShape.Height)) And _
-                    ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
-                    (.Left >= projectShape.Left And .Left <= projectShape.Left + projectShape.Width)) Then
+                    If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
+                        (.Top >= projectShape.Top And .Top <= projectShape.Top + projectShape.Height)) And _
+                        ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
+                        (.Left >= projectShape.Left And .Left <= projectShape.Left + projectShape.Width)) Then
 
-                    CType(worksheetShapes.Item(chtobj.Name), Excel.Shape).ZOrder(MsoZOrderCmd.msoBringToFront)
+                        CType(worksheetShapes.Item(chtobj.Name), Excel.Shape).ZOrder(MsoZOrderCmd.msoBringToFront)
 
-                End If
-            End With
+                    End If
+                End With
+            Catch ex As Exception
+
+            End Try
+
 
         Next
 
@@ -10581,7 +10625,7 @@ Public Module Projekte
                             phaseShape.Apply()
                         End If
 
-                            
+
 
                     Catch ex As Exception
                         Throw New Exception("in zeichneProjektinPlantafel2 : keine Shape-Erstellung möglich ...  ")
@@ -10772,7 +10816,7 @@ Public Module Projekte
                     End If
                 End If
             End If
-            
+
 
             hproj.shpUID = .ID.ToString
             hproj.tfZeile = calcYCoordToZeile(projectShape.Top)
@@ -10813,7 +10857,7 @@ Public Module Projekte
             ' das muss jedoch nur gemacht werden, wenn nicht vorher schon zeichnePhasenInProjekt oder zeichneMilestonesInProjekt aufgerufen wurde 
             Call bringChartsToFront(projectShape)
         End If
-        
+
 
 
         appInstance.EnableEvents = formerEE
@@ -11378,6 +11422,56 @@ Public Module Projekte
     End Sub
 
     ''' <summary>
+    ''' zeichnet die Werte der Rollen und Kosten auf die Projekt-Tafel
+    ''' </summary>
+    ''' <param name="hproj">das Projekt, das gezeichnet werden soll </param>
+    ''' <param name="namenListe">die Liste der Rollen bzw. Kosten</param>
+    ''' <param name="tmpShowRangeLeft">linke Spalte des Bereiches, in dem gezeichnet werden soll</param>
+    ''' <param name="tmpShowrangeRight">rechte Spalte des Bereiches, in dem gezeichnet werden soll</param>
+    ''' <param name="type">gibt an den Type an, damit lässt sich entscheiden, ob Rolle / Kosten in der Namenliste stehen</param>
+    ''' <remarks></remarks>
+    Public Sub zeichneRollenKostenWerteInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal tmpShowRangeLeft As Integer, ByVal tmpShowrangeRight As Integer, _
+                                                          ByVal type As String)
+
+        ' aktuell wird das nur im Fall nicht-extended Mode angezeigt 
+        If awinSettings.drawphases Then
+            ' nichts tun 
+            Call MsgBox("wird aktuell nur im Einzeilen - Modus unterstützt" & vbLf & _
+                         "Wählen Sie Extended Mode = Nein")
+            Exit Sub
+        End If
+
+        ' aktuell wird nur unterstützt, einen Monat anzuzeigen 
+        If tmpShowRangeLeft <> tmpShowrangeRight Then
+            Call MsgBox("aktuell wird nur ein Monat unterstützt")
+            Exit Sub
+        End If
+
+        ' bestimme die Zeile und die Spalte 
+        Dim currentRow As Integer = hproj.tfZeile + 1
+        Dim currentColumn As Integer = tmpShowRangeLeft
+
+        ' bestimme den Wert
+        Dim currentValue As Double = hproj.getBedarfeInMonth(namenListe, type, tmpShowRangeLeft)
+
+        ' schreibe jetzt den Wert in die Zelle
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            If currentValue > 0 Then
+                .Cells(currentRow, currentColumn).value = CInt(currentValue)
+
+            End If
+
+        End With
+
+        appInstance.EnableEvents = formerEE
+
+
+    End Sub
+
+    ''' <summary>
     ''' trägt bei Projektlinie den Namen ein ... 
     ''' </summary>
     ''' <param name="hproj"></param>
@@ -11436,12 +11530,26 @@ Public Module Projekte
                 Else
                     shapeGruppe = projectShape.Ungroup
                     Dim anzElements As Integer = shapeGruppe.Count
+                    ' hier muss der alte Shape Text rausgelöscht werdewn 
 
-                    Dim i As Integer
-                    For i = 1 To anzElements
-                        listOFShapes.Add(shapeGruppe.Item(i).Name)
+                    Dim oldTxtxShape As Excel.Shape = Nothing
+                    For Each tmpshape As Excel.Shape In shapeGruppe
+                        If tmpshape.AlternativeText = "(Projektname)" Then
+                            oldTxtxShape = tmpshape
+                        Else
+                            listOFShapes.Add(tmpshape.Name)
+                        End If
                     Next
+
+                    ' jetzt muss der alte Text gelöscht werden ...
+                    If Not IsNothing(oldTxtxShape) Then
+                        oldTxtxShape.Delete()
+                    End If
+
+
                 End If
+
+
 
                 ' ab jetzt darf auf projectShape nicht mehr zugegriffen werden, da es ggf bereits im Else-Zweig aufgelöst wurde ...
 
@@ -11451,6 +11559,7 @@ Public Module Projekte
                                                         txtLeft, txtTop, txtwidth, txtHeight)
 
                 With pNameShape
+                    .AlternativeText = "(Projektname)"
                     .TextFrame2.AutoSize = MsoAutoSize.msoAutoSizeShapeToFitText
                     .TextFrame2.WordWrap = MsoTriState.msoFalse
                     .TextFrame2.TextRange.Text = hproj.getShapeText
@@ -11959,7 +12068,7 @@ Public Module Projekte
         Dim chtobj As Excel.ChartObject
         Dim vglName As String = hproj.name.Trim
         Dim founddiagram As New clsDiagramm
-        Dim IDkennung As String
+        ' ''Dim IDkennung As String
 
 
         If Not (hproj Is Nothing) Then
@@ -11977,17 +12086,19 @@ Public Module Projekte
                             ' chtobj name ist aufgebaut: pr#PTprdk.kennung#pName#Auswahl
                             If tmpArray(0) = "pr" Then
 
+                                ' tk/ur: 2.7.15 das muss nochmal in Ruhe überarbeitet werden 
+                                ' Aufnahme Diagramme 
                                 'ur:12.03.2015
                                 ' Diagramlist auf den neuesten Stand bringen, damit der Resize der Charts funktioniert
 
-                                founddiagram = DiagramList.getDiagramm(chtobj.Name)
-                                DiagramList.Remove(chtobj.Name)
-                                With founddiagram
-                                    tmpArray(2) = vglName
-                                    IDkennung = Join(tmpArray, "#")
-                                    .kennung = IDkennung
-                                End With
-                                DiagramList.Add(founddiagram)
+                                ' '' ''founddiagram = DiagramList.getDiagramm(chtobj.Name)
+                                ' '' ''DiagramList.Remove(chtobj.Name)
+                                ' '' ''With founddiagram
+                                ' '' ''    tmpArray(2) = vglName
+                                ' '' ''    IDkennung = Join(tmpArray, "#")
+                                ' '' ''    .kennung = IDkennung
+                                ' '' ''End With
+                                ' '' ''DiagramList.Add(founddiagram)
                                 ' VORSICHT: das Diagram 'founddiagram' ist von den Inhalten in der DiagramList inkonsistenz.
                                 '           DiagramTitle und die myCollection stimmen nicht mit dem selektierten Projekt überein.
                                 ' TODO: den in den update-Routinen zusammengesetzen DiagramTitle und die aktuelle myCollection müssen noch in das ListenElement richtig eingetragen werden.
@@ -17421,11 +17532,13 @@ Public Module Projekte
 
                 tfzeile = hproj.tfZeile
 
-                ' Projekt aus Showprojekte rausnehmen
-                ShowProjekte.Remove(pname)
-
                 ' die Darstellung in der Projekt-Tafel löschen
                 Call clearProjektinPlantafel(pname)
+
+                ' Änderung tk 4.7.15 erst clear auf Tafel, dann Remove aus Showprojekte 
+                ' andernfalls macht der Clear mit Röntgen-Blick Schwierigkeiten 
+                ' Projekt aus Showprojekte rausnehmen
+                ShowProjekte.Remove(pname)
 
             End If
 
@@ -17621,7 +17734,8 @@ Public Module Projekte
                                 If .Status = ProjektStatus(1) Then
                                     .Status = ProjektStatus(2)
                                 End If
-
+                            Else
+                                .diffToPrev = False
                             End If
 
                         End With
@@ -17633,22 +17747,12 @@ Public Module Projekte
 
 
                     Try
-                        ' Änderung tk 18.1.15 nachher soll die Projekt-Tafel komplett gelöscht und neu aufgebaut werden, deshalb wird das hier rausgenomme
-                        '
-                        'If ShowProjekte.contains(pname) Then
-
-                        '    phaseList = projectboardShapes.getPhaseList(pname)
-                        '    milestoneList = projectboardShapes.getMilestoneList(pname)
-
-                        '    ' Shape wird auf der Plan-Tafel gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
-                        '    Call clearProjektinPlantafel(hproj.name)
-
-                        '    ShowProjekte.Remove(pname)
-
-
-                        'End If
 
                         AlleProjekte.Remove(vglName)
+                        If ShowProjekte.contains(hproj.name) Then
+                            ShowProjekte.Remove(hproj.name)
+                        End If
+
 
                     Catch ex1 As Exception
                         Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)
@@ -18650,4 +18754,75 @@ Public Module Projekte
 
     End Sub
 
+
+    ''' <summary>
+    ''' es werden zufällig Phasen verschoben, verkürzt bzw. verlängert 
+    ''' dadurch werden auch Meilensteine, die in den Phasen sind, vorgezogen oder nach hinten geschoben 
+    ''' ausserdem werden dadurch auch Ressourcen durch die proportionale Anpassung weniger / mehr.  
+    ''' es werden allerdings nur Phasen verlängert/verkürzt die
+    ''' noch nicht beendet sind 
+    ''' die bereits begonnen haben bzw. deren Start nicht weiter weg als 2 M ist.  
+    ''' </summary>
+    ''' <param name="shorterPercentage"></param>
+    ''' <param name="longerPercentage"></param>
+    ''' <param name="heute"></param>
+    ''' <remarks></remarks>
+    Public Sub createRandomChanges(ByVal shorterPercentage As Double, ByVal longerPercentage As Double, ByVal heute As Date)
+
+        Dim expl As String = "Erläuterung ..."
+        Dim redBaseValue As Double = 0.3
+        Dim yellowBaseValue As Double = 0.7
+        Dim zufall As New Random(10)
+
+        Dim moveForward As Double = 0.1
+        Dim moveBackward As Double = 0.8
+        Dim makeItShorter As Double = 0.1
+        Dim makeItLonger As Double = 0.8
+        Dim currentValue As Double
+
+        Dim cphase As clsPhase
+        Dim previousSetting As Boolean = awinSettings.propAnpassRess
+        Dim startColumn As Integer, endColumn As Integer
+        Dim heuteColumn As Integer = getColumnOfDate(heute)
+
+        ' bisheriges Setting merken 
+        awinSettings.propAnpassRess = True
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            With kvp.Value
+
+                For pi As Integer = 1 To .CountPhases
+                    cphase = .getPhase(pi)
+                    startColumn = getColumnOfDate(cphase.getStartDate)
+                    endColumn = getColumnOfDate(cphase.getEndDate)
+
+                    ' wenn die Ausgangsbedingung für nach vorne /hinten verschieben zutrifft: noch nicht gestartet, aber Start weniger als 2 Monate entfernt  
+                    If heuteColumn <= startColumn And heuteColumn + 2 >= startColumn Then
+                        ' Start nach vorne bzw hinten verschieben
+                        currentValue = zufall.NextDouble
+                        If currentValue <= moveForward Then
+                            Dim anzahlTage As Long = DateDiff(DateInterval.Day, heute, cphase.getStartDate)
+                            If anzahlTage > 0 Then
+                                Dim newStartOffset As Integer = cphase.startOffsetinDays - CInt(anzahlTage * currentValue)
+
+                            End If
+
+
+                        ElseIf currentValue >= moveBackward Then
+
+                        End If
+                    End If
+
+                    ' wenn die Ausgangsbedingung für verkürzen / verlängern zutrifft: bereits gestartet, aber noch nicht beendet 
+                Next
+
+            End With
+
+        Next
+
+        ' altes Setting wiederherstellen 
+        awinSettings.propAnpassRess = previousSetting
+
+    End Sub
 End Module
