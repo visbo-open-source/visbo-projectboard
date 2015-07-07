@@ -264,10 +264,10 @@
       <tab id ="PT6" label ="Einstellungen">
         <group id ="PT6G1" label ="Visualisierug">
           <checkBox id="PT6G1B2" label="Extended Drawing Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen" supertip ="Es werden alle Projekte mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. In dieser Darstellung können einzelne Phasen oder Meilensteine selektiv verschoben werden; Achtung: es werden alle Projekte der Session im Extended Mode dargestellt - das kann nach Menge der Projekte einige Zeit dauern!"/>
-          <checkBox id="PT6G1B3" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>
+          <!--<checkBox id="PT6G1B3" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>-->
           <checkBox id="PT6G1B4" label="Anzeigen selekt. Objekte im Summenchart" getPressed="PTShowSelectedObjects" onAction ="awinSetShowSelObj" supertip ="ist diese Option aktiviert, so werden in Leistbarkeitscharts der Anteil der selektierten Projekte im Leistbarkeits-Gebirge angezeigt; auf diese Art und Weise kann man leicht erkennen, welchen Anteil die selektierten Projekte am Gesamtverlauf haben"/>
           <checkBox id="PT6G1B5" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln" supertip ="ist diese Option aktiviert, so werden die Ampeln mit einem Schatten dargestellt, dessen Farbe der gesetzten Ampelfarbe des Meilensteines entspricht. So kann man schnell erkennen, wo die roten Ampeln liegen. Durch Klicken auf den Meilenstein wird eine Erläuterung des Projektleiters zur Meilensteinbewertung angezeigt"/>
-          <button id="PT6G1B6" label="Windows u. Excel-Version"  onAction ="PTShowVersions" />
+          <!--<button id="PT6G1B6" label="Windows u. Excel-Version"  onAction ="PTShowVersions" />-->
           <checkBox id="PT6G1B7" label="MissingDefinitions hinzufügen" getPressed="PTAddMissingInit" onAction ="PTAddMissingDefinitions" supertip ="fehlende Phasen- oder Meilenstein-Namen werden im CustomizationFile ergänzt"/>
         </group>
         <group id ="PT6G2" label="Berechnung">
