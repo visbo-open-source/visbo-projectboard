@@ -394,12 +394,17 @@ Imports System.Drawing
         Dim returnValue As DialogResult
         Dim cockpitName As String
         Try
+            
 
             Call projektTafelInit()
+
+            appInstance.ScreenUpdating = False
+            enableOnUpdate = False
 
             Call awinDeSelect()
 
             Dim anzDiagrams As Integer = CType(appInstance.Worksheets(arrWsNames(3)).ChartObjects, Excel.ChartObjects).Count
+
 
             If anzDiagrams > 0 Then
 
@@ -412,19 +417,16 @@ Imports System.Drawing
 
                     cockpitName = storeCockpitFrm.ComboBox1.Text
 
-                    appInstance.ScreenUpdating = False
-
-                    enableOnUpdate = False
-
                     Call awinStoreCockpit(cockpitName)
 
-                    enableOnUpdate = True
-
-                    appInstance.ScreenUpdating = True
                 Else
 
+                    appInstance.ScreenUpdating = True
+                    enableOnUpdate = True
 
                 End If
+
+                
                 ' hier muss eventuell ein Neuzeichnen erfolgen
             Else
                 Call MsgBox("Es ist kein Chart angezeigt")
@@ -1241,21 +1243,27 @@ Imports System.Drawing
                     Exit Sub
                 End Try
 
-                ' jetzt werden die Daten aus hproj in Edit Ressourcen worksheet geschrieben ... 
-                appInstance.ScreenUpdating = False
-                Call awinStoreProjForEditRess(hproj)
-                Dim oldShpID As Integer = CInt(hproj.shpUID)
+                If hproj.Status = ProjektStatus(0) Then
+                    ' jetzt werden die Daten aus hproj in Edit Ressourcen worksheet geschrieben ... 
+                    appInstance.ScreenUpdating = False
+                    Call awinStoreProjForEditRess(hproj)
+                    Dim oldShpID As Integer = CInt(hproj.shpUID)
 
-                ' hier wird das non-modale Dialog Fenster aufgerufen 
-                Dim confirmEdit As New frmConfirmEditRess
+                    ' hier wird das non-modale Dialog Fenster aufgerufen 
+                    Dim confirmEdit As New frmConfirmEditRess
 
-                confirmEdit.selectedProject = hproj.name
-                confirmEdit.Show()
+                    confirmEdit.selectedProject = hproj.name
+                    confirmEdit.Show()
 
-                With CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
-                    .Activate()
-                End With
+                    With CType(appInstance.Worksheets(arrWsNames(5)), Excel.Worksheet)
+                        .Activate()
+                    End With
+                    appInstance.ScreenUpdating = True
+                Else
+                    Call MsgBox("bitte erst eine Variante anlegen ...")
+                End If
 
+                
 
 
             Else
@@ -1317,54 +1325,61 @@ Imports System.Drawing
                 Try
                     hproj = ShowProjekte.getProject(singleShp.Name)
 
-                    ' jetzt werden die Werte im Fenster vorbesetzt ...
-                    With ProjektAendern
-                        .projectName.Text = hproj.name
-                        .vorlagenName.Text = hproj.VorlagenName
-                        For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
-                            .businessUnit.Items.Add(kvp.Value.name)
-                        Next
-                        .businessUnit.Text = hproj.businessUnit
-                        .Erloes.Text = hproj.Erloes.ToString
-                        .risiko.Text = hproj.Risiko.ToString("0.0")
-                        .sFit.Text = hproj.StrategicFit.ToString("0.0")
-                    End With
-                    ' Aufruf Dialog Fenster 
-                    returnValue = ProjektAendern.ShowDialog
+                    If hproj.Status = ProjektStatus(0) Then
 
-                    If returnValue = DialogResult.OK Then
-                        With hproj
-                            .timeStamp = Date.Now
+                        ' jetzt werden die Werte im Fenster vorbesetzt ...
+                        With ProjektAendern
+                            .projectName.Text = hproj.name
+                            .vorlagenName.Text = hproj.VorlagenName
+                            For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                                .businessUnit.Items.Add(kvp.Value.name)
+                            Next
+                            .businessUnit.Text = hproj.businessUnit
+                            .Erloes.Text = hproj.Erloes.ToString
+                            .risiko.Text = hproj.Risiko.ToString("0.0")
+                            .sFit.Text = hproj.StrategicFit.ToString("0.0")
+                        End With
+                        ' Aufruf Dialog Fenster 
+                        returnValue = ProjektAendern.ShowDialog
 
-                            If .Erloes <> CType(ProjektAendern.Erloes.Text, Double) Then
-                                If .Erloes = 0 Then
-                                    .Erloes = CType(ProjektAendern.Erloes.Text, Double)
+                        If returnValue = DialogResult.OK Then
+                            With hproj
+                                .timeStamp = Date.Now
 
-                                    ' Workaround: 
-                                    Dim tmpValue As Integer = hproj.dauerInDays
-                                    Call awinCreateBudgetWerte(hproj)
-                                Else
-                                    Try
-                                        Call awinUpdateBudgetWerte(hproj, CType(ProjektAendern.Erloes.Text, Double))
+                                If .Erloes <> CType(ProjektAendern.Erloes.Text, Double) Then
+                                    If .Erloes = 0 Then
                                         .Erloes = CType(ProjektAendern.Erloes.Text, Double)
-                                    Catch ex As Exception
-                                        .Erloes = CType(ProjektAendern.Erloes.Text, Double)
+
                                         ' Workaround: 
                                         Dim tmpValue As Integer = hproj.dauerInDays
                                         Call awinCreateBudgetWerte(hproj)
-                                    End Try
+                                    Else
+                                        Try
+                                            Call awinUpdateBudgetWerte(hproj, CType(ProjektAendern.Erloes.Text, Double))
+                                            .Erloes = CType(ProjektAendern.Erloes.Text, Double)
+                                        Catch ex As Exception
+                                            .Erloes = CType(ProjektAendern.Erloes.Text, Double)
+                                            ' Workaround: 
+                                            Dim tmpValue As Integer = hproj.dauerInDays
+                                            Call awinCreateBudgetWerte(hproj)
+                                        End Try
 
+                                    End If
                                 End If
-                            End If
 
-                            .StrategicFit = CType(ProjektAendern.sFit.Text, Double)
-                            .Risiko = CType(ProjektAendern.risiko.Text, Double)
-                            .businessUnit = CType(ProjektAendern.businessUnit.Text, String)
+                                .StrategicFit = CType(ProjektAendern.sFit.Text, Double)
+                                .Risiko = CType(ProjektAendern.risiko.Text, Double)
+                                .businessUnit = CType(ProjektAendern.businessUnit.Text, String)
 
-                        End With
+                            End With
 
-                        Call awinNeuZeichnenDiagramme(5)
+                            Call awinNeuZeichnenDiagramme(5)
+                        End If
+
+                    Else
+                        Call MsgBox("bitte erst eine Variante anlegen")
                     End If
+                    
 
                 Catch ex As Exception
                     Call MsgBox(" Fehler in EditProject " & singleShp.Name & " , Modul: Tom2G1Resources")
@@ -1409,7 +1424,7 @@ Imports System.Drawing
         Dim pname As String
         Dim todoListe As New Collection
         Dim errMessage As String = ""
-        Dim initMsg As String = "für folgende Projekte nicht zulässig, da sie nicht mehr Status=geplant haben: "
+        Dim initMsg As String = "bitte erst eine Variante anlegen"
 
         Call projektTafelInit()
 
@@ -1688,10 +1703,10 @@ Imports System.Drawing
                     .pictureBU.Visible = False
                     .rdbTyp.Visible = False
                     .pictureTyp.Visible = False
-                    .rdbRoles.Visible = False
-                    .pictureRoles.Visible = False
-                    .rdbCosts.Visible = False
-                    .pictureCosts.Visible = False
+                    .rdbRoles.Visible = True
+                    .pictureRoles.Visible = True
+                    .rdbCosts.Visible = True
+                    .pictureCosts.Visible = True
 
                     ' Leistbarkeits-Charts
                     .chkbxOneChart.Checked = False
@@ -1904,8 +1919,8 @@ Imports System.Drawing
                         .statusLabel.Text = ""
                         .statusLabel.Visible = True
 
-                        .rdbRoles.Enabled = False
-                        .rdbCosts.Enabled = False
+                        .rdbRoles.Enabled = True
+                        .rdbCosts.Enabled = True
 
                         .rdbBU.Visible = True
                         .pictureBU.Visible = True
@@ -2591,14 +2606,20 @@ Imports System.Drawing
             dateiName = getInventurImport.selectedDateiName
 
             Try
-                appInstance.Workbooks.Open(dateiName)
 
-                ' alle Import Projekte erstmal löschen
-                ImportProjekte.Clear()
-                Call awinImportProjektInventur(myCollection)
-                appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+                If My.Computer.FileSystem.FileExists(dateiName) Then
+                    appInstance.Workbooks.Open(dateiName)
 
-                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                    ' alle Import Projekte erstmal löschen
+                    ImportProjekte.Clear()
+                    Call awinImportProjektInventur(myCollection)
+                    appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                    Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+                Else
+                    Call MsgBox("bitte Datei auswählen ...")
+                End If
+                
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -7808,7 +7829,7 @@ Imports System.Drawing
         End If
 
         If Not atleastOne Then
-            Call MsgBox("done ..")
+            Call MsgBox("alles ok ..")
         End If
 
         enableOnUpdate = True
@@ -7822,8 +7843,8 @@ Imports System.Drawing
 
         enableOnUpdate = False
         appInstance.EnableEvents = True
-        Dim yellows As Double = 0.07
-        Dim reds As Double = 0.02
+        Dim yellows As Double = 0.1
+        Dim reds As Double = 0.04
         Call createInitialRandomBewertungen(yellows, reds, Date.Now)
 
         enableOnUpdate = True
