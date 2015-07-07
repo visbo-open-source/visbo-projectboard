@@ -5108,7 +5108,6 @@ Public Module Projekte
             repObj = CType(.ChartObjects(anzDiagrams + 1), Excel.ChartObject)
 
 
-
         End With
 
 
@@ -7198,7 +7197,8 @@ Public Module Projekte
     '
     ' Sub trägt ein individuelles Projekt ein
     '
-    Public Sub erstelleInventurProjekt(ByRef hproj As clsProjekt, ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, ByVal endedate As Date, _
+    Public Sub erstelleInventurProjekt(ByRef hproj As clsProjekt, ByVal pname As String, ByVal vorlagenName As String, ByVal variantName As String, _
+                                       ByVal startdate As Date, ByVal endedate As Date, _
                                        ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
                                        ByVal volume As Double, ByVal complexity As Double, ByVal businessUnit As String, ByVal description As String)
 
@@ -7206,8 +7206,6 @@ Public Module Projekte
         Dim pStatus As String = ProjektStatus(1) ' jedes Projekt soll zu Beginn als beauftragtes Projekt importiert werden 
         Dim zeile As Integer = tafelZeile
         Dim spalte As Integer = getColumnOfDate(startdate)
-        'Dim plen As Integer
-        'Dim pcolor As Object
         Dim heute As Date = Now
         Dim key As String = pname & "#"
 
@@ -7216,7 +7214,9 @@ Public Module Projekte
         '
         ' ein neues Projekt wird als Objekt angelegt ....
         '
-
+        If IsNothing(variantName) Then
+            variantName = ""
+        End If
 
         Try
             Projektvorlagen.getProject(vorlagenName).korrCopyTo(hproj, startdate, endedate)
@@ -7229,6 +7229,7 @@ Public Module Projekte
         Try
             With hproj
                 .name = pname
+                .variantName = variantName
                 '.getPhase(1).name = pname
                 .getPhase(1).nameID = rootPhaseName
                 .VorlagenName = vorlagenName
@@ -7271,18 +7272,59 @@ Public Module Projekte
 
     End Sub
 
-    '
-    '
-    '
+
     ''' <summary>
-    ''' löscht das angegebene Projekt mit Name pName inkl all seiner Varianten 
+    ''' fügt dem Projekt hproj das Modul mit Namen vorlagenName hinzu
+    ''' alternativ können ParentID einer Phase oder parentName und startOffset, endoffset angegeben werden
+    ''' Achtung: ergänzen zu einer ParentID wird noch nicht unterstützt  - hier muss noch behandelt werden, dass
+    ''' die neu hinzugefügten Phasen ja am Ende der AllPhases List angefügt werden; andererseits werden beim Darstellen des Extended Mode die Phasen eines 
+    ''' nach dem anderen gezeichnet; notwendig wäre hier eine zusätzliche Struktur, die die Reihenfolge beeinhaltet oder AllPhases und die Hierarchie Struktur muss neu afgebaut bzw. geändert werden 
     ''' </summary>
-    ''' <param name="pName">
-    ''' gibt an , ob es der erste Aufruf war
-    ''' wenn ja, kommt erst der Bestätigungs-Dialog 
-    ''' wenn nein, wird ohne Aufforderung zur Bestätigung gelöscht 
-    ''' </param>
+    ''' <param name="hproj"></param>
+    ''' <param name="parentNameID"></param>
+    ''' <param name="parentName"></param>
+    ''' <param name="vorlagenName"></param>
+    ''' <param name="startOffset"></param>
+    ''' <param name="endOffset"></param>
     ''' <remarks></remarks>
+    Public Sub addModuleToProjekt(ByRef hproj As clsProjekt, ByVal vorlagenName As String, _
+                                      ByVal parentNameID As String, ByVal parentName As String, _
+                                      ByVal startOffset As Integer, ByVal endOffset As Integer, _
+                                      ByVal dontStretch As Boolean)
+
+        Dim modulVorlage As clsProjektvorlage
+        If ModulVorlagen.Contains(vorlagenName) Then
+
+            If parentNameID.Length > 0 Then
+                Throw New ArgumentException("wird noch nicht unterstützt ...")
+            ElseIf parentName.Length = 0 Then
+                Throw New ArgumentException("Name muss mindestens ein Zeichen enthalten ")
+            ElseIf startOffset <= 0 Or endOffset <= 0 Or endOffset - startOffset <= 0 Then
+                Throw New ArgumentException("ungültige Start-/Ende Angaben: " & startOffset & " , " & endOffset)
+            Else
+                ' jetzt kann die Aktion durchgeführt werden 
+                modulVorlage = ModulVorlagen.getProject(vorlagenName)
+                modulVorlage.moduleCopyTo(project:=hproj, parentID:="", moduleName:=parentName, _
+                                           modulStartOffset:=startOffset, endOffset:=endOffset, dontStretch:=dontStretch)
+            End If
+
+        Else
+            Throw New ArgumentException("Vorlage " & vorlagenName & " existiert nicht")
+        End If
+
+    End Sub
+        '
+        '
+        '
+        ''' <summary>
+        ''' löscht das angegebene Projekt mit Name pName inkl all seiner Varianten 
+        ''' </summary>
+        ''' <param name="pName">
+        ''' gibt an , ob es der erste Aufruf war
+        ''' wenn ja, kommt erst der Bestätigungs-Dialog 
+        ''' wenn nein, wird ohne Aufforderung zur Bestätigung gelöscht 
+        ''' </param>
+        ''' <remarks></remarks>
     Public Sub awinDeleteProjectInSession(ByVal pName As String)
 
 
@@ -7554,6 +7596,10 @@ Public Module Projekte
                     End While
 
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                    enableOnUpdate = True
+                    appInstance.ScreenUpdating = True
+
                     Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
                     'xlsCockpits.Close(SaveChanges:=True)
 
@@ -7803,10 +7849,17 @@ Public Module Projekte
         Dim ws As Excel.Worksheet
         Dim shc As Excel.Shapes
         Dim sh As Excel.Shape
-        zo = cho.ZOrder
+        Dim found As Boolean = False
+        Dim i As Integer = 0
         ws = CType(cho.Parent, Excel.Worksheet)
         shc = ws.Shapes
-        sh = shc.Item(zo)
+        While Not found And i <= shc.Count
+            i = i + 1
+            found = cho.Name = shc.Item(i).Name
+        End While
+
+        sh = shc.Item(i)
+
         chtobj2shape = sh
 
     End Function
@@ -9980,7 +10033,36 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' zeichnet die Ressourcen- bzw. Kostenbedarfe in die Projekt-Tafel 
+    ''' </summary>
+    ''' <param name="nameList"></param>
+    ''' <param name="prcTyp"></param>
+    ''' <remarks></remarks>
+    Public Sub awinZeichneBedarfe(ByVal nameList As Collection, ByVal prcTyp As String)
 
+        Dim tmpName As String = ""
+
+        If nameList.Count < 1 Then
+            tmpName = ""
+        ElseIf nameList.Count = 1 Then
+            tmpName = CStr(nameList.Item(1))
+        ElseIf nameList.Count > 1 Then
+            tmpName = "Collection"
+            
+        End If
+
+        With roentgenBlick
+            If .isOn Then
+                Call awinNoshowProjectNeeds()
+            End If
+            .isOn = True
+            .name = tmpName
+            .myCollection = nameList
+            .type = prcTyp
+            Call awinShowProjectNeeds1(nameList, prcTyp)
+        End With
+    End Sub
 
     ''' <summary>
     ''' zeichnet für interaktiven wie Report Modus die Milestones 
@@ -10140,16 +10222,21 @@ Public Module Projekte
 
         For Each chtobj In CType(CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
 
+            Try
             With chtobj
-                If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
-                    (.Top >= projectShape.Top And .Top <= projectShape.Top + projectShape.Height)) And _
-                    ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
-                    (.Left >= projectShape.Left And .Left <= projectShape.Left + projectShape.Width)) Then
+                    If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
+                        (.Top >= projectShape.Top And .Top <= projectShape.Top + projectShape.Height)) And _
+                        ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
+                        (.Left >= projectShape.Left And .Left <= projectShape.Left + projectShape.Width)) Then
 
-                    CType(worksheetShapes.Item(chtobj.Name), Excel.Shape).ZOrder(MsoZOrderCmd.msoBringToFront)
+                        CType(worksheetShapes.Item(chtobj.Name), Excel.Shape).ZOrder(MsoZOrderCmd.msoBringToFront)
 
-                End If
-            End With
+                    End If
+                End With
+            Catch ex As Exception
+
+            End Try
+
 
         Next
 
@@ -10352,6 +10439,7 @@ Public Module Projekte
         Dim vorlagenShape As xlNS.Shape
 
         Dim shpExists As Boolean
+        Dim oldAlternativeText As String = ""
 
 
         Try
@@ -10384,6 +10472,8 @@ Public Module Projekte
             Try
                 projectShape = worksheetShapes.Item(pname)
                 shpExists = True
+                ' merken, weil bei Variante erzeugen der Alternative Text nicht geändert werden soll 
+                oldAlternativeText = projectShape.AlternativeText
             Catch ex As Exception
                 shpExists = False
                 projectShape = Nothing
@@ -10535,7 +10625,7 @@ Public Module Projekte
                             phaseShape.Apply()
                         End If
 
-                            
+
 
                     Catch ex As Exception
                         Throw New Exception("in zeichneProjektinPlantafel2 : keine Shape-Erstellung möglich ...  ")
@@ -10713,16 +10803,20 @@ Public Module Projekte
         End If
 
         With projectShape
-            If drawphases Then
-                .AlternativeText = CInt(PTshty.projektE).ToString
+            If shpExists Then
+                .AlternativeText = oldAlternativeText
             Else
-                If awinSettings.drawProjectLine Then
-                    .AlternativeText = CInt(PTshty.projektL).ToString
+                If drawphases Then
+                    .AlternativeText = CInt(PTshty.projektE).ToString
                 Else
-                    .AlternativeText = CInt(PTshty.projektN).ToString
+                    If awinSettings.drawProjectLine Then
+                        .AlternativeText = CInt(PTshty.projektL).ToString
+                    Else
+                        .AlternativeText = CInt(PTshty.projektN).ToString
+                    End If
                 End If
-
             End If
+
 
             hproj.shpUID = .ID.ToString
             hproj.tfZeile = calcYCoordToZeile(projectShape.Top)
@@ -10763,7 +10857,7 @@ Public Module Projekte
             ' das muss jedoch nur gemacht werden, wenn nicht vorher schon zeichnePhasenInProjekt oder zeichneMilestonesInProjekt aufgerufen wurde 
             Call bringChartsToFront(projectShape)
         End If
-        
+
 
 
         appInstance.EnableEvents = formerEE
@@ -11328,6 +11422,56 @@ Public Module Projekte
     End Sub
 
     ''' <summary>
+    ''' zeichnet die Werte der Rollen und Kosten auf die Projekt-Tafel
+    ''' </summary>
+    ''' <param name="hproj">das Projekt, das gezeichnet werden soll </param>
+    ''' <param name="namenListe">die Liste der Rollen bzw. Kosten</param>
+    ''' <param name="tmpShowRangeLeft">linke Spalte des Bereiches, in dem gezeichnet werden soll</param>
+    ''' <param name="tmpShowrangeRight">rechte Spalte des Bereiches, in dem gezeichnet werden soll</param>
+    ''' <param name="type">gibt an den Type an, damit lässt sich entscheiden, ob Rolle / Kosten in der Namenliste stehen</param>
+    ''' <remarks></remarks>
+    Public Sub zeichneRollenKostenWerteInProjekt(ByVal hproj As clsProjekt, ByVal namenListe As Collection, ByVal tmpShowRangeLeft As Integer, ByVal tmpShowrangeRight As Integer, _
+                                                          ByVal type As String)
+
+        ' aktuell wird das nur im Fall nicht-extended Mode angezeigt 
+        If awinSettings.drawphases Then
+            ' nichts tun 
+            Call MsgBox("wird aktuell nur im Einzeilen - Modus unterstützt" & vbLf & _
+                         "Wählen Sie Extended Mode = Nein")
+            Exit Sub
+        End If
+
+        ' aktuell wird nur unterstützt, einen Monat anzuzeigen 
+        If tmpShowRangeLeft <> tmpShowrangeRight Then
+            Call MsgBox("aktuell wird nur ein Monat unterstützt")
+            Exit Sub
+        End If
+
+        ' bestimme die Zeile und die Spalte 
+        Dim currentRow As Integer = hproj.tfZeile + 1
+        Dim currentColumn As Integer = tmpShowRangeLeft
+
+        ' bestimme den Wert
+        Dim currentValue As Double = hproj.getBedarfeInMonth(namenListe, type, tmpShowRangeLeft)
+
+        ' schreibe jetzt den Wert in die Zelle
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
+            If currentValue > 0 Then
+                .Cells(currentRow, currentColumn).value = CInt(currentValue)
+
+            End If
+
+        End With
+
+        appInstance.EnableEvents = formerEE
+
+
+    End Sub
+
+    ''' <summary>
     ''' trägt bei Projektlinie den Namen ein ... 
     ''' </summary>
     ''' <param name="hproj"></param>
@@ -11386,12 +11530,26 @@ Public Module Projekte
                 Else
                     shapeGruppe = projectShape.Ungroup
                     Dim anzElements As Integer = shapeGruppe.Count
+                    ' hier muss der alte Shape Text rausgelöscht werdewn 
 
-                    Dim i As Integer
-                    For i = 1 To anzElements
-                        listOFShapes.Add(shapeGruppe.Item(i).Name)
+                    Dim oldTxtxShape As Excel.Shape = Nothing
+                    For Each tmpshape As Excel.Shape In shapeGruppe
+                        If tmpshape.AlternativeText = "(Projektname)" Then
+                            oldTxtxShape = tmpshape
+                        Else
+                            listOFShapes.Add(tmpshape.Name)
+                        End If
                     Next
+
+                    ' jetzt muss der alte Text gelöscht werden ...
+                    If Not IsNothing(oldTxtxShape) Then
+                        oldTxtxShape.Delete()
+                    End If
+
+
                 End If
+
+
 
                 ' ab jetzt darf auf projectShape nicht mehr zugegriffen werden, da es ggf bereits im Else-Zweig aufgelöst wurde ...
 
@@ -11401,6 +11559,7 @@ Public Module Projekte
                                                         txtLeft, txtTop, txtwidth, txtHeight)
 
                 With pNameShape
+                    .AlternativeText = "(Projektname)"
                     .TextFrame2.AutoSize = MsoAutoSize.msoAutoSizeShapeToFitText
                     .TextFrame2.WordWrap = MsoTriState.msoFalse
                     .TextFrame2.TextRange.Text = hproj.getShapeText
@@ -11909,7 +12068,7 @@ Public Module Projekte
         Dim chtobj As Excel.ChartObject
         Dim vglName As String = hproj.name.Trim
         Dim founddiagram As New clsDiagramm
-        Dim IDkennung As String
+        ' ''Dim IDkennung As String
 
 
         If Not (hproj Is Nothing) Then
@@ -11927,17 +12086,19 @@ Public Module Projekte
                             ' chtobj name ist aufgebaut: pr#PTprdk.kennung#pName#Auswahl
                             If tmpArray(0) = "pr" Then
 
+                                ' tk/ur: 2.7.15 das muss nochmal in Ruhe überarbeitet werden 
+                                ' Aufnahme Diagramme 
                                 'ur:12.03.2015
                                 ' Diagramlist auf den neuesten Stand bringen, damit der Resize der Charts funktioniert
 
-                                founddiagram = DiagramList.getDiagramm(chtobj.Name)
-                                DiagramList.Remove(chtobj.Name)
-                                With founddiagram
-                                    tmpArray(2) = vglName
-                                    IDkennung = Join(tmpArray, "#")
-                                    .kennung = IDkennung
-                                End With
-                                DiagramList.Add(founddiagram)
+                                ' '' ''founddiagram = DiagramList.getDiagramm(chtobj.Name)
+                                ' '' ''DiagramList.Remove(chtobj.Name)
+                                ' '' ''With founddiagram
+                                ' '' ''    tmpArray(2) = vglName
+                                ' '' ''    IDkennung = Join(tmpArray, "#")
+                                ' '' ''    .kennung = IDkennung
+                                ' '' ''End With
+                                ' '' ''DiagramList.Add(founddiagram)
                                 ' VORSICHT: das Diagram 'founddiagram' ist von den Inhalten in der DiagramList inkonsistenz.
                                 '           DiagramTitle und die myCollection stimmen nicht mit dem selektierten Projekt überein.
                                 ' TODO: den in den update-Routinen zusammengesetzen DiagramTitle und die aktuelle myCollection müssen noch in das ListenElement richtig eingetragen werden.
@@ -13269,7 +13430,8 @@ Public Module Projekte
         fileName = cleanFileName(fileName)
 
         ' fileName wird nun ergänzt mit dem passenden Pfad
-        fileName = awinPath & projektFilesOrdner & "\" & fileName
+        'fileName = awinPath & projektFilesOrdner & "\" & fileName
+        fileName = exportOrdnerNames(PTImpExp.visbo) & "\" & fileName
 
 
         ' -------------------------------------------------
@@ -14003,8 +14165,8 @@ Public Module Projekte
         fileName = cleanFileName(fileName)
 
         ' fileName wird nun ergänzt mit dem passenden Pfad
-        fileName = awinPath & projektFilesOrdner & "\" & fileName
-
+        'fileName = awinPath & projektFilesOrdner & "\" & fileName
+        fileName = exportOrdnerNames(PTImpExp.visbo) & "\" & fileName
 
         ' -------------------------------------------------
         ' hier werden die einzelnen Stamm-Daten in das entsprechende File geschrieben 
@@ -16258,6 +16420,7 @@ Public Module Projekte
         Dim worksheetShapes As Excel.Shapes
         Dim nameID As String
         Dim description As String = ""
+        
         Dim ok As Boolean
         Dim index As Integer = 0
 
@@ -16300,87 +16463,32 @@ Public Module Projekte
                 index = 0
                 For Each elemShape In shapeSammlung
 
+                    ' zurücksetzen 
+                    description = ""
                     txtShape = Nothing
                     ok = False
+                    nameID = ""
 
-                    If istMeilensteinShape(elemShape) And annotateMilestones Then
 
+                    If isPhaseType(kindOfShape(elemShape)) And annotatePhases Then
+                        nameID = extractName(elemShape.Name, PTshty.phaseN)
                         ok = True
 
+                    ElseIf isMilestoneType(kindOfShape(elemShape)) And annotateMilestones Then
                         nameID = extractName(elemShape.Name, PTshty.milestoneN)
-                        If showStdNames Then
-                            If showAbbrev Then
-                                Dim msName As String = elemNameOfElemID(nameID)
-                                Dim msDef As clsMeilensteinDefinition
-                                msDef = MilestoneDefinitions.getMilestoneDef(msName)
-                                If IsNothing(msDef) Then
-                                    description = "-"
-                                Else
-                                    description = msDef.shortName
-                                    If IsNothing(description) Then
-                                        description = "-"
-                                    Else
-                                        If description = "" Then
-                                            description = "-"
-                                        End If
+                        ok = True
 
-                                    End If
-                                End If
+                    End If
 
-                            Else
-                                description = elemNameOfElemID(nameID)
-                            End If
-
-                        Else
-                            description = hproj.hierarchy.nodeItem(nameID).origName
-                        End If
-
-
-                    ElseIf istPhasenShape(elemShape) And annotatePhases Then
-
-
-
-                        nameID = extractName(elemShape.Name, PTshty.milestoneN)
-
-                        If nameID <> rootPhaseName Then
-
-                            ok = True
-                            If showStdNames Then
-
-                                If showAbbrev Then
-                                    Dim phName As String = elemNameOfElemID(nameID)
-                                    Dim phDef As clsPhasenDefinition
-                                    phDef = PhaseDefinitions.getPhaseDef(phName)
-                                    If IsNothing(phDef) Then
-                                        description = "-"
-                                    Else
-                                        description = phDef.shortName
-                                        If IsNothing(description) Then
-                                            description = "-"
-                                        Else
-                                            If description = "" Then
-                                                description = "-"
-                                            End If
-                                        End If
-                                    End If
-
-                                Else
-                                    description = elemNameOfElemID(nameID)
-                                End If
-
-                            Else
-                                description = hproj.hierarchy.nodeItem(nameID).origName
-                            End If
-                        
-                        End If
-
-                        
-
+                    If nameID = rootPhaseName Then
+                        ok = False
                     End If
 
                     ' jetzt wird das Description Shape erzeugt 
                     If ok Then
                         ' nur, wenn es entweder ein Meilenstein oder eine Phase war ... 
+
+                        description = hproj.hierarchy.getBestNameOfID(nameID, showStdNames, showAbbrev)
 
                         top = elemShape.Top
                         left = elemShape.Left
@@ -16395,8 +16503,8 @@ Public Module Projekte
                             .TextFrame2.WordWrap = MsoTriState.msoFalse
                             .TextFrame2.TextRange.Text = description
                             .TextFrame2.TextRange.Font.Size = hproj.Schrift - 2
-                            .TextFrame2.MarginLeft = 0.05
-                            .TextFrame2.MarginRight = 0.05
+                            .TextFrame2.MarginLeft = 0.1
+                            .TextFrame2.MarginRight = 0.1
                             .TextFrame2.MarginTop = 0
                             .TextFrame2.MarginBottom = 0
                             .TextFrame2.VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
@@ -16410,7 +16518,7 @@ Public Module Projekte
                                 .Fill.Transparency = 0
                                 .Fill.Solid()
                             End If
-                            
+
 
                         End With
 
@@ -16464,7 +16572,7 @@ Public Module Projekte
                 Catch ex As Exception
 
                 End Try
-                
+
                 ' hier muss das alte Shape wieder restauriert werden 
                 projectShape = shapeSammlung.Group
 
@@ -17304,10 +17412,12 @@ Public Module Projekte
 
     ''' <summary>
     ''' speichert die aktuelle Konstellation in currentProjektListe in eine Konstellation
+    ''' wenn die ImportProjekte vom Typ clsProjekteAlle übergeben wird, dann wird die hergenommen, um die Constellation aufzubauen 
     ''' </summary>
     ''' <param name="constellationName"></param>
     ''' <remarks></remarks>
-    Public Sub storeSessionConstellation(ByRef currentProjektListe As clsProjekte, ByVal constellationName As String)
+    Public Sub storeSessionConstellation(ByRef currentProjektListe As clsProjekte, ByVal constellationName As String, _
+                                         Optional ByVal ImportProjekte As clsProjekteAlle = Nothing)
 
         'Dim request As New Request(awinSettings.databaseName)
 
@@ -17329,17 +17439,33 @@ Public Module Projekte
         End With
 
         Dim newConstellationItem As clsConstellationItem
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In currentProjektListe.Liste
-            newConstellationItem = New clsConstellationItem
-            With newConstellationItem
-                .projectName = kvp.Key
-                .show = True
-                .Start = kvp.Value.startDate
-                .variantName = kvp.Value.variantName
-                .zeile = kvp.Value.tfZeile
-            End With
-            newC.Add(newConstellationItem)
-        Next
+
+        If Not IsNothing(ImportProjekte) Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ImportProjekte.liste
+                newConstellationItem = New clsConstellationItem
+                With newConstellationItem
+                    .projectName = kvp.Value.name
+                    .show = True
+                    .Start = kvp.Value.startDate
+                    .variantName = kvp.Value.variantName
+                    .zeile = kvp.Value.tfZeile
+                End With
+                newC.Add(newConstellationItem)
+            Next
+        Else
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In currentProjektListe.Liste
+                newConstellationItem = New clsConstellationItem
+                With newConstellationItem
+                    .projectName = kvp.Key
+                    .show = True
+                    .Start = kvp.Value.startDate
+                    .variantName = kvp.Value.variantName
+                    .zeile = kvp.Value.tfZeile
+                End With
+                newC.Add(newConstellationItem)
+            Next
+        End If
+
 
 
         Try
@@ -17349,16 +17475,8 @@ Public Module Projekte
             Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
         End Try
 
-        ' Portfolio in die Datenbank speichern
-        ' 2.11.14 wird nicht automatisch in der Datenbank gespeichert 
-        ' erst mit dem expliziten Speichern in die Datenbank werden die Portfolios auch mitgespeichert  
-        'If request.pingMongoDb() Then
-        '    If Not request.storeConstellationToDB(newC) Then
-        '        Call MsgBox("Fehler beim Speichern der projektConstellation '" & newC.constellationName & "' in die Datenbank")
-        '    End If
-        'Else
-        '    Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen!")
-        'End If
+
+
 
     End Sub
 
@@ -17414,11 +17532,13 @@ Public Module Projekte
 
                 tfzeile = hproj.tfZeile
 
-                ' Projekt aus Showprojekte rausnehmen
-                ShowProjekte.Remove(pname)
-
                 ' die Darstellung in der Projekt-Tafel löschen
                 Call clearProjektinPlantafel(pname)
+
+                ' Änderung tk 4.7.15 erst clear auf Tafel, dann Remove aus Showprojekte 
+                ' andernfalls macht der Clear mit Röntgen-Blick Schwierigkeiten 
+                ' Projekt aus Showprojekte rausnehmen
+                ShowProjekte.Remove(pname)
 
             End If
 
@@ -17441,7 +17561,7 @@ Public Module Projekte
             End If
 
         Else
-            Throw New ArgumentException("Projektvariante existiert nicht")
+            'Throw New ArgumentException("Projektvariante existiert nicht")
         End If
 
 
@@ -17457,8 +17577,10 @@ Public Module Projekte
     ''' </summary>
     ''' <param name="myCollection"></param>
     ''' <param name="importDate"></param>
+    ''' <param name="scenarioName">wenn scenarioName einen wert hat, dann werden für bereits existierende Projekte Varianten mit dem Namen des Szenario-Namens erzeugt </param>
     ''' <remarks></remarks>
-    Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date, ByVal pStatus As String)
+    Public Sub importProjekteEintragen(ByVal myCollection As Collection, ByVal importDate As Date, ByVal pStatus As String, _
+                                       Optional ByVal scenarioName As String = "")
 
         Dim hproj As New clsProjekt, cproj As New clsProjekt
         Dim fullName As String, vglName As String
@@ -17612,7 +17734,8 @@ Public Module Projekte
                                 If .Status = ProjektStatus(1) Then
                                     .Status = ProjektStatus(2)
                                 End If
-
+                            Else
+                                .diffToPrev = False
                             End If
 
                         End With
@@ -17624,22 +17747,12 @@ Public Module Projekte
 
 
                     Try
-                        ' Änderung tk 18.1.15 nachher soll die Projekt-Tafel komplett gelöscht und neu aufgebaut werden, deshalb wird das hier rausgenomme
-                        '
-                        'If ShowProjekte.contains(pname) Then
-
-                        '    phaseList = projectboardShapes.getPhaseList(pname)
-                        '    milestoneList = projectboardShapes.getMilestoneList(pname)
-
-                        '    ' Shape wird auf der Plan-Tafel gelöscht - ausserdem wird der Verweis in hproj auf das Shape gelöscht 
-                        '    Call clearProjektinPlantafel(hproj.name)
-
-                        '    ShowProjekte.Remove(pname)
-
-
-                        'End If
 
                         AlleProjekte.Remove(vglName)
+                        If ShowProjekte.contains(hproj.name) Then
+                            ShowProjekte.Remove(hproj.name)
+                        End If
+
 
                     Catch ex1 As Exception
                         Throw New ArgumentException("Fehler beim Update des Projektes " & ex1.Message)
@@ -18022,6 +18135,38 @@ Public Module Projekte
             isProjectType = True
         Else
             isProjectType = False
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' gibt zurück, ob es sich bei dem angegebenen Shape um einen Meilenstein handelt 
+    ''' </summary>
+    ''' <param name="type"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isMilestoneType(ByVal type As Integer) As Boolean
+
+        If type = PTshty.milestoneN Or type = PTshty.milestoneE Then
+            isMilestoneType = True
+        Else
+            isMilestoneType = False
+        End If
+
+    End Function
+
+    ''' <summary>
+    ''' gibt zurück, ob es sich bei dem angegebenen Shape um eine Phase handelt 
+    ''' </summary>
+    ''' <param name="type"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isPhaseType(ByVal type As Integer) As Boolean
+
+        If type = PTshty.phase1 Or type = PTshty.phaseE Or type = PTshty.phaseN Then
+            isPhaseType = True
+        Else
+            isPhaseType = False
         End If
 
     End Function
@@ -18455,4 +18600,229 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' wird nur zum Aufsetzen von zufälligen Bewertungen in Demo-Szenarien benötigt ... 
+    ''' 
+    ''' </summary>
+    ''' <param name="yellowPercentage">gibt an wieviele Meilensteine gelb bewertet werden sollen</param>
+    ''' <param name="redPercentage">gibt an, wieviele Meilensteine rot bewertet werden sollen</param>
+    ''' <param name="heute">gibt das Datum an, das als das heutige gelten soll</param> 
+    ''' <remarks></remarks>
+    Public Sub createInitialRandomBewertungen(ByVal yellowPercentage As Double, ByVal redPercentage As Double, ByVal heute As Date)
+
+        Dim expl As String = "Erläuterung ..."
+        Dim redBaseValue As Double = 0.3
+        Dim yellowBaseValue As Double = 0.7
+        Dim zufall As New Random(10)
+
+
+        Dim allMilestones As Integer
+        Dim redMilestones As Integer
+        Dim yellowMilestones As Integer
+        Dim greenMilestones As Integer
+        Dim firstMS As Integer
+        Dim lastMS As Integer
+        Dim currentValue As Double
+        Dim heuteColumn As Integer = getColumnOfDate(heute)
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            allMilestones = 0
+            redMilestones = 0
+            yellowMilestones = 0
+            greenMilestones = 0
+
+            With kvp.Value
+                firstMS = .hierarchy.getIndexOf1stMilestone
+                lastMS = .hierarchy.count
+
+                For i As Integer = firstMS To lastMS
+                    Dim msID As String = .hierarchy.getIDAtIndex(i)
+                    Dim milestone As clsMeilenstein = .getMilestoneByID(msID)
+                    Dim msColumn As Integer = getColumnOfDate(milestone.getDate)
+
+                    If msColumn <= heuteColumn + 6 Then
+
+                       
+
+                        currentValue = zufall.NextDouble
+                        With milestone
+                            If currentValue >= redBaseValue And _
+                                currentValue <= redBaseValue + redPercentage Then
+
+                                Dim b As clsBewertung
+
+                                If .bewertungsCount = 0 Then
+                                    b = New clsBewertung
+                                    b.description = "Erläuterung für die rote Ampel ..."
+                                    b.color = awinSettings.AmpelRot
+                                    .addBewertung(b)
+                                Else
+                                    b = .getBewertung(1)
+                                    b.description = "Erläuterung für die rote Ampel ..."
+                                    b.color = awinSettings.AmpelRot
+                                End If
+                                
+                                If msColumn > heuteColumn Then
+                                    redMilestones = redMilestones + 1
+                                End If
+
+
+
+                            ElseIf currentValue >= yellowBaseValue And _
+                                currentValue <= yellowBaseValue + yellowPercentage Then
+                                Dim b As clsBewertung
+
+                                If .bewertungsCount = 0 Then
+                                    b = New clsBewertung
+                                    b.description = "Erläuterung für die gelbe Ampel ..."
+                                    b.color = awinSettings.AmpelGelb
+                                    .addBewertung(b)
+                                Else
+                                    b = .getBewertung(1)
+                                    b.description = "Erläuterung für die gelbe Ampel ..."
+                                    b.color = awinSettings.AmpelGelb
+                                End If
+
+                                If msColumn > heuteColumn Then
+                                    yellowMilestones = yellowMilestones + 1
+                                End If
+
+
+
+                            Else
+                                Dim b As clsBewertung
+
+                                If .bewertungsCount = 0 Then
+                                    b = New clsBewertung
+                                    b.description = "aktuell alles i.O.  ..."
+                                    b.color = awinSettings.AmpelGruen
+                                    .addBewertung(b)
+                                Else
+                                    b = .getBewertung(1)
+                                    b.description = "aktuell alles i.O.  ..."
+                                    b.color = awinSettings.AmpelGruen
+                                End If
+
+                                If msColumn > heuteColumn Then
+                                    greenMilestones = greenMilestones + 1
+                                End If
+
+                            End If
+
+
+                        End With
+                    Else
+                        ' nichts tun, alles unverändert lassen 
+                    End If
+
+
+                Next
+
+                ' jetzt noch die Ampel-Farbe setzen 
+                If redMilestones > 0 Then
+                    If redMilestones / greenMilestones > 0.02 Then
+                        .ampelErlaeuterung = "Erläuterung des Projektleiters ... "
+                        .ampelStatus = 3
+                    Else
+                        .ampelErlaeuterung = "Erläuterung für gelbe Bewertung (u.a mind. eine rote Ampel) ..."
+                        .ampelStatus = 2
+                    End If
+
+                ElseIf yellowMilestones > 0 Then
+                    If greenMilestones > 0 Then
+
+                        If yellowMilestones / greenMilestones > 0.05 Then
+                            .ampelErlaeuterung = "Erläuterung des Projektleiters ... "
+                            .ampelStatus = 2
+                        Else
+                            .ampelErlaeuterung = "aktuell alles i.O ..."
+                            .ampelStatus = 1
+                        End If
+                    Else
+                        .ampelErlaeuterung = "Erläuterung des Projektleiters ... "
+                        .ampelStatus = 2
+                    End If
+                Else
+                    .ampelErlaeuterung = "aktuell alles i.O ..."
+                    .ampelStatus = 1
+                End If
+
+            End With
+
+        Next
+
+    End Sub
+
+
+    ''' <summary>
+    ''' es werden zufällig Phasen verschoben, verkürzt bzw. verlängert 
+    ''' dadurch werden auch Meilensteine, die in den Phasen sind, vorgezogen oder nach hinten geschoben 
+    ''' ausserdem werden dadurch auch Ressourcen durch die proportionale Anpassung weniger / mehr.  
+    ''' es werden allerdings nur Phasen verlängert/verkürzt die
+    ''' noch nicht beendet sind 
+    ''' die bereits begonnen haben bzw. deren Start nicht weiter weg als 2 M ist.  
+    ''' </summary>
+    ''' <param name="shorterPercentage"></param>
+    ''' <param name="longerPercentage"></param>
+    ''' <param name="heute"></param>
+    ''' <remarks></remarks>
+    Public Sub createRandomChanges(ByVal shorterPercentage As Double, ByVal longerPercentage As Double, ByVal heute As Date)
+
+        Dim expl As String = "Erläuterung ..."
+        Dim redBaseValue As Double = 0.3
+        Dim yellowBaseValue As Double = 0.7
+        Dim zufall As New Random(10)
+
+        Dim moveForward As Double = 0.1
+        Dim moveBackward As Double = 0.8
+        Dim makeItShorter As Double = 0.1
+        Dim makeItLonger As Double = 0.8
+        Dim currentValue As Double
+
+        Dim cphase As clsPhase
+        Dim previousSetting As Boolean = awinSettings.propAnpassRess
+        Dim startColumn As Integer, endColumn As Integer
+        Dim heuteColumn As Integer = getColumnOfDate(heute)
+
+        ' bisheriges Setting merken 
+        awinSettings.propAnpassRess = True
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            With kvp.Value
+
+                For pi As Integer = 1 To .CountPhases
+                    cphase = .getPhase(pi)
+                    startColumn = getColumnOfDate(cphase.getStartDate)
+                    endColumn = getColumnOfDate(cphase.getEndDate)
+
+                    ' wenn die Ausgangsbedingung für nach vorne /hinten verschieben zutrifft: noch nicht gestartet, aber Start weniger als 2 Monate entfernt  
+                    If heuteColumn <= startColumn And heuteColumn + 2 >= startColumn Then
+                        ' Start nach vorne bzw hinten verschieben
+                        currentValue = zufall.NextDouble
+                        If currentValue <= moveForward Then
+                            Dim anzahlTage As Long = DateDiff(DateInterval.Day, heute, cphase.getStartDate)
+                            If anzahlTage > 0 Then
+                                Dim newStartOffset As Integer = cphase.startOffsetinDays - CInt(anzahlTage * currentValue)
+
+                            End If
+
+
+                        ElseIf currentValue >= moveBackward Then
+
+                        End If
+                    End If
+
+                    ' wenn die Ausgangsbedingung für verkürzen / verlängern zutrifft: bereits gestartet, aber noch nicht beendet 
+                Next
+
+            End With
+
+        Next
+
+        ' altes Setting wiederherstellen 
+        awinSettings.propAnpassRess = previousSetting
+
+    End Sub
 End Module

@@ -20,6 +20,7 @@ Public Module Module1
     Public loginErfolgreich As Boolean = False
 
     Public awinSettings As New clsawinSettings
+    Public visboZustaende As New clsVisboZustaende
     Public magicBoardCmdBar As New clsCommandBarEvents
     Public anzahlCalls As Integer = 0
     Public iProjektFarbe As Object
@@ -44,6 +45,7 @@ Public Module Module1
     'Public mongoDBaktiv = False
 
     Public Projektvorlagen As New clsProjektvorlagen
+    Public ModulVorlagen As New clsProjektvorlagen
     Public ShowProjekte As New clsProjekte
     Public noShowProjekte As New clsProjekte
     Public selectedProjekte As New clsProjekte
@@ -268,6 +270,8 @@ Public Module Module1
         filterdefinieren = 3
         einzelprojektReport = 4
         excelExport = 5
+        vorlageErstellen = 6
+        rplan = 7
     End Enum
 
 
@@ -325,6 +329,14 @@ Public Module Module1
         deleteV = 7
     End Enum
 
+    Public Enum PTImpExp
+        visbo = 0
+        rplan = 1
+        msproject = 2
+        simpleScen = 3
+        modulScen = 4
+    End Enum
+
    
     Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
 
@@ -378,16 +390,19 @@ Public Module Module1
 
     ' nimmt den Pfad Namen auf - also wo liegen Customization File und Projekt-Details
     Public awinPath As String
+    Public importOrdnerNames() As String
+    Public exportOrdnerNames() As String
+
+    'Public projektFilesOrdner As String = "ProjectFiles"
+    'Public rplanimportFilesOrdner As String = "RPLANImport"
+    'Public exportFilesOrdner As String = "Export Dateien"
+
+    Public excelExportVorlage As String = "export Vorlage.xlsx"
     Public requirementsOrdner As String = "requirements\"
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
-    Public projektFilesOrdner As String = "ProjectFiles"
-    Public rplanimportFilesOrdner As String = "RPLANImport"
-    Public exportFilesOrdner As String = "Export Dateien"
-    Public excelExportVorlage As String = "export Vorlage.xlsx"
-
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"
-    ' Public projektDetail As String = "Project Detail.xlsx"
+    Public modulVorlagenOrdner As String = requirementsOrdner & "ModuleTemplates"
     Public projektAustausch As String = requirementsOrdner & "Projekt-Steckbrief.xlsx"
     Public projektRessOrdner As String = requirementsOrdner & "Ressource Manager"
     Public RepProjectVorOrdner As String = requirementsOrdner & "ReportTemplatesProject"
@@ -423,6 +438,7 @@ Public Module Module1
                 .ScreenUpdating = True
             End If
         End With
+
 
     End Sub
 
@@ -567,7 +583,7 @@ Public Module Module1
     ' prüft , ob übergebenes Diagramm ein Cockpit Diagramm ist
     '
     Function istCockpitDiagramm(ByRef chtobj As ChartObject) As Boolean
-        Dim ergebnis As Boolean = False
+        Dim ergebnis As Boolean = True
 
         ' Änderung 31.7 es gibt keine Cockpit Diagramme mehr, deswegen wird immer falsch zurückgegeben 
         'Dim Sc As Microsoft.Office.Interop.Excel.SeriesCollection
@@ -2018,9 +2034,9 @@ Public Module Module1
     Public Function calcDauerIndays(ByVal startDatum As Date, ByVal endeDatum As Date) As Integer
 
         If startDatum.Date > endeDatum.Date Then
-            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) - 1)
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum.Date, endeDatum.Date) - 1)
         Else
-            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum, endeDatum) + 1)
+            calcDauerIndays = CInt(DateDiff(DateInterval.Day, startDatum.Date, endeDatum.Date) + 1)
         End If
 
     End Function
@@ -2593,15 +2609,31 @@ Public Module Module1
     Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
                                               ByVal fBU As Collection, ByVal fTyp As Collection, _
                                               ByVal fPhase As Collection, ByVal fMilestone As Collection, _
-                                              ByVal fRole As Collection, ByVal fCost As Collection)
+                                              ByVal fRole As Collection, ByVal fCost As Collection, _
+                                              ByVal calledFromHry As Boolean)
 
         Dim lastFilter As clsFilter
 
 
-        lastFilter = New clsFilter(fName, fBU, fTyp, _
+        If calledFromHry Then
+            Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
+
+            If Not IsNothing(nameLastFilter) Then
+                With nameLastFilter
+                    lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
+                End With
+            Else
+                lastFilter = New clsFilter(fName, fBU, fTyp, _
                                   fPhase, fMilestone, _
                                  fRole, fCost)
+            End If
 
+
+        Else
+            lastFilter = New clsFilter(fName, fBU, fTyp, _
+                                  fPhase, fMilestone, _
+                                 fRole, fCost)
+        End If
 
         If menuOption = PTmenue.filterdefinieren Then
             filterDefinitions.storeFilter(fName, lastFilter)

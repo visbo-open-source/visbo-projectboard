@@ -377,7 +377,8 @@
             If _dauerInDays > 0 Then
                 getEndDate = Me.Parent.startDate.AddDays(_startOffsetinDays + _dauerInDays - 1)
             Else
-                Throw New Exception("Dauer muss mindestens 1 Tag sein ...")
+                'Throw New Exception("Dauer muss mindestens 1 Tag sein ...")
+                getEndDate = Me.Parent.startDate.AddDays(_startOffsetinDays)
             End If
 
         End Get
@@ -829,6 +830,35 @@
 
     End Sub
 
+    ''' <summary>
+    ''' löscht den Meilenstein an Position index; Index kann Werte 1 .. Anzahl Meilensteine haben 
+    ''' wenn checkname ungleich "" ist , so wird der Meilenstein nur dann gelöscht, wenn die NameID mit checkname übereinstimmt  
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <param name="checkID"></param>
+    ''' <remarks></remarks>
+    Public Sub removeMilestoneAt(ByVal index As Integer, Optional ByVal checkID As String = "")
+        Dim ok As Boolean = True
+
+        If index >= 0 And index <= AllMilestones.Count - 1 Then
+            If checkID <> "" Then
+                If AllMilestones.ElementAt(index).nameID = checkID Then
+                    ok = True
+                Else
+                    ok = False
+                End If
+            End If
+        Else
+            ok = False
+        End If
+        
+
+        If ok Then
+            AllMilestones.RemoveAt(index)
+        End If
+
+    End Sub
+
     Public ReadOnly Property rollenListe() As List(Of clsRolle)
 
         Get
@@ -934,7 +964,7 @@
         End With
 
     End Sub
-    Public Sub korrCopyTo(ByRef newphase As clsPhase, ByVal corrFactor As Double)
+    Public Sub korrCopyTo(ByRef newphase As clsPhase, ByVal corrFactor As Double, Optional newPhaseNameID As String = "")
         Dim r As Integer, k As Integer
         Dim newrole As clsRolle, oldrole As clsRolle
         Dim newcost As clsKostenart, oldcost As clsKostenart
@@ -955,7 +985,12 @@
             .latestStart = Me._latestStart
             .Offset = Me._Offset
 
-            .nameID = _name
+            If newPhaseNameID = "" Then
+                .nameID = _name
+            Else
+                .nameID = newPhaseNameID
+            End If
+
 
             .changeStartandDauer(CInt(Me._startOffsetinDays * corrFactor), CInt(Me._dauerInDays * corrFactor))
 
@@ -1020,7 +1055,13 @@
 
             For r = 1 To Me.AllMilestones.Count
                 newresult = New clsMeilenstein(parent:=newphase)
-                Me.getMilestone(r).CopyTo(newresult)
+                If newPhaseNameID = "" Then
+                    Me.getMilestone(r).CopyTo(newresult)
+                Else
+                    Dim newMSNameID As String = newphase.Parent.hierarchy.findUniqueElemKey(Me.getMilestone(r).name, True)
+                    Me.getMilestone(r).CopyTo(newresult, newMSNameID)
+                End If
+
                 ' korrigiert den Offset der Meilensteine 
                 newresult.offset = CLng(System.Math.Round(CLng(Me.getMilestone(r).offset * corrFactor)))
 
@@ -1042,6 +1083,7 @@
     ''' </summary>
     ''' <param name="faktor"></param>
     ''' <remarks></remarks>
+
     Public Sub adjustMilestones(ByVal faktor As Double)
         Dim newOffset As Integer
         For r = 1 To Me.AllMilestones.Count

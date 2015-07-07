@@ -50,105 +50,6 @@ Public Class clsEventsPrcCharts
         End Try
 
 
-
-        'Dim i As Integer, p As Integer
-        'Dim von As Integer, bis As Integer
-        'Dim left As Double, top As Double, height As Double, width As Double
-        'Dim found As Boolean
-        'Dim diagrammTyp As String
-        'Dim myCollection As New Collection
-        'Dim chtobj As ChartObject
-        ''Dim chtTitle As String
-        'Dim repObj As Object = Nothing
-        'Dim IDkennung As String
-
-        'Cancel = True
-        'diagrammTyp = " "
-        ''
-        '' die Werte des Charts bestimmen, aus dem heraus der Event aufgerufen wurde ...
-        'Try
-        '    chtobj = Me.PrcChartEvents.Parent
-        '    IDkennung = chtobj.Name
-        'Catch ex As NullReferenceException
-        '    Call MsgBox("in PRC ChartEvents, BeforeDoubleClick: kein Chart-Objekt ...")
-        '    Exit Sub
-        'End Try
-
-
-        '' ist es überhaupt ein Cockpit chart ?
-        'If Not istCockpitDiagramm(chtobj) Then
-        '    Exit Sub
-        'End If
-
-        'von = showRangeLeft
-        'bis = showRangeRight
-
-        'If istSummenDiagramm(chtobj, p) Then
-
-        '    height = 2 * miniHeight
-        '    top = WertfuerTop() + awinSettings.ChartHoehe1
-        '    left = linkerRandCpPfChart + 5 * miniWidth
-        '    width = 300
-        '    Call awinCreatePersCostStructureDiagramm(top, left, width, height, False)
-
-
-        'Else
-        '    '
-        '    ' Bestimmen der Breite und Position des Diagrammes
-        '    '
-        '    ' start_top = WertfuerTop + HoehePrcChart
-
-        '    height = awinSettings.ChartHoehe1
-        '    top = WertfuerTop()
-        '    If von > 1 Then
-        '        left = ((von - 1) / 3 - 1) * 3 * boxWidth + 32.8 + von * screen_correct
-        '    Else
-        '        left = 0
-        '    End If
-
-        '    width = 265 + (bis - von - 12 + 1) * boxWidth + (bis - von) * screen_correct
-
-
-        '    i = 1
-        '    found = False
-
-        '    Dim foundDiagramm As clsDiagramm
-
-        '    'Try
-        '    '    chtTitle = chtobj.Chart.ChartTitle.Text
-        '    'Catch ex As Exception
-        '    '    chtTitle = " "
-        '    'End Try
-
-        '    'While i <= DiagramList.Count And Not found
-        '    '    If chtTitle Like (DiagramList.getDiagramm(i).DiagrammTitel & "*") Then
-        '    '        diagrammTyp = DiagramList.getDiagramm(i).diagrammTyp
-        '    '        myCollection = DiagramList.getDiagramm(i).gsCollection
-        '    '        found = True
-        '    '    Else
-        '    '        i = i + 1
-        '    '    End If
-        '    'End While
-
-
-        '    Try
-        '        foundDiagramm = DiagramList.getDiagramm(IDkennung)
-        '        diagrammTyp = foundDiagramm.diagrammTyp
-        '        myCollection = foundDiagramm.gsCollection
-        '        found = True
-        '    Catch ex As Exception
-
-        '    End Try
-
-        '    If found Then
-        '        Call awinCreateprcCollectionDiagram(myCollection, repObj, top, left, width, height, False, diagrammTyp)
-        '    End If
-
-        '    'myCollection.Clear()
-        'End If
-
-        ''chtobj = Nothing
-
     End Sub
 
     Private Sub PrcChartEvents_BeforeRightClick(ByRef Cancel As Boolean) Handles PrcChartEvents.BeforeRightClick
@@ -512,16 +413,15 @@ Public Class clsEventsPrcCharts
     Private Sub PrcChartEvents_Select(ElementID As Integer, Arg1 As Integer, Arg2 As Integer) Handles PrcChartEvents.Select
 
 
-        ' in ARG2 steht, das wievielte Element selektiert wurde ...
+        Dim chtobjname As String
+        Dim diagOBJ As clsDiagramm
+        Dim msNumber As Integer = 1
+        Dim chtobj As xlNS.ChartObject
 
-        'If (ElementID = xlNS.XlChartItem.xlSeries) And Arg1 = 1 And Arg2 > 0 Then
         If (ElementID = xlNS.XlChartItem.xlSeries) And Arg2 > 0 Then
             'Dim i As Integer
-            Dim chtobjname As String
-            Dim diagOBJ As clsDiagramm
-            Dim msNumber As Integer = 1
             Dim selMonth As Integer = showRangeLeft + Arg2 - 1
-            Dim chtobj As xlNS.ChartObject
+
 
             'Dim formerUpdate As Boolean = appInstance.ScreenUpdating
             'appInstance.ScreenUpdating = False
@@ -545,7 +445,7 @@ Public Class clsEventsPrcCharts
 
 
                 '
-                ' nur bei Phasen wird aktuell etwas gemacht 
+                ' nur bei Phasen und Meilensteinen wird aktuell etwas gemacht 
                 '
                 If diagOBJ.diagrammTyp = DiagrammTypen(0) And diagOBJ.gsCollection.Count > 0 Then
 
@@ -556,6 +456,23 @@ Public Class clsEventsPrcCharts
                         Call zeichnePhasenInProjekt(kvp.Value, diagOBJ.gsCollection, False, msNumber, selMonth, selMonth)
 
                     Next
+
+                    ' jetzt den selektierten Balken im ShowTimeZone anzeigen 
+                    Call awinShowSelectedMonth(selMonth)
+
+                ElseIf (diagOBJ.diagrammTyp = DiagrammTypen(1) Or diagOBJ.diagrammTyp = DiagrammTypen(2)) And _
+                    diagOBJ.gsCollection.Count > 0 Then
+
+                    'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+
+                    '    Call zeichneRollenKostenWerteInProjekt(kvp.Value, diagOBJ.gsCollection, selMonth, selMonth, diagOBJ.diagrammTyp)
+
+                    'Next
+
+                    ' jetzt den selektierten Balken im ShowTimeZone anzeigen 
+                    Call awinShowSelectedMonth(selMonth)
+
 
                 ElseIf diagOBJ.diagrammTyp = DiagrammTypen(5) And diagOBJ.gsCollection.Count > 0 Then
 
@@ -570,6 +487,9 @@ Public Class clsEventsPrcCharts
 
                     Next
 
+                    ' jetzt den selektierten Balken im ShowTimeZone anzeigen 
+                    Call awinShowSelectedMonth(selMonth)
+
                 End If
 
 
@@ -578,6 +498,70 @@ Public Class clsEventsPrcCharts
 
             End Try
 
+
+        ElseIf (ElementID = xlNS.XlChartItem.xlSeries) And Arg2 = -1 Then
+
+            ' ggf Röntgenblick einschalten 
+            ' jetzt sind alle Balken selektiert 
+            ' im Falle Rolle / Kostenarten wird jetzt Röntgenblick eingeschaltet 
+
+            Try
+
+                chtobjname = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject).Name
+
+                chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
+                Dim IDKennung As String
+                IDKennung = chtobj.Name
+
+
+                diagOBJ = DiagramList.getDiagramm(chtobjname)
+
+                If (diagOBJ.diagrammTyp = DiagrammTypen(1) Or diagOBJ.diagrammTyp = DiagrammTypen(2)) And _
+                    diagOBJ.gsCollection.Count > 0 Then
+
+                    ' jetzt den Röntgenblick einschalten 
+                    Dim screenUpdateFormerState As Boolean = appInstance.ScreenUpdating
+                    Dim name As String = ""
+                    appInstance.ScreenUpdating = False
+
+                    If diagOBJ.gsCollection.Count < 1 Then
+                        name = ""
+                    ElseIf diagOBJ.gsCollection.Count = 1 Then
+                        name = CStr(diagOBJ.gsCollection.Item(1))
+                    ElseIf diagOBJ.gsCollection.Count > 1 Then
+                        name = "Collection"
+                        Dim myCollection As New Collection
+
+                    End If
+
+
+                    With roentgenBlick
+                        'If .isOn And .name = name And .type = diagOBJ.diagrammTyp Then
+                        '    .isOn = False
+                        '    .name = ""
+                        '    .myCollection = Nothing
+                        '    .type = ""
+                        '    Call awinNoshowProjectNeeds()
+                        'Else
+                        If .isOn Then
+                            Call awinNoshowProjectNeeds()
+                        End If
+                        .isOn = True
+                        .name = name
+                        .myCollection = diagOBJ.gsCollection
+                        .type = diagOBJ.diagrammTyp
+                        Call awinShowProjectNeeds1(diagOBJ.gsCollection, diagOBJ.diagrammTyp)
+                        'End If
+                    End With
+
+
+                    appInstance.ScreenUpdating = screenUpdateFormerState
+
+
+                End If
+            Catch ex As Exception
+
+            End Try
 
 
         End If

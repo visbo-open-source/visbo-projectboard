@@ -47,6 +47,135 @@
     End Sub
 
     ''' <summary>
+    ''' löscht das Element , das durch uniqueID gekennzeichnet ist, in der Hierarchie-Liste 
+    ''' der Parent-Node und die Kind-Nodes werden entsprechend konsistent gehalten 
+    ''' Exception, wenn rootphase gelöscht werden soll  
+    ''' </summary>
+    ''' <param name="uniqueID"></param>
+    ''' <param name="deleteALLChilds">true: alle Kinder werden rekursiv gelöscht 
+    ''' false: alle Kinder bekommen den "Großvater" als Vater</param>
+    ''' <remarks></remarks>
+    Public Sub removeNode(ByVal uniqueID As String, Optional ByVal deleteALLChilds As Boolean = True)
+
+        If uniqueID = rootPhaseName Then
+            Throw New ArgumentException(message:="Root Phase kann nicht gelöscht werden ", paramName:=uniqueID)
+        End If
+
+
+
+        If _allNodes.ContainsKey(uniqueID) Then
+            Dim elemNode As clsHierarchyNode = _allNodes.Item(uniqueID)
+            Dim parentNodeID As String = elemNode.parentNodeKey
+
+            Dim parentNode As clsHierarchyNode = Me.parentNodeItem(uniqueID)
+
+            ' Eltern-Element aktualisieren 
+            If Not IsNothing(parentNode) Then
+                ' Kind-Eintrag löschen 
+                parentNode.removeChild(uniqueID)
+            End If
+
+            ' kind-Elemente löschen oder umhängen
+            If deleteALLChilds Then
+                ' jetzt alle Kind-Elemente löschen 
+                For i As Integer = 1 To elemNode.childCount
+                    Dim childID As String = elemNode.getChild(i)
+                    Me.removeNode(childID, True)
+                Next
+            Else
+                ' jetzt alle Kind-Elemente umhängen
+                For i As Integer = 1 To elemNode.childCount
+                    Dim childNode As clsHierarchyNode
+                    If _allNodes.ContainsKey(elemNode.getChild(i)) Then
+                        childNode = _allNodes.Item(elemNode.getChild(i))
+                        childNode.parentNodeKey = parentNodeID
+                    End If
+                Next
+            End If
+
+            ' jetzt das eigentliche Element löschen 
+            _allNodes.Remove(uniqueID)
+            
+        Else
+            ' nichts tun, ist eh nicht mehr existent ...
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' löscht das Element an Stelle Index ;
+    ''' Index kann Werte von 0 bis count-1 annehmen 
+    ''' Vorsicht : mit dieser Funktionwerden keinerlei Konsistenzprüfungen vorgenommen, 
+    ''' was die Behandlung von Kind- und Vater-Elementen angeht  
+    ''' Diese Sub darf daher nur aufgerufen werden, wo die Konsistenz durch die übergeordnete Methode bereits sichergestellt wird. 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <remarks></remarks>
+    Public Sub removeAt(ByVal index As Integer)
+
+        If index >= 0 And index <= _allNodes.Count - 1 Then
+            If _allNodes.ElementAt(index).Key <> rootPhaseName Then
+                _allNodes.RemoveAt(index)
+            End If
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' erhöht / erniedrigt in der Hierarchie-Liste die Phasen-Verweise (indexOfElem) um increment
+    ''' das wird benötigt, wenn zuvor ein Element gelöscht bzw neu in der Phasen-Liste ergänzt wurde 
+    ''' </summary>
+    ''' <param name="indexInPhaseList"></param>
+    ''' <param name="increment"></param>
+    ''' <remarks></remarks>
+    Public Sub updatePhasenVerweise(ByVal indexInPhaseList As Integer, ByVal increment As Integer)
+
+        Dim lastPhase As Integer = Me.getIndexOf1stMilestone - 1
+
+        If lastPhase < 0 Then
+            lastPhase = Me.count
+        End If
+
+        For i As Integer = 1 To lastPhase
+            If _allNodes.ElementAt(i - 1).Value.indexOfElem > indexInPhaseList Then
+                _allNodes.ElementAt(i - 1).Value.indexOfElem = _allNodes.ElementAt(i - 1).Value.indexOfElem + increment
+            End If
+        Next
+
+
+    End Sub
+
+    ''' <summary>
+    ''' erhöht / erniedrigt in der Hierarchie-Liste die Meilenstein-Verweise (indexofElem) um increment
+    ''' das darf aber nur bei Meilensteinen getan werden, die auch zum angegebenen Vater gehören 
+    ''' </summary>
+    ''' <param name="indexInMeilensteinListe"></param>
+    ''' <param name="parentID"></param>
+    ''' <param name="increment"></param>
+    ''' <remarks></remarks>
+    Public Sub updateMeilensteinVerweise(ByVal indexInMeilensteinListe As Integer, ByVal parentID As String, ByVal increment As Integer)
+
+        Dim firstMilestone As Integer = Me.getIndexOf1stMilestone
+        If firstMilestone < 0 Then
+            ' nichts tun, es gibt keine Meilensteine 
+        End If
+
+        For i As Integer = firstMilestone To _allNodes.Count
+            ' nur Meilensteine behandeln, deren Vater-ID mit der übergebenen parentID identisch ist 
+            If _allNodes.ElementAt(i - 1).Value.parentNodeKey = parentID Then
+                If _allNodes.ElementAt(i - 1).Value.indexOfElem > indexInMeilensteinListe Then
+                    _allNodes.ElementAt(i - 1).Value.indexOfElem = _allNodes.ElementAt(i - 1).Value.indexOfElem + increment
+                End If
+            End If
+
+        Next
+
+
+    End Sub
+
+    ''' <summary>
     ''' kopiert den Hierarchie Knoten ohne Überprüfungen in die Hierarchie
     ''' dies wird benötigt, wenn 
     ''' eine Projektvorlage in ein Projekt kopiert wird
@@ -289,6 +418,272 @@
     End Property
 
     ''' <summary>
+    ''' gibt den eindeutigsten Namen für das element zurück, der sich finden lässt
+    ''' entweder den das Element eindeutig machenden Breadcrumb Namen oder den Breadcrumb Namen, mit dem am wenigsten Mehrdeutigkeiten existieren
+    ''' wenn das Element eh eindeutig ist im Projekt, dann wird nur der Elem-Name zurückgegeben 
+    ''' </summary>
+    ''' <param name="nameID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBestNameOfID(ByVal nameID As String, _
+                                             ByVal ShowStdNames As Boolean, ByVal showAbbrev As Boolean) As String
+        Get
+            Dim elemName As String = elemNameOfElemID(nameID)
+            Dim isMilestone As Boolean
+            Dim curBC As String = ""
+            Dim oldBC As String = ""
+            Dim anzElements As Integer
+            Dim anzElementsBefore As Integer
+            Dim level As Integer = 1
+            Dim tmpName As String = elemName
+            Dim rootreached As Boolean = False
+            Dim description1 As String = "", description2 As String = elemName
+            Dim phDef As clsPhasenDefinition
+
+            isMilestone = elemIDIstMeilenstein(nameID)
+
+            Try
+                If isMilestone Then
+
+                    Dim milestoneIndices(,) As Integer = Me.getMilestoneIndices(elemName, "")
+                    anzElements = CInt(milestoneIndices.Length / 2)
+
+                    If anzElements > 1 Then
+
+                        anzElementsBefore = anzElements
+
+                        Do Until anzElements = 1 Or rootreached
+                            curBC = Me.getBreadCrumb(nameID, level)
+
+                            If oldBC = curBC Then
+                                rootreached = True
+                            Else
+                                oldBC = curBC
+                            End If
+
+                            If Not rootreached Then
+                                milestoneIndices = Me.getMilestoneIndices(elemName, curBC)
+                                anzElements = CInt(milestoneIndices.Length / 2)
+                                If anzElements < anzElementsBefore Then
+                                    anzElementsBefore = anzElements
+                                    tmpName = calcHryFullname(elemName, curBC)
+                                End If
+                            End If
+
+                            level = level + 1
+
+                        Loop
+                    Else
+                        tmpName = elemName
+                    End If
+
+
+                Else
+                    ' es handelt sich um eine Phase
+                    Dim phaseIndices() As Integer = Me.getPhaseIndices(elemName, "")
+                    anzElements = phaseIndices.Length
+
+                    If anzElements > 1 Then
+
+                        anzElementsBefore = anzElements
+
+                        Do Until anzElements = 1 Or rootreached
+                            curBC = Me.getBreadCrumb(nameID, level)
+
+                            If oldBC = curBC Then
+                                rootreached = True
+                            Else
+                                oldBC = curBC
+                            End If
+
+                            If Not rootreached Then
+                                phaseIndices = Me.getPhaseIndices(elemName, curBC)
+                                anzElements = phaseIndices.Length
+                                If anzElements < anzElementsBefore Then
+                                    anzElementsBefore = anzElements
+                                    tmpName = calcHryFullname(elemName, curBC)
+                                End If
+                            End If
+
+                            level = level + 1
+
+                        Loop
+                    Else
+                        tmpName = elemName
+                    End If
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            ' jetzt wird unterschieden, ob Abbrev gezeigt werden soll oder Standard Name ... 
+            If showStdNames Then
+                If showAbbrev Then
+
+                    If awinSettings.showBestName And Not awinSettings.drawphases Then
+                        ' den bestmöglichen, also den kürzesten Breadcrumb Namen, der (möglichst) eindeutig ist
+                        ' anzeigen; aber nur, wenn im Ein-Zeile-Modus beschriftet wird, weil dann der Kontext fehlt ... 
+                        Call splitHryFullnameTo2(tmpName, description2, description1)
+
+                        Dim tmpStr() As String = description1.Split(New Char() {CChar("#")}, 20)
+
+                        ' jetzt den Abbrev String zusammensetzen 
+                        Dim newDesc1 As String = ""
+                        For i As Integer = 1 To tmpStr.Length
+                            Dim tmpPhName As String = tmpStr(i - 1)
+                            phDef = PhaseDefinitions.getPhaseDef(tmpPhName)
+
+                            If IsNothing(phDef) Then
+                                If i = 1 And tmpPhName <> elemNameOfElemID(rootPhaseName) And tmpPhName <> "" Then
+                                    newDesc1 = "?"
+                                ElseIf i > 1 Then
+                                    newDesc1 = newDesc1 & "-?"
+                                End If
+
+                            Else
+                                If i = 1 Then
+                                    If phDef.shortName = "" Then
+                                        newDesc1 = "?"
+                                    Else
+                                        newDesc1 = phDef.shortName
+                                    End If
+
+                                Else
+                                    If phDef.shortName = "" Then
+                                        newDesc1 = newDesc1 & "-?"
+                                    Else
+                                        newDesc1 = newDesc1 & "-" & phDef.shortName
+                                    End If
+
+                                End If
+                            End If
+
+                        Next
+                        description1 = newDesc1
+
+                        If isMilestone Then
+
+                            Dim msDef As clsMeilensteinDefinition
+                            msDef = MilestoneDefinitions.getMilestoneDef(description2)
+                            If IsNothing(msDef) Then
+                                description2 = "-"
+                            Else
+                                description2 = msDef.shortName
+                                If IsNothing(description2) Then
+                                    description2 = "-"
+                                Else
+                                    If description2 = "" Then
+                                        description2 = "-"
+                                    End If
+
+                                End If
+                            End If
+
+                        Else
+
+                            phDef = PhaseDefinitions.getPhaseDef(description2)
+                            If IsNothing(phDef) Then
+                                description2 = "-"
+                            Else
+                                description2 = phDef.shortName
+                                If IsNothing(description2) Then
+                                    description2 = "-"
+                                Else
+                                    If description2 = "" Then
+                                        description2 = "-"
+                                    End If
+
+                                End If
+                            End If
+
+                        End If
+                    Else
+                        description1 = ""
+
+                        If isMilestone Then
+
+                            Dim msDef As clsMeilensteinDefinition
+                            msDef = MilestoneDefinitions.getMilestoneDef(description2)
+                            If IsNothing(msDef) Then
+                                description2 = "-"
+                            Else
+                                description2 = msDef.shortName
+                                If IsNothing(description2) Then
+                                    description2 = "-"
+                                Else
+                                    If description2 = "" Then
+                                        description2 = "-"
+                                    End If
+
+                                End If
+                            End If
+
+                        Else
+                            phDef = PhaseDefinitions.getPhaseDef(description2)
+                            If IsNothing(phDef) Then
+                                description2 = "-"
+                            Else
+                                description2 = phDef.shortName
+                                If IsNothing(description2) Then
+                                    description2 = "-"
+                                Else
+                                    If description2 = "" Then
+                                        description2 = "-"
+                                    End If
+
+                                End If
+                            End If
+
+                        End If
+
+
+                    End If
+                Else
+
+                    Call splitHryFullnameTo2(tmpName, description2, description1)
+                    Dim tmpStr() As String = description1.Split(New Char() {CChar("#")}, 20)
+
+                    ' jetzt den Std-Name zusammensetzen 
+                    Dim newDesc1 As String = ""
+                    For i As Integer = 1 To tmpStr.Length
+                        Dim tmpPhName As String = tmpStr(i - 1)
+
+                        If i = 1 Then
+                            If tmpPhName = elemNameOfElemID(rootPhaseName) Then
+                                ' nichts tun
+                            Else
+                                newDesc1 = tmpPhName
+                            End If
+                        ElseIf i > 1 Then
+                            newDesc1 = newDesc1 & "-" & tmpPhName
+                        End If
+
+                    Next
+                    description1 = newDesc1
+
+
+                End If
+            Else
+                description2 = Me.nodeItem(nameID).origName
+            End If
+
+            Dim description As String = ""
+            Try
+                If description1 <> "" Then
+                    description = description1 & "-" & description2
+                Else
+                    description = description2
+                End If
+            Catch ex As Exception
+
+            End Try
+
+            getBestNameOfID = description
+
+        End Get
+    End Property
+    ''' <summary>
     ''' gibt den Index in der Hierarchie zurück, den das Element mit uniqueID hat
     ''' wenn uniqueID nicht existiert, dann wird als Wert 0 zurückgegeben  
     ''' </summary>
@@ -339,6 +734,36 @@
                 nodeItem = _allNodes.Item(uniqueID)
             Else
                 nodeItem = Nothing
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Hierarchie Knoten zurück des Parent-Elements von uniqueID zurück 
+    ''' wenn der nicht existiert: Nothing 
+    ''' also auch im Fall rootPhaseName 
+    ''' </summary>
+    ''' <param name="uniqueID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property parentNodeItem(ByVal uniqueID As String) As clsHierarchyNode
+        Get
+            If uniqueID = rootPhaseName Then
+                parentNodeItem = Nothing
+            Else
+                Dim elemNode As clsHierarchyNode
+                If _allNodes.ContainsKey(uniqueID) Then
+                    elemNode = _allNodes.Item(uniqueID)
+                    If _allNodes.ContainsKey(elemNode.parentNodeKey) Then
+                        parentNodeItem = _allNodes.Item(elemNode.parentNodeKey)
+                    Else
+                        parentNodeItem = Nothing
+                    End If
+                Else
+                    parentNodeItem = Nothing
+                End If
+
             End If
         End Get
     End Property

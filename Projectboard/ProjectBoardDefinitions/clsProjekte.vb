@@ -730,6 +730,250 @@ Public Class clsProjekte
         End Get
     End Property
 
+
+    ''' <summary>
+    ''' gibt einen zweidimensionalen Array zurück, der die Namen der Projekte enthält, die eines der angegebenen Elemente im jeweiligen Zeitraum enthalten 
+    ''' </summary>
+    ''' <param name="myCollection"></param>
+    ''' <param name="prcTyp"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProjectsWithElemNameInMonth(ByVal myCollection As Collection, ByVal prcTyp As String) As String(,)
+        Get
+            Dim zeitraum As Integer = showRangeRight - showRangeLeft
+            Dim maxAnzahl As Integer = ShowProjekte.Count - 1
+            Dim curMonat As Integer = 0
+            Dim hproj As clsProjekt
+            Dim cMilestone As clsMeilenstein
+
+            Dim roleValues(zeitraum) As Double
+            Dim costValues(zeitraum) As Double
+            Dim ergebnisListe(zeitraum, maxAnzahl) As String
+            Dim curElemIX(zeitraum) As Integer
+
+
+
+            Dim elemName As String = ""
+            Dim breadCrumb As String = ""
+
+            If showRangeRight = 0 Or showRangeLeft = 0 Then
+                ' nichts tun 
+            Else
+                For cix As Integer = 1 To myCollection.Count
+                    Call splitHryFullnameTo2(CStr(myCollection.Item(cix)), elemName, breadCrumb)
+
+                    If prcTyp = DiagrammTypen(0) Then
+                        ' Phasen
+                        Dim hphase As clsPhase
+                        Dim prAnfang As Integer
+                        Dim prEnde As Integer
+                        Dim phAnfang As Integer
+                        Dim phEnde As Integer
+                        Dim ixZeitraum As Integer
+                        Dim anzLoops As Integer
+
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+
+                            hproj = kvp.Value
+
+                            Dim phaseIndices() As Integer = hproj.hierarchy.getPhaseIndices(elemName, breadCrumb)
+
+                            For px As Integer = 0 To phaseIndices.Length - 1
+
+                                If phaseIndices(px) > 0 And phaseIndices(px) <= hproj.CountPhases Then
+                                    hphase = hproj.getPhase(phaseIndices(px))
+                                Else
+                                    hphase = Nothing
+                                End If
+
+
+                                If Not hphase Is Nothing Then
+
+                                    With hproj
+                                        prAnfang = .Start + .StartOffset
+                                        prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                                    End With
+
+
+                                    If istBereichInTimezone(prAnfang, prEnde) Then
+                                        'projektstart = hproj.Start
+
+                                        With hphase
+                                            phAnfang = prAnfang + .relStart - 1
+                                            phEnde = prAnfang + .relEnde - 1
+                                        End With
+
+                                        'Dim ixKorrektur As Integer = hphase.relStart - 1
+                                        Dim ix As Integer
+                                        Call awinIntersectZeitraum(phAnfang, phEnde, ixZeitraum, ix, anzLoops)
+
+                                        If anzLoops > 0 Then
+                                            ' dann ist die Phase enthalten 
+
+                                            For al As Integer = 1 To anzLoops
+                                                If ixZeitraum + al - 1 > zeitraum Then
+                                                    ' Fehlerprotokoll schreiben ...  
+                                                Else
+                                                    ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText
+                                                    curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
+                                                End If
+                                                
+                                            Next
+
+                                        End If
+
+
+                                    End If
+                                End If
+                            Next
+
+                        Next kvp
+
+                    ElseIf prcTyp = DiagrammTypen(1) Then
+                        ' Rollen
+
+                        Dim Dauer As Integer
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+
+                            hproj = kvp.Value
+
+                            Dauer = hproj.anzahlRasterElemente
+                            Dim tempArray(Dauer - 1) As Double
+                            Dim prAnfang As Integer, prEnde As Integer
+                            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+
+                            With hproj
+                                prAnfang = .Start + .StartOffset
+                                prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                            End With
+
+                            anzLoops = 0
+                            Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                            If anzLoops > 0 Then
+
+                                Try
+
+                                    tempArray = hproj.getRessourcenBedarf(elemName)
+
+                                Catch ex As Exception
+
+                                End Try
+
+
+                            End If
+
+                            For al As Integer = 1 To anzLoops
+                                If ixZeitraum + al - 1 > zeitraum Then
+                                    ' Fehlerprotokoll schreiben ...  
+                                Else
+                                    ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & CInt(tempArray(ix + al - 1)).ToString
+                                    curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
+                                End If
+
+                            Next
+
+
+                        Next
+
+                    ElseIf prcTyp = DiagrammTypen(2) Then
+                        ' Kostenarten
+
+                        Dim Dauer As Integer
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+
+                            hproj = kvp.Value
+
+                            Dauer = hproj.anzahlRasterElemente
+                            Dim tempArray(Dauer - 1) As Double
+                            Dim prAnfang As Integer, prEnde As Integer
+                            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+
+                            With hproj
+                                prAnfang = .Start + .StartOffset
+                                prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                            End With
+
+                            anzLoops = 0
+                            Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                            If anzLoops > 0 Then
+
+                                Try
+
+                                    tempArray = hproj.getKostenBedarf(elemName)
+
+                                Catch ex As Exception
+
+                                End Try
+
+
+                            End If
+
+                            For al As Integer = 1 To anzLoops
+                                If ixZeitraum + al - 1 > zeitraum Then
+                                    ' Fehlerprotokoll schreiben ...  
+                                Else
+                                    ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & CInt(tempArray(ix + al - 1)).ToString
+                                    curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
+                                End If
+
+                            Next
+
+
+                        Next
+
+
+                    ElseIf prcTyp = DiagrammTypen(5) Then
+                        ' Meilensteine 
+
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+
+                            hproj = kvp.Value
+
+                            ' neuer Code
+                            Dim milestoneIndices(,) As Integer = hproj.hierarchy.getMilestoneIndices(elemName, breadCrumb)
+
+                            For mx As Integer = 0 To CInt(milestoneIndices.Length / 2) - 1
+
+                                cMilestone = hproj.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx))
+
+                                If Not IsNothing(cMilestone) Then
+
+                                    Dim ix As Integer
+                                    ' bestimme den monatsbezogenen Index im Array 
+                                    ix = getColumnOfDate(cMilestone.getDate) - showRangeLeft
+
+                                    If ix >= 0 And ix <= zeitraum Then
+
+                                        ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText
+                                        curElemIX(ix) = curElemIX(ix) + 1
+
+                                    End If
+
+
+                                End If
+
+                            Next
+
+
+                        Next kvp
+
+
+
+                    End If
+
+
+                Next
+            End If
+
+
+            getProjectsWithElemNameInMonth = ergebnisListe
+
+        End Get
+    End Property
+
     ''' <summary>
     ''' gibt einen Array zurück, der angibt wie oft der übergebene Milestone im jeweiligen Monat vorkommt 
     ''' showrangeleft und showrangeright spannen den Betrachtungszeitraum auf
@@ -794,41 +1038,6 @@ Public Class clsProjekte
                     End If
 
                 Next
-
-                ' alter Code, vor Einführung der Hierarchie 
-
-                '' alle Phasen durchgehen und nach dem Meilenstein-Namen suchen 
-                'Dim p As Integer
-                'For p = 1 To hproj.CountPhases
-
-
-                '    cphase = hproj.getPhase(p)
-                '    cresult = cphase.getMilestone(milestoneName)
-
-                '    If IsNothing(cresult) Then
-                '    Else
-
-                '        ' bestimme den monatsbezogenen Index im Array 
-                '        ix = getColumnOfDate(cresult.getDate) - showRangeLeft
-
-                '        If ix >= 0 And ix <= zeitraum Then
-
-                '            If cresult.bewertungsCount > 0 Then
-                '                idFarbe = cresult.getBewertung(1).colorIndex
-                '            Else
-                '                idFarbe = 0
-                '            End If
-
-                '            milestoneValues(idFarbe, ix) = milestoneValues(idFarbe, ix) + 1
-
-                '        End If
-
-
-                '    End If
-
-
-
-                'Next
 
 
             Next kvp
@@ -1035,6 +1244,7 @@ Public Class clsProjekte
             Dim zeitraum As Integer
             Dim r As Integer, m As Integer
             Dim breadcrumb As String = ""
+            Dim ok As Boolean = True
 
 
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
@@ -1046,17 +1256,22 @@ Public Class clsProjekte
                 'rname = CStr(myCollection.Item(r))
                 ' rname wird jetzt durch das folgende bestimmt 
                 Call splitHryFullnameTo2(CStr(myCollection.Item(r)), rname, breadcrumb)
-                If PhaseDefinitions.Contains(rname) Then
+                If PhaseDefinitions.Contains(rname) And breadcrumb = "" And ok Then
                     hkapa = PhaseDefinitions.getPhaseDef(rname).schwellWert
                 Else
                     hkapa = 0
+                    ok = False
                 End If
 
-
-                For m = 0 To zeitraum
-                    ' Änderung 31.5 Holen der Schwellwerte einer Phase 
-                    schwellWerte(m) = schwellWerte(m) + hkapa
-                Next m
+                ' nur wenn es sich um die uneingeschränkte Auswahl des Namens handelt bzw. wenn jedes Element aus der Liste einen Schwellwert hat ;
+                ' soll der Schwellwert angezeigt werden 
+                If ok Then
+                    For m = 0 To zeitraum
+                        ' Änderung 31.5 Holen der Schwellwerte einer Phase 
+                        schwellWerte(m) = schwellWerte(m) + hkapa
+                    Next m
+                End If
+                
 
 
             Next r
@@ -1084,6 +1299,7 @@ Public Class clsProjekte
             Dim zeitraum As Integer
             Dim r As Integer, m As Integer
             Dim breadcrumb As String = ""
+            Dim ok As Boolean = True
 
 
             ' showRangeLeft As Integer, showRangeRight sind die beiden Markierungen für den betrachteten Zeitraum
@@ -1094,17 +1310,23 @@ Public Class clsProjekte
 
                 'msName = CStr(myCollection.Item(r))
                 Call splitHryFullnameTo2(CStr(myCollection.Item(r)), msName, breadcrumb)
-                If MilestoneDefinitions.Contains(msName) Then
+                ' nur wenn es sich um die uneingeschränkte Auswahl des Namens handelt bzw. wenn jedes Element aus der Liste einen Schwellwert hat ;
+                ' soll der Schwellwert angezeigt werden 
+                If MilestoneDefinitions.Contains(msName) And breadcrumb = "" And ok Then
                     hkapa = MilestoneDefinitions.getMilestoneDef(msName).schwellWert
                 Else
                     hkapa = 0
+                    ok = False
                 End If
 
-
-                For m = 0 To zeitraum
-                    ' Änderung 31.5 Holen der Schwellwerte einer Phase 
-                    schwellWerte(m) = schwellWerte(m) + hkapa
-                Next m
+                
+                If ok Then
+                    For m = 0 To zeitraum
+                        ' Änderung 31.5 Holen der Schwellwerte einer Phase 
+                        schwellWerte(m) = schwellWerte(m) + hkapa
+                    Next m
+                End If
+                
 
 
             Next r
