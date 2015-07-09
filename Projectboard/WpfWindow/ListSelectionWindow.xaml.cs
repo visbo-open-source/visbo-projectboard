@@ -179,7 +179,7 @@ namespace WpfWindow
                         nameList.Clear();
                         this.listbox.SelectedItems.Clear();
                     }
-                else if (this.chTyp == Module1.DiagrammTypen[6])
+                else if (this.chTyp == Module1.DiagrammTypen[6])         // Meilenstein Trendanalyse
                 {
                     
                     VBCollection myCollection = new VBCollection();

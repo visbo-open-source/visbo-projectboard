@@ -803,7 +803,7 @@ Public Class clsProjekt
                 If Not IsNothing(cresult) Then
 
                     colorIndex = cresult.getBewertung(1).colorIndex
-                    tmpDate = cresult.getDate.Date
+                    tmpDate = cresult.getDate.Date          ' hier wird der Zeit-Teil des MS-Datums abgeschnitten und wird nach tmpdate gespeichert
 
                     ' jetzt wird die Ampelfarbe ins Datum kodiert 
                     tmpDate = tmpDate.AddSeconds(colorIndex)

@@ -3430,6 +3430,7 @@ Public Module Projekte
 
 
                         For px = 1 To tdatenreihe.Length
+
                             With CType(.SeriesCollection(drawnMilestones).Points(px), Point)
                                 .Interior.Color = ampelfarben(px - 1)
                                 .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleCircle
@@ -3442,7 +3443,10 @@ Public Module Projekte
 
                                     ' wenn es der Wert aus dem Vormonat ist: einen kleineren Marker zeichnen 
                                     If prevValueTaken(px - 1) Then
-                                        .MarkerSize = 5
+                                        .Interior.Color = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerForegroundColor = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerBackgroundColor = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerSize = 2
                                     End If
 
                                     ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er auch so markiert
@@ -3469,16 +3473,18 @@ Public Module Projekte
                                     Catch ex As Exception
 
                                     End Try
-
-
                                 End If
+
 
                                 ' wenn mittendrin Daten auftauchen, die noch nicht geschrieben wurden ... 
                                 If px > 1 And px < tdatenreihe.Length Then
 
                                     ' wenn es der Wert aus dem Vormonat ist: einen kleineren Marker zeichnen 
                                     If prevValueTaken(px - 1) Then
-                                        .MarkerSize = 5
+                                        .Interior.Color = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerForegroundColor = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerBackgroundColor = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerSize = 2
                                     End If
 
                                     ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er entsprechend markiert
@@ -3511,16 +3517,18 @@ Public Module Projekte
 
                                         End Try
 
-
                                     End If
                                 End If
 
                                 ' Schreiben des letzten Planungs-Standes
                                 If px > 1 And px = tdatenreihe.Length Then
 
-                                    ' wenn es der Wert aus dem Vormonat ist: einen kleineren Marker zeichnen 
+                                    ' wenn es der Wert aus dem Vormonat ist: einen kleineren/ nicht sichtbaren Marker zeichnen 
                                     If prevValueTaken(px - 1) Then
-                                        .MarkerSize = 5
+                                        .Interior.Color = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerForegroundColor = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerBackgroundColor = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerSize = 2
                                     End If
 
                                     ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er auch so markiert
