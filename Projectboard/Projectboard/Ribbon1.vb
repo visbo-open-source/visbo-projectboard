@@ -5616,6 +5616,7 @@ Imports System.Drawing
         Dim formerAmpelSetting As Boolean = awinSettings.mppShowAmpel
         awinSettings.mppShowAmpel = True
 
+
         Dim myCollection As New Collection
         myCollection.Add("Ziele")
 
@@ -5685,7 +5686,7 @@ Imports System.Drawing
             Call MsgBox("Es sind keine Projekte geladen!")
         End If
 
-        awinSettings.mppShowAmpel = formerAmpelSetting
+        'awinSettings.mppShowAmpel = formerAmpelSetting
 
         appInstance.EnableEvents = True
         enableOnUpdate = True

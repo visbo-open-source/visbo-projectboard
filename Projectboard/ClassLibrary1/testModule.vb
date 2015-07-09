@@ -869,10 +869,16 @@ Public Module testModule
                                         hheight = 2 * ((listOfItems.Count - 1) * 20 + 110)
                                         hwidth = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 24 * boxWidth + 10)
 
-                                        Call createMsTrendAnalysisOfProject(hproj, obj, listOfItems, htop, hleft, hheight, hwidth)
+                                        Try
+                                            Call createMsTrendAnalysisOfProject(hproj, obj, listOfItems, htop, hleft, hheight, hwidth)
 
-                                        reportObj = obj
-                                        notYetDone = True
+                                            reportObj = obj
+                                            notYetDone = True
+                                        Catch ex As Exception
+                                            .TextFrame2.TextRange.Text = "zum Projekt" & hproj.name & vbLf & "gibt es noch keine Trend-Analyse," & vbLf & _
+                                                                        "da es noch nicht begonnen hat"
+                                        End Try
+                                        
                                     Else
                                         .TextFrame2.TextRange.Text = "es gibt keine Meilensteine im Projekt" & vbLf & hproj.name
                                     End If
@@ -2436,10 +2442,14 @@ Public Module testModule
 
                         Case "Projekt-Tafel"
 
+                            
                             Dim farbtyp As Integer
                             Dim rng As xlNS.Range
                             Dim colorrng As xlNS.Range
                             Dim selectionType As Integer = -1 ' keine Einschränkung
+                            Dim formerSetting As Boolean = awinSettings.mppShowAmpel
+                            awinSettings.mppShowAmpel = True
+
                             von = showRangeLeft
                             bis = showRangeRight
                             myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
@@ -2573,6 +2583,8 @@ Public Module testModule
                                 .TextFrame2.TextRange.Text = "Keine Projekte im angegebenen Zeitraum vorhanden"
                             End If
 
+
+                            awinSettings.mppShowAmpel = formerSetting
 
                         Case "Projekt-Tafel Phasen"
 
@@ -2908,7 +2920,13 @@ Public Module testModule
                             hwidth = 0.4 * maxScreenWidth
                             hheight = 0.6 * maxScreenHeight
                             obj = Nothing
-                            Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+
+                            If qualifier = "Ampel" Then
+                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.AmpelFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                            Else
+                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                            End If
+
 
 
                             reportObj = obj
@@ -9833,6 +9851,7 @@ Public Module testModule
         For i = 1 To uniqueElemClasses.Count
 
             phaseName = CStr(uniqueElemClasses(i))
+            Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName)
 
             phaseShape = PhaseDefinitions.getShape(phaseName)
 
@@ -9853,7 +9872,7 @@ Public Module testModule
             copiedShape = pptslide.Shapes.Paste()
             With copiedShape(1)
 
-                .TextFrame2.TextRange.Text = phaseName
+                .TextFrame2.TextRange.Text = phShortname & " (=" & phaseName & ")"
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor + legendPhaseVorlagenShape.Width + 3
 

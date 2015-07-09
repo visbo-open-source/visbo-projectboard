@@ -883,7 +883,7 @@ Public Module awinDiagrams
         Dim found As Boolean
         Dim hmxWert As Double = -10000.0 ' nimmt den Max-Wert der Datenreihe auf
 
-        Dim minwert As Double, maxwert As Double
+        'Dim minwert As Double, maxwert As Double
         Dim nr_pts As Integer
         Dim diagramTitle As String
 
@@ -901,7 +901,7 @@ Public Module awinDiagrams
         Dim breadcrumb As String = ""
         Dim startdate As Date
         Dim diff As Integer
-        Dim mindone As Boolean, maxdone As Boolean
+        'Dim mindone As Boolean, maxdone As Boolean
         Dim width As Double
         'Dim left As Double
         Dim myCollection As Collection
