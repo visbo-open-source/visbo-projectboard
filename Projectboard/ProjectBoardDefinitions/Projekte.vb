@@ -3411,7 +3411,7 @@ Public Module Projekte
 
                         'series
                         With CType(.SeriesCollection.NewSeries, Excel.Series)
-                            .Name = drawnMilestones.ToString & " - " & msName
+                            .Name = drawnMilestones.ToString & " - " & elemNameOfElemID(msName)
                             .ChartType = Excel.XlChartType.xlLineMarkers
                             .Interior.Color = awinSettings.AmpelNichtBewertet
                             .Values = tdatenreihe
@@ -3454,7 +3454,7 @@ Public Module Projekte
                                     If anzMilestones > 1 Then
                                         .DataLabel.Text = drawnMilestones.ToString & " - " & tmpdatenreihe(px - 1).ToShortDateString
                                     Else
-                                        .DataLabel.Text = msName & vbLf & tmpdatenreihe(px - 1).ToShortDateString
+                                        .DataLabel.Text = elemNameOfElemID(msName) & vbLf & tmpdatenreihe(px - 1).ToShortDateString
                                     End If
 
                                     .DataLabel.Font.Size = awinSettings.fontsizeItems
@@ -3532,7 +3532,7 @@ Public Module Projekte
                                     If anzMilestones > 1 Then
                                         .DataLabel.Text = drawnMilestones.ToString & " - " & tmpdatenreihe(px - 1).ToShortDateString
                                     Else
-                                        .DataLabel.Text = msName & vbLf & tmpdatenreihe(px - 1).ToShortDateString
+                                        .DataLabel.Text = elemNameOfElemID(msName) & vbLf & tmpdatenreihe(px - 1).ToShortDateString
                                     End If
                                     .DataLabel.Font.Size = awinSettings.fontsizeItems
                                     Try
@@ -7845,7 +7845,7 @@ Public Module Projekte
     ''' <remarks></remarks>
     Function chtobj2shape(ByRef cho As ChartObject) As Excel.Shape
 
-        Dim zo As Long
+        'Dim zo As Long
         Dim ws As Excel.Worksheet
         Dim shc As Excel.Shapes
         Dim sh As Excel.Shape
