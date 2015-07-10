@@ -272,6 +272,7 @@ Public Module Module1
         excelExport = 5
         vorlageErstellen = 6
         rplan = 7
+        meilensteinTrendanalyse = 8
     End Enum
 
 

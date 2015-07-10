@@ -124,8 +124,17 @@ Public Class frmNameSelection
         '    End Try
 
         'End If
+        If Me.menuOption = PTmenue.meilensteinTrendanalyse Then
+            Me.rdbMilestones.Checked = True
 
-        Me.rdbPhases.Checked = True
+            For Each element As String In selectedMilestones
+                If Not selNameListBox.Items.Contains(element) Then
+                    selNameListBox.Items.Add(element)
+                End If
+            Next
+        Else
+            Me.rdbPhases.Checked = True
+        End If
 
     End Sub
 
@@ -300,8 +309,11 @@ Public Class frmNameSelection
         appInstance.EnableEvents = True
         enableOnUpdate = True
 
-        ' bei bestimmten Menu-Optionen das Formuzlar dann schliessen 
-        If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Then
+
+        ' bei bestimmten Menu-Optionen das Formular dann schliessen 
+        If Me.menuOption = PTmenue.excelExport Or _
+            menuOption = PTmenue.filterdefinieren Or _
+            (menuOption = PTmenue.meilensteinTrendanalyse And selectedMilestones.Count > 0) Then
             MyBase.Close()
         End If
 
@@ -418,7 +430,7 @@ Public Class frmNameSelection
 
         Else
 
-            ' Merken welches die selektierten Phasen waren 
+            ' Merken welches die selektierten Meilensteine waren 
             selectedMilestones.Clear()
             For Each element As String In selNameListBox.Items
                 selectedMilestones.Add(element, element)

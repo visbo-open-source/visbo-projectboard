@@ -6782,7 +6782,7 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
-    ''' führt die Aktionen Visualisieren, Leistbarkeit aus dem Hierarchie bzw. Namen-Auswahl Fenster durch 
+    ''' führt die Aktionen Visualisieren, Leistbarkeit, Meilenstein Trendanalyse aus dem Hierarchie bzw. Namen-Auswahl Fenster durch 
     ''' 
     ''' </summary>
     ''' <param name="menueOption"></param>
@@ -6797,7 +6797,7 @@ Public Module awinGeneralModules
 
         If menueOption = PTmenue.visualisieren Or menueOption = PTmenue.einzelprojektReport Or _
             menueOption = PTmenue.excelExport Or menueOption = PTmenue.multiprojektReport Or _
-            menueOption = PTmenue.vorlageErstellen Then
+            menueOption = PTmenue.vorlageErstellen Or menueOption = PTmenue.meilensteinTrendanalyse Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft > 5 Then
             validOption = True
@@ -6928,13 +6928,133 @@ Public Module awinGeneralModules
             Else
                 Call MsgBox("bitte mindestens ein Element aus einer der Kategorien Phasen / Meilensteine selektieren  ")
             End If
+        ElseIf menueOption = PTmenue.meilensteinTrendanalyse Then
 
+
+            If selectedMilestones.Count > 0 Then
+                ' Window Position festlegen
+
+                Call awinShowMilestoneTrend(selectedMilestones)
+            Else
+                Call MsgBox("Bitte Meilensteine auswählen! ")
+
+            End If
 
         Else
 
             Call MsgBox("noch nicht unterstützt")
 
         End If
+
+    End Sub
+
+
+    Sub awinShowMilestoneTrend(ByVal selectedMilestones As Collection)
+
+        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim singleShp As Excel.Shape
+        Dim listOfItems As New Collection
+        Dim nameList As New SortedList(Of Date, String)
+        Dim title As String = "Meilensteine auswählen"
+        Dim hproj As clsProjekt
+        Dim awinSelection As Excel.ShapeRange
+        Dim selektierteProjekte As New clsProjekte
+        Dim top As Double, left As Double, height As Double, width As Double
+        Dim repObj As Excel.ChartObject = Nothing
+
+        Dim pName As String, vglName As String = " "
+        Dim variantName As String
+
+        Call projektTafelInit()
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If request.pingMongoDb() Then
+
+            If Not awinSelection Is Nothing Then
+
+                ' eingangs-prüfung, ob auch nur ein Element selektiert wurde ...
+                If awinSelection.Count = 1 Then
+
+                    ' Aktion durchführen ...
+
+                    singleShp = awinSelection.Item(1)
+
+                    Try
+
+                        hproj = ShowProjekte.getProject(singleShp.Name)
+                        nameList = hproj.getMilestones
+                        listOfItems = hproj.getElemIdsOf(selectedMilestones, True)
+
+
+                        ' jetzt muss die ProjektHistorie aufgebaut werden 
+                        With hproj
+                            pName = .name
+                            variantName = .variantName
+                        End With
+
+                        If Not projekthistorie Is Nothing Then
+                            If projekthistorie.Count > 0 Then
+                                vglName = projekthistorie.First.getShapeText
+                            End If
+                        Else
+                            projekthistorie = New clsProjektHistorie
+                        End If
+
+                        If vglName <> hproj.getShapeText Then
+
+                            ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+                                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+                            projekthistorie.Add(Date.Now, hproj)
+
+
+                        Else
+                            ' der aktuelle Stand hproj muss hinzugefügt werden 
+                            Dim lastElem As Integer = projekthistorie.Count - 1
+                            projekthistorie.RemoveAt(lastElem)
+                            projekthistorie.Add(Date.Now, hproj)
+                        End If
+
+
+
+                        With singleShp
+                            top = .Top + boxHeight + 5
+                            left = .Left - 5
+                        End With
+
+                        height = 2 * ((nameList.Count - 1) * 20 + 110)
+                        width = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 24 * boxWidth + 10)
+
+
+                        Call createMsTrendAnalysisOfProject(hproj, repObj, listOfItems, top, left, height, width)
+
+
+                    Catch ex As Exception
+                        Call MsgBox(ex.Message)
+                    End Try
+
+                Else
+                    Call MsgBox("bitte nur ein Projekt selektieren ...")
+                End If
+            Else
+                Call MsgBox("vorher ein Projekt selektieren ...")
+            End If
+
+        Else
+            Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
+            'projekthistorie.clear()
+        End If
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+
+
+
+
 
     End Sub
 
