@@ -3245,7 +3245,7 @@ Public Module Projekte
         ' wenn nicht mindestens zwei Elemente darstellbar sind, ist kein Trend darzustellen 
         If plen < 2 Then
             appInstance.EnableEvents = formerEE
-            Throw New Exception("es gibt noch keinen Trend")
+            Throw New Exception("Es gibt noch keinen Trend für das Projekt '" & hproj.name & "'")
         End If
 
         ' neu - neu - neu - neu 

@@ -71,7 +71,7 @@
           <menu id="PT0G1M2" label="Meilensteine">
             <button id="PT0G1M2B5" label="Alle" onAction="Tom2G2M5M2B5ShowMilestones" />
             <button id="PT0G1M2B6" label="Meilenstein anzeigen" onAction="PTShowMilestonesByName" />
-            <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="PTShowMilestoneTrend" />
+            <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="NameHierarchySelAction"  />
             <!--<button id="PT0G1M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />-->
           </menu>
           <separator id="PT0G1s5"/>
