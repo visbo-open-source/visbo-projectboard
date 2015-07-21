@@ -86,7 +86,9 @@ Public Module awinGUI
             pname = CStr(ProjektListe.Item(1))
             hproj = ShowProjekte.getProject(pname)
             tmpCollection.Add(hproj.getShapeText & "#0")
-            kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
+            ' ur: 21.07.2015: Versuch zur Korrektur:
+            'kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpCollection)
+            kennung = calcChartKennung("pr", charttype, tmpCollection)
         Else
             kennung = calcChartKennung("pf", charttype, ProjektListe)
         End If

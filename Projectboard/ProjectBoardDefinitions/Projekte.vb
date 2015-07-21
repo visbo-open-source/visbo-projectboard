@@ -1443,15 +1443,15 @@ Public Module Projekte
         Dim titelTeilLaengen(1) As Integer
 
 
-
-        pName = hproj.name
-        tmpcollection.Add(pName & "#" & auswahl.ToString)
-        kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpcollection)
         isSingleProject = True
         projektListe.Add(hproj.name)
 
         tmpstr = chtobj.Name.Trim.Split(New Char() {CChar("#")}, 4)
         charttype = CInt(tmpstr(1))
+
+        pName = hproj.name
+        tmpcollection.Add(pName & "#" & auswahl.ToString)
+        kennung = calcChartKennung("pr", charttype, tmpcollection)
 
         'foundDiagramm = DiagramList.getDiagramm(chtobj.Name)
         ' event. für eine Erweiterung benötigt
@@ -1622,7 +1622,7 @@ Public Module Projekte
 
             Case PTpfdk.FitRisikoVol
 
-                titelTeile(0) = portfolioDiagrammtitel(PTprdk.StrategieRisiko) & " " & hproj.name & vbLf
+                titelTeile(0) = portfolioDiagrammtitel(PTprdk.FitRisikoVol) & " " & hproj.name & vbLf
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
             Case PTpfdk.ZeitRisiko
@@ -1711,7 +1711,8 @@ Public Module Projekte
                                     dlFontStrikethrough = CBool(.Font.Strikethrough)
                                     dlFontSubscript = CBool(.Font.Subscript)
                                     dlFontSuperscript = CBool(.Font.Superscript)
-                                    dlFontUnderline = CDbl(.Font.Underline)
+                                    'ur 21.07.2015 dlFontUnderline = CDbl(.Font.Underline)
+
                                     dlFontSize = CDbl(.Font.Size)
                                     If .Font.Color <> awinSettings.AmpelRot Then
                                         dlFontColor = CInt(.Font.Color)
@@ -1795,7 +1796,7 @@ Public Module Projekte
                                     .Font.Strikethrough = dlFontStrikethrough
                                     .Font.Subscript = dlFontSubscript
                                     .Font.Superscript = dlFontSuperscript
-                                    .Font.Underline = dlFontUnderline
+                                    'ur: 21.07.2015: .Font.Underline = dlFontUnderline
 
                                     'ur: 17.7.2014: fontsize kommt vom existierenden Chart
                                     '.Font.Size = awinSettings.CPfontsizeItems
@@ -2437,7 +2438,7 @@ Public Module Projekte
                             .name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
                         Else
                             '.name = "Baseline (" & beauftragung.timeStamp.ToString("d") & ")"
-                            .name = "Baseline"
+                            .name = "Soll"
                         End If
 
                         '.name = "Baseline"
@@ -2529,7 +2530,7 @@ Public Module Projekte
 
                 With .SeriesCollection.NewSeries
                     '.name = "Current (" & hproj.timeStamp.ToString("d") & ")"
-                    .name = "Current"
+                    .name = "Ist"
                     '.name = "Current"
                     .Interior.color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheC
@@ -3098,7 +3099,7 @@ Public Module Projekte
                         If isMinMax Then
                             .name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
                         Else
-                            .name = "Baseline (" & beauftragung.timeStamp.ToString("d") & ")"
+                            .name = "Soll (" & beauftragung.timeStamp.ToString("d") & ")"
                         End If
 
                         .Interior.color = awinSettings.SollIstFarbeB
@@ -3130,7 +3131,7 @@ Public Module Projekte
 
 
                 With .SeriesCollection.NewSeries
-                    .name = "Current (" & hproj.timeStamp.ToString("d") & ")"
+                    .name = "Ist (" & hproj.timeStamp.ToString("d") & ")"
                     .Interior.color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheC
                     .XValues = Xdatenreihe
@@ -9933,7 +9934,7 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
+        appInstance.ScreenUpdating = True
 
         enableOnUpdate = False
 
@@ -9949,7 +9950,7 @@ Public Module Projekte
             Dim anzSelect As Integer = awinSelection.Count
 
             ' jetzt die Aktion durchführen ...
-
+          
             For Each singleShp In awinSelection
                 ok = True
                 With singleShp
@@ -10030,8 +10031,8 @@ Public Module Projekte
         End If
 
 
-
         Call awinDeSelect()
+
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
@@ -10194,7 +10195,7 @@ Public Module Projekte
 
         End If
 
-        Call awinDeSelect()
+        awinDeSelect()
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
@@ -11194,12 +11195,22 @@ Public Module Projekte
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        If selectedProjekte.Count > 0 Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
 
-            key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
-            todoListe.Add(key, kvp.Value)
+                key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+                todoListe.Add(key, kvp.Value)
 
-        Next
+            Next
+        Else
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+                todoListe.Add(key, kvp.Value)
+
+            Next
+        End If
+
 
         Dim msNumber As Integer = 1
 
@@ -11208,6 +11219,7 @@ Public Module Projekte
             Call zeichneMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
 
         Next
+
 
         appInstance.EnableEvents = formerEE
         enableOnUpdate = formereO
@@ -12158,6 +12170,13 @@ Public Module Projekte
 
                                             Call updateProjectPfDiagram(hproj, chtobj, CInt(tmpArray(3)))
 
+                                        Case CInt(PTprdk.FitRisikoVol).ToString
+
+                                            Call updateProjectPfDiagram(hproj, chtobj, CInt(tmpArray(3)))
+
+                                        Case CInt(PTprdk.ComplexRisiko).ToString
+
+                                            Call updateProjectPfDiagram(hproj, chtobj, CInt(tmpArray(3)))
 
                                         Case CInt(PTprdk.Ergebnis).ToString
                                             ' Update Ergebnis Diagramm
