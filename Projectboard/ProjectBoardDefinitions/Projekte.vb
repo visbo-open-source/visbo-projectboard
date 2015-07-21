@@ -1443,15 +1443,15 @@ Public Module Projekte
         Dim titelTeilLaengen(1) As Integer
 
 
-
-        pName = hproj.name
-        tmpcollection.Add(pName & "#" & auswahl.ToString)
-        kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpcollection)
         isSingleProject = True
         projektListe.Add(hproj.name)
 
         tmpstr = chtobj.Name.Trim.Split(New Char() {CChar("#")}, 4)
         charttype = CInt(tmpstr(1))
+
+        pName = hproj.name
+        tmpcollection.Add(pName & "#" & auswahl.ToString)
+        kennung = calcChartKennung("pr", charttype, tmpcollection)
 
         'foundDiagramm = DiagramList.getDiagramm(chtobj.Name)
         ' event. für eine Erweiterung benötigt
@@ -1622,7 +1622,7 @@ Public Module Projekte
 
             Case PTpfdk.FitRisikoVol
 
-                titelTeile(0) = portfolioDiagrammtitel(PTprdk.StrategieRisiko) & " " & hproj.name & vbLf
+                titelTeile(0) = portfolioDiagrammtitel(PTprdk.FitRisikoVol) & " " & hproj.name & vbLf
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
             Case PTpfdk.ZeitRisiko
@@ -1711,7 +1711,8 @@ Public Module Projekte
                                     dlFontStrikethrough = CBool(.Font.Strikethrough)
                                     dlFontSubscript = CBool(.Font.Subscript)
                                     dlFontSuperscript = CBool(.Font.Superscript)
-                                    dlFontUnderline = CDbl(.Font.Underline)
+                                    'ur 21.07.2015 dlFontUnderline = CDbl(.Font.Underline)
+
                                     dlFontSize = CDbl(.Font.Size)
                                     If .Font.Color <> awinSettings.AmpelRot Then
                                         dlFontColor = CInt(.Font.Color)
@@ -1795,7 +1796,7 @@ Public Module Projekte
                                     .Font.Strikethrough = dlFontStrikethrough
                                     .Font.Subscript = dlFontSubscript
                                     .Font.Superscript = dlFontSuperscript
-                                    .Font.Underline = dlFontUnderline
+                                    'ur: 21.07.2015: .Font.Underline = dlFontUnderline
 
                                     'ur: 17.7.2014: fontsize kommt vom existierenden Chart
                                     '.Font.Size = awinSettings.CPfontsizeItems
@@ -12172,6 +12173,13 @@ Public Module Projekte
 
                                             Call updateProjectPfDiagram(hproj, chtobj, CInt(tmpArray(3)))
 
+                                        Case CInt(PTprdk.FitRisikoVol).ToString
+
+                                            Call updateProjectPfDiagram(hproj, chtobj, CInt(tmpArray(3)))
+
+                                        Case CInt(PTprdk.ComplexRisiko).ToString
+
+                                            Call updateProjectPfDiagram(hproj, chtobj, CInt(tmpArray(3)))
 
                                         Case CInt(PTprdk.Ergebnis).ToString
                                             ' Update Ergebnis Diagramm
