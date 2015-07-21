@@ -6870,6 +6870,11 @@ Public Module awinGeneralModules
                             roentgenBlick.isOn = False
                         End If
                         Call awinZeichnePhasen(selectedPhases, False, True)
+
+                        ' Selektion der selektierten Projekte wieder sichtbar machen
+                        If selectedProjekte.Count > 0 Then
+                            Call awinSelect()
+                        End If
                     End If
 
                     If selectedMilestones.Count > 0 Then
@@ -6902,6 +6907,11 @@ Public Module awinGeneralModules
 
             Else
                 Call MsgBox("bitte mindestens ein Element aus einer der Kategorien selektieren  ")
+            End If
+
+            ' selektierte Projekte weiterhin als selektiert darstellen
+            If selectedProjekte.Count > 0 Then
+                Call awinSelect()
             End If
 
         ElseIf menueOption = PTmenue.filterdefinieren Then

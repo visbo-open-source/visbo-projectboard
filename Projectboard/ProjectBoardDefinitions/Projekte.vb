@@ -2437,7 +2437,7 @@ Public Module Projekte
                             .name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
                         Else
                             '.name = "Baseline (" & beauftragung.timeStamp.ToString("d") & ")"
-                            .name = "Baseline"
+                            .name = "Soll"
                         End If
 
                         '.name = "Baseline"
@@ -2529,7 +2529,7 @@ Public Module Projekte
 
                 With .SeriesCollection.NewSeries
                     '.name = "Current (" & hproj.timeStamp.ToString("d") & ")"
-                    .name = "Current"
+                    .name = "Ist"
                     '.name = "Current"
                     .Interior.color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheC
@@ -3098,7 +3098,7 @@ Public Module Projekte
                         If isMinMax Then
                             .name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
                         Else
-                            .name = "Baseline (" & beauftragung.timeStamp.ToString("d") & ")"
+                            .name = "Soll (" & beauftragung.timeStamp.ToString("d") & ")"
                         End If
 
                         .Interior.color = awinSettings.SollIstFarbeB
@@ -3130,7 +3130,7 @@ Public Module Projekte
 
 
                 With .SeriesCollection.NewSeries
-                    .name = "Current (" & hproj.timeStamp.ToString("d") & ")"
+                    .name = "Ist (" & hproj.timeStamp.ToString("d") & ")"
                     .Interior.color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheC
                     .XValues = Xdatenreihe
@@ -9933,7 +9933,7 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
+        appInstance.ScreenUpdating = True
 
         enableOnUpdate = False
 
@@ -9949,7 +9949,7 @@ Public Module Projekte
             Dim anzSelect As Integer = awinSelection.Count
 
             ' jetzt die Aktion durchführen ...
-
+          
             For Each singleShp In awinSelection
                 ok = True
                 With singleShp
@@ -10030,8 +10030,9 @@ Public Module Projekte
         End If
 
 
+        'ur: 17.7.2015: für PlanElemente visualisieren für Einzelprojekt-Info sollte nach zeichnen der Phasen nicht deselektiert werden
+        '' ''Call awinDeSelect()
 
-        Call awinDeSelect()
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
@@ -10194,7 +10195,8 @@ Public Module Projekte
 
         End If
 
-        Call awinDeSelect()
+        'ur: 17.7.2015: für PlanElemente visualisieren sollte nach zeichnen der Meilensteine nicht deselektiert werden
+        '' ''Call awinDeSelect()
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
@@ -11194,12 +11196,22 @@ Public Module Projekte
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        If selectedProjekte.Count > 0 Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
 
-            key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
-            todoListe.Add(key, kvp.Value)
+                key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+                todoListe.Add(key, kvp.Value)
 
-        Next
+            Next
+        Else
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+                todoListe.Add(key, kvp.Value)
+
+            Next
+        End If
+
 
         Dim msNumber As Integer = 1
 
@@ -11208,6 +11220,8 @@ Public Module Projekte
             Call zeichneMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
 
         Next
+
+        Call awinSelect()
 
         appInstance.EnableEvents = formerEE
         enableOnUpdate = formereO
