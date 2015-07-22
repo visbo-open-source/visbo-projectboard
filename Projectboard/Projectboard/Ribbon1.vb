@@ -430,6 +430,8 @@ Imports System.Drawing
                 ' hier muss eventuell ein Neuzeichnen erfolgen
             Else
                 Call MsgBox("Es ist kein Chart angezeigt")
+                appInstance.ScreenUpdating = True
+                enableOnUpdate = True
             End If
 
         Catch ex As Exception
