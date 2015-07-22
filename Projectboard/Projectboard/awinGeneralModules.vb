@@ -263,7 +263,7 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
-    ''' liest das Customization File aus unn initialisiert die globalen Variablen entsprechend
+    ''' liest das Customization File aus und initialisiert die globalen Variablen entsprechend
     ''' </summary>
     ''' <remarks></remarks>
     Friend Sub awinsetTypen()
@@ -1139,16 +1139,24 @@ Public Module awinGeneralModules
 
             Try
                 If isModulVorlage Then
-                    awinSettings.lastModulTyp = ModulVorlagen.Liste.ElementAt(0).Value.VorlagenName
+                    If ModulVorlagen.Count > 0 Then
+                        awinSettings.lastModulTyp = ModulVorlagen.Liste.ElementAt(0).Value.VorlagenName
+                        Call awinWritePhaseDefinitions()
+                    End If
+
                 Else
-                    awinSettings.lastProjektTyp = Projektvorlagen.Liste.ElementAt(0).Value.VorlagenName
+                    If Projektvorlagen.Count > 0 Then
+                        awinSettings.lastProjektTyp = Projektvorlagen.Liste.ElementAt(0).Value.VorlagenName
+                        Call awinWritePhaseDefinitions()
+                    End If
+
                 End If
 
             Catch ex As Exception
                 awinSettings.lastProjektTyp = ""
             End Try
 
-            Call awinWritePhaseDefinitions()
+
 
         Else
             If isModulVorlage Then
