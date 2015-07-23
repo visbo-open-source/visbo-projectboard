@@ -10031,7 +10031,8 @@ Public Module Projekte
         End If
 
 
-        Call awinDeSelect()
+        'ur: 17.7.2015: für PlanElemente visualisieren für Einzelprojekt-Info sollte nach zeichnen der Phasen nicht deselektiert werden
+        '' ''Call awinDeSelect()
 
 
         enableOnUpdate = True
@@ -10058,7 +10059,7 @@ Public Module Projekte
             tmpName = CStr(nameList.Item(1))
         ElseIf nameList.Count > 1 Then
             tmpName = "Collection"
-            
+
         End If
 
         With roentgenBlick
@@ -10195,7 +10196,8 @@ Public Module Projekte
 
         End If
 
-        awinDeSelect()
+        'ur: 17.7.2015: für PlanElemente visualisieren sollte nach zeichnen der Meilensteine nicht deselektiert werden
+        '' ''Call awinDeSelect()
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
@@ -10232,7 +10234,7 @@ Public Module Projekte
         For Each chtobj In CType(CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
 
             Try
-            With chtobj
+                With chtobj
                     If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
                         (.Top >= projectShape.Top And .Top <= projectShape.Top + projectShape.Height)) And _
                         ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
@@ -11220,6 +11222,7 @@ Public Module Projekte
 
         Next
 
+        Call awinSelect()
 
         appInstance.EnableEvents = formerEE
         enableOnUpdate = formereO

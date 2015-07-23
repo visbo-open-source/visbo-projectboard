@@ -1690,7 +1690,7 @@ Imports System.Drawing
 
             If awinSettings.isHryNameFrmActive Then
                 Call MsgBox("es kann nur ein Fenster zur Hierarchie- bzw. Namenauswahl geöffnet sein ...")
-            ElseIf control.Id = "PTXG1B4" Then
+            ElseIf control.Id = "PTXG1B4" Or control.Id = "PT0G1B8" Then
                 ' Namen auswählen, Visualisieren
                 awinSettings.useHierarchy = False
                 With nameFormular
@@ -1724,7 +1724,7 @@ Imports System.Drawing
                     'returnValue = .ShowDialog
                 End With
 
-            ElseIf control.Id = "PTXG1B5" Then
+            ElseIf control.Id = "PTXG1B5" Or control.Id = "PT0G1B9" Then
                 ' Hierarchie auswählen, visualisieren
                 awinSettings.useHierarchy = True
                 With hryFormular
@@ -5684,6 +5684,7 @@ Imports System.Drawing
 
     Sub PT0ShowZieleUebersicht(control As IRibbonControl)
 
+        Dim relevanteProjekte As clsProjekte
         Dim chtObject As Excel.ChartObject = Nothing
         'Dim top As Double, left As Double, width As Double, height As Double
         Dim future As Integer = 0
@@ -5698,7 +5699,14 @@ Imports System.Drawing
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
-        If ShowProjekte.Count > 0 Then
+        If control.Id = "PT0G1B2" Then
+            relevanteProjekte = selectedProjekte
+        Else
+            Call awinDeSelect() ' evt. vorhandene Selektion entfernen, da über Multiprojekt-Info
+            relevanteProjekte = ShowProjekte
+        End If
+      
+        If relevanteProjekte.Count > 0 Then
             If showRangeRight - showRangeLeft > 5 Then
 
                 ' betrachte sowohl Vergangenheit als auch Gegenwart
@@ -5709,7 +5717,7 @@ Imports System.Drawing
 
                 ' Nicht bewertet 
                 With valueItem
-                    .value = ShowProjekte.getColorsInMonth(0, future).Sum
+                    .value = relevanteProjekte.getColorsInMonth(0, future).Sum
                     .name = "nicht bewertet"
                     .color = CType(awinSettings.AmpelNichtBewertet, UInt32)
                 End With
@@ -5718,7 +5726,7 @@ Imports System.Drawing
                 valueItem = New clsWPFPieValues
                 ' Grün bewertet
                 With valueItem
-                    .value = ShowProjekte.getColorsInMonth(1, future).Sum
+                    .value = relevanteProjekte.getColorsInMonth(1, future).Sum
                     .name = "OK"
                     .color = CType(awinSettings.AmpelGruen, UInt32)
                 End With
@@ -5727,7 +5735,7 @@ Imports System.Drawing
                 valueItem = New clsWPFPieValues
                 ' Gelb bewertet
                 With valueItem
-                    .value = ShowProjekte.getColorsInMonth(2, future).Sum
+                    .value = relevanteProjekte.getColorsInMonth(2, future).Sum
                     .name = "nicht vollständig"
                     .color = CType(awinSettings.AmpelGelb, UInt32)
                 End With
@@ -5736,7 +5744,7 @@ Imports System.Drawing
                 valueItem = New clsWPFPieValues
                 ' Rot bewertet
                 With valueItem
-                    .value = ShowProjekte.getColorsInMonth(3, future).Sum
+                    .value = relevanteProjekte.getColorsInMonth(3, future).Sum
                     .name = "Zielverfehlung"
                     .color = CType(awinSettings.AmpelRot, UInt32)
                 End With
@@ -5757,7 +5765,12 @@ Imports System.Drawing
             End If
 
         Else
-            Call MsgBox("Es sind keine Projekte geladen!")
+            If control.Id = "PT0G1B2" Then
+                Call MsgBox("Bitte zuerst ein Projekt selektieren! ")
+            Else
+                Call MsgBox("Es sind keine Projekte geladen!")
+            End If
+
         End If
 
         'awinSettings.mppShowAmpel = formerAmpelSetting
