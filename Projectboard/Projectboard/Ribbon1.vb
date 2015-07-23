@@ -5702,6 +5702,7 @@ Imports System.Drawing
         If control.Id = "PT0G1B2" Then
             relevanteProjekte = selectedProjekte
         Else
+            Call awinDeSelect() ' evt. vorhandene Selektion entfernen, da über Multiprojekt-Info
             relevanteProjekte = ShowProjekte
         End If
       
