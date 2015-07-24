@@ -430,6 +430,8 @@ Imports System.Drawing
                 ' hier muss eventuell ein Neuzeichnen erfolgen
             Else
                 Call MsgBox("Es ist kein Chart angezeigt")
+                appInstance.ScreenUpdating = True
+                enableOnUpdate = True
             End If
 
         Catch ex As Exception
@@ -1688,7 +1690,7 @@ Imports System.Drawing
 
             If awinSettings.isHryNameFrmActive Then
                 Call MsgBox("es kann nur ein Fenster zur Hierarchie- bzw. Namenauswahl geöffnet sein ...")
-            ElseIf control.Id = "PTXG1B4" Then
+            ElseIf control.Id = "PTXG1B4" Or control.Id = "PT0G1B8" Then
                 ' Namen auswählen, Visualisieren
                 awinSettings.useHierarchy = False
                 With nameFormular
@@ -1722,7 +1724,7 @@ Imports System.Drawing
                     'returnValue = .ShowDialog
                 End With
 
-            ElseIf control.Id = "PTXG1B5" Then
+            ElseIf control.Id = "PTXG1B5" Or control.Id = "PT0G1B9" Then
                 ' Hierarchie auswählen, visualisieren
                 awinSettings.useHierarchy = True
                 With hryFormular
@@ -2104,9 +2106,76 @@ Imports System.Drawing
                     '.Show()
                     returnValue = .ShowDialog
                 End With
+
+            ElseIf control.Id = "PT0G1M2B7" Then
+                ' Auswahl über Namen, Meilensteine für Meilenstein Trendanalyse
+                Try
+                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                Catch ex As Exception
+                    awinSelection = Nothing
+                End Try
+
+                If awinSelection Is Nothing Then
+                    Call MsgBox("vorher Projekt/e selektieren ...")
+                Else
+
+                    appInstance.ScreenUpdating = False
+
+                    With nameFormular
+
+                        .Text = "Meilenstein Trendanalyse erzeugen"
+                        .OKButton.Text = "Anzeigen"
+                        .menuOption = PTmenue.meilensteinTrendanalyse
+                        .statusLabel.Text = ""
+                        .statusLabel.Visible = True
+
+                        .headerLine.Text = "Meilensteine"
+
+                        .picturePhasen.Visible = False
+                        .rdbPhases.Visible = False
+                        .rdbPhases.Checked = False
+                        .rdbPhases.Enabled = False
+
+                        .pictureMilestones.Visible = False
+                        .rdbMilestones.Visible = False
+                        .rdbMilestones.Checked = True
+                        .rdbMilestones.Enabled = False
+
+                        .pictureRoles.Visible = False
+                        .rdbRoles.Visible = False
+                        .rdbRoles.Checked = False
+                        .rdbRoles.Enabled = False
+
+                        .pictureCosts.Visible = False
+                        .rdbCosts.Visible = False
+                        .rdbCosts.Checked = False
+                        .rdbCosts.Enabled = False
+
+                        .rdbBU.Visible = False
+                        .pictureBU.Visible = False
+
+                        .rdbTyp.Visible = False
+                        .pictureTyp.Visible = False
+
+
+                        .einstellungen.Visible = False
+
+                        .chkbxOneChart.Checked = False
+                        .chkbxOneChart.Visible = False
+
+                        .repVorlagenDropbox.Visible = False
+                        .labelPPTVorlage.Visible = False
+
+                 
+                        returnValue = .ShowDialog()
+                    End With
+
+                    appInstance.ScreenUpdating = True
+
                 End If
 
 
+            End If
         Else
             Call MsgBox("Es sind keine Projekte sichtbar!  ")
         End If
@@ -4835,157 +4904,162 @@ Imports System.Drawing
 
     End Sub
 
+    '' '' '' '' '' '' ''' ur: 10.7.2015: wurde durch awinShowMilestoneTrend ersetzt
+    '' '' '' '' '' '' ''' <summary>
+    '' '' '' '' '' '' ''' zeigt zu dem ausgewählten Projekt die Meilenstein Trendanalyse an 
+    '' '' '' '' '' '' ''' dazu wird erst ein Fenster aufgeschaltet, aus dem der oder die Namen des betreffenden Meilensteins ausgewählt werden können 
+    '' '' '' '' '' '' ''' </summary>
+    '' '' '' '' '' '' ''' <param name="control"></param>
+    '' '' '' '' '' '' ''' <remarks></remarks>
+    '' '' '' '' '' ''Sub PTShowMilestoneTrend(control As IRibbonControl)
 
-    ''' <summary>
-    ''' zeigt zu dem ausgewählten Projekt die Meilenstein Trendanalyse an 
-    ''' dazu wird erst ein Fenster aufgeschaltet, aus dem der oder die Namen des betreffenden Meilensteins ausgewählt werden können 
-    ''' </summary>
-    ''' <param name="control"></param>
-    ''' <remarks></remarks>
-    Sub PTShowMilestoneTrend(control As IRibbonControl)
+    '' '' '' '' '' ''    Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+    '' '' '' '' '' ''    Dim singleShp As Excel.Shape
+    '' '' '' '' '' ''    Dim listOfItems As New Collection
+    '' '' '' '' '' ''    Dim listOfMSNames As New Collection
+    '' '' '' '' '' ''    Dim nameList As New SortedList(Of Date, String)
+    '' '' '' '' '' ''    Dim title As String = "Meilensteine auswählen"
+    '' '' '' '' '' ''    Dim hproj As clsProjekt
+    '' '' '' '' '' ''    Dim awinSelection As Excel.ShapeRange
+    '' '' '' '' '' ''    Dim selektierteProjekte As New clsProjekte
+    '' '' '' '' '' ''    Dim top As Double, left As Double, height As Double, width As Double
+    '' '' '' '' '' ''    Dim repObj As Excel.ChartObject = Nothing
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim singleShp As Excel.Shape
-        Dim listOfItems As New Collection
-        Dim nameList As New SortedList(Of Date, String)
-        Dim title As String = "Meilensteine auswählen"
-        Dim hproj As clsProjekt
-        Dim awinSelection As Excel.ShapeRange
-        Dim selektierteProjekte As New clsProjekte
-        Dim top As Double, left As Double, height As Double, width As Double
-        Dim repObj As Excel.ChartObject = Nothing
+    '' '' '' '' '' ''    Dim pName As String, vglName As String = " "
+    '' '' '' '' '' ''    Dim variantName As String
 
-        Dim pName As String, vglName As String = " "
-        Dim variantName As String
+    '' '' '' '' '' ''    Call projektTafelInit()
 
-        Call projektTafelInit()
+    '' '' '' '' '' ''    Try
+    '' '' '' '' '' ''        awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+    '' '' '' '' '' ''    Catch ex As Exception
+    '' '' '' '' '' ''        awinSelection = Nothing
+    '' '' '' '' '' ''    End Try
+    '' '' '' '' '' ''    If request.pingMongoDb() Then
 
-        Try
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
-        If request.pingMongoDb() Then
+    '' '' '' '' '' ''        If Not awinSelection Is Nothing Then
 
-            If Not awinSelection Is Nothing Then
+    '' '' '' '' '' ''            ' eingangs-prüfung, ob auch nur ein Element selektiert wurde ...
+    '' '' '' '' '' ''            If awinSelection.Count = 1 Then
 
-                ' eingangs-prüfung, ob auch nur ein Element selektiert wurde ...
-                If awinSelection.Count = 1 Then
+    '' '' '' '' '' ''                ' Aktion durchführen ...
 
-                    ' Aktion durchführen ...
+    '' '' '' '' '' ''                singleShp = awinSelection.Item(1)
 
-                    singleShp = awinSelection.Item(1)
+    '' '' '' '' '' ''                Try
+    '' '' '' '' '' ''                    hproj = ShowProjekte.getProject(singleShp.Name)
+    '' '' '' '' '' ''                    nameList = hproj.getMilestones
 
-                    Try
-                        hproj = ShowProjekte.getProject(singleShp.Name)
-                        nameList = hproj.getMilestones
+    '' '' '' '' '' ''                    ' jetzt muss die ProjektHistorie aufgebaut werden 
+    '' '' '' '' '' ''                    With hproj
+    '' '' '' '' '' ''                        pName = .name
+    '' '' '' '' '' ''                        variantName = .variantName
+    '' '' '' '' '' ''                    End With
 
-                        ' jetzt muss die ProjektHistorie aufgebaut werden 
-                        With hproj
-                            pName = .name
-                            variantName = .variantName
-                        End With
+    '' '' '' '' '' ''                    If Not projekthistorie Is Nothing Then
+    '' '' '' '' '' ''                        If projekthistorie.Count > 0 Then
+    '' '' '' '' '' ''                            vglName = projekthistorie.First.getShapeText
+    '' '' '' '' '' ''                        End If
+    '' '' '' '' '' ''                    Else
+    '' '' '' '' '' ''                        projekthistorie = New clsProjektHistorie
+    '' '' '' '' '' ''                    End If
 
-                        If Not projekthistorie Is Nothing Then
-                            If projekthistorie.Count > 0 Then
-                                vglName = projekthistorie.First.getShapeText
-                            End If
-                        Else
-                            projekthistorie = New clsProjektHistorie
-                        End If
+    '' '' '' '' '' ''                    If vglName <> hproj.getShapeText Then
 
-                        If vglName <> hproj.getShapeText Then
-
-                            ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                            projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                                storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                            projekthistorie.Add(Date.Now, hproj)
-
-
-                        Else
-                            ' der aktuelle Stand hproj muss hinzugefügt werden 
-                            Dim lastElem As Integer = projekthistorie.Count - 1
-                            projekthistorie.RemoveAt(lastElem)
-                            projekthistorie.Add(Date.Now, hproj)
-                        End If
-
-                        If nameList.Count > 0 Then
+    '' '' '' '' '' ''                        ' projekthistorie muss nur dann neu bestimmt werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+    '' '' '' '' '' ''                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+    '' '' '' '' '' ''                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+    '' '' '' '' '' ''                        projekthistorie.Add(Date.Now, hproj)
 
 
-                            appInstance.EnableEvents = False
-                            enableOnUpdate = False
+    '' '' '' '' '' ''                    Else
+    '' '' '' '' '' ''                        ' der aktuelle Stand hproj muss hinzugefügt werden 
+    '' '' '' '' '' ''                        Dim lastElem As Integer = projekthistorie.Count - 1
+    '' '' '' '' '' ''                        projekthistorie.RemoveAt(lastElem)
+    '' '' '' '' '' ''                        projekthistorie.Add(Date.Now, hproj)
+    '' '' '' '' '' ''                    End If
 
-                            repObj = Nothing
+    '' '' '' '' '' ''                    If nameList.Count > 0 Then
 
 
+    '' '' '' '' '' ''                        appInstance.EnableEvents = False
+    '' '' '' '' '' ''                        enableOnUpdate = False
 
-                            For Each kvp As KeyValuePair(Of Date, String) In nameList
-                                listOfItems.Add(kvp.Value)
-                            Next
-
-                            With singleShp
-                                top = .Top + boxHeight + 5
-                                left = .Left - 5
-                            End With
-
-                            height = 2 * ((nameList.Count - 1) * 20 + 110)
-                            width = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 24 * boxWidth + 10)
-
-                            'Try
-
-                            '    Call createMsTrendAnalysisOfProject(hproj, repObj, listOfItems, top, left, height, width)
-
-                            'Catch ex As Exception
-
-                            '    Call MsgBox(ex.Message)
-
-                            'End Try
+    '' '' '' '' '' ''                        repObj = Nothing
 
 
 
-                            ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
-                            Dim auswahlFenster As New ListSelectionWindow(listOfItems, title)
+    '' '' '' '' '' ''                        For Each kvp As KeyValuePair(Of Date, String) In nameList
 
+    '' '' '' '' '' ''                            Dim msname As String = ""
+    '' '' '' '' '' ''                            msname = elemNameOfElemID(kvp.Value)
+    '' '' '' '' '' ''                            listOfMSNames.Add(msname)
+    '' '' '' '' '' ''                            listOfItems.Add(kvp.Value)
+    '' '' '' '' '' ''                        Next
 
-                            With auswahlFenster
+    '' '' '' '' '' ''                        With singleShp
+    '' '' '' '' '' ''                            top = .Top + boxHeight + 5
+    '' '' '' '' '' ''                            left = .Left - 5
+    '' '' '' '' '' ''                        End With
 
-                                .kennung = " "
-                                .chTyp = DiagrammTypen(6)
-                                .chTop = top
-                                .chLeft = left
-                                .chWidth = width
-                                .chHeight = height
+    '' '' '' '' '' ''                        height = 2 * ((nameList.Count - 1) * 20 + 110)
+    '' '' '' '' '' ''                        width = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 24 * boxWidth + 10)
 
-                            End With
-                            auswahlFenster.Show()
+    '' '' '' '' '' ''                        'Try
 
-                        Else
-                            Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
-                        End If
+    '' '' '' '' '' ''                        '    Call createMsTrendAnalysisOfProject(hproj, repObj, listOfItems, top, left, height, width)
 
-                    Catch ex As Exception
-                        Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
-                    End Try
+    '' '' '' '' '' ''                        'Catch ex As Exception
 
-                Else
-                    Call MsgBox("bitte nur ein Projekt selektieren ...")
-                End If
-            Else
-                Call MsgBox("vorher ein Projekt selektieren ...")
-            End If
+    '' '' '' '' '' ''                        '    Call MsgBox(ex.Message)
 
-        Else
-            Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
-            'projekthistorie.clear()
-        End If
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
+    '' '' '' '' '' ''                        'End Try
 
 
 
+    '' '' '' '' '' ''                        ' jetzt stehen in der listOfItems die Namen der Meilensteine - alphabetisch sortiert 
+    '' '' '' '' '' ''                        Dim auswahlFenster As New ListSelectionWindow(listOfMSNames, title)
 
 
-    End Sub
+    '' '' '' '' '' ''                        With auswahlFenster
+
+    '' '' '' '' '' ''                            .kennung = " "
+    '' '' '' '' '' ''                            .chTyp = DiagrammTypen(6)
+    '' '' '' '' '' ''                            .chTop = top
+    '' '' '' '' '' ''                            .chLeft = left
+    '' '' '' '' '' ''                            .chWidth = width
+    '' '' '' '' '' ''                            .chHeight = height
+
+    '' '' '' '' '' ''                        End With
+    '' '' '' '' '' ''                        auswahlFenster.Show()
+
+    '' '' '' '' '' ''                    Else
+    '' '' '' '' '' ''                        Call MsgBox("keine Meilensteine in den selektierten Projekten vorhanden ..")
+    '' '' '' '' '' ''                    End If
+
+    '' '' '' '' '' ''                Catch ex As Exception
+    '' '' '' '' '' ''                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+    '' '' '' '' '' ''                End Try
+
+    '' '' '' '' '' ''            Else
+    '' '' '' '' '' ''                Call MsgBox("bitte nur ein Projekt selektieren ...")
+    '' '' '' '' '' ''            End If
+    '' '' '' '' '' ''        Else
+    '' '' '' '' '' ''            Call MsgBox("vorher ein Projekt selektieren ...")
+    '' '' '' '' '' ''        End If
+
+    '' '' '' '' '' ''    Else
+    '' '' '' '' '' ''        Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Projekthistorie kann nicht geladen werden")
+    '' '' '' '' '' ''        'projekthistorie.clear()
+    '' '' '' '' '' ''    End If
+    '' '' '' '' '' ''    enableOnUpdate = True
+    '' '' '' '' '' ''    appInstance.EnableEvents = True
+
+
+
+
+
+    '' '' '' '' '' ''End Sub
 
     Sub PT0ShowProjektStatus(control As IRibbonControl)
 
@@ -5610,6 +5684,7 @@ Imports System.Drawing
 
     Sub PT0ShowZieleUebersicht(control As IRibbonControl)
 
+        Dim relevanteProjekte As clsProjekte
         Dim chtObject As Excel.ChartObject = Nothing
         'Dim top As Double, left As Double, width As Double, height As Double
         Dim future As Integer = 0
@@ -5624,7 +5699,13 @@ Imports System.Drawing
 
         appInstance.EnableEvents = False
         enableOnUpdate = False
-        If ShowProjekte.Count > 0 Then
+        If control.Id = "PT0G1B2" Then
+            relevanteProjekte = selectedProjekte
+        Else
+            relevanteProjekte = ShowProjekte
+        End If
+      
+        If relevanteProjekte.Count > 0 Then
             If showRangeRight - showRangeLeft > 5 Then
 
                 ' betrachte sowohl Vergangenheit als auch Gegenwart
@@ -5635,7 +5716,7 @@ Imports System.Drawing
 
                 ' Nicht bewertet 
                 With valueItem
-                    .value = ShowProjekte.getColorsInMonth(0, future).Sum
+                    .value = relevanteProjekte.getColorsInMonth(0, future).Sum
                     .name = "nicht bewertet"
                     .color = CType(awinSettings.AmpelNichtBewertet, UInt32)
                 End With
@@ -5644,7 +5725,7 @@ Imports System.Drawing
                 valueItem = New clsWPFPieValues
                 ' Grün bewertet
                 With valueItem
-                    .value = ShowProjekte.getColorsInMonth(1, future).Sum
+                    .value = relevanteProjekte.getColorsInMonth(1, future).Sum
                     .name = "OK"
                     .color = CType(awinSettings.AmpelGruen, UInt32)
                 End With
@@ -5653,7 +5734,7 @@ Imports System.Drawing
                 valueItem = New clsWPFPieValues
                 ' Gelb bewertet
                 With valueItem
-                    .value = ShowProjekte.getColorsInMonth(2, future).Sum
+                    .value = relevanteProjekte.getColorsInMonth(2, future).Sum
                     .name = "nicht vollständig"
                     .color = CType(awinSettings.AmpelGelb, UInt32)
                 End With
@@ -5662,7 +5743,7 @@ Imports System.Drawing
                 valueItem = New clsWPFPieValues
                 ' Rot bewertet
                 With valueItem
-                    .value = ShowProjekte.getColorsInMonth(3, future).Sum
+                    .value = relevanteProjekte.getColorsInMonth(3, future).Sum
                     .name = "Zielverfehlung"
                     .color = CType(awinSettings.AmpelRot, UInt32)
                 End With
@@ -5683,7 +5764,12 @@ Imports System.Drawing
             End If
 
         Else
-            Call MsgBox("Es sind keine Projekte geladen!")
+            If control.Id = "PT0G1B2" Then
+                Call MsgBox("Bitte zuerst ein Projekt selektieren! ")
+            Else
+                Call MsgBox("Es sind keine Projekte geladen!")
+            End If
+
         End If
 
         'awinSettings.mppShowAmpel = formerAmpelSetting

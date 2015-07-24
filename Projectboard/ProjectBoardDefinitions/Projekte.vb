@@ -1443,15 +1443,15 @@ Public Module Projekte
         Dim titelTeilLaengen(1) As Integer
 
 
-
-        pName = hproj.name
-        tmpcollection.Add(pName & "#" & auswahl.ToString)
-        kennung = calcChartKennung("pr", PTprdk.StrategieRisiko, tmpcollection)
         isSingleProject = True
         projektListe.Add(hproj.name)
 
         tmpstr = chtobj.Name.Trim.Split(New Char() {CChar("#")}, 4)
         charttype = CInt(tmpstr(1))
+
+        pName = hproj.name
+        tmpcollection.Add(pName & "#" & auswahl.ToString)
+        kennung = calcChartKennung("pr", charttype, tmpcollection)
 
         'foundDiagramm = DiagramList.getDiagramm(chtobj.Name)
         ' event. für eine Erweiterung benötigt
@@ -1622,7 +1622,7 @@ Public Module Projekte
 
             Case PTpfdk.FitRisikoVol
 
-                titelTeile(0) = portfolioDiagrammtitel(PTprdk.StrategieRisiko) & " " & hproj.name & vbLf
+                titelTeile(0) = portfolioDiagrammtitel(PTprdk.FitRisikoVol) & " " & hproj.name & vbLf
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
 
             Case PTpfdk.ZeitRisiko
@@ -1692,7 +1692,7 @@ Public Module Projekte
                 Dim dlFontStrikethrough As Boolean
                 Dim dlFontSuperscript As Boolean
                 Dim dlFontSubscript As Boolean
-                Dim dlFontUnderline As Double
+                'Dim dlFontUnderline As Double
 
                 For i = 1 To pts.Count
 
@@ -1711,7 +1711,8 @@ Public Module Projekte
                                     dlFontStrikethrough = CBool(.Font.Strikethrough)
                                     dlFontSubscript = CBool(.Font.Subscript)
                                     dlFontSuperscript = CBool(.Font.Superscript)
-                                    dlFontUnderline = CDbl(.Font.Underline)
+                                    'ur 21.07.2015 dlFontUnderline = CDbl(.Font.Underline)
+
                                     dlFontSize = CDbl(.Font.Size)
                                     If .Font.Color <> awinSettings.AmpelRot Then
                                         dlFontColor = CInt(.Font.Color)
@@ -1795,7 +1796,7 @@ Public Module Projekte
                                     .Font.Strikethrough = dlFontStrikethrough
                                     .Font.Subscript = dlFontSubscript
                                     .Font.Superscript = dlFontSuperscript
-                                    .Font.Underline = dlFontUnderline
+                                    'ur: 21.07.2015: .Font.Underline = dlFontUnderline
 
                                     'ur: 17.7.2014: fontsize kommt vom existierenden Chart
                                     '.Font.Size = awinSettings.CPfontsizeItems
@@ -2437,7 +2438,7 @@ Public Module Projekte
                             .name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
                         Else
                             '.name = "Baseline (" & beauftragung.timeStamp.ToString("d") & ")"
-                            .name = "Baseline"
+                            .name = "Soll"
                         End If
 
                         '.name = "Baseline"
@@ -2529,7 +2530,7 @@ Public Module Projekte
 
                 With .SeriesCollection.NewSeries
                     '.name = "Current (" & hproj.timeStamp.ToString("d") & ")"
-                    .name = "Current"
+                    .name = "Ist"
                     '.name = "Current"
                     .Interior.color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheC
@@ -3098,7 +3099,7 @@ Public Module Projekte
                         If isMinMax Then
                             .name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
                         Else
-                            .name = "Baseline (" & beauftragung.timeStamp.ToString("d") & ")"
+                            .name = "Soll (" & beauftragung.timeStamp.ToString("d") & ")"
                         End If
 
                         .Interior.color = awinSettings.SollIstFarbeB
@@ -3130,7 +3131,7 @@ Public Module Projekte
 
 
                 With .SeriesCollection.NewSeries
-                    .name = "Current (" & hproj.timeStamp.ToString("d") & ")"
+                    .name = "Ist (" & hproj.timeStamp.ToString("d") & ")"
                     .Interior.color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheC
                     .XValues = Xdatenreihe
@@ -3245,7 +3246,7 @@ Public Module Projekte
         ' wenn nicht mindestens zwei Elemente darstellbar sind, ist kein Trend darzustellen 
         If plen < 2 Then
             appInstance.EnableEvents = formerEE
-            Throw New Exception("es gibt noch keinen Trend")
+            Throw New Exception("Es gibt noch keinen Trend für das Projekt '" & hproj.name & "'")
         End If
 
         ' neu - neu - neu - neu 
@@ -3430,6 +3431,7 @@ Public Module Projekte
 
 
                         For px = 1 To tdatenreihe.Length
+
                             With CType(.SeriesCollection(drawnMilestones).Points(px), Point)
                                 .Interior.Color = ampelfarben(px - 1)
                                 .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleCircle
@@ -3442,7 +3444,10 @@ Public Module Projekte
 
                                     ' wenn es der Wert aus dem Vormonat ist: einen kleineren Marker zeichnen 
                                     If prevValueTaken(px - 1) Then
-                                        .MarkerSize = 5
+                                        .Interior.Color = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerForegroundColor = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerBackgroundColor = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerSize = 2
                                     End If
 
                                     ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er auch so markiert
@@ -3469,16 +3474,18 @@ Public Module Projekte
                                     Catch ex As Exception
 
                                     End Try
-
-
                                 End If
+
 
                                 ' wenn mittendrin Daten auftauchen, die noch nicht geschrieben wurden ... 
                                 If px > 1 And px < tdatenreihe.Length Then
 
                                     ' wenn es der Wert aus dem Vormonat ist: einen kleineren Marker zeichnen 
                                     If prevValueTaken(px - 1) Then
-                                        .MarkerSize = 5
+                                        .Interior.Color = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerForegroundColor = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerBackgroundColor = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerSize = 2
                                     End If
 
                                     ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er entsprechend markiert
@@ -3511,16 +3518,18 @@ Public Module Projekte
 
                                         End Try
 
-
                                     End If
                                 End If
 
                                 ' Schreiben des letzten Planungs-Standes
                                 If px > 1 And px = tdatenreihe.Length Then
 
-                                    ' wenn es der Wert aus dem Vormonat ist: einen kleineren Marker zeichnen 
+                                    ' wenn es der Wert aus dem Vormonat ist: einen kleineren/ nicht sichtbaren Marker zeichnen 
                                     If prevValueTaken(px - 1) Then
-                                        .MarkerSize = 5
+                                        .Interior.Color = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerForegroundColor = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerBackgroundColor = CInt(awinSettings.AmpelNichtBewertet)
+                                        .MarkerSize = 2
                                     End If
 
                                     ' wenn der Meilenstein zum zeitpunkt des Planungs-Standes bereits in der Vergangenheit lag, wird er auch so markiert
@@ -9925,7 +9934,7 @@ Public Module Projekte
         Dim formerEE As Boolean = appInstance.EnableEvents
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         appInstance.EnableEvents = False
-        appInstance.ScreenUpdating = False
+        appInstance.ScreenUpdating = True
 
         enableOnUpdate = False
 
@@ -9941,7 +9950,7 @@ Public Module Projekte
             Dim anzSelect As Integer = awinSelection.Count
 
             ' jetzt die Aktion durchführen ...
-
+          
             For Each singleShp In awinSelection
                 ok = True
                 With singleShp
@@ -10022,8 +10031,9 @@ Public Module Projekte
         End If
 
 
+        'ur: 17.7.2015: für PlanElemente visualisieren für Einzelprojekt-Info sollte nach zeichnen der Phasen nicht deselektiert werden
+        '' ''Call awinDeSelect()
 
-        Call awinDeSelect()
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
@@ -10186,7 +10196,8 @@ Public Module Projekte
 
         End If
 
-        Call awinDeSelect()
+        'ur: 17.7.2015: für PlanElemente visualisieren sollte nach zeichnen der Meilensteine nicht deselektiert werden
+        '' ''Call awinDeSelect()
 
         enableOnUpdate = True
         appInstance.EnableEvents = formerEE
@@ -11186,12 +11197,22 @@ Public Module Projekte
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+        If selectedProjekte.Count > 0 Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
 
-            key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
-            todoListe.Add(key, kvp.Value)
+                key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+                todoListe.Add(key, kvp.Value)
 
-        Next
+            Next
+        Else
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                key = 10000 * kvp.Value.tfZeile + kvp.Value.tfspalte
+                todoListe.Add(key, kvp.Value)
+
+            Next
+        End If
+
 
         Dim msNumber As Integer = 1
 
@@ -11200,6 +11221,8 @@ Public Module Projekte
             Call zeichneMilestonesInProjekt(kvp.Value, nameList, farbTyp, showRangeLeft, showRangeRight, numberIt, msNumber, False)
 
         Next
+
+        Call awinSelect()
 
         appInstance.EnableEvents = formerEE
         enableOnUpdate = formereO
@@ -12150,6 +12173,13 @@ Public Module Projekte
 
                                             Call updateProjectPfDiagram(hproj, chtobj, CInt(tmpArray(3)))
 
+                                        Case CInt(PTprdk.FitRisikoVol).ToString
+
+                                            Call updateProjectPfDiagram(hproj, chtobj, CInt(tmpArray(3)))
+
+                                        Case CInt(PTprdk.ComplexRisiko).ToString
+
+                                            Call updateProjectPfDiagram(hproj, chtobj, CInt(tmpArray(3)))
 
                                         Case CInt(PTprdk.Ergebnis).ToString
                                             ' Update Ergebnis Diagramm
@@ -16149,6 +16179,9 @@ Public Module Projekte
                         If mycollection.Count = PhaseDefinitions.Count Then
                             IDkennung = IDkennung & "#Alle"
 
+                        ElseIf mycollection.Count > 4 Then
+                            IDkennung = IDkennung & "#Mehrere"
+
                         Else
 
                             For i = 1 To mycollection.Count
@@ -16166,16 +16199,35 @@ Public Module Projekte
 
                     Case PTpfdk.Meilenstein
 
-                        For i = 1 To mycollection.Count
-                            cName = CStr(mycollection.Item(i)).Replace("#", "-")
-                            IDkennung = IDkennung & "#" & cName
+                        If mycollection.Count = MilestoneDefinitions.Count Then
+                            IDkennung = IDkennung & "#Alle"
 
-                        Next
+                        ElseIf mycollection.Count > 4 Then
+                            IDkennung = IDkennung & "#Mehrere"
+
+                        Else
+
+                            For i = 1 To mycollection.Count
+                                cName = CStr(mycollection.Item(i)).Replace("#", "-")
+                                ' der evtl vorhandenen Breadcrumb hat als Trennzeichen das #
+                                Try
+                                    IDkennung = IDkennung & "#" & cName
+                                Catch ex As Exception
+                                    IDkennung = IDkennung & "#"
+                                End Try
+
+                            Next
+
+                        End If
+
 
                     Case PTpfdk.Rollen
 
                         If mycollection.Count = RoleDefinitions.Count Then
                             IDkennung = IDkennung & "#Alle"
+
+                        ElseIf mycollection.Count > 4 Then
+                            IDkennung = IDkennung & "#Mehrere"
 
                         Else
 
@@ -16190,6 +16242,9 @@ Public Module Projekte
 
                         If mycollection.Count = CostDefinitions.Count Then
                             IDkennung = IDkennung & "#Alle"
+
+                        ElseIf mycollection.Count > 4 Then
+                            IDkennung = IDkennung & "#Mehrere"
 
                         Else
 

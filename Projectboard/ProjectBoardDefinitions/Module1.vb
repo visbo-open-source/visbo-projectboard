@@ -272,6 +272,7 @@ Public Module Module1
         excelExport = 5
         vorlageErstellen = 6
         rplan = 7
+        meilensteinTrendanalyse = 8
     End Enum
 
 
@@ -1456,6 +1457,51 @@ Public Module Module1
         istinStringCollection = found
     End Function
 
+    ''' <summary>
+    ''' Selektion aller Objekte in der Liste "selectedProjekte"
+    ''' 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Sub awinSelect()
+
+        Dim worksheetShapes As Excel.Shapes
+        Dim hproj As clsProjekt
+        Dim shapegruppe As Excel.ShapeRange
+        Dim shpElement As Excel.Shape
+        Dim shpArray() As String
+        Dim i As Integer = 0
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        ' Selektierte Projekte als selektiert kennzeichnen in der ProjektTafel
+
+        If selectedProjekte.Count > 0 Then
+            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            ReDim shpArray(selectedProjekte.Count - 1)
+
+            For Each kvp In selectedProjekte.Liste
+
+                hproj = kvp.Value
+                i = i + 1
+                Try
+                    shpElement = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(hproj.name)
+                    shpArray(i - 1) = shpElement.Name
+
+                Catch ex As Exception
+
+                End Try
+
+            Next
+            shapegruppe = worksheetShapes.Range(shpArray)
+            shapegruppe.Select()
+        End If
+
+
+
+        appInstance.EnableEvents = formerEE
+
+    End Sub
     ''' <summary>
     ''' De-Selektion aller Objekte durch Selektion einer Zelle in Zeile 2 in der Mitte des aktuell gezeigten Fensters 
     ''' 
