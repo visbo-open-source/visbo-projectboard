@@ -62,6 +62,12 @@ Public Class frmNameSelection
 
         awinSettings.isHryNameFrmActive = False
 
+        ' Falls einzelne Projekte selektiert waren, so wird diese Selection hier aufgehoben
+        If selectedProjekte.Count > 0 Then
+            Call awinDeSelect()
+        End If
+
+
     End Sub
 
     ''' <summary>

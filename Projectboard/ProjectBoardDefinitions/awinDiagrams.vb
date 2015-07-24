@@ -3722,19 +3722,26 @@ Public Module awinDiagrams
     End Sub
 
     '
-    ' zeigt für alle Projekte die Bedarfe für die jeweilige Rolle an
+    ' zeigt für alle/die selektierten Projekte die Bedarfe für die jeweilige Rolle an
     '
     Sub awinShowProjectNeeds1(ByRef mycollection As Collection, type As String)
         Dim formerSU As Boolean = appInstance.ScreenUpdating
 
         appInstance.ScreenUpdating = False
 
-        ' jetzt alle Shapes unsichtbar machen, die im Zeitraum liegen 
+        ' jetzt überprüfen, ob Projekte selektiert sind
+        If selectedProjekte.Count > 0 Then
+            ' dann die Werte in die Excel Zellen der selektierten Projekte schreiben 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
+            Next kvp
+        Else
 
-        ' dann die Werte in die Excel Zellen schreiben 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-            Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
-        Next kvp
+            ' sonst die Werte aller geladenen Projekte in die Excel Zellen schreiben 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
+            Next kvp
+        End If
 
 
         ' jetzt wieder alle Shapes sichtbar machen 
