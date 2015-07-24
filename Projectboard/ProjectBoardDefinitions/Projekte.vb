@@ -1692,7 +1692,7 @@ Public Module Projekte
                 Dim dlFontStrikethrough As Boolean
                 Dim dlFontSuperscript As Boolean
                 Dim dlFontSubscript As Boolean
-                Dim dlFontUnderline As Double
+                'Dim dlFontUnderline As Double
 
                 For i = 1 To pts.Count
 
@@ -16179,6 +16179,9 @@ Public Module Projekte
                         If mycollection.Count = PhaseDefinitions.Count Then
                             IDkennung = IDkennung & "#Alle"
 
+                        ElseIf mycollection.Count > 4 Then
+                            IDkennung = IDkennung & "#Mehrere"
+
                         Else
 
                             For i = 1 To mycollection.Count
@@ -16196,16 +16199,35 @@ Public Module Projekte
 
                     Case PTpfdk.Meilenstein
 
-                        For i = 1 To mycollection.Count
-                            cName = CStr(mycollection.Item(i)).Replace("#", "-")
-                            IDkennung = IDkennung & "#" & cName
+                        If mycollection.Count = MilestoneDefinitions.Count Then
+                            IDkennung = IDkennung & "#Alle"
 
-                        Next
+                        ElseIf mycollection.Count > 4 Then
+                            IDkennung = IDkennung & "#Mehrere"
+
+                        Else
+
+                            For i = 1 To mycollection.Count
+                                cName = CStr(mycollection.Item(i)).Replace("#", "-")
+                                ' der evtl vorhandenen Breadcrumb hat als Trennzeichen das #
+                                Try
+                                    IDkennung = IDkennung & "#" & cName
+                                Catch ex As Exception
+                                    IDkennung = IDkennung & "#"
+                                End Try
+
+                            Next
+
+                        End If
+
 
                     Case PTpfdk.Rollen
 
                         If mycollection.Count = RoleDefinitions.Count Then
                             IDkennung = IDkennung & "#Alle"
+
+                        ElseIf mycollection.Count > 4 Then
+                            IDkennung = IDkennung & "#Mehrere"
 
                         Else
 
@@ -16220,6 +16242,9 @@ Public Module Projekte
 
                         If mycollection.Count = CostDefinitions.Count Then
                             IDkennung = IDkennung & "#Alle"
+
+                        ElseIf mycollection.Count > 4 Then
+                            IDkennung = IDkennung & "#Mehrere"
 
                         Else
 

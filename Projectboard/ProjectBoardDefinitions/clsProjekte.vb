@@ -385,13 +385,13 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Property Liste() As SortedList(Of String, clsProjekt)
+    Public ReadOnly Property Liste() As SortedList(Of String, clsProjekt)
         Get
             Liste = AllProjects
         End Get
-        Set(value As SortedList(Of String, clsProjekt))
-            AllProjects = value
-        End Set
+        'Set(value As SortedList(Of String, clsProjekt))
+        '    AllProjects = value
+        'End Set
     End Property
 
     ''' <summary>
