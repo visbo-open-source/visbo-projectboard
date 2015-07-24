@@ -130,6 +130,17 @@ Public Class frmNameSelection
         '    End Try
 
         'End If
+
+        ' alle definierten Filter in ComboBox anzeigen
+        If Me.menuOption = PTmenue.filterdefinieren Then
+
+            For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
+                repVorlagenDropbox.Items.Add(kvp.Key)
+            Next
+
+        End If
+
+
         If Me.menuOption = PTmenue.meilensteinTrendanalyse Then
             Me.rdbMilestones.Checked = True
 
@@ -152,7 +163,8 @@ Public Class frmNameSelection
     ''' <remarks></remarks>
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
-        Dim filterName As String = "Last"
+        Dim filterName As String = ""
+        Dim lastFilter As String = "Last"
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
@@ -215,9 +227,18 @@ Public Class frmNameSelection
             Next
         End If
 
+        If Me.menuOption = PTmenue.filterdefinieren Then
+
+            filterName = repVorlagenDropbox.Text
+            ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts, False)
+        End If
+
 
         ' jetzt wird der letzte Filter gespeichert ..
-        Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+        Call storeFilter(lastFilter, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts, False)
 

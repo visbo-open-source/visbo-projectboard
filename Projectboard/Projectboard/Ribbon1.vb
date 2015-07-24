@@ -1652,8 +1652,9 @@ Imports System.Drawing
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
-                .repVorlagenDropbox.Visible = False
-                .labelPPTVorlage.Visible = False
+                .repVorlagenDropbox.Visible = True
+                .labelPPTVorlage.Visible = True
+                .labelPPTVorlage.Text = "Name des Filters"
 
                 returnValue = .ShowDialog
 

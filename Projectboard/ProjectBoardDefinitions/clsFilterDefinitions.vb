@@ -45,6 +45,13 @@
         Call filterListe.Add(name, filter)
 
     End Sub
+    Public ReadOnly Property Liste As SortedList(Of String, clsFilter)
+
+        Get
+            Liste = filterListe
+        End Get
+
+    End Property
     Sub New()
         filterListe = New SortedList(Of String, clsFilter)
     End Sub
