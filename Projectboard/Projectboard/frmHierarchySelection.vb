@@ -68,9 +68,15 @@ Public Class frmHierarchySelection
                 Call addToSuperHierarchy(hry, kvp.Value)
             Next
         End If
-        
+
+        Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
 
         Call buildHryTreeView()
+
+        ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+        If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+            hryTreeView.ExpandAll()
+        End If
 
         Cursor = Cursors.Default
 
@@ -298,10 +304,23 @@ Public Class frmHierarchySelection
                     childNode = node.Nodes.Add(elemNameOfElemID(childNameID))
                     childNode.Name = childNameID
 
+                    
+                    Dim tmpBreadcrumb As String = hry.getBreadCrumb(childNameID, CInt(hryStufen.Value))
+                    Dim elemName As String = elemNameOfElemID(childNameID)
+                    Dim element As String = calcHryFullname(elemName, tmpBreadcrumb)
+
 
                     If elemIDIstMeilenstein(childNameID) Then
                         childNode.BackColor = System.Drawing.Color.Azure
+                        If selectedMilestones.Contains(element) Or selectedMilestones.Contains(elemName) Then
+                            childNode.Checked = True
+                        End If
+                    Else
+                        If selectedPhases.Contains(element) Or selectedPhases.Contains(elemName) Then
+                            childNode.Checked = True
+                        End If
                     End If
+
 
 
                     If hry.nodeItem(childNameID).childCount > 0 Then
@@ -353,9 +372,22 @@ Public Class frmHierarchySelection
                     nodeLevel0 = .Nodes.Add(elemNameOfElemID(childNameID))
                     nodeLevel0.Name = childNameID
 
+
+                    Dim tmpBreadcrumb As String = hry.getBreadCrumb(childNameID, CInt(hryStufen.Value))
+                    Dim elemName As String = elemNameOfElemID(childNameID)
+                    Dim element As String = calcHryFullname(elemName, tmpBreadcrumb)
+
+
                     If elemIDIstMeilenstein(childNameID) Then
                         nodeLevel0.BackColor = System.Drawing.Color.Azure
+                        If selectedMilestones.Contains(element) Or selectedMilestones.Contains(elemName) Then
+                            nodeLevel0.Checked = True
+                        End If
+                    Else
 
+                        If selectedPhases.Contains(element) Or selectedPhases.Contains(elemName) Then
+                            nodeLevel0.Checked = True
+                        End If
                     End If
 
 

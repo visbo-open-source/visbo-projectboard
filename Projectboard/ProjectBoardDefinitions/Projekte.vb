@@ -1692,7 +1692,7 @@ Public Module Projekte
                 Dim dlFontStrikethrough As Boolean
                 Dim dlFontSuperscript As Boolean
                 Dim dlFontSubscript As Boolean
-                Dim dlFontUnderline As Double
+                'ur: 21.07.2015: Dim dlFontUnderline As Double
 
                 For i = 1 To pts.Count
 
