@@ -2648,47 +2648,51 @@ Public Module Module1
 
     End Function
 
-    ''' <summary>
-    ''' speichert den letzten Filter und setzt die temporären Collections wieder zurück 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
-                                              ByVal fBU As Collection, ByVal fTyp As Collection, _
-                                              ByVal fPhase As Collection, ByVal fMilestone As Collection, _
-                                              ByVal fRole As Collection, ByVal fCost As Collection, _
-                                              ByVal calledFromHry As Boolean)
+    '' '' ''' <summary>
+    '' '' ''' speichert den letzten Filter und setzt die temporären Collections wieder zurück 
+    '' '' ''' </summary>
+    '' '' ''' <remarks></remarks>
+    '' ''Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
+    '' ''                                          ByVal fBU As Collection, ByVal fTyp As Collection, _
+    '' ''                                          ByVal fPhase As Collection, ByVal fMilestone As Collection, _
+    '' ''                                          ByVal fRole As Collection, ByVal fCost As Collection, _
+    '' ''                                          ByVal calledFromHry As Boolean)
 
-        Dim lastFilter As clsFilter
-
-
-        If calledFromHry Then
-            Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
-
-            If Not IsNothing(nameLastFilter) Then
-                With nameLastFilter
-                    lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
-                End With
-            Else
-                lastFilter = New clsFilter(fName, fBU, fTyp, _
-                                  fPhase, fMilestone, _
-                                 fRole, fCost)
-            End If
+    '' ''    Dim lastFilter As clsFilter
 
 
-        Else
-            lastFilter = New clsFilter(fName, fBU, fTyp, _
-                                  fPhase, fMilestone, _
-                                 fRole, fCost)
-        End If
+    '' ''    If calledFromHry Then
+    '' ''        Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
 
-        If menuOption = PTmenue.filterdefinieren Then
-            filterDefinitions.storeFilter(fName, lastFilter)
-        Else
-            selFilterDefinitions.storeFilter(fName, lastFilter)
-        End If
+    '' ''        If Not IsNothing(nameLastFilter) Then
+    '' ''            With nameLastFilter
+    '' ''                lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
+    '' ''            End With
+    '' ''        Else
+    '' ''            lastFilter = New clsFilter(fName, fBU, fTyp, _
+    '' ''                              fPhase, fMilestone, _
+    '' ''                             fRole, fCost)
+    '' ''        End If
 
 
-    End Sub
+    '' ''    Else
+    '' ''        lastFilter = New clsFilter(fName, fBU, fTyp, _
+    '' ''                              fPhase, fMilestone, _
+    '' ''                             fRole, fCost)
+    '' ''    End If
+
+    '' ''    If menuOption = PTmenue.filterdefinieren Then
+
+    '' ''        filterDefinitions.storeFilter(fName, lastFilter)
+    '' ''        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+
+
+    '' ''    Else
+    '' ''        selFilterDefinitions.storeFilter(fName, lastFilter)
+    '' ''    End If
+
+
+    '' ''End Sub
 
     
 
@@ -2714,21 +2718,15 @@ Public Module Module1
             lastFilter = filterDefinitions.retrieveFilter(fName)
         Else
             lastFilter = selFilterDefinitions.retrieveFilter(fName)
-            If IsNothing(lastFilter) Then
-                lastFilter = filterDefinitions.retrieveFilter(fName)
-            End If
+
+            ' ur: 30.07.2015: wenn kein selFilterDefinitions existiert, so soll auch keine Voreinstellung angezeigt werden
+            ' ''If IsNothing(lastFilter) Then
+            ' ''    lastFilter = filterDefinitions.retrieveFilter(fName)
+            ' ''End If
         End If
 
 
         If Not IsNothing(lastFilter) Then
-            ' Änderung 16.2.15: es sollen immer alle berücksichtigt werden 
-            'If menuOption = PTmenue.filterdefinieren Then
-            '    selectedBUs = lastFilter.BUs
-            '    selectedTyps = lastFilter.Typs
-            'Else
-            '    selectedBUs = New Collection
-            '    selectedTyps = New Collection
-            'End If
 
             selectedBUs = lastFilter.BUs
             selectedTyps = lastFilter.Typs

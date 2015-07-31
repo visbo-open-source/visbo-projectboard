@@ -15,9 +15,7 @@ Public Class frmHierarchySelection
 
     Friend menuOption As Integer
 
-    Private Sub labelPPTVorlage_Click(sender As Object, e As EventArgs) Handles labelPPTVorlage.Click
-
-    End Sub
+ 
 
     Private Sub frmHierarchySelection_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
 
@@ -80,8 +78,21 @@ Public Class frmHierarchySelection
 
         Cursor = Cursors.Default
 
-        ' die Vorlagen einlesen
+        ' die Vorlagen  einlesen
         Call frmHryNameReadPPTVorlagen(Me.menuOption, repVorlagenDropbox)
+
+        ' die Filter einlesen
+        Call frmHryNameReadFilterVorlagen(Me.menuOption, filterDropbox)
+
+        ' alle definierten Filter in ComboBox anzeigen
+        If Me.menuOption = PTmenue.filterdefinieren Then
+
+            For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
+                filterDropbox.Items.Add(kvp.Key)
+            Next
+
+        End If
+
 
     End Sub
 
@@ -148,11 +159,19 @@ Public Class frmHierarchySelection
             Next
 
         End With
+        If Me.menuOption = PTmenue.filterdefinieren Then
 
+            Dim filterName As String
+            filterName = filterDropbox.Text
+            ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts, False)
+        End If
 
         ' jetzt wird der letzte Filter gespeichert ..
-        Dim filterName As String = "Last"
-        Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+        Dim lastfilter As String = "Last"
+        Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts, True)
 
@@ -244,7 +263,7 @@ Public Class frmHierarchySelection
         Else
             ' die Aktion Subroutine aufrufen 
             Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
-                            selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, filterName)
+                            selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, lastfilter)
         End If
 
         appInstance.EnableEvents = True
@@ -679,6 +698,31 @@ Public Class frmHierarchySelection
         With hryTreeView
             .CollapseAll()
         End With
+
+    End Sub
+
+    Private Sub filterDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles filterDropbox.SelectedIndexChanged
+
+        If Me.menuOption = PTmenue.filterdefinieren Then
+
+            Dim fName As String = filterDropbox.SelectedItem.ToString
+            ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
+
+            ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
+            Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
+                                    selectedPhases, selectedMilestones, _
+                                    selectedRoles, selectedCosts)
+
+            Call buildHryTreeView()
+
+            ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+            If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                hryTreeView.ExpandAll()
+            End If
+
+            Cursor = Cursors.Default
+
+        End If
 
     End Sub
 End Class

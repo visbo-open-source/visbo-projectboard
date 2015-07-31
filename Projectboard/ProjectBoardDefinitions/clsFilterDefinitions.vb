@@ -32,17 +32,13 @@
     ''' <remarks></remarks>
     Public Sub storeFilter(ByVal name As String, ByVal filter As clsFilter)
 
-        'If filterListe.ContainsKey(name) Then
-        '    filterListe.Item(name) = filter
-        'Else
-        '    filterListe.Add(name, filter)
-        'End If
 
         If filterListe.ContainsKey(name) Then
             Dim ok As Boolean = filterListe.Remove(name)
         End If
 
         Call filterListe.Add(name, filter)
+
 
     End Sub
     Public ReadOnly Property Liste As SortedList(Of String, clsFilter)

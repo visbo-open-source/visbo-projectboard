@@ -6776,7 +6776,64 @@ Public Module awinGeneralModules
             Catch ex As Exception
 
             End Try
+        Else
+         
 
+        End If
+
+    End Sub
+    ''' <summary>
+    ''' wird aus Formular NameSelection bzw. HrySelection aufgerufen
+    ''' besetzt die Filter-Auswahl Dropbox mit Filternamen aus Datenbank
+    ''' </summary>
+    ''' <param name="menuOption"></param>
+    ''' <param name="filterDropbox"></param>
+    ''' <remarks></remarks>
+    Public Sub frmHryNameReadFilterVorlagen(ByVal menuOption As Integer, ByRef filterDropbox As System.Windows.Forms.ComboBox)
+
+
+        ' einlesen und anzeigen der in der Datenbank definierten Filter
+        If menuOption = PTmenue.filterdefinieren Then
+
+            ' Filter mit Namen "fName" in DB speichern
+            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+
+            ' Datenbank ist gestartet
+            If request.pingMongoDb() Then
+
+                Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(False)
+                For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
+                    If Not filterDefinitions.Liste.ContainsKey(kvp.Key) Then
+                        filterDefinitions.Liste.Add(kvp.Key, kvp.Value)
+                    End If
+                Next
+            Else
+                Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+            End If
+        Else
+            If menuOption = PTmenue.visualisieren Or _
+                menuOption = PTmenue.multiprojektReport Or _
+                menuOption = PTmenue.einzelprojektReport Or _
+                menuOption = PTmenue.leistbarkeitsAnalyse Then
+
+                ' allee Filter aus DB lesen
+                Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+
+                ' Datenbank ist gestartet
+                If request.pingMongoDb() Then
+
+                    Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(True)
+                    For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
+                       
+                        If Not selFilterDefinitions.Liste.ContainsKey(kvp.Key) Then
+                            selFilterDefinitions.Liste.Add(kvp.Key, kvp.Value)
+                        End If
+
+                    Next
+                Else
+                    Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+                End If
+            End If
         End If
 
     End Sub
@@ -7209,6 +7266,74 @@ Public Module awinGeneralModules
             Throw New Exception(ex.Message)
         End Try
 
+
+
+    End Sub
+    ''' <summary>
+    ''' speichert den letzten Filter unter "fname" und setzt die temporären Collections wieder zurück 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
+                                              ByVal fBU As Collection, ByVal fTyp As Collection, _
+                                              ByVal fPhase As Collection, ByVal fMilestone As Collection, _
+                                              ByVal fRole As Collection, ByVal fCost As Collection, _
+                                              ByVal calledFromHry As Boolean)
+
+        Dim lastFilter As clsFilter
+
+
+        If calledFromHry Then
+            Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
+
+            If Not IsNothing(nameLastFilter) Then
+                With nameLastFilter
+                    lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
+                End With
+            Else
+                lastFilter = New clsFilter(fName, fBU, fTyp, _
+                                  fPhase, fMilestone, _
+                                 fRole, fCost)
+            End If
+
+
+        Else
+            lastFilter = New clsFilter(fName, fBU, fTyp, _
+                                  fPhase, fMilestone, _
+                                 fRole, fCost)
+        End If
+
+        If menuOption = PTmenue.filterdefinieren Then
+
+            filterDefinitions.storeFilter(fName, lastFilter)
+
+            ' Filter mit Namen "fName" in DB speichern
+            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+
+            ' Datenbank ist gestartet
+            If request.pingMongoDb() Then
+
+                Dim filterToStoreInDB As clsFilter = filterDefinitions.retrieveFilter(fName)
+                Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, False)
+            Else
+                Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+            End If
+
+
+        Else
+            selFilterDefinitions.storeFilter(fName, lastFilter)
+            ' Filter mit Namen "fName" in DB speichern
+            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+
+            ' Datenbank ist gestartet
+            If request.pingMongoDb() Then
+
+                Dim filterToStoreInDB As clsFilter = selFilterDefinitions.retrieveFilter(fName)
+                Dim returnvalue As Boolean = request.storeFilterToDB(filterToStoreInDB, True)
+            Else
+                Call MsgBox(" Datenbank-Verbindung ist unterbrochen!" & vbLf & " Filter kann nicht in DB gespeichert werden")
+            End If
+
+        End If
 
 
     End Sub
