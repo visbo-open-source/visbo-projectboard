@@ -15,9 +15,7 @@ Public Class frmHierarchySelection
 
     Friend menuOption As Integer
 
-    Private Sub labelPPTVorlage_Click(sender As Object, e As EventArgs) Handles labelPPTVorlage.Click
-
-    End Sub
+ 
 
     Private Sub frmHierarchySelection_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
 
@@ -80,8 +78,27 @@ Public Class frmHierarchySelection
 
         Cursor = Cursors.Default
 
-        ' die Vorlagen einlesen
+        ' die Vorlagen  einlesen
         Call frmHryNameReadPPTVorlagen(Me.menuOption, repVorlagenDropbox)
+
+        ' die Filter einlesen
+        Call frmHryNameReadFilterVorlagen(Me.menuOption, filterDropbox)
+
+        ' alle definierten Filter in ComboBox anzeigen
+        If Me.menuOption = PTmenue.filterdefinieren Then
+
+            For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
+                filterDropbox.Items.Add(kvp.Key)
+            Next
+
+        Else
+
+            For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
+                filterDropbox.Items.Add(kvp.Key)
+            Next
+
+        End If
+
 
     End Sub
 
@@ -98,7 +115,7 @@ Public Class frmHierarchySelection
         Dim anzahlKnoten As Integer
         Dim selectedNode As TreeNode
         Dim tmpNode As TreeNode
-
+        Dim filterName As String = ""
         Dim element As String
 
 
@@ -149,10 +166,38 @@ Public Class frmHierarchySelection
 
         End With
 
+        If Me.menuOption = PTmenue.filterdefinieren Then
+
+            filterName = filterDropbox.Text
+            ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts, False)
+        ElseIf Me.menuOption = PTmenue.visualisieren Then
+
+            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
+                (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
+                Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
+                ''Else
+                ''    filterName = filterDropbox.Text
+                ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+                ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                ''                                           selectedPhases, selectedMilestones, _
+                ''                                           selectedRoles, selectedCosts, False)
+            End If
+
+            ''Else    ' alle anderen PTmenues
+
+            ''    filterName = filterDropbox.Text
+            ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+            ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+            ''                                           selectedPhases, selectedMilestones, _
+            ''                                           selectedRoles, selectedCosts, False)
+        End If
 
         ' jetzt wird der letzte Filter gespeichert ..
-        Dim filterName As String = "Last"
-        Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+        Dim lastfilter As String = "Last"
+        Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts, True)
 
@@ -244,7 +289,7 @@ Public Class frmHierarchySelection
         Else
             ' die Aktion Subroutine aufrufen 
             Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
-                            selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, filterName)
+                            selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, lastfilter)
         End If
 
         appInstance.EnableEvents = True
@@ -253,7 +298,15 @@ Public Class frmHierarchySelection
         ' bei bestimmten Menu-Optionen das Formuzlar dann schliessen 
         If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Then
             MyBase.Close()
+        Else
+            ' geänderte Auswahl/Filterliste neu anzeigen
+            filterDropbox.Items.Clear()
+            For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
+                filterDropbox.Items.Add(kvp.Key)
+            Next
+
         End If
+
 
 
     End Sub
@@ -304,19 +357,19 @@ Public Class frmHierarchySelection
                     childNode = node.Nodes.Add(elemNameOfElemID(childNameID))
                     childNode.Name = childNameID
 
-                    
+
                     Dim tmpBreadcrumb As String = hry.getBreadCrumb(childNameID, CInt(hryStufen.Value))
                     Dim elemName As String = elemNameOfElemID(childNameID)
-                    Dim element As String = calcHryFullname(elemName, tmpBreadcrumb)
+                    Dim ele As String = calcHryFullname(elemName, tmpBreadcrumb)
 
 
                     If elemIDIstMeilenstein(childNameID) Then
                         childNode.BackColor = System.Drawing.Color.Azure
-                        If selectedMilestones.Contains(element) Or selectedMilestones.Contains(elemName) Then
+                        If selectedMilestones.Contains(ele) Or selectedMilestones.Contains(elemName) Then
                             childNode.Checked = True
                         End If
                     Else
-                        If selectedPhases.Contains(element) Or selectedPhases.Contains(elemName) Then
+                        If selectedPhases.Contains(ele) Or selectedPhases.Contains(elemName) Then
                             childNode.Checked = True
                         End If
                     End If
@@ -338,7 +391,6 @@ Public Class frmHierarchySelection
 
 
         End If
-
 
     End Sub
 
@@ -371,7 +423,6 @@ Public Class frmHierarchySelection
                     childNameID = hryNode.getChild(i)
                     nodeLevel0 = .Nodes.Add(elemNameOfElemID(childNameID))
                     nodeLevel0.Name = childNameID
-
 
                     Dim tmpBreadcrumb As String = hry.getBreadCrumb(childNameID, CInt(hryStufen.Value))
                     Dim elemName As String = elemNameOfElemID(childNameID)
@@ -474,7 +525,7 @@ Public Class frmHierarchySelection
 
     Private Sub hryTreeView_DoubleClick(sender As Object, e As EventArgs) Handles hryTreeView.DoubleClick
 
-        
+
 
     End Sub
 
@@ -681,6 +732,143 @@ Public Class frmHierarchySelection
         With hryTreeView
             .CollapseAll()
         End With
+
+    End Sub
+
+    Private Sub filterDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles filterDropbox.SelectedIndexChanged
+
+        If Me.menuOption = PTmenue.filterdefinieren Then
+
+            Dim fName As String = filterDropbox.SelectedItem.ToString
+            ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
+
+            ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
+            Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
+                                    selectedPhases, selectedMilestones, _
+                                    selectedRoles, selectedCosts)
+
+            Call buildHryTreeView()
+
+            ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+            If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                hryTreeView.ExpandAll()
+            End If
+
+            Cursor = Cursors.Default
+
+        Else
+
+            Dim fName As String = filterDropbox.SelectedItem.ToString
+            ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
+
+            ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
+            Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
+                                    selectedPhases, selectedMilestones, _
+                                    selectedRoles, selectedCosts)
+
+            Call buildHryTreeView()
+
+            ' wenn es selektierte Phasen oder Meilensteine schon gibt, so wird die Hierarchie aufgeklappt angezeigt
+            If selectedMilestones.Count > 0 Or selectedPhases.Count > 0 Then
+                hryTreeView.ExpandAll()
+            End If
+
+            Cursor = Cursors.Default
+
+        End If
+
+    End Sub
+
+    Private Sub auswSpeichern_Click(sender As Object, e As EventArgs) Handles auswSpeichern.Click
+
+        Dim anzahlKnoten As Integer
+        Dim selectedNode As TreeNode
+        Dim tmpNode As TreeNode
+        Dim filterName As String = ""
+        Dim element As String
+
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        statusLabel.Text = ""
+
+
+        anzahlKnoten = hryTreeView.Nodes.Count
+        selectedNode = hryTreeView.SelectedNode
+
+        selectedPhases.Clear()
+        selectedMilestones.Clear()
+
+        With hryTreeView
+
+            For px As Integer = 1 To anzahlKnoten
+
+                tmpNode = .Nodes.Item(px - 1)
+
+                If tmpNode.Checked Then
+                    ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
+
+                    Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
+                    Dim elemName As String = elemNameOfElemID(tmpNode.Name)
+                    element = calcHryFullname(elemName, tmpBreadcrumb)
+
+                    If elemIDIstMeilenstein(tmpNode.Name) Then
+                        If Not selectedMilestones.Contains(element) Then
+                            selectedMilestones.Add(element, element)
+                        End If
+                    Else
+                        If Not selectedPhases.Contains(element) Then
+                            selectedPhases.Add(element, element)
+                        End If
+
+                    End If
+
+                End If
+
+
+                If tmpNode.Nodes.Count > 0 Then
+                    Call pickupCheckedItems(tmpNode)
+                End If
+
+            Next
+
+        End With
+
+        If Me.menuOption = PTmenue.filterdefinieren Then
+
+            filterName = filterDropbox.Text
+            ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts, False)
+        ElseIf Me.menuOption = PTmenue.visualisieren Then
+
+            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
+                (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
+                Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
+            Else
+                filterName = filterDropbox.Text
+                ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+                Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                       selectedPhases, selectedMilestones, _
+                                                       selectedRoles, selectedCosts, False)
+            End If
+
+        Else    ' alle anderen PTmenues
+
+            filterName = filterDropbox.Text
+            ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts, False)
+        End If
+
+        ' jetzt wird der letzte Filter gespeichert ..
+        Dim lastfilter As String = "Last"
+        Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts, True)
 
     End Sub
 End Class

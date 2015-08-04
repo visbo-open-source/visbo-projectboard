@@ -18331,15 +18331,17 @@ Public Module Projekte
 
     End Function
 
+    
     ''' <summary>
-    ''' kopiert eine Collection , die Strings enthält 
+    ''' kopiert eine Collection , die Strings enthält
     ''' </summary>
     ''' <param name="original"></param>
-    ''' <param name="kopie"></param>
+    ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Sub copyCollections(ByVal original As Collection, ByRef kopie As Collection)
+    Public Function copyCollection(ByVal original As Collection) As Collection
         Dim i As Integer
         Dim element As String
+        Dim kopie As New Collection
 
         If Not IsNothing(original) Then
             For i = 1 To original.Count
@@ -18347,8 +18349,9 @@ Public Module Projekte
                 kopie.Add(element, element)
             Next
         End If
+        copyCollection = kopie
 
-    End Sub
+    End Function
 
     ''' <summary>
     ''' addiert die Hierarchie hry zur bereits existierenden Super-Hierarchie

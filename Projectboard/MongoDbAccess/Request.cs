@@ -24,6 +24,7 @@ namespace MongoDbAccess
         public MongoCollection CollectionProjects { get; set; }
         public MongoCollection CollectionConstellations { get; set; }
         public MongoCollection CollectionDependencies { get; set; }
+        public MongoCollection CollectionFilter { get; set; }
 
         public Request()
         {
@@ -35,6 +36,7 @@ namespace MongoDbAccess
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
+            CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
         }
 
         public Request(string databaseName, string username, string dbPasswort)
@@ -58,6 +60,7 @@ namespace MongoDbAccess
             CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
             CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
             CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
+            CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
         }
 
         public bool collectionEmpty(string name)
@@ -420,7 +423,7 @@ namespace MongoDbAccess
                 result.Add(c);
               
             }
-            
+        
             
 
             return result;
@@ -453,5 +456,62 @@ namespace MongoDbAccess
             return result;
         }
 
+        /** liest einen bestimmten Filter aus der DB               */
+
+        public clsFilter retrieveOneFilterfromDB(string filtername)
+        {
+            var result = new clsFilterDB();
+            string searchstr = filtername;
+            result = CollectionFilter.AsQueryable<clsFilterDB>()
+                    .Where(c => c.name == searchstr)
+                    .Last();
+     
+            //TODO: rückumwandeln
+            var filter = new clsFilter();
+            result.copyto(ref filter);
+            return filter;
+        }
+
+        /** speichert einen Filter mit Namen 'name' in der Datenbank*/
+
+        public bool storeFilterToDB(clsFilter filter, Boolean selfilter)
+        {
+            var filterDB = new clsFilterDB();
+            filterDB.copyfrom( ref filter,  selfilter);
+            filterDB.Id = filter.name;
+            return CollectionFilter.Save(filterDB).Ok;
+        }
+        /** löscht einen bestimmten Filter aus der Datenbank */
+
+        public bool removeFilterFromDB(clsFilterDB filter)
+        {
+            //var cDB = new clsConstellationDB();
+            //cDB.copyfrom(ref c);
+            //cDB.Id = cDB.constellationName;
+           
+            var query = Query<clsFilterDB>
+                .Where(e => (e.name == filter.name));
+            return CollectionFilter.Remove(query).Ok;
+        }
+
+        /** liest alle Filter aus der Datenbank */
+        public SortedList<String, clsFilter> retrieveAllFilterFromDB(Boolean selfilter)
+        {
+            var result = new SortedList<String, clsFilter>();
+
+            var filterDB = CollectionFilter.AsQueryable<clsFilterDB>()
+                                 .Select(cDB => cDB);
+            foreach (clsFilterDB cDB in filterDB)
+            {
+                if (selfilter == cDB.selFilter)
+                {
+                    var f = new clsFilter();
+                    cDB.copyto(ref f);
+                    result.Add(f.name, f);
+                }
+            }
+
+            return result;
+        }
     }
 }

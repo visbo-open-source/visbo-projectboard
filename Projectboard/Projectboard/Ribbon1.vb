@@ -1652,8 +1652,19 @@ Imports System.Drawing
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
+                ' Reports 
                 .repVorlagenDropbox.Visible = False
                 .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Name des Filters"
+
+                ' Auswahl Speichern
+                .auswSpeichern.Visible = False
+                .auswSpeichern.Enabled = False
 
                 returnValue = .ShowDialog
 
@@ -1677,9 +1688,20 @@ Imports System.Drawing
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
-                ' Reports
+                ' Reports 
                 .repVorlagenDropbox.Visible = False
                 .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Name des Filters"
+
+                ' Auswahl Speichern
+                .auswSpeichern.Visible = False
+                .auswSpeichern.Enabled = False
+
                 .einstellungen.Visible = False
 
                 returnValue = .ShowDialog
@@ -1719,6 +1741,12 @@ Imports System.Drawing
                     .labelPPTVorlage.Visible = False
                     .einstellungen.Visible = False
 
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
+
+
                     ' Nicht Modal anzeigen
                     .Show()
                     'returnValue = .ShowDialog
@@ -1743,6 +1771,12 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
                     .einstellungen.Visible = False
+
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
+
 
                     ' Nicht Modal anzeigen
                     .Show()
@@ -1777,6 +1811,11 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
 
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
+
                     ' Nicht Modal anzeigen
                     .Show()
                     'returnValue = .ShowDialog
@@ -1801,6 +1840,11 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
                     .einstellungen.Visible = False
+
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
 
                     ' Nicht Modal anzeigen
                     .Show()
@@ -1834,11 +1878,13 @@ Imports System.Drawing
                         .rdbRoles.Enabled = False
                         .rdbCosts.Enabled = False
 
-                        .rdbBU.Visible = True
-                        .pictureBU.Visible = True
+                        .rdbBU.Enabled = False
+                        .rdbBU.Visible = False
+                        .pictureBU.Visible = False
 
-                        .rdbTyp.Visible = True
-                        .pictureTyp.Visible = True
+                        .rdbTyp.Enabled = False
+                        .rdbTyp.Visible = False
+                        .pictureTyp.Visible = False
 
 
                         .einstellungen.Visible = True
@@ -1848,6 +1894,12 @@ Imports System.Drawing
 
                         .repVorlagenDropbox.Visible = True
                         .labelPPTVorlage.Visible = True
+
+                        ' Filter
+                        .filterDropbox.Visible = True
+                        .filterLabel.Visible = True
+                        .filterLabel.Text = "Auswahl"
+
 
                         '.Show()
                         ' bei Reports mit der Background Worker Behandlung 
@@ -1894,7 +1946,13 @@ Imports System.Drawing
                         .labelPPTVorlage.Visible = True
                         .einstellungen.Visible = True
 
-                        ' bei Verwnedung Background Worker muss Modal erfolgen 
+                        ' Filter
+                        .filterDropbox.Visible = True
+                        .filterLabel.Visible = True
+                        .filterLabel.Text = "Name des Filters"
+
+
+                        ' bei Verwendung Background Worker muss Modal erfolgen 
                         '.Show()
                         returnValue = .ShowDialog
                     End With
@@ -1924,11 +1982,13 @@ Imports System.Drawing
                         .rdbRoles.Enabled = True
                         .rdbCosts.Enabled = True
 
-                        .rdbBU.Visible = True
-                        .pictureBU.Visible = True
+                        .rdbBU.Enabled = False
+                        .rdbBU.Visible = False
+                        .pictureBU.Visible = False
 
-                        .rdbTyp.Visible = True
-                        .pictureTyp.Visible = True
+                        .rdbTyp.Enabled = False
+                        .rdbTyp.Visible = False
+                        .pictureTyp.Visible = False
 
 
                         .einstellungen.Visible = True
@@ -1938,6 +1998,12 @@ Imports System.Drawing
 
                         .repVorlagenDropbox.Visible = True
                         .labelPPTVorlage.Visible = True
+
+                        ' Filter
+                        .filterDropbox.Visible = True
+                        .filterLabel.Visible = True
+                        .filterLabel.Text = "Auswahl"
+
                         ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
                         returnValue = .ShowDialog
                     End With
@@ -1971,11 +2037,16 @@ Imports System.Drawing
                         .chkbxOneChart.Checked = False
                         .chkbxOneChart.Visible = False
 
-
                         ' Reports
                         .repVorlagenDropbox.Visible = True
                         .labelPPTVorlage.Visible = True
                         .einstellungen.Visible = True
+
+                        ' Filter
+                        .filterDropbox.Visible = True
+                        .filterLabel.Visible = True
+                        .filterLabel.Text = "Auswahl"
+
 
                         ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
                         returnValue = .ShowDialog
@@ -2013,38 +2084,52 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
 
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
+
+
                     returnValue = .ShowDialog
                 End With
 
                 appInstance.ScreenUpdating = True
 
             ElseIf control.Id = "PT4G1M0B2" Then
-                    ' Auswahl über Hierarchie, Typ II Export
-                    appInstance.ScreenUpdating = False
 
-                    awinSettings.useHierarchy = True
-                    With hryFormular
+                ' Auswahl über Hierarchie, Typ II Export
+                appInstance.ScreenUpdating = False
 
-                        .Text = "Excel Report erzeugen"
-                        .OKButton.Text = "Report erstellen"
-                        .menuOption = PTmenue.excelExport
-                        .statusLabel.Text = ""
+                awinSettings.useHierarchy = True
 
-                        .AbbrButton.Visible = False
-                        .AbbrButton.Enabled = False
+                With hryFormular
 
-                        .chkbxOneChart.Checked = False
-                        .chkbxOneChart.Visible = False
+                    .Text = "Excel Report erzeugen"
+                    .OKButton.Text = "Report erstellen"
+                    .menuOption = PTmenue.excelExport
+                    .statusLabel.Text = ""
 
-                        ' Reports
-                        .repVorlagenDropbox.Visible = False
-                        .labelPPTVorlage.Visible = False
-                        .einstellungen.Visible = False
+                    .AbbrButton.Visible = False
+                    .AbbrButton.Enabled = False
 
-                        ' Nicht Modal anzeigen
-                        .Show()
-                        'returnValue = .ShowDialog
-                    End With
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+                    ' Reports
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
+
+                    .einstellungen.Visible = False
+
+                    ' Nicht Modal anzeigen
+                    .Show()
+                    'returnValue = .ShowDialog
+                End With
             ElseIf control.Id = "PT4G1M2B1" Then
                 ' Auswahl über Namen, Vorlagen erzeugen
                 appInstance.ScreenUpdating = False
@@ -2072,6 +2157,11 @@ Imports System.Drawing
 
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
+
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
 
                     returnValue = .ShowDialog
                 End With
@@ -2101,6 +2191,11 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
                     .einstellungen.Visible = False
+
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
 
                     ' Nicht Modal anzeigen
                     '.Show()
