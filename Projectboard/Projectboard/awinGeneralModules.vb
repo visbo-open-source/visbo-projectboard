@@ -7281,28 +7281,29 @@ Public Module awinGeneralModules
 
         Dim lastFilter As clsFilter
 
+        If menuOption = PTmenue.filterdefinieren Then
 
-        If calledFromHry Then
-            Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
+            If calledFromHry Then
+                Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
 
-            If Not IsNothing(nameLastFilter) Then
-                With nameLastFilter
-                    lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
-                End With
+                If Not IsNothing(nameLastFilter) Then
+                    With nameLastFilter
+                        lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
+                    End With
+                Else
+                    lastFilter = New clsFilter(fName, fBU, fTyp, _
+                                      fPhase, fMilestone, _
+                                     fRole, fCost)
+                End If
+
+
             Else
                 lastFilter = New clsFilter(fName, fBU, fTyp, _
-                                  fPhase, fMilestone, _
-                                 fRole, fCost)
+                                      fPhase, fMilestone, _
+                                     fRole, fCost)
             End If
 
 
-        Else
-            lastFilter = New clsFilter(fName, fBU, fTyp, _
-                                  fPhase, fMilestone, _
-                                 fRole, fCost)
-        End If
-
-        If menuOption = PTmenue.filterdefinieren Then
 
             filterDefinitions.storeFilter(fName, lastFilter)
 
@@ -7319,7 +7320,28 @@ Public Module awinGeneralModules
             End If
 
 
-        Else
+        Else        ' nicht menuOption = PTmenue.filterdefinieren
+
+            If calledFromHry Then
+                Dim nameLastFilter As clsFilter = selFilterDefinitions.retrieveFilter("Last")
+
+                If Not IsNothing(nameLastFilter) Then
+                    With nameLastFilter
+                        lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
+                    End With
+                Else
+                    lastFilter = New clsFilter(fName, fBU, fTyp, _
+                                      fPhase, fMilestone, _
+                                     fRole, fCost)
+                End If
+
+
+            Else
+                lastFilter = New clsFilter(fName, fBU, fTyp, _
+                                      fPhase, fMilestone, _
+                                     fRole, fCost)
+            End If
+
             selFilterDefinitions.storeFilter(fName, lastFilter)
             ' Filter mit Namen "fName" in DB speichern
             Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)

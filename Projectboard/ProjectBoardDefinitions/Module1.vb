@@ -2728,12 +2728,13 @@ Public Module Module1
 
         If Not IsNothing(lastFilter) Then
 
-            selectedBUs = lastFilter.BUs
-            selectedTyps = lastFilter.Typs
-            selectedPhases = lastFilter.Phases
-            selectedMilestones = lastFilter.Milestones
-            selectedRoles = lastFilter.Roles
-            selectedCosts = lastFilter.Costs
+            'selectedBUs = lastFilter.BUs
+            selectedBUs = copyCollection(lastFilter.BUs)
+            selectedTyps = copyCollection(lastFilter.Typs)
+            selectedPhases = copyCollection(lastFilter.Phases)
+            selectedMilestones = copyCollection(lastFilter.Milestones)
+            selectedRoles = copyCollection(lastFilter.Roles)
+            selectedCosts = copyCollection(lastFilter.Costs)
 
         Else
             selectedBUs = New Collection
@@ -2745,6 +2746,7 @@ Public Module Module1
         End If
 
     End Sub
+   
 
 
 End Module

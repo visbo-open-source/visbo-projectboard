@@ -1662,6 +1662,10 @@ Imports System.Drawing
                 .filterLabel.Visible = True
                 .filterLabel.Text = "Name des Filters"
 
+                ' Auswahl Speichern
+                .auswSpeichern.Visible = False
+                .auswSpeichern.Enabled = False
+
                 returnValue = .ShowDialog
 
             End With
@@ -1694,6 +1698,9 @@ Imports System.Drawing
                 .filterLabel.Visible = True
                 .filterLabel.Text = "Name des Filters"
 
+                ' Auswahl Speichern
+                .auswSpeichern.Visible = False
+                .auswSpeichern.Enabled = False
 
                 .einstellungen.Visible = False
 
@@ -1737,7 +1744,7 @@ Imports System.Drawing
                     ' Filter
                     .filterDropbox.Visible = True
                     .filterLabel.Visible = True
-                    .filterLabel.Text = "Name des Filters"
+                    .filterLabel.Text = "Auswahl"
 
 
                     ' Nicht Modal anzeigen
@@ -1768,7 +1775,7 @@ Imports System.Drawing
                     ' Filter
                     .filterDropbox.Visible = True
                     .filterLabel.Visible = True
-                    .filterLabel.Text = "Name des Filters"
+                    .filterLabel.Text = "Auswahl"
 
 
                     ' Nicht Modal anzeigen
@@ -1807,7 +1814,7 @@ Imports System.Drawing
                     ' Filter
                     .filterDropbox.Visible = True
                     .filterLabel.Visible = True
-                    .filterLabel.Text = "Name des Filters"
+                    .filterLabel.Text = "Auswahl"
 
                     ' Nicht Modal anzeigen
                     .Show()
@@ -1837,7 +1844,7 @@ Imports System.Drawing
                     ' Filter
                     .filterDropbox.Visible = True
                     .filterLabel.Visible = True
-                    .filterLabel.Text = "Name des Filters"
+                    .filterLabel.Text = "Auswahl"
 
                     ' Nicht Modal anzeigen
                     .Show()
@@ -1871,11 +1878,13 @@ Imports System.Drawing
                         .rdbRoles.Enabled = False
                         .rdbCosts.Enabled = False
 
-                        .rdbBU.Visible = True
-                        .pictureBU.Visible = True
+                        .rdbBU.Enabled = False
+                        .rdbBU.Visible = False
+                        .pictureBU.Visible = False
 
-                        .rdbTyp.Visible = True
-                        .pictureTyp.Visible = True
+                        .rdbTyp.Enabled = False
+                        .rdbTyp.Visible = False
+                        .pictureTyp.Visible = False
 
 
                         .einstellungen.Visible = True
@@ -1889,7 +1898,7 @@ Imports System.Drawing
                         ' Filter
                         .filterDropbox.Visible = True
                         .filterLabel.Visible = True
-                        .filterLabel.Text = "Name des Filters"
+                        .filterLabel.Text = "Auswahl"
 
 
                         '.Show()
@@ -1973,11 +1982,13 @@ Imports System.Drawing
                         .rdbRoles.Enabled = True
                         .rdbCosts.Enabled = True
 
-                        .rdbBU.Visible = True
-                        .pictureBU.Visible = True
+                        .rdbBU.Enabled = False
+                        .rdbBU.Visible = False
+                        .pictureBU.Visible = False
 
-                        .rdbTyp.Visible = True
-                        .pictureTyp.Visible = True
+                        .rdbTyp.Enabled = False
+                        .rdbTyp.Visible = False
+                        .pictureTyp.Visible = False
 
 
                         .einstellungen.Visible = True
@@ -1991,7 +2002,7 @@ Imports System.Drawing
                         ' Filter
                         .filterDropbox.Visible = True
                         .filterLabel.Visible = True
-                        .filterLabel.Text = "Name des Filters"
+                        .filterLabel.Text = "Auswahl"
 
                         ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
                         returnValue = .ShowDialog
@@ -2034,7 +2045,7 @@ Imports System.Drawing
                         ' Filter
                         .filterDropbox.Visible = True
                         .filterLabel.Visible = True
-                        .filterLabel.Text = "Name des Filters"
+                        .filterLabel.Text = "Auswahl"
 
 
                         ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
@@ -2076,7 +2087,7 @@ Imports System.Drawing
                     ' Filter
                     .filterDropbox.Visible = True
                     .filterLabel.Visible = True
-                    .filterLabel.Text = "Name des Filters"
+                    .filterLabel.Text = "Auswahl"
 
 
                     returnValue = .ShowDialog
@@ -2111,7 +2122,7 @@ Imports System.Drawing
                     ' Filter
                     .filterDropbox.Visible = True
                     .filterLabel.Visible = True
-                    .filterLabel.Text = "Name des Filters"
+                    .filterLabel.Text = "Auswahl"
 
                     .einstellungen.Visible = False
 
@@ -2150,7 +2161,7 @@ Imports System.Drawing
                     ' Filter
                     .filterDropbox.Visible = True
                     .filterLabel.Visible = True
-                    .filterLabel.Text = "Name des Filters"
+                    .filterLabel.Text = "Auswahl"
 
                     returnValue = .ShowDialog
                 End With
@@ -2184,7 +2195,7 @@ Imports System.Drawing
                     ' Filter
                     .filterDropbox.Visible = True
                     .filterLabel.Visible = True
-                    .filterLabel.Text = "Name des Filters"
+                    .filterLabel.Text = "Auswahl"
 
                     ' Nicht Modal anzeigen
                     '.Show()

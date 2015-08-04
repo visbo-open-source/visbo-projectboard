@@ -38,6 +38,7 @@ Partial Class frmHierarchySelection
         Me.SelectionReset = New System.Windows.Forms.PictureBox()
         Me.filterDropbox = New System.Windows.Forms.ComboBox()
         Me.filterLabel = New System.Windows.Forms.Label()
+        Me.auswSpeichern = New System.Windows.Forms.Button()
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -75,7 +76,7 @@ Partial Class frmHierarchySelection
         Me.einstellungen.AutoSize = True
         Me.einstellungen.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, CType((System.Drawing.FontStyle.Italic Or System.Drawing.FontStyle.Underline), System.Drawing.FontStyle), System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.einstellungen.ForeColor = System.Drawing.SystemColors.MenuHighlight
-        Me.einstellungen.Location = New System.Drawing.Point(476, 381)
+        Me.einstellungen.Location = New System.Drawing.Point(476, 417)
         Me.einstellungen.Name = "einstellungen"
         Me.einstellungen.Size = New System.Drawing.Size(70, 13)
         Me.einstellungen.TabIndex = 42
@@ -107,7 +108,7 @@ Partial Class frmHierarchySelection
         'statusLabel
         '
         Me.statusLabel.AutoSize = True
-        Me.statusLabel.Location = New System.Drawing.Point(9, 456)
+        Me.statusLabel.Location = New System.Drawing.Point(9, 470)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(39, 13)
         Me.statusLabel.TabIndex = 41
@@ -198,11 +199,21 @@ Partial Class frmHierarchySelection
         Me.filterLabel.Text = "Filter-Auswahl"
         Me.filterLabel.Visible = False
         '
+        'auswSpeichern
+        '
+        Me.auswSpeichern.Location = New System.Drawing.Point(433, 379)
+        Me.auswSpeichern.Name = "auswSpeichern"
+        Me.auswSpeichern.Size = New System.Drawing.Size(113, 23)
+        Me.auswSpeichern.TabIndex = 50
+        Me.auswSpeichern.Text = "Speichern"
+        Me.auswSpeichern.UseVisualStyleBackColor = True
+        '
         'frmHierarchySelection
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(558, 478)
+        Me.ClientSize = New System.Drawing.Size(558, 492)
+        Me.Controls.Add(Me.auswSpeichern)
         Me.Controls.Add(Me.filterLabel)
         Me.Controls.Add(Me.filterDropbox)
         Me.Controls.Add(Me.collapseCompletely)
@@ -245,4 +256,5 @@ Partial Class frmHierarchySelection
     Friend WithEvents collapseCompletely As System.Windows.Forms.PictureBox
     Friend WithEvents filterDropbox As System.Windows.Forms.ComboBox
     Friend WithEvents filterLabel As System.Windows.Forms.Label
+    Friend WithEvents auswSpeichern As System.Windows.Forms.Button
 End Class
