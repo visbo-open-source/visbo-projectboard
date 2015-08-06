@@ -184,7 +184,7 @@ Public Class ThisWorkbook
         If loginErfolgreich Then
 
 
-            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
 
         'If roentgenBlick.isOn Then

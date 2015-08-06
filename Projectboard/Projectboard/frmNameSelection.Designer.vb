@@ -50,6 +50,9 @@ Partial Class frmNameSelection
         Me.addButton = New System.Windows.Forms.PictureBox()
         Me.removeButton = New System.Windows.Forms.PictureBox()
         Me.Label1 = New System.Windows.Forms.Label()
+        Me.filterDropbox = New System.Windows.Forms.ComboBox()
+        Me.filterLabel = New System.Windows.Forms.Label()
+        Me.auswSpeichern = New System.Windows.Forms.Button()
         CType(Me.pictureCosts, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.pictureRoles, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.picturePhasen, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -74,7 +77,7 @@ Partial Class frmNameSelection
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(162, 384)
+        Me.OKButton.Location = New System.Drawing.Point(162, 404)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(113, 23)
         Me.OKButton.TabIndex = 9
@@ -83,7 +86,7 @@ Partial Class frmNameSelection
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(315, 384)
+        Me.AbbrButton.Location = New System.Drawing.Point(313, 404)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(113, 23)
         Me.AbbrButton.TabIndex = 10
@@ -105,9 +108,9 @@ Partial Class frmNameSelection
         Me.headerLine.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.headerLine.Location = New System.Drawing.Point(12, 76)
         Me.headerLine.Name = "headerLine"
-        Me.headerLine.Size = New System.Drawing.Size(49, 16)
+        Me.headerLine.Size = New System.Drawing.Size(91, 16)
         Me.headerLine.TabIndex = 12
-        Me.headerLine.Text = "Label1"
+        Me.headerLine.Text = "Label1              "
         '
         'rdbPhases
         '
@@ -199,7 +202,7 @@ Partial Class frmNameSelection
         'repVorlagenDropbox
         '
         Me.repVorlagenDropbox.FormattingEnabled = True
-        Me.repVorlagenDropbox.Location = New System.Drawing.Point(162, 343)
+        Me.repVorlagenDropbox.Location = New System.Drawing.Point(162, 364)
         Me.repVorlagenDropbox.Name = "repVorlagenDropbox"
         Me.repVorlagenDropbox.Size = New System.Drawing.Size(264, 21)
         Me.repVorlagenDropbox.TabIndex = 9
@@ -209,7 +212,7 @@ Partial Class frmNameSelection
         '
         Me.labelPPTVorlage.AutoSize = True
         Me.labelPPTVorlage.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelPPTVorlage.Location = New System.Drawing.Point(12, 343)
+        Me.labelPPTVorlage.Location = New System.Drawing.Point(12, 369)
         Me.labelPPTVorlage.Name = "labelPPTVorlage"
         Me.labelPPTVorlage.Size = New System.Drawing.Size(126, 16)
         Me.labelPPTVorlage.TabIndex = 10
@@ -219,7 +222,7 @@ Partial Class frmNameSelection
         'statusLabel
         '
         Me.statusLabel.AutoSize = True
-        Me.statusLabel.Location = New System.Drawing.Point(16, 417)
+        Me.statusLabel.Location = New System.Drawing.Point(12, 432)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(39, 13)
         Me.statusLabel.TabIndex = 21
@@ -235,7 +238,7 @@ Partial Class frmNameSelection
         Me.einstellungen.AutoSize = True
         Me.einstellungen.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, CType((System.Drawing.FontStyle.Italic Or System.Drawing.FontStyle.Underline), System.Drawing.FontStyle), System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.einstellungen.ForeColor = System.Drawing.SystemColors.MenuHighlight
-        Me.einstellungen.Location = New System.Drawing.Point(517, 346)
+        Me.einstellungen.Location = New System.Drawing.Point(517, 372)
         Me.einstellungen.Name = "einstellungen"
         Me.einstellungen.Size = New System.Drawing.Size(70, 13)
         Me.einstellungen.TabIndex = 22
@@ -321,12 +324,44 @@ Partial Class frmNameSelection
         Me.Label1.TabIndex = 30
         Me.Label1.Text = "aktuelle Auswahl, auf die sich die Aktion bezieht "
         '
+        'filterDropbox
+        '
+        Me.filterDropbox.FormattingEnabled = True
+        Me.filterDropbox.Location = New System.Drawing.Point(162, 337)
+        Me.filterDropbox.Name = "filterDropbox"
+        Me.filterDropbox.Size = New System.Drawing.Size(264, 21)
+        Me.filterDropbox.TabIndex = 31
+        Me.filterDropbox.Visible = False
+        '
+        'filterLabel
+        '
+        Me.filterLabel.AutoSize = True
+        Me.filterLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.filterLabel.Location = New System.Drawing.Point(12, 342)
+        Me.filterLabel.Name = "filterLabel"
+        Me.filterLabel.Size = New System.Drawing.Size(91, 16)
+        Me.filterLabel.TabIndex = 32
+        Me.filterLabel.Text = "Filter-Auswahl"
+        Me.filterLabel.Visible = False
+        '
+        'auswSpeichern
+        '
+        Me.auswSpeichern.Location = New System.Drawing.Point(474, 335)
+        Me.auswSpeichern.Name = "auswSpeichern"
+        Me.auswSpeichern.Size = New System.Drawing.Size(113, 23)
+        Me.auswSpeichern.TabIndex = 33
+        Me.auswSpeichern.Text = "Speichern"
+        Me.auswSpeichern.UseVisualStyleBackColor = True
+        '
         'frmNameSelection
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.AutoScroll = True
-        Me.ClientSize = New System.Drawing.Size(599, 439)
+        Me.ClientSize = New System.Drawing.Size(599, 454)
+        Me.Controls.Add(Me.auswSpeichern)
+        Me.Controls.Add(Me.filterLabel)
+        Me.Controls.Add(Me.filterDropbox)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.removeButton)
         Me.Controls.Add(Me.addButton)
@@ -395,4 +430,7 @@ Partial Class frmNameSelection
     Friend WithEvents removeButton As System.Windows.Forms.PictureBox
     Friend WithEvents Label1 As System.Windows.Forms.Label
     Public WithEvents BackgroundWorker1 As System.ComponentModel.BackgroundWorker
+    Friend WithEvents filterDropbox As System.Windows.Forms.ComboBox
+    Friend WithEvents filterLabel As System.Windows.Forms.Label
+    Friend WithEvents auswSpeichern As System.Windows.Forms.Button
 End Class

@@ -55,7 +55,7 @@ Imports System.Drawing
         Dim returnValue As DialogResult
         Dim constellationName As String
         Dim speichernDatenbank As String = "Pt5G2B1"
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim storeToDB As Boolean = False
         Dim newConstellationForm As New frmProjPortfolioAdmin
 
@@ -98,7 +98,7 @@ Imports System.Drawing
         Dim loadConstellationFrm As New frmLoadConstellation
 
         Dim constellationName As String
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
 
@@ -167,7 +167,7 @@ Imports System.Drawing
 
 
         Dim deleteDatenbank As String = "Pt5G3B1"
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim removeFromDB As Boolean
 
@@ -639,7 +639,7 @@ Imports System.Drawing
     Sub Tom2G1Rename(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         'Dim pName As String, variantName As String
         'Dim shapeText As String
 
@@ -773,7 +773,7 @@ Imports System.Drawing
         Dim ProjektEingabe As New frmProjektEingabe1
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Call projektTafelInit()
 
@@ -830,7 +830,7 @@ Imports System.Drawing
         Dim awinSelection As Excel.ShapeRange
         Dim neueVariante As New frmCreateNewVariant
         Dim resultat As DialogResult
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim newproj As clsProjekt
         Dim key As String
         Dim phaseList As New Collection
@@ -1652,8 +1652,19 @@ Imports System.Drawing
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
+                ' Reports 
                 .repVorlagenDropbox.Visible = False
                 .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Name des Filters"
+
+                ' Auswahl Speichern
+                .auswSpeichern.Visible = False
+                .auswSpeichern.Enabled = False
 
                 returnValue = .ShowDialog
 
@@ -1677,9 +1688,20 @@ Imports System.Drawing
                 .chkbxOneChart.Checked = False
                 .chkbxOneChart.Visible = False
 
-                ' Reports
+                ' Reports 
                 .repVorlagenDropbox.Visible = False
                 .labelPPTVorlage.Visible = False
+                .einstellungen.Visible = False
+
+                ' Filter
+                .filterDropbox.Visible = True
+                .filterLabel.Visible = True
+                .filterLabel.Text = "Name des Filters"
+
+                ' Auswahl Speichern
+                .auswSpeichern.Visible = False
+                .auswSpeichern.Enabled = False
+
                 .einstellungen.Visible = False
 
                 returnValue = .ShowDialog
@@ -1719,6 +1741,12 @@ Imports System.Drawing
                     .labelPPTVorlage.Visible = False
                     .einstellungen.Visible = False
 
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
+
+
                     ' Nicht Modal anzeigen
                     .Show()
                     'returnValue = .ShowDialog
@@ -1743,6 +1771,12 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
                     .einstellungen.Visible = False
+
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
+
 
                     ' Nicht Modal anzeigen
                     .Show()
@@ -1777,6 +1811,11 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
 
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
+
                     ' Nicht Modal anzeigen
                     .Show()
                     'returnValue = .ShowDialog
@@ -1801,6 +1840,11 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
                     .einstellungen.Visible = False
+
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
 
                     ' Nicht Modal anzeigen
                     .Show()
@@ -1834,11 +1878,13 @@ Imports System.Drawing
                         .rdbRoles.Enabled = False
                         .rdbCosts.Enabled = False
 
-                        .rdbBU.Visible = True
-                        .pictureBU.Visible = True
+                        .rdbBU.Enabled = False
+                        .rdbBU.Visible = False
+                        .pictureBU.Visible = False
 
-                        .rdbTyp.Visible = True
-                        .pictureTyp.Visible = True
+                        .rdbTyp.Enabled = False
+                        .rdbTyp.Visible = False
+                        .pictureTyp.Visible = False
 
 
                         .einstellungen.Visible = True
@@ -1848,6 +1894,12 @@ Imports System.Drawing
 
                         .repVorlagenDropbox.Visible = True
                         .labelPPTVorlage.Visible = True
+
+                        ' Filter
+                        .filterDropbox.Visible = True
+                        .filterLabel.Visible = True
+                        .filterLabel.Text = "Auswahl"
+
 
                         '.Show()
                         ' bei Reports mit der Background Worker Behandlung 
@@ -1894,7 +1946,13 @@ Imports System.Drawing
                         .labelPPTVorlage.Visible = True
                         .einstellungen.Visible = True
 
-                        ' bei Verwnedung Background Worker muss Modal erfolgen 
+                        ' Filter
+                        .filterDropbox.Visible = True
+                        .filterLabel.Visible = True
+                        .filterLabel.Text = "Name des Filters"
+
+
+                        ' bei Verwendung Background Worker muss Modal erfolgen 
                         '.Show()
                         returnValue = .ShowDialog
                     End With
@@ -1924,11 +1982,13 @@ Imports System.Drawing
                         .rdbRoles.Enabled = True
                         .rdbCosts.Enabled = True
 
-                        .rdbBU.Visible = True
-                        .pictureBU.Visible = True
+                        .rdbBU.Enabled = False
+                        .rdbBU.Visible = False
+                        .pictureBU.Visible = False
 
-                        .rdbTyp.Visible = True
-                        .pictureTyp.Visible = True
+                        .rdbTyp.Enabled = False
+                        .rdbTyp.Visible = False
+                        .pictureTyp.Visible = False
 
 
                         .einstellungen.Visible = True
@@ -1938,6 +1998,12 @@ Imports System.Drawing
 
                         .repVorlagenDropbox.Visible = True
                         .labelPPTVorlage.Visible = True
+
+                        ' Filter
+                        .filterDropbox.Visible = True
+                        .filterLabel.Visible = True
+                        .filterLabel.Text = "Auswahl"
+
                         ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
                         returnValue = .ShowDialog
                     End With
@@ -1971,11 +2037,16 @@ Imports System.Drawing
                         .chkbxOneChart.Checked = False
                         .chkbxOneChart.Visible = False
 
-
                         ' Reports
                         .repVorlagenDropbox.Visible = True
                         .labelPPTVorlage.Visible = True
                         .einstellungen.Visible = True
+
+                        ' Filter
+                        .filterDropbox.Visible = True
+                        .filterLabel.Visible = True
+                        .filterLabel.Text = "Auswahl"
+
 
                         ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
                         returnValue = .ShowDialog
@@ -2013,38 +2084,52 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
 
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
+
+
                     returnValue = .ShowDialog
                 End With
 
                 appInstance.ScreenUpdating = True
 
             ElseIf control.Id = "PT4G1M0B2" Then
-                    ' Auswahl über Hierarchie, Typ II Export
-                    appInstance.ScreenUpdating = False
 
-                    awinSettings.useHierarchy = True
-                    With hryFormular
+                ' Auswahl über Hierarchie, Typ II Export
+                appInstance.ScreenUpdating = False
 
-                        .Text = "Excel Report erzeugen"
-                        .OKButton.Text = "Report erstellen"
-                        .menuOption = PTmenue.excelExport
-                        .statusLabel.Text = ""
+                awinSettings.useHierarchy = True
 
-                        .AbbrButton.Visible = False
-                        .AbbrButton.Enabled = False
+                With hryFormular
 
-                        .chkbxOneChart.Checked = False
-                        .chkbxOneChart.Visible = False
+                    .Text = "Excel Report erzeugen"
+                    .OKButton.Text = "Report erstellen"
+                    .menuOption = PTmenue.excelExport
+                    .statusLabel.Text = ""
 
-                        ' Reports
-                        .repVorlagenDropbox.Visible = False
-                        .labelPPTVorlage.Visible = False
-                        .einstellungen.Visible = False
+                    .AbbrButton.Visible = False
+                    .AbbrButton.Enabled = False
 
-                        ' Nicht Modal anzeigen
-                        .Show()
-                        'returnValue = .ShowDialog
-                    End With
+                    .chkbxOneChart.Checked = False
+                    .chkbxOneChart.Visible = False
+
+                    ' Reports
+                    .repVorlagenDropbox.Visible = False
+                    .labelPPTVorlage.Visible = False
+
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
+
+                    .einstellungen.Visible = False
+
+                    ' Nicht Modal anzeigen
+                    .Show()
+                    'returnValue = .ShowDialog
+                End With
             ElseIf control.Id = "PT4G1M2B1" Then
                 ' Auswahl über Namen, Vorlagen erzeugen
                 appInstance.ScreenUpdating = False
@@ -2072,6 +2157,11 @@ Imports System.Drawing
 
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
+
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
 
                     returnValue = .ShowDialog
                 End With
@@ -2101,6 +2191,11 @@ Imports System.Drawing
                     .repVorlagenDropbox.Visible = False
                     .labelPPTVorlage.Visible = False
                     .einstellungen.Visible = False
+
+                    ' Filter
+                    .filterDropbox.Visible = True
+                    .filterLabel.Visible = True
+                    .filterLabel.Text = "Auswahl"
 
                     ' Nicht Modal anzeigen
                     '.Show()
@@ -2815,7 +2910,7 @@ Imports System.Drawing
 
     Public Sub Tom2G4M1Import(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim hproj As New clsProjekt
         Dim cproj As New clsProjekt
         Dim vglName As String = " "
@@ -4512,7 +4607,7 @@ Imports System.Drawing
     ''' <param name="typ"></param>
     ''' <remarks></remarks>
     Private Sub awinSollIstVergleich(ByVal auswahl As Integer, ByVal typ As String, ByVal vglBaseline As Boolean)
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
@@ -4641,7 +4736,7 @@ Imports System.Drawing
     ''' </param>
     ''' <remarks></remarks>
     Private Sub awinStatusAnzeige(ByVal compareTyp As Integer, ByVal auswahl As Integer, ByVal qualifier As String)
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
@@ -6849,7 +6944,7 @@ Imports System.Drawing
 
     Sub PT3G1B2PhasenVgl(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
@@ -6992,7 +7087,7 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub PT3G1B3PhasenVgl(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
@@ -7192,7 +7287,7 @@ Imports System.Drawing
 
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -7299,7 +7394,7 @@ Imports System.Drawing
     Sub awinShowTrendKPI(control As IRibbonControl)
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -7402,7 +7497,7 @@ Imports System.Drawing
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
         Dim vglName As String = " "
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -7637,7 +7732,7 @@ Imports System.Drawing
     Sub PTTestFunktion2(control As IRibbonControl)
 
         Dim hproj As clsProjekt
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim tstCollection As SortedList(Of Date, String)
         Dim anzElements As Integer

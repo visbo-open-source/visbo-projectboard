@@ -8,7 +8,7 @@ Public Class frmCreateNewVariant
     End Sub
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim key As String
         Dim ok As Boolean = False
 
