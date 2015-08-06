@@ -13,6 +13,8 @@ using System.Collections;
 using MongoDB.Driver.Linq;
 
 using ProjectBoardDefinitions;
+using MongoDbAccess.Properties;
+
 
 namespace MongoDbAccess
 {
@@ -26,31 +28,31 @@ namespace MongoDbAccess
         public MongoCollection CollectionDependencies { get; set; }
         public MongoCollection CollectionFilter { get; set; }
 
-        public Request()
-        {
-            var connectionString = "mongodb://localhost";
-            /**var connectionString = "mongodb://ute:Mopsi@localhost"; Aufruf mit MongoDB mit Authentication */
-            Client = new MongoClient(connectionString);
-            Server = Client.GetServer();
-            Database = Server.GetDatabase("projectboard");
-            CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
-            CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
-            CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
-            CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
-        }
+        ////////public Request()
+        ////////{
+        ////////    var connectionString = "mongodb://localhost";
+        ////////    /**var connectionString = "mongodb://ute:Mopsi@localhost"; Aufruf mit MongoDB mit Authentication */
+        ////////    Client = new MongoClient(connectionString);
+        ////////    Server = Client.GetServer();
+        ////////    Database = Server.GetDatabase("projectboard");
+        ////////    CollectionProjects = Database.GetCollection<clsProjektDB>("projects");
+        ////////    CollectionConstellations = Database.GetCollection<clsConstellationDB>("constellations");
+        ////////    CollectionDependencies = Database.GetCollection<clsDependenciesOfPDB>("dependencies");
+        ////////    CollectionFilter = Database.GetCollection<clsFilterDB>("filters");
+        ////////}
 
-        public Request(string databaseName, string username, string dbPasswort)
+        public Request(string databaseURL, string databaseName, string username, string dbPasswort)
         {
-            
+            //var databaseURL = "localhost";
             if (String.IsNullOrEmpty(username) && String.IsNullOrEmpty(dbPasswort))
             {
-                var connectionString = "mongodb://localhost";
+                var connectionString = "mongodb://" + databaseURL;
                 //var connectionString = "mongodb://@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
             }
             else
             {
-                var connectionString = "mongodb://" + username + ":" + dbPasswort + "@localhost";  /*Aufruf mit MongoDB mit Authentication  */
+                var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL;  /*Aufruf mit MongoDB mit Authentication  */
                 //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);
             }

@@ -64,6 +64,34 @@ Partial Friend NotInheritable Class MySettings
             Me("ExcelVersion") = value
         End Set
     End Property
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Ute\Documents\Visual Studio 2012\Projects\Projectboard\project-board-rep"& _ 
+        "o\Projectboard\Projectboard\bin\Debug\")>  _
+    Public ReadOnly Property awinPath() As String
+        Get
+            Return CType(Me("awinPath"),String)
+        End Get
+    End Property
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
+    Public ReadOnly Property mongoDBURL() As String
+        Get
+            Return CType(Me("mongoDBURL"),String)
+        End Get
+    End Property
+    
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("telairdemoUte")>  _
+    Public ReadOnly Property mongoDBname() As String
+        Get
+            Return CType(Me("mongoDBname"),String)
+        End Get
+    End Property
 End Class
 
 Namespace My
