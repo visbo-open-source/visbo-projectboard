@@ -278,7 +278,16 @@ Public Module awinGeneralModules
 
         ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
         'awinPath = appInstance.ActiveWorkbook.Path & "\"
-        awinPath = My.Settings.awinPath
+
+        If (Dir(My.Settings.awinPath, vbDirectory) <> "") Then
+            awinPath = My.Settings.awinPath
+        Else
+
+            Throw New ArgumentException("Requirementsordner " & My.Settings.awinPath & " existiert nicht")
+
+        End If
+
+
 
         importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
         importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"

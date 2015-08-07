@@ -80,7 +80,7 @@ Public Class ThisWorkbook
         Catch ex As Exception
 
             Call MsgBox(ex.Message)
-
+            appInstance.Quit()
         Finally
             appInstance.ScreenUpdating = True
             appInstance.ShowChartTipNames = True
