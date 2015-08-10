@@ -12,7 +12,7 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">telairdemoUte</Value>
+      <Value Profile="(Default)">telairdemo</Value>
     </Setting>
   </Settings>
 </SettingsFile>

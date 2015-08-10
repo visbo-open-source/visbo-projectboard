@@ -86,7 +86,7 @@ Partial Friend NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("telairdemoUte")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("telairdemo")>  _
     Public ReadOnly Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)
