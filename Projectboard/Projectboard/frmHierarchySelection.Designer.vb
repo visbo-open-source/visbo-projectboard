@@ -22,6 +22,7 @@ Partial Class frmHierarchySelection
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmHierarchySelection))
         Me.hryTreeView = New System.Windows.Forms.TreeView()
         Me.hryStufenLabel = New System.Windows.Forms.Label()
         Me.hryStufen = New System.Windows.Forms.NumericUpDown()
@@ -33,13 +34,15 @@ Partial Class frmHierarchySelection
         Me.OKButton = New System.Windows.Forms.Button()
         Me.BackgroundWorker1 = New System.ComponentModel.BackgroundWorker()
         Me.AbbrButton = New System.Windows.Forms.Button()
-        Me.collapseCompletely = New System.Windows.Forms.PictureBox()
-        Me.expandCompletely = New System.Windows.Forms.PictureBox()
-        Me.SelectionReset = New System.Windows.Forms.PictureBox()
         Me.filterDropbox = New System.Windows.Forms.ComboBox()
         Me.filterLabel = New System.Windows.Forms.Label()
         Me.auswSpeichern = New System.Windows.Forms.Button()
+        Me.SelectionSet = New System.Windows.Forms.PictureBox()
+        Me.collapseCompletely = New System.Windows.Forms.PictureBox()
+        Me.expandCompletely = New System.Windows.Forms.PictureBox()
+        Me.SelectionReset = New System.Windows.Forms.PictureBox()
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -148,37 +151,6 @@ Partial Class frmHierarchySelection
         Me.AbbrButton.UseVisualStyleBackColor = False
         Me.AbbrButton.Visible = False
         '
-        'collapseCompletely
-        '
-        Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
-        Me.collapseCompletely.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_beginning
-        Me.collapseCompletely.Location = New System.Drawing.Point(35, 349)
-        Me.collapseCompletely.Name = "collapseCompletely"
-        Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
-        Me.collapseCompletely.TabIndex = 47
-        Me.collapseCompletely.TabStop = False
-        '
-        'expandCompletely
-        '
-        Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
-        Me.expandCompletely.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_end
-        Me.expandCompletely.Location = New System.Drawing.Point(57, 349)
-        Me.expandCompletely.Name = "expandCompletely"
-        Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
-        Me.expandCompletely.TabIndex = 46
-        Me.expandCompletely.TabStop = False
-        '
-        'SelectionReset
-        '
-        Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
-        Me.SelectionReset.Image = Global.ExcelWorkbook1.My.Resources.Resources.selection_delete
-        Me.SelectionReset.InitialImage = Nothing
-        Me.SelectionReset.Location = New System.Drawing.Point(12, 349)
-        Me.SelectionReset.Name = "SelectionReset"
-        Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
-        Me.SelectionReset.TabIndex = 45
-        Me.SelectionReset.TabStop = False
-        '
         'filterDropbox
         '
         Me.filterDropbox.FormattingEnabled = True
@@ -208,11 +180,55 @@ Partial Class frmHierarchySelection
         Me.auswSpeichern.Text = "Speichern"
         Me.auswSpeichern.UseVisualStyleBackColor = True
         '
+        'SelectionSet
+        '
+        Me.SelectionSet.BackColor = System.Drawing.SystemColors.Control
+        Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
+        Me.SelectionSet.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_check1
+        Me.SelectionSet.InitialImage = Nothing
+        Me.SelectionSet.Location = New System.Drawing.Point(12, 349)
+        Me.SelectionSet.Name = "SelectionSet"
+        Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionSet.TabIndex = 51
+        Me.SelectionSet.TabStop = False
+        '
+        'collapseCompletely
+        '
+        Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
+        Me.collapseCompletely.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_beginning
+        Me.collapseCompletely.Location = New System.Drawing.Point(68, 349)
+        Me.collapseCompletely.Name = "collapseCompletely"
+        Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.collapseCompletely.TabIndex = 47
+        Me.collapseCompletely.TabStop = False
+        '
+        'expandCompletely
+        '
+        Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
+        Me.expandCompletely.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_end
+        Me.expandCompletely.Location = New System.Drawing.Point(90, 349)
+        Me.expandCompletely.Name = "expandCompletely"
+        Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
+        Me.expandCompletely.TabIndex = 46
+        Me.expandCompletely.TabStop = False
+        '
+        'SelectionReset
+        '
+        Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
+        Me.SelectionReset.Image = Global.ExcelWorkbook1.My.Resources.Resources.selection_delete
+        Me.SelectionReset.InitialImage = Nothing
+        Me.SelectionReset.Location = New System.Drawing.Point(32, 349)
+        Me.SelectionReset.Name = "SelectionReset"
+        Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionReset.TabIndex = 45
+        Me.SelectionReset.TabStop = False
+        '
         'frmHierarchySelection
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(558, 492)
+        Me.Controls.Add(Me.SelectionSet)
         Me.Controls.Add(Me.auswSpeichern)
         Me.Controls.Add(Me.filterLabel)
         Me.Controls.Add(Me.filterDropbox)
@@ -233,6 +249,7 @@ Partial Class frmHierarchySelection
         Me.Text = "Auswahl über Hierarchie"
         Me.TopMost = True
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).EndInit()
@@ -257,4 +274,5 @@ Partial Class frmHierarchySelection
     Friend WithEvents filterDropbox As System.Windows.Forms.ComboBox
     Friend WithEvents filterLabel As System.Windows.Forms.Label
     Friend WithEvents auswSpeichern As System.Windows.Forms.Button
+    Friend WithEvents SelectionSet As System.Windows.Forms.PictureBox
 End Class

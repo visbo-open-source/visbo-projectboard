@@ -5731,18 +5731,18 @@ Public Module awinGeneralModules
                 aktuelleGesamtListe = AlleProjekte
                 loadErrorMsg = "es sind keine Projekte geladen"
 
-            Case PTTvActions.definePortfolioDB
-                pname = ""
-                variantName = ""
+                ' '' ''ur: 10.08.2015: ''Case PTTvActions.definePortfolioDB
+                ' '' '' ''    pname = ""
+                ' '' '' ''    variantName = ""
 
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-                loadErrorMsg = "es gibt keine Projekte in der Datenbank"
+                ' '' '' ''    aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                ' '' '' ''    loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
-            Case PTTvActions.definePortfolioSE
-                pname = ""
-                variantName = ""
-                aktuelleGesamtListe = AlleProjekte
-                loadErrorMsg = "es sind keine Projekte geladen"
+                ' '' '' ''Case PTTvActions.definePortfolioSE
+                ' '' '' ''    pname = ""
+                ' '' '' ''    variantName = ""
+                ' '' '' ''    aktuelleGesamtListe = AlleProjekte
+                ' '' '' ''    loadErrorMsg = "es sind keine Projekte geladen"
 
 
         End Select
@@ -5783,7 +5783,7 @@ Public Module awinGeneralModules
                         If aKtionskennung = PTTvActions.delFromSession Or _
                             aKtionskennung = PTTvActions.activateV Or _
                             aKtionskennung = PTTvActions.deleteV Or _
-                            aKtionskennung = PTTvActions.loadPV Or _
+                             aKtionskennung = PTTvActions.loadPV Or _
                             aKtionskennung = PTTvActions.definePortfolioDB Or _
                             aKtionskennung = PTTvActions.definePortfolioSE Then
                             If aktuelleGesamtListe.getVariantZahl(pname) > 0 Or _
@@ -5797,14 +5797,14 @@ Public Module awinGeneralModules
                                 nodeLevel0.Tag = "X"
                             End If
 
-                            ' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 
-                            If aKtionskennung = PTTvActions.definePortfolioSE Then
-                                If ShowProjekte.contains(pname) Then
-                                    ' im aufrufenden Teil wird stopRecursion auf true gesetzt ... 
-                                    nodeLevel0.Checked = True
+                            '' ''ur:10.08.2015 '' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 
+                            ' '' ''If aKtionskennung = PTTvActions.definePortfolioSE Then
+                            ' '' ''    If ShowProjekte.contains(pname) Then
+                            ' '' ''        ' im aufrufenden Teil wird stopRecursion auf true gesetzt ... 
+                            ' '' ''        nodeLevel0.Checked = True
 
-                                End If
-                            End If
+                            ' '' ''    End If
+                            ' '' ''End If
 
 
                         Else
@@ -6664,6 +6664,8 @@ Public Module awinGeneralModules
         Dim returnValue As DialogResult
 
         With auswahlFormular
+
+
             .Text = "Datenbank Filter definieren"
 
             '.chkbxShowObjects = False
@@ -6678,9 +6680,17 @@ Public Module awinGeneralModules
             .rdbTyp.Visible = True
             .pictureTyp.Visible = True
 
-
             .repVorlagenDropbox.Visible = False
             .labelPPTVorlage.Visible = False
+
+            ' Filter
+            .filterDropbox.Visible = True
+            .filterLabel.Visible = True
+            .filterLabel.Text = "Name des Filters"
+
+            ' Auswahl Speichern
+            .auswSpeichern.Visible = False
+            .auswSpeichern.Enabled = False
 
             '.showModePortfolio = True
             .menuOption = PTmenue.filterdefinieren
@@ -6805,8 +6815,10 @@ Public Module awinGeneralModules
         ' einlesen und anzeigen der in der Datenbank definierten Filter
         If menuOption = PTmenue.filterdefinieren Then
 
+
             ' Filter mit Namen "fName" in DB speichern
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
             ' Datenbank ist gestartet
             If request.pingMongoDb() Then
@@ -7291,7 +7303,8 @@ Public Module awinGeneralModules
 
         Dim lastFilter As clsFilter
 
-        If menuOption = PTmenue.filterdefinieren Then
+        If menuOption = PTmenue.filterdefinieren Or _
+            menuOption = PTmenue.filterAuswahl Then
 
             If calledFromHry Then
                 Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")

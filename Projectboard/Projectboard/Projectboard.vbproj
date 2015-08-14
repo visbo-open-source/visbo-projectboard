@@ -451,6 +451,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\milestones_icon1.png" />
+    <None Include="Resources\navigate_check1.png" />
+    <None Include="Resources\navigate_check.png" />
     <None Include="Resources\selection_delete.png" />
     <None Include="Resources\navigate_end.png" />
     <None Include="Resources\navigate_beginning.png" />
