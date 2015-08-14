@@ -57,9 +57,7 @@ Imports System.Drawing
         Dim speichernDatenbank As String = "Pt5G2B1"
         Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
         Dim storeToDB As Boolean = False
-        Dim newConstellationForm As New frmProjPortfolioAdmin
-
-
+        Dim returnRequest As Boolean = False
 
         Call projektTafelInit()
 
@@ -76,9 +74,27 @@ Imports System.Drawing
                 End If
                 Call storeSessionConstellation(ShowProjekte, constellationName)
 
+              
+                ' speichern der Konstellation mit constellationName in DB
+                If storeToDB Then
+
+                    If request.pingMongoDb() Then
+                        ' prüfen, ob diese Constellation existiert ..
+                        If projectConstellations.Contains(constellationName) Then
+                            Try
+                                returnRequest = request.storeConstellationToDB(projectConstellations.getConstellation(constellationName))
+                            Catch ex As Exception
+                                Throw New ArgumentException("Fehler beim Speichern des MultiprojektSzenario in die DB")
+                            End Try
+                        End If
+                    Else
+                        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen")
+                    End If
+
+                End If
+
                 ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
                 currentConstellation = constellationName
-
             End If
         Else
             Call MsgBox("Es sind keine Projekte in der Projekt-Tafel geladen!")
@@ -86,8 +102,8 @@ Imports System.Drawing
         ' 
         ' Ende alte Version; vor dem 26.10.14
 
-        
-        
+
+
         enableOnUpdate = True
 
     End Sub
@@ -262,8 +278,8 @@ Imports System.Drawing
                 .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
                 .aKtionskennung = PTTvActions.delFromDB
                 .OKButton.Text = "Löschen"
-                .portfolioName.Visible = False
-                .Label1.Visible = False
+                '' '' ''.portfolioName.Visible = False
+                '' '' ''.Label1.Visible = False
             End With
 
             returnValue = deleteProjects.ShowDialog
@@ -996,8 +1012,8 @@ Imports System.Drawing
                 .aKtionskennung = PTTvActions.activateV
                 .OKButton.Visible = False
                 '.OKButton.Text = "Löschen"
-                .portfolioName.Visible = False
-                .Label1.Visible = False
+                '' '' ''.portfolioName.Visible = False
+                '' '' ''.Label1.Visible = False
             End With
 
             'returnValue = activateVariant.ShowDialog
@@ -1116,8 +1132,8 @@ Imports System.Drawing
                 .aKtionskennung = PTTvActions.deleteV
                 .OKButton.Visible = True
                 .OKButton.Text = "Löschen"
-                .portfolioName.Visible = False
-                .Label1.Visible = False
+                '' '' ''.portfolioName.Visible = False
+                '' '' ''.Label1.Visible = False
             End With
 
             'returnValue = activateVariant.ShowDialog
@@ -2653,8 +2669,8 @@ Imports System.Drawing
                         .Text = "Projekte, Varianten aus der Session löschen"
                         .aKtionskennung = PTTvActions.delFromSession
                         .OKButton.Text = "Löschen"
-                        .portfolioName.Visible = False
-                        .Label1.Visible = False
+                        '' '' ''.portfolioName.Visible = False
+                        '' '' ''.Label1.Visible = False
                     End With
 
                     returnValue = deleteProjects.ShowDialog
@@ -3698,8 +3714,8 @@ Imports System.Drawing
                 .Text = "Projekte und Varianten in die Session laden "
                 .aKtionskennung = PTTvActions.loadPV
                 .OKButton.Text = "Laden"
-                .portfolioName.Visible = False
-                .Label1.Visible = False
+                '' '' ''.portfolioName.Visible = False
+                '' '' ''.Label1.Visible = False
             End With
 
             returnValue = loadProjectsForm.ShowDialog

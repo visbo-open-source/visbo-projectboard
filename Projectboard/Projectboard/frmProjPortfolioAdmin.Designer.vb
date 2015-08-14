@@ -23,11 +23,9 @@ Partial Class frmProjPortfolioAdmin
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.TreeViewProjekte = New System.Windows.Forms.TreeView()
-        Me.portfolioName = New System.Windows.Forms.ComboBox()
-        Me.Label1 = New System.Windows.Forms.Label()
         Me.OKButton = New System.Windows.Forms.Button()
-        Me.applyFilter = New System.Windows.Forms.CheckBox()
-        Me.defineFilter = New System.Windows.Forms.LinkLabel()
+        Me.filterLabel = New System.Windows.Forms.Label()
+        Me.filterDropbox = New System.Windows.Forms.ComboBox()
         Me.SuspendLayout()
         '
         'TreeViewProjekte
@@ -38,23 +36,6 @@ Partial Class frmProjPortfolioAdmin
         Me.TreeViewProjekte.Size = New System.Drawing.Size(395, 290)
         Me.TreeViewProjekte.TabIndex = 1
         '
-        'portfolioName
-        '
-        Me.portfolioName.FormattingEnabled = True
-        Me.portfolioName.Location = New System.Drawing.Point(127, 344)
-        Me.portfolioName.Name = "portfolioName"
-        Me.portfolioName.Size = New System.Drawing.Size(302, 21)
-        Me.portfolioName.TabIndex = 4
-        '
-        'Label1
-        '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(34, 348)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(76, 13)
-        Me.Label1.TabIndex = 5
-        Me.Label1.Text = "Portfolio Name"
-        '
         'OKButton
         '
         Me.OKButton.Location = New System.Drawing.Point(179, 385)
@@ -64,48 +45,42 @@ Partial Class frmProjPortfolioAdmin
         Me.OKButton.Text = "Button1"
         Me.OKButton.UseVisualStyleBackColor = True
         '
-        'applyFilter
+        'filterLabel
         '
-        Me.applyFilter.AutoSize = True
-        Me.applyFilter.Location = New System.Drawing.Point(186, 321)
-        Me.applyFilter.Name = "applyFilter"
-        Me.applyFilter.Size = New System.Drawing.Size(101, 17)
-        Me.applyFilter.TabIndex = 7
-        Me.applyFilter.Text = "Filter anwenden"
-        Me.applyFilter.UseVisualStyleBackColor = True
+        Me.filterLabel.AutoSize = True
+        Me.filterLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.filterLabel.Location = New System.Drawing.Point(31, 345)
+        Me.filterLabel.Name = "filterLabel"
+        Me.filterLabel.Size = New System.Drawing.Size(91, 16)
+        Me.filterLabel.TabIndex = 33
+        Me.filterLabel.Text = "Filter-Auswahl"
         '
-        'defineFilter
+        'filterDropbox
         '
-        Me.defineFilter.AutoSize = True
-        Me.defineFilter.Location = New System.Drawing.Point(347, 321)
-        Me.defineFilter.Name = "defineFilter"
-        Me.defineFilter.Size = New System.Drawing.Size(78, 13)
-        Me.defineFilter.TabIndex = 8
-        Me.defineFilter.TabStop = True
-        Me.defineFilter.Text = "Filter definieren"
+        Me.filterDropbox.FormattingEnabled = True
+        Me.filterDropbox.Location = New System.Drawing.Point(128, 340)
+        Me.filterDropbox.Name = "filterDropbox"
+        Me.filterDropbox.Size = New System.Drawing.Size(301, 21)
+        Me.filterDropbox.TabIndex = 34
         '
         'frmProjPortfolioAdmin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(467, 430)
-        Me.Controls.Add(Me.defineFilter)
-        Me.Controls.Add(Me.applyFilter)
+        Me.Controls.Add(Me.filterDropbox)
+        Me.Controls.Add(Me.filterLabel)
         Me.Controls.Add(Me.OKButton)
-        Me.Controls.Add(Me.Label1)
-        Me.Controls.Add(Me.portfolioName)
         Me.Controls.Add(Me.TreeViewProjekte)
         Me.Name = "frmProjPortfolioAdmin"
-        Me.Text = "Portfolio erstellen"
+        Me.Text = "Multiprojekt-Szenario"
         Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
     Public WithEvents TreeViewProjekte As System.Windows.Forms.TreeView
-    Friend WithEvents portfolioName As System.Windows.Forms.ComboBox
-    Friend WithEvents Label1 As System.Windows.Forms.Label
     Friend WithEvents OKButton As System.Windows.Forms.Button
-    Friend WithEvents applyFilter As System.Windows.Forms.CheckBox
-    Friend WithEvents defineFilter As System.Windows.Forms.LinkLabel
+    Friend WithEvents filterLabel As System.Windows.Forms.Label
+    Friend WithEvents filterDropbox As System.Windows.Forms.ComboBox
 End Class
