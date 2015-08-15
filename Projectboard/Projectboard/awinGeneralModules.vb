@@ -3940,7 +3940,7 @@ Public Module awinGeneralModules
 
             End With
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in awinImportProject, Lesen Stammdaten")
+            Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Stammdaten")
         End Try
 
         ' ------------------------------------------------------------------------------------------------------
@@ -4013,7 +4013,7 @@ Public Module awinGeneralModules
                 End With
             End If
         Catch ex As Exception
-            Throw New ArgumentException("Fehler in awinImportProject, Lesen Attribute")
+            Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Attribute")
         End Try
 
 
@@ -4046,7 +4046,7 @@ Public Module awinGeneralModules
                 hproj.AddPhase(cphase)
 
             Catch ex1 As Exception
-                Throw New ArgumentException("Fehler in awinImportProject, Erzeugen ProjektPhase")
+                Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Erzeugen ProjektPhase")
             End Try
 
         End Try
@@ -4394,7 +4394,7 @@ Public Module awinGeneralModules
 
                 End With
             Catch ex As Exception
-                Throw New ArgumentException("Fehler in awinImportProject, Lesen Ressourcen von '" & hproj.name & "' " & vbLf & ex.Message)
+                Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Ressourcen von '" & hproj.name & "' " & vbLf & ex.Message)
             End Try
 
         End If

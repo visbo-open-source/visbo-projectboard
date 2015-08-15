@@ -2877,8 +2877,8 @@ Imports System.Drawing
 
 
 
-
-        dirName = awinPath & msprojectFilesOrdner
+        'dirName = awinPath & msprojectFilesOrdner
+        dirName = importOrdnerNames(PTImpExp.msproject)
         listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
 
         ' alle Import Projekte erstmal löschen
