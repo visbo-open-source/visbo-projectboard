@@ -277,7 +277,17 @@ Public Module awinGeneralModules
 
 
         ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
-        awinPath = appInstance.ActiveWorkbook.Path & "\"
+        'awinPath = appInstance.ActiveWorkbook.Path & "\"
+
+        If (Dir(My.Settings.awinPath, vbDirectory) <> "") Then
+            awinPath = My.Settings.awinPath
+        Else
+
+            Throw New ArgumentException("Requirementsordner " & My.Settings.awinPath & " existiert nicht")
+
+        End If
+
+
 
         importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
         importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
@@ -436,25 +446,25 @@ Public Module awinGeneralModules
             Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
         End Try
 
-
-
-
         Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
                                                 Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-        ' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
-        Try
-            awinSettings.databaseName = CStr(wsName4.Range("Datenbank").Value).Trim
-            If awinSettings.databaseName = "" Then
-                awinSettings.databaseName = "VisboTest"
-            End If
-        Catch ex As Exception
+        ' '' '' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
+        '' ''Try
+        '' ''    awinSettings.databaseName = CStr(wsName4.Range("Datenbank").Value).Trim
+        '' ''    If awinSettings.databaseName = "" Then
+        '' ''        awinSettings.databaseName = "VisboTest"
+        '' ''    End If
+        '' ''Catch ex As Exception
 
-            awinSettings.databaseName = "VisboTest"
-            'appInstance.ScreenUpdating = formerSU
-            'Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
-        End Try
+        '' ''    awinSettings.databaseName = "VisboTest"
+        '' ''    'appInstance.ScreenUpdating = formerSU
+        '' ''    'Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
+        '' ''End Try
 
+       
+        awinSettings.databaseURL = My.Settings.mongoDBURL
+        awinSettings.databaseName = My.Settings.mongoDBname
 
         ' ur: 23.01.2015: Abfragen der Login-Informationen
         loginErfolgreich = loginProzedur()
@@ -964,7 +974,7 @@ Public Module awinGeneralModules
                 awinSettings.zeitEinheit = CStr(.Range("Zeiteinheit").Value)
                 awinSettings.kapaEinheit = CStr(.Range("kapaEinheit").Value)
                 awinSettings.offsetEinheit = CStr(.Range("offsetEinheit").Value)
-                awinSettings.databaseName = CStr(.Range("Datenbank").Value)
+                'ur: 6.08.2015: umgestellt auf Settings in app.config ''awinSettings.databaseName = CStr(.Range("Datenbank").Value)
                 awinSettings.EinzelRessExport = CInt(.Range("EinzelRessourcenExport").Value)
                 awinSettings.zeilenhoehe1 = CDbl(.Range("Zeilenhoehe1").Value)
                 awinSettings.zeilenhoehe2 = CDbl(.Range("Zeilenhoehe2").Value)
@@ -1297,7 +1307,7 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Private Sub readInitConstellations()
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         ' Datenbank ist gestartet
         If request.pingMongoDb() Then
@@ -4303,7 +4313,7 @@ Public Module awinGeneralModules
         Dim storedGestern As Date = storedHeute.AddDays(-1)
         Dim pname As String = ""
         Dim variantName As String = ""
-        Dim request As New Request(databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, databaseName, dbUsername, dbPasswort)
         Dim lastConstellation As New clsConstellation
         Dim hproj As clsProjekt
 
@@ -4356,7 +4366,7 @@ Public Module awinGeneralModules
         Dim storedGestern As Date = storedHeute.AddDays(-1)
         Dim pname As String = ""
         Dim variantName As String = ""
-        Dim request As New Request(databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, databaseName, dbUsername, dbPasswort)
         Dim lastConstellation As New clsConstellation
         Dim projekteImZeitraum As New SortedList(Of String, clsProjekt)
         Dim projektHistorie As New clsProjektHistorie
@@ -4484,7 +4494,7 @@ Public Module awinGeneralModules
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim anzErrDB As Integer = 0
         Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
         Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
@@ -4591,7 +4601,7 @@ Public Module awinGeneralModules
 
         Dim activeConstellation As New clsConstellation
         Dim hproj As New clsProjekt
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim anzErrDB As Integer = 0
         Dim loadErrorMessage As String = " * Projekte, die nicht in der DB '" & awinSettings.databaseName & "' existieren:"
         Dim loadDateMessage As String = " * Das Datum kann nicht angepasst werden kann." & vbLf & _
@@ -4681,7 +4691,7 @@ Public Module awinGeneralModules
 
         Dim returnValue As Boolean = True
         Dim activeConstellation As New clsConstellation
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         ' prüfen, ob diese Constellation überhaupt existiert ..
         Try
@@ -4725,7 +4735,7 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub loadProjectfromDB(ByVal pName As String, vName As String, ByVal show As Boolean)
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim hproj As clsProjekt
         Dim key As String = calcProjektKey(pName, vName)
 
@@ -4767,8 +4777,8 @@ Public Module awinGeneralModules
 
         If kennung = PTTvActions.delFromDB Then
 
-            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
-            Dim requestTrash As New Request(awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+            Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
             If Not projekthistorie Is Nothing Then
                 projekthistorie.clear() ' alte Historie löschen
@@ -4877,8 +4887,8 @@ Public Module awinGeneralModules
     Public Sub deleteProjectVariantTimeStamp(ByVal pname As String, ByVal variantName As String, _
                                                   ByVal timeStamp As Date, ByRef first As Boolean)
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
         Dim hproj As clsProjekt
 
         If first Then
@@ -5671,8 +5681,8 @@ Public Module awinGeneralModules
         Dim deletedProj As Integer = 0
 
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
         ' alles zurücksetzen 
         projektHistorien.clear()
@@ -5721,18 +5731,18 @@ Public Module awinGeneralModules
                 aktuelleGesamtListe = AlleProjekte
                 loadErrorMsg = "es sind keine Projekte geladen"
 
-            Case PTTvActions.definePortfolioDB
-                pname = ""
-                variantName = ""
+                ' '' ''ur: 10.08.2015: ''Case PTTvActions.definePortfolioDB
+                ' '' '' ''    pname = ""
+                ' '' '' ''    variantName = ""
 
-                aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
-                loadErrorMsg = "es gibt keine Projekte in der Datenbank"
+                ' '' '' ''    aktuelleGesamtListe.liste = request.retrieveProjectsFromDB(pname, variantName, zeitraumVon, zeitraumbis, storedGestern, storedHeute, True)
+                ' '' '' ''    loadErrorMsg = "es gibt keine Projekte in der Datenbank"
 
-            Case PTTvActions.definePortfolioSE
-                pname = ""
-                variantName = ""
-                aktuelleGesamtListe = AlleProjekte
-                loadErrorMsg = "es sind keine Projekte geladen"
+                ' '' '' ''Case PTTvActions.definePortfolioSE
+                ' '' '' ''    pname = ""
+                ' '' '' ''    variantName = ""
+                ' '' '' ''    aktuelleGesamtListe = AlleProjekte
+                ' '' '' ''    loadErrorMsg = "es sind keine Projekte geladen"
 
 
         End Select
@@ -5773,7 +5783,7 @@ Public Module awinGeneralModules
                         If aKtionskennung = PTTvActions.delFromSession Or _
                             aKtionskennung = PTTvActions.activateV Or _
                             aKtionskennung = PTTvActions.deleteV Or _
-                            aKtionskennung = PTTvActions.loadPV Or _
+                             aKtionskennung = PTTvActions.loadPV Or _
                             aKtionskennung = PTTvActions.definePortfolioDB Or _
                             aKtionskennung = PTTvActions.definePortfolioSE Then
                             If aktuelleGesamtListe.getVariantZahl(pname) > 0 Or _
@@ -5787,14 +5797,14 @@ Public Module awinGeneralModules
                                 nodeLevel0.Tag = "X"
                             End If
 
-                            ' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 
-                            If aKtionskennung = PTTvActions.definePortfolioSE Then
-                                If ShowProjekte.contains(pname) Then
-                                    ' im aufrufenden Teil wird stopRecursion auf true gesetzt ... 
-                                    nodeLevel0.Checked = True
+                            '' ''ur:10.08.2015 '' hier muss im Falle Portfolio Definition das Kreuz dort gesetzt sein, was geladen ist 
+                            ' '' ''If aKtionskennung = PTTvActions.definePortfolioSE Then
+                            ' '' ''    If ShowProjekte.contains(pname) Then
+                            ' '' ''        ' im aufrufenden Teil wird stopRecursion auf true gesetzt ... 
+                            ' '' ''        nodeLevel0.Checked = True
 
-                                End If
-                            End If
+                            ' '' ''    End If
+                            ' '' ''End If
 
 
                         Else
@@ -6654,6 +6664,8 @@ Public Module awinGeneralModules
         Dim returnValue As DialogResult
 
         With auswahlFormular
+
+
             .Text = "Datenbank Filter definieren"
 
             '.chkbxShowObjects = False
@@ -6668,9 +6680,17 @@ Public Module awinGeneralModules
             .rdbTyp.Visible = True
             .pictureTyp.Visible = True
 
-
             .repVorlagenDropbox.Visible = False
             .labelPPTVorlage.Visible = False
+
+            ' Filter
+            .filterDropbox.Visible = True
+            .filterLabel.Visible = True
+            .filterLabel.Text = "Name des Filters"
+
+            ' Auswahl Speichern
+            .auswSpeichern.Visible = False
+            .auswSpeichern.Enabled = False
 
             '.showModePortfolio = True
             .menuOption = PTmenue.filterdefinieren
@@ -6795,8 +6815,10 @@ Public Module awinGeneralModules
         ' einlesen und anzeigen der in der Datenbank definierten Filter
         If menuOption = PTmenue.filterdefinieren Then
 
+
             ' Filter mit Namen "fName" in DB speichern
-            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+
 
             ' Datenbank ist gestartet
             If request.pingMongoDb() Then
@@ -6817,7 +6839,7 @@ Public Module awinGeneralModules
                 menuOption = PTmenue.leistbarkeitsAnalyse Then
 
                 ' allee Filter aus DB lesen
-                Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
                 ' Datenbank ist gestartet
                 If request.pingMongoDb() Then
@@ -7018,7 +7040,7 @@ Public Module awinGeneralModules
 
     Sub awinShowMilestoneTrend(ByVal selectedMilestones As Collection)
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim listOfItems As New Collection
         Dim nameList As New SortedList(Of Date, String)
@@ -7281,7 +7303,8 @@ Public Module awinGeneralModules
 
         Dim lastFilter As clsFilter
 
-        If menuOption = PTmenue.filterdefinieren Then
+        If menuOption = PTmenue.filterdefinieren Or _
+            menuOption = PTmenue.filterAuswahl Then
 
             If calledFromHry Then
                 Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
@@ -7308,7 +7331,7 @@ Public Module awinGeneralModules
             filterDefinitions.storeFilter(fName, lastFilter)
 
             ' Filter mit Namen "fName" in DB speichern
-            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
             ' Datenbank ist gestartet
             If request.pingMongoDb() Then
@@ -7344,7 +7367,7 @@ Public Module awinGeneralModules
 
             selFilterDefinitions.storeFilter(fName, lastFilter)
             ' Filter mit Namen "fName" in DB speichern
-            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
             ' Datenbank ist gestartet
             If request.pingMongoDb() Then

@@ -80,7 +80,7 @@ Public Class ThisWorkbook
         Catch ex As Exception
 
             Call MsgBox(ex.Message)
-
+            appInstance.Quit()
         Finally
             appInstance.ScreenUpdating = True
             appInstance.ShowChartTipNames = True
@@ -184,7 +184,7 @@ Public Class ThisWorkbook
         If loginErfolgreich Then
 
 
-            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
 
         'If roentgenBlick.isOn Then

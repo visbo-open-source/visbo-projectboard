@@ -55,11 +55,9 @@ Imports System.Drawing
         Dim returnValue As DialogResult
         Dim constellationName As String
         Dim speichernDatenbank As String = "Pt5G2B1"
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim storeToDB As Boolean = False
-        Dim newConstellationForm As New frmProjPortfolioAdmin
-
-
+        Dim returnRequest As Boolean = False
 
         Call projektTafelInit()
 
@@ -76,9 +74,27 @@ Imports System.Drawing
                 End If
                 Call storeSessionConstellation(ShowProjekte, constellationName)
 
+              
+                ' speichern der Konstellation mit constellationName in DB
+                If storeToDB Then
+
+                    If request.pingMongoDb() Then
+                        ' prüfen, ob diese Constellation existiert ..
+                        If projectConstellations.Contains(constellationName) Then
+                            Try
+                                returnRequest = request.storeConstellationToDB(projectConstellations.getConstellation(constellationName))
+                            Catch ex As Exception
+                                Throw New ArgumentException("Fehler beim Speichern des MultiprojektSzenario in die DB")
+                            End Try
+                        End If
+                    Else
+                        Throw New ArgumentException("Datenbank-Verbindung ist unterbrochen")
+                    End If
+
+                End If
+
                 ' setzen der public variable, welche Konstellation denn jetzt gesetzt ist
                 currentConstellation = constellationName
-
             End If
         Else
             Call MsgBox("Es sind keine Projekte in der Projekt-Tafel geladen!")
@@ -86,8 +102,8 @@ Imports System.Drawing
         ' 
         ' Ende alte Version; vor dem 26.10.14
 
-        
-        
+
+
         enableOnUpdate = True
 
     End Sub
@@ -98,7 +114,7 @@ Imports System.Drawing
         Dim loadConstellationFrm As New frmLoadConstellation
 
         Dim constellationName As String
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim initMessage As String = "Es sind dabei folgende Probleme aufgetreten" & vbLf & vbLf
 
@@ -167,7 +183,7 @@ Imports System.Drawing
 
 
         Dim deleteDatenbank As String = "Pt5G3B1"
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Dim removeFromDB As Boolean
 
@@ -262,8 +278,8 @@ Imports System.Drawing
                 .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
                 .aKtionskennung = PTTvActions.delFromDB
                 .OKButton.Text = "Löschen"
-                .portfolioName.Visible = False
-                .Label1.Visible = False
+                '' '' ''.portfolioName.Visible = False
+                '' '' ''.Label1.Visible = False
             End With
 
             returnValue = deleteProjects.ShowDialog
@@ -639,7 +655,7 @@ Imports System.Drawing
     Sub Tom2G1Rename(control As IRibbonControl)
 
         Dim singleShp As Excel.Shape
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         'Dim pName As String, variantName As String
         'Dim shapeText As String
 
@@ -773,7 +789,7 @@ Imports System.Drawing
         Dim ProjektEingabe As New frmProjektEingabe1
         Dim returnValue As DialogResult
         Dim zeile As Integer = 0
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
         Call projektTafelInit()
 
@@ -830,7 +846,7 @@ Imports System.Drawing
         Dim awinSelection As Excel.ShapeRange
         Dim neueVariante As New frmCreateNewVariant
         Dim resultat As DialogResult
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim newproj As clsProjekt
         Dim key As String
         Dim phaseList As New Collection
@@ -996,8 +1012,8 @@ Imports System.Drawing
                 .aKtionskennung = PTTvActions.activateV
                 .OKButton.Visible = False
                 '.OKButton.Text = "Löschen"
-                .portfolioName.Visible = False
-                .Label1.Visible = False
+                '' '' ''.portfolioName.Visible = False
+                '' '' ''.Label1.Visible = False
             End With
 
             'returnValue = activateVariant.ShowDialog
@@ -1116,8 +1132,8 @@ Imports System.Drawing
                 .aKtionskennung = PTTvActions.deleteV
                 .OKButton.Visible = True
                 .OKButton.Text = "Löschen"
-                .portfolioName.Visible = False
-                .Label1.Visible = False
+                '' '' ''.portfolioName.Visible = False
+                '' '' ''.Label1.Visible = False
             End With
 
             'returnValue = activateVariant.ShowDialog
@@ -2653,8 +2669,8 @@ Imports System.Drawing
                         .Text = "Projekte, Varianten aus der Session löschen"
                         .aKtionskennung = PTTvActions.delFromSession
                         .OKButton.Text = "Löschen"
-                        .portfolioName.Visible = False
-                        .Label1.Visible = False
+                        '' '' ''.portfolioName.Visible = False
+                        '' '' ''.Label1.Visible = False
                     End With
 
                     returnValue = deleteProjects.ShowDialog
@@ -2910,7 +2926,7 @@ Imports System.Drawing
 
     Public Sub Tom2G4M1Import(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim hproj As New clsProjekt
         Dim cproj As New clsProjekt
         Dim vglName As String = " "
@@ -3698,8 +3714,8 @@ Imports System.Drawing
                 .Text = "Projekte und Varianten in die Session laden "
                 .aKtionskennung = PTTvActions.loadPV
                 .OKButton.Text = "Laden"
-                .portfolioName.Visible = False
-                .Label1.Visible = False
+                '' '' ''.portfolioName.Visible = False
+                '' '' ''.Label1.Visible = False
             End With
 
             returnValue = loadProjectsForm.ShowDialog
@@ -4607,7 +4623,7 @@ Imports System.Drawing
     ''' <param name="typ"></param>
     ''' <remarks></remarks>
     Private Sub awinSollIstVergleich(ByVal auswahl As Integer, ByVal typ As String, ByVal vglBaseline As Boolean)
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
@@ -4736,7 +4752,7 @@ Imports System.Drawing
     ''' </param>
     ''' <remarks></remarks>
     Private Sub awinStatusAnzeige(ByVal compareTyp As Integer, ByVal auswahl As Integer, ByVal qualifier As String)
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
@@ -6944,7 +6960,7 @@ Imports System.Drawing
 
     Sub PT3G1B2PhasenVgl(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
@@ -7087,7 +7103,7 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub PT3G1B3PhasenVgl(control As IRibbonControl)
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp1 As Excel.Shape
         Dim hproj As clsProjekt, cproj As clsProjekt
         Dim top As Double, left As Double, width As Double, height As Double
@@ -7287,7 +7303,7 @@ Imports System.Drawing
 
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -7394,7 +7410,7 @@ Imports System.Drawing
     Sub awinShowTrendKPI(control As IRibbonControl)
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -7497,7 +7513,7 @@ Imports System.Drawing
         Dim hproj As clsProjekt
         Dim pName As String, variantName As String
         Dim vglName As String = " "
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim showCharacteristics As New frmShowProjCharacteristics
         'Dim returnValue As DialogResult
@@ -7732,7 +7748,7 @@ Imports System.Drawing
     Sub PTTestFunktion2(control As IRibbonControl)
 
         Dim hproj As clsProjekt
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim singleShp As Excel.Shape
         Dim tstCollection As SortedList(Of Date, String)
         Dim anzElements As Integer

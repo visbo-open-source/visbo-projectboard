@@ -707,6 +707,50 @@ Public Class frmHierarchySelection
 
     End Sub
 
+    Private Sub SelectionSet_Click(sender As Object, e As EventArgs) Handles SelectionSet.Click
+
+        Dim curNode As TreeNode
+        With hryTreeView
+
+
+            For i As Integer = 1 To .Nodes.Count
+                curNode = .Nodes.Item(i - 1)
+                If Not curNode.Checked Then
+                    curNode.Checked = True
+                End If
+                If curNode.Nodes.Count > 0 Then
+                    Call Check(curNode)
+                End If
+            Next
+
+
+        End With
+    End Sub
+
+    ''' <summary>
+    ''' setzt alle Knoten im TreeView auf checked
+    ''' </summary>
+    ''' <param name="node"></param>
+    ''' <remarks></remarks>
+    Private Sub Check(ByRef node As TreeNode)
+        Dim curNode As TreeNode
+
+        With node
+
+            For i As Integer = 1 To .Nodes.Count
+                curNode = .Nodes.Item(i - 1)
+                If Not curNode.Checked Then
+                    curNode.Checked = True
+                End If
+                If curNode.Nodes.Count > 0 Then
+                    Call Check(curNode)
+                End If
+            Next
+
+        End With
+
+    End Sub
+
     ''' <summary>
     ''' expandiert den kompletten Baum
     ''' </summary>
@@ -870,5 +914,16 @@ Public Class frmHierarchySelection
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts, True)
 
+        ' geänderte Auswahl/Filterliste neu anzeigen
+        If Not (Me.menuOption = PTmenue.filterdefinieren) Then
+            filterDropbox.Items.Clear()
+            For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
+                filterDropbox.Items.Add(kvp.Key)
+            Next
+
+        End If
+
     End Sub
+
+ 
 End Class

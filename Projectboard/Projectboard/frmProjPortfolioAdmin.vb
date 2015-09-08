@@ -11,7 +11,14 @@ Public Class frmProjPortfolioAdmin
     Private projektHistorien As New clsProjektDBInfos
     Private stopRecursion As Boolean = False
     Private constellationName As String = ""
-    Private filterAnwenden As Boolean = awinSettings.applyFilter
+
+
+    Private selectedMilestones As New Collection
+    Private selectedPhases As New Collection
+    Private selectedCosts As New Collection
+    Private selectedRoles As New Collection
+    Private selectedBUs As New Collection
+    Private selectedTyps As New Collection
 
     ' wird an der aufrufenden Stelle gesetzt; steuert, was mit den ausgewählten ELementen geschieht
     Friend aKtionskennung As Integer
@@ -34,11 +41,18 @@ Public Class frmProjPortfolioAdmin
             Me.Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
         End If
 
-        Me.applyFilter.Checked = awinSettings.applyFilter
+
+        ' alle definierten Filter in ComboBox anzeigen
+        ' die Filter einlesen 
+        Call frmHryNameReadFilterVorlagen(PTmenue.filterdefinieren, filterDropbox)
+        For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
+            filterDropbox.Items.Add(kvp.Key)
+        Next
+
 
         stopRecursion = True
         Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
-                           Me.applyFilter.Checked)
+                           False)
         stopRecursion = False
 
         If aktuelleGesamtListe.liste.Count < 1 Then
@@ -265,7 +279,7 @@ Public Class frmProjPortfolioAdmin
 
     Private Sub TreeViewProjekte_BeforeExpand(sender As Object, e As TreeViewCancelEventArgs) Handles TreeViewProjekte.BeforeExpand
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim node As New TreeNode
         Dim nodeVariant As New TreeNode
         Dim nodeTimeStamp As New TreeNode
@@ -461,139 +475,139 @@ Public Class frmProjPortfolioAdmin
         Dim anzahlVarianten As Integer
         Dim anzahlTimeStamps As Integer
         Dim pname As String, variantName As String, timestamp As Date
-        Dim hproj As clsProjekt
+        'Dim hproj As clsProjekt
         Dim portfolioZeile As Integer = 2
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim requestTrash As New Request(awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim requestTrash As New Request(awinSettings.databaseURL, awinSettings.databaseName & "Trash", dbUsername, dbPasswort)
 
         Dim p As Integer, v As Integer, t As Integer
 
-        '
-        ' Aktivieren von Varianten erfordert überhaupt keinen Button; deswegen ist das jetzt hier nicht abgefragt 
-        '
-        If aKtionskennung = PTTvActions.definePortfolioSE Or _
-            aKtionskennung = PTTvActions.definePortfolioDB Then
-            '
-            ' Portfolios definieren 
-            '
-            ' prüfen, ob diese Constellation bereits existiert ..
+        ' ''ur:10.08.2015 '' ''
+        ' '' '' '' Aktivieren von Varianten erfordert überhaupt keinen Button; deswegen ist das jetzt hier nicht abgefragt 
+        ' '' '' ''
+        '' '' ''If aKtionskennung = PTTvActions.definePortfolioSE Or _
+        '' '' ''    aKtionskennung = PTTvActions.definePortfolioDB Then
+        '' '' ''    '
+        '' '' ''    ' Portfolios definieren 
+        '' '' ''    '
+        '' '' ''    ' prüfen, ob diese Constellation bereits existiert ..
 
 
-            If IsNothing(portfolioName.SelectedItem) Then
-                constellationName = portfolioName.Text
-            Else
-                constellationName = portfolioName.SelectedItem.ToString
-            End If
+        '' '' ''    If IsNothing(portfolioName.SelectedItem) Then
+        '' '' ''        constellationName = portfolioName.Text
+        '' '' ''    Else
+        '' '' ''        constellationName = portfolioName.SelectedItem.ToString
+        '' '' ''    End If
 
-            If constellationName.Length = 0 Then
-                Call MsgBox("bitte einen Namen angeben")
-                Exit Sub
-            End If
+        '' '' ''    If constellationName.Length = 0 Then
+        '' '' ''        Call MsgBox("bitte einen Namen angeben")
+        '' '' ''        Exit Sub
+        '' '' ''    End If
 
-            If projectConstellations.Contains(constellationName) Then
+        '' '' ''    If projectConstellations.Contains(constellationName) Then
 
-                Try
-                    projectConstellations.Remove(constellationName)
-                Catch ex As Exception
+        '' '' ''        Try
+        '' '' ''            projectConstellations.Remove(constellationName)
+        '' '' ''        Catch ex As Exception
 
-                End Try
+        '' '' ''        End Try
 
-            End If
+        '' '' ''    End If
 
-            Dim newC As New clsConstellation
-            With newC
-                .constellationName = constellationName
-            End With
-
-
-            With TreeViewProjekte
-                anzahlProjekte = .Nodes.Count
-
-                For p = 1 To anzahlProjekte
-
-                    projektNode = .Nodes.Item(p - 1)
-                    pname = projektNode.Text
-                    variantName = ""
-
-                    If projektNode.Checked Then
-                        ' das Projekt mit Variante "" in Konstellation eintragen
-
-                        hproj = request.retrieveOneProjectfromDB(pname, variantName)
-
-                        Dim newConstellationItem As New clsConstellationItem
-
-                        With newConstellationItem
-                            .projectName = pname
-                            .show = True
-                            .Start = hproj.startDate
-                            .variantName = hproj.variantName
-                            .zeile = portfolioZeile
-                            portfolioZeile = portfolioZeile + 1
-                        End With
-
-                        newC.Add(newConstellationItem)
+        '' '' ''    Dim newC As New clsConstellation
+        '' '' ''    With newC
+        '' '' ''        .constellationName = constellationName
+        '' '' ''    End With
 
 
-                        ' wenn es bereits ersetzt wurde, dann stimmt anzahlVarianten = ... 
-                    ElseIf projektNode.Tag = "X" Then
+        '' '' ''    With TreeViewProjekte
+        '' '' ''        anzahlProjekte = .Nodes.Count
 
-                        anzahlVarianten = projektNode.Nodes.Count
+        '' '' ''        For p = 1 To anzahlProjekte
 
-                        For v = 1 To anzahlVarianten
-                            variantNode = projektNode.Nodes.Item(v - 1)
-                            variantName = getVariantNameOf(variantNode.Text)
+        '' '' ''            projektNode = .Nodes.Item(p - 1)
+        '' '' ''            pname = projektNode.Text
+        '' '' ''            variantName = ""
 
+        '' '' ''            If projektNode.Checked Then
+        '' '' ''                ' das Projekt mit Variante "" in Konstellation eintragen
 
-                            If variantNode.Checked Then
+        '' '' ''                hproj = request.retrieveOneProjectfromDB(pname, variantName)
 
-                                hproj = request.retrieveOneProjectfromDB(pname, variantName)
+        '' '' ''                Dim newConstellationItem As New clsConstellationItem
 
-                                Dim newConstellationItem As New clsConstellationItem
+        '' '' ''                With newConstellationItem
+        '' '' ''                    .projectName = pname
+        '' '' ''                    .show = True
+        '' '' ''                    .Start = hproj.startDate
+        '' '' ''                    .variantName = hproj.variantName
+        '' '' ''                    .zeile = portfolioZeile
+        '' '' ''                    portfolioZeile = portfolioZeile + 1
+        '' '' ''                End With
 
-                                With newConstellationItem
-                                    .projectName = pname
-                                    .show = True
-                                    .Start = hproj.startDate
-                                    .variantName = hproj.variantName
-                                    .zeile = portfolioZeile
-                                    portfolioZeile = portfolioZeile + 1
-                                End With
-
-                                newC.Add(newConstellationItem)
-
-
-
-                            End If
-
-                        Next
-                    End If
-
-                Next
+        '' '' ''                newC.Add(newConstellationItem)
 
 
-                Try
-                    projectConstellations.Add(newC)
-                    Call MsgBox("Portfolio " & constellationName & " gespeichert ...")
-                Catch ex As Exception
-                    Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
-                End Try
+        '' '' ''                ' wenn es bereits ersetzt wurde, dann stimmt anzahlVarianten = ... 
+        '' '' ''            ElseIf projektNode.Tag = "X" Then
 
-                ' Portfolio in die Datenbank speichern, falls Aktionskennung 
-                If aKtionskennung = PTTvActions.definePortfolioDB Then
-                    If request.pingMongoDb() Then
-                        If Not request.storeConstellationToDB(newC) Then
-                            Call MsgBox("Fehler beim Speichern der ProjektConstellation '" & newC.constellationName & "' in die Datenbank")
-                        End If
-                    Else
-                        Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
-                    End If
-                End If
+        '' '' ''                anzahlVarianten = projektNode.Nodes.Count
+
+        '' '' ''                For v = 1 To anzahlVarianten
+        '' '' ''                    variantNode = projektNode.Nodes.Item(v - 1)
+        '' '' ''                    variantName = getVariantNameOf(variantNode.Text)
 
 
-            End With
+        '' '' ''                    If variantNode.Checked Then
 
-        ElseIf aKtionskennung = PTTvActions.delFromDB Or _
+        '' '' ''                        hproj = request.retrieveOneProjectfromDB(pname, variantName)
+
+        '' '' ''                        Dim newConstellationItem As New clsConstellationItem
+
+        '' '' ''                        With newConstellationItem
+        '' '' ''                            .projectName = pname
+        '' '' ''                            .show = True
+        '' '' ''                            .Start = hproj.startDate
+        '' '' ''                            .variantName = hproj.variantName
+        '' '' ''                            .zeile = portfolioZeile
+        '' '' ''                            portfolioZeile = portfolioZeile + 1
+        '' '' ''                        End With
+
+        '' '' ''                        newC.Add(newConstellationItem)
+
+
+
+        '' '' ''                    End If
+
+        '' '' ''                Next
+        '' '' ''            End If
+
+        '' '' ''        Next
+
+
+        '' '' ''        Try
+        '' '' ''            projectConstellations.Add(newC)
+        '' '' ''            Call MsgBox("Portfolio " & constellationName & " gespeichert ...")
+        '' '' ''        Catch ex As Exception
+        '' '' ''            Call MsgBox("Fehler bei Add projectConstellations in awinStoreConstellations")
+        '' '' ''        End Try
+
+        '' '' ''        ' Portfolio in die Datenbank speichern, falls Aktionskennung 
+        '' '' ''        If aKtionskennung = PTTvActions.definePortfolioDB Then
+        '' '' ''            If request.pingMongoDb() Then
+        '' '' ''                If Not request.storeConstellationToDB(newC) Then
+        '' '' ''                    Call MsgBox("Fehler beim Speichern der ProjektConstellation '" & newC.constellationName & "' in die Datenbank")
+        '' '' ''                End If
+        '' '' ''            Else
+        '' '' ''                Call MsgBox("Datenbank-Verbindung ist unterbrochen!")
+        '' '' ''            End If
+        '' '' ''        End If
+
+
+        '' '' ''    End With
+
+        If aKtionskennung = PTTvActions.delFromDB Or _
             aKtionskennung = PTTvActions.delFromSession Or _
             aKtionskennung = PTTvActions.deleteV Or _
             aKtionskennung = PTTvActions.loadPV Then
@@ -742,27 +756,51 @@ Public Class frmProjPortfolioAdmin
 
     End Sub
 
-    Private Sub applyFilter_CheckedChanged(sender As Object, e As EventArgs) Handles applyFilter.CheckedChanged
+    ' 'ur: 11.08.2015: PT-103' ''Private Sub applyFilter_CheckedChanged(sender As Object, e As EventArgs)
 
-        ' der TreeView muss neu aufgebaut werden 
+    ' '' ''    ' der TreeView muss neu aufgebaut werden 
+
+    ' '' ''    stopRecursion = True
+    ' '' ''    Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
+    ' '' ''                       Me.applyFilter.Checked)
+    ' '' ''    stopRecursion = False
+
+
+    ' '' ''End Sub
+
+    ' ''ur: 11.08.2015: PT-103 '' ''' <summary>
+    ' '' '' ''' ruft die Eingabe Maske zum Definieren des Filters auf 
+    ' '' '' ''' </summary>
+    ' '' '' ''' <param name="sender"></param>
+    ' '' '' ''' <param name="e"></param>
+    ' '' '' ''' <remarks></remarks>
+    ' '' ''Private Sub defineFilter_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles defineFilter.LinkClicked
+
+    ' '' ''    Call defineFilterDB()
+
+    ' '' ''End Sub
+
+    Private Sub filterDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles filterDropbox.SelectedIndexChanged
+
+        Dim fName As String = filterDropbox.SelectedItem.ToString
+        ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
+
+        ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
+        Call retrieveSelections(fName, PTmenue.filterAuswahl, selectedBUs, selectedTyps, _
+                                selectedPhases, selectedMilestones, _
+                                selectedRoles, selectedCosts)
+        ' und als "Last" gespeichert
+        Call storeFilter("Last", PTmenue.filterAuswahl, selectedBUs, selectedTyps, _
+                                selectedPhases, selectedMilestones, _
+                                selectedRoles, selectedCosts, False)
 
         stopRecursion = True
         Call buildTreeview(projektHistorien, TreeViewProjekte, aktuelleGesamtListe, aKtionskennung, _
-                           Me.applyFilter.Checked)
+                           True)
         stopRecursion = False
 
-
-    End Sub
-
-    ''' <summary>
-    ''' ruft die Eingabe Maske zum Definieren des Filters auf 
-    ''' </summary>
-    ''' <param name="sender"></param>
-    ''' <param name="e"></param>
-    ''' <remarks></remarks>
-    Private Sub defineFilter_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles defineFilter.LinkClicked
-
-        Call defineFilterDB()
+        '  Call MsgBox("in filterDropbox")
+        
 
     End Sub
 End Class

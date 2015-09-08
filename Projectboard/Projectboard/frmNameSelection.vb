@@ -1285,10 +1285,14 @@ Public Class frmNameSelection
                                                    selectedRoles, selectedCosts, False)
 
         ' geänderte Auswahl/Filterliste neu anzeigen
-        filterDropbox.Items.Clear()
-        For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
-            filterDropbox.Items.Add(kvp.Key)
-        Next
+        If Not (Me.menuOption = PTmenue.filterdefinieren) Then
+            filterDropbox.Items.Clear()
+            For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
+                filterDropbox.Items.Add(kvp.Key)
+            Next
+
+        End If
+
 
     End Sub
 End Class
