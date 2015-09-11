@@ -26,6 +26,8 @@ Public Class frmStoreCockpit
 
         DialogResult = System.Windows.Forms.DialogResult.OK
         MyBase.Close()
+
+
     End Sub
 
     Private Sub frmStoreCockpit_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -87,6 +89,11 @@ Public Class frmStoreCockpit
     End Sub
 
     Private Sub ComboBox1_TextChanged(sender As Object, e As EventArgs) Handles ComboBox1.TextChanged
+        If ComboBox1.Text.Length <= 31 Then
+           
+        Else
+            Call MsgBox("Länge des CockpitNamens auf 30 Zeichen begrenzt")
+        End If
         'Call MsgBox("Text changed")
     End Sub
 End Class

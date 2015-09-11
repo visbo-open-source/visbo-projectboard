@@ -348,7 +348,7 @@ Public Module awinDiagrams
             If Not found Then
 
 
-                With CType(appInstance.Charts.Add, Excel.Chart)
+                With appInstance.Charts.Add
 
 
                     If Not isCockpitChart Then
@@ -493,7 +493,7 @@ Public Module awinDiagrams
 
                                 ' Änderung 8.10.14 die Zahl der MEilensteine insgesamt anzeigen 
                                 ' nicht aufgeschlüsselt nach welcher MEilenstein , welche Farbe
-                                
+
                                 For i = 0 To bis - von
                                     datenreihe(i) = 0
                                     For c = 0 To 3
