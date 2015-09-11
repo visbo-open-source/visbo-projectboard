@@ -4793,8 +4793,10 @@ Public Module awinGeneralModules
                 If requestTrash.storeProjectToDB(kvp.Value) Then
                 Else
                     ' es ging etwas schief
-                    Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
-                                kvp.Value.name & ", " & kvp.Value.timeStamp.ToShortDateString)
+
+                    '' ''ur: 08.09.2015: für Telair, da evt. keine TrashDB 
+                    '' '' '' ''Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
+                    '' '' '' ''            kvp.Value.name & ", " & kvp.Value.timeStamp.ToShortDateString)
                 End If
             Next
 
@@ -4925,8 +4927,10 @@ Public Module awinGeneralModules
                 End If
             Else
                 ' es ging etwas schief
-                Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
-                            hproj.name & ", " & hproj.timeStamp.ToShortDateString)
+
+                '' ''ur: 08.09.2015: für Telair, da evt. keine TrashDB 
+                '' '' '' ''Call MsgBox("Fehler beim Speichern im Papierkorb:" & vbLf & _
+                '' '' '' ''            hproj.name & ", " & hproj.timeStamp.ToShortDateString)
             End If
 
         End If

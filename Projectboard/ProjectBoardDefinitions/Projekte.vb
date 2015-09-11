@@ -134,7 +134,7 @@ Public Module Projekte
                 Throw New ArgumentException("Diagramm wird schon angezeigt ...")
             Else
 
-                With CType(appInstance.Charts.Add, Excel.Chart)
+                With appInstance.Charts.Add
                     ' remove extra series
                     Do Until CType(.SeriesCollection, Excel.SeriesCollection).Count = 0
                         CType(.SeriesCollection(1), Excel.Series).Delete()
@@ -408,7 +408,7 @@ Public Module Projekte
                 Throw New ArgumentException("Diagramm wird schon angezeigt ...")
             Else
 
-                With CType(appInstance.Charts.Add, Excel.Chart)
+                With appInstance.Charts.Add
                     ' remove extra series
                     Do Until CType(.SeriesCollection, Excel.SeriesCollection).Count = 0
                         CType(.SeriesCollection(1), Excel.Series).Delete()
@@ -671,7 +671,7 @@ Public Module Projekte
                 MsgBox(" Diagramm wird bereits angezeigt ...")
             Else
 
-                With CType(appInstance.Charts.Add, Excel.Chart)
+                With appInstance.Charts.Add
                     ' remove extra series
                     Do Until CType(.SeriesCollection, Excel.SeriesCollection).Count = 0
                         CType(.SeriesCollection(1), Excel.Series).Delete()
@@ -938,7 +938,7 @@ Public Module Projekte
                 repObj = CType(.ChartObjects(i), Excel.ChartObject)
             Else
 
-                With CType(appInstance.Charts.Add, Excel.Chart)
+                With appInstance.Charts.Add
                     ' remove extra series
                     Do Until CType(.SeriesCollection, Excel.SeriesCollection).Count = 0
                         CType(.SeriesCollection(1), Excel.Series).Delete()
@@ -1153,8 +1153,6 @@ Public Module Projekte
         Dim tmpcollection As New Collection
         Dim kennung As String = " "
         Dim maxscale As Double
-
-
 
 
         Dim pname As String = hproj.name
@@ -7487,7 +7485,7 @@ Public Module Projekte
                             xlsCockpits.Worksheets.Application.DisplayAlerts = True
                         End If
                     Catch ex As Exception
-
+                   
                     End Try
                     'i = 1
                     'While i <= xlsCockpits.Worksheets.Count And Not wsfound

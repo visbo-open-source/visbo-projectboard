@@ -2268,7 +2268,6 @@ Imports System.Drawing
                         .rdbTyp.Visible = False
                         .pictureTyp.Visible = False
 
-
                         .einstellungen.Visible = False
 
                         .chkbxOneChart.Checked = False
@@ -2277,6 +2276,7 @@ Imports System.Drawing
                         .repVorlagenDropbox.Visible = False
                         .labelPPTVorlage.Visible = False
 
+                        .auswSpeichern.Visible = False
                  
                         returnValue = .ShowDialog()
                     End With

@@ -113,7 +113,7 @@ Public Class frmNameSelection
             For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
                 filterDropbox.Items.Add(kvp.Key)
             Next
-
+            Me.rdbPhases.Checked = True
 
         ElseIf Me.menuOption = PTmenue.meilensteinTrendanalyse Then
             Me.rdbMilestones.Checked = True
@@ -128,10 +128,10 @@ Public Class frmNameSelection
             For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
                 filterDropbox.Items.Add(kvp.Key)
             Next
-            'Me.rdbPhases.Checked = True
+            Me.rdbPhases.Checked = True
         End If
 
-        Me.rdbPhases.Checked = True
+
 
     End Sub
 

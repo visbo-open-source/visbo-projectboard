@@ -4396,7 +4396,7 @@ Public Module testModule
                 ReDim tempArray(anzBubbles - 1)
 
 
-                With CType(appInstance.Charts.Add, Excel.Chart)
+                With appInstance.Charts.Add
 
                     CType(.SeriesCollection, Excel.SeriesCollection).NewSeries()
                     CType(.SeriesCollection, Excel.SeriesCollection).Item(1).Name = diagramTitle
@@ -7499,7 +7499,7 @@ Public Module testModule
 
             ReDim tempArray(anzBubbles - 1)
 
-            With CType(appInstance.Charts.Add, Excel.Chart)
+            With appInstance.Charts.Add
 
                 CType(.SeriesCollection, Excel.SeriesCollection).NewSeries()
                 CType(.SeriesCollection, Excel.SeriesCollection).Item(1).Name = diagramTitle
