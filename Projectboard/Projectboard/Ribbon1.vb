@@ -228,6 +228,7 @@ Imports System.Drawing
     Sub PT5StoreProjects(control As IRibbonControl)
 
         Dim storedProj As Integer = 0
+        Dim msgresult As Integer
 
         Call projektTafelInit()
 
@@ -238,9 +239,9 @@ Imports System.Drawing
                 ' in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
                 If storedProj = 0 Then
-                    Call MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte speichern?", MsgBoxStyle.OkCancel)
+                    msgresult = MsgBox("Es wurde kein Projekt selektiert. " & vbLf & "Alle Projekte speichern?", MsgBoxStyle.OkCancel)
 
-                    If MsgBoxResult.Ok = vbOK Then
+                    If msgresult = MsgBoxResult.Ok Then
                         Call StoreAllProjectsinDB()
                     End If
                 Else
