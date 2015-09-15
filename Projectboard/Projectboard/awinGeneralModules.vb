@@ -1859,8 +1859,10 @@ Public Module awinGeneralModules
             End If
             ' ''prj.FileOpen(Name:="\\KOYTEK-NAS\backup\Ute\VISBO\MS Project Beispiele\ute.mpp", _
             ' ''             ReadOnly:=True, FormatID:="MSProject.MPP")
+
             prj.FileOpen(Name:=filename, _
                         ReadOnly:=True, FormatID:="MSProject.MPP")
+
 
 
             Dim anzProj As Integer = prj.Projects.Count
@@ -1883,7 +1885,7 @@ Public Module awinGeneralModules
             msproj = prj.Projects.Item(anzProj)
 
 
-            hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.Start), CDate(msproj.Finish))
+            hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.ProjectStart), CDate(msproj.ProjectStart))
 
             Dim ProjektdauerIndays As Integer = calcDauerIndays(hproj.startDate, CDate(msproj.Finish))
             Dim startOffset As Long = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(0))
@@ -2242,7 +2244,11 @@ Public Module awinGeneralModules
                         msDef.shortName = ""
                         msDef.UID = MilestoneDefinitions.Count + 1
                         'MilestoneDefinitions.Add(msDef)
-                        missingMilestoneDefinitions.Add(msDef)
+                        Try
+                            missingMilestoneDefinitions.Add(msDef)
+                        Catch ex As Exception
+                        End Try
+
 
                     End If
 
