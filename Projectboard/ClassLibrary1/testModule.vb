@@ -8626,7 +8626,7 @@ Public Module testModule
 
                 ' ur:23.03.2015: Test darauf, ob der Rest der Seite für dieses Projekt ausreicht'
                 If awinSettings.mppExtendedMode Then
-                    Dim neededSpace As Double = hproj.calcNeededLines(selectedPhases, True, Not awinSettings.mppShowAllIfOne) * zeilenhoehe
+                    Dim neededSpace As Double = hproj.calcNeededLines(selectedPhases, selectedMilestones, True, Not awinSettings.mppShowAllIfOne) * zeilenhoehe
                     If neededSpace > drawingAreaBottom - drawingAreaTop Then
 
                         ' Projekt kann nicht gezeichnet werden, da nicht alle Phasen auf eine Seite passen, 
@@ -11014,7 +11014,7 @@ Public Module testModule
 
                     End Try
 
-                    anzZeilen = hproj.calcNeededLines(selectedPhases, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
+                    anzZeilen = hproj.calcNeededLines(selectedPhases, selectedMilestones, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
                     maxZeilen = System.Math.Max(maxZeilen, anzZeilen)
                     gesamtAnzZeilen = gesamtAnzZeilen + anzZeilen
 

@@ -16503,7 +16503,12 @@ Public Module Projekte
 
         Else
             Try
-                anzahlElements = projectShape.GroupItems.Count
+                Try
+                    anzahlElements = projectShape.GroupItems.Count
+                Catch ex As Exception
+                    Call MsgBox("ProjektShape.GroupItems.Count kann nicht abgerufen werden")
+                End Try
+
                 ReDim arrayOfNames(anzahlElements - 1)
 
                 shapeSammlung = projectShape.Ungroup()
