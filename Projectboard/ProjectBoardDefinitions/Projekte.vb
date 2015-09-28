@@ -10526,7 +10526,15 @@ Public Module Projekte
                 For i = 1 To hproj.CountPhases
                     cphase = hproj.getPhase(i)
                     phasenNameID = cphase.nameID
-                    phaseShapeName = projectboardShapes.calcPhaseShapeName(pname, phasenNameID) & "#" & i.ToString
+
+                    '''' tk/ur: 28.9.15 
+                    '''' damit die Phase (1) gefunden werden kann.  muss bei Phase(1) der Name anders zusammengesetzt sein als bei den anderen 
+                    If phasenNameID = rootPhaseName Then
+                        phaseShapeName = projectboardShapes.calcPhaseShapeName(pname, phasenNameID)
+                    Else
+                        phaseShapeName = projectboardShapes.calcPhaseShapeName(pname, phasenNameID) & "#" & i.ToString
+                    End If
+
                     'phaseShapeName = pname & "#" & phasenName & "#" & i.ToString
 
                     Try
@@ -18154,7 +18162,13 @@ Public Module Projekte
 
         ElseIf type = PTshty.phaseE Or type = PTshty.phaseN Or type = PTshty.phase1 Then
 
-            tmpName = shpNameParts(1)
+            ' ergänzt tk/28.9.15 wg Fehler Beschriften
+            If shpNameParts.Length > 1 Then
+                tmpName = shpNameParts(1)
+            Else
+                tmpName = rootPhaseName
+            End If
+
 
         ElseIf type = PTshty.milestoneE Or type = PTshty.milestoneN Then
 
