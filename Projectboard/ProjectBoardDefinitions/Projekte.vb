@@ -17557,6 +17557,7 @@ Public Module Projekte
         Dim newProj As clsProjekt
         Dim hproj As clsProjekt
         Dim key As String = calcProjektKey(pname, newVariant)
+
         'Dim tfzeile As Integer = 0
         'Dim projectshape As Excel.ShapeRange
 
@@ -17589,6 +17590,10 @@ Public Module Projekte
 
                 tfzeile = hproj.tfZeile
 
+                ' tk/ur : sicherstellen, dass die neue Variante in der gleichen Art(extendedView) angezeigt wird wie die 
+                ' bisherige Variante 
+                newProj.extendedView = hproj.extendedView
+
                 ' die Darstellung in der Projekt-Tafel löschen
                 Call clearProjektinPlantafel(pname)
 
@@ -17602,6 +17607,7 @@ Public Module Projekte
 
             ' die  Variante wird aufgenommen
             ShowProjekte.Add(newProj)
+
 
             ' neu zeichnen des Projekts 
             Dim tmpCollection As New Collection
