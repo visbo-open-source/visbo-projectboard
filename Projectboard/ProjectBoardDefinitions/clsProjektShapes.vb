@@ -178,6 +178,8 @@ Public Class clsProjektShapes
                                 ''''geändert ur: 18.09.2015: Beim Erzeugen der Variante findet die ZeicheProjektinPlantafel das Shape der RootPhase nicht
                                 ''''.Name = projectboardShapes.calcPhaseShapeName(hproj.name, hproj.getPhase(1).nameID)
 
+                                '''' tk/ur: wieder reingenommen, weil Beschriften dadurch nicht mehr funktioniert hat 
+                                .Name = projectboardShapes.calcPhaseShapeName(hproj.name, hproj.getPhase(1).nameID)
 
                             End With
 
