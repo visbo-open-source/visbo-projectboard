@@ -7345,7 +7345,7 @@ Public Module Projekte
         enableOnUpdate = False
 
         hproj = ShowProjekte.getProject(pName)
-        anzahlZeilen = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
+        anzahlZeilen = hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
 
 
 
@@ -10322,7 +10322,7 @@ Public Module Projekte
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
-                    zeile = zeile + hproj.calcNeededLines(tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
+                    zeile = zeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
 
                 Catch ex As Exception
 
@@ -10390,7 +10390,7 @@ Public Module Projekte
                     ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
-                    curzeile = lastzeile + hproj.calcNeededLines(tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
+                    curzeile = lastzeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
 
 
                     If curZeile > max Then

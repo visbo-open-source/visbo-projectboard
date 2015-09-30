@@ -2689,128 +2689,130 @@ Public Class clsProjekt
 
 
     End Sub
+    ' '' '' '' ''' <summary>
+    ' '' '' '' ''' gibt die Anzahl Zeilen zurück, die das aktuelle Projekt im "Extended Drawing Mode" benötigt 
+    ' '' '' '' ''' </summary>
+    ' '' '' '' ''' <returns></returns>
+    ' '' '' '' ''' <remarks></remarks>
+    ' '' '' ''Public ReadOnly Property calcNeededLines(ByVal selectedPhases As Collection, ByVal extended As Boolean, ByVal considerTimespace As Boolean) As Integer
+    ' '' '' ''    Get
+
+    ' '' '' ''        Dim phasenName As String
+    ' '' '' ''        Dim zeilenOffset As Integer = 1
+    ' '' '' ''        Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
+    ' '' '' ''        Dim tmpValue As Integer
+
+    ' '' '' ''        Dim selPhaseName As String = ""
+    ' '' '' ''        Dim breadcrumb As String = ""
+
+
+
+    ' '' '' ''        If extended And selectedPhases.Count > 0 Then ' extended Sicht bzw. Report mit selektierte Phasen
+
+    ' '' '' ''            Dim anzPhases As Integer = 0
+    ' '' '' ''            Dim cphase As clsPhase = Nothing
+
+    ' '' '' ''            For i = 1 To Me.CountPhases ' Schleife über alle Phasen eines Projektes
+    ' '' '' ''                Try
+    ' '' '' ''                    cphase = Me.getPhase(i)
+    ' '' '' ''                    If Not IsNothing(cphase) Then
+
+    ' '' '' ''                        ' herausfinden, ob cphase in den selektierten Phasen enthalten ist
+    ' '' '' ''                        Dim found As Boolean = False
+    ' '' '' ''                        Dim j As Integer = 1
+    ' '' '' ''                        While j <= selectedPhases.Count And Not found
+
+    ' '' '' ''                            Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb)
+
+    ' '' '' ''                            If cphase.name = selPhaseName Then
+    ' '' '' ''                                found = True
+    ' '' '' ''                            End If
+    ' '' '' ''                            j = j + 1
+    ' '' '' ''                        End While
+
+    ' '' '' ''                        If found Then           ' cphase ist eine der selektierten Phasen
+
+    ' '' '' ''                            If Not considerTimespace _
+    ' '' '' ''                                Or _
+    ' '' '' ''                                (considerTimespace And phaseWithinTimeFrame(Me.Start, cphase.relStart, cphase.relEnde, showRangeLeft, showRangeRight)) Then
+
+    ' '' '' ''                                With cphase
+
+    ' '' '' ''                                    'phasenName = .name
+    ' '' '' ''                                    If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+    ' '' '' ''                                        zeilenOffset = zeilenOffset + 1
+    ' '' '' ''                                        lastEndDate = StartofCalendar.AddDays(-1)
+    ' '' '' ''                                    End If
+
+    ' '' '' ''                                    If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+    ' '' '' ''                                        lastEndDate = .getEndDate
+    ' '' '' ''                                    End If
+
+    ' '' '' ''                                End With
+    ' '' '' ''                                anzPhases = anzPhases + 1
+    ' '' '' ''                            Else
+
+    ' '' '' ''                            End If
+    ' '' '' ''                        End If
+    ' '' '' ''                    End If
+
+    ' '' '' ''                Catch ex As Exception
+
+    ' '' '' ''                End Try
+
+
+
+    ' '' '' ''            Next i      ' nächste Phase im Projekt betrachten
+
+
+
+    ' '' '' ''            If anzPhases > 1 Then
+    ' '' '' ''                tmpValue = zeilenOffset + 1     'ur: 17.04.2015:  +1 für die übrigen Meilensteine
+    ' '' '' ''            Else
+    ' '' '' ''                tmpValue = 1 + 1                ' ur: 17.04.2015: +1 für die übrigen Meilensteine
+    ' '' '' ''            End If
+
+
+    ' '' '' ''        ElseIf extended And selectedPhases.Count < 1 Then   ' extended Sicht bzw. Report ohne selektierte Phasen
+
+
+    ' '' '' ''            For i = 1 To Me.CountPhases ' Schleife über alle Phasen eines Projektes
+
+    ' '' '' ''                With Me.getPhase(i)
+
+    ' '' '' ''                    phasenName = .name
+    ' '' '' ''                    If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+    ' '' '' ''                        zeilenOffset = zeilenOffset + 1
+    ' '' '' ''                        lastEndDate = StartofCalendar.AddDays(-1)
+    ' '' '' ''                    End If
+
+    ' '' '' ''                    If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+    ' '' '' ''                        lastEndDate = .getEndDate
+    ' '' '' ''                    End If
+
+    ' '' '' ''                End With
+    ' '' '' ''            Next
+
+    ' '' '' ''            If Me.CountPhases > 1 Then
+    ' '' '' ''                tmpValue = zeilenOffset + 1      ' ur: 17.04.2015: +1 für die übrigen Meilensteine
+    ' '' '' ''            Else
+    ' '' '' ''                tmpValue = 1 + 1                 ' ur: 17.04.2015: +1 für die übrigen Meilensteine
+    ' '' '' ''            End If
+
+    ' '' '' ''        Else    ' keine extended Sicht (bzw. Report) 
+    ' '' '' ''            tmpValue = 1
+    ' '' '' ''        End If
+
+
+    ' '' '' ''        calcNeededLines = tmpValue
+
+    ' '' '' ''    End Get
+
+    ' '' '' ''End Property
+
     ''' <summary>
     ''' gibt die Anzahl Zeilen zurück, die das aktuelle Projekt im "Extended Drawing Mode" benötigt 
-    ''' </summary>
-    ''' <returns></returns>
-    ''' <remarks></remarks>
-    Public ReadOnly Property calcNeededLines(ByVal selectedPhases As Collection, ByVal extended As Boolean, ByVal considerTimespace As Boolean) As Integer
-        Get
-
-            Dim phasenName As String
-            Dim zeilenOffset As Integer = 1
-            Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
-            Dim tmpValue As Integer
-
-            Dim selPhaseName As String = ""
-            Dim breadcrumb As String = ""
-
-
-
-            If extended And selectedPhases.Count > 0 Then ' extended Sicht bzw. Report mit selektierte Phasen
-
-                Dim anzPhases As Integer = 0
-                Dim cphase As clsPhase = Nothing
-
-                For i = 1 To Me.CountPhases ' Schleife über alle Phasen eines Projektes
-                    Try
-                        cphase = Me.getPhase(i)
-                        If Not IsNothing(cphase) Then
-
-                            ' herausfinden, ob cphase in den selektierten Phasen enthalten ist
-                            Dim found As Boolean = False
-                            Dim j As Integer = 1
-                            While j <= selectedPhases.Count And Not found
-
-                                Call splitHryFullnameTo2(CStr(selectedPhases(j)), selPhaseName, breadcrumb)
-
-                                If cphase.name = selPhaseName Then
-                                    found = True
-                                End If
-                                j = j + 1
-                            End While
-
-                            If found Then           ' cphase ist eine der selektierten Phasen
-
-                                If Not considerTimespace _
-                                    Or _
-                                    (considerTimespace And phaseWithinTimeFrame(Me.Start, cphase.relStart, cphase.relEnde, showRangeLeft, showRangeRight)) Then
-
-                                    With cphase
-
-                                        'phasenName = .name
-                                        If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
-                                            zeilenOffset = zeilenOffset + 1
-                                            lastEndDate = StartofCalendar.AddDays(-1)
-                                        End If
-
-                                        If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
-                                            lastEndDate = .getEndDate
-                                        End If
-
-                                    End With
-                                    anzPhases = anzPhases + 1
-                                Else
-
-                                End If
-                            End If
-                        End If
-
-                    Catch ex As Exception
-
-                    End Try
-
-
-
-                Next i      ' nächste Phase im Projekt betrachten
-
-
-
-                If anzPhases > 1 Then
-                    tmpValue = zeilenOffset + 1     'ur: 17.04.2015:  +1 für die übrigen Meilensteine
-                Else
-                    tmpValue = 1 + 1                ' ur: 17.04.2015: +1 für die übrigen Meilensteine
-                End If
-
-
-            ElseIf extended And selectedPhases.Count < 1 Then   ' extended Sicht bzw. Report ohne selektierte Phasen
-
-
-                For i = 1 To Me.CountPhases ' Schleife über alle Phasen eines Projektes
-
-                    With Me.getPhase(i)
-
-                        phasenName = .name
-                        If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
-                            zeilenOffset = zeilenOffset + 1
-                            lastEndDate = StartofCalendar.AddDays(-1)
-                        End If
-
-                        If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
-                            lastEndDate = .getEndDate
-                        End If
-
-                    End With
-                Next
-
-                If Me.CountPhases > 1 Then
-                    tmpValue = zeilenOffset + 1      ' ur: 17.04.2015: +1 für die übrigen Meilensteine
-                Else
-                    tmpValue = 1 + 1                 ' ur: 17.04.2015: +1 für die übrigen Meilensteine
-                End If
-
-            Else    ' keine extended Sicht (bzw. Report) 
-                tmpValue = 1
-            End If
-
-
-            calcNeededLines = tmpValue
-
-        End Get
-
-    End Property
-    ''' <summary>
-    ''' Neu: im extendedMode wird noch nachsehen, ob Meilensteine einen Parent oder Parent/Parent ... haben
+    ''' Neu: im extendedMode wird noch nachsehen, ob selektierte Meilensteine einen Parent oder Parent/Parent ... haben
     ''' </summary>
     ''' <param name="selectedPhases"></param>
     ''' <param name="selectedMilestones"></param>
@@ -2889,16 +2891,25 @@ Public Class clsProjekt
 
                 Next i      ' nächste Phase im Projekt betrachten
 
-                Dim drawliste As New SortedList(Of String, SortedList)
-                Dim addLines As Integer
+                ' ur: 28.09.2015
+                ' Bestimmen, zu welcher Phase die selektieren Meilenstein jeweils gezeichnet werden sollen und mitzählen, wieviele zusätzliche
+                ' Zeilen benötigt werden dazu.
 
-                Call selMilestonesToselPhase(selectedPhases, selectedMilestones, False, addLines, drawliste)
+                Dim drawliste As New SortedList(Of String, SortedList)
+                Dim addLines As Integer = 1
+
+                If selectedMilestones.Count > 0 Then
+
+
+                    Call selMilestonesToselPhase(selectedPhases, selectedMilestones, False, addLines, drawliste)
+
+                End If
 
 
                 If anzPhases > 1 Then
-                    tmpValue = zeilenOffset + addLines    'ur: 17.04.2015:  +1 für die übrigen Meilensteine
+                    tmpValue = zeilenOffset + addLines    'ur: 17.04.2015:  +addlines für die übrigen Meilensteine
                 Else
-                    tmpValue = 1 + addLines              ' ur: 17.04.2015: +1 für die übrigen Meilensteine
+                    tmpValue = 1 + addLines              ' ur: 17.04.2015: + für die übrigen Meilensteine
                 End If
 
 
@@ -2923,9 +2934,9 @@ Public Class clsProjekt
                 Next
 
                 If Me.CountPhases > 1 Then
-                    tmpValue = zeilenOffset + 1      ' ur: 17.04.2015: +1 für die übrigen Meilensteine
+                    tmpValue = zeilenOffset      ' ur: 17.04.2015: +1 für die übrigen Meilensteine
                 Else
-                    tmpValue = 1 + 1                 ' ur: 17.04.2015: +1 für die übrigen Meilensteine
+                    tmpValue = 1                ' ur: 17.04.2015: +1 für die übrigen Meilensteine
                 End If
 
             Else    ' keine extended Sicht (bzw. Report) 
@@ -2949,7 +2960,8 @@ Public Class clsProjekt
     ''' <param name="anzLines"></param>
     ''' <param name="drawMStoPhaseListe"></param>
     ''' <remarks></remarks>
-    Public Sub selMilestonesToselPhase(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal considerTimespace As Boolean, ByRef anzLines As Integer, ByRef drawMStoPhaseListe As SortedList(Of String, SortedList))
+    Public Sub selMilestonesToselPhase(ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal considerTimespace As Boolean, _
+                                       ByRef anzLines As Integer, ByRef drawMStoPhaseListe As SortedList(Of String, SortedList))
 
 
         If selectedMilestones.Count > 0 Then
@@ -2997,7 +3009,8 @@ Public Class clsProjekt
                         If Not found Then
                             x = Me.hierarchy.getParentIDOfID(x) 'Parent eine Stufe höher finden
                             If x = Nothing Or x = "" Then
-                                Call MsgBox("x =" & x)
+                                x = rootPhaseName
+                                found = True
                             End If
                         End If
 
@@ -3012,6 +3025,7 @@ Public Class clsProjekt
 
                     If Not listMS.Contains(msnameID) Then
                         listMS.Add(msnameID, msnameID)
+
                     End If
 
                 Next j
