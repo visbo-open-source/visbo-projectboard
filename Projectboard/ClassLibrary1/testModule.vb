@@ -10655,6 +10655,9 @@ Public Module testModule
                                              ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs, _
                                              ByVal isMultiprojektSicht As Boolean, ByVal projMitVariants As clsProjekt)
 
+        ' ur:5.10.2015: ExtendedMode macht nur Sinn, wenn mindestens 1 Phase selektiert wurde. deshalb diese Code-Zeile
+        awinSettings.mppExtendedMode = awinSettings.mppExtendedMode And (selectedPhases.Count > 0)
+
         ' Vereinbarungen für Multiprojekt Sicht Erzeugung 
         Dim multiprojektContainerShape As pptNS.Shape = Nothing
 
