@@ -1568,7 +1568,7 @@ Public Module Module1
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
                 With kvp.Value
-                    If zeile >= .tfZeile And zeile < .tfZeile + kvp.Value.calcNeededLines(tmpCollection, awinSettings.drawphases Or kvp.Value.extendedView, False) Then
+                    If zeile >= .tfZeile And zeile < .tfZeile + kvp.Value.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or kvp.Value.extendedView, False) Then
                         istfrei = False
                         Exit For
                     End If
@@ -1625,7 +1625,7 @@ Public Module Module1
 
         Try
             Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
-            anzahlzeilen = hproj.calcNeededLines(tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
+            anzahlzeilen = hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
 
             ' Konsistenzbedingung prüfen ... 
             If zeile < 2 Then
