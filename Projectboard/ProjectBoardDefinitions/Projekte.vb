@@ -7345,7 +7345,7 @@ Public Module Projekte
         enableOnUpdate = False
 
         hproj = ShowProjekte.getProject(pName)
-        anzahlZeilen = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
+        anzahlZeilen = hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
 
 
 
@@ -10322,7 +10322,7 @@ Public Module Projekte
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
-                    zeile = zeile + hproj.calcNeededLines(tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
+                    zeile = zeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
 
                 Catch ex As Exception
 
@@ -10390,7 +10390,7 @@ Public Module Projekte
                     ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
-                    curzeile = lastzeile + hproj.calcNeededLines(tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
+                    curzeile = lastzeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
 
 
                     If curZeile > max Then
@@ -12807,7 +12807,7 @@ Public Module Projekte
                     Catch ex As Exception
 
                     End Try
-             
+
 
                 End If
             Else
@@ -14793,7 +14793,7 @@ Public Module Projekte
             columnOffset = tbl.Column
 
             zeile = 0
-          
+
             For p = 1 To hproj.CountPhases
 
                 cphase = hproj.getPhase(p)
@@ -16477,7 +16477,7 @@ Public Module Projekte
         Dim worksheetShapes As Excel.Shapes
         Dim nameID As String
         Dim description As String = ""
-        
+
         Dim ok As Boolean
         Dim index As Integer = 0
 
@@ -16511,7 +16511,12 @@ Public Module Projekte
 
         Else
             Try
-                anzahlElements = projectShape.GroupItems.Count
+                Try
+                    anzahlElements = projectShape.GroupItems.Count
+                Catch ex As Exception
+                    Call MsgBox("ProjektShape.GroupItems.Count kann nicht abgerufen werden")
+                End Try
+
                 ReDim arrayOfNames(anzahlElements - 1)
 
                 shapeSammlung = projectShape.Ungroup()
