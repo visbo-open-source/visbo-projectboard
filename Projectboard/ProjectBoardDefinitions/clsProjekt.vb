@@ -2991,8 +2991,9 @@ Public Class clsProjekt
 
                     x = Me.hierarchy.getParentIDOfID(msnameID)
                     'While Not (x = rootPhaseName Or found)
+                    Dim zaehler As Integer = 0
                     While Not found
-
+                        zaehler = zaehler + 1
                         ' nachsehen, ob diese Phase in den selektierten Phasen enthalten ist
                         Dim phind As Integer = 1
                         While Not found And phind <= selectedPhases.Count
@@ -3016,15 +3017,20 @@ Public Class clsProjekt
 
                     End While
 
-                    If drawMSinPhase.ContainsKey(x) Then
-                        listMS = drawMSinPhase(x)
-                    Else
-                        listMS = New SortedList
-                        drawMSinPhase.Add(x, listMS)
-                    End If
+                    If zaehler > 1 Or x = rootPhaseName Then ' Parent des Meilenstein soll nicht angezeigt werden, ist also nicht selektiert
+                        ' oder letzte Stufe ist erreicht, nämlich Phase rootPhaseName
 
-                    If Not listMS.Contains(msnameID) Then
-                        listMS.Add(msnameID, msnameID)
+                        If drawMSinPhase.ContainsKey(x) Then
+                            listMS = drawMSinPhase(x)
+                        Else
+                            listMS = New SortedList
+                            drawMSinPhase.Add(x, listMS)
+                        End If
+
+                        If Not listMS.Contains(msnameID) Then
+                            listMS.Add(msnameID, msnameID)
+
+                        End If
 
                     End If
 
