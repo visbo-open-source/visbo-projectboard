@@ -141,7 +141,7 @@ Public Class clsProjektShapes
                     With groupShapes
 
                         .Name = pName
-                        If awinSettings.drawphases Then
+                        If awinSettings.drawphases Or hproj.extendedView Then
                             .AlternativeText = CInt(PTshty.projektE).ToString
                         Else
                             If anzElements = 1 Then
@@ -169,14 +169,17 @@ Public Class clsProjektShapes
                             phase1Shape = groupShapes.GroupItems.Item(1)
 
                             With phase1Shape
-                                If awinSettings.drawphases Then
+                                If awinSettings.drawphases Or hproj.extendedView Then
                                     .AlternativeText = CInt(PTshty.phaseE).ToString
                                 Else
                                     .AlternativeText = CInt(PTshty.phase1).ToString
                                 End If
 
-                                .Name = projectboardShapes.calcPhaseShapeName(hproj.name, hproj.getPhase(1).nameID)
+                                ''''geändert ur: 18.09.2015: Beim Erzeugen der Variante findet die ZeicheProjektinPlantafel das Shape der RootPhase nicht
+                                ''''.Name = projectboardShapes.calcPhaseShapeName(hproj.name, hproj.getPhase(1).nameID)
 
+                                '''' tk/ur: wieder reingenommen, weil Beschriften dadurch nicht mehr funktioniert hat 
+                                .Name = projectboardShapes.calcPhaseShapeName(hproj.name, hproj.getPhase(1).nameID)
 
                             End With
 
@@ -900,6 +903,7 @@ Public Class clsProjektShapes
                         newProjekt.Status = .Status
                         newProjekt.shpUID = .shpUID
                         newProjekt.tfZeile = .tfZeile
+
                     End With
 
                     newProjekt.timeStamp = Date.Now
@@ -1212,7 +1216,7 @@ Public Class clsProjektShapes
 
                         ' Platz schaffen auf der Projekt-Tafel
                         Dim tmpCollection As New Collection
-                        Dim anzahlZeilen As Integer = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
+                        Dim anzahlZeilen As Integer = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
                         If Not magicBoardIstFrei(mycollection:=selCollection, pname:=hproj.name, zeile:=newZeile, _
                                             spalte:=hproj.Start, laenge:=hproj.anzahlRasterElemente, _
                                             anzahlZeilen:=anzahlZeilen) Then

@@ -994,6 +994,133 @@ Imports System.Drawing
     End Sub
 
     ''' <summary>
+    ''' stellt die selektierten Projekte im Extended View dar;
+    ''' Proj.extendedView wird dabei auf true gesetzt 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTExtendedView(control As IRibbonControl)
+
+        Dim awinSelection As Excel.ShapeRange
+        Dim hproj As clsProjekt
+        Dim singleShp As Excel.Shape
+        Dim i As Integer
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            If awinSelection.Count >= 1 Then
+
+                ' Es muss mindestens 1 Projekt selektiert sein
+                For i = 1 To awinSelection.Count
+
+
+                    singleShp = awinSelection.Item(i)
+
+                    Try
+                        hproj = ShowProjekte.getProject(singleShp.Name)
+                        hproj.extendedView = True
+
+                    Catch ex As Exception
+                        Call MsgBox(" Fehler in extended Darstellung " & singleShp.Name & " , Modul: PTExtendedView")
+                        enableOnUpdate = True
+                        Exit Sub
+                    End Try
+
+                Next i
+
+                appInstance.ScreenUpdating = True
+
+                Call awinClearPlanTafel()
+                Call awinZeichnePlanTafel(False)
+
+                appInstance.ScreenUpdating = True
+
+            Else
+                Call MsgBox("bitte mindestens ein Projekt selektieren ...")
+            End If
+        Else
+            Call MsgBox("bitte mindestens ein Projekt selektieren ...")
+        End If
+
+        awinDeSelect()
+        enableOnUpdate = True
+
+    End Sub
+    ''' <summary>
+    ''' stellt die selektierten Projekte im normalen Modus dar;
+    ''' Proj.extendedView wird dabei auf false gesetzt 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PTLineView(control As IRibbonControl)
+
+        Dim awinSelection As Excel.ShapeRange
+        Dim hproj As clsProjekt
+        Dim singleShp As Excel.Shape
+        Dim i As Integer
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+
+        Try
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            If awinSelection.Count >= 1 Then
+
+                ' Es muss mindestens 1 Projekt selektiert sein
+                For i = 1 To awinSelection.Count
+
+
+                    singleShp = awinSelection.Item(i)
+
+                    Try
+                        hproj = ShowProjekte.getProject(singleShp.Name)
+                        hproj.extendedView = False
+
+                    Catch ex As Exception
+                        Call MsgBox(" Fehler in einzeiliger Darstellung " & singleShp.Name & " , Modul: PTLineView")
+                        enableOnUpdate = True
+                        Exit Sub
+                    End Try
+
+                Next i
+
+                appInstance.ScreenUpdating = False
+
+                Call awinClearPlanTafel()
+                Call awinZeichnePlanTafel(False)
+
+                appInstance.ScreenUpdating = True
+
+            Else
+                Call MsgBox("bitte mindestens ein Projekt selektieren ...")
+            End If
+        Else
+            Call MsgBox("bitte mindestens ein Projekt selektieren ...")
+        End If
+
+        awinDeSelect()
+        enableOnUpdate = True
+
+    End Sub
+
+    ''' <summary>
     ''' aktiviert die selektierte Variante 
     ''' </summary>
     ''' <param name="control"></param>
@@ -3509,6 +3636,9 @@ Imports System.Drawing
 
     Public Sub PT5phasenZeichnen(control As IRibbonControl, ByRef pressed As Boolean)
 
+        Dim i As Integer
+        Dim hproj As clsProjekt
+
         Call projektTafelInit()
 
         Cursor.Current = Cursors.WaitCursor
@@ -3522,6 +3652,11 @@ Imports System.Drawing
             Call awinClearPlanTafel()
             Call awinZeichnePlanTafel(False)
         Else
+            ' extendedView der einzelnen Projekte, sofern gesetzt, entfernen
+            For i = 1 To ShowProjekte.Count
+                hproj = ShowProjekte.getProject(i)
+                hproj.extendedView = False
+            Next
             ' jetzt werden die Projekt-Symbole ohne Phasen Darstellung gezeichnet 
             awinSettings.drawphases = False
             'Call awinLoadConstellation("Last")

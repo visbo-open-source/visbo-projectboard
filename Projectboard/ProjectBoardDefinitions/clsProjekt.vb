@@ -50,8 +50,15 @@ Public Class clsProjekt
     Public Property complexity As Double
     Public Property businessUnit As String
 
+
+    ''''  Definitionen zu einem Projekt, die nicht in der DB abgespeichert werden
+
     ' ergänzt am 30.1.14 - diffToPrev , wird benutzt, um zu kennzeichnen , welches Projekt sich im Vergleich zu vorher verändert hat 
     Public Property diffToPrev As Boolean
+
+    ' ergänzt am 16.09.2015 - extendedView , wird benutzt, um zu kennzeichnen , welches Projekt in extended View dargestellt werden soll
+    Public Property extendedView As Boolean
+    ' 
 
     ''' <summary>
     ''' gibt für die übergebenen Listen an Phasen und Meilensteinen das früheste bzw. späteste Datum zurück, das in den 
@@ -1330,6 +1337,7 @@ Public Class clsProjekt
             .latestStart = _latestStart
             .leadPerson = _leadPerson
             .Status = _Status
+            .extendedView = Me.extendedView
 
         End With
 
@@ -2867,6 +2875,7 @@ Public Class clsProjekt
 
         AllPhases = New List(Of clsPhase)
         diffToPrev = False
+        extendedView = False
         relStart = 1
         _leadPerson = ""
         iDauer = 0
@@ -2897,6 +2906,7 @@ Public Class clsProjekt
 
         AllPhases = New List(Of clsPhase)
         diffToPrev = False
+        extendedView = False
         relStart = 1
         _leadPerson = ""
         iDauer = 0
@@ -2926,6 +2936,8 @@ Public Class clsProjekt
     Public Sub New(ByVal startDate As Date, ByVal earliestStartdate As Date, ByVal latestStartdate As Date)
 
         AllPhases = New List(Of clsPhase)
+        diffToPrev = False
+        extendedView = False
         relStart = 1
         _leadPerson = ""
         iDauer = 0

@@ -145,6 +145,10 @@
           <separator id="PT2G1s3"/>
           <button id="PT2G1B4" label="Beschriften" onAction="PTBeschriften" />
           <button id="PT2G1B5" label="alle Beschriftungen löschen" onAction="PT6DeleteBeschriftung" />
+          <separator id="PT2G1s4"/>
+          <button id="PT2G1B6" label="Extended View" onAction="PTExtendedView" supertip ="Die selektierten Projekte werden mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. "/>
+          <button id="PT2G1B7" label="Extended View aufheben" onAction="PTLineView" supertip ="Die selektierten Projekte werden wieder einzeilig gezeichnet. "/>
+         
           <!--<button id="PT2G1B4" label="in Warteschlange stellen" onAction="Tom2G1NoShow" />
           <button id="PT2G1B5" label="aus Warteschlange holen" onAction="Tom2G1Show" />
           <separator id="PT2G1s4"/>
@@ -280,13 +284,13 @@
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
         </group>-->
-        <group id ="PT6G5" label ="Testfunktionen">
+        <!--<group id ="PT6G5" label ="Testfunktionen">
           <button id="Pt6G5B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
           <button id="Pt6G5B1" label="Aufbau Histories"  onAction="PTTestFunktion2" />
           <button id="PT6G5B2" label="Test-Funktionen"  onAction ="PTTestFunktion3" />
           <button id="PT6G5B3" label="Demo-Funktion Ampel"  onAction ="PTTestFunktion4" />
           <button id="PT6G5B4" label="Demo-Funktion Historie"  onAction ="PTTestFunktion5" />
-        </group>
+        </group>-->
       </tab>
     </tabs>
   </ribbon>

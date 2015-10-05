@@ -232,7 +232,7 @@ Public Class clsCommandBarEvents
                                 oldproj = ShowProjekte.getProject(shpName) ' der shpName ist identisch mit dem Projekt-Namen aus dem kopiert wurde
 
                                 ' Änderung 25.3.14 wegen Kopiertes Projekt soll einfach in der nächsten Zeile gezeichnet werden  
-                                anzahlZeilen = oldproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
+                                anzahlZeilen = oldproj.calcNeededLines(tmpCollection, awinSettings.drawphases Or oldproj.extendedView, False)
                                 zeile = oldproj.tfZeile + 1
                                 Call moveShapesDown(tmpCollection, zeile, anzahlZeilen, 0) ' Stoppzeile 0: alle Elemente werden verschoben  
                             Catch ex As Exception
