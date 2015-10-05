@@ -134,7 +134,7 @@ Public Module Projekte
                 Throw New ArgumentException("Diagramm wird schon angezeigt ...")
             Else
 
-                With CType(appInstance.Charts.Add, Excel.Chart)
+                With appInstance.Charts.Add
                     ' remove extra series
                     Do Until CType(.SeriesCollection, Excel.SeriesCollection).Count = 0
                         CType(.SeriesCollection(1), Excel.Series).Delete()
@@ -408,7 +408,7 @@ Public Module Projekte
                 Throw New ArgumentException("Diagramm wird schon angezeigt ...")
             Else
 
-                With CType(appInstance.Charts.Add, Excel.Chart)
+                With appInstance.Charts.Add
                     ' remove extra series
                     Do Until CType(.SeriesCollection, Excel.SeriesCollection).Count = 0
                         CType(.SeriesCollection(1), Excel.Series).Delete()
@@ -671,7 +671,7 @@ Public Module Projekte
                 MsgBox(" Diagramm wird bereits angezeigt ...")
             Else
 
-                With CType(appInstance.Charts.Add, Excel.Chart)
+                With appInstance.Charts.Add
                     ' remove extra series
                     Do Until CType(.SeriesCollection, Excel.SeriesCollection).Count = 0
                         CType(.SeriesCollection(1), Excel.Series).Delete()
@@ -938,7 +938,7 @@ Public Module Projekte
                 repObj = CType(.ChartObjects(i), Excel.ChartObject)
             Else
 
-                With CType(appInstance.Charts.Add, Excel.Chart)
+                With appInstance.Charts.Add
                     ' remove extra series
                     Do Until CType(.SeriesCollection, Excel.SeriesCollection).Count = 0
                         CType(.SeriesCollection(1), Excel.Series).Delete()
@@ -1153,8 +1153,6 @@ Public Module Projekte
         Dim tmpcollection As New Collection
         Dim kennung As String = " "
         Dim maxscale As Double
-
-
 
 
         Dim pname As String = hproj.name
@@ -1692,7 +1690,7 @@ Public Module Projekte
                 Dim dlFontStrikethrough As Boolean
                 Dim dlFontSuperscript As Boolean
                 Dim dlFontSubscript As Boolean
-                'Dim dlFontUnderline As Double
+                'ur: 21.07.2015: Dim dlFontUnderline As Double
 
                 For i = 1 To pts.Count
 
@@ -7347,7 +7345,7 @@ Public Module Projekte
         enableOnUpdate = False
 
         hproj = ShowProjekte.getProject(pName)
-        anzahlZeilen = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
+        anzahlZeilen = hproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or hproj.extendedView, False)
 
 
 
@@ -7487,7 +7485,7 @@ Public Module Projekte
                             xlsCockpits.Worksheets.Application.DisplayAlerts = True
                         End If
                     Catch ex As Exception
-
+                   
                     End Try
                     'i = 1
                     'While i <= xlsCockpits.Worksheets.Count And Not wsfound
@@ -10059,7 +10057,7 @@ Public Module Projekte
             tmpName = CStr(nameList.Item(1))
         ElseIf nameList.Count > 1 Then
             tmpName = "Collection"
-            
+
         End If
 
         With roentgenBlick
@@ -10234,7 +10232,7 @@ Public Module Projekte
         For Each chtobj In CType(CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).ChartObjects, Excel.ChartObjects)
 
             Try
-            With chtobj
+                With chtobj
                     If ((projectShape.Top >= .Top And projectShape.Top <= .Top + .Height) Or _
                         (.Top >= projectShape.Top And .Top <= projectShape.Top + projectShape.Height)) And _
                         ((projectShape.Left >= .Left And projectShape.Left <= .Left + .Width) Or _
@@ -10324,7 +10322,7 @@ Public Module Projekte
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, zeile, tmpCollection, tmpCollection)
 
-                    zeile = zeile + hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
+                    zeile = zeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
 
                 Catch ex As Exception
 
@@ -10392,7 +10390,7 @@ Public Module Projekte
                     ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
                     Dim tmpCollection As New Collection
                     Call ZeichneProjektinPlanTafel(tmpCollection, pname, curZeile, tmpCollection, tmpCollection)
-                    curzeile = lastzeile + hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
+                    curzeile = lastzeile + hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
 
 
                     If curZeile > max Then
@@ -10514,7 +10512,7 @@ Public Module Projekte
 
         If shpExists Then
 
-            If drawphases Then
+            If drawphases Or hproj.extendedView Then
 
                 ' ungroup Shape, damit die einzelnen Phasen- bzw Milestone Shapes im Zugriff sind 
                 Try
@@ -10584,7 +10582,7 @@ Public Module Projekte
             ' hier wird der vorher bestimmte Wert gesetzt, wo das Shape gezeichnet werden kann 
             hproj.tfZeile = zeile
 
-            If drawphases And (hproj.CountPhases > 1) Then
+            If (drawphases And (hproj.CountPhases > 1)) Or (hproj.extendedView And (hproj.CountPhases > 1)) Then
                 ' stelle das Projekt im Extended Mode dar  
                 'Dim shapeGroupListe() As Object
                 Dim shapeGroupListe() As String
@@ -10613,7 +10611,7 @@ Public Module Projekte
 
                     Try
                         zeilenOffset = 0
-                        Call hproj.calculateShapeCoord(i, zeilenOffset, top, left, width, height)
+                        Call hproj.CalculateShapeCoord(i, zeilenOffset, top, left, width, height)
 
                         If i = 1 Then
 
@@ -10787,7 +10785,7 @@ Public Module Projekte
 
 
             Else
-                ' stelle das Projekt im Einzeilen Mode dar
+                ' stelle das Projekt im Einzeilen Modus dar
 
                 With hproj
                     .CalculateShapeCoord(top, left, width, height)
@@ -10817,7 +10815,7 @@ Public Module Projekte
             If shpExists Then
                 .AlternativeText = oldAlternativeText
             Else
-                If drawphases Then
+                If hproj.extendedView Or drawphases Then
                     .AlternativeText = CInt(PTshty.projektE).ToString
                 Else
                     If awinSettings.drawProjectLine Then
@@ -10842,12 +10840,12 @@ Public Module Projekte
         ' jetzt müssen ggf die noch zu zeichnenden Meilensteine und Phasen eingezeichnet werden  
 
         Dim msNumber As Integer = 0
-        If drawPhaseList.Count > 0 And Not drawphases Then
+        If drawPhaseList.Count > 0 And Not (drawphases Or hproj.extendedView) Then
             Call zeichnePhasenInProjekt(hproj, drawPhaseList, False, msNumber)
         End If
 
         msNumber = 0
-        If drawMilestoneList.Count > 0 And Not drawphases Then
+        If drawMilestoneList.Count > 0 And Not (drawphases Or hproj.extendedView) Then
             Call zeichneMilestonesInProjekt(hproj, drawMilestoneList, 4, 0, 0, False, msNumber, False)
         End If
 
@@ -11603,7 +11601,7 @@ Public Module Projekte
 
                 ' jetzt muss das Shape noch in der Höhe richtig positioniert werden 
                 Dim diff As Single
-                If awinSettings.drawphases Then
+                If awinSettings.drawphases Or hproj.extendedView Then
                     diff = CSng(0.3 * boxHeight)
                 Else
                     diff = (pNameShape.Height - projectHeight) / 2
@@ -12619,7 +12617,8 @@ Public Module Projekte
 
     End Sub
 
-    Public Sub defineShapeAppearance(ByRef myproject As clsProjekt, ByRef projectShape As Excel.Shape)
+    Public Sub defineShapeAppearance(ByRef myproject As clsProjekt, ByRef projectShape As Excel.Shape, Optional ByVal phasenindex As Integer = 0)
+
         Dim pcolor As Object = XlRgbColor.rgbAqua
         Dim schriftFarbe As Long
         Dim schriftGroesse As Integer
@@ -12631,18 +12630,38 @@ Public Module Projekte
         Dim showAmpel As Boolean = False
         Dim showResults As Boolean = True
         Dim myshape As Excel.Shape
+        Dim myphase As clsPhase
+
+        If phasenindex = 0 Then
 
 
-        Try
-            If projectShape.AlternativeText = CInt(PTshty.projektL).ToString Or _
-                    projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+            Try
+                If projectShape.AlternativeText = CInt(PTshty.projektL).ToString Or _
+                        projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+                    myshape = projectShape
+                Else
+                    myshape = CType(projectShape.GroupItems.Item(1), Excel.Shape)
+                End If
+            Catch ex As Exception
                 myshape = projectShape
-            Else
-                myshape = CType(projectShape.GroupItems.Item(1), Excel.Shape)
-            End If
-        Catch ex As Exception
-            myshape = projectShape
-        End Try
+            End Try
+        Else
+            Try
+                myphase = myproject.getPhase(phasenindex)
+
+            Catch ex As Exception
+                Throw New ArgumentException("Phase " & phasenindex.ToString & _
+                                            " existiert nicht ...")
+            End Try
+
+            Try
+
+                myshape = CType(projectShape.GroupItems.Item(phasenindex), Excel.Shape)
+
+            Catch ex As Exception
+                myshape = projectShape
+            End Try
+        End If
 
 
         Try
@@ -12681,110 +12700,110 @@ Public Module Projekte
 
             End Try
 
-
-            ' hier muss jetzt unterschieden werden, ob die Projektlinie gezeichnet wurde oder der Balken 
-
-            If awinSettings.drawProjectLine Then
-
-                Try
-                    With .Line
-                        .ForeColor.RGB = CInt(pcolor)
-                        .Transparency = 0
-                        .Weight = 4.0
-                        .DashStyle = MsoLineDashStyle.msoLineDash
-                    End With
-                Catch ex As Exception
-
-                End Try
-
-                ' Darstellung, fixiert oder nicht fixiert 
-
-                Try
-
-                    With .Line
-                        If status = ProjektStatus(0) Then
-                            .BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadOval
-                            .EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadOval
-                        Else
-                            .BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadDiamond
-                            .EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadDiamond
-                        End If
-
-                    End With
+            If phasenindex <= 1 Then
 
 
+                ' hier muss jetzt unterschieden werden, ob die Projektlinie gezeichnet wurde oder der Balken 
 
-                Catch ex As Exception
+                If awinSettings.drawProjectLine Then
 
-                End Try
+                    Try
+                        With .Line
+                            .ForeColor.RGB = CInt(pcolor)
+                            .Transparency = 0
+                            .Weight = 4.0
+                            .DashStyle = MsoLineDashStyle.msoLineDash
+                        End With
+                    Catch ex As Exception
 
-            Else
+                    End Try
 
-                Try
-                    With .Fill
-                        '.Visible = msoTrue
-                        .ForeColor.RGB = CInt(pcolor)
-                        .ForeColor.TintAndShade = 0
-                        .ForeColor.Brightness = -0.25
+                    ' Darstellung, fixiert oder nicht fixiert 
+
+                    Try
+
+                        With .Line
+                            If status = ProjektStatus(0) Then
+                                .BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadOval
+                                .EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadOval
+                            Else
+                                .BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadDiamond
+                                .EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadDiamond
+                            End If
+
+                        End With
+
+
+
+                    Catch ex As Exception
+
+                    End Try
+
+                Else
+
+                    Try
+                        With .Fill
+                            '.Visible = msoTrue
+                            .ForeColor.RGB = CInt(pcolor)
+                            .ForeColor.TintAndShade = 0
+                            .ForeColor.Brightness = -0.25
+
+                            If roentgenBlick.isOn Then
+                                .Transparency = 0.8
+                            Else
+                                .Transparency = 0.0
+                            End If
+
+                            .Solid()
+
+                        End With
+                    Catch ex As Exception
+
+                    End Try
+
+
+                    Try
+                        With .TextFrame2
+                            .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
+                            .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
+                            .TextRange.Font.Size = schriftGroesse
+                            .TextRange.Font.Fill.ForeColor.RGB = CInt(schriftFarbe)
+                        End With
 
                         If roentgenBlick.isOn Then
-                            .Transparency = 0.8
+
+                            .TextFrame2.TextRange.Text = ""
+
+
                         Else
-                            .Transparency = 0.0
+                            ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
+
+                            .TextFrame2.TextRange.Text = myproject.getShapeText
+
+                            ' Ende Änderung 13.10.14
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+                    ' nur verändern, wenn es auch veränderbar ist 
+                    Try
+
+                        If .Adjustments.Count > 0 Then
+                            If status = ProjektStatus(0) Then
+                                .Adjustments.Item(1) = 0.5
+                            Else
+                                .Adjustments.Item(1) = 0.25
+                            End If
                         End If
 
-                        .Solid()
+                    Catch ex As Exception
 
-                    End With
-                Catch ex As Exception
+                    End Try
+             
 
-                End Try
-
-
-                Try
-                    With .TextFrame2
-                        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
-                        .TextRange.Font.Size = schriftGroesse
-                        .TextRange.Font.Fill.ForeColor.RGB = CInt(schriftFarbe)
-                    End With
-
-                    If roentgenBlick.isOn Then
-
-                        .TextFrame2.TextRange.Text = ""
-
-
-                    Else
-                        ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
-
-                        .TextFrame2.TextRange.Text = myproject.getShapeText
-
-                        ' Ende Änderung 13.10.14
-                    End If
-                Catch ex As Exception
-
-                End Try
-
-                ' nur verändern, wenn es auch veränderbar ist 
-                Try
-
-                    If .Adjustments.Count > 0 Then
-                        If status = ProjektStatus(0) Then
-                            .Adjustments.Item(1) = 0.5
-                        Else
-                            .Adjustments.Item(1) = 0.25
-                        End If
-                    End If
-
-                Catch ex As Exception
-
-                End Try
-
-
-
-
-
-
+                End If
+            Else
+                '' phasenindex > 1
             End If
 
         End With
@@ -12792,186 +12811,186 @@ Public Module Projekte
 
     End Sub
 
-    ''' <summary>
-    ''' definiert das Aussehen eines Shapes im Modus , wenn alles Shapes gezeichnet werden 
-    ''' </summary>
-    ''' <param name="myproject"></param>
-    ''' <param name="projectShape"></param>
-    ''' <param name="phasenIndex"></param>
-    ''' <remarks></remarks>
-    Public Sub defineShapeAppearance(ByVal myproject As clsProjekt, ByRef projectShape As Excel.Shape, ByVal phasenIndex As Integer)
+    ' ''ur:18.09.2015: wurde in defineShapeAppearance integriert '' ''' <summary>
+    ' '' '' ''' definiert das Aussehen eines Shapes im Modus , wenn alles Shapes gezeichnet werden 
+    ' '' '' ''' </summary>
+    ' '' '' ''' <param name="myproject"></param>
+    ' '' '' ''' <param name="projectShape"></param>
+    ' '' '' ''' <param name="phasenIndex"></param>
+    ' '' '' ''' <remarks></remarks>
+    ' '' ''Public Sub defineShapeAppearance1(ByVal myproject As clsProjekt, ByRef projectShape As Excel.Shape, ByVal phasenIndex As Integer)
 
-        Dim projectColor As Object = Nothing, phaseColor As Object = RGB(255, 255, 255)
-        Dim whiteColor As Object = RGB(255, 255, 255)
-        Dim status As String = ""
-        Dim pMarge As Double
-        Dim pname As String
-        Dim ampel As Integer
-        Dim showAmpel As Boolean = False
-        Dim showResults As Boolean = True
-        Dim myshape As Excel.Shape
-        Dim myphase As clsPhase
-
-
-        Try
-            myphase = myproject.getPhase(phasenIndex)
+    ' '' ''    Dim projectColor As Object = Nothing, phaseColor As Object = RGB(255, 255, 255)
+    ' '' ''    Dim whiteColor As Object = RGB(255, 255, 255)
+    ' '' ''    Dim status As String = ""
+    ' '' ''    Dim pMarge As Double
+    ' '' ''    Dim pname As String
+    ' '' ''    Dim ampel As Integer
+    ' '' ''    Dim showAmpel As Boolean = False
+    ' '' ''    Dim showResults As Boolean = True
+    ' '' ''    Dim myshape As Excel.Shape
+    ' '' ''    Dim myphase As clsPhase
 
 
-        Catch ex As Exception
-            Throw New ArgumentException("Phase " & phasenIndex.ToString & _
-                                        " existiert nicht ...")
-        End Try
-
-        Try
-
-            myshape = CType(projectShape.GroupItems.Item(phasenIndex), Excel.Shape)
-
-        Catch ex As Exception
-            myshape = projectShape
-        End Try
-
-        Try
-            With myproject
-                projectColor = .farbe
-                status = .Status
-                pMarge = .ProjectMarge
-                pname = .name
-                ampel = .ampelStatus
-            End With
-
-        Catch ex As Exception
-
-        End Try
+    ' '' ''    Try
+    ' '' ''        myphase = myproject.getPhase(phasenIndex)
 
 
-        With myshape
+    ' '' ''    Catch ex As Exception
+    ' '' ''        Throw New ArgumentException("Phase " & phasenIndex.ToString & _
+    ' '' ''                                    " existiert nicht ...")
+    ' '' ''    End Try
+
+    ' '' ''    Try
+
+    ' '' ''        myshape = CType(projectShape.GroupItems.Item(phasenIndex), Excel.Shape)
+
+    ' '' ''    Catch ex As Exception
+    ' '' ''        myshape = projectShape
+    ' '' ''    End Try
+
+    ' '' ''    Try
+    ' '' ''        With myproject
+    ' '' ''            projectColor = .farbe
+    ' '' ''            status = .Status
+    ' '' ''            pMarge = .ProjectMarge
+    ' '' ''            pname = .name
+    ' '' ''            ampel = .ampelStatus
+    ' '' ''        End With
+
+    ' '' ''    Catch ex As Exception
+
+    ' '' ''    End Try
 
 
-            Try
-                If status = ProjektStatus(2) Then
-
-                    If phasenIndex = 1 Then
-                        ' beauftragt, aber noch nicht wieder freigegeben ... 
-
-                        .Glow.Color.RGB = CInt(awinSettings.glowColor)
-                        .Glow.Color.TintAndShade = 0
-                        .Glow.Color.Brightness = 0
-                        .Glow.Transparency = 0.4
-                        .Glow.Radius = 10
-                    Else
-                        .Glow.Color.RGB = RGB(255, 255, 255)
-                        .Glow.Transparency = 1.0
-                    End If
-                Else
-                    .Glow.Color.RGB = RGB(255, 255, 255)
-                    .Glow.Transparency = 1.0
-                End If
-            Catch ex As Exception
-
-            End Try
+    ' '' ''    With myshape
 
 
-            Try
-                With .Line
-                    '.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                    '.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
-                    'If pMarge < 0 Then
-                    '    .ForeColor.RGB = RGB(255, 0, 0)
-                    '    .Weight = 2.0
-                    'Else
-                    '    .ForeColor.RGB = pcolor
-                    'End If
-                    If phasenIndex = 1 Then
-                        .ForeColor.RGB = CInt(projectColor)
-                        .Transparency = 0
-                    Else
-                        '.ForeColor.RGB = CInt(phaseColor)
-                        .Transparency = 0
-                    End If
+    ' '' ''        Try
+    ' '' ''            If status = ProjektStatus(2) Then
 
-                End With
-            Catch ex As Exception
+    ' '' ''                If phasenIndex = 1 Then
+    ' '' ''                    ' beauftragt, aber noch nicht wieder freigegeben ... 
 
-            End Try
+    ' '' ''                    .Glow.Color.RGB = CInt(awinSettings.glowColor)
+    ' '' ''                    .Glow.Color.TintAndShade = 0
+    ' '' ''                    .Glow.Color.Brightness = 0
+    ' '' ''                    .Glow.Transparency = 0.4
+    ' '' ''                    .Glow.Radius = 10
+    ' '' ''                Else
+    ' '' ''                    .Glow.Color.RGB = RGB(255, 255, 255)
+    ' '' ''                    .Glow.Transparency = 1.0
+    ' '' ''                End If
+    ' '' ''            Else
+    ' '' ''                .Glow.Color.RGB = RGB(255, 255, 255)
+    ' '' ''                .Glow.Transparency = 1.0
+    ' '' ''            End If
+    ' '' ''        Catch ex As Exception
 
-            Try
-                With .Fill
-
-                    ' geändert wegen Änder
-                    If phasenIndex = 1 Then
-                        .ForeColor.RGB = CInt(projectColor)
-                        'Else
-                        '    .ForeColor.RGB = CInt(phaseColor)
-                    End If
-
-                    '.ForeColor.TintAndShade = 0
-                    '.ForeColor.Brightness = -0.25
-
-                    If roentgenBlick.isOn Then
-                        .Transparency = 0.8
-                    Else
-                        .Transparency = 0.0
-                    End If
-
-                    If phasenIndex = 1 Then
-                        .Solid()
-                    End If
+    ' '' ''        End Try
 
 
-                End With
+    ' '' ''        Try
+    ' '' ''            With .Line
+    ' '' ''                '.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+    ' '' ''                '.Visible = Microsoft.Office.Core.MsoTriState.msoFalse
+    ' '' ''                'If pMarge < 0 Then
+    ' '' ''                '    .ForeColor.RGB = RGB(255, 0, 0)
+    ' '' ''                '    .Weight = 2.0
+    ' '' ''                'Else
+    ' '' ''                '    .ForeColor.RGB = pcolor
+    ' '' ''                'End If
+    ' '' ''                If phasenIndex = 1 Then
+    ' '' ''                    .ForeColor.RGB = CInt(projectColor)
+    ' '' ''                    .Transparency = 0
+    ' '' ''                Else
+    ' '' ''                    '.ForeColor.RGB = CInt(phaseColor)
+    ' '' ''                    .Transparency = 0
+    ' '' ''                End If
 
-            Catch ex As Exception
+    ' '' ''            End With
+    ' '' ''        Catch ex As Exception
 
-            End Try
+    ' '' ''        End Try
 
+    ' '' ''        Try
+    ' '' ''            With .Fill
 
-            Try
+    ' '' ''                ' geändert wegen Änder
+    ' '' ''                If phasenIndex = 1 Then
+    ' '' ''                    .ForeColor.RGB = CInt(projectColor)
+    ' '' ''                    'Else
+    ' '' ''                    '    .ForeColor.RGB = CInt(phaseColor)
+    ' '' ''                End If
 
-                If phasenIndex = 1 Then
-                    If roentgenBlick.isOn Then
+    ' '' ''                '.ForeColor.TintAndShade = 0
+    ' '' ''                '.ForeColor.Brightness = -0.25
 
-                        .TextFrame2.TextRange.Text = ""
+    ' '' ''                If roentgenBlick.isOn Then
+    ' '' ''                    .Transparency = 0.8
+    ' '' ''                Else
+    ' '' ''                    .Transparency = 0.0
+    ' '' ''                End If
 
-                    Else
-
-                        With .TextFrame2
-                            .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                            .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
-                            .WordWrap = MsoTriState.msoFalse
-                        End With
-
-                        .TextFrame2.TextRange.Text = myproject.getShapeText
-
-
-                    End If
-                End If
-
-
-            Catch ex As Exception
-
-            End Try
-
-
-            Try
-                If .Adjustments.Count > 0 Then
-
-                    If status = ProjektStatus(0) Then
-                        .Adjustments.Item(1) = 0.5
-                    Else
-                        .Adjustments.Item(1) = 0.25
-                    End If
-
-                End If
-            Catch ex As Exception
-
-            End Try
+    ' '' ''                If phasenIndex = 1 Then
+    ' '' ''                    .Solid()
+    ' '' ''                End If
 
 
+    ' '' ''            End With
 
-        End With
+    ' '' ''        Catch ex As Exception
+
+    ' '' ''        End Try
 
 
-    End Sub
+    ' '' ''        Try
+
+    ' '' ''            If phasenIndex = 1 Then
+    ' '' ''                If roentgenBlick.isOn Then
+
+    ' '' ''                    .TextFrame2.TextRange.Text = ""
+
+    ' '' ''                Else
+
+    ' '' ''                    With .TextFrame2
+    ' '' ''                        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
+    ' '' ''                        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
+    ' '' ''                        .WordWrap = MsoTriState.msoFalse
+    ' '' ''                    End With
+
+    ' '' ''                    .TextFrame2.TextRange.Text = myproject.getShapeText
+
+
+    ' '' ''                End If
+    ' '' ''            End If
+
+
+    ' '' ''        Catch ex As Exception
+
+    ' '' ''        End Try
+
+
+    ' '' ''        Try
+    ' '' ''            If .Adjustments.Count > 0 Then
+
+    ' '' ''                If status = ProjektStatus(0) Then
+    ' '' ''                    .Adjustments.Item(1) = 0.5
+    ' '' ''                Else
+    ' '' ''                    .Adjustments.Item(1) = 0.25
+    ' '' ''                End If
+
+    ' '' ''            End If
+    ' '' ''        Catch ex As Exception
+
+    ' '' ''        End Try
+
+
+
+    ' '' ''    End With
+
+
+    ' '' ''End Sub
 
     ' ''' <summary>
     ' ''' passt die Shape Darstellung dem veränderten Projekt pname an  
@@ -16179,9 +16198,6 @@ Public Module Projekte
                         If mycollection.Count = PhaseDefinitions.Count Then
                             IDkennung = IDkennung & "#Alle"
 
-                        ElseIf mycollection.Count > 4 Then
-                            IDkennung = IDkennung & "#Mehrere"
-
                         Else
 
                             For i = 1 To mycollection.Count
@@ -16199,35 +16215,16 @@ Public Module Projekte
 
                     Case PTpfdk.Meilenstein
 
-                        If mycollection.Count = MilestoneDefinitions.Count Then
-                            IDkennung = IDkennung & "#Alle"
+                        For i = 1 To mycollection.Count
+                            cName = CStr(mycollection.Item(i)).Replace("#", "-")
+                            IDkennung = IDkennung & "#" & cName
 
-                        ElseIf mycollection.Count > 4 Then
-                            IDkennung = IDkennung & "#Mehrere"
-
-                        Else
-
-                            For i = 1 To mycollection.Count
-                                cName = CStr(mycollection.Item(i)).Replace("#", "-")
-                                ' der evtl vorhandenen Breadcrumb hat als Trennzeichen das #
-                                Try
-                                    IDkennung = IDkennung & "#" & cName
-                                Catch ex As Exception
-                                    IDkennung = IDkennung & "#"
-                                End Try
-
-                            Next
-
-                        End If
-
+                        Next
 
                     Case PTpfdk.Rollen
 
                         If mycollection.Count = RoleDefinitions.Count Then
                             IDkennung = IDkennung & "#Alle"
-
-                        ElseIf mycollection.Count > 4 Then
-                            IDkennung = IDkennung & "#Mehrere"
 
                         Else
 
@@ -16242,9 +16239,6 @@ Public Module Projekte
 
                         If mycollection.Count = CostDefinitions.Count Then
                             IDkennung = IDkennung & "#Alle"
-
-                        ElseIf mycollection.Count > 4 Then
-                            IDkennung = IDkennung & "#Mehrere"
 
                         Else
 
@@ -16509,7 +16503,12 @@ Public Module Projekte
 
         Else
             Try
-                anzahlElements = projectShape.GroupItems.Count
+                Try
+                    anzahlElements = projectShape.GroupItems.Count
+                Catch ex As Exception
+                    Call MsgBox("ProjektShape.GroupItems.Count kann nicht abgerufen werden")
+                End Try
+
                 ReDim arrayOfNames(anzahlElements - 1)
 
                 shapeSammlung = projectShape.Ungroup()
@@ -17015,7 +17014,7 @@ Public Module Projekte
 
                 ' jetzt muss geprüft werden, ob sich die Start-Position, Länge oder Endposition geändert hat 
 
-                If awinSettings.drawphases = True Then
+                If awinSettings.drawphases Or hproj.extendedView Then
 
                     projectShape = projectShapes.Range(projectName)
                     shapeSammlung = projectShape.Ungroup()
@@ -17099,7 +17098,7 @@ Public Module Projekte
                 Else
                     ' dann der Ordnung halber auf die Soll-Werte setzen 
 
-                    If awinSettings.drawphases = False Then
+                    If Not (awinSettings.drawphases Or hproj.extendedView) Then
 
                         With phaseShape
 
@@ -17339,7 +17338,7 @@ Public Module Projekte
 
 
         If ok Then
-            If awinSettings.createIfNotThere And Not awinSettings.drawphases Then
+            If awinSettings.createIfNotThere And Not (awinSettings.drawphases Or hproj.extendedView) Then
                 ' prüfen, ob das Shape bereits angezeigt wird 
                 Dim tstshpName = projectboardShapes.calcPhaseShapeName(projectName, phaseNameID)
                 If Not projectboardShapes.contains(tstshpName) Then
@@ -18356,15 +18355,17 @@ Public Module Projekte
 
     End Function
 
+    
     ''' <summary>
-    ''' kopiert eine Collection , die Strings enthält 
+    ''' kopiert eine Collection , die Strings enthält
     ''' </summary>
     ''' <param name="original"></param>
-    ''' <param name="kopie"></param>
+    ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Sub copyCollections(ByVal original As Collection, ByRef kopie As Collection)
+    Public Function copyCollection(ByVal original As Collection) As Collection
         Dim i As Integer
         Dim element As String
+        Dim kopie As New Collection
 
         If Not IsNothing(original) Then
             For i = 1 To original.Count
@@ -18372,8 +18373,9 @@ Public Module Projekte
                 kopie.Add(element, element)
             Next
         End If
+        copyCollection = kopie
 
-    End Sub
+    End Function
 
     ''' <summary>
     ''' addiert die Hierarchie hry zur bereits existierenden Super-Hierarchie

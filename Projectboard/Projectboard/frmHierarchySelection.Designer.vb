@@ -22,6 +22,7 @@ Partial Class frmHierarchySelection
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmHierarchySelection))
         Me.hryTreeView = New System.Windows.Forms.TreeView()
         Me.hryStufenLabel = New System.Windows.Forms.Label()
         Me.hryStufen = New System.Windows.Forms.NumericUpDown()
@@ -33,10 +34,15 @@ Partial Class frmHierarchySelection
         Me.OKButton = New System.Windows.Forms.Button()
         Me.BackgroundWorker1 = New System.ComponentModel.BackgroundWorker()
         Me.AbbrButton = New System.Windows.Forms.Button()
+        Me.filterDropbox = New System.Windows.Forms.ComboBox()
+        Me.filterLabel = New System.Windows.Forms.Label()
+        Me.auswSpeichern = New System.Windows.Forms.Button()
+        Me.SelectionSet = New System.Windows.Forms.PictureBox()
         Me.collapseCompletely = New System.Windows.Forms.PictureBox()
         Me.expandCompletely = New System.Windows.Forms.PictureBox()
         Me.SelectionReset = New System.Windows.Forms.PictureBox()
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -73,7 +79,7 @@ Partial Class frmHierarchySelection
         Me.einstellungen.AutoSize = True
         Me.einstellungen.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, CType((System.Drawing.FontStyle.Italic Or System.Drawing.FontStyle.Underline), System.Drawing.FontStyle), System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.einstellungen.ForeColor = System.Drawing.SystemColors.MenuHighlight
-        Me.einstellungen.Location = New System.Drawing.Point(476, 381)
+        Me.einstellungen.Location = New System.Drawing.Point(476, 417)
         Me.einstellungen.Name = "einstellungen"
         Me.einstellungen.Size = New System.Drawing.Size(70, 13)
         Me.einstellungen.TabIndex = 42
@@ -95,7 +101,7 @@ Partial Class frmHierarchySelection
         '
         Me.labelPPTVorlage.AutoSize = True
         Me.labelPPTVorlage.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.labelPPTVorlage.Location = New System.Drawing.Point(12, 378)
+        Me.labelPPTVorlage.Location = New System.Drawing.Point(9, 414)
         Me.labelPPTVorlage.Name = "labelPPTVorlage"
         Me.labelPPTVorlage.Size = New System.Drawing.Size(126, 16)
         Me.labelPPTVorlage.TabIndex = 39
@@ -105,7 +111,7 @@ Partial Class frmHierarchySelection
         'statusLabel
         '
         Me.statusLabel.AutoSize = True
-        Me.statusLabel.Location = New System.Drawing.Point(12, 444)
+        Me.statusLabel.Location = New System.Drawing.Point(9, 470)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(39, 13)
         Me.statusLabel.TabIndex = 41
@@ -114,7 +120,7 @@ Partial Class frmHierarchySelection
         'repVorlagenDropbox
         '
         Me.repVorlagenDropbox.FormattingEnabled = True
-        Me.repVorlagenDropbox.Location = New System.Drawing.Point(147, 376)
+        Me.repVorlagenDropbox.Location = New System.Drawing.Point(145, 409)
         Me.repVorlagenDropbox.Name = "repVorlagenDropbox"
         Me.repVorlagenDropbox.Size = New System.Drawing.Size(264, 21)
         Me.repVorlagenDropbox.TabIndex = 37
@@ -122,7 +128,7 @@ Partial Class frmHierarchySelection
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(223, 418)
+        Me.OKButton.Location = New System.Drawing.Point(199, 443)
         Me.OKButton.Name = "OKButton"
         Me.OKButton.Size = New System.Drawing.Size(113, 23)
         Me.OKButton.TabIndex = 38
@@ -137,7 +143,7 @@ Partial Class frmHierarchySelection
         'AbbrButton
         '
         Me.AbbrButton.BackColor = System.Drawing.Color.FromArgb(CType(CType(255, Byte), Integer), CType(CType(128, Byte), Integer), CType(CType(0, Byte), Integer))
-        Me.AbbrButton.Location = New System.Drawing.Point(342, 418)
+        Me.AbbrButton.Location = New System.Drawing.Point(344, 444)
         Me.AbbrButton.Name = "AbbrButton"
         Me.AbbrButton.Size = New System.Drawing.Size(113, 23)
         Me.AbbrButton.TabIndex = 44
@@ -145,11 +151,52 @@ Partial Class frmHierarchySelection
         Me.AbbrButton.UseVisualStyleBackColor = False
         Me.AbbrButton.Visible = False
         '
+        'filterDropbox
+        '
+        Me.filterDropbox.FormattingEnabled = True
+        Me.filterDropbox.Location = New System.Drawing.Point(145, 381)
+        Me.filterDropbox.Name = "filterDropbox"
+        Me.filterDropbox.Size = New System.Drawing.Size(264, 21)
+        Me.filterDropbox.TabIndex = 48
+        Me.filterDropbox.Visible = False
+        '
+        'filterLabel
+        '
+        Me.filterLabel.AutoSize = True
+        Me.filterLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.filterLabel.Location = New System.Drawing.Point(9, 386)
+        Me.filterLabel.Name = "filterLabel"
+        Me.filterLabel.Size = New System.Drawing.Size(91, 16)
+        Me.filterLabel.TabIndex = 49
+        Me.filterLabel.Text = "Filter-Auswahl"
+        Me.filterLabel.Visible = False
+        '
+        'auswSpeichern
+        '
+        Me.auswSpeichern.Location = New System.Drawing.Point(433, 379)
+        Me.auswSpeichern.Name = "auswSpeichern"
+        Me.auswSpeichern.Size = New System.Drawing.Size(113, 23)
+        Me.auswSpeichern.TabIndex = 50
+        Me.auswSpeichern.Text = "Speichern"
+        Me.auswSpeichern.UseVisualStyleBackColor = True
+        '
+        'SelectionSet
+        '
+        Me.SelectionSet.BackColor = System.Drawing.SystemColors.Control
+        Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
+        Me.SelectionSet.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_check1
+        Me.SelectionSet.InitialImage = Nothing
+        Me.SelectionSet.Location = New System.Drawing.Point(12, 349)
+        Me.SelectionSet.Name = "SelectionSet"
+        Me.SelectionSet.Size = New System.Drawing.Size(16, 16)
+        Me.SelectionSet.TabIndex = 51
+        Me.SelectionSet.TabStop = False
+        '
         'collapseCompletely
         '
         Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.collapseCompletely.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_beginning
-        Me.collapseCompletely.Location = New System.Drawing.Point(35, 349)
+        Me.collapseCompletely.Location = New System.Drawing.Point(68, 349)
         Me.collapseCompletely.Name = "collapseCompletely"
         Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
         Me.collapseCompletely.TabIndex = 47
@@ -159,7 +206,7 @@ Partial Class frmHierarchySelection
         '
         Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
         Me.expandCompletely.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_end
-        Me.expandCompletely.Location = New System.Drawing.Point(57, 349)
+        Me.expandCompletely.Location = New System.Drawing.Point(90, 349)
         Me.expandCompletely.Name = "expandCompletely"
         Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
         Me.expandCompletely.TabIndex = 46
@@ -170,7 +217,7 @@ Partial Class frmHierarchySelection
         Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
         Me.SelectionReset.Image = Global.ExcelWorkbook1.My.Resources.Resources.selection_delete
         Me.SelectionReset.InitialImage = Nothing
-        Me.SelectionReset.Location = New System.Drawing.Point(12, 349)
+        Me.SelectionReset.Location = New System.Drawing.Point(32, 349)
         Me.SelectionReset.Name = "SelectionReset"
         Me.SelectionReset.Size = New System.Drawing.Size(16, 16)
         Me.SelectionReset.TabIndex = 45
@@ -180,7 +227,11 @@ Partial Class frmHierarchySelection
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(558, 466)
+        Me.ClientSize = New System.Drawing.Size(558, 492)
+        Me.Controls.Add(Me.SelectionSet)
+        Me.Controls.Add(Me.auswSpeichern)
+        Me.Controls.Add(Me.filterLabel)
+        Me.Controls.Add(Me.filterDropbox)
         Me.Controls.Add(Me.collapseCompletely)
         Me.Controls.Add(Me.expandCompletely)
         Me.Controls.Add(Me.SelectionReset)
@@ -198,6 +249,7 @@ Partial Class frmHierarchySelection
         Me.Text = "Auswahl über Hierarchie"
         Me.TopMost = True
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.expandCompletely, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.SelectionReset, System.ComponentModel.ISupportInitialize).EndInit()
@@ -219,4 +271,8 @@ Partial Class frmHierarchySelection
     Friend WithEvents SelectionReset As System.Windows.Forms.PictureBox
     Friend WithEvents expandCompletely As System.Windows.Forms.PictureBox
     Friend WithEvents collapseCompletely As System.Windows.Forms.PictureBox
+    Friend WithEvents filterDropbox As System.Windows.Forms.ComboBox
+    Friend WithEvents filterLabel As System.Windows.Forms.Label
+    Friend WithEvents auswSpeichern As System.Windows.Forms.Button
+    Friend WithEvents SelectionSet As System.Windows.Forms.PictureBox
 End Class

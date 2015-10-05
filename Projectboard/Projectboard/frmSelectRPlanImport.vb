@@ -47,7 +47,7 @@ Public Class frmSelectRPlanImport
 
     Private Sub importRPLAN_Click(sender As Object, e As EventArgs) Handles importRPLAN.Click
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim vglName As String = " "
         Dim myCollection As New Collection
 
