@@ -10526,7 +10526,15 @@ Public Module Projekte
                 For i = 1 To hproj.CountPhases
                     cphase = hproj.getPhase(i)
                     phasenNameID = cphase.nameID
-                    phaseShapeName = projectboardShapes.calcPhaseShapeName(pname, phasenNameID) & "#" & i.ToString
+
+                    '''' tk/ur: 28.9.15 
+                    '''' damit die Phase (1) gefunden werden kann.  muss bei Phase(1) der Name anders zusammengesetzt sein als bei den anderen 
+                    If phasenNameID = rootPhaseName Then
+                        phaseShapeName = projectboardShapes.calcPhaseShapeName(pname, phasenNameID)
+                    Else
+                        phaseShapeName = projectboardShapes.calcPhaseShapeName(pname, phasenNameID) & "#" & i.ToString
+                    End If
+
                     'phaseShapeName = pname & "#" & phasenName & "#" & i.ToString
 
                     Try
@@ -17554,6 +17562,7 @@ Public Module Projekte
         Dim newProj As clsProjekt
         Dim hproj As clsProjekt
         Dim key As String = calcProjektKey(pname, newVariant)
+
         'Dim tfzeile As Integer = 0
         'Dim projectshape As Excel.ShapeRange
 
@@ -17586,6 +17595,10 @@ Public Module Projekte
 
                 tfzeile = hproj.tfZeile
 
+                ' tk/ur : sicherstellen, dass die neue Variante in der gleichen Art(extendedView) angezeigt wird wie die 
+                ' bisherige Variante 
+                newProj.extendedView = hproj.extendedView
+
                 ' die Darstellung in der Projekt-Tafel löschen
                 Call clearProjektinPlantafel(pname)
 
@@ -17599,6 +17612,7 @@ Public Module Projekte
 
             ' die  Variante wird aufgenommen
             ShowProjekte.Add(newProj)
+
 
             ' neu zeichnen des Projekts 
             Dim tmpCollection As New Collection
@@ -18159,7 +18173,13 @@ Public Module Projekte
 
         ElseIf type = PTshty.phaseE Or type = PTshty.phaseN Or type = PTshty.phase1 Then
 
-            tmpName = shpNameParts(1)
+            ' ergänzt tk/28.9.15 wg Fehler Beschriften
+            If shpNameParts.Length > 1 Then
+                tmpName = shpNameParts(1)
+            Else
+                tmpName = rootPhaseName
+            End If
+
 
         ElseIf type = PTshty.milestoneE Or type = PTshty.milestoneN Then
 
