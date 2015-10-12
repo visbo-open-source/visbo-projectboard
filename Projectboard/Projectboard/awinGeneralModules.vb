@@ -3791,15 +3791,17 @@ Public Module awinGeneralModules
                   
                     Catch ex As Exception
 
-                    End Try
-
-                    Else
+                End Try
 
 
+            Else
 
+                Call MsgBox("keine Termine definiert")
+                Throw New ArgumentException("Es wurden keine Termine definiert! Projekt " & hproj.name & " kann nicht eingelesen werden")
             End If
         Catch ex As Exception
-            Call MsgBox("keine Termine definiert")
+            Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Termine von '" & hproj.name & "' " & vbLf & ex.Message)
+
         End Try
 
 
