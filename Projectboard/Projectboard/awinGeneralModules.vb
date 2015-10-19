@@ -2048,9 +2048,14 @@ Public Module awinGeneralModules
                                         Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
                                         Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
 
-                                        If anzhours > 0 And anzmonth = 0 Then
+                                        If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                            anzdays = 1
                                             anzmonth = 1
                                         End If
+                                        If anzdays > 0 And anzmonth = 0 Then
+                                            anzmonth = 1
+                                        End If
+
 
                                         ReDim Xwerte(anzmonth - 1)
 
@@ -2125,9 +2130,16 @@ Public Module awinGeneralModules
 
                                         Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
                                         Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
+                                        Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
+
+                                        If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                            anzdays = 1
+                                            anzmonth = 1
+                                        End If
                                         If anzdays > 0 And anzmonth = 0 Then
                                             anzmonth = 1
                                         End If
+                                       
 
                                         ReDim Xwerte(anzmonth - 1)
 
