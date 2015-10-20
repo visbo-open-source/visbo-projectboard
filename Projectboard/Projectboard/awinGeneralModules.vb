@@ -3555,7 +3555,7 @@ Public Module awinGeneralModules
                             Dim duration As Long
                             Dim offset As Long
 
-                           
+
                             Try
                                 ' String aus erster Spalte der Tabelle lesen
 
@@ -3822,8 +3822,8 @@ Public Module awinGeneralModules
 
                         Next zeile
                     End With
-                  
-                    Catch ex As Exception
+
+                Catch ex As Exception
 
                 End Try
 
@@ -4116,7 +4116,7 @@ Public Module awinGeneralModules
                                 If Not (anfang = cphase.relStart And ende = cphase.relEnde) Then
 
                                     'Call MsgBox("Fehler beim Lesen der Ressourcen: die Dauer der Phase " & cphase.name & "' ist fehlerhaft")
-                                    Throw New ArgumentException("Fehler beim Lesen der Ressourcen: die Dauer der Phase " & cphase.name & "' ist fehlerhaft")
+                                    Throw New ArgumentException("Fehler beim Lesen der Ressourcen: die Dauer der Phase '" & cphase.name & "' ist fehlerhaft")
 
                                 End If
 
