@@ -30,6 +30,12 @@ Public Module Module1
     Public myProjektTafel As String = ""
     Public myCustomizationFile As String
 
+    'Definitionen zum Schreiben eines Logfiles
+    Public xlsLogfile As Excel.Workbook = Nothing
+    Public logmessage As String = ""
+    Public anzFehler As Long = 0
+
+
     Public vergleichsfarbe0 As Object
     Public vergleichsfarbe1 As Object
     Public vergleichsfarbe2 As Object
@@ -401,6 +407,7 @@ Public Module Module1
 
     Public excelExportVorlage As String = "export Vorlage.xlsx"
     Public requirementsOrdner As String = "requirements\"
+    Public logFileName As String = requirementsOrdner & "logFile.xlsx"                               ' für Fehlermeldung aus Import und Export
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"
@@ -2749,6 +2756,52 @@ Public Module Module1
 
     End Sub
    
+
+
+    ''' <summary>
+    ''' initialisert das Logfile
+    ''' </summary>
+    ''' <remarks></remarks>
+    Sub logfileInit()
+
+        Try
+
+            With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
+                CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
+                CType(.Columns(1), Excel.Range).ColumnWidth = 100
+                CType(.Columns(2), Excel.Range).ColumnWidth = 50
+                CType(.Columns(3), Excel.Range).ColumnWidth = 20
+            End With
+        Catch ex As Exception
+
+        End Try
+
+
+    End Sub
+    ''' <summary>
+    ''' schreibt in das logfile 
+    ''' </summary>
+    ''' <param name="text"></param>
+    ''' <param name="addOn"></param>
+    ''' <remarks></remarks>
+    Sub logfileSchreiben(ByVal text As String, ByVal addOn As String, ByRef anzFehler As Long)
+
+        Dim obj As Object
+
+        Try
+            obj = CType(CType(xlsLogfile.Worksheets(1), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+
+            With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
+                CType(.Cells(1, 1), Excel.Range).Value = text
+                CType(.Cells(1, 2), Excel.Range).Value = addOn
+                CType(.Cells(1, 3), Excel.Range).Value = Date.Now
+            End With
+            anzFehler = anzFehler + 1
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
 
 
 End Module

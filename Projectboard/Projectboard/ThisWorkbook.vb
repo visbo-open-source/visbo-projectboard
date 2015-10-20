@@ -237,10 +237,10 @@ Public Class ThisWorkbook
 
         appInstance.ActiveWorkbook.Saved = True
 
-
         ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
 
         Application.Quit()
+        'xlsLogfile.Close(SaveChanges:=True)
         appInstance.EnableEvents = True
 
     End Sub

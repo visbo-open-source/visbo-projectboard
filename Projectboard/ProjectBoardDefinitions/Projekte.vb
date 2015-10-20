@@ -17921,7 +17921,7 @@ Public Module Projekte
         Next
 
         If ImportProjekte.Count < 1 Then
-            Call MsgBox(" es waren keine Projekte zu importieren ...")
+            Call MsgBox(" es wurden keine Projekte importiert ...")
         Else
             Dim filterText As String
             If awinSettings.applyFilter Then

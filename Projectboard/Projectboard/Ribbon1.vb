@@ -3101,8 +3101,10 @@ Imports System.Drawing
 
                 Try
                     appInstance.Workbooks.Open(dateiName)
+                    Call logfileSchreiben("Beginn Import ", dateiName, -1)
+
                 Catch ex1 As Exception
-                    'Call MsgBox("Fehler bei Öffnen der Datei " & dateiName)
+                    Call logfileSchreiben("Fehler bei Öffnen der Datei ", dateiName, -1)
                     skip = True
                 End Try
 
@@ -3124,8 +3126,9 @@ Imports System.Drawing
 
                     Catch ex1 As Exception
                         appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                        Call logfileSchreiben(ex1.Message, "", anzFehler)
                         Call MsgBox(ex1.Message)
-                        Call MsgBox("Fehler bei Import von Projekt " & hproj.name)
+                        'Call MsgBox("Fehler bei Import von Projekt " & hproj.name & vbCrLf & "Siehe Logfile")
                     End Try
 
 
