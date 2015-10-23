@@ -3051,6 +3051,115 @@ Imports System.Drawing
         appInstance.ScreenUpdating = True
 
     End Sub
+    Public Sub Tom2G4M1ImportOLD(control As IRibbonControl)
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim hproj As New clsProjekt
+        Dim cproj As New clsProjekt
+        Dim vglName As String = " "
+        Dim outputString As String = ""
+        Dim dirName As String
+        Dim dateiName As String
+        Dim pname As String
+        Dim importDate As Date = Date.Now
+        'Dim importDate As Date = "31.10.2013"
+        Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+        Dim projektInventurFile As String = "ProjektInventur.xlsm"
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        Dim myCollection As New Collection
+
+
+
+
+        'dirName = awinPath & projektFilesOrdner
+        dirName = importOrdnerNames(PTImpExp.visbo)
+        listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.xlsx")
+
+        ' alle Import Projekte erstmal löschen
+        ImportProjekte.Clear()
+
+
+        ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+        Dim i As Integer
+        For i = 1 To listOfVorlagen.Count
+            dateiName = listOfVorlagen.Item(i - 1)
+
+            If dateiName = projektInventurFile Then
+
+                ' nichts machen 
+
+            Else
+                Dim skip As Boolean = False
+
+
+                Try
+                    appInstance.Workbooks.Open(dateiName)
+                    Call logfileSchreiben("Beginn Import ", dateiName, -1)
+
+                Catch ex1 As Exception
+                    Call logfileSchreiben("Fehler bei Öffnen der Datei ", dateiName, -1)
+                    skip = True
+                End Try
+
+                If Not skip Then
+                    pname = ""
+                    hproj = New clsProjekt
+                    Try
+                        Call awinImportProjectmitHrchy_beforePT113(hproj, Nothing, False, importDate)
+
+                        Try
+                            Dim keyStr As String = calcProjektKey(hproj)
+                            ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                            myCollection.Add(calcProjektKey(hproj))
+                        Catch ex2 As Exception
+                            Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
+                        End Try
+
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+
+                    Catch ex1 As Exception
+                        appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                        Call logfileSchreiben(ex1.Message, "", anzFehler)
+                        Call MsgBox(ex1.Message)
+                        'Call MsgBox("Fehler bei Import von Projekt " & hproj.name & vbCrLf & "Siehe Logfile")
+                    End Try
+
+
+
+                End If
+
+
+
+            End If
+
+
+        Next i
+
+
+
+        Try
+            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
+        End Try
+
+
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
+
+
+    End Sub
 
     Public Sub Tom2G4M1Import(control As IRibbonControl)
 

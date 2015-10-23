@@ -290,6 +290,7 @@
           <button id="PT6G5B2" label="Test-Funktionen"  onAction ="PTTestFunktion3" />
           <button id="PT6G5B3" label="Demo-Funktion Ampel"  onAction ="PTTestFunktion4" />
           <button id="PT6G5B4" label="Demo-Funktion Historie"  onAction ="PTTestFunktion5" />
+          <button id="PT4G5B6" label="Import alte Projekt-Steckbriefe vor PT113" onAction="Tom2G4M1ImportOLD" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: Struktur von Feature PT113, Spalte Summe"/>
         </group>
       </tab>
     </tabs>
