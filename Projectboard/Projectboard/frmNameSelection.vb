@@ -204,7 +204,7 @@ Public Class frmNameSelection
         ' jetzt wird der letzte Filter gespeichert ..
         Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
-                                                   selectedRoles, selectedCosts)
+                                                   selectedRoles, selectedCosts, False)
 
         ''''
         ''
@@ -216,7 +216,8 @@ Public Class frmNameSelection
 
         Dim validOption As Boolean
         If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
-            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Then
+            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Or _
+            Me.menuOption = PTmenue.vorlageErstellen Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft > 5 Then
             validOption = True
@@ -956,6 +957,7 @@ Public Class frmNameSelection
 
     ''' <summary>
     ''' fügt das selektierte Element der Listbox2 hinzu
+    ''' es muss unterschieden werden: 
     ''' </summary>
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
@@ -977,6 +979,20 @@ Public Class frmNameSelection
         Next
 
         nameListBox.SelectedItems.Clear()
+
+        ' Konsistenzbedingungen einhalten: 
+        If (rdbPhases.Checked = True Or rdbMilestones.Checked = True) And selNameListBox.Items.Count > 0 Then
+            selectedCosts.Clear()
+            selectedRoles.Clear()
+        ElseIf rdbRoles.Checked = True Then
+            selectedCosts.Clear()
+            selectedMilestones.Clear()
+            selectedPhases.Clear()
+        ElseIf rdbCosts.Checked = True Then
+            selectedRoles.Clear()
+            selectedMilestones.Clear()
+            selectedPhases.Clear()
+        End If
 
 
 

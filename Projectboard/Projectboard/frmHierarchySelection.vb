@@ -145,10 +145,10 @@ Public Class frmHierarchySelection
 
 
         ' jetzt wird der letzte Filter gespeichert ..
-        Dim filterName As String = "LastHry"
+        Dim filterName As String = "Last"
         Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
-                                                   selectedRoles, selectedCosts)
+                                                   selectedRoles, selectedCosts, True)
 
 
         ''''
@@ -161,7 +161,8 @@ Public Class frmHierarchySelection
 
         Dim validOption As Boolean
         If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
-            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Then
+            Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Or _
+            Me.menuOption = PTmenue.vorlageErstellen Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft > 5 Then
             validOption = True
