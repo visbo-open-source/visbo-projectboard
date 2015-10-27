@@ -31,31 +31,28 @@ Partial Class frmStoreCockpit
         'ComboBox1
         '
         Me.ComboBox1.FormattingEnabled = True
-        Me.ComboBox1.Location = New System.Drawing.Point(30, 77)
-        Me.ComboBox1.Margin = New System.Windows.Forms.Padding(4)
+        Me.ComboBox1.Location = New System.Drawing.Point(22, 63)
+        Me.ComboBox1.MaxLength = 30
         Me.ComboBox1.Name = "ComboBox1"
-        Me.ComboBox1.Size = New System.Drawing.Size(581, 24)
+        Me.ComboBox1.Size = New System.Drawing.Size(226, 21)
         Me.ComboBox1.Sorted = True
         Me.ComboBox1.TabIndex = 1
         '
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(27, 39)
-        Me.Label1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label1.Location = New System.Drawing.Point(19, 25)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(584, 17)
+        Me.Label1.Size = New System.Drawing.Size(149, 13)
         Me.Label1.TabIndex = 4
-        Me.Label1.Text = "Geben  Sie den Namen des Cockpits an, unter dem diese Charts gespeichert werden s" & _
-    "ollen"
+        Me.Label1.Text = "Bitte Cockpit-Namen angeben"
         '
         'OKButton
         '
         Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
-        Me.OKButton.Location = New System.Drawing.Point(122, 125)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(4)
+        Me.OKButton.Location = New System.Drawing.Point(23, 102)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(115, 28)
+        Me.OKButton.Size = New System.Drawing.Size(86, 23)
         Me.OKButton.TabIndex = 5
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -63,23 +60,23 @@ Partial Class frmStoreCockpit
         'AbbrButton
         '
         Me.AbbrButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.AbbrButton.Location = New System.Drawing.Point(371, 125)
-        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4)
+        Me.AbbrButton.Location = New System.Drawing.Point(158, 102)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(120, 28)
+        Me.AbbrButton.Size = New System.Drawing.Size(90, 23)
         Me.AbbrButton.TabIndex = 6
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
         '
         'frmStoreCockpit
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(635, 178)
+        Me.ClientSize = New System.Drawing.Size(290, 145)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.ComboBox1)
+        Me.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.Name = "frmStoreCockpit"
         Me.Text = "Speichern eines Chart-Cockpits"
         Me.ResumeLayout(False)

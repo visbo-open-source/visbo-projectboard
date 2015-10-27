@@ -75,6 +75,7 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsFilterDB.vb" />
     <Compile Include="clsVisboZustaende.vb" />
     <Compile Include="clsHierarchy.vb" />
     <Compile Include="clsHierarchyNode.vb" />

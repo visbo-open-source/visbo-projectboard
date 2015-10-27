@@ -274,6 +274,8 @@ Public Module Module1
         excelExport = 5
         vorlageErstellen = 6
         rplan = 7
+        meilensteinTrendanalyse = 8
+        filterAuswahl = 9
     End Enum
 
 
@@ -1466,6 +1468,51 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' Selektion aller Objekte in der Liste "selectedProjekte"
+    ''' 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Sub awinSelect()
+
+        Dim worksheetShapes As Excel.Shapes
+        Dim hproj As clsProjekt
+        Dim shapegruppe As Excel.ShapeRange
+        Dim shpElement As Excel.Shape
+        Dim shpArray() As String
+        Dim i As Integer = 0
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        ' Selektierte Projekte als selektiert kennzeichnen in der ProjektTafel
+
+        If selectedProjekte.Count > 0 Then
+            worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+            ReDim shpArray(selectedProjekte.Count - 1)
+
+            For Each kvp In selectedProjekte.Liste
+
+                hproj = kvp.Value
+                i = i + 1
+                Try
+                    shpElement = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes.Item(hproj.name)
+                    shpArray(i - 1) = shpElement.Name
+
+                Catch ex As Exception
+
+                End Try
+
+            Next
+            shapegruppe = worksheetShapes.Range(shpArray)
+            shapegruppe.Select()
+        End If
+
+
+
+        appInstance.EnableEvents = formerEE
+
+    End Sub
+    ''' <summary>
     ''' De-Selektion aller Objekte durch Selektion einer Zelle in Zeile 2 in der Mitte des aktuell gezeigten Fensters 
     ''' 
     ''' </summary>
@@ -1530,7 +1577,7 @@ Public Module Module1
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
                 With kvp.Value
-                    If zeile >= .tfZeile And zeile < .tfZeile + kvp.Value.calcNeededLines(tmpCollection, awinSettings.drawphases, False) Then
+                    If zeile >= .tfZeile And zeile < .tfZeile + kvp.Value.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or kvp.Value.extendedView, False) Then
                         istfrei = False
                         Exit For
                     End If
@@ -1587,7 +1634,7 @@ Public Module Module1
 
         Try
             Dim hproj As clsProjekt = ShowProjekte.getProject(pname)
-            anzahlzeilen = hproj.calcNeededLines(tmpCollection, awinSettings.drawphases, False)
+            anzahlzeilen = hproj.calcNeededLines(tmpCollection, tmpCollection, hproj.extendedView Or awinSettings.drawphases, False)
 
             ' Konsistenzbedingung prüfen ... 
             If zeile < 2 Then
@@ -1690,6 +1737,8 @@ Public Module Module1
 
         Try
             worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
+
+
 
             For Each shpElement In worksheetShapes
 
@@ -2611,47 +2660,51 @@ Public Module Module1
 
     End Function
 
-    ''' <summary>
-    ''' speichert den letzten Filter und setzt die temporären Collections wieder zurück 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
-                                              ByVal fBU As Collection, ByVal fTyp As Collection, _
-                                              ByVal fPhase As Collection, ByVal fMilestone As Collection, _
-                                              ByVal fRole As Collection, ByVal fCost As Collection, _
-                                              ByVal calledFromHry As Boolean)
+    '' '' ''' <summary>
+    '' '' ''' speichert den letzten Filter und setzt die temporären Collections wieder zurück 
+    '' '' ''' </summary>
+    '' '' ''' <remarks></remarks>
+    '' ''Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
+    '' ''                                          ByVal fBU As Collection, ByVal fTyp As Collection, _
+    '' ''                                          ByVal fPhase As Collection, ByVal fMilestone As Collection, _
+    '' ''                                          ByVal fRole As Collection, ByVal fCost As Collection, _
+    '' ''                                          ByVal calledFromHry As Boolean)
 
-        Dim lastFilter As clsFilter
-
-
-        If calledFromHry Then
-            Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
-
-            If Not IsNothing(nameLastFilter) Then
-                With nameLastFilter
-                    lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
-                End With
-            Else
-                lastFilter = New clsFilter(fName, fBU, fTyp, _
-                                  fPhase, fMilestone, _
-                                 fRole, fCost)
-            End If
+    '' ''    Dim lastFilter As clsFilter
 
 
-        Else
-            lastFilter = New clsFilter(fName, fBU, fTyp, _
-                                  fPhase, fMilestone, _
-                                 fRole, fCost)
-        End If
+    '' ''    If calledFromHry Then
+    '' ''        Dim nameLastFilter As clsFilter = filterDefinitions.retrieveFilter("Last")
 
-        If menuOption = PTmenue.filterdefinieren Then
-            filterDefinitions.storeFilter(fName, lastFilter)
-        Else
-            selFilterDefinitions.storeFilter(fName, lastFilter)
-        End If
+    '' ''        If Not IsNothing(nameLastFilter) Then
+    '' ''            With nameLastFilter
+    '' ''                lastFilter = New clsFilter(fName, .BUs, .Typs, fPhase, fMilestone, .Roles, .Costs)
+    '' ''            End With
+    '' ''        Else
+    '' ''            lastFilter = New clsFilter(fName, fBU, fTyp, _
+    '' ''                              fPhase, fMilestone, _
+    '' ''                             fRole, fCost)
+    '' ''        End If
 
 
-    End Sub
+    '' ''    Else
+    '' ''        lastFilter = New clsFilter(fName, fBU, fTyp, _
+    '' ''                              fPhase, fMilestone, _
+    '' ''                             fRole, fCost)
+    '' ''    End If
+
+    '' ''    If menuOption = PTmenue.filterdefinieren Then
+
+    '' ''        filterDefinitions.storeFilter(fName, lastFilter)
+    '' ''        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+
+
+    '' ''    Else
+    '' ''        selFilterDefinitions.storeFilter(fName, lastFilter)
+    '' ''    End If
+
+
+    '' ''End Sub
 
     
 
@@ -2673,32 +2726,28 @@ Public Module Module1
 
         Dim lastFilter As clsFilter
 
-        If menuOption = PTmenue.filterdefinieren Then
+        If menuOption = PTmenue.filterdefinieren Or _
+            menuOption = PTmenue.filterAuswahl Then
             lastFilter = filterDefinitions.retrieveFilter(fName)
         Else
             lastFilter = selFilterDefinitions.retrieveFilter(fName)
-            If IsNothing(lastFilter) Then
-                lastFilter = filterDefinitions.retrieveFilter(fName)
-            End If
+
+            ' ur: 30.07.2015: wenn kein selFilterDefinitions existiert, so soll auch keine Voreinstellung angezeigt werden
+            ' ''If IsNothing(lastFilter) Then
+            ' ''    lastFilter = filterDefinitions.retrieveFilter(fName)
+            ' ''End If
         End If
 
 
         If Not IsNothing(lastFilter) Then
-            ' Änderung 16.2.15: es sollen immer alle berücksichtigt werden 
-            'If menuOption = PTmenue.filterdefinieren Then
-            '    selectedBUs = lastFilter.BUs
-            '    selectedTyps = lastFilter.Typs
-            'Else
-            '    selectedBUs = New Collection
-            '    selectedTyps = New Collection
-            'End If
 
-            selectedBUs = lastFilter.BUs
-            selectedTyps = lastFilter.Typs
-            selectedPhases = lastFilter.Phases
-            selectedMilestones = lastFilter.Milestones
-            selectedRoles = lastFilter.Roles
-            selectedCosts = lastFilter.Costs
+            'selectedBUs = lastFilter.BUs
+            selectedBUs = copyCollection(lastFilter.BUs)
+            selectedTyps = copyCollection(lastFilter.Typs)
+            selectedPhases = copyCollection(lastFilter.Phases)
+            selectedMilestones = copyCollection(lastFilter.Milestones)
+            selectedRoles = copyCollection(lastFilter.Roles)
+            selectedCosts = copyCollection(lastFilter.Costs)
 
         Else
             selectedBUs = New Collection
@@ -2710,6 +2759,7 @@ Public Module Module1
         End If
 
     End Sub
+   
 
 
 End Module

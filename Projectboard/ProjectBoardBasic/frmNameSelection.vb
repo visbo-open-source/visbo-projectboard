@@ -2,6 +2,7 @@
 Imports System.ComponentModel
 Imports ClassLibrary1
 Imports Microsoft.Office.Interop.Excel
+Imports System.Windows.Forms
 
 Public Class frmNameSelection
 
@@ -62,6 +63,12 @@ Public Class frmNameSelection
 
         awinSettings.isHryNameFrmActive = False
 
+        ' Falls einzelne Projekte selektiert waren, so wird diese Selection hier aufgehoben
+        If selectedProjekte.Count > 0 Then
+            Call awinDeSelect()
+        End If
+
+
     End Sub
 
     ''' <summary>
@@ -85,47 +92,47 @@ Public Class frmNameSelection
         statusLabel.Text = ""
         statusLabel.Visible = True
 
-        
+
         ' jetzt werden anhand des letzten Filters die Collections gesetzt 
         Call retrieveSelections("Last", menuOption, selectedBUs, selectedTyps, _
                                 selectedPhases, selectedMilestones, _
                                 selectedRoles, selectedCosts)
 
         ' jetzt werden die ProjektReport- bzw. PortfolioReport-Vorlagen ausgelesen 
-        ' in diesem Fall werden nur die mit Multiprojekt angezeigt 
+        ' in letztem Fall werden nur die mit Multiprojekt angezeigt 
+        ' ur:27.07.2015: für menuOption = filterdefinieren, werden hier die in der Datenbank vorhandenen Filter zur Auswahl angezeigt
 
         Call frmHryNameReadPPTVorlagen(Me.menuOption, repVorlagenDropbox)
 
-        ' das folgende wurde bereits alles in dem Aufruf frmHryNameReadPPTVorlagen gemacht ...  
-        'If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Then
 
-        '    Dim dirname As String
-        '    Dim dateiName As String = ""
+        ' die Filter einlesen
+        Call frmHryNameReadFilterVorlagen(Me.menuOption, filterDropbox)
 
-        '    If Me.menuOption = PTmenue.multiprojektReport Then
-        '        dirname = awinPath & RepPortfolioVorOrdner
-        '    Else
-        '        dirname = awinPath & RepProjectVorOrdner
-        '    End If
+        ' alle definierten Filter in ComboBox anzeigen
+        If Me.menuOption = PTmenue.filterdefinieren Then
 
-        '    Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
-        '    Try
+            For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
+                filterDropbox.Items.Add(kvp.Key)
+            Next
+            Me.rdbPhases.Checked = True
 
-        '        Dim i As Integer
-        '        For i = 1 To listOfVorlagen.Count
-        '            dateiName = Dir(listOfVorlagen.Item(i - 1))
-        '            If dateiName.Contains("Typ II") Then
-        '                repVorlagenDropbox.Items.Add(dateiName)
-        '            End If
+        ElseIf Me.menuOption = PTmenue.meilensteinTrendanalyse Then
+            Me.rdbMilestones.Checked = True
 
-        '        Next i
-        '    Catch ex As Exception
-        '        'Call MsgBox(ex.Message & ": " & dateiName)
-        '    End Try
+            For Each element As String In selectedMilestones
+                If Not selNameListBox.Items.Contains(element) Then
+                    selNameListBox.Items.Add(element)
+                End If
+            Next
+        Else
 
-        'End If
+            For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
+                filterDropbox.Items.Add(kvp.Key)
+            Next
+            Me.rdbPhases.Checked = True
+        End If
 
-        Me.rdbPhases.Checked = True
+
 
     End Sub
 
@@ -137,7 +144,8 @@ Public Class frmNameSelection
     ''' <remarks></remarks>
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
-        Dim filterName As String = "Last"
+        Dim filterName As String = ""
+        Dim lastFilter As String = "Last"
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
@@ -200,9 +208,40 @@ Public Class frmNameSelection
             Next
         End If
 
+        If Me.menuOption = PTmenue.filterdefinieren Then
+
+            filterName = filterDropbox.Text
+            ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts, False)
+
+        ElseIf Me.menuOption = PTmenue.visualisieren Then
+
+            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
+                (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
+                Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
+                ''Else
+                ''    filterName = filterDropbox.Text
+                ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+                ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                ''                                           selectedPhases, selectedMilestones, _
+                ''                                           selectedRoles, selectedCosts, False)
+            End If
+
+            ''Else    ' alle anderen PTmenues
+
+            ''    filterName = filterDropbox.Text
+            ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+            ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+            ''                                           selectedPhases, selectedMilestones, _
+            ''                                           selectedRoles, selectedCosts, False)
+        End If
+
+
 
         ' jetzt wird der letzte Filter gespeichert ..
-        Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+        Call storeFilter(lastFilter, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts, False)
 
@@ -289,6 +328,7 @@ Public Class frmNameSelection
             End If
 
         Else
+
             ' die Aktion Subroutine aufrufen 
             Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
                             selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, filterName)
@@ -300,9 +340,19 @@ Public Class frmNameSelection
         appInstance.EnableEvents = True
         enableOnUpdate = True
 
-        ' bei bestimmten Menu-Optionen das Formuzlar dann schliessen 
-        If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Then
+
+        ' bei bestimmten Menu-Optionen das Formular dann schliessen 
+        If Me.menuOption = PTmenue.excelExport Or _
+            menuOption = PTmenue.filterdefinieren Or _
+            (menuOption = PTmenue.meilensteinTrendanalyse And selectedMilestones.Count > 0) Then
             MyBase.Close()
+        Else
+            ' geänderte Auswahl/Filterliste neu anzeigen
+            filterDropbox.Items.Clear()
+            For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
+                filterDropbox.Items.Add(kvp.Key)
+            Next
+
         End If
 
     End Sub
@@ -418,7 +468,7 @@ Public Class frmNameSelection
 
         Else
 
-            ' Merken welches die selektierten Phasen waren 
+            ' Merken welches die selektierten Meilensteine waren 
             selectedMilestones.Clear()
             For Each element As String In selNameListBox.Items
                 selectedMilestones.Add(element, element)
@@ -839,20 +889,25 @@ Public Class frmNameSelection
 
         End Select
 
-        
 
         For i = 1 To listOfNames.Count
-            nameListBox.Items.Add(listOfNames.Item(i))
+            If Not nameListBox.Items.Contains(listOfNames.Item(i)) Then
+                nameListBox.Items.Add(listOfNames.Item(i))
+            End If
         Next
 
 
         ' Filter Box Test setzen 
         filterBox.Text = ""
 
-        ' jetzt prüfen, ob selectedphases bereits etwas enthält
+        ' jetzt prüfen, ob selected... bereits etwas enthält
         ' wenn ja, dann werden diese Items in Listbox2 dargestellt 
+        selNameListBox.Items.Clear()
         For Each element As String In tmpCollection
-            selNameListBox.Items.Add(element)
+            If Not selNameListBox.Items.Contains(element) Then
+                selNameListBox.Items.Add(element)
+            End If
+
         Next
 
     End Sub
@@ -930,9 +985,6 @@ Public Class frmNameSelection
         Me.statusLabel.Visible = True
         Me.AbbrButton.Text = "Zurücksetzen"
 
-        'Call storeFilter("Last", selectedBUs, selectedTyps, _
-        '                                           selectedPhases, selectedMilestones, _
-        '                                           selectedRoles, selectedCosts)
 
         backgroundRunning = False
     End Sub
@@ -980,20 +1032,31 @@ Public Class frmNameSelection
 
         nameListBox.SelectedItems.Clear()
 
-        ' Konsistenzbedingungen einhalten: 
-        If (rdbPhases.Checked = True Or rdbMilestones.Checked = True) And selNameListBox.Items.Count > 0 Then
-            selectedCosts.Clear()
-            selectedRoles.Clear()
-        ElseIf rdbRoles.Checked = True Then
-            selectedCosts.Clear()
-            selectedMilestones.Clear()
-            selectedPhases.Clear()
-        ElseIf rdbCosts.Checked = True Then
-            selectedRoles.Clear()
-            selectedMilestones.Clear()
-            selectedPhases.Clear()
-        End If
 
+        ' ur: 30.07.2015: gilt nicht für filterdefinieren: Konsistenzbedingungen einhalten: 
+
+        If Me.menuOption = PTmenue.visualisieren Then
+
+            If (rdbPhases.Checked = True Or rdbMilestones.Checked = True) And selNameListBox.Items.Count > 0 Then
+                selectedCosts.Clear()
+                selectedRoles.Clear()
+            ElseIf rdbRoles.Checked = True Then
+                selectedCosts.Clear()
+                selectedMilestones.Clear()
+                selectedPhases.Clear()
+            ElseIf rdbCosts.Checked = True Then
+                selectedRoles.Clear()
+                selectedMilestones.Clear()
+                selectedPhases.Clear()
+            End If
+
+        ElseIf Me.menuOption = PTmenue.meilensteinTrendanalyse Then
+
+            selectedRoles.Clear()
+            selectedCosts.Clear()
+            selectedPhases.Clear()
+
+        End If
 
 
 
@@ -1010,6 +1073,8 @@ Public Class frmNameSelection
         Dim element As Object
         Dim removeCollection As New Collection
 
+
+
         For i = 1 To selNameListBox.SelectedItems.Count
             element = selNameListBox.SelectedItems.Item(i - 1)
             removeCollection.Add(element)
@@ -1019,49 +1084,216 @@ Public Class frmNameSelection
             selNameListBox.Items.Remove(element)
         Next
 
+
+    End Sub
+    '''' ur: 3.08.2015: wurde mit der Auswahl aus der Hierarchie frmHierarchySelection ersetzt
+
+    ' '' ''Private Sub selNameListBox_MouseDoubleClick(sender As Object, e As MouseEventArgs) Handles selNameListBox.MouseDoubleClick
+
+    ' '' ''    Dim elemName As String = ""
+    ' '' ''    Dim childName As String
+    ' '' ''    Dim sammelCollection As Collection
+    ' '' ''    Dim anzahl As Integer = selNameListBox.SelectedItems.Count
+
+    ' '' ''    If rdbPhases.Checked Then
+
+    ' '' ''        If anzahl = 1 Then
+    ' '' ''            elemName = CStr(selNameListBox.SelectedItem)
+    ' '' ''        ElseIf anzahl > 1 Then
+    ' '' ''            elemName = CStr(selNameListBox.SelectedItems.Item(1))
+    ' '' ''        End If
+
+    ' '' ''        ' das Element rausnehmen 
+    ' '' ''        selNameListBox.Items.Remove(selNameListBox.SelectedItem)
+
+    ' '' ''        sammelCollection = ShowProjekte.getPhasesOfPhase(elemName)
+
+    ' '' ''        For i As Integer = 1 To sammelCollection.Count
+
+    ' '' ''            childName = CStr(sammelCollection.Item(i))
+    ' '' ''            If Not selNameListBox.Items.Contains(childName) Then
+    ' '' ''                selNameListBox.Items.Add(childName)
+    ' '' ''            End If
+
+    ' '' ''        Next
+
+    ' '' ''        If sammelCollection.Count > 0 Then
+    ' '' ''            ' dann wurde eine Ersetzung vorgenommen 
+    ' '' ''            ' jetzt muss bestimmt werden, ob Farben geändert werden müssen 
+
+    ' '' ''        End If
+
+    ' '' ''    End If
+
+
+    ' '' ''End Sub
+
+    Private Sub filterDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles filterDropbox.SelectedIndexChanged
+
+        If Me.menuOption = PTmenue.filterdefinieren Then
+
+            Dim fName As String = filterDropbox.SelectedItem.ToString
+            ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
+
+            ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
+            Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
+                                    selectedPhases, selectedMilestones, _
+                                    selectedRoles, selectedCosts)
+            If Me.rdbPhases.Checked Then
+                Call rebuildFormerState(PTauswahlTyp.phase)
+            ElseIf Me.rdbMilestones.Checked Then
+                Call rebuildFormerState(PTauswahlTyp.meilenstein)
+            ElseIf Me.rdbRoles.Checked Then
+                Call rebuildFormerState(PTauswahlTyp.Rolle)
+            ElseIf Me.rdbCosts.Checked Then
+                Call rebuildFormerState(PTauswahlTyp.Kostenart)
+            ElseIf Me.rdbTyp.Checked Then
+                Call rebuildFormerState(PTauswahlTyp.ProjektTyp)
+            ElseIf Me.rdbBU.Checked Then
+                Call rebuildFormerState(PTauswahlTyp.BusinessUnit)
+            End If
+
+            '  Call MsgBox("in filterDropbox")
+        Else
+
+            Dim fName As String = filterDropbox.SelectedItem.ToString
+            ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
+
+            ' jetzt werden anhand des Filters "fName" die Collections gesetzt 
+            Call retrieveSelections(fName, menuOption, selectedBUs, selectedTyps, _
+                                    selectedPhases, selectedMilestones, _
+                                    selectedRoles, selectedCosts)
+            If Me.rdbPhases.Checked Then
+                Call rebuildFormerState(PTauswahlTyp.phase)
+            ElseIf Me.rdbMilestones.Checked Then
+                Call rebuildFormerState(PTauswahlTyp.meilenstein)
+            ElseIf Me.rdbRoles.Checked Then
+                Call rebuildFormerState(PTauswahlTyp.Rolle)
+            ElseIf Me.rdbCosts.Checked Then
+                Call rebuildFormerState(PTauswahlTyp.Kostenart)
+            ElseIf Me.rdbTyp.Checked Then
+                Call rebuildFormerState(PTauswahlTyp.ProjektTyp)
+            ElseIf Me.rdbBU.Checked Then
+                Call rebuildFormerState(PTauswahlTyp.BusinessUnit)
+            End If
+
+            '  Call MsgBox("in filterDropbox")
+        End If
+
     End Sub
 
-    
-    Private Sub selNameListBox_MouseDoubleClick(sender As Object, e As MouseEventArgs) Handles selNameListBox.MouseDoubleClick
+    Private Sub auswSpeichern_Click(sender As Object, e As EventArgs) Handles auswSpeichern.Click
 
-        Dim elemName As String = ""
-        Dim childName As String
-        Dim sammelCollection As Collection
-        Dim anzahl As Integer = selNameListBox.SelectedItems.Count
+        Dim filterName As String = ""
+        Dim lastFilter As String = "Last"
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
 
-        If rdbPhases.Checked Then
+        statusLabel.Text = ""
 
-            If anzahl = 1 Then
-                elemName = CStr(selNameListBox.SelectedItem)
-            ElseIf anzahl > 1 Then
-                elemName = CStr(selNameListBox.SelectedItems.Item(1))
-            End If
+        ' hier muss jetzt noch der aktuelle rdb ausgelesen werden ..
+        If Me.rdbPhases.Checked = True Then
 
-            ' das Element rausnehmen 
-            selNameListBox.Items.Remove(selNameListBox.SelectedItem)
-
-            sammelCollection = ShowProjekte.getPhasesOfPhase(elemName)
-
-            For i As Integer = 1 To sammelCollection.Count
-
-                childName = CStr(sammelCollection.Item(i))
-                If Not selNameListBox.Items.Contains(childName) Then
-                    selNameListBox.Items.Add(childName)
+            selectedPhases.Clear()
+            For Each element As String In selNameListBox.Items
+                If Not selectedPhases.Contains(element) Then
+                    selectedPhases.Add(element, element)
                 End If
-
             Next
 
-            If sammelCollection.Count > 0 Then
-                ' dann wurde eine Ersetzung vorgenommen 
-                ' jetzt muss bestimmt werden, ob Farben geändert werden müssen 
 
+        ElseIf Me.rdbMilestones.Checked = True Then
+
+            selectedMilestones.Clear()
+            For Each element As String In selNameListBox.Items
+                If Not selectedMilestones.Contains(element) Then
+                    selectedMilestones.Add(element, element)
+                End If
+            Next
+
+        ElseIf rdbRoles.Checked = True Then
+
+            selectedRoles.Clear()
+            For Each element As String In selNameListBox.Items
+                If Not selectedRoles.Contains(element) Then
+                    selectedRoles.Add(element, element)
+                End If
+            Next
+
+        ElseIf rdbCosts.Checked = True Then
+
+            selectedCosts.Clear()
+            For Each element As String In selNameListBox.Items
+                If Not selectedCosts.Contains(element) Then
+                    selectedCosts.Add(element, element)
+                End If
+            Next
+
+        ElseIf rdbBU.Checked = True Then
+
+            selectedBUs.Clear()
+            For Each element As String In selNameListBox.Items
+                If Not selectedBUs.Contains(element) Then
+                    selectedBUs.Add(element, element)
+                End If
+            Next
+
+        ElseIf rdbTyp.Checked = True Then
+
+            selectedTyps.Clear()
+            For Each element As String In selNameListBox.Items
+                If Not selectedTyps.Contains(element) Then
+                    selectedTyps.Add(element, element)
+                End If
+            Next
+        End If
+
+        If Me.menuOption = PTmenue.filterdefinieren Then
+
+            filterName = filterDropbox.Text
+            ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts, False)
+
+        ElseIf Me.menuOption = PTmenue.visualisieren Then
+
+            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
+                (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
+                Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
+            Else
+                filterName = filterDropbox.Text
+                ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+                Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                       selectedPhases, selectedMilestones, _
+                                                       selectedRoles, selectedCosts, False)
             End If
+
+        Else    ' alle anderen PTmenues
+
+            filterName = filterDropbox.Text
+            ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts, False)
+        End If
+
+
+
+        ' jetzt wird der letzte Filter gespeichert ..
+        Call storeFilter(lastFilter, menuOption, selectedBUs, selectedTyps, _
+                                                   selectedPhases, selectedMilestones, _
+                                                   selectedRoles, selectedCosts, False)
+
+        ' geänderte Auswahl/Filterliste neu anzeigen
+        If Not (Me.menuOption = PTmenue.filterdefinieren) Then
+            filterDropbox.Items.Clear()
+            For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
+                filterDropbox.Items.Add(kvp.Key)
+            Next
 
         End If
 
 
     End Sub
-
-
-
 End Class

@@ -320,7 +320,7 @@
     End Property
 
     ''' <summary>
-    ''' gibt zu einem gegebenen Meilenstein-Namen das clsResult Objekt zurück, sofern es existiert
+    ''' gibt zu einem gegebenen Meilenstein-Namen das clsMeilenstein Objekt zurück, sofern es existiert
     ''' Nothing sonst
     ''' </summary>
     ''' <param name="msName">Name des Meilensteins</param>

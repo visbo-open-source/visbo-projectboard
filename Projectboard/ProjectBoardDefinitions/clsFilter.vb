@@ -559,22 +559,22 @@
                 ByVal fRolle As Collection, ByVal fCost As Collection)
 
         filterPhase = New Collection
-        Call copyCollections(fPhase, filterPhase)
+        filterPhase = copyCollection(fPhase)
 
         filterMilestone = New Collection
-        Call copyCollections(fMilestone, filterMilestone)
+        filterMilestone = copyCollection(fMilestone)
 
         filterRolle = New Collection
-        Call copyCollections(fRolle, filterRolle)
+        filterRolle = copyCollection(fRolle)
         
         filterCost = New Collection
-        Call copyCollections(fCost, filterCost)
+        filterCost = copyCollection(fCost)
 
         filterBU = New Collection
-        Call copyCollections(fBU, filterBU)
+        filterBU = copyCollection(fBU)
         
         filterTyp = New Collection
-        Call copyCollections(fTyp, filterTyp)
+        filterTyp = copyCollection(fTyp)
         
 
         name = kennung

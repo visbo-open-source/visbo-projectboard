@@ -35,6 +35,7 @@
     Public Property zeitEinheit As String
     Public Property kapaEinheit As String
     Public Property databaseName As String
+    Public Property databaseURL As String
     Public Property zeilenhoehe1 As Double
     Public Property zeilenhoehe2 As Double
     Public Property spaltenbreite As Double

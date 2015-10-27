@@ -348,7 +348,7 @@ Public Module awinDiagrams
             If Not found Then
 
 
-                With CType(appInstance.Charts.Add, Excel.Chart)
+                With appInstance.Charts.Add
 
 
                     If Not isCockpitChart Then
@@ -493,7 +493,7 @@ Public Module awinDiagrams
 
                                 ' Änderung 8.10.14 die Zahl der MEilensteine insgesamt anzeigen 
                                 ' nicht aufgeschlüsselt nach welcher MEilenstein , welche Farbe
-                                
+
                                 For i = 0 To bis - von
                                     datenreihe(i) = 0
                                     For c = 0 To 3
@@ -883,7 +883,7 @@ Public Module awinDiagrams
         Dim found As Boolean
         Dim hmxWert As Double = -10000.0 ' nimmt den Max-Wert der Datenreihe auf
 
-        Dim minwert As Double, maxwert As Double
+        'Dim minwert As Double, maxwert As Double
         Dim nr_pts As Integer
         Dim diagramTitle As String
 
@@ -901,7 +901,7 @@ Public Module awinDiagrams
         Dim breadcrumb As String = ""
         Dim startdate As Date
         Dim diff As Integer
-        Dim mindone As Boolean, maxdone As Boolean
+        'Dim mindone As Boolean, maxdone As Boolean
         Dim width As Double
         'Dim left As Double
         Dim myCollection As Collection
@@ -3722,19 +3722,26 @@ Public Module awinDiagrams
     End Sub
 
     '
-    ' zeigt für alle Projekte die Bedarfe für die jeweilige Rolle an
+    ' zeigt für alle/die selektierten Projekte die Bedarfe für die jeweilige Rolle an
     '
     Sub awinShowProjectNeeds1(ByRef mycollection As Collection, type As String)
         Dim formerSU As Boolean = appInstance.ScreenUpdating
 
         appInstance.ScreenUpdating = False
 
-        ' jetzt alle Shapes unsichtbar machen, die im Zeitraum liegen 
+        ' jetzt überprüfen, ob Projekte selektiert sind
+        If selectedProjekte.Count > 0 Then
+            ' dann die Werte in die Excel Zellen der selektierten Projekte schreiben 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
+            Next kvp
+        Else
 
-        ' dann die Werte in die Excel Zellen schreiben 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-            Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
-        Next kvp
+            ' sonst die Werte aller geladenen Projekte in die Excel Zellen schreiben 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
+            Next kvp
+        End If
 
 
         ' jetzt wieder alle Shapes sichtbar machen 

@@ -1,10 +1,11 @@
 ﻿
 Imports ProjectBoardDefinitions
 Imports xlNS = Microsoft.Office.Interop.Excel
+Imports Microsoft.Office.Tools
 
 
 
-Public Class frmLoadCockpit
+Public Class frmStoreCockpit
 
     Private xlsCockpits As xlNS.Workbook = Nothing
 
@@ -17,26 +18,24 @@ Public Class frmLoadCockpit
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
         Dim cName As String
-        If ListBox1.Text <> "" Then
-            If IsNothing(ListBox1.SelectedItem) Then
-                cName = ListBox1.Text
-            Else
-                cName = ListBox1.SelectedItem.ToString
-            End If
-            DialogResult = System.Windows.Forms.DialogResult.OK
-            MyBase.Close()
+
+        If IsNothing(ComboBox1.SelectedItem) Then
+            cName = ComboBox1.Text
         Else
-            Call MsgBox("bitte einen Eintrag selektieren")
+            cName = ComboBox1.SelectedItem.ToString
         End If
+
+        DialogResult = System.Windows.Forms.DialogResult.OK
+        MyBase.Close()
+
 
     End Sub
 
     Private Sub frmStoreCockpit_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Dim i As Integer
         Dim fileName As String
-        Dim wsSheet As xlNS.Worksheet = Nothing
 
-        appInstance.ScreenUpdating = False
+        Dim wsSheet As xlNS.Worksheet = Nothing
 
         fileName = awinPath & cockpitsFile
 
@@ -66,7 +65,11 @@ Public Class frmLoadCockpit
 
             End Try
         Else
-            Throw New ArgumentException("Die Datei " & fileName & " existiert nicht.")
+            ' Cockpits-File neu anlegen 
+            xlsCockpits = appInstance.Workbooks.Add()
+            xlsCockpits.SaveAs(fileName)
+
+            'Throw New ArgumentException("Die Datei " & fileName & " existiert nicht.")
         End If
 
         ' alle vorhandenen Cockpits (=Tabellenblätter) zur Auswahl anzeigen
@@ -74,20 +77,24 @@ Public Class frmLoadCockpit
         i = 1
         While i <= xlsCockpits.Worksheets.Count
             wsSheet = CType(xlsCockpits.Worksheets.Item(i), Excel.Worksheet)
-            ListBox1.Items.Add(wsSheet.Name)
+            ComboBox1.Items.Add(wsSheet.Name)
             i = i + 1
         End While
 
         xlsCockpits.Close(SaveChanges:=False)
-        'appInstance.ScreenUpdating = True
-    End Sub
-
-    Private Sub ComboBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListBox1.SelectedIndexChanged
 
     End Sub
 
-    Private Sub ComboBox1_TextChanged(sender As Object, e As EventArgs) Handles ListBox1.TextChanged
+    Private Sub ComboBox1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ComboBox1.SelectedIndexChanged
+
+    End Sub
+
+    Private Sub ComboBox1_TextChanged(sender As Object, e As EventArgs) Handles ComboBox1.TextChanged
+        If ComboBox1.Text.Length <= 31 Then
+
+        Else
+            Call MsgBox("Länge des CockpitNamens auf 30 Zeichen begrenzt")
+        End If
         'Call MsgBox("Text changed")
     End Sub
-
 End Class

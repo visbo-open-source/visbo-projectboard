@@ -3,6 +3,7 @@ Imports ClassLibrary1
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports MongoDbAccess
+Imports System.Windows.Forms
 
 
 
@@ -32,7 +33,7 @@ Public Class frmAuthentication
 
 
         Try
-            Dim request As New Request(awinSettings.databaseName, user, pwd)
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
             projexist = request.projectNameAlreadyExists("TestProjekt", "v1")
             dbUsername = benutzer.Text
             dbPasswort = maskedPwd.Text
@@ -62,7 +63,7 @@ Public Class frmAuthentication
 
 
             Try
-                Dim request As New Request(awinSettings.databaseName, user, pwd)
+                Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
                 projexist = request.projectNameAlreadyExists("TestProjekt", "v1")
                 dbUsername = benutzer.Text
                 dbPasswort = maskedPwd.Text
@@ -113,7 +114,7 @@ Public Class frmAuthentication
 
 
         Try
-            Dim request As New Request(awinSettings.databaseName, user, pwd)
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, user, pwd)
             projexist = request.projectNameAlreadyExists("TestProjekt", "v1")
             dbUsername = benutzer.Text
             dbPasswort = maskedPwd.Text

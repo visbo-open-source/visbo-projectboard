@@ -7,6 +7,8 @@ Imports MongoDbAccess
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
+Imports System.Windows.Forms
+Imports Microsoft.Office.Interop
 
 
 Public Class frmSelectPPTTempl
@@ -66,7 +68,7 @@ Public Class frmSelectPPTTempl
 
     Private Sub createReport_Click(sender As Object, e As EventArgs) Handles createReport.Click
 
-        Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         'Dim singleShp As Excel.Shape
         'Dim hproj As clsProjekt
         Dim vglName As String = " "
@@ -149,7 +151,7 @@ Public Class frmSelectPPTTempl
                 .ScreenUpdating = True
             End If
         End With
-       
+
 
         Call MsgBox("Berichterstellung wurde beendet")
         MyBase.Close()
@@ -183,7 +185,7 @@ Public Class frmSelectPPTTempl
             Call MsgBox("Fehler " & ex.Message)
             Call MsgBox(" in BAckground Worker ...")
         End Try
-        
+
 
 
 
