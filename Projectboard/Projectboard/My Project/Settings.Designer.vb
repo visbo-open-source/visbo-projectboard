@@ -16,7 +16,7 @@ Option Explicit On
 <Global.System.Runtime.CompilerServices.CompilerGeneratedAttribute(),  _
  Global.System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "11.0.0.0"),  _
  Global.System.ComponentModel.EditorBrowsableAttribute(Global.System.ComponentModel.EditorBrowsableState.Advanced)>  _
-Partial Friend NotInheritable Class MySettings
+Partial Public NotInheritable Class MySettings
     Inherits Global.System.Configuration.ApplicationSettingsBase
     
     Private Shared defaultInstance As MySettings = CType(Global.System.Configuration.ApplicationSettingsBase.Synchronized(New MySettings()),MySettings)
@@ -71,15 +71,6 @@ Partial Friend NotInheritable Class MySettings
     Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
-        End Get
-    End Property
-    
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
-    Public ReadOnly Property mongoDBURL() As String
-        Get
-            Return CType(Me("mongoDBURL"),String)
         End Get
     End Property
     

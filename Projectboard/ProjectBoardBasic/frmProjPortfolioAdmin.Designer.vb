@@ -80,7 +80,7 @@ Partial Class frmProjPortfolioAdmin
 
     End Sub
     Public WithEvents TreeViewProjekte As System.Windows.Forms.TreeView
-    Friend WithEvents OKButton As System.Windows.Forms.Button
     Friend WithEvents filterLabel As System.Windows.Forms.Label
     Friend WithEvents filterDropbox As System.Windows.Forms.ComboBox
+    Friend WithEvents OKButton As System.Windows.Forms.Button
 End Class

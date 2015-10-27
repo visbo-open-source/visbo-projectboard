@@ -1,4 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
+Imports ProjectBoardBasic
 Imports MongoDbAccess
 Imports ClassLibrary1
 Imports WpfWindow
@@ -266,39 +267,41 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub PT5DeleteProjectsInDB(control As IRibbonControl)
 
+        Call PBBDeleteProjectsInDB(control)
 
-        Dim deletedProj As Integer = 0
-        Dim returnValue As DialogResult
 
-        'Dim deleteProjects As New frmDeleteProjects
-        Dim deleteProjects As New frmProjPortfolioAdmin
+        ' ''Dim deletedProj As Integer = 0
+        ' ''Dim returnValue As DialogResult
 
-        Try
+        '' ''Dim deleteProjects As New frmDeleteProjects
+        ' ''Dim deleteProjects As New frmProjPortfolioAdmin
 
-            With deleteProjects
-                .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
-                .aKtionskennung = PTTvActions.delFromDB
-                .OKButton.Text = "Löschen"
-                '' '' ''.portfolioName.Visible = False
-                '' '' ''.Label1.Visible = False
-            End With
+        ' ''Try
 
-            returnValue = deleteProjects.ShowDialog
+        ' ''    With deleteProjects
+        ' ''        .Text = "Projekte, Varianten bzw. Snapshots in der Datenbank löschen"
+        ' ''        .aKtionskennung = PTTvActions.delFromDB
+        ' ''        .OKButton.Text = "Löschen"
+        ' ''        '' '' ''.portfolioName.Visible = False
+        ' ''        '' '' ''.Label1.Visible = False
+        ' ''    End With
 
-            ' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
+        ' ''    returnValue = deleteProjects.ShowDialog
 
-            If returnValue = DialogResult.OK Then
-                ' everything is done ... 
+        ' ''    ' die Operation ist bereits ausgeführt - deswegen muss hier nichts mehr unterschieden werden 
 
-            Else
-                ' everything is done ... 
+        ' ''    If returnValue = DialogResult.OK Then
+        ' ''        ' everything is done ... 
 
-            End If
+        ' ''    Else
+        ' ''        ' everything is done ... 
 
-        Catch ex As Exception
+        ' ''    End If
 
-            Call MsgBox(ex.Message)
-        End Try
+        ' ''Catch ex As Exception
+
+        ' ''    Call MsgBox(ex.Message)
+        ' ''End Try
 
 
 
@@ -842,108 +845,110 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub PT2VarianteNeu(control As IRibbonControl)
 
-        Dim singleShp As Excel.Shape
-        Dim hproj As clsProjekt
-        Dim awinSelection As Excel.ShapeRange
-        Dim neueVariante As New frmCreateNewVariant
-        Dim resultat As DialogResult
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim newproj As clsProjekt
-        Dim key As String
-        Dim phaseList As New Collection
-        Dim milestoneList As New Collection
+        Call PBBVarianteNeu(control)
+
+        ' ''Dim singleShp As Excel.Shape
+        ' ''Dim hproj As clsProjekt
+        ' ''Dim awinSelection As Excel.ShapeRange
+        ' ''Dim neueVariante As New frmCreateNewVariant
+        ' ''Dim resultat As DialogResult
+        ' ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ' ''Dim newproj As clsProjekt
+        ' ''Dim key As String
+        ' ''Dim phaseList As New Collection
+        ' ''Dim milestoneList As New Collection
 
 
-        Call projektTafelInit()
+        ' ''Call projektTafelInit()
 
-        enableOnUpdate = False
+        ' ''enableOnUpdate = False
 
-        Try
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
+        ' ''Try
+        ' ''    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        ' ''Catch ex As Exception
+        ' ''    awinSelection = Nothing
+        ' ''End Try
 
-        If Not awinSelection Is Nothing Then
+        ' ''If Not awinSelection Is Nothing Then
 
-            If awinSelection.Count = 1 Then
-                ' jetzt die Aktion durchführen ...
-                singleShp = awinSelection.Item(1)
+        ' ''    If awinSelection.Count = 1 Then
+        ' ''        ' jetzt die Aktion durchführen ...
+        ' ''        singleShp = awinSelection.Item(1)
 
-                Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
-                    phaseList = projectboardShapes.getPhaseList(hproj.name)
-                    milestoneList = projectboardShapes.getMilestoneList(hproj.name)
-                Catch ex As Exception
-                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
-                    enableOnUpdate = True
-                    Exit Sub
-                End Try
+        ' ''        Try
+        ' ''            hproj = ShowProjekte.getProject(singleShp.Name)
+        ' ''            phaseList = projectboardShapes.getPhaseList(hproj.name)
+        ' ''            milestoneList = projectboardShapes.getMilestoneList(hproj.name)
+        ' ''        Catch ex As Exception
+        ' ''            Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+        ' ''            enableOnUpdate = True
+        ' ''            Exit Sub
+        ' ''        End Try
 
-                ' enableevents wird hier nicht false gesetzt; wenn dann wird das im Formular gemacht 
-                ' screenupdating wird hier ebenso nicht auf false gesetzt 
+        ' ''        ' enableevents wird hier nicht false gesetzt; wenn dann wird das im Formular gemacht 
+        ' ''        ' screenupdating wird hier ebenso nicht auf false gesetzt 
 
-                ' jetzt wird hier das Formular aufgerufen, wo eine neue Variante eingegeben werden kann 
-                With neueVariante
-                    .projektName.Text = hproj.name
-                    .variantenName.Text = hproj.variantName
-                    .newVariant.Text = ""
-                End With
+        ' ''        ' jetzt wird hier das Formular aufgerufen, wo eine neue Variante eingegeben werden kann 
+        ' ''        With neueVariante
+        ' ''            .projektName.Text = hproj.name
+        ' ''            .variantenName.Text = hproj.variantName
+        ' ''            .newVariant.Text = ""
+        ' ''        End With
 
-                resultat = neueVariante.ShowDialog
-                If resultat = DialogResult.OK Then
+        ' ''        resultat = neueVariante.ShowDialog
+        ' ''        If resultat = DialogResult.OK Then
 
-                    newproj = New clsProjekt
-                    hproj.copyTo(newproj)
+        ' ''            newproj = New clsProjekt
+        ' ''            hproj.copyTo(newproj)
 
-                    With newproj
-                        .name = hproj.name
-                        .variantName = neueVariante.newVariant.Text
-                        .ampelErlaeuterung = hproj.ampelErlaeuterung
-                        .ampelStatus = hproj.ampelStatus
-                        .timeStamp = Date.Now
-                        .shpUID = hproj.shpUID
-                        .tfZeile = hproj.tfZeile
-                        .Status = ProjektStatus(0)
-                        If Not IsNothing(hproj.budgetWerte) Then
-                            .budgetWerte = hproj.budgetWerte
-                        End If
+        ' ''            With newproj
+        ' ''                .name = hproj.name
+        ' ''                .variantName = neueVariante.newVariant.Text
+        ' ''                .ampelErlaeuterung = hproj.ampelErlaeuterung
+        ' ''                .ampelStatus = hproj.ampelStatus
+        ' ''                .timeStamp = Date.Now
+        ' ''                .shpUID = hproj.shpUID
+        ' ''                .tfZeile = hproj.tfZeile
+        ' ''                .Status = ProjektStatus(0)
+        ' ''                If Not IsNothing(hproj.budgetWerte) Then
+        ' ''                    .budgetWerte = hproj.budgetWerte
+        ' ''                End If
 
-                    End With
+        ' ''            End With
 
-                    ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
-                    ShowProjekte.Remove(hproj.name)
+        ' ''            ' jetzt muss die bisherige Variante aus Showprojekte rausgenommen werden ..
+        ' ''            ShowProjekte.Remove(hproj.name)
 
-                    ' die neue Variante wird aufgenommen
-                    key = calcProjektKey(newproj)
-                    AlleProjekte.Add(key, newproj)
-                    ShowProjekte.Add(newproj)
+        ' ''            ' die neue Variante wird aufgenommen
+        ' ''            key = calcProjektKey(newproj)
+        ' ''            AlleProjekte.Add(key, newproj)
+        ' ''            ShowProjekte.Add(newproj)
 
-                    ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
-                    ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
-                    Try
+        ' ''            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+        ' ''            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+        ' ''            Try
 
-                        Dim tmpCollection As New Collection
-                        Call ZeichneProjektinPlanTafel(tmpCollection, newproj.name, newproj.tfZeile, phaseList, milestoneList)
+        ' ''                Dim tmpCollection As New Collection
+        ' ''                Call ZeichneProjektinPlanTafel(tmpCollection, newproj.name, newproj.tfZeile, phaseList, milestoneList)
 
-                    Catch ex As Exception
+        ' ''            Catch ex As Exception
 
-                        Call MsgBox("Fehler bei Zeichnen Projekt: " & ex.Message)
+        ' ''                Call MsgBox("Fehler bei Zeichnen Projekt: " & ex.Message)
 
-                    End Try
+        ' ''            End Try
 
 
-                End If
+        ' ''        End If
 
-            Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
+        ' ''    Else
+        ' ''        Call MsgBox("bitte nur ein Projekt selektieren")
 
-            End If
-        Else
-            Call MsgBox("vorher Projekt selektieren ...")
-        End If
+        ' ''    End If
+        ' ''Else
+        ' ''    Call MsgBox("vorher Projekt selektieren ...")
+        ' ''End If
 
-        enableOnUpdate = True
+        ' ''enableOnUpdate = True
 
 
 
@@ -1127,38 +1132,40 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub PT2VarianteAktiv(control As IRibbonControl)
 
-        Dim deletedProj As Integer = 0
-        'Dim returnValue As DialogResult
+        Call PBBVarianteAktiv(control)
 
-        'Dim activateVariant As New frmDeleteProjects
-        Dim activateVariant As New frmProjPortfolioAdmin
+        ' ''Dim deletedProj As Integer = 0
+        '' ''Dim returnValue As DialogResult
 
-        Try
+        '' ''Dim activateVariant As New frmDeleteProjects
+        ' ''Dim activateVariant As New frmProjPortfolioAdmin
 
-            With activateVariant
-                .Text = "Variante aktivieren"
-                .aKtionskennung = PTTvActions.activateV
-                .OKButton.Visible = False
-                '.OKButton.Text = "Löschen"
-                '' '' ''.portfolioName.Visible = False
-                '' '' ''.Label1.Visible = False
-            End With
+        ' ''Try
 
-            'returnValue = activateVariant.ShowDialog
-            activateVariant.Show()
+        ' ''    With activateVariant
+        ' ''        .Text = "Variante aktivieren"
+        ' ''        .aKtionskennung = PTTvActions.activateV
+        ' ''        .OKButton.Visible = False
+        ' ''        '.OKButton.Text = "Löschen"
+        ' ''        '' '' ''.portfolioName.Visible = False
+        ' ''        '' '' ''.Label1.Visible = False
+        ' ''    End With
 
-            'If returnValue = DialogResult.OK Then
-            '    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+        ' ''    'returnValue = activateVariant.ShowDialog
+        ' ''    activateVariant.Show()
 
-            'Else
-            '    ' returnValue = DialogResult.Cancel
+        ' ''    'If returnValue = DialogResult.OK Then
+        ' ''    '    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
-            'End If
+        ' ''    'Else
+        ' ''    '    ' returnValue = DialogResult.Cancel
 
-        Catch ex As Exception
+        ' ''    'End If
 
-            Call MsgBox(ex.Message)
-        End Try
+        ' ''Catch ex As Exception
+
+        ' ''    Call MsgBox(ex.Message)
+        ' ''End Try
 
 
     End Sub
@@ -1247,38 +1254,40 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub PT2VarianteLoeschen(control As IRibbonControl)
 
-        Dim deletedProj As Integer = 0
-        'Dim returnValue As DialogResult
+        Call PBBVarianteLoeschen(control)
 
-        'Dim activateVariant As New frmDeleteProjects
-        Dim deleteVariant As New frmProjPortfolioAdmin
+        ' ''Dim deletedProj As Integer = 0
+        '' ''Dim returnValue As DialogResult
 
-        Try
+        '' ''Dim activateVariant As New frmDeleteProjects
+        ' ''Dim deleteVariant As New frmProjPortfolioAdmin
 
-            With deleteVariant
-                .Text = "Variante löschen"
-                .aKtionskennung = PTTvActions.deleteV
-                .OKButton.Visible = True
-                .OKButton.Text = "Löschen"
-                '' '' ''.portfolioName.Visible = False
-                '' '' ''.Label1.Visible = False
-            End With
+        ' ''Try
 
-            'returnValue = activateVariant.ShowDialog
-            deleteVariant.Show()
+        ' ''    With deleteVariant
+        ' ''        .Text = "Variante löschen"
+        ' ''        .aKtionskennung = PTTvActions.deleteV
+        ' ''        .OKButton.Visible = True
+        ' ''        .OKButton.Text = "Löschen"
+        ' ''        '' '' ''.portfolioName.Visible = False
+        ' ''        '' '' ''.Label1.Visible = False
+        ' ''    End With
 
-            'If returnValue = DialogResult.OK Then
-            '    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+        ' ''    'returnValue = activateVariant.ShowDialog
+        ' ''    deleteVariant.Show()
 
-            'Else
-            '    ' returnValue = DialogResult.Cancel
+        ' ''    'If returnValue = DialogResult.OK Then
+        ' ''    '    'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
-            'End If
+        ' ''    'Else
+        ' ''    '    ' returnValue = DialogResult.Cancel
 
-        Catch ex As Exception
+        ' ''    'End If
 
-            Call MsgBox(ex.Message)
-        End Try
+        ' ''Catch ex As Exception
+
+        ' ''    Call MsgBox(ex.Message)
+        ' ''End Try
 
 
     End Sub
@@ -1757,673 +1766,676 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub NameHierarchySelAction(control As IRibbonControl)
 
-        Dim nameFormular As New frmNameSelection
-        Dim hryFormular As New frmHierarchySelection
-        Dim awinSelection As Excel.ShapeRange
-        Dim returnValue As DialogResult
 
-        Call projektTafelInit()
+        Call PBBNameHierarchySelAction(control)
 
-        'enableOnUpdate = False
-        'appInstance.EnableEvents = False
+        '' ''Dim nameFormular As New frmNameSelection
+        '' ''Dim hryFormular As New frmHierarchySelection
+        '' ''Dim awinSelection As Excel.ShapeRange
+        '' ''Dim returnValue As DialogResult
 
+        '' ''Call projektTafelInit()
 
-        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
-        'If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+        ' '' ''enableOnUpdate = False
+        ' '' ''appInstance.EnableEvents = False
 
-        If control.Id = "Pt6G3M1B1" Then
-            ' normale, volle Auswahl des filters ; Namens-Definition
 
-            With nameFormular
+        ' '' '' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
+        ' '' ''If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
 
-                .Text = "Datenbank Filter definieren"
-                .OKButton.Text = "Speichern"
-                .menuOption = PTmenue.filterdefinieren
-                .statusLabel.Text = ""
-                .statusLabel.Visible = True
+        '' ''If control.Id = "Pt6G3M1B1" Then
+        '' ''    ' normale, volle Auswahl des filters ; Namens-Definition
 
-                .rdbRoles.Enabled = True
-                .rdbCosts.Enabled = True
+        '' ''    With nameFormular
 
-                .rdbBU.Visible = True
-                .pictureBU.Visible = True
+        '' ''        .Text = "Datenbank Filter definieren"
+        '' ''        .OKButton.Text = "Speichern"
+        '' ''        .menuOption = PTmenue.filterdefinieren
+        '' ''        .statusLabel.Text = ""
+        '' ''        .statusLabel.Visible = True
 
-                .rdbTyp.Visible = True
-                .pictureTyp.Visible = True
+        '' ''        .rdbRoles.Enabled = True
+        '' ''        .rdbCosts.Enabled = True
 
-                .einstellungen.Visible = False
+        '' ''        .rdbBU.Visible = True
+        '' ''        .pictureBU.Visible = True
 
-                .chkbxOneChart.Checked = False
-                .chkbxOneChart.Visible = False
+        '' ''        .rdbTyp.Visible = True
+        '' ''        .pictureTyp.Visible = True
 
-                ' Reports 
-                .repVorlagenDropbox.Visible = False
-                .labelPPTVorlage.Visible = False
-                .einstellungen.Visible = False
+        '' ''        .einstellungen.Visible = False
 
-                ' Filter
-                .filterDropbox.Visible = True
-                .filterLabel.Visible = True
-                .filterLabel.Text = "Name des Filters"
+        '' ''        .chkbxOneChart.Checked = False
+        '' ''        .chkbxOneChart.Visible = False
 
-                ' Auswahl Speichern
-                .auswSpeichern.Visible = False
-                .auswSpeichern.Enabled = False
+        '' ''        ' Reports 
+        '' ''        .repVorlagenDropbox.Visible = False
+        '' ''        .labelPPTVorlage.Visible = False
+        '' ''        .einstellungen.Visible = False
 
-                returnValue = .ShowDialog
+        '' ''        ' Filter
+        '' ''        .filterDropbox.Visible = True
+        '' ''        .filterLabel.Visible = True
+        '' ''        .filterLabel.Text = "Name des Filters"
 
-            End With
+        '' ''        ' Auswahl Speichern
+        '' ''        .auswSpeichern.Visible = False
+        '' ''        .auswSpeichern.Enabled = False
 
-        ElseIf control.Id = "Pt6G3M1B2" Then
+        '' ''        returnValue = .ShowDialog
 
-            awinSettings.useHierarchy = True
+        '' ''    End With
 
-            With hryFormular
+        '' ''ElseIf control.Id = "Pt6G3M1B2" Then
 
-                .Text = "Datenbank Filter definieren"
-                .OKButton.Text = "Speichern"
-                .menuOption = PTmenue.filterdefinieren
-                .statusLabel.Text = ""
-                .statusLabel.Visible = True
+        '' ''    awinSettings.useHierarchy = True
 
-                .AbbrButton.Visible = False
-                .AbbrButton.Enabled = False
+        '' ''    With hryFormular
 
-                .chkbxOneChart.Checked = False
-                .chkbxOneChart.Visible = False
+        '' ''        .Text = "Datenbank Filter definieren"
+        '' ''        .OKButton.Text = "Speichern"
+        '' ''        .menuOption = PTmenue.filterdefinieren
+        '' ''        .statusLabel.Text = ""
+        '' ''        .statusLabel.Visible = True
 
-                ' Reports 
-                .repVorlagenDropbox.Visible = False
-                .labelPPTVorlage.Visible = False
-                .einstellungen.Visible = False
+        '' ''        .AbbrButton.Visible = False
+        '' ''        .AbbrButton.Enabled = False
 
-                ' Filter
-                .filterDropbox.Visible = True
-                .filterLabel.Visible = True
-                .filterLabel.Text = "Name des Filters"
+        '' ''        .chkbxOneChart.Checked = False
+        '' ''        .chkbxOneChart.Visible = False
 
-                ' Auswahl Speichern
-                .auswSpeichern.Visible = False
-                .auswSpeichern.Enabled = False
+        '' ''        ' Reports 
+        '' ''        .repVorlagenDropbox.Visible = False
+        '' ''        .labelPPTVorlage.Visible = False
+        '' ''        .einstellungen.Visible = False
 
-                .einstellungen.Visible = False
+        '' ''        ' Filter
+        '' ''        .filterDropbox.Visible = True
+        '' ''        .filterLabel.Visible = True
+        '' ''        .filterLabel.Text = "Name des Filters"
 
-                returnValue = .ShowDialog
-            End With
-
+        '' ''        ' Auswahl Speichern
+        '' ''        .auswSpeichern.Visible = False
+        '' ''        .auswSpeichern.Enabled = False
 
-        ElseIf ShowProjekte.Count > 0 Then
+        '' ''        .einstellungen.Visible = False
 
-            If awinSettings.isHryNameFrmActive Then
-                Call MsgBox("es kann nur ein Fenster zur Hierarchie- bzw. Namenauswahl geöffnet sein ...")
-            ElseIf control.Id = "PTXG1B4" Or control.Id = "PT0G1B8" Then
-                ' Namen auswählen, Visualisieren
-                awinSettings.useHierarchy = False
-                With nameFormular
-                    .Text = "Plan-Elemente visualisieren"
-                    .OKButton.Text = "Anzeigen"
-                    .menuOption = PTmenue.visualisieren
-                    .statusLabel.Text = ""
-                    .statusLabel.Visible = True
-
-
-                    .rdbBU.Visible = False
-                    .pictureBU.Visible = False
-                    .rdbTyp.Visible = False
-                    .pictureTyp.Visible = False
-                    .rdbRoles.Visible = True
-                    .pictureRoles.Visible = True
-                    .rdbCosts.Visible = True
-                    .pictureCosts.Visible = True
-
-                    ' Leistbarkeits-Charts
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
-
-                    ' Reports 
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
-                    .einstellungen.Visible = False
-
-                    ' Filter
-                    .filterDropbox.Visible = True
-                    .filterLabel.Visible = True
-                    .filterLabel.Text = "Auswahl"
-
-
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
-                End With
-
-            ElseIf control.Id = "PTXG1B5" Or control.Id = "PT0G1B9" Then
-                ' Hierarchie auswählen, visualisieren
-                awinSettings.useHierarchy = True
-                With hryFormular
-                    .Text = "Plan-Elemente visualisieren"
-                    .OKButton.Text = "Anzeigen"
-                    .AbbrButton.Visible = False
-                    .AbbrButton.Enabled = False
-                    .menuOption = PTmenue.visualisieren
-                    .statusLabel.Text = ""
-                    .statusLabel.Visible = True
-
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
-
-                    ' Reports
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
-                    .einstellungen.Visible = False
-
-                    ' Filter
-                    .filterDropbox.Visible = True
-                    .filterLabel.Visible = True
-                    .filterLabel.Text = "Auswahl"
-
-
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
-                End With
-            ElseIf control.Id = "PTXG1B6" Then
-                ' Namen auswählen, Leistbarkeit
-                awinSettings.useHierarchy = False
-                With nameFormular
-                    .Text = "Leistbarkeits-Charts erstellen"
-                    .OKButton.Text = "Charts erstellen"
-                    .menuOption = PTmenue.leistbarkeitsAnalyse
-                    .statusLabel.Text = ""
-                    .statusLabel.Visible = True
-
-
-                    .rdbBU.Visible = False
-                    .pictureBU.Visible = False
-                    .rdbTyp.Visible = False
-                    .pictureTyp.Visible = False
-
-                    .rdbRoles.Visible = True
-                    .pictureRoles.Visible = True
-                    .rdbCosts.Visible = True
-                    .pictureCosts.Visible = True
-
-                    ' Leistbarkeits-Charts
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = True
-
-                    ' Reports 
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
-
-                    ' Filter
-                    .filterDropbox.Visible = True
-                    .filterLabel.Visible = True
-                    .filterLabel.Text = "Auswahl"
-
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
-                End With
-            ElseIf control.Id = "PTXG1B7" Then
-                ' Hierarchie auswählen, Leistbarkeit
-                awinSettings.useHierarchy = True
-                With hryFormular
-                    .Text = "Leistbarkeits-Charts erstellen"
-                    .OKButton.Text = "Charts erstellen"
-                    .AbbrButton.Visible = False
-                    .AbbrButton.Enabled = False
-                    .menuOption = PTmenue.leistbarkeitsAnalyse
-                    .statusLabel.Text = ""
-                    .statusLabel.Visible = True
-
-
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = True
-
-                    ' Reports
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
-                    .einstellungen.Visible = False
-
-                    ' Filter
-                    .filterDropbox.Visible = True
-                    .filterLabel.Visible = True
-                    .filterLabel.Text = "Auswahl"
-
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
-                End With
-
-
-            ElseIf control.Id = "PT1G1M1B1" Then
-                ' Namen auswählen, Einzelprojekt Berichte 
-
-                Try
-                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-                Catch ex As Exception
-                    awinSelection = Nothing
-                End Try
-
-                If awinSelection Is Nothing Then
-                    Call MsgBox("vorher Projekt/e selektieren ...")
-                Else
-
-                    appInstance.ScreenUpdating = False
-
-                    With nameFormular
-
-                        .Text = "Projekt-Varianten Report erzeugen"
-                        .OKButton.Text = "Bericht erstellen"
-                        .menuOption = PTmenue.einzelprojektReport
-                        .statusLabel.Text = ""
-                        .statusLabel.Visible = True
-
-                        .rdbRoles.Enabled = False
-                        .rdbCosts.Enabled = False
-
-                        .rdbBU.Enabled = False
-                        .rdbBU.Visible = False
-                        .pictureBU.Visible = False
-
-                        .rdbTyp.Enabled = False
-                        .rdbTyp.Visible = False
-                        .pictureTyp.Visible = False
-
-
-                        .einstellungen.Visible = True
-
-                        .chkbxOneChart.Checked = False
-                        .chkbxOneChart.Visible = False
+        '' ''        returnValue = .ShowDialog
+        '' ''    End With
 
-                        .repVorlagenDropbox.Visible = True
-                        .labelPPTVorlage.Visible = True
 
-                        ' Filter
-                        .filterDropbox.Visible = True
-                        .filterLabel.Visible = True
-                        .filterLabel.Text = "Auswahl"
+        '' ''ElseIf ShowProjekte.Count > 0 Then
 
+        '' ''    If awinSettings.isHryNameFrmActive Then
+        '' ''        Call MsgBox("es kann nur ein Fenster zur Hierarchie- bzw. Namenauswahl geöffnet sein ...")
+        '' ''    ElseIf control.Id = "PTXG1B4" Or control.Id = "PT0G1B8" Then
+        '' ''        ' Namen auswählen, Visualisieren
+        '' ''        awinSettings.useHierarchy = False
+        '' ''        With nameFormular
+        '' ''            .Text = "Plan-Elemente visualisieren"
+        '' ''            .OKButton.Text = "Anzeigen"
+        '' ''            .menuOption = PTmenue.visualisieren
+        '' ''            .statusLabel.Text = ""
+        '' ''            .statusLabel.Visible = True
+
+
+        '' ''            .rdbBU.Visible = False
+        '' ''            .pictureBU.Visible = False
+        '' ''            .rdbTyp.Visible = False
+        '' ''            .pictureTyp.Visible = False
+        '' ''            .rdbRoles.Visible = True
+        '' ''            .pictureRoles.Visible = True
+        '' ''            .rdbCosts.Visible = True
+        '' ''            .pictureCosts.Visible = True
+
+        '' ''            ' Leistbarkeits-Charts
+        '' ''            .chkbxOneChart.Checked = False
+        '' ''            .chkbxOneChart.Visible = False
+
+        '' ''            ' Reports 
+        '' ''            .repVorlagenDropbox.Visible = False
+        '' ''            .labelPPTVorlage.Visible = False
+        '' ''            .einstellungen.Visible = False
+
+        '' ''            ' Filter
+        '' ''            .filterDropbox.Visible = True
+        '' ''            .filterLabel.Visible = True
+        '' ''            .filterLabel.Text = "Auswahl"
+
+
+        '' ''            ' Nicht Modal anzeigen
+        '' ''            .Show()
+        '' ''            'returnValue = .ShowDialog
+        '' ''        End With
+
+        '' ''    ElseIf control.Id = "PTXG1B5" Or control.Id = "PT0G1B9" Then
+        '' ''        ' Hierarchie auswählen, visualisieren
+        '' ''        awinSettings.useHierarchy = True
+        '' ''        With hryFormular
+        '' ''            .Text = "Plan-Elemente visualisieren"
+        '' ''            .OKButton.Text = "Anzeigen"
+        '' ''            .AbbrButton.Visible = False
+        '' ''            .AbbrButton.Enabled = False
+        '' ''            .menuOption = PTmenue.visualisieren
+        '' ''            .statusLabel.Text = ""
+        '' ''            .statusLabel.Visible = True
+
+        '' ''            .chkbxOneChart.Checked = False
+        '' ''            .chkbxOneChart.Visible = False
+
+        '' ''            ' Reports
+        '' ''            .repVorlagenDropbox.Visible = False
+        '' ''            .labelPPTVorlage.Visible = False
+        '' ''            .einstellungen.Visible = False
+
+        '' ''            ' Filter
+        '' ''            .filterDropbox.Visible = True
+        '' ''            .filterLabel.Visible = True
+        '' ''            .filterLabel.Text = "Auswahl"
+
+
+        '' ''            ' Nicht Modal anzeigen
+        '' ''            .Show()
+        '' ''            'returnValue = .ShowDialog
+        '' ''        End With
+        '' ''    ElseIf control.Id = "PTXG1B6" Then
+        '' ''        ' Namen auswählen, Leistbarkeit
+        '' ''        awinSettings.useHierarchy = False
+        '' ''        With nameFormular
+        '' ''            .Text = "Leistbarkeits-Charts erstellen"
+        '' ''            .OKButton.Text = "Charts erstellen"
+        '' ''            .menuOption = PTmenue.leistbarkeitsAnalyse
+        '' ''            .statusLabel.Text = ""
+        '' ''            .statusLabel.Visible = True
+
+
+        '' ''            .rdbBU.Visible = False
+        '' ''            .pictureBU.Visible = False
+        '' ''            .rdbTyp.Visible = False
+        '' ''            .pictureTyp.Visible = False
+
+        '' ''            .rdbRoles.Visible = True
+        '' ''            .pictureRoles.Visible = True
+        '' ''            .rdbCosts.Visible = True
+        '' ''            .pictureCosts.Visible = True
+
+        '' ''            ' Leistbarkeits-Charts
+        '' ''            .chkbxOneChart.Checked = False
+        '' ''            .chkbxOneChart.Visible = True
+
+        '' ''            ' Reports 
+        '' ''            .repVorlagenDropbox.Visible = False
+        '' ''            .labelPPTVorlage.Visible = False
+
+        '' ''            ' Filter
+        '' ''            .filterDropbox.Visible = True
+        '' ''            .filterLabel.Visible = True
+        '' ''            .filterLabel.Text = "Auswahl"
+
+        '' ''            ' Nicht Modal anzeigen
+        '' ''            .Show()
+        '' ''            'returnValue = .ShowDialog
+        '' ''        End With
+        '' ''    ElseIf control.Id = "PTXG1B7" Then
+        '' ''        ' Hierarchie auswählen, Leistbarkeit
+        '' ''        awinSettings.useHierarchy = True
+        '' ''        With hryFormular
+        '' ''            .Text = "Leistbarkeits-Charts erstellen"
+        '' ''            .OKButton.Text = "Charts erstellen"
+        '' ''            .AbbrButton.Visible = False
+        '' ''            .AbbrButton.Enabled = False
+        '' ''            .menuOption = PTmenue.leistbarkeitsAnalyse
+        '' ''            .statusLabel.Text = ""
+        '' ''            .statusLabel.Visible = True
+
+
+        '' ''            .chkbxOneChart.Checked = False
+        '' ''            .chkbxOneChart.Visible = True
+
+        '' ''            ' Reports
+        '' ''            .repVorlagenDropbox.Visible = False
+        '' ''            .labelPPTVorlage.Visible = False
+        '' ''            .einstellungen.Visible = False
+
+        '' ''            ' Filter
+        '' ''            .filterDropbox.Visible = True
+        '' ''            .filterLabel.Visible = True
+        '' ''            .filterLabel.Text = "Auswahl"
+
+        '' ''            ' Nicht Modal anzeigen
+        '' ''            .Show()
+        '' ''            'returnValue = .ShowDialog
+        '' ''        End With
+
+
+        '' ''    ElseIf control.Id = "PT1G1M1B1" Then
+        '' ''        ' Namen auswählen, Einzelprojekt Berichte 
+
+        '' ''        Try
+        '' ''            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        '' ''        Catch ex As Exception
+        '' ''            awinSelection = Nothing
+        '' ''        End Try
+
+        '' ''        If awinSelection Is Nothing Then
+        '' ''            Call MsgBox("vorher Projekt/e selektieren ...")
+        '' ''        Else
+
+        '' ''            appInstance.ScreenUpdating = False
+
+        '' ''            With nameFormular
+
+        '' ''                .Text = "Projekt-Varianten Report erzeugen"
+        '' ''                .OKButton.Text = "Bericht erstellen"
+        '' ''                .menuOption = PTmenue.einzelprojektReport
+        '' ''                .statusLabel.Text = ""
+        '' ''                .statusLabel.Visible = True
+
+        '' ''                .rdbRoles.Enabled = False
+        '' ''                .rdbCosts.Enabled = False
+
+        '' ''                .rdbBU.Enabled = False
+        '' ''                .rdbBU.Visible = False
+        '' ''                .pictureBU.Visible = False
+
+        '' ''                .rdbTyp.Enabled = False
+        '' ''                .rdbTyp.Visible = False
+        '' ''                .pictureTyp.Visible = False
+
+
+        '' ''                .einstellungen.Visible = True
+
+        '' ''                .chkbxOneChart.Checked = False
+        '' ''                .chkbxOneChart.Visible = False
+
+        '' ''                .repVorlagenDropbox.Visible = True
+        '' ''                .labelPPTVorlage.Visible = True
 
-                        '.Show()
-                        ' bei Reports mit der Background Worker Behandlung 
-                        returnValue = .ShowDialog()
-                    End With
+        '' ''                ' Filter
+        '' ''                .filterDropbox.Visible = True
+        '' ''                .filterLabel.Visible = True
+        '' ''                .filterLabel.Text = "Auswahl"
 
-                    appInstance.ScreenUpdating = True
 
-                End If
+        '' ''                '.Show()
+        '' ''                ' bei Reports mit der Background Worker Behandlung 
+        '' ''                returnValue = .ShowDialog()
+        '' ''            End With
 
-            ElseIf control.Id = "PT1G1M1B2" Then
+        '' ''            appInstance.ScreenUpdating = True
+
+        '' ''        End If
 
-                Try
-                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-                Catch ex As Exception
-                    awinSelection = Nothing
-                End Try
+        '' ''    ElseIf control.Id = "PT1G1M1B2" Then
 
-                If awinSelection Is Nothing Then
-                    Call MsgBox("vorher Projekt/e selektieren ...")
-                Else
+        '' ''        Try
+        '' ''            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        '' ''        Catch ex As Exception
+        '' ''            awinSelection = Nothing
+        '' ''        End Try
 
+        '' ''        If awinSelection Is Nothing Then
+        '' ''            Call MsgBox("vorher Projekt/e selektieren ...")
+        '' ''        Else
 
-                    ' Hierarchie auswählen, Einzelprojekt Berichte 
-                    appInstance.ScreenUpdating = False
 
-                    awinSettings.useHierarchy = True
-                    With hryFormular
-                        .Text = "Projekt-Varianten Report erzeugen"
-                        .OKButton.Text = "Bericht erstellen"
-                        .menuOption = PTmenue.einzelprojektReport
-                        .statusLabel.Text = ""
-                        .statusLabel.Visible = True
+        '' ''            ' Hierarchie auswählen, Einzelprojekt Berichte 
+        '' ''            appInstance.ScreenUpdating = False
 
-                        .AbbrButton.Visible = False
-                        .AbbrButton.Enabled = False
+        '' ''            awinSettings.useHierarchy = True
+        '' ''            With hryFormular
+        '' ''                .Text = "Projekt-Varianten Report erzeugen"
+        '' ''                .OKButton.Text = "Bericht erstellen"
+        '' ''                .menuOption = PTmenue.einzelprojektReport
+        '' ''                .statusLabel.Text = ""
+        '' ''                .statusLabel.Visible = True
 
-                        .chkbxOneChart.Checked = False
-                        .chkbxOneChart.Visible = False
+        '' ''                .AbbrButton.Visible = False
+        '' ''                .AbbrButton.Enabled = False
 
+        '' ''                .chkbxOneChart.Checked = False
+        '' ''                .chkbxOneChart.Visible = False
 
-                        ' Reports
-                        .repVorlagenDropbox.Visible = True
-                        .labelPPTVorlage.Visible = True
-                        .einstellungen.Visible = True
 
-                        ' Filter
-                        .filterDropbox.Visible = True
-                        .filterLabel.Visible = True
-                        .filterLabel.Text = "Name des Filters"
+        '' ''                ' Reports
+        '' ''                .repVorlagenDropbox.Visible = True
+        '' ''                .labelPPTVorlage.Visible = True
+        '' ''                .einstellungen.Visible = True
 
+        '' ''                ' Filter
+        '' ''                .filterDropbox.Visible = True
+        '' ''                .filterLabel.Visible = True
+        '' ''                .filterLabel.Text = "Name des Filters"
 
-                        ' bei Verwendung Background Worker muss Modal erfolgen 
-                        '.Show()
-                        returnValue = .ShowDialog
-                    End With
 
-                    appInstance.ScreenUpdating = True
+        '' ''                ' bei Verwendung Background Worker muss Modal erfolgen 
+        '' ''                '.Show()
+        '' ''                returnValue = .ShowDialog
+        '' ''            End With
 
-                End If
+        '' ''            appInstance.ScreenUpdating = True
 
-            ElseIf control.Id = "PT1G1M2B1" Then
+        '' ''        End If
 
-                If showRangeRight - showRangeLeft <= 6 Then
-                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
-                Else
+        '' ''    ElseIf control.Id = "PT1G1M2B1" Then
 
+        '' ''        If showRangeRight - showRangeLeft <= 6 Then
+        '' ''            Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+        '' ''        Else
 
-                    ' Namen Auswahl, Multiprojekt Report
-                    appInstance.ScreenUpdating = False
 
-                    With nameFormular
+        '' ''            ' Namen Auswahl, Multiprojekt Report
+        '' ''            appInstance.ScreenUpdating = False
 
-                        .Text = "Multiprojekt Reports erzeugen"
-                        .OKButton.Text = "Bericht erstellen"
-                        .menuOption = PTmenue.multiprojektReport
-                        .statusLabel.Text = ""
-                        .statusLabel.Visible = True
+        '' ''            With nameFormular
 
-                        .rdbRoles.Enabled = True
-                        .rdbCosts.Enabled = True
+        '' ''                .Text = "Multiprojekt Reports erzeugen"
+        '' ''                .OKButton.Text = "Bericht erstellen"
+        '' ''                .menuOption = PTmenue.multiprojektReport
+        '' ''                .statusLabel.Text = ""
+        '' ''                .statusLabel.Visible = True
 
-                        .rdbBU.Enabled = False
-                        .rdbBU.Visible = False
-                        .pictureBU.Visible = False
+        '' ''                .rdbRoles.Enabled = True
+        '' ''                .rdbCosts.Enabled = True
 
-                        .rdbTyp.Enabled = False
-                        .rdbTyp.Visible = False
-                        .pictureTyp.Visible = False
+        '' ''                .rdbBU.Enabled = False
+        '' ''                .rdbBU.Visible = False
+        '' ''                .pictureBU.Visible = False
 
+        '' ''                .rdbTyp.Enabled = False
+        '' ''                .rdbTyp.Visible = False
+        '' ''                .pictureTyp.Visible = False
 
-                        .einstellungen.Visible = True
 
-                        .chkbxOneChart.Checked = False
-                        .chkbxOneChart.Visible = False
+        '' ''                .einstellungen.Visible = True
 
-                        .repVorlagenDropbox.Visible = True
-                        .labelPPTVorlage.Visible = True
+        '' ''                .chkbxOneChart.Checked = False
+        '' ''                .chkbxOneChart.Visible = False
 
-                        ' Filter
-                        .filterDropbox.Visible = True
-                        .filterLabel.Visible = True
-                        .filterLabel.Text = "Auswahl"
+        '' ''                .repVorlagenDropbox.Visible = True
+        '' ''                .labelPPTVorlage.Visible = True
 
-                        ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
-                        returnValue = .ShowDialog
-                    End With
+        '' ''                ' Filter
+        '' ''                .filterDropbox.Visible = True
+        '' ''                .filterLabel.Visible = True
+        '' ''                .filterLabel.Text = "Auswahl"
 
-                    appInstance.ScreenUpdating = True
+        '' ''                ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
+        '' ''                returnValue = .ShowDialog
+        '' ''            End With
 
-                End If
+        '' ''            appInstance.ScreenUpdating = True
 
-            ElseIf control.Id = "PT1G1M2B2" Then
+        '' ''        End If
 
-                If showRangeRight - showRangeLeft <= 6 Then
-                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
-                Else
+        '' ''    ElseIf control.Id = "PT1G1M2B2" Then
 
+        '' ''        If showRangeRight - showRangeLeft <= 6 Then
+        '' ''            Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+        '' ''        Else
 
-                    ' Hierarchie Auswahl, Multiprojekt Report
-                    appInstance.ScreenUpdating = False
 
-                    awinSettings.useHierarchy = True
-                    With hryFormular
+        '' ''            ' Hierarchie Auswahl, Multiprojekt Report
+        '' ''            appInstance.ScreenUpdating = False
 
-                        .Text = "Multiprojekt Reports erzeugen"
-                        .OKButton.Text = "Bericht erstellen"
-                        .menuOption = PTmenue.multiprojektReport
-                        .statusLabel.Text = ""
-                        .statusLabel.Visible = True
+        '' ''            awinSettings.useHierarchy = True
+        '' ''            With hryFormular
 
-                        .AbbrButton.Visible = False
-                        .AbbrButton.Enabled = False
+        '' ''                .Text = "Multiprojekt Reports erzeugen"
+        '' ''                .OKButton.Text = "Bericht erstellen"
+        '' ''                .menuOption = PTmenue.multiprojektReport
+        '' ''                .statusLabel.Text = ""
+        '' ''                .statusLabel.Visible = True
 
-                        .chkbxOneChart.Checked = False
-                        .chkbxOneChart.Visible = False
+        '' ''                .AbbrButton.Visible = False
+        '' ''                .AbbrButton.Enabled = False
 
-                        ' Reports
-                        .repVorlagenDropbox.Visible = True
-                        .labelPPTVorlage.Visible = True
-                        .einstellungen.Visible = True
+        '' ''                .chkbxOneChart.Checked = False
+        '' ''                .chkbxOneChart.Visible = False
 
-                        ' Filter
-                        .filterDropbox.Visible = True
-                        .filterLabel.Visible = True
-                        .filterLabel.Text = "Auswahl"
+        '' ''                ' Reports
+        '' ''                .repVorlagenDropbox.Visible = True
+        '' ''                .labelPPTVorlage.Visible = True
+        '' ''                .einstellungen.Visible = True
 
+        '' ''                ' Filter
+        '' ''                .filterDropbox.Visible = True
+        '' ''                .filterLabel.Visible = True
+        '' ''                .filterLabel.Text = "Auswahl"
 
-                        ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
-                        returnValue = .ShowDialog
-                    End With
 
-                    appInstance.ScreenUpdating = True
+        '' ''                ' .show; bei Verwendung mit Background Worker Funktion muss das modal erfolgen
+        '' ''                returnValue = .ShowDialog
+        '' ''            End With
 
-                End If
+        '' ''            appInstance.ScreenUpdating = True
 
-            ElseIf control.Id = "PT4G1M0B1" Then
-                ' Auswahl über Namen, Typ II Export
-                appInstance.ScreenUpdating = False
+        '' ''        End If
 
-                With nameFormular
+        '' ''    ElseIf control.Id = "PT4G1M0B1" Then
+        '' ''        ' Auswahl über Namen, Typ II Export
+        '' ''        appInstance.ScreenUpdating = False
 
-                    .Text = "Excel Report erzeugen"
-                    .OKButton.Text = "Report erstellen"
-                    .menuOption = PTmenue.excelExport
-                    .statusLabel.Text = ""
+        '' ''        With nameFormular
 
-                    .rdbRoles.Enabled = False
-                    .rdbCosts.Enabled = False
+        '' ''            .Text = "Excel Report erzeugen"
+        '' ''            .OKButton.Text = "Report erstellen"
+        '' ''            .menuOption = PTmenue.excelExport
+        '' ''            .statusLabel.Text = ""
 
-                    .rdbBU.Visible = True
-                    .pictureBU.Visible = True
+        '' ''            .rdbRoles.Enabled = False
+        '' ''            .rdbCosts.Enabled = False
 
-                    .rdbTyp.Visible = True
-                    .pictureTyp.Visible = True
+        '' ''            .rdbBU.Visible = True
+        '' ''            .pictureBU.Visible = True
 
-                    .einstellungen.Visible = False
+        '' ''            .rdbTyp.Visible = True
+        '' ''            .pictureTyp.Visible = True
 
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
+        '' ''            .einstellungen.Visible = False
 
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
+        '' ''            .chkbxOneChart.Checked = False
+        '' ''            .chkbxOneChart.Visible = False
 
-                    ' Filter
-                    .filterDropbox.Visible = True
-                    .filterLabel.Visible = True
-                    .filterLabel.Text = "Auswahl"
+        '' ''            .repVorlagenDropbox.Visible = False
+        '' ''            .labelPPTVorlage.Visible = False
 
+        '' ''            ' Filter
+        '' ''            .filterDropbox.Visible = True
+        '' ''            .filterLabel.Visible = True
+        '' ''            .filterLabel.Text = "Auswahl"
 
-                    returnValue = .ShowDialog
-                End With
 
-                appInstance.ScreenUpdating = True
+        '' ''            returnValue = .ShowDialog
+        '' ''        End With
 
-            ElseIf control.Id = "PT4G1M0B2" Then
+        '' ''        appInstance.ScreenUpdating = True
 
-                ' Auswahl über Hierarchie, Typ II Export
-                appInstance.ScreenUpdating = False
+        '' ''    ElseIf control.Id = "PT4G1M0B2" Then
 
-                awinSettings.useHierarchy = True
+        '' ''        ' Auswahl über Hierarchie, Typ II Export
+        '' ''        appInstance.ScreenUpdating = False
 
-                With hryFormular
+        '' ''        awinSettings.useHierarchy = True
 
-                    .Text = "Excel Report erzeugen"
-                    .OKButton.Text = "Report erstellen"
-                    .menuOption = PTmenue.excelExport
-                    .statusLabel.Text = ""
+        '' ''        With hryFormular
 
-                    .AbbrButton.Visible = False
-                    .AbbrButton.Enabled = False
+        '' ''            .Text = "Excel Report erzeugen"
+        '' ''            .OKButton.Text = "Report erstellen"
+        '' ''            .menuOption = PTmenue.excelExport
+        '' ''            .statusLabel.Text = ""
 
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
+        '' ''            .AbbrButton.Visible = False
+        '' ''            .AbbrButton.Enabled = False
 
-                    ' Reports
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
+        '' ''            .chkbxOneChart.Checked = False
+        '' ''            .chkbxOneChart.Visible = False
 
-                    ' Filter
-                    .filterDropbox.Visible = True
-                    .filterLabel.Visible = True
-                    .filterLabel.Text = "Auswahl"
+        '' ''            ' Reports
+        '' ''            .repVorlagenDropbox.Visible = False
+        '' ''            .labelPPTVorlage.Visible = False
 
-                    .einstellungen.Visible = False
+        '' ''            ' Filter
+        '' ''            .filterDropbox.Visible = True
+        '' ''            .filterLabel.Visible = True
+        '' ''            .filterLabel.Text = "Auswahl"
 
-                    ' Nicht Modal anzeigen
-                    .Show()
-                    'returnValue = .ShowDialog
-                End With
-            ElseIf control.Id = "PT4G1M2B1" Then
-                ' Auswahl über Namen, Vorlagen erzeugen
-                appInstance.ScreenUpdating = False
+        '' ''            .einstellungen.Visible = False
 
-                With nameFormular
+        '' ''            ' Nicht Modal anzeigen
+        '' ''            .Show()
+        '' ''            'returnValue = .ShowDialog
+        '' ''        End With
+        '' ''    ElseIf control.Id = "PT4G1M2B1" Then
+        '' ''        ' Auswahl über Namen, Vorlagen erzeugen
+        '' ''        appInstance.ScreenUpdating = False
 
-                    .Text = "modulare Vorlagen erzeugen"
-                    .OKButton.Text = "Vorlage erstellen"
-                    .menuOption = PTmenue.vorlageErstellen
-                    .statusLabel.Text = ""
+        '' ''        With nameFormular
 
-                    .rdbRoles.Enabled = False
-                    .rdbCosts.Enabled = False
+        '' ''            .Text = "modulare Vorlagen erzeugen"
+        '' ''            .OKButton.Text = "Vorlage erstellen"
+        '' ''            .menuOption = PTmenue.vorlageErstellen
+        '' ''            .statusLabel.Text = ""
 
-                    .rdbBU.Visible = False
-                    .pictureBU.Visible = False
+        '' ''            .rdbRoles.Enabled = False
+        '' ''            .rdbCosts.Enabled = False
 
-                    .rdbTyp.Visible = False
-                    .pictureTyp.Visible = False
+        '' ''            .rdbBU.Visible = False
+        '' ''            .pictureBU.Visible = False
 
-                    .einstellungen.Visible = False
+        '' ''            .rdbTyp.Visible = False
+        '' ''            .pictureTyp.Visible = False
 
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
+        '' ''            .einstellungen.Visible = False
 
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
+        '' ''            .chkbxOneChart.Checked = False
+        '' ''            .chkbxOneChart.Visible = False
 
-                    ' Filter
-                    .filterDropbox.Visible = True
-                    .filterLabel.Visible = True
-                    .filterLabel.Text = "Auswahl"
+        '' ''            .repVorlagenDropbox.Visible = False
+        '' ''            .labelPPTVorlage.Visible = False
 
-                    returnValue = .ShowDialog
-                End With
+        '' ''            ' Filter
+        '' ''            .filterDropbox.Visible = True
+        '' ''            .filterLabel.Visible = True
+        '' ''            .filterLabel.Text = "Auswahl"
 
-                appInstance.ScreenUpdating = True
+        '' ''            returnValue = .ShowDialog
+        '' ''        End With
 
+        '' ''        appInstance.ScreenUpdating = True
 
-            ElseIf control.Id = "PT4G1M2B2" Then
-                ' Auswahl über Hierarchie, Vorlagen Export
-                appInstance.ScreenUpdating = False
 
-                awinSettings.useHierarchy = True
-                With hryFormular
+        '' ''    ElseIf control.Id = "PT4G1M2B2" Then
+        '' ''        ' Auswahl über Hierarchie, Vorlagen Export
+        '' ''        appInstance.ScreenUpdating = False
 
-                    .Text = "modulare Vorlagen erzeugen"
-                    .OKButton.Text = "Vorlage erstellen"
-                    .menuOption = PTmenue.vorlageErstellen
-                    .statusLabel.Text = ""
+        '' ''        awinSettings.useHierarchy = True
+        '' ''        With hryFormular
 
-                    .AbbrButton.Visible = False
-                    .AbbrButton.Enabled = False
+        '' ''            .Text = "modulare Vorlagen erzeugen"
+        '' ''            .OKButton.Text = "Vorlage erstellen"
+        '' ''            .menuOption = PTmenue.vorlageErstellen
+        '' ''            .statusLabel.Text = ""
 
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = False
+        '' ''            .AbbrButton.Visible = False
+        '' ''            .AbbrButton.Enabled = False
 
-                    ' Reports
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
-                    .einstellungen.Visible = False
+        '' ''            .chkbxOneChart.Checked = False
+        '' ''            .chkbxOneChart.Visible = False
 
-                    ' Filter
-                    .filterDropbox.Visible = True
-                    .filterLabel.Visible = True
-                    .filterLabel.Text = "Auswahl"
+        '' ''            ' Reports
+        '' ''            .repVorlagenDropbox.Visible = False
+        '' ''            .labelPPTVorlage.Visible = False
+        '' ''            .einstellungen.Visible = False
 
-                    ' Nicht Modal anzeigen
-                    '.Show()
-                    returnValue = .ShowDialog
-                End With
+        '' ''            ' Filter
+        '' ''            .filterDropbox.Visible = True
+        '' ''            .filterLabel.Visible = True
+        '' ''            .filterLabel.Text = "Auswahl"
 
-            ElseIf control.Id = "PT0G1M2B7" Then
-                ' Auswahl über Namen, Meilensteine für Meilenstein Trendanalyse
-                Try
-                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-                Catch ex As Exception
-                    awinSelection = Nothing
-                End Try
+        '' ''            ' Nicht Modal anzeigen
+        '' ''            '.Show()
+        '' ''            returnValue = .ShowDialog
+        '' ''        End With
 
-                If awinSelection Is Nothing Then
-                    Call MsgBox("vorher Projekt/e selektieren ...")
-                Else
+        '' ''    ElseIf control.Id = "PT0G1M2B7" Then
+        '' ''        ' Auswahl über Namen, Meilensteine für Meilenstein Trendanalyse
+        '' ''        Try
+        '' ''            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        '' ''        Catch ex As Exception
+        '' ''            awinSelection = Nothing
+        '' ''        End Try
 
-                    appInstance.ScreenUpdating = False
+        '' ''        If awinSelection Is Nothing Then
+        '' ''            Call MsgBox("vorher Projekt/e selektieren ...")
+        '' ''        Else
 
-                    With nameFormular
+        '' ''            appInstance.ScreenUpdating = False
 
-                        .Text = "Meilenstein Trendanalyse erzeugen"
-                        .OKButton.Text = "Anzeigen"
-                        .menuOption = PTmenue.meilensteinTrendanalyse
-                        .statusLabel.Text = ""
-                        .statusLabel.Visible = True
+        '' ''            With nameFormular
 
-                        .headerLine.Text = "Meilensteine"
+        '' ''                .Text = "Meilenstein Trendanalyse erzeugen"
+        '' ''                .OKButton.Text = "Anzeigen"
+        '' ''                .menuOption = PTmenue.meilensteinTrendanalyse
+        '' ''                .statusLabel.Text = ""
+        '' ''                .statusLabel.Visible = True
 
-                        .picturePhasen.Visible = False
-                        .rdbPhases.Visible = False
-                        .rdbPhases.Checked = False
-                        .rdbPhases.Enabled = False
+        '' ''                .headerLine.Text = "Meilensteine"
 
-                        .pictureMilestones.Visible = False
-                        .rdbMilestones.Visible = False
-                        .rdbMilestones.Checked = True
-                        .rdbMilestones.Enabled = False
+        '' ''                .picturePhasen.Visible = False
+        '' ''                .rdbPhases.Visible = False
+        '' ''                .rdbPhases.Checked = False
+        '' ''                .rdbPhases.Enabled = False
 
-                        .pictureRoles.Visible = False
-                        .rdbRoles.Visible = False
-                        .rdbRoles.Checked = False
-                        .rdbRoles.Enabled = False
+        '' ''                .pictureMilestones.Visible = False
+        '' ''                .rdbMilestones.Visible = False
+        '' ''                .rdbMilestones.Checked = True
+        '' ''                .rdbMilestones.Enabled = False
 
-                        .pictureCosts.Visible = False
-                        .rdbCosts.Visible = False
-                        .rdbCosts.Checked = False
-                        .rdbCosts.Enabled = False
+        '' ''                .pictureRoles.Visible = False
+        '' ''                .rdbRoles.Visible = False
+        '' ''                .rdbRoles.Checked = False
+        '' ''                .rdbRoles.Enabled = False
 
-                        .rdbBU.Visible = False
-                        .pictureBU.Visible = False
+        '' ''                .pictureCosts.Visible = False
+        '' ''                .rdbCosts.Visible = False
+        '' ''                .rdbCosts.Checked = False
+        '' ''                .rdbCosts.Enabled = False
 
-                        .rdbTyp.Visible = False
-                        .pictureTyp.Visible = False
+        '' ''                .rdbBU.Visible = False
+        '' ''                .pictureBU.Visible = False
 
-                        .einstellungen.Visible = False
+        '' ''                .rdbTyp.Visible = False
+        '' ''                .pictureTyp.Visible = False
 
-                        .chkbxOneChart.Checked = False
-                        .chkbxOneChart.Visible = False
+        '' ''                .einstellungen.Visible = False
 
-                        .repVorlagenDropbox.Visible = False
-                        .labelPPTVorlage.Visible = False
+        '' ''                .chkbxOneChart.Checked = False
+        '' ''                .chkbxOneChart.Visible = False
 
-                        .auswSpeichern.Visible = False
-                 
-                        returnValue = .ShowDialog()
-                    End With
+        '' ''                .repVorlagenDropbox.Visible = False
+        '' ''                .labelPPTVorlage.Visible = False
 
-                    appInstance.ScreenUpdating = True
+        '' ''                .auswSpeichern.Visible = False
 
-                End If
+        '' ''                returnValue = .ShowDialog()
+        '' ''            End With
 
+        '' ''            appInstance.ScreenUpdating = True
 
-            End If
-        Else
-            Call MsgBox("Es sind keine Projekte sichtbar!  ")
-        End If
+        '' ''        End If
 
 
+        '' ''    End If
+        '' ''Else
+        '' ''    Call MsgBox("Es sind keine Projekte sichtbar!  ")
+        '' ''End If
 
-        ' oben ist es de-aktiviert 
-        'appInstance.EnableEvents = True
-        'enableOnUpdate = True
+
+
+        ' '' '' oben ist es de-aktiviert 
+        ' '' ''appInstance.EnableEvents = True
+        ' '' ''enableOnUpdate = True
 
 
     End Sub
@@ -2431,98 +2443,101 @@ Imports System.Drawing
 
     Sub AnalyseLeistbarkeit001(ByVal control As IRibbonControl)
 
-        Dim namensFormular As New frmNameSelection
-        Dim hierarchieFormular As New frmHierarchySelection
-        Dim returnValue As DialogResult
 
-        Call projektTafelInit()
+        Call PBBAnalyseLeistbarkeit001(control)
 
-        enableOnUpdate = False
-        appInstance.EnableEvents = False
+        ' ''Dim namensFormular As New frmNameSelection
+        ' ''Dim hierarchieFormular As New frmHierarchySelection
+        ' ''Dim returnValue As DialogResult
 
-        ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
-        If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
+        ' ''Call projektTafelInit()
 
-            If control.Id = "PTXG1B6" Then
-                ' Auswahl über Namen
+        ' ''enableOnUpdate = False
+        ' ''appInstance.EnableEvents = False
 
-                With namensFormular
-                    .Text = "Leistbarkeit analysieren"
+        '' '' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
+        ' ''If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
 
-                    .rdbBU.Visible = False
-                    .pictureBU.Visible = False
+        ' ''    If control.Id = "PTXG1B6" Then
+        ' ''        ' Auswahl über Namen
 
-                    .rdbTyp.Visible = False
-                    .pictureTyp.Visible = False
+        ' ''        With namensFormular
+        ' ''            .Text = "Leistbarkeit analysieren"
 
-                    .rdbRoles.Visible = True
-                    .pictureRoles.Visible = True
+        ' ''            .rdbBU.Visible = False
+        ' ''            .pictureBU.Visible = False
 
-                    .rdbCosts.Visible = True
-                    .pictureCosts.Visible = True
+        ' ''            .rdbTyp.Visible = False
+        ' ''            .pictureTyp.Visible = False
 
-                    '.chkbxShowObjects = False
+        ' ''            .rdbRoles.Visible = True
+        ' ''            .pictureRoles.Visible = True
 
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = True
+        ' ''            .rdbCosts.Visible = True
+        ' ''            .pictureCosts.Visible = True
 
-                    '.chkbxCreateCharts = True
+        ' ''            '.chkbxShowObjects = False
 
+        ' ''            .chkbxOneChart.Checked = False
+        ' ''            .chkbxOneChart.Visible = True
 
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
-
-                    '.showModePortfolio = True
-
-                    .menuOption = PTmenue.leistbarkeitsAnalyse
-                    .OKButton.Text = "Charts erstellen"
-
-                    '.Show()
-                    returnValue = .ShowDialog
-                End With
+        ' ''            '.chkbxCreateCharts = True
 
 
-            Else
-                ' Auswahl über Hierarchie
-                ' Hierarchie
-                awinSettings.useHierarchy = True
-                With hierarchieFormular
-                    .Text = "Leistbarkeit analysieren"
+        ' ''            .repVorlagenDropbox.Visible = False
+        ' ''            .labelPPTVorlage.Visible = False
 
-                    .chkbxOneChart.Checked = False
-                    .chkbxOneChart.Visible = True
+        ' ''            '.showModePortfolio = True
 
-                    '.chkbxCreateCharts = False
+        ' ''            .menuOption = PTmenue.leistbarkeitsAnalyse
+        ' ''            .OKButton.Text = "Charts erstellen"
 
-
-                    .repVorlagenDropbox.Visible = False
-                    .labelPPTVorlage.Visible = False
-
-                    '.showModePortfolio = True
-                    .menuOption = PTmenue.leistbarkeitsAnalyse
-
-                    .OKButton.Text = "Charts erstellen"
-
-                    '.Show()
-                    returnValue = .ShowDialog
-                End With
-
-            End If
-
-        ElseIf ShowProjekte.Count = 0 Then
-
-            Call MsgBox("Es sind keine Projekte geladen!  ")
-
-        ElseIf showRangeRight - showRangeLeft <= 5 Then
-
-            Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
-
-        End If
+        ' ''            '.Show()
+        ' ''            returnValue = .ShowDialog
+        ' ''        End With
 
 
+        ' ''    Else
+        ' ''        ' Auswahl über Hierarchie
+        ' ''        ' Hierarchie
+        ' ''        awinSettings.useHierarchy = True
+        ' ''        With hierarchieFormular
+        ' ''            .Text = "Leistbarkeit analysieren"
 
-        appInstance.EnableEvents = True
-        enableOnUpdate = True
+        ' ''            .chkbxOneChart.Checked = False
+        ' ''            .chkbxOneChart.Visible = True
+
+        ' ''            '.chkbxCreateCharts = False
+
+
+        ' ''            .repVorlagenDropbox.Visible = False
+        ' ''            .labelPPTVorlage.Visible = False
+
+        ' ''            '.showModePortfolio = True
+        ' ''            .menuOption = PTmenue.leistbarkeitsAnalyse
+
+        ' ''            .OKButton.Text = "Charts erstellen"
+
+        ' ''            '.Show()
+        ' ''            returnValue = .ShowDialog
+        ' ''        End With
+
+        ' ''    End If
+
+        ' ''ElseIf ShowProjekte.Count = 0 Then
+
+        ' ''    Call MsgBox("Es sind keine Projekte geladen!  ")
+
+        ' ''ElseIf showRangeRight - showRangeLeft <= 5 Then
+
+        ' ''    Call MsgBox("bitte zuerst einen Zeitraum markieren! ")
+
+        ' ''End If
+
+
+
+        ' ''appInstance.EnableEvents = True
+        ' ''enableOnUpdate = True
 
 
 
@@ -2720,113 +2735,115 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Sub Tom2G1Loeschen(control As IRibbonControl)
 
-        Dim bestaetigeLoeschen As New frmconfirmDeletePrj
-        Dim singleShp As Excel.Shape
-        Dim awinSelection As Excel.ShapeRange
-        Dim returnValue As DialogResult
+        Call PBBLoeschen(control)
 
-        Call projektTafelInit()
+        ' ''Dim bestaetigeLoeschen As New frmconfirmDeletePrj
+        ' ''Dim singleShp As Excel.Shape
+        ' ''Dim awinSelection As Excel.ShapeRange
+        ' ''Dim returnValue As DialogResult
 
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
+        ' ''Call projektTafelInit()
 
-        Try
-            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
+        ' ''appInstance.EnableEvents = False
+        ' ''enableOnUpdate = False
 
-        If Not awinSelection Is Nothing Then
+        ' ''Try
+        ' ''    'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+        ' ''    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        ' ''Catch ex As Exception
+        ' ''    awinSelection = Nothing
+        ' ''End Try
 
-            bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen" & vbLf & _
-                                            "Vorsicht: alle Varianten werden mitgelöscht ..."
-            returnValue = bestaetigeLoeschen.ShowDialog
+        ' ''If Not awinSelection Is Nothing Then
 
-            If returnValue = DialogResult.Cancel Then
+        ' ''    bestaetigeLoeschen.botschaft = "Bitte bestätigen Sie das Löschen" & vbLf & _
+        ' ''                                    "Vorsicht: alle Varianten werden mitgelöscht ..."
+        ' ''    returnValue = bestaetigeLoeschen.ShowDialog
 
-                appInstance.EnableEvents = True
-                enableOnUpdate = True
-                Exit Sub
+        ' ''    If returnValue = DialogResult.Cancel Then
 
-            End If
+        ' ''        appInstance.EnableEvents = True
+        ' ''        enableOnUpdate = True
+        ' ''        Exit Sub
 
-
-
-            ' jetzt die Aktion durchführen ...
-
-
-            For Each singleShp In awinSelection
-
-
-                Dim shapeArt As Integer
-                shapeArt = kindOfShape(singleShp)
-
-                With singleShp
-                    If isProjectType(shapeArt) Then
-
-                        Try
-                            Call awinDeleteProjectInSession(pName:=.Name)
-
-                        Catch ex As Exception
-                            Exit For
-                        End Try
-
-                    End If
-                End With
-
-
-            Next
-
-            ' ein oder mehrere Projekte wurden gelöscht  - typus = 3
-            Call awinNeuZeichnenDiagramme(3)
-
-        Else
-
-            Dim deletedProj As Integer = 0
-
-            If AlleProjekte.Count = 0 Then
-                Call MsgBox("es sind keine Projekte geladen !")
-            Else
-
-                'Dim deleteProjects As New frmDeleteProjects
-                Dim deleteProjects As New frmProjPortfolioAdmin
-                Try
-
-                    With deleteProjects
-                        .Text = "Projekte, Varianten aus der Session löschen"
-                        .aKtionskennung = PTTvActions.delFromSession
-                        .OKButton.Text = "Löschen"
-                        '' '' ''.portfolioName.Visible = False
-                        '' '' ''.Label1.Visible = False
-                    End With
-
-                    returnValue = deleteProjects.ShowDialog
-
-                    If returnValue = DialogResult.OK Then
-
-                        'Call MsgBox("ok, aus Session gelöscht  !")
-
-                    Else
-                        ' returnValue = DialogResult.Cancel
-
-                    End If
-
-                Catch ex As Exception
-
-                    Call MsgBox(ex.Message)
-                End Try
-
-            End If
+        ' ''    End If
 
 
 
-        End If
+        ' ''    ' jetzt die Aktion durchführen ...
 
-        Call awinDeSelect()
 
-        enableOnUpdate = True
-        appInstance.EnableEvents = True
+        ' ''    For Each singleShp In awinSelection
+
+
+        ' ''        Dim shapeArt As Integer
+        ' ''        shapeArt = kindOfShape(singleShp)
+
+        ' ''        With singleShp
+        ' ''            If isProjectType(shapeArt) Then
+
+        ' ''                Try
+        ' ''                    Call awinDeleteProjectInSession(pName:=.Name)
+
+        ' ''                Catch ex As Exception
+        ' ''                    Exit For
+        ' ''                End Try
+
+        ' ''            End If
+        ' ''        End With
+
+
+        ' ''    Next
+
+        ' ''    ' ein oder mehrere Projekte wurden gelöscht  - typus = 3
+        ' ''    Call awinNeuZeichnenDiagramme(3)
+
+        ' ''Else
+
+        ' ''    Dim deletedProj As Integer = 0
+
+        ' ''    If AlleProjekte.Count = 0 Then
+        ' ''        Call MsgBox("es sind keine Projekte geladen !")
+        ' ''    Else
+
+        ' ''        'Dim deleteProjects As New frmDeleteProjects
+        ' ''        Dim deleteProjects As New frmProjPortfolioAdmin
+        ' ''        Try
+
+        ' ''            With deleteProjects
+        ' ''                .Text = "Projekte, Varianten aus der Session löschen"
+        ' ''                .aKtionskennung = PTTvActions.delFromSession
+        ' ''                .OKButton.Text = "Löschen"
+        ' ''                '' '' ''.portfolioName.Visible = False
+        ' ''                '' '' ''.Label1.Visible = False
+        ' ''            End With
+
+        ' ''            returnValue = deleteProjects.ShowDialog
+
+        ' ''            If returnValue = DialogResult.OK Then
+
+        ' ''                'Call MsgBox("ok, aus Session gelöscht  !")
+
+        ' ''            Else
+        ' ''                ' returnValue = DialogResult.Cancel
+
+        ' ''            End If
+
+        ' ''        Catch ex As Exception
+
+        ' ''            Call MsgBox(ex.Message)
+        ' ''        End Try
+
+        ' ''    End If
+
+
+
+        ' ''End If
+
+        ' ''Call awinDeSelect()
+
+        ' ''enableOnUpdate = True
+        ' ''appInstance.EnableEvents = True
 
     End Sub
 
@@ -3815,21 +3832,7 @@ Imports System.Drawing
 
     End Sub
 
-    'Public Sub PT6RasterPressed(control As IRibbonControl, ByRef pressed As Boolean)
-    '    pressed = awinSettings.mppVertikalesRaster
-    'End Sub
-
-
-    'Public Sub PT6SetRaster(Control As IRibbonControl, ByRef pressed As Boolean)
-
-    '    If pressed Then
-    '        awinSettings.mppVertikalesRaster = True
-    '    Else
-    '        awinSettings.mppVertikalesRaster = False
-    '    End If
-
-    'End Sub
-
+  
 
     ''' <summary>
     ''' lädt die gewählten Projekte und gewählten Varianten in die Session
@@ -3838,36 +3841,38 @@ Imports System.Drawing
     ''' <remarks></remarks>
     Public Sub PT5DatenbankLoadProjekte(Control As IRibbonControl)
 
-        Dim deletedProj As Integer = 0
-        Dim returnValue As DialogResult
+        Call PBBDatenbankLoadProjekte(Control)
 
-        'Dim deleteProjects As New frmDeleteProjects
-        Dim loadProjectsForm As New frmProjPortfolioAdmin
+        ' ''Dim deletedProj As Integer = 0
+        ' ''Dim returnValue As DialogResult
 
-        Try
+        '' ''Dim deleteProjects As New frmDeleteProjects
+        ' ''Dim loadProjectsForm As New frmProjPortfolioAdmin
 
-            With loadProjectsForm
-                .Text = "Projekte und Varianten in die Session laden "
-                .aKtionskennung = PTTvActions.loadPV
-                .OKButton.Text = "Laden"
-                '' '' ''.portfolioName.Visible = False
-                '' '' ''.Label1.Visible = False
-            End With
+        ' ''Try
 
-            returnValue = loadProjectsForm.ShowDialog
+        ' ''    With loadProjectsForm
+        ' ''        .Text = "Projekte und Varianten in die Session laden "
+        ' ''        .aKtionskennung = PTTvActions.loadPV
+        ' ''        .OKButton.Text = "Laden"
+        ' ''        '' '' ''.portfolioName.Visible = False
+        ' ''        '' '' ''.Label1.Visible = False
+        ' ''    End With
 
-            If returnValue = DialogResult.OK Then
-                'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
+        ' ''    returnValue = loadProjectsForm.ShowDialog
 
-            Else
-                ' returnValue = DialogResult.Cancel
+        ' ''    If returnValue = DialogResult.OK Then
+        ' ''        'deletedProj = RemoveSelectedProjectsfromDB(deleteProjects.selectedItems)    ' es werden die selektierten Projekte in der DB gespeichert, die Anzahl gespeicherter Projekte sind das Ergebnis
 
-            End If
+        ' ''    Else
+        ' ''        ' returnValue = DialogResult.Cancel
 
-        Catch ex As Exception
+        ' ''    End If
 
-            Call MsgBox(ex.Message)
-        End Try
+        ' ''Catch ex As Exception
+
+        ' ''    Call MsgBox(ex.Message)
+        ' ''End Try
 
 
 
@@ -7646,149 +7651,153 @@ Imports System.Drawing
 
 
     Sub awinShowTimeMachine(control As IRibbonControl)
-        Dim hproj As clsProjekt
-        Dim pName As String, variantName As String
-        Dim vglName As String = " "
-        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
-        Dim singleShp As Excel.Shape
-        Dim showCharacteristics As New frmShowProjCharacteristics
-        'Dim returnValue As DialogResult
-        Dim awinSelection As Excel.ShapeRange
-        Dim grueneAmpel As String = awinPath & "gruen.gif"
-        Dim gelbeAmpel As String = awinPath & "gelb.gif"
-        Dim roteAmpel As String = awinPath & "rot.gif"
-        Dim graueAmpel As String = awinPath & "grau.gif"
-
-        If timeMachineIsOn Then
-            Call MsgBox("bitte erst Time Machine beenden ...")
-            Exit Sub
-        End If
-
-        Call projektTafelInit()
-
-        enableOnUpdate = False
-        appInstance.EnableEvents = True
 
 
-        Try
-            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-        Catch ex As Exception
-            awinSelection = Nothing
-        End Try
+        Call PBBShowTimeMachine(control)
 
-        If Not awinSelection Is Nothing Then
+        ' ''Dim hproj As clsProjekt
+        ' ''Dim pName As String, variantName As String
+        ' ''Dim vglName As String = " "
+        ' ''Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        ' ''Dim singleShp As Excel.Shape
+        ' ''Dim showCharacteristics As New frmShowProjCharacteristics
+        '' ''Dim returnValue As DialogResult
+        ' ''Dim awinSelection As Excel.ShapeRange
+        ' ''Dim grueneAmpel As String = awinPath & "gruen.gif"
+        ' ''Dim gelbeAmpel As String = awinPath & "gelb.gif"
+        ' ''Dim roteAmpel As String = awinPath & "rot.gif"
+        ' ''Dim graueAmpel As String = awinPath & "grau.gif"
 
+        ' ''If timeMachineIsOn Then
+        ' ''    Call MsgBox("bitte erst Time Machine beenden ...")
+        ' ''    Exit Sub
+        ' ''End If
 
-            If awinSelection.Count = 1 And isProjectType(kindOfShape(awinSelection.Item(1))) Then
-                ' jetzt die Aktion durchführen ...
-                singleShp = awinSelection.Item(1)
-                hproj = ShowProjekte.getProject(singleShp.Name)
-                With hproj
-                    pName = .name
-                    variantName = .variantName
-                    'Try
-                    '    variantName = .variantName.Trim
-                    'Catch ex As Exception
-                    '    variantName = ""
-                    'End Try
+        ' ''Call projektTafelInit()
 
-                End With
-
-                If Not projekthistorie Is Nothing Then
-                    If projekthistorie.Count > 0 Then
-                        vglName = projekthistorie.First.getShapeText
-                    End If
-
-                Else
-                    projekthistorie = New clsProjektHistorie
-                End If
-
-                If vglName <> hproj.getShapeText Then
-
-                    If request.pingMongoDb() Then
-                        ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
-                        projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
-                                                                            storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
-                        If projekthistorie.Count <> 0 Then
-
-                            projekthistorie.Add(Date.Now, hproj)
-
-                        End If
-
-                    Else
-                        Call MsgBox("Datenbank-Verbindung ist unterbrochen")
-                        projekthistorie.clear()
-                    End If
-
-                Else
-                    ' der aktuelle Stand hproj muss hinzugefügt werden 
-                    Dim lastElem As Integer = projekthistorie.Count - 1
-                    projekthistorie.RemoveAt(lastElem)
-                    projekthistorie.Add(Date.Now, hproj)
-                End If
+        ' ''enableOnUpdate = False
+        ' ''appInstance.EnableEvents = True
 
 
-                Dim nrSnapshots As Integer = projekthistorie.Count
+        ' ''Try
+        ' ''    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        ' ''Catch ex As Exception
+        ' ''    awinSelection = Nothing
+        ' ''End Try
 
-                If nrSnapshots > 0 Then
-
-                    With showCharacteristics
-
-                        .Text = "Historie für Projekt " & pName.Trim & vbLf & _
-                                "( " & projekthistorie.getZeitraum & " )"
-                        .timeSlider.Minimum = 0
-                        .timeSlider.Maximum = nrSnapshots - 1
-
-                        '.ampelErlaeuterung.Text = kvp.Value.ampelErlaeuterung
-
-                        'If kvp.Value.ampelStatus = 1 Then
-                        '    .ampelPicture.LoadAsync(grueneAmpel)
-                        'ElseIf kvp.Value.ampelStatus = 2 Then
-                        '    .ampelPicture.LoadAsync(gelbeAmpel)
-                        'ElseIf kvp.Value.ampelStatus = 3 Then
-                        '    .ampelPicture.LoadAsync(roteAmpel)
-                        'Else
-                        '    .ampelPicture.LoadAsync(graueAmpel)
-                        'End If
-
-                        '.snapshotDate.Text = kvp.Value.timeStamp.ToString
-                        ' das ist ja der aktuelle Stand ..
-                        .snapshotDate.Text = "Aktueller Stand"
-                        ' Designer 
-                        'Dim zE As String = "(" & awinSettings.zeitEinheit & ")"
-                        '.engpass1.Text = "Designer:          " & kvp.Value.getRessourcenBedarf(3).Sum.ToString("###.#") & zE
-                        '.engpass2.Text = "Personalkosten: " & kvp.Value.getAllPersonalKosten.Sum.ToString("###.#") & " (T€)"
-                        '.engpass3.Text = "Sonstige Kosten:   " & kvp.Value.getGesamtAndereKosten.Sum.ToString("###.#") & " (T€)"
+        ' ''If Not awinSelection Is Nothing Then
 
 
-                    End With
+        ' ''    If awinSelection.Count = 1 And isProjectType(kindOfShape(awinSelection.Item(1))) Then
+        ' ''        ' jetzt die Aktion durchführen ...
+        ' ''        singleShp = awinSelection.Item(1)
+        ' ''        hproj = ShowProjekte.getProject(singleShp.Name)
+        ' ''        With hproj
+        ' ''            pName = .name
+        ' ''            variantName = .variantName
+        ' ''            'Try
+        ' ''            '    variantName = .variantName.Trim
+        ' ''            'Catch ex As Exception
+        ' ''            '    variantName = ""
+        ' ''            'End Try
+
+        ' ''        End With
+
+        ' ''        If Not projekthistorie Is Nothing Then
+        ' ''            If projekthistorie.Count > 0 Then
+        ' ''                vglName = projekthistorie.First.getShapeText
+        ' ''            End If
+
+        ' ''        Else
+        ' ''            projekthistorie = New clsProjektHistorie
+        ' ''        End If
+
+        ' ''        If vglName <> hproj.getShapeText Then
+
+        ' ''            If request.pingMongoDb() Then
+        ' ''                ' projekthistorie muss nur dann neu geladen werden, wenn sie nicht bereits für dieses Projekt geholt wurde
+        ' ''                projekthistorie.liste = request.retrieveProjectHistoryFromDB(projectname:=pName, variantName:=variantName, _
+        ' ''                                                                    storedEarliest:=StartofCalendar, storedLatest:=Date.Now)
+        ' ''                If projekthistorie.Count <> 0 Then
+
+        ' ''                    projekthistorie.Add(Date.Now, hproj)
+
+        ' ''                End If
+
+        ' ''            Else
+        ' ''                Call MsgBox("Datenbank-Verbindung ist unterbrochen")
+        ' ''                projekthistorie.clear()
+        ' ''            End If
+
+        ' ''        Else
+        ' ''            ' der aktuelle Stand hproj muss hinzugefügt werden 
+        ' ''            Dim lastElem As Integer = projekthistorie.Count - 1
+        ' ''            projekthistorie.RemoveAt(lastElem)
+        ' ''            projekthistorie.Add(Date.Now, hproj)
+        ' ''        End If
 
 
-                    ' jetzt wird das Form aufgerufen ... 
+        ' ''        Dim nrSnapshots As Integer = projekthistorie.Count
 
-                    'returnValue = showCharacteristics.ShowDialog
-                    showCharacteristics.Show()
+        ' ''        If nrSnapshots > 0 Then
 
-                Else
-                    Call MsgBox("es gibt noch keine Planungs-Historie")
-                End If
+        ' ''            With showCharacteristics
 
-            Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
-                'For Each singleShp In awinSelection
-                '    With singleShp
-                '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
-                '            nrSelPshp = nrSelPshp + 1
-                '            SID = .ID.ToString
-                '        End If
-                '    End With
-                'Next
-            End If
-        Else
-            Call MsgBox("vorher Projekt selektieren ...")
-        End If
+        ' ''                .Text = "Historie für Projekt " & pName.Trim & vbLf & _
+        ' ''                        "( " & projekthistorie.getZeitraum & " )"
+        ' ''                .timeSlider.Minimum = 0
+        ' ''                .timeSlider.Maximum = nrSnapshots - 1
 
-        enableOnUpdate = True
+        ' ''                '.ampelErlaeuterung.Text = kvp.Value.ampelErlaeuterung
+
+        ' ''                'If kvp.Value.ampelStatus = 1 Then
+        ' ''                '    .ampelPicture.LoadAsync(grueneAmpel)
+        ' ''                'ElseIf kvp.Value.ampelStatus = 2 Then
+        ' ''                '    .ampelPicture.LoadAsync(gelbeAmpel)
+        ' ''                'ElseIf kvp.Value.ampelStatus = 3 Then
+        ' ''                '    .ampelPicture.LoadAsync(roteAmpel)
+        ' ''                'Else
+        ' ''                '    .ampelPicture.LoadAsync(graueAmpel)
+        ' ''                'End If
+
+        ' ''                '.snapshotDate.Text = kvp.Value.timeStamp.ToString
+        ' ''                ' das ist ja der aktuelle Stand ..
+        ' ''                .snapshotDate.Text = "Aktueller Stand"
+        ' ''                ' Designer 
+        ' ''                'Dim zE As String = "(" & awinSettings.zeitEinheit & ")"
+        ' ''                '.engpass1.Text = "Designer:          " & kvp.Value.getRessourcenBedarf(3).Sum.ToString("###.#") & zE
+        ' ''                '.engpass2.Text = "Personalkosten: " & kvp.Value.getAllPersonalKosten.Sum.ToString("###.#") & " (T€)"
+        ' ''                '.engpass3.Text = "Sonstige Kosten:   " & kvp.Value.getGesamtAndereKosten.Sum.ToString("###.#") & " (T€)"
+
+
+        ' ''            End With
+
+
+        ' ''            ' jetzt wird das Form aufgerufen ... 
+
+        ' ''            'returnValue = showCharacteristics.ShowDialog
+        ' ''            showCharacteristics.Show()
+
+        ' ''        Else
+        ' ''            Call MsgBox("es gibt noch keine Planungs-Historie")
+        ' ''        End If
+
+        ' ''    Else
+        ' ''        Call MsgBox("bitte nur ein Projekt selektieren")
+        ' ''        'For Each singleShp In awinSelection
+        ' ''        '    With singleShp
+        ' ''        '        If .AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
+        ' ''        '            nrSelPshp = nrSelPshp + 1
+        ' ''        '            SID = .ID.ToString
+        ' ''        '        End If
+        ' ''        '    End With
+        ' ''        'Next
+        ' ''    End If
+        ' ''Else
+        ' ''    Call MsgBox("vorher Projekt selektieren ...")
+        ' ''End If
+
+        ' ''enableOnUpdate = True
 
 
     End Sub
