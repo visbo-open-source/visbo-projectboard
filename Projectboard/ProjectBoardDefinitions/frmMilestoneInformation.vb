@@ -40,7 +40,17 @@
                 Dim farbe As System.Drawing.Color = Drawing.Color.FromArgb(CInt(.color))
 
                
-                bewertungsText.Text = .description
+
+                ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
+                Dim tmpstr() As String = .description.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 20)
+                If tmpstr.Length > 0 Then
+                    For i As Integer = 1 To tmpstr.Length
+                        bewertungsText.Lines(i - 1) = tmpstr(i - 1)
+                    Next
+                Else
+                    bewertungsText.Text = .description
+                End If
+                
 
             End With
 
@@ -131,4 +141,6 @@
             resultName.Text = elemNameOfElemID(milestoneNameID)
         End If
     End Sub
+
+    
 End Class

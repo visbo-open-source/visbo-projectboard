@@ -14827,20 +14827,11 @@ Public Module Projekte
 
                     Dim indlevel As Integer = hproj.hierarchy.getIndentLevel(itemNameID)
 
-                    '' ''Dim phstr As String = ""
-
-                    ' '' '' in phstr werden nun soviele Leerzeichen hineingeschrieben, wie diese Phase Hierarchie-Stufen hat
-                    '' ''For i = 1 To indlevel
-                    '' ''    phstr = phstr & einrückJeStufe
-                    '' ''Next
-
-                    ' '' '' nun wird der PhasenName angehängt
-                    '' ''phstr = phstr & elemNameOfElemID(itemNameID)
-
                     .Cells(rowOffset + zeile, columnOffset).value = elemNameOfElemID(itemNameID)
                     With CType(.Cells(rowOffset + zeile, columnOffset), Excel.Range)
-                        .IndentLevel = indlevel * einrückTiefe
                         .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                        .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                        .IndentLevel = indlevel * einrückTiefe
                     End With
 
                 End If
@@ -14852,6 +14843,16 @@ Public Module Projekte
                 .Cells(rowOffset + zeile, columnOffset + 4).interior.color = awinSettings.AmpelNichtBewertet
                 .Cells(rowOffset + zeile, columnOffset + 5).value = " "
                 .Cells(rowOffset + zeile, columnOffset + 6).value = " "
+
+                ' Änderung tk 1.11.15: 
+                Try
+                    For offs As Integer = 2 To 6
+                        .Cells(rowOffset + zeile, columnOffset + offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    Next
+                Catch ex As Exception
+
+                End Try
+                ' Ende Änderung tk 1.11.15
 
                 zeile = zeile + 1
 
@@ -14877,9 +14878,10 @@ Public Module Projekte
                     .Cells(rowOffset + zeile, columnOffset).value = elemNameOfElemID(itemNameID)
                     With CType(.Cells(rowOffset + zeile, columnOffset), Excel.Range)
 
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                        .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
                         .IndentLevel = indlevel * einrückTiefe
                         .Font.Bold = True
-                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
 
                     End With
                     '.Cells(rowOffset + zeile, columnOffset + 2).value = cResult.getDate
@@ -14889,6 +14891,27 @@ Public Module Projekte
                     ' Zelle für Beschreibung in der Höhe anpassen, autom. Zeilenumbruch
                     .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
                     .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
+
+                    '
+                    ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
+                    Try
+                        If Not IsNothing(cBewertung.description) Then
+                            If cBewertung.description.Length > 0 Then
+                                If cBewertung.description.Contains(vbLf) Or cBewertung.description.Contains(vbCr) Then
+                                    CType(.Rows(rowOffset + zeile), Excel.Range).AutoFit()
+                                End If
+                            End If
+                        End If
+
+
+                        For offs As Integer = 2 To 6
+                            .Cells(rowOffset + zeile, columnOffset + offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                        Next
+                    Catch ex As Exception
+
+                    End Try
+                    ' Ende Änderung tk 1.11.15 
+                    '
 
                     zeile = zeile + 1
                 Next
@@ -16740,7 +16763,17 @@ Public Module Projekte
 
                 '.projectName.Text = hproj.name
                 .projectName.Text = hproj.getShapeText
-                .bewertungsText.Text = description
+
+                '
+                ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
+                Dim tmpstr() As String = description.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+                Dim newString As String = ""
+                If tmpstr.Length > 0 Then
+                    .bewertungsText.Lines = tmpstr
+                Else
+                    .bewertungsText.Text = description
+                End If
+
 
                 If .Visible Then
                 Else
@@ -16935,13 +16968,16 @@ Public Module Projekte
             .resultDate.Text = dateText
             .resultName.Text = milestoneName
 
-            'If lfdNr > 1 Then
-            '    .lfdNr.Text = lfdNr.ToString("0#")
-            'Else
-            '    .lfdNr.Text = ""
-            'End If
+            '
+            ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
+            Dim tmpstr() As String = explanation.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+            Dim newString As String = ""
+            If tmpstr.Length > 0 Then
+                .bewertungsText.Lines = tmpstr
+            Else
+                .bewertungsText.Text = explanation
+            End If
 
-            .bewertungsText.Text = explanation
 
             If .Visible Then
             Else

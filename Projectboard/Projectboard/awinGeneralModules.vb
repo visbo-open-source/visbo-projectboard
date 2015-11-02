@@ -469,6 +469,7 @@ Public Module awinGeneralModules
         ' ur: 23.01.2015: Abfragen der Login-Informationen
         loginErfolgreich = loginProzedur()
 
+        
         If Not loginErfolgreich Then
             ' Customization-File wird geschlossen
             xlsCustomization.Close(SaveChanges:=False)

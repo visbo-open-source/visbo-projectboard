@@ -190,10 +190,7 @@
           <button id="PT3G1B3" label="mit Beauftragung vergleichen" onAction="PT3G1B3PhasenVgl" />
           <separator id="PT3G1s1"/>
           <button id="PT3G1B4" label="Ressourcen vergleichen" onAction="Tom2G3M1B2ResourceVgl" />
-          <!--<separator id="PT3G1s2"/>
-          
-          <separator id="PT3G1s3"/>-->
-         
+                   
           <separator id="PT3G1s4"/>
           <menu id="PT3G1M2" label="Einzelprojekt Historie">
             <button id="PT3G1M2B1" label="Strategie/Risiko" onAction="awinShowTrendSR"/>
