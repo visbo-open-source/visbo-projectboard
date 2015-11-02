@@ -29,6 +29,7 @@ Public Module Module1
 
     Public myProjektTafel As String = ""
     Public myCustomizationFile As String
+    Public myLogfile As String
 
     'Definitionen zum Schreiben eines Logfiles
     Public xlsLogfile As Excel.Workbook = Nothing
@@ -2797,6 +2798,8 @@ Public Module Module1
                 CType(.Cells(1, 3), Excel.Range).Value = Date.Now
             End With
             anzFehler = anzFehler + 1
+
+
         Catch ex As Exception
 
         End Try

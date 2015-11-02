@@ -440,7 +440,7 @@ Public Module awinGeneralModules
         If My.Computer.FileSystem.FileExists(awinPath & logFileName) Then
             Try
                 xlsLogfile = appInstance.Workbooks.Open(awinPath & logFileName)
-
+                myLogfile = appInstance.ActiveWorkbook.Name
             Catch ex As Exception
 
                 logmessage = "Öffnen von " & logFileName & " fehlgeschlagen" & vbLf & _
@@ -453,10 +453,12 @@ Public Module awinGeneralModules
         Else
             ' Logfile neu anlegen 
             xlsLogfile = appInstance.Workbooks.Add
+            myLogfile = appInstance.ActiveWorkbook.Name
             Call logfileInit()
             xlsLogfile.SaveAs(awinPath & logFileName)
 
         End If
+
 
         ' hier muss jetzt das Customization File aufgemacht werden ...
         Try

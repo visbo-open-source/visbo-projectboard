@@ -181,57 +181,54 @@ Public Class ThisWorkbook
 
         Dim projektespeichern As New frmProjekteSpeichern
         Dim returnValue As DialogResult
+
+        Call xlsLogfile.Close(SaveChanges:=True)
+
         If loginErfolgreich Then
 
 
             Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
+            Call awinKontextReset()
 
-        'If roentgenBlick.isOn Then
-        '    Call awinNoshowProjectNeeds()
-        '    With roentgenBlick
-        '        .isOn = False
-        '        .name = ""
-        '        .type = ""
-        '    End With
-        'End If
+            ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
+            Try
 
+                If request.pingMongoDb() And AlleProjekte.Count > 0 Then
+                    returnValue = projektespeichern.ShowDialog
 
-        Call awinKontextReset()
+                    If returnValue = DialogResult.Yes Then
 
-        ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
-        Try
+                        Call StoreAllProjectsinDB()
 
-            If Request.pingMongoDb() And AlleProjekte.Count > 0 Then
-                returnValue = projektespeichern.ShowDialog
+                    End If
 
-
-                If returnValue = DialogResult.Yes Then
-
-                    Call StoreAllProjectsinDB()
+                Else
+                    Call MsgBox("keine Projekte zu speichern ...")
 
                 End If
 
-            Else
-
-                Call MsgBox("keine Projekte zu speichern ...")
-
-
-            End If
-        Catch ex As Exception
+                'appInstance.ScreenUpdating = False
+                'appInstance.Workbooks(myLogfile).Activate()
+                'Call appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
 
 
-        End Try
+            Catch ex As Exception
+                Call xlsLogfile.Close(SaveChanges:=True)
+            End Try
 
-        appInstance.ScreenUpdating = False
-        appInstance.EnableEvents = False
+            'Application.Worksheets(arrWsNames(3)).Activate()
+
+
+            'appInstance.EnableEvents = False
+
 
         ' hier sollen jetzt noch die Phasen weggeschrieben werden 
-        Try
-            Call awinWritePhaseDefinitions()
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Schreiben Customization File")
-        End Try
+            Try
+                Call awinWritePhaseDefinitions()
+            Catch ex As Exception
+                Call MsgBox("Fehler bei Schreiben Customization File")
+            End Try
 
         End If
 
@@ -239,11 +236,12 @@ Public Class ThisWorkbook
 
         ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
 
+        'appInstance.ScreenUpdating = True
 
-        'xlsLogfile.Close(SaveChanges:=True)
+
+        appInstance.Quit()
+
         appInstance.EnableEvents = True
-        appInstance.ScreenUpdating = True
-        Application.Quit()
     End Sub
 
     Private Sub ThisWorkbook_Shutdown() Handles Me.Shutdown
@@ -261,58 +259,57 @@ Public Class ThisWorkbook
         'Call MsgBox(" in shutdown")
 
 
-        Try
-            Application.DisplayFormulaBar = True
-        Catch ex As Exception
+        ' '' ''Try
+        ' '' ''    Application.DisplayFormulaBar = True
+        ' '' ''Catch ex As Exception
 
-        End Try
+        ' '' ''End Try
 
 
-        With Application.ActiveWindow
-            Try
-                .SplitColumn = 0
-                .SplitRow = 0
-            Catch ex As Exception
+        ' '' ''With Application.ActiveWindow
+        ' '' ''    Try
+        ' '' ''        .SplitColumn = 0
+        ' '' ''        .SplitRow = 0
+        ' '' ''    Catch ex As Exception
 
-            End Try
+        ' '' ''    End Try
 
-            Try
-                .DisplayWorkbookTabs = True
-            Catch ex As Exception
+        ' '' ''    Try
+        ' '' ''        .DisplayWorkbookTabs = True
+        ' '' ''    Catch ex As Exception
 
-            End Try
+        ' '' ''    End Try
 
-            Try
-                .GridlineColor = RGB(220, 220, 220)
-            Catch ex As Exception
+        ' '' ''    Try
+        ' '' ''        .GridlineColor = RGB(220, 220, 220)
+        ' '' ''    Catch ex As Exception
 
-            End Try
+        ' '' ''    End Try
 
-            Try
-                .FreezePanes = False
-            Catch ex As Exception
+        ' '' ''    Try
+        ' '' ''        .FreezePanes = False
+        ' '' ''    Catch ex As Exception
 
-            End Try
+        ' '' ''    End Try
 
-            Try
-                .DisplayHeadings = True
-            Catch ex As Exception
+        ' '' ''    Try
+        ' '' ''        .DisplayHeadings = True
+        ' '' ''    Catch ex As Exception
 
-            End Try
+        ' '' ''    End Try
 
-        End With
+        ' '' ''End With
 
-        appInstance.ShowChartTipNames = True
-        appInstance.ShowChartTipValues = True
+        ' '' ''appInstance.ShowChartTipNames = True
+        ' '' ''appInstance.ShowChartTipValues = True
 
-        Dim anzWindows As Integer = appInstance.Windows.Count
+        ' '' ''Dim anzWindows As Integer = appInstance.Windows.Count
 
 
         appInstance.ScreenUpdating = True
-        
-
-
-
+        appInstance.Quit()
+       
     End Sub
+
 
 End Class
