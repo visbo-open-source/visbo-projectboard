@@ -64,24 +64,6 @@ Partial Public NotInheritable Class MySettings
             Me("ExcelVersion") = value
         End Set
     End Property
-    
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BHTC\")>  _
-    Public ReadOnly Property awinPath() As String
-        Get
-            Return CType(Me("awinPath"),String)
-        End Get
-    End Property
-    
-    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("bhtc")>  _
-    Public ReadOnly Property mongoDBname() As String
-        Get
-            Return CType(Me("mongoDBname"),String)
-        End Get
-    End Property
 End Class
 
 Namespace My
