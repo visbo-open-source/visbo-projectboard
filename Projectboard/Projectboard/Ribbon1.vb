@@ -3066,6 +3066,13 @@ Imports System.Drawing
         Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
         Dim projektInventurFile As String = "ProjektInventur.xlsm"
 
+        ' öffnen des LogFiles
+        Call logfileOpen()
+
+        ' '' '' ProjektTafel wieder Aktiv setzen
+        '' ''appInstance.Workbooks(myProjektTafel).Activate()
+
+
         Call projektTafelInit()
 
         appInstance.EnableEvents = False
@@ -3157,11 +3164,13 @@ Imports System.Drawing
         appInstance.ScreenUpdating = True
 
 
-
+        ' Schließen des LogFiles
+        Call logfileSchliessen()
 
     End Sub
 
     Public Sub Tom2G4M1Import(control As IRibbonControl)
+
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
         Dim hproj As New clsProjekt
@@ -3175,6 +3184,13 @@ Imports System.Drawing
         'Dim importDate As Date = "31.10.2013"
         Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
         Dim projektInventurFile As String = "ProjektInventur.xlsm"
+
+
+        ' öffnen des LogFiles
+        Call logfileOpen()
+
+        ' '' '' ProjektTafel wieder Aktiv setzen
+        '' ''appInstance.Workbooks(myProjektTafel).Activate()
 
         Call projektTafelInit()
 
@@ -3266,7 +3282,8 @@ Imports System.Drawing
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
 
-
+        'Schließen des LogFiles
+        Call logfileSchliessen()
 
 
     End Sub

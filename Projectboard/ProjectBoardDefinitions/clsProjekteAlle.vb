@@ -399,6 +399,9 @@ Public Class clsProjekteAlle
         End While
 
         ' Lösche alle Varianten mit ProjektName = pName 
+
+        '''''ur: ???? Hier ist der Fehler
+
         While found
 
             If _allProjects.ElementAt(i).Value.name = pName Then

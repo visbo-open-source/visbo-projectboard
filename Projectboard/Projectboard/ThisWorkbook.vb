@@ -142,36 +142,7 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_BeforeSave(SaveAsUI As Boolean, ByRef Cancel As Boolean) Handles Me.BeforeSave
 
-        'Dim zeitStempel As Date
-        'Call MsgBox(" in BeforeSave")
-
         Cancel = True
-
-
-        'If AlleProjekte.Count > 0 Then
-
-        '    Call StoreAllProjectsinDB()
-
-        '    zeitStempel = AlleProjekte.First.Value.timeStamp
-
-        '    Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
-
-        '    ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
-        '    Try
-        '        If projekthistorie.Count > 0 Then
-        '            projekthistorie.clear()
-        '        End If
-        '    Catch ex As Exception
-
-        '    End Try
-        'Else
-        '    Call MsgBox("keine Projekte zu speichern ...")
-        'End If
-
-
-
-
-
 
 
     End Sub
@@ -182,7 +153,7 @@ Public Class ThisWorkbook
         Dim projektespeichern As New frmProjekteSpeichern
         Dim returnValue As DialogResult
 
-        Call xlsLogfile.Close(SaveChanges:=True)
+        appInstance.ScreenUpdating = False
 
         If loginErfolgreich Then
 
@@ -208,107 +179,133 @@ Public Class ThisWorkbook
 
                 End If
 
-                'appInstance.ScreenUpdating = False
-                'appInstance.Workbooks(myLogfile).Activate()
-                'Call appInstance.Workbooks(myLogfile).Close(SaveChanges:=True)
-
-
             Catch ex As Exception
-                Call xlsLogfile.Close(SaveChanges:=True)
+
             End Try
 
-            'Application.Worksheets(arrWsNames(3)).Activate()
+            Application.Worksheets(arrWsNames(3)).Activate()
 
 
-            'appInstance.EnableEvents = False
+            appInstance.EnableEvents = False
 
 
-        ' hier sollen jetzt noch die Phasen weggeschrieben werden 
+            ' hier sollen jetzt noch die Phasen weggeschrieben werden 
             Try
                 Call awinWritePhaseDefinitions()
             Catch ex As Exception
                 Call MsgBox("Fehler bei Schreiben Customization File")
             End Try
 
+            '' ''    Try
+            '' ''        Call logfileSchreiben("Ende von ProjektBoard", "", anzFehler)
+            '' ''        Call logfileSchliessen()
+            '' ''        'CType(Application.Workbooks(myProjektTafel), Excel.Workbook).Activate()
+
+            '' ''    Catch ex As Exception
+            '' ''        Call MsgBox("Fehler beim Schliessen des Logfiles")
+            '' ''    End Try
+
+
         End If
 
-        appInstance.ActiveWorkbook.Saved = True
+        '' ''Application.Worksheets(arrWsNames(3)).Activate()
+        '' ''appInstance.EnableEvents = False
+        '' ''appInstance.ActiveWorkbook.Saved = True
+        ' '' ''appInstance.Workbooks(myProjektTafel).Close(SaveChanges:=False)
+
+        '' ''appInstance.ScreenUpdating = True
+        '' ''appInstance.EnableEvents = True
+
 
         ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
 
-        'appInstance.ScreenUpdating = True
+        Dim WB As Workbook
+        For Each WB In Application.Workbooks
+            WB.Saved = True
+        Next
 
 
-        appInstance.Quit()
+        '' ''Dim newHour As Integer = Hour(Now())
+        '' ''Dim newMinute As Integer = Minute(Now())
+        '' ''Dim newSecond As Integer = Second(Now()) + 100
+        '' ''Dim waitTime As Date = TimeSerial(newHour, newMinute, newSecond)
 
-        appInstance.EnableEvents = True
+        '' ''Application.Wait(waitTime)
+
+        Application.DisplayAlerts = False
+        Application.Quit()
+
+
+
     End Sub
 
     Private Sub ThisWorkbook_Shutdown() Handles Me.Shutdown
 
-        'Dim cbar As CommandBar
+       
+        Dim cbar As CommandBar
 
-        ' die Short Cut Menues aus Excel alle wieder aktivieren ...
-        'For Each cbar In appInstance.CommandBars
+        'die Short Cut Menues aus Excel alle wieder aktivieren ...
 
-        '    If cbar.Type = MsoBarType.msoBarTypePopup Then
-        '        cbar.Enabled = True
-        '    End If
-        'Next
+        For Each cbar In appInstance.CommandBars
+
+            If cbar.Type = MsoBarType.msoBarTypePopup Then
+                cbar.Enabled = True
+            End If
+        Next
 
         'Call MsgBox(" in shutdown")
 
 
-        ' '' ''Try
-        ' '' ''    Application.DisplayFormulaBar = True
-        ' '' ''Catch ex As Exception
+        Try
+            Application.DisplayFormulaBar = True
+        Catch ex As Exception
 
-        ' '' ''End Try
+        End Try
 
 
-        ' '' ''With Application.ActiveWindow
-        ' '' ''    Try
-        ' '' ''        .SplitColumn = 0
-        ' '' ''        .SplitRow = 0
-        ' '' ''    Catch ex As Exception
+        With Application.ActiveWindow
+            Try
+                .SplitColumn = 0
+                .SplitRow = 0
+            Catch ex As Exception
 
-        ' '' ''    End Try
+            End Try
 
-        ' '' ''    Try
-        ' '' ''        .DisplayWorkbookTabs = True
-        ' '' ''    Catch ex As Exception
+            Try
+                .DisplayWorkbookTabs = True
+            Catch ex As Exception
 
-        ' '' ''    End Try
+            End Try
 
-        ' '' ''    Try
-        ' '' ''        .GridlineColor = RGB(220, 220, 220)
-        ' '' ''    Catch ex As Exception
+            Try
+                .GridlineColor = RGB(220, 220, 220)
+            Catch ex As Exception
 
-        ' '' ''    End Try
+            End Try
 
-        ' '' ''    Try
-        ' '' ''        .FreezePanes = False
-        ' '' ''    Catch ex As Exception
+            Try
+                .FreezePanes = False
+            Catch ex As Exception
 
-        ' '' ''    End Try
+            End Try
 
-        ' '' ''    Try
-        ' '' ''        .DisplayHeadings = True
-        ' '' ''    Catch ex As Exception
+            Try
+                .DisplayHeadings = True
+            Catch ex As Exception
 
-        ' '' ''    End Try
+            End Try
 
-        ' '' ''End With
+        End With
 
-        ' '' ''appInstance.ShowChartTipNames = True
-        ' '' ''appInstance.ShowChartTipValues = True
+        appInstance.ShowChartTipNames = True
+        appInstance.ShowChartTipValues = True
 
-        ' '' ''Dim anzWindows As Integer = appInstance.Windows.Count
+        'Dim anzWindows As Integer = appInstance.Windows.Count
 
 
         appInstance.ScreenUpdating = True
-        appInstance.Quit()
-       
+
+
     End Sub
 
 

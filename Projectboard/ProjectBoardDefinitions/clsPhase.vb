@@ -740,7 +740,7 @@
         If Not AllRoles.Contains(role) Then
             AllRoles.Add(role)
         Else
-            Call logfileSchreiben("Fehler: Rolle '" & role.name & "' ist bereits in der Phase '" & Me.name & "' enthalten", "", anzFehler)
+            'Call logfileSchreiben("Fehler: Rolle '" & role.name & "' ist bereits in der Phase '" & Me.name & "' enthalten", "", anzFehler)
         End If
 
 
