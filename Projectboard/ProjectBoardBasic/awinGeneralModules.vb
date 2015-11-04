@@ -5,6 +5,7 @@ Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
 Imports System.Windows
+Imports System.Windows.Forms
 'Imports Excel = Microsoft.Office.Interop.Excel
 
 
@@ -43,7 +44,7 @@ Public Module awinGeneralModules
     ''' das Customization File 
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Sub awinWritePhaseDefinitions()
+    Public Sub awinWritePhaseDefinitions()
 
         Dim phaseDefs As Excel.Range
         Dim milestoneDefs As Excel.Range
@@ -119,7 +120,7 @@ Public Module awinGeneralModules
 
             End If
 
-           
+
 
         Next i
 
@@ -212,7 +213,7 @@ Public Module awinGeneralModules
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-               
+
             End If
 
 
@@ -266,7 +267,7 @@ Public Module awinGeneralModules
     ''' liest das Customization File aus und initialisiert die globalen Variablen entsprechend
     ''' </summary>
     ''' <remarks></remarks>
-    Friend Sub awinsetTypen()
+    Public Sub awinsetTypen()
 
         Dim i As Integer
         Dim xlsCustomization As Excel.Workbook = Nothing
@@ -465,7 +466,7 @@ Public Module awinGeneralModules
         '' ''    'Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
         '' ''End Try
 
-       
+
         awinSettings.databaseURL = My.Settings.mongoDBURL
         awinSettings.databaseName = My.Settings.mongoDBname
 
@@ -570,8 +571,12 @@ Public Module awinGeneralModules
                 Throw New ArgumentException(ex.Message)
             End Try
 
+<<<<<<< HEAD:Projectboard/Projectboard/awinGeneralModules.vb
             ' Logfile wird geschlossen
             Call logfileSchliessen()
+=======
+
+>>>>>>> feature/separates-Modul-für-Projectboard-Routinen:Projectboard/ProjectBoardBasic/awinGeneralModules.vb
 
         End If  ' von "if Login erfolgt"
 

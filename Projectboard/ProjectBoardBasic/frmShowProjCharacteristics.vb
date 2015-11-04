@@ -1,5 +1,8 @@
 ﻿Imports ProjectBoardDefinitions
 Imports System.Math
+Imports Excel = Microsoft.Office.Interop.Excel
+Imports System.Windows.Forms
+
 
 Public Class frmShowProjCharacteristics
     Dim nrSnapshots As Integer

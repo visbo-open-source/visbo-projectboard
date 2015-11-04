@@ -154,7 +154,7 @@ Partial Class frmNameSelection
         '
         'pictureCosts
         '
-        Me.pictureCosts.Image = Global.ExcelWorkbook1.My.Resources.Resources.money2
+        Me.pictureCosts.Image = CType(resources.GetObject("pictureCosts.Image"), System.Drawing.Image)
         Me.pictureCosts.Location = New System.Drawing.Point(344, 21)
         Me.pictureCosts.Name = "pictureCosts"
         Me.pictureCosts.Size = New System.Drawing.Size(33, 33)
@@ -163,7 +163,7 @@ Partial Class frmNameSelection
         '
         'pictureRoles
         '
-        Me.pictureRoles.Image = Global.ExcelWorkbook1.My.Resources.Resources.businessmen
+        Me.pictureRoles.Image = CType(resources.GetObject("pictureRoles.Image"), System.Drawing.Image)
         Me.pictureRoles.Location = New System.Drawing.Point(242, 21)
         Me.pictureRoles.Name = "pictureRoles"
         Me.pictureRoles.Size = New System.Drawing.Size(33, 33)
@@ -297,8 +297,8 @@ Partial Class frmNameSelection
         '
         'addButton
         '
-        Me.addButton.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_right
-        Me.addButton.InitialImage = Global.ExcelWorkbook1.My.Resources.Resources.navigate_right
+        Me.addButton.Image = CType(resources.GetObject("addButton.Image"), System.Drawing.Image)
+        Me.addButton.InitialImage = CType(resources.GetObject("addButton.InitialImage"), System.Drawing.Image)
         Me.addButton.Location = New System.Drawing.Point(290, 148)
         Me.addButton.Name = "addButton"
         Me.addButton.Size = New System.Drawing.Size(20, 20)
@@ -307,8 +307,8 @@ Partial Class frmNameSelection
         '
         'removeButton
         '
-        Me.removeButton.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_left
-        Me.removeButton.InitialImage = Global.ExcelWorkbook1.My.Resources.Resources.navigate_right
+        Me.removeButton.Image = CType(resources.GetObject("removeButton.Image"), System.Drawing.Image)
+        Me.removeButton.InitialImage = CType(resources.GetObject("removeButton.InitialImage"), System.Drawing.Image)
         Me.removeButton.Location = New System.Drawing.Point(289, 209)
         Me.removeButton.Name = "removeButton"
         Me.removeButton.Size = New System.Drawing.Size(20, 20)

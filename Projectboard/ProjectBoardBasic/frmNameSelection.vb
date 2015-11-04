@@ -2,6 +2,7 @@
 Imports System.ComponentModel
 Imports ClassLibrary1
 Imports Microsoft.Office.Interop.Excel
+Imports System.Windows.Forms
 
 Public Class frmNameSelection
 
@@ -91,7 +92,7 @@ Public Class frmNameSelection
         statusLabel.Text = ""
         statusLabel.Visible = True
 
-        
+
         ' jetzt werden anhand des letzten Filters die Collections gesetzt 
         Call retrieveSelections("Last", menuOption, selectedBUs, selectedTyps, _
                                 selectedPhases, selectedMilestones, _
@@ -327,7 +328,7 @@ Public Class frmNameSelection
             End If
 
         Else
-         
+
             ' die Aktion Subroutine aufrufen 
             Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
                             selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, filterName)
@@ -888,7 +889,7 @@ Public Class frmNameSelection
 
         End Select
 
-        
+
         For i = 1 To listOfNames.Count
             If Not nameListBox.Items.Contains(listOfNames.Item(i)) Then
                 nameListBox.Items.Add(listOfNames.Item(i))
@@ -1034,7 +1035,7 @@ Public Class frmNameSelection
 
         ' ur: 30.07.2015: gilt nicht für filterdefinieren: Konsistenzbedingungen einhalten: 
 
-      If Me.menuOption = PTmenue.visualisieren Then
+        If Me.menuOption = PTmenue.visualisieren Then
 
             If (rdbPhases.Checked = True Or rdbMilestones.Checked = True) And selNameListBox.Items.Count > 0 Then
                 selectedCosts.Clear()
@@ -1072,7 +1073,7 @@ Public Class frmNameSelection
         Dim element As Object
         Dim removeCollection As New Collection
 
-      
+
 
         For i = 1 To selNameListBox.SelectedItems.Count
             element = selNameListBox.SelectedItems.Item(i - 1)
@@ -1086,7 +1087,7 @@ Public Class frmNameSelection
 
     End Sub
     '''' ur: 3.08.2015: wurde mit der Auswahl aus der Hierarchie frmHierarchySelection ersetzt
-    
+
     ' '' ''Private Sub selNameListBox_MouseDoubleClick(sender As Object, e As MouseEventArgs) Handles selNameListBox.MouseDoubleClick
 
     ' '' ''    Dim elemName As String = ""
