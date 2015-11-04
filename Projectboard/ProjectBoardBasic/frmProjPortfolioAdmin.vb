@@ -1,5 +1,7 @@
 ﻿Imports ProjectBoardDefinitions
+Imports ProjectBoardBasic
 Imports MongoDbAccess
+Imports System.Windows.Forms
 
 ''' <summary>
 ''' wird verwendet um Portfolios zu definieren, Varianten zu aktivieren, Projekte und Varianten zu laden, zu aktivieren und zu löschen 
@@ -800,7 +802,7 @@ Public Class frmProjPortfolioAdmin
         stopRecursion = False
 
         '  Call MsgBox("in filterDropbox")
-        
+
 
     End Sub
 End Class

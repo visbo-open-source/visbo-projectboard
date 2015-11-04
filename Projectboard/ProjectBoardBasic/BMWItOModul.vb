@@ -1,6 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Imports Excel = Microsoft.Office.Interop.Excel
-Module BMWItOModul
+Public Module BMWItOModul
 
 
     Private Enum ptNamen
@@ -133,7 +133,7 @@ Module BMWItOModul
 
         End While
 
-        
+
 
         Dim aktivesSheet As Excel.Worksheet = CType(appInstance.ActiveWorkbook.ActiveSheet, _
                                                             Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -244,7 +244,7 @@ Module BMWItOModul
         End With
 
 
-        
+
 
 
 
@@ -339,7 +339,7 @@ Module BMWItOModul
 
                         ElseIf tmpStr(0).Trim.EndsWith("E") Then
                             typKennung = "E"
-                            
+
                         Else
                             typKennung = "?"
                         End If
@@ -480,7 +480,7 @@ Module BMWItOModul
                                             CType(aktivesSheet.Cells(curZeile, colProtocol), Excel.Range).Value = completeName
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 5), Excel.Range).Value = currentDateiName
                                         End If
-                                        
+
 
 
                                         ' Änderung 26.1.15 Ignorieren 
@@ -638,7 +638,7 @@ Module BMWItOModul
                                     ' Abkürzung
                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 4), Excel.Range).Value = txtAbbrev
                                 End If
-                                
+
 
                                 ' jetzt muss ggf die Phase in die Orig Hierarchie aufgenommen werden 
                                 If Not isMilestone Then

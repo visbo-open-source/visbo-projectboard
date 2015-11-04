@@ -7,6 +7,8 @@ Imports MongoDbAccess
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
+Imports System.Windows.Forms
+Imports Microsoft.Office.Interop
 
 
 Public Class frmSelectPPTTempl
@@ -149,7 +151,7 @@ Public Class frmSelectPPTTempl
                 .ScreenUpdating = True
             End If
         End With
-       
+
 
         Call MsgBox("Berichterstellung wurde beendet")
         MyBase.Close()
@@ -183,7 +185,7 @@ Public Class frmSelectPPTTempl
             Call MsgBox("Fehler " & ex.Message)
             Call MsgBox(" in BAckground Worker ...")
         End Try
-        
+
 
 
 
