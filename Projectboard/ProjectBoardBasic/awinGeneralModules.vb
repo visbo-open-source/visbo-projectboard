@@ -571,12 +571,9 @@ Public Module awinGeneralModules
                 Throw New ArgumentException(ex.Message)
             End Try
 
-<<<<<<< HEAD:Projectboard/Projectboard/awinGeneralModules.vb
             ' Logfile wird geschlossen
             Call logfileSchliessen()
-=======
 
->>>>>>> feature/separates-Modul-für-Projectboard-Routinen:Projectboard/ProjectBoardBasic/awinGeneralModules.vb
 
         End If  ' von "if Login erfolgt"
 
