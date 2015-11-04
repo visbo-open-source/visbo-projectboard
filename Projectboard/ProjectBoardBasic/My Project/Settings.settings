@@ -6,10 +6,10 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">bhtc</Value>
+      <Value Profile="(Default)">telairdemo</Value>
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BHTC\</Value>
+      <Value Profile="(Default)">C:\Users\Ute\Documents\Visual Studio 2012\Projects\Projectboard\project-board-repo\Projectboard\Projectboard\bin\Debug\</Value>
     </Setting>
   </Settings>
 </SettingsFile>
