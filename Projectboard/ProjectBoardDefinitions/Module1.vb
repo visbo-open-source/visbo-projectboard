@@ -1729,6 +1729,8 @@ Public Module Module1
         Try
             worksheetShapes = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet).Shapes
 
+
+
             For Each shpElement In worksheetShapes
 
                 shapeType = kindOfShape(shpElement)

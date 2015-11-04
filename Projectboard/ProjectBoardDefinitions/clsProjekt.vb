@@ -2985,56 +2985,61 @@ Public Class clsProjekt
                 Dim msNameIndices() As Integer
                 msNameIndices = Me.hierarchy.getMilestoneHryIndices(selMSName, breadcrumb)
 
-                For j = 0 To msNameIndices.Length - 1
+                If msNameIndices(0) = 0 Then
+                    ' Änderung tk: in diesem Fall gibt es den Meilenstein gar nicht 
+                    ' einfach in der Schleife weitermachen ...
+                Else
+                    For j = 0 To msNameIndices.Length - 1
 
-                    msnameID = Me.hierarchy.getIDAtIndex(msNameIndices(j))
+                        msnameID = Me.hierarchy.getIDAtIndex(msNameIndices(j))
 
-                    x = Me.hierarchy.getParentIDOfID(msnameID)
-                    'While Not (x = rootPhaseName Or found)
-                    Dim zaehler As Integer = 0
-                    While Not found
-                        zaehler = zaehler + 1
-                        ' nachsehen, ob diese Phase in den selektierten Phasen enthalten ist
-                        Dim phind As Integer = 1
-                        While Not found And phind <= selectedPhases.Count
+                        x = Me.hierarchy.getParentIDOfID(msnameID)
+                        'While Not (x = rootPhaseName Or found)
+                        Dim zaehler As Integer = 0
+                        While Not found
+                            zaehler = zaehler + 1
+                            ' nachsehen, ob diese Phase in den selektierten Phasen enthalten ist
+                            Dim phind As Integer = 1
+                            While Not found And phind <= selectedPhases.Count
 
-                            Call splitHryFullnameTo2(CStr(selectedPhases(phind)), selPHName, breadcrumb)
-                            Dim phNameIndices() As Integer
-                            phNameIndices = Me.hierarchy.getPhaseHryIndices(selPHName, breadcrumb)
-                            If phNameIndices.Contains(Me.hierarchy.getIndexOfID(x)) Then
-                                found = True
+                                Call splitHryFullnameTo2(CStr(selectedPhases(phind)), selPHName, breadcrumb)
+                                Dim phNameIndices() As Integer
+                                phNameIndices = Me.hierarchy.getPhaseHryIndices(selPHName, breadcrumb)
+                                If phNameIndices.Contains(Me.hierarchy.getIndexOfID(x)) Then
+                                    found = True
+                                End If
+                                phind = phind + 1
+
+                            End While
+                            If Not found Then
+                                x = Me.hierarchy.getParentIDOfID(x) 'Parent eine Stufe höher finden
+                                If x = Nothing Or x = "" Then
+                                    x = rootPhaseName
+                                    found = True
+                                End If
                             End If
-                            phind = phind + 1
 
                         End While
-                        If Not found Then
-                            x = Me.hierarchy.getParentIDOfID(x) 'Parent eine Stufe höher finden
-                            If x = Nothing Or x = "" Then
-                                x = rootPhaseName
-                                found = True
+
+                        If zaehler > 1 Or x = rootPhaseName Then ' Parent des Meilenstein soll nicht angezeigt werden, ist also nicht selektiert
+                            ' oder letzte Stufe ist erreicht, nämlich Phase rootPhaseName
+
+                            If drawMSinPhase.ContainsKey(x) Then
+                                listMS = drawMSinPhase(x)
+                            Else
+                                listMS = New SortedList
+                                drawMSinPhase.Add(x, listMS)
                             End If
-                        End If
 
-                    End While
+                            If Not listMS.Contains(msnameID) Then
+                                listMS.Add(msnameID, msnameID)
 
-                    If zaehler > 1 Or x = rootPhaseName Then ' Parent des Meilenstein soll nicht angezeigt werden, ist also nicht selektiert
-                        ' oder letzte Stufe ist erreicht, nämlich Phase rootPhaseName
-
-                        If drawMSinPhase.ContainsKey(x) Then
-                            listMS = drawMSinPhase(x)
-                        Else
-                            listMS = New SortedList
-                            drawMSinPhase.Add(x, listMS)
-                        End If
-
-                        If Not listMS.Contains(msnameID) Then
-                            listMS.Add(msnameID, msnameID)
+                            End If
 
                         End If
 
-                    End If
-
-                Next j
+                    Next j
+                End If
 
             Next mx
 

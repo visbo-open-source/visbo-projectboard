@@ -90,7 +90,7 @@ Public Class clsProjektShapes
 
 
     ''' <summary>
-    ''' gruppiert die im Array übergebenen Shapes zu einem Shape mit Namen pName
+    ''' gruppiert die in listOFNames übergebenen Shapes zu einem Shape mit Namen pName
     ''' </summary>
     ''' <param name="listOFNames"></param>
     ''' <param name="pName"></param>
