@@ -3609,7 +3609,8 @@ Public Module awinGeneralModules
                                         ' für die rootPhase muss gelten: offset = startoffset = 0 und duration = ProjektdauerIndays
                                         If duration <> ProjektdauerIndays Or offset <> 0 Then
 
-                                            '''''ur: ???? hier weiter machen
+                                            Call logfileSchreiben(("unzulässige Angaben für Offset und Dauer: der ProjektPhase" & _
+                                                                    offset.ToString & ", " & duration.ToString), hproj.name, anzFehler)
                                             Throw New Exception("unzulässige Angaben für Offset und Dauer: der ProjektPhase" & _
                                                                     offset.ToString & ", " & duration.ToString)
                                         Else
@@ -3654,8 +3655,11 @@ Public Module awinGeneralModules
 
                                     If duration < 1 Or offset < 0 Then
                                         If startDate = Date.MinValue And endeDate = Date.MinValue Then
+                                            Call logfileSchreiben((" zu '" & objectName & "' wurde kein Datum eingetragen!"), hproj.name, anzFehler)
                                             Throw New Exception(" zu '" & objectName & "' wurde kein Datum eingetragen!")
                                         Else
+                                            Call logfileSchreiben(("unzulässige Angaben für Offset und Dauer: " & _
+                                                                offset.ToString & ", " & duration.ToString), hproj.name, anzFehler)
                                             Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
                                                                 offset.ToString & ", " & duration.ToString)
                                         End If
@@ -3708,6 +3712,7 @@ Public Module awinGeneralModules
                                             Next l
                                             hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
                                         Else
+                                            Call logfileSchreiben(("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden"), hproj.name, anzFehler)
                                             Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
                                         End If
 
@@ -3741,6 +3746,10 @@ Public Module awinGeneralModules
                                         If Not awinSettings.milestoneFreeFloat And _
                                             (DateDiff(DateInterval.Day, cphase.getStartDate, milestoneDate) < 0 Or _
                                              DateDiff(DateInterval.Day, cphase.getEndDate, milestoneDate) > 0) Then
+
+                                            Call logfileSchreiben(("Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
+                                                                milestoneName & " nicht innerhalb " & cphase.name & vbLf & _
+                                                                     "Korrigieren Sie bitte diese Inkonsistenz in der Datei '"), hproj.name, anzFehler)
                                             Throw New Exception("Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
                                                                 milestoneName & " nicht innerhalb " & cphase.name & vbLf & _
                                                                      "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
@@ -3752,8 +3761,8 @@ Public Module awinGeneralModules
                                             milestoneDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
                                         Else
                                             If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
-                                                Call MsgBox("der Meilenstein '" & milestoneName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
-                                                            "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '" & hproj.name & ".xlsx")
+                                                Call logfileSchreiben(("der Meilenstein '" & milestoneName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
+                                                            "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '"), hproj.name & ".xlsx", anzFehler)
                                             End If
 
                                         End If
@@ -3818,6 +3827,7 @@ Public Module awinGeneralModules
                 Throw New ArgumentException("Es wurden keine Termine definiert! Projekt " & hproj.name & " kann nicht eingelesen werden")
             End If
         Catch ex As Exception
+            Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Termine: '" & ex.Message, hproj.name, anzFehler)
             Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Termine von '" & hproj.name & "' " & vbLf & ex.Message)
 
         End Try

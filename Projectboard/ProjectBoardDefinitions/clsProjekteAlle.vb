@@ -399,13 +399,16 @@ Public Class clsProjekteAlle
         End While
 
         ' Lösche alle Varianten mit ProjektName = pName 
-
-        '''''ur: ???? Hier ist der Fehler
-
         While found
 
-            If _allProjects.ElementAt(i).Value.name = pName Then
-                _allProjects.RemoveAt(i)
+            If i < _allProjects.Count Then
+
+                If _allProjects.ElementAt(i).Value.name = pName Then
+                    _allProjects.RemoveAt(i)
+                Else
+                    found = False
+                End If
+
             Else
                 found = False
             End If
