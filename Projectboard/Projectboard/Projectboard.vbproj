@@ -150,118 +150,9 @@
     <Import Include="Excel = Microsoft.Office.Interop.Excel" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="awinGeneralModules.vb" />
-    <Compile Include="frmAnnotateProject.Designer.vb">
-      <DependentUpon>frmAnnotateProject.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmAnnotateProject.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmHierarchySelection.Designer.vb">
-      <DependentUpon>frmHierarchySelection.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmHierarchySelection.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmAuthentication.Designer.vb">
-      <DependentUpon>frmAuthentication.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmAuthentication.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmProjPortfolioAdmin.Designer.vb">
-      <DependentUpon>frmProjPortfolioAdmin.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmProjPortfolioAdmin.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmCreateNewVariant.Designer.vb">
-      <DependentUpon>frmCreateNewVariant.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmCreateNewVariant.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmNameSelection.Designer.vb">
-      <DependentUpon>frmNameSelection.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmNameSelection.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmdemoModusDate.Designer.vb">
-      <DependentUpon>frmdemoModusDate.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmdemoModusDate.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmLoadCockpit.Designer.vb">
-      <DependentUpon>frmLoadCockpit.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmLoadCockpit.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmProjekteSpeichern.Designer.vb">
-      <DependentUpon>frmProjekteSpeichern.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmProjekteSpeichern.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmBetterWorseSettings.Designer.vb">
-      <DependentUpon>frmBetterWorseSettings.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmBetterWorseSettings.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmDependencies.Designer.vb">
-      <DependentUpon>frmDependencies.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmDependencies.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmSelectRPlanImport.Designer.vb">
-      <DependentUpon>frmSelectRPlanImport.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmSelectRPlanImport.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmSelectPPTTempl.Designer.vb">
-      <DependentUpon>frmSelectPPTTempl.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmSelectPPTTempl.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmMoveTimeSpan.Designer.vb">
-      <DependentUpon>frmMoveTimeSpan.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmMoveTimeSpan.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmAmpelBewertung.Designer.vb">
-      <DependentUpon>frmAmpelBewertung.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmAmpelBewertung.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmCreateRolloutProject.Designer.vb">
-      <DependentUpon>frmCreateRolloutProject.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmCreateRolloutProject.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmShowProjCharacteristics.Designer.vb">
-      <DependentUpon>frmShowProjCharacteristics.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmShowProjCharacteristics.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="frmStoreCockpit.Designer.vb">
-      <DependentUpon>frmStoreCockpit.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmStoreCockpit.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="BMWItOModul.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="Ribbon1.vb" />
+    <Compile Include="Settings.vb" />
     <Compile Include="Tabelle1.Designer.vb">
       <DependentUpon>Tabelle1.Designer.xml</DependentUpon>
     </Compile>
@@ -286,61 +177,6 @@
     <Compile Include="ThisWorkbook.vb">
       <DependentUpon>Projectboard.xlsx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="frmAnnotateProject.resx">
-      <DependentUpon>frmAnnotateProject.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmHierarchySelection.resx">
-      <DependentUpon>frmHierarchySelection.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmAuthentication.resx">
-      <DependentUpon>frmAuthentication.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmProjPortfolioAdmin.resx">
-      <DependentUpon>frmProjPortfolioAdmin.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmCreateNewVariant.resx">
-      <DependentUpon>frmCreateNewVariant.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmdemoModusDate.resx">
-      <DependentUpon>frmdemoModusDate.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmLoadCockpit.resx">
-      <DependentUpon>frmLoadCockpit.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmProjekteSpeichern.resx">
-      <DependentUpon>frmProjekteSpeichern.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmBetterWorseSettings.resx">
-      <DependentUpon>frmBetterWorseSettings.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmDependencies.resx">
-      <DependentUpon>frmDependencies.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmMoveTimeSpan.resx">
-      <DependentUpon>frmMoveTimeSpan.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmAmpelBewertung.resx">
-      <DependentUpon>frmAmpelBewertung.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmCreateRolloutProject.resx">
-      <DependentUpon>frmCreateRolloutProject.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmSelectPPTTempl.resx">
-      <DependentUpon>frmSelectPPTTempl.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmSelectRPlanImport.resx">
-      <DependentUpon>frmSelectRPlanImport.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmNameSelection.resx">
-      <DependentUpon>frmNameSelection.vb</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmShowProjCharacteristics.resx">
-      <DependentUpon>frmShowProjCharacteristics.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="frmStoreCockpit.resx">
-      <DependentUpon>frmStoreCockpit.vb</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
@@ -370,7 +206,7 @@
     <None Include="My Project\DataSources\ThisRibbonCollection.datasource" />
     <None Include="My Project\DataSources\ThisWorkbook.datasource" />
     <None Include="My Project\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <Compile Include="My Project\Settings.Designer.vb">
@@ -414,6 +250,10 @@
     <ProjectReference Include="..\MongoDbAccess\MongoDbAccess.csproj">
       <Project>{352a645d-d9c8-4902-9b8c-20f832ac8cdb}</Project>
       <Name>MongoDbAccess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProjectBoardBasic\ProjectBoardBasic.vbproj">
+      <Project>{ecdec86c-6f2f-436a-99f5-98c1958cf08b}</Project>
+      <Name>ProjectBoardBasic</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProjectBoardDefinitions\ProjectBoardDefinitions.vbproj">
       <Project>{b833e439-5c8b-41b3-8526-c8300e50d8da}</Project>

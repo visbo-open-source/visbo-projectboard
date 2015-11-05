@@ -184,7 +184,7 @@ Partial Class frmHierarchySelection
         '
         Me.SelectionSet.BackColor = System.Drawing.SystemColors.Control
         Me.SelectionSet.ErrorImage = CType(resources.GetObject("SelectionSet.ErrorImage"), System.Drawing.Image)
-        Me.SelectionSet.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_check1
+        Me.SelectionSet.Image = CType(resources.GetObject("SelectionSet.Image"), System.Drawing.Image)
         Me.SelectionSet.InitialImage = Nothing
         Me.SelectionSet.Location = New System.Drawing.Point(12, 349)
         Me.SelectionSet.Name = "SelectionSet"
@@ -195,7 +195,7 @@ Partial Class frmHierarchySelection
         'collapseCompletely
         '
         Me.collapseCompletely.BackColor = System.Drawing.SystemColors.Control
-        Me.collapseCompletely.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_beginning
+        Me.collapseCompletely.Image = CType(resources.GetObject("collapseCompletely.Image"), System.Drawing.Image)
         Me.collapseCompletely.Location = New System.Drawing.Point(68, 349)
         Me.collapseCompletely.Name = "collapseCompletely"
         Me.collapseCompletely.Size = New System.Drawing.Size(16, 16)
@@ -205,7 +205,7 @@ Partial Class frmHierarchySelection
         'expandCompletely
         '
         Me.expandCompletely.BackColor = System.Drawing.SystemColors.Control
-        Me.expandCompletely.Image = Global.ExcelWorkbook1.My.Resources.Resources.navigate_end
+        Me.expandCompletely.Image = CType(resources.GetObject("expandCompletely.Image"), System.Drawing.Image)
         Me.expandCompletely.Location = New System.Drawing.Point(90, 349)
         Me.expandCompletely.Name = "expandCompletely"
         Me.expandCompletely.Size = New System.Drawing.Size(16, 16)
@@ -215,7 +215,7 @@ Partial Class frmHierarchySelection
         'SelectionReset
         '
         Me.SelectionReset.BackColor = System.Drawing.SystemColors.Control
-        Me.SelectionReset.Image = Global.ExcelWorkbook1.My.Resources.Resources.selection_delete
+        Me.SelectionReset.Image = CType(resources.GetObject("SelectionReset.Image"), System.Drawing.Image)
         Me.SelectionReset.InitialImage = Nothing
         Me.SelectionReset.Location = New System.Drawing.Point(32, 349)
         Me.SelectionReset.Name = "SelectionReset"

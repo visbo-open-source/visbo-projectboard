@@ -29,6 +29,13 @@ Public Module Module1
 
     Public myProjektTafel As String = ""
     Public myCustomizationFile As String
+    Public myLogfile As String
+
+    'Definitionen zum Schreiben eines Logfiles
+    Public xlsLogfile As Excel.Workbook = Nothing
+    Public logmessage As String = ""
+    Public anzFehler As Long = 0
+
 
     Public vergleichsfarbe0 As Object
     Public vergleichsfarbe1 As Object
@@ -401,6 +408,7 @@ Public Module Module1
 
     Public excelExportVorlage As String = "export Vorlage.xlsx"
     Public requirementsOrdner As String = "requirements\"
+    Public logFileName As String = requirementsOrdner & "logFile.xlsx"                               ' für Fehlermeldung aus Import und Export
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"

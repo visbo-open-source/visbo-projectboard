@@ -12807,7 +12807,7 @@ Public Module Projekte
                     Catch ex As Exception
 
                     End Try
-             
+
 
                 End If
             Else
@@ -14793,7 +14793,7 @@ Public Module Projekte
             columnOffset = tbl.Column
 
             zeile = 0
-          
+
             For p = 1 To hproj.CountPhases
 
                 cphase = hproj.getPhase(p)
@@ -16504,7 +16504,7 @@ Public Module Projekte
         Dim worksheetShapes As Excel.Shapes
         Dim nameID As String
         Dim description As String = ""
-        
+
         Dim ok As Boolean
         Dim index As Integer = 0
 
@@ -17995,7 +17995,7 @@ Public Module Projekte
         Next
 
         If ImportProjekte.Count < 1 Then
-            Call MsgBox(" es waren keine Projekte zu importieren ...")
+            Call MsgBox(" es wurden keine Projekte importiert ...")
         Else
             Dim filterText As String
             If awinSettings.applyFilter Then

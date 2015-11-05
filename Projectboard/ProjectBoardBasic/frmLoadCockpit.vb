@@ -73,7 +73,7 @@ Public Class frmLoadCockpit
 
         i = 1
         While i <= xlsCockpits.Worksheets.Count
-            wsSheet = CType(xlsCockpits.Worksheets.Item(i), Excel.Worksheet)
+            wsSheet = CType(xlsCockpits.Worksheets.Item(i), xlNS.Worksheet)
             ListBox1.Items.Add(wsSheet.Name)
             i = i + 1
         End While

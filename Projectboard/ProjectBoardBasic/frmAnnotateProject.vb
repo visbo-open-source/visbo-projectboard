@@ -1,5 +1,8 @@
 ﻿Imports ProjectBoardDefinitions
+Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
+Imports System.Windows.Forms
+
 Public Class frmAnnotateProject
 
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
@@ -50,7 +53,7 @@ Public Class frmAnnotateProject
             Next
         End If
         Me.Cursor = Cursors.Default
-        
+
 
     End Sub
 
@@ -62,7 +65,7 @@ Public Class frmAnnotateProject
 
     End Sub
 
-    
+
     Private Sub showOrigNames_CheckedChanged(sender As Object, e As EventArgs) Handles showOrigNames.CheckedChanged
         If showOrigNames.Checked = True Then
             showAbbrev.Checked = False

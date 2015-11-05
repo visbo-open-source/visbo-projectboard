@@ -737,7 +737,12 @@
     'End Sub
     Public Sub addRole(ByVal role As clsRolle)
 
-        AllRoles.Add(role)
+        If Not AllRoles.Contains(role) Then
+            AllRoles.Add(role)
+        Else
+            'Call logfileSchreiben("Fehler: Rolle '" & role.name & "' ist bereits in der Phase '" & Me.name & "' enthalten", "", anzFehler)
+        End If
+
 
     End Sub
 
@@ -1238,6 +1243,11 @@
 
     Public Sub AddCost(ByVal cost As clsKostenart)
 
+        If Not AllCosts.Contains(cost) Then
+            AllCosts.Add(cost)
+        Else
+            Throw New Exception("Fehler: Kostenart '" & cost.name & "' ist bereits in der Phase '" & Me.name & "' enthalten")
+        End If
         AllCosts.Add(cost)
 
     End Sub
@@ -1335,14 +1345,17 @@
 
     End Sub
 
+    
     ''' <summary>
-    ''' berechnet für die betreffenden Xwert-Array 
+    ''' berechnet die Bedarfe (Rollen,Kosten) der Phase gemäß Startdate und endedate, und corrFakt neu
     ''' </summary>
+    ''' <param name="startdate"></param>
+    ''' <param name="endedate"></param>
     ''' <param name="oldXwerte"></param>
     ''' <param name="corrFakt"></param>
     ''' <param name="newValues"></param>
     ''' <remarks></remarks>
-    Private Sub berechneBedarfe(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, ByVal corrFakt As Double, ByRef newValues() As Double)
+    Public Sub berechneBedarfe(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, ByVal corrFakt As Double, ByRef newValues() As Double)
         Dim k As Integer
         Dim newXwerte() As Double
         Dim gesBedarf As Double
