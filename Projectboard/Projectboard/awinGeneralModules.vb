@@ -3877,6 +3877,7 @@ Public Module awinGeneralModules
                         Dim resultVerantwortlich As String = ""
                         Dim bewertungsAmpel As Integer
                         Dim explanation As String
+                        Dim deliverables As String
                         Dim bewertungsdatum As Date = importDatum
                         Dim Nummer As String
                         Dim tbl As Excel.Range
@@ -4216,8 +4217,16 @@ Public Module awinGeneralModules
                                     End If
 
                                     ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
-                                    bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
+                                    Try
+                                        bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
+                                    Catch ex As Exception
+                                        bewertungsAmpel = 0
+                                    End Try
+
                                     explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
+
+                                    ' Ergänzung tk 2.11 deliverables ergänzt 
+                                    deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
 
 
                                     If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
@@ -4230,6 +4239,7 @@ Public Module awinGeneralModules
                                         .colorIndex = bewertungsAmpel
                                         .datum = importDatum
                                         .description = explanation
+                                        .deliverables = deliverables
                                     End With
 
 
@@ -6258,11 +6268,12 @@ Public Module awinGeneralModules
 
 
                     cphase = kvp.Value.getPhase(elemName, breadcrumb, lfdNr)
-                    Dim phaseName As String = kvp.Value.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+                    Dim phaseName As String
 
                     If Not IsNothing(cphase) Then
                         Try
 
+                            phaseName = kvp.Value.hierarchy.getBestNameOfID(cphase.nameID, True, False)
                             startDate = cphase.getStartDate
                             endDate = cphase.getEndDate
 

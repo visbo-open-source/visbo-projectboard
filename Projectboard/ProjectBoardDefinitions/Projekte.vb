@@ -14891,13 +14891,17 @@ Public Module Projekte
                     ' Zelle für Beschreibung in der Höhe anpassen, autom. Zeilenumbruch
                     .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
                     .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
+                    ' Änderung tk 2.11 Ergänzung um Deliverables 
+                    .Cells(rowOffset + zeile, columnOffset + 6).value = cBewertung.deliverables
+                    .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
 
                     '
                     ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
                     Try
-                        If Not IsNothing(cBewertung.description) Then
-                            If cBewertung.description.Length > 0 Then
-                                If cBewertung.description.Contains(vbLf) Or cBewertung.description.Contains(vbCr) Then
+                        If Not IsNothing(cBewertung.description) Or Not IsNothing(cBewertung.deliverables) Then
+                            If cBewertung.description.Length > 0 Or cBewertung.deliverables.Length > 0 Then
+                                If cBewertung.description.Contains(vbLf) Or cBewertung.description.Contains(vbCr) Or _
+                                    cBewertung.deliverables.Contains(vbLf) Or cBewertung.deliverables.Contains(vbCr) Then
                                     CType(.Rows(rowOffset + zeile), Excel.Range).AutoFit()
                                 End If
                             End If
@@ -16807,6 +16811,7 @@ Public Module Projekte
 
         Dim projektName As String = ""
         Dim explanation As String = ""
+        Dim deliverables As String = ""
         Dim milestoneName As String = "-"
         Dim breadCrumb As String = "-"
         Dim dateText As String = ""
@@ -16908,6 +16913,7 @@ Public Module Projekte
 
         Catch ex As Exception
             explanation = milestoneNameID & " existiert nicht"
+            deliverables = milestoneNameID & " existiert nicht"
             ok = False
         End Try
 
@@ -16942,12 +16948,14 @@ Public Module Projekte
                 farbe = System.Drawing.Color.FromArgb(CInt(hb.color))
 
                 explanation = hb.description
+                deliverables = hb.deliverables
 
 
             Else
 
                 farbe = System.Drawing.Color.FromArgb(CInt(awinSettings.AmpelNichtBewertet))
-                explanation = "es existiert noch keine Bewertung ...."
+                explanation = ""
+                deliverables = ""
 
             End If
 
@@ -16970,12 +16978,23 @@ Public Module Projekte
 
             '
             ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
-            Dim tmpstr() As String = explanation.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+            Dim tmpstr() As String
+            If .rdbDeliverables.Checked Then
+                tmpstr = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+            Else
+                tmpstr = explanation.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+            End If
+
             Dim newString As String = ""
             If tmpstr.Length > 0 Then
                 .bewertungsText.Lines = tmpstr
             Else
-                .bewertungsText.Text = explanation
+                If .rdbDeliverables.Checked Then
+                    .bewertungsText.Text = deliverables
+                Else
+                    .bewertungsText.Text = explanation
+                End If
+
             End If
 
 
