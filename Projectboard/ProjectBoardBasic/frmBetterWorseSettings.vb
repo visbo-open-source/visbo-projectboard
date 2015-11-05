@@ -65,4 +65,8 @@ Public Class frmBetterWorseSettings
 
         auswahl = 0
     End Sub
+
+    Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
+
+    End Sub
 End Class

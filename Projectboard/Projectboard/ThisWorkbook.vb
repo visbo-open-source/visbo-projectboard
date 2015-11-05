@@ -76,6 +76,12 @@ Public Class ThisWorkbook
         Try
 
             appInstance.ScreenUpdating = False
+
+            awinSettings.databaseURL = My.Settings.mongoDBURL
+            awinSettings.databaseName = My.Settings.mongoDBname
+            awinSettings.awinPath = My.Settings.awinPath
+
+
             Call awinsetTypen()
 
         Catch ex As Exception

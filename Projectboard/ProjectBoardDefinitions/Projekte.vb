@@ -7424,11 +7424,21 @@ Public Module Projekte
         Dim wsPT As xlNS.Worksheet = Nothing
         Dim sichtbarerBereich As Excel.Range
 
+
+        ' Änderung tk: 5.11.15  
+        ' enableEvents = false , enableonUpdate = false; sonst werden stätnig Event getriggert und ausgeführt 
+
+        Dim formerEO As Boolean = enableOnUpdate
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
         Try
             ' Merken des aktuell gesetzten sichtbaren Bereich in der ProjektTafel
             With appInstance.ActiveWindow
                 sichtbarerBereich = .VisibleRange
             End With
+
             wsPT = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
             With wsPT
                 ' benötigt um die Spaltenbreite und Zeilenhöhe  zu setzen für die Tabelle in "Project Board Cockpit.xlsx", in die das neue Cockpit gespeichert wird.
@@ -7464,7 +7474,8 @@ Public Module Projekte
                             If Not fileIsOpen Then
                                 logMessage = "Öffnen von " & fileName & " fehlgeschlagen" & vbLf & _
                                                             "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
-
+                                appInstance.EnableEvents = formerEE
+                                enableOnUpdate = formerEO
                                 Throw New ArgumentException(logMessage)
                             End If
 
@@ -7604,7 +7615,8 @@ Public Module Projekte
 
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                    enableOnUpdate = True
+                    enableOnUpdate = formerEO
+                    appInstance.EnableEvents = formerEE
                     appInstance.ScreenUpdating = True
 
                     Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
@@ -7616,6 +7628,8 @@ Public Module Projekte
             End With
 
         Catch ex As Exception
+            enableOnUpdate = formerEO
+            appInstance.EnableEvents = formerEE
             Throw New Exception("Fehler beim Speichern des Cockpits '" & cockpitname & vbLf & ex.Message)
         End Try
 

@@ -276,15 +276,14 @@ Public Module awinGeneralModules
         ReDim exportOrdnerNames(4)
 
 
-
         ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
         'awinPath = appInstance.ActiveWorkbook.Path & "\"
 
-        If (Dir(My.Settings.awinPath, vbDirectory) <> "") Then
-            awinPath = My.Settings.awinPath
+        If (Dir(awinSettings.awinPath, vbDirectory) <> "") Then
+            awinPath = awinSettings.awinPath
         Else
 
-            Throw New ArgumentException("Requirementsordner " & My.Settings.awinPath & " existiert nicht")
+            Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
 
         End If
 
@@ -467,8 +466,6 @@ Public Module awinGeneralModules
         '' ''End Try
 
 
-        awinSettings.databaseURL = My.Settings.mongoDBURL
-        awinSettings.databaseName = My.Settings.mongoDBname
 
         ' ur: 23.01.2015: Abfragen der Login-Informationen
         loginErfolgreich = loginProzedur()

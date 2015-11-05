@@ -21,6 +21,8 @@
 
     Public Property glowColor As Long
 
+    ' hier werden die Settings gesetzt  
+    
     ' Settings für die Projekteingabe
     Public Property lastProjektTyp As String
     Public Property lastModulTyp As String
@@ -36,6 +38,7 @@
     Public Property kapaEinheit As String
     Public Property databaseName As String
     Public Property databaseURL As String
+    Public Property awinPath As String
     Public Property zeilenhoehe1 As Double
     Public Property zeilenhoehe2 As Double
     Public Property spaltenbreite As Double
@@ -146,7 +149,10 @@
         _kalenderStart = #1/1/2012#
         _kapaEinheit = "PT"
         _zeitEinheit = "PM"
-        _databaseName = "projectboard"
+        _databaseName = ""
+        _databaseURL = ""
+        _awinPath = ""
+
         _selectedColumn = 1
         _offsetEinheit = "d"
         _milestoneFreeFloat = True

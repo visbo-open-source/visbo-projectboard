@@ -11,44 +11,42 @@
     <tabs>
       <tab id="PTX" label ="Multiprojekt-Info">
         <group id="PTXG1" label ="Analysen">
-          <button id="PTXG1B1" label="Projekt-Ampeln" onAction="Tom2G2M5M1B3ShowStatus" />
+          <!--<button id="PTXG1B1" label="Projekt-Ampeln" onAction="Tom2G2M5M1B3ShowStatus" />
           <separator id="PTXG1s1"/>
           <button id="PTXG1B2" label="Meilenstein-Ampeln" onAction="PT0ShowZieleUebersicht" />
-          <separator id="PTXG1s2"/>
+          <separator id="PTXG1s2"/>-->
           <!--  <separator id="PTXG1s3"/>-->
           <menu id="PTXG1M1" label="Planelemente visualisieren" supertip="Meilensteine und Vorgänge visualisieren">
             <button id="PTXG1B4" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
             <button id="PTXG1B5" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie"/>   
           </menu>
-         
-           </group>
+        </group>
         <group id="PTPf" label="Charts">
           <menu id="PTXG1M2" label ="Leistbarkeit analysieren" supertip="Häufigkeit bzw. Summe von Meilensteinen, Phasen, Ressourcen und Kosten im betrachteten Zeitraum visualisieren">
             <button id="PTXG1B6" label="Auswahl über Namen" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Element-Namen"/>
             <button id="PTXG1B7" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Hierarchie"/>
           </menu>
-          <button id="PTXG1B10" label="Engpass" onAction="PTXShowEngpass" />
-          <button id="PTXG1B3" label="Auslastung" onAction="PT0ShowAuslastung" />
+          <!--<button id="PTXG1B10" label="Engpass" onAction="PTXShowEngpass" />
+          <button id="PTXG1B3" label="Auslastung" onAction="PT0ShowAuslastung" />-->
          <separator id="PTXG1s4"/>
           <menu id="PTOPT" label="Optimieren">
             <button id="PTOPTB1" label ="optimale Varianten-Kombination" onAction ="PTOPTVariantenOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse die optimale Kombination von Projekt-Varianten ermitteln"/>
             <button id="PTOPTB2" label ="Spielraum nutzen" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>
           </menu>    
-          <separator id="PTXG1s5"/>
+          <!--<separator id="PTXG1s5"/>
           <button id="PTXG1B8" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
-          <button id="PTXG1B9" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />
+          <button id="PTXG1B9" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />-->
           <!--<button id="PTXG1B8" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />-->
-          <separator id="PTXG1s6"/>
+          <!--<separator id="PTXG1s6"/>
          
           <button id="PTFKB1" label="Budget/Kosten" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
-          <button id="PTFKB2" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>
+          <button id="PTFKB2" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>-->
         </group>
        
       </tab>
 
-      <tab id="PT0" label="Einzelprojekt-Info">
+      <!--<tab id="PT0" label="Einzelprojekt-Info">
         <group id="PT0G1" label="Analysen">
-          <!--<separator id="PT0G1s0"/>-->
           <button id="PT0G1B0" label="Projekt-Ampel " onAction="PT0ShowProjektStatus" />
           <separator id="PT0G1s1"/>
           <button id="PT0G1B2" label="Meilenstein-Ampel " onAction="PT0ShowZieleUebersicht" />
@@ -56,47 +54,38 @@
           <menu id="PT0G1M0" label="Planelemente visualisieren" supertip="Meilensteine und Vorgänge visualisieren">
             <button id="PT0G1B8" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
             <button id="PT0G1B9" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie"/>
-            <!--<button id="PT0G1M0B3" label="Phasen Darstellung" onAction="Tom2G2M1B1Phasen2" />-->
           </menu>
           <separator id="PT0G1s3"/>
           <button id="PT3G1B5" label="Time-Machine" onAction="awinShowTimeMachine"/>
           <button id="PT0G1B1" label="Abhängigkeiten" onAction="PT0ShowDependencies" />
         </group>
         <group id="PT0G2" label ="Charts">
-         
-          <!--<menu id="PT0G1M2" label="Planelemente">-->
-             <button id="PT0G1M0B2" label="Phasen Übersicht" onAction="Tom2G2M1B1Phasen" />
-             <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="NameHierarchySelAction"  />
-           <separator id="PT0G1s4"/>
-             <button id="PT0G1M1B1" label="Personal Bedarfe" onAction="Tom2G2M1B2Resources" />
-             <button id="PT0G1M1B2" label="Kosten Bedarfe" onAction="Tom2G2M1B5GKosten" />
-             <!--<button id="PT0G1M2B5" label="Alle" onAction="Tom2G2M5M2B5ShowMilestones" />-->
-             <!--<button id="PT0G1M2B6" label="Meilenstein anzeigen" onAction="PTShowMilestonesByName" />-->
-             <!--<button id="PT0G1M2B8" label="Symbole löschen" onAction="Tom2G2M5B3NoShowMilestones" />-->
-          <!--</menu>-->
+          <button id="PT0G1M0B2" label="Phasen Übersicht" onAction="Tom2G2M1B1Phasen" />
+          <button id="PT0G1M2B7" label="Meilenstein Trend Analyse" onAction="NameHierarchySelAction"  />
+          <separator id="PT0G1s4"/>
+          <button id="PT0G1M1B1" label="Personal Bedarfe" onAction="Tom2G2M1B2Resources" />
+          <button id="PT0G1M1B2" label="Kosten Bedarfe" onAction="Tom2G2M1B5GKosten" />
           <separator id="PT0G1s5"/>
-            <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
-            <button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />
+          <button id="PT0G1B3" label="Strategie/Risiko/Marge" onAction="Tom2G2M1B6SFIT" />
+          <button id="PT0G1B4" label="Strategie/Risiko/Volumen" onAction="Tom2G2M1B6SFITVOl" />
           <separator id="PT0G1s8"/>
-            <button id="PT0G1B5" label="Abhängigkeiten" onAction="Tom2G2M1B6Abhaengigkeit" />
-            <button id="PT0G1B6" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />
+          <button id="PT0G1B5" label="Abhängigkeiten" onAction="Tom2G2M1B6Abhaengigkeit" />
+          <button id="PT0G1B6" label="Komplexität / Risiko" onAction="Tom2G2M1B6CRisk" />
           <separator id="PT0G1s6"/>
           <menu id="PT3G1M1" label ="Soll/Ist">
             <button id="PT3G1M1B1" label="Personalkosten" onAction="Tom2G2M2M1B2SollIstPKosten" />
             <button id="PT3G1M1B2" label="Sonstige Kosten" onAction="Tom2G2M2M2B2SollIstAKosten" />
             <button id="PT3G1M1B3" label="Gesamt Kosten" onAction="Tom2G2M2M3B2SollIstGKosten" />
           </menu>
-          
           <separator id="PT0G1s7"/>
-            <button id="PT0G1B7" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
-               
+          <button id="PT0G1B7" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
         </group>
-      </tab>
+      </tab>-->
       
       <tab id="PT7" label ="Cockpit">
         <group id="PT7G1" label=" ">
-          <button id="PT0G1M3B1" label="Cockpit visualisieren" onAction="PT0ShowCockpit" />
-          <button id="PT0G1M3B2" label="Cockpit speichern" onAction="PT0SaveCockpit" />
+          <button id="PT0G1M3B1" label="Cockpit visualisieren" onAction="PT0ShowCockpit" supertip="eine zuvor gespeicherte Menge von Cockpits wird wieder abgerufen und auf dem Bildschirm dargestellt"/>
+          <button id="PT0G1M3B2" label="Cockpit speichern" onAction="PT0SaveCockpit" supertip="die aktuell auf dem Bildschirm dargestellte Menge von Charts wird als Cockpit gespeichert; Position und Größe der Charts bleiben dabei erhalten"/>
         </group>
       </tab>
       <tab id="PT1" label="Reports">
@@ -175,14 +164,14 @@
           </menu>
         </group>
       
-        <group id="PT2G4" label="Abhängigkeiten">
+        <!--<group id="PT2G4" label="Abhängigkeiten">
           <button id="PT2G4B1" label="Definieren" onAction="PTDefineDependencies" />
           <separator id="PT2G4s1"/>
           <button id="PT2G4B2" label="Löschen" onAction="PTDeleteDependencies" enabled="false"/>
-        </group>
+        </group>-->
       </tab>
       <!---->
-      <tab id ="PT3" label="Vergleichen">
+      <!--<tab id ="PT3" label="Vergleichen">
         <group id="PT3G1" label="Einzelprojekt">
           <button id="PT3G1B0" label="Phasen vergleichen in 1 Chart" onAction="Tom2G3M1B1PhasenVgl" />
           <button id="PT3G1B1" label="mit Projekt bzw. Vorlage vergleichen" onAction="Tom2G3M1B2PhasenVgl" />
@@ -190,10 +179,6 @@
           <button id="PT3G1B3" label="mit Beauftragung vergleichen" onAction="PT3G1B3PhasenVgl" />
           <separator id="PT3G1s1"/>
           <button id="PT3G1B4" label="Ressourcen vergleichen" onAction="Tom2G3M1B2ResourceVgl" />
-          <!--<separator id="PT3G1s2"/>
-          
-          <separator id="PT3G1s3"/>-->
-         
           <separator id="PT3G1s4"/>
           <menu id="PT3G1M2" label="Einzelprojekt Historie">
             <button id="PT3G1M2B1" label="Strategie/Risiko" onAction="awinShowTrendSR"/>
@@ -203,7 +188,7 @@
         <group id="PT3G2" label="Multiprojekt-Szenario">
           <button id="PT3G2B1" label="Vergleichen" onAction="awinSetModusHistory" enabled="false" />
         </group>
-      </tab>
+      </tab>-->
       <!---->    
       <tab id ="PT4" label="Datenmanagement">
 
@@ -229,7 +214,7 @@
             <button id="PT4G1M0B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Element-Namen"/>
             <button id="PT4G1M0B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Hierarchie"/>
           </menu>
-          <button id="PT4G1B5" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />
+          <!--<button id="PT4G1B5" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />-->
        </group>
         
        <group id= "PT4G12" label="Datenbank"> 
@@ -255,7 +240,7 @@
       <!---->     
       <tab id ="PT6" label ="Einstellungen">
         <group id ="PT6G1" label ="Visualisierug">
-          <checkBox id="PT6G1B2" label="Extended Drawing Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen" supertip ="Es werden alle Projekte mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. In dieser Darstellung können einzelne Phasen oder Meilensteine selektiv verschoben werden; Achtung: es werden alle Projekte der Session im Extended Mode dargestellt - das kann nach Menge der Projekte einige Zeit dauern!"/>
+          <!--<checkBox id="PT6G1B2" label="Extended Drawing Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen" supertip ="Es werden alle Projekte mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. In dieser Darstellung können einzelne Phasen oder Meilensteine selektiv verschoben werden; Achtung: es werden alle Projekte der Session im Extended Mode dargestellt - das kann nach Menge der Projekte einige Zeit dauern!"/>-->
           <!--<checkBox id="PT6G1B3" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>-->
           <checkBox id="PT6G1B4" label="Anzeigen selekt. Objekte im Summenchart" getPressed="PTShowSelectedObjects" onAction ="awinSetShowSelObj" supertip ="ist diese Option aktiviert, so werden in Leistbarkeitscharts der Anteil der selektierten Projekte im Leistbarkeits-Gebirge angezeigt; auf diese Art und Weise kann man leicht erkennen, welchen Anteil die selektierten Projekte am Gesamtverlauf haben"/>
           <checkBox id="PT6G1B5" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln" supertip ="ist diese Option aktiviert, so werden die Ampeln mit einem Schatten dargestellt, dessen Farbe der gesetzten Ampelfarbe des Meilensteines entspricht. So kann man schnell erkennen, wo die roten Ampeln liegen. Durch Klicken auf den Meilenstein wird eine Erläuterung des Projektleiters zur Meilensteinbewertung angezeigt"/>
