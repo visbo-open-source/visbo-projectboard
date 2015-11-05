@@ -385,13 +385,13 @@ Public Class clsProjekte
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Property Liste() As SortedList(Of String, clsProjekt)
+    Public ReadOnly Property Liste() As SortedList(Of String, clsProjekt)
         Get
             Liste = AllProjects
         End Get
-        Set(value As SortedList(Of String, clsProjekt))
-            AllProjects = value
-        End Set
+        'Set(value As SortedList(Of String, clsProjekt))
+        '    AllProjects = value
+        'End Set
     End Property
 
     ''' <summary>
@@ -747,6 +747,8 @@ Public Class clsProjekte
             Dim hproj As clsProjekt
             Dim cMilestone As clsMeilenstein
 
+            Dim roleValues(zeitraum) As Double
+            Dim costValues(zeitraum) As Double
             Dim ergebnisListe(zeitraum, maxAnzahl) As String
             Dim curElemIX(zeitraum) As Integer
 
@@ -828,8 +830,104 @@ Public Class clsProjekte
 
                         Next kvp
 
+                    ElseIf prcTyp = DiagrammTypen(1) Then
+                        ' Rollen
+
+                        Dim Dauer As Integer
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+
+                            hproj = kvp.Value
+
+                            Dauer = hproj.anzahlRasterElemente
+                            Dim tempArray(Dauer - 1) As Double
+                            Dim prAnfang As Integer, prEnde As Integer
+                            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+
+                            With hproj
+                                prAnfang = .Start + .StartOffset
+                                prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                            End With
+
+                            anzLoops = 0
+                            Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                            If anzLoops > 0 Then
+
+                                Try
+
+                                    tempArray = hproj.getRessourcenBedarf(elemName)
+
+                                Catch ex As Exception
+
+                                End Try
+
+
+                            End If
+
+                            For al As Integer = 1 To anzLoops
+                                If ixZeitraum + al - 1 > zeitraum Then
+                                    ' Fehlerprotokoll schreiben ...  
+                                Else
+                                    ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & CInt(tempArray(ix + al - 1)).ToString
+                                    curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
+                                End If
+
+                            Next
+
+
+                        Next
+
+                    ElseIf prcTyp = DiagrammTypen(2) Then
+                        ' Kostenarten
+
+                        Dim Dauer As Integer
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
+
+                            hproj = kvp.Value
+
+                            Dauer = hproj.anzahlRasterElemente
+                            Dim tempArray(Dauer - 1) As Double
+                            Dim prAnfang As Integer, prEnde As Integer
+                            Dim ixZeitraum As Integer, ix As Integer, anzLoops As Integer
+
+                            With hproj
+                                prAnfang = .Start + .StartOffset
+                                prEnde = .Start + .anzahlRasterElemente - 1 + .StartOffset
+                            End With
+
+                            anzLoops = 0
+                            Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
+
+                            If anzLoops > 0 Then
+
+                                Try
+
+                                    tempArray = hproj.getKostenBedarf(elemName)
+
+                                Catch ex As Exception
+
+                                End Try
+
+
+                            End If
+
+                            For al As Integer = 1 To anzLoops
+                                If ixZeitraum + al - 1 > zeitraum Then
+                                    ' Fehlerprotokoll schreiben ...  
+                                Else
+                                    ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & CInt(tempArray(ix + al - 1)).ToString
+                                    curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
+                                End If
+
+                            Next
+
+
+                        Next
+
+
                     ElseIf prcTyp = DiagrammTypen(5) Then
                         ' Meilensteine 
+
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
 
                             hproj = kvp.Value

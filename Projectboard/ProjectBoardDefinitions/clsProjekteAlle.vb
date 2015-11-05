@@ -401,8 +401,14 @@ Public Class clsProjekteAlle
         ' Lösche alle Varianten mit ProjektName = pName 
         While found
 
-            If _allProjects.ElementAt(i).Value.name = pName Then
-                _allProjects.RemoveAt(i)
+            If i < _allProjects.Count Then
+
+                If _allProjects.ElementAt(i).Value.name = pName Then
+                    _allProjects.RemoveAt(i)
+                Else
+                    found = False
+                End If
+
             Else
                 found = False
             End If

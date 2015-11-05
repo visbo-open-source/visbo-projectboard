@@ -1,5 +1,6 @@
 ﻿Imports System.Math ' für Funktion Abs()
 Imports ProjectBoardDefinitions
+Imports ProjectBoardBasic
 Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Core
 
@@ -26,6 +27,8 @@ Public Class Tabelle1
             .FreezePanes = True
 
         End With
+
+        
 
 
     End Sub

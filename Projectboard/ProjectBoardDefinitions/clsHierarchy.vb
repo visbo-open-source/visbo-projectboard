@@ -47,6 +47,135 @@
     End Sub
 
     ''' <summary>
+    ''' löscht das Element , das durch uniqueID gekennzeichnet ist, in der Hierarchie-Liste 
+    ''' der Parent-Node und die Kind-Nodes werden entsprechend konsistent gehalten 
+    ''' Exception, wenn rootphase gelöscht werden soll  
+    ''' </summary>
+    ''' <param name="uniqueID"></param>
+    ''' <param name="deleteALLChilds">true: alle Kinder werden rekursiv gelöscht 
+    ''' false: alle Kinder bekommen den "Großvater" als Vater</param>
+    ''' <remarks></remarks>
+    Public Sub removeNode(ByVal uniqueID As String, Optional ByVal deleteALLChilds As Boolean = True)
+
+        If uniqueID = rootPhaseName Then
+            Throw New ArgumentException(message:="Root Phase kann nicht gelöscht werden ", paramName:=uniqueID)
+        End If
+
+
+
+        If _allNodes.ContainsKey(uniqueID) Then
+            Dim elemNode As clsHierarchyNode = _allNodes.Item(uniqueID)
+            Dim parentNodeID As String = elemNode.parentNodeKey
+
+            Dim parentNode As clsHierarchyNode = Me.parentNodeItem(uniqueID)
+
+            ' Eltern-Element aktualisieren 
+            If Not IsNothing(parentNode) Then
+                ' Kind-Eintrag löschen 
+                parentNode.removeChild(uniqueID)
+            End If
+
+            ' kind-Elemente löschen oder umhängen
+            If deleteALLChilds Then
+                ' jetzt alle Kind-Elemente löschen 
+                For i As Integer = 1 To elemNode.childCount
+                    Dim childID As String = elemNode.getChild(i)
+                    Me.removeNode(childID, True)
+                Next
+            Else
+                ' jetzt alle Kind-Elemente umhängen
+                For i As Integer = 1 To elemNode.childCount
+                    Dim childNode As clsHierarchyNode
+                    If _allNodes.ContainsKey(elemNode.getChild(i)) Then
+                        childNode = _allNodes.Item(elemNode.getChild(i))
+                        childNode.parentNodeKey = parentNodeID
+                    End If
+                Next
+            End If
+
+            ' jetzt das eigentliche Element löschen 
+            _allNodes.Remove(uniqueID)
+            
+        Else
+            ' nichts tun, ist eh nicht mehr existent ...
+        End If
+
+
+    End Sub
+
+    ''' <summary>
+    ''' löscht das Element an Stelle Index ;
+    ''' Index kann Werte von 0 bis count-1 annehmen 
+    ''' Vorsicht : mit dieser Funktionwerden keinerlei Konsistenzprüfungen vorgenommen, 
+    ''' was die Behandlung von Kind- und Vater-Elementen angeht  
+    ''' Diese Sub darf daher nur aufgerufen werden, wo die Konsistenz durch die übergeordnete Methode bereits sichergestellt wird. 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <remarks></remarks>
+    Public Sub removeAt(ByVal index As Integer)
+
+        If index >= 0 And index <= _allNodes.Count - 1 Then
+            If _allNodes.ElementAt(index).Key <> rootPhaseName Then
+                _allNodes.RemoveAt(index)
+            End If
+
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' erhöht / erniedrigt in der Hierarchie-Liste die Phasen-Verweise (indexOfElem) um increment
+    ''' das wird benötigt, wenn zuvor ein Element gelöscht bzw neu in der Phasen-Liste ergänzt wurde 
+    ''' </summary>
+    ''' <param name="indexInPhaseList"></param>
+    ''' <param name="increment"></param>
+    ''' <remarks></remarks>
+    Public Sub updatePhasenVerweise(ByVal indexInPhaseList As Integer, ByVal increment As Integer)
+
+        Dim lastPhase As Integer = Me.getIndexOf1stMilestone - 1
+
+        If lastPhase < 0 Then
+            lastPhase = Me.count
+        End If
+
+        For i As Integer = 1 To lastPhase
+            If _allNodes.ElementAt(i - 1).Value.indexOfElem > indexInPhaseList Then
+                _allNodes.ElementAt(i - 1).Value.indexOfElem = _allNodes.ElementAt(i - 1).Value.indexOfElem + increment
+            End If
+        Next
+
+
+    End Sub
+
+    ''' <summary>
+    ''' erhöht / erniedrigt in der Hierarchie-Liste die Meilenstein-Verweise (indexofElem) um increment
+    ''' das darf aber nur bei Meilensteinen getan werden, die auch zum angegebenen Vater gehören 
+    ''' </summary>
+    ''' <param name="indexInMeilensteinListe"></param>
+    ''' <param name="parentID"></param>
+    ''' <param name="increment"></param>
+    ''' <remarks></remarks>
+    Public Sub updateMeilensteinVerweise(ByVal indexInMeilensteinListe As Integer, ByVal parentID As String, ByVal increment As Integer)
+
+        Dim firstMilestone As Integer = Me.getIndexOf1stMilestone
+        If firstMilestone < 0 Then
+            ' nichts tun, es gibt keine Meilensteine 
+        End If
+
+        For i As Integer = firstMilestone To _allNodes.Count
+            ' nur Meilensteine behandeln, deren Vater-ID mit der übergebenen parentID identisch ist 
+            If _allNodes.ElementAt(i - 1).Value.parentNodeKey = parentID Then
+                If _allNodes.ElementAt(i - 1).Value.indexOfElem > indexInMeilensteinListe Then
+                    _allNodes.ElementAt(i - 1).Value.indexOfElem = _allNodes.ElementAt(i - 1).Value.indexOfElem + increment
+                End If
+            End If
+
+        Next
+
+
+    End Sub
+
+    ''' <summary>
     ''' kopiert den Hierarchie Knoten ohne Überprüfungen in die Hierarchie
     ''' dies wird benötigt, wenn 
     ''' eine Projektvorlage in ein Projekt kopiert wird
@@ -309,7 +438,7 @@
             Dim level As Integer = 1
             Dim tmpName As String = elemName
             Dim rootreached As Boolean = False
-            Dim description1 As String = "", description2 As String = ""
+            Dim description1 As String = "", description2 As String = elemName
             Dim phDef As clsPhasenDefinition
 
             isMilestone = elemIDIstMeilenstein(nameID)
@@ -605,6 +734,36 @@
                 nodeItem = _allNodes.Item(uniqueID)
             Else
                 nodeItem = Nothing
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Hierarchie Knoten zurück des Parent-Elements von uniqueID zurück 
+    ''' wenn der nicht existiert: Nothing 
+    ''' also auch im Fall rootPhaseName 
+    ''' </summary>
+    ''' <param name="uniqueID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property parentNodeItem(ByVal uniqueID As String) As clsHierarchyNode
+        Get
+            If uniqueID = rootPhaseName Then
+                parentNodeItem = Nothing
+            Else
+                Dim elemNode As clsHierarchyNode
+                If _allNodes.ContainsKey(uniqueID) Then
+                    elemNode = _allNodes.Item(uniqueID)
+                    If _allNodes.ContainsKey(elemNode.parentNodeKey) Then
+                        parentNodeItem = _allNodes.Item(elemNode.parentNodeKey)
+                    Else
+                        parentNodeItem = Nothing
+                    End If
+                Else
+                    parentNodeItem = Nothing
+                End If
+
             End If
         End Get
     End Property

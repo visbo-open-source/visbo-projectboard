@@ -1,4 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
+Imports ProjectBoardBasic
 Imports ClassLibrary1
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
@@ -19,6 +20,7 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_ActivateEvent() Handles Me.ActivateEvent
 
+        Application.DisplayFormulaBar = False
         'Application.Worksheets(arrWsNames(3)).Activate()
 
     End Sub
@@ -36,7 +38,12 @@ Public Class ThisWorkbook
             .SplitRow = 0
             .DisplayWorkbookTabs = True
             .GridlineColor = RGB(220, 220, 220)
-            .FreezePanes = False
+            Try
+                .FreezePanes = False
+            Catch ex As Exception
+
+            End Try
+
             .DisplayHeadings = True
         End With
 
@@ -74,7 +81,7 @@ Public Class ThisWorkbook
         Catch ex As Exception
 
             Call MsgBox(ex.Message)
-
+            appInstance.Quit()
         Finally
             appInstance.ScreenUpdating = True
             appInstance.ShowChartTipNames = True
@@ -136,36 +143,7 @@ Public Class ThisWorkbook
 
     Private Sub ThisWorkbook_BeforeSave(SaveAsUI As Boolean, ByRef Cancel As Boolean) Handles Me.BeforeSave
 
-        'Dim zeitStempel As Date
-        'Call MsgBox(" in BeforeSave")
-
         Cancel = True
-
-
-        'If AlleProjekte.Count > 0 Then
-
-        '    Call StoreAllProjectsinDB()
-
-        '    zeitStempel = AlleProjekte.First.Value.timeStamp
-
-        '    Call MsgBox("ok, gespeichert!" & vbLf & zeitStempel.ToShortDateString & ", " & zeitStempel.ToShortTimeString)
-
-        '    ' Änderung 18.6 - wenn gespeichert wird, soll die Projekthistorie zurückgesetzt werden 
-        '    Try
-        '        If projekthistorie.Count > 0 Then
-        '            projekthistorie.clear()
-        '        End If
-        '    Catch ex As Exception
-
-        '    End Try
-        'Else
-        '    Call MsgBox("keine Projekte zu speichern ...")
-        'End If
-
-
-
-
-
 
 
     End Sub
@@ -175,108 +153,161 @@ Public Class ThisWorkbook
 
         Dim projektespeichern As New frmProjekteSpeichern
         Dim returnValue As DialogResult
+
+        appInstance.ScreenUpdating = False
+
         If loginErfolgreich Then
 
 
-            Dim request As New Request(awinSettings.databaseName, dbUsername, dbPasswort)
+            Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
 
+            Call awinKontextReset()
 
-        'If roentgenBlick.isOn Then
-        '    Call awinNoshowProjectNeeds()
-        '    With roentgenBlick
-        '        .isOn = False
-        '        .name = ""
-        '        .type = ""
-        '    End With
-        'End If
+            ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
+            Try
 
+                If request.pingMongoDb() And AlleProjekte.Count > 0 Then
+                    returnValue = projektespeichern.ShowDialog
 
-        Call awinKontextReset()
+                    If returnValue = DialogResult.Yes Then
 
-        ' tk: nur Fragen , wenn die Datenbank überhaupt läuft 
-        Try
+                        Call StoreAllProjectsinDB()
 
-            If Request.pingMongoDb() And AlleProjekte.Count > 0 Then
-                returnValue = projektespeichern.ShowDialog
+                    End If
 
-
-                If returnValue = DialogResult.Yes Then
-
-                    Call StoreAllProjectsinDB()
+                Else
+                    Call MsgBox("keine Projekte zu speichern ...")
 
                 End If
 
-            Else
+            Catch ex As Exception
 
-                Call MsgBox("keine Projekte zu speichern ...")
+            End Try
 
-
-            End If
-        Catch ex As Exception
+            Application.Worksheets(arrWsNames(3)).Activate()
 
 
-        End Try
+            appInstance.EnableEvents = False
 
-        appInstance.ScreenUpdating = False
-        appInstance.EnableEvents = False
 
-        ' hier sollen jetzt noch die Phasen weggeschrieben werden 
-        Try
-            Call awinWritePhaseDefinitions()
-        Catch ex As Exception
-            Call MsgBox("Fehler bei Schreiben Customization File")
-        End Try
+            ' hier sollen jetzt noch die Phasen weggeschrieben werden 
+            Try
+                Call awinWritePhaseDefinitions()
+            Catch ex As Exception
+                Call MsgBox("Fehler bei Schreiben Customization File")
+            End Try
+
+            '' ''    Try
+            '' ''        Call logfileSchreiben("Ende von ProjektBoard", "", anzFehler)
+            '' ''        Call logfileSchliessen()
+            '' ''        'CType(Application.Workbooks(myProjektTafel), Excel.Workbook).Activate()
+
+            '' ''    Catch ex As Exception
+            '' ''        Call MsgBox("Fehler beim Schliessen des Logfiles")
+            '' ''    End Try
+
 
         End If
 
-        appInstance.ActiveWorkbook.Saved = True
+        '' ''Application.Worksheets(arrWsNames(3)).Activate()
+        '' ''appInstance.EnableEvents = False
+        '' ''appInstance.ActiveWorkbook.Saved = True
+        ' '' ''appInstance.Workbooks(myProjektTafel).Close(SaveChanges:=False)
+
+        '' ''appInstance.ScreenUpdating = True
+        '' ''appInstance.EnableEvents = True
 
 
         ' hier wird festgelegt, dass Projectboard.xlsx beim Schließen nicht gespeichert wird, und auch nicht nachgefragt wird.
 
+        Dim WB As Workbook
+        For Each WB In Application.Workbooks
+            WB.Saved = True
+        Next
+
+
+        '' ''Dim newHour As Integer = Hour(Now())
+        '' ''Dim newMinute As Integer = Minute(Now())
+        '' ''Dim newSecond As Integer = Second(Now()) + 100
+        '' ''Dim waitTime As Date = TimeSerial(newHour, newMinute, newSecond)
+
+        '' ''Application.Wait(waitTime)
+
+        Application.DisplayAlerts = False
         Application.Quit()
-        appInstance.EnableEvents = True
+
+
 
     End Sub
 
     Private Sub ThisWorkbook_Shutdown() Handles Me.Shutdown
 
-        'Dim cbar As CommandBar
+       
+        Dim cbar As CommandBar
 
-        ' die Short Cut Menues aus Excel alle wieder aktivieren ...
-        'For Each cbar In appInstance.CommandBars
+        'die Short Cut Menues aus Excel alle wieder aktivieren ...
 
-        '    If cbar.Type = MsoBarType.msoBarTypePopup Then
-        '        cbar.Enabled = True
-        '    End If
-        'Next
+        For Each cbar In appInstance.CommandBars
+
+            If cbar.Type = MsoBarType.msoBarTypePopup Then
+                cbar.Enabled = True
+            End If
+        Next
 
         'Call MsgBox(" in shutdown")
 
 
+        Try
+            Application.DisplayFormulaBar = True
+        Catch ex As Exception
 
-        Application.DisplayFormulaBar = True
+        End Try
+
 
         With Application.ActiveWindow
-            .SplitColumn = 0
-            .SplitRow = 0
-            .DisplayWorkbookTabs = True
-            .GridlineColor = RGB(220, 220, 220)
-            .FreezePanes = False
-            .DisplayHeadings = True
+            Try
+                .SplitColumn = 0
+                .SplitRow = 0
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                .DisplayWorkbookTabs = True
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                .GridlineColor = RGB(220, 220, 220)
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                .FreezePanes = False
+            Catch ex As Exception
+
+            End Try
+
+            Try
+                .DisplayHeadings = True
+            Catch ex As Exception
+
+            End Try
+
         End With
 
         appInstance.ShowChartTipNames = True
         appInstance.ShowChartTipValues = True
 
-        Dim anzWindows As Integer = appInstance.Windows.Count
+        'Dim anzWindows As Integer = appInstance.Windows.Count
 
 
         appInstance.ScreenUpdating = True
-        
-        'appInstance.Quit()
 
 
     End Sub
+
 
 End Class

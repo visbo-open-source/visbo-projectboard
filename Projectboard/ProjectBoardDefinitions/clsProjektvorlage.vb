@@ -106,8 +106,137 @@
     End Sub
 
     ''' <summary>
+    ''' entfernt die Phase mit der übergebenen nameID 
+    ''' dabei kann angegeben werden, was mit den Kind-Elementen passieren soll: löschen oder umhängen 
+    ''' die rootPhase kann nicht gelöscht werden; in diesem Fall wird eine Exception geworfen  
+    ''' </summary>
+    ''' <param name="nameID">der eindeutige Identifier aus der Hierarchie-Liste</param>
+    ''' <param name="deleteAllChilds" >
+    ''' true: alle Kind-Elemente werden mitgelöscht
+    ''' false: alle Kind-Elemente werden der Parent-Phase zugewiesen  </param>
+    ''' <remarks></remarks>
+    Public Sub removePhase(ByVal nameID As String, Optional deleteAllChilds As Boolean = True)
+
+        ' die Root-Phase darf nicht gelöscht werden ...
+        If nameID = rootPhaseName Then
+            Throw New ArgumentException(message:="die Root-Phase kann nicht gelöscht werden  ", paramName:=nameID)
+        End If
+
+        If elemIDIstMeilenstein(nameID) Then
+            Throw New ArgumentException(message:="das übergebene Element ist keine Phase ... ", paramName:=nameID)
+        End If
+
+        Dim elemNode As clsHierarchyNode = Me.hierarchy.nodeItem(nameID)
+
+        ' Abbruch, wenn das Element gar nicht existiert 
+        If IsNothing(elemNode) Then
+            Throw New ArgumentException(message:="das Element existiert nicht in der Hierarchie: ", paramName:=nameID)
+        End If
+
+        ' Konsistenzprüfung: stimmt der Verweis ? 
+        Dim indexInPhaseList As Integer = elemNode.indexOfElem
+        If Me.AllPhases.ElementAt(indexInPhaseList - 1).nameID <> nameID Then
+            Throw New ArgumentException(message:="der Verweis auf die Phasen-Liste ist nicht korrekt ", paramName:=nameID)
+        End If
+
+
+        Dim parentID As String = elemNode.parentNodeKey
+        Dim parentNode As clsHierarchyNode = Me.hierarchy.parentNodeItem(nameID)
+        Dim childNodeID As String = ""
+
+        'als erstes im ParentNode das Element aus der Kinder-Liste löschen 
+        parentNode.removeChild(nameID)
+
+        If deleteAllChilds Then
+
+            ' jetzt alle Kinder löschen  
+            For i As Integer = 1 To elemNode.childCount
+                childNodeID = elemNode.getChild(i)
+                If elemIDIstMeilenstein(childNodeID) Then
+                    ' lösche Meilenstein 
+                    Me.removeMeilenstein(childNodeID)
+                Else
+                    Me.removePhase(childNodeID, True)
+                End If
+            Next
+        Else
+            ' hier alle Kinder umhängen: die bekommen die ParentID statt nameID als ihren neuen Vater 
+            For i As Integer = 1 To elemNode.childCount
+                Dim childNode As clsHierarchyNode
+                childNodeID = elemNode.getChild(i)
+                If Me.hierarchy.containsKey(childNodeID) Then
+                    childNode = Me.hierarchy.nodeItem(childNodeID)
+                    childNode.parentNodeKey = parentID
+                End If
+            Next
+        End If
+
+        Dim indexInHierarchy As Integer = Me.hierarchy.getIndexOfID(nameID)
+
+        ' in der Hierarchie-Liste löschen 
+        Me.hierarchy.removeAt(indexInHierarchy - 1)
+
+        ' in der Phasen-Liste löschen
+        Me.AllPhases.RemoveAt(indexInPhaseList - 1)
+
+        ' jetzt in der Hierarchie alle Phasen-Verweise, die größer als indexInPhaseList sind, um eins erniedrigen 
+        Me.hierarchy.updatePhasenVerweise(indexInPhaseList, -1)
+
+
+    End Sub
+
+    ''' <summary>
+    ''' entfernt den Meilenstein mit der übergebenen nameID 
+    ''' </summary>
+    ''' <param name="nameID"></param>
+    ''' <remarks></remarks>
+    Public Sub removeMeilenstein(ByVal nameID As String)
+
+        If Not elemIDIstMeilenstein(nameID) Then
+            Throw New ArgumentException(message:="das übergebene Element ist kein Meilenstein ... ", paramName:=nameID)
+        End If
+
+
+        Dim elemNode As clsHierarchyNode = Me.hierarchy.nodeItem(nameID)
+
+        ' Abbruch, wenn das Element gar nicht existiert 
+        If IsNothing(elemNode) Then
+            Throw New ArgumentException(message:="das Element existiert nicht in der Hierarchie: ", paramName:=nameID)
+        End If
+
+        Dim parentID As String = elemNode.parentNodeKey
+        Dim parentNode As clsHierarchyNode = Me.hierarchy.parentNodeItem(nameID)
+        Dim childNodeID As String = ""
+
+        'als erstes im ParentNode das Element aus der Kinder-Liste löschen 
+        parentNode.removeChild(nameID)
+
+        ' ein Meilenstein kann eigentlich keine Kinder haben, Fehler, wenn doch ..
+        If elemNode.childCount > 0 Then
+            Call MsgBox("Meilenstein mit Kindern !?")
+        End If
+
+        ' jetzt den Meilenstein selber löschen 
+        Dim indexInMilestoneList As Integer = elemNode.indexOfElem
+        Dim indexInHierarchy As Integer = Me.hierarchy.getIndexOfID(nameID)
+
+        ' in der Hierarchie-Liste löschen 
+        Me.hierarchy.removeAt(indexInHierarchy - 1)
+
+        Dim cPhase As clsPhase = Me.getPhase(parentID)
+
+        ' in der Meilenstein-Liste der Phase löschen 
+        cPhase.removeMilestoneAt(indexInMilestoneList - 1)
+        
+        ' jetzt in der Hierarchie alle Meilenstein-Verweise, die größer als indexInMilestoneList sind, um eins erniedrigen 
+        Me.hierarchy.updateMeilensteinVerweise(indexInMilestoneList, parentID, -1)
+
+
+    End Sub
+
+    ''' <summary>
     ''' gibt den Meilenstein mit Element-ID elemID zurück 
-    ''' Nothing, wenn sie nicht existiert 
+    ''' Nothing, wenn der Meilenstein nicht existiert 
     ''' </summary>
     ''' <param name="elemID"></param>
     ''' <value></value>
@@ -176,7 +305,7 @@
     End Property
 
     ''' <summary>
-    ''' gibt zu einem gegebenen Meilenstein-Namen das clsResult Objekt zurück, sofern es existiert
+    ''' gibt zu einem gegebenen Meilenstein-Namen das clsMeilenstein Objekt zurück, sofern es existiert
     ''' Nothing sonst
     ''' </summary>
     ''' <param name="msName">Name des Meilensteins</param>
@@ -559,6 +688,8 @@
     Public ReadOnly Property getElemIdsOf(ByVal namenListe As Collection, ByVal namesAreMilestones As Boolean) As Collection
         Get
             Dim iDCollection As New Collection
+            Dim tmpSortList As New SortedList(Of DateTime, String)
+            Dim sortDate As DateTime
             Dim itemName As String = ""
             Dim itemBreadcrumb As String = ""
             Dim iDItem As String
@@ -571,9 +702,24 @@
 
                 If istElemID(itemName) Then
 
-                    If Not iDCollection.Contains(itemName) Then
-                        iDCollection.Add(itemName, itemName)
+                    If namesAreMilestones Then
+                        sortDate = Me.getMilestoneByID(itemName).getDate
+                    Else
+                        sortDate = Me.getPhaseByID(itemName).getStartDate
                     End If
+
+                    If Not tmpSortList.ContainsValue(itemName) Then
+
+                        Do While tmpSortList.ContainsKey(sortDate)
+                            sortDate = sortDate.AddMilliseconds(1)
+                        Loop
+
+                        tmpSortList.Add(sortDate, itemName)
+
+                    End If
+                    'If Not iDCollection.Contains(itemName) Then
+                    '    iDCollection.Add(itemName, itemName)
+                    'End If
 
                 Else
                     Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb)
@@ -587,9 +733,24 @@
 
                                 Try
                                     iDItem = Me.getMilestone(milestoneIndices(0, mx), milestoneIndices(1, mx)).nameID
-                                    If Not iDCollection.Contains(iDItem) Then
-                                        iDCollection.Add(iDItem, iDItem)
+                                    sortDate = Me.getMilestoneByID(iDItem).getDate
+
+                                    If Not tmpSortList.ContainsValue(iDItem) Then
+
+                                        Do While tmpSortList.ContainsKey(sortDate)
+                                            sortDate = sortDate.AddMilliseconds(1)
+                                        Loop
+
+
+                                        tmpSortList.Add(sortDate, iDItem)
+
+
                                     End If
+
+                                    'If Not iDCollection.Contains(iDItem) Then
+                                    '    iDCollection.Add(iDItem, iDItem)
+                                    'End If
+
                                 Catch ex As Exception
 
                                 End Try
@@ -603,15 +764,35 @@
 
                             If phaseIndices(px) > 0 And phaseIndices(px) <= Me.CountPhases Then
                                 iDItem = Me.getPhase(phaseIndices(px)).nameID
-                                If Not iDCollection.Contains(iDItem) Then
-                                    iDCollection.Add(iDItem, iDItem)
+
+                                sortDate = Me.getPhaseByID(iDItem).getStartDate
+
+                                If Not tmpSortList.ContainsValue(iDItem) Then
+
+                                    Do While tmpSortList.ContainsKey(sortDate)
+                                        sortDate = sortDate.AddMilliseconds(1)
+                                    Loop
+
+
+                                    tmpSortList.Add(sortDate, iDItem)
+
+
                                 End If
+
+                                'If Not iDCollection.Contains(iDItem) Then
+                                '    iDCollection.Add(iDItem, iDItem)
+                                'End If
                             End If
 
                         Next
                     End If
                 End If
 
+            Next
+
+            ' jetzt muss umkopiert werden 
+            For Each kvp As KeyValuePair(Of DateTime, String) In tmpSortList
+                iDCollection.Add(kvp.Value, kvp.Value)
             Next
 
             getElemIdsOf = iDCollection
@@ -632,6 +813,8 @@
     Public ReadOnly Property getAllElemIDs(ByVal lookingForMS As Boolean) As Collection
         Get
             Dim iDCollection As New Collection
+            Dim tmpSortList As New SortedList(Of DateTime, String)
+            Dim sortDate As DateTime
             Dim firstIX As Integer, lastIX As Integer
             Dim elemID As String
 
@@ -643,9 +826,21 @@
                 Else
                     For mx = firstIX To lastIX
                         elemID = Me.hierarchy.getIDAtIndex(mx)
-                        If Not iDCollection.Contains(elemID) Then
-                            iDCollection.Add(elemID, elemID)
+
+                        sortDate = Me.getMilestoneByID(elemID).getDate
+                        If Not tmpSortList.ContainsValue(elemID) Then
+
+                            Do While tmpSortList.ContainsKey(sortDate)
+                                sortDate = sortDate.AddMilliseconds(1)
+                            Loop
+
+                            tmpSortList.Add(sortDate, elemID)
+
                         End If
+
+                        'If Not iDCollection.Contains(elemID) Then
+                        '    iDCollection.Add(elemID, elemID)
+                        'End If
                     Next
                 End If
             Else
@@ -660,12 +855,32 @@
 
                 For mx = firstIX To lastIX
                     elemID = Me.hierarchy.getIDAtIndex(mx)
-                    If Not iDCollection.Contains(elemID) Then
-                        iDCollection.Add(elemID, elemID)
+
+                    sortDate = Me.getPhaseByID(elemID).getStartDate
+
+                    If Not tmpSortList.ContainsValue(elemID) Then
+
+                        Do While tmpSortList.ContainsKey(sortDate)
+                            sortDate = sortDate.AddMilliseconds(1)
+                        Loop
+
+
+                        tmpSortList.Add(sortDate, elemID)
+
+
                     End If
+
+                    'If Not iDCollection.Contains(elemID) Then
+                    '    iDCollection.Add(elemID, elemID)
+                    'End If
                 Next
 
             End If
+
+            ' jetzt muss umkopiert werden 
+            For Each kvp As KeyValuePair(Of DateTime, String) In tmpSortList
+                iDCollection.Add(kvp.Value, kvp.Value)
+            Next
 
             getAllElemIDs = iDCollection
 

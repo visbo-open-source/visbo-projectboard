@@ -34,13 +34,41 @@
 
         Me.showOrigItem.Checked = awinSettings.showOrigName
 
+        rdbDeliverables.Checked = True
+
+
+    End Sub
+
+    Private Sub fuelleTextBox()
+
         If bewertungsListe.Count > 0 Then
 
             With bewertungsListe.ElementAt(0).Value
                 Dim farbe As System.Drawing.Color = Drawing.Color.FromArgb(CInt(.color))
 
-               
-                bewertungsText.Text = .description
+
+
+                ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
+                Dim tmpstr() As String
+                If rdbDeliverables.Checked Then
+                    tmpstr = .deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+                Else
+                    tmpstr = .description.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+                End If
+
+                If tmpstr.Length > 0 Then
+                    For i As Integer = 1 To tmpstr.Length
+                        bewertungsText.Lines(i - 1) = tmpstr(i - 1)
+                    Next
+                Else
+                    If rdbDeliverables.Checked Then
+                        bewertungsText.Text = .deliverables
+                    Else
+                        bewertungsText.Text = .description
+                    End If
+
+                End If
+
 
             End With
 
@@ -48,13 +76,16 @@
 
             Dim farbe As System.Drawing.Color = Drawing.Color.FromArgb(CInt(awinSettings.AmpelNichtBewertet))
 
-            
-            bewertungsText.Text = "es existiert noch keine Bewertung ...."
+            If rdbDeliverables.Checked Then
+                bewertungsText.Text = ""
+            Else
+                bewertungsText.Text = ""
+            End If
+
 
 
 
         End If
-
     End Sub
 
     'Private Sub sliderBewertungen_Scroll(sender As Object, e As EventArgs)
@@ -131,4 +162,20 @@
             resultName.Text = elemNameOfElemID(milestoneNameID)
         End If
     End Sub
+
+    
+    ''' <summary>
+    ''' es reicht , wenn die Behandlung für einen Radio-Button gemacht wird. 
+    ''' fillTextfenster füllt den Text in Abhängigkeit, ob Ergebnisse oder Erläuterung gecheckt sind 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub rdbDeliverables_CheckedChanged(sender As Object, e As EventArgs) Handles rdbDeliverables.CheckedChanged
+
+        Call fuelleTextBox()
+
+    End Sub
+
+    
 End Class

@@ -348,7 +348,7 @@ Public Module awinDiagrams
             If Not found Then
 
 
-                With CType(appInstance.Charts.Add, Excel.Chart)
+                With appInstance.Charts.Add
 
 
                     If Not isCockpitChart Then
@@ -493,7 +493,7 @@ Public Module awinDiagrams
 
                                 ' Änderung 8.10.14 die Zahl der MEilensteine insgesamt anzeigen 
                                 ' nicht aufgeschlüsselt nach welcher MEilenstein , welche Farbe
-                                
+
                                 For i = 0 To bis - von
                                     datenreihe(i) = 0
                                     For c = 0 To 3
@@ -883,7 +883,7 @@ Public Module awinDiagrams
         Dim found As Boolean
         Dim hmxWert As Double = -10000.0 ' nimmt den Max-Wert der Datenreihe auf
 
-        Dim minwert As Double, maxwert As Double
+        'Dim minwert As Double, maxwert As Double
         Dim nr_pts As Integer
         Dim diagramTitle As String
 
@@ -901,7 +901,7 @@ Public Module awinDiagrams
         Dim breadcrumb As String = ""
         Dim startdate As Date
         Dim diff As Integer
-        Dim mindone As Boolean, maxdone As Boolean
+        'Dim mindone As Boolean, maxdone As Boolean
         Dim width As Double
         'Dim left As Double
         Dim myCollection As Collection
@@ -1039,6 +1039,15 @@ Public Module awinDiagrams
         If diagramTitle.Contains("#") Then
             diagramTitle = diagramTitle.Replace("#", "-")
         End If
+
+        ' Änderung tk 26.10.15 
+        ' damit Diagramm-Title manuell geändert werden kann und dann beim Update , bis auf die Summe 
+        ' unverändert bleibt, wird der hier rausgelesen
+        Dim tmpstr() As String = chtobj.Chart.ChartTitle.Text.Split(New Char() {CChar("("), CChar(")")}, 20)
+        If tmpstr(0).Length > 0 Then
+            diagramTitle = tmpstr(0).TrimEnd
+        End If
+
 
         If prcTyp = DiagrammTypen(1) Then
             kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection, False)
@@ -1307,87 +1316,87 @@ Public Module awinDiagrams
 
                 lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
-                If isCockpitChart Then
-                    ' jetzt muss eine Dummy Series Collection eingeführt werde, damit das Datalabel über dem Balken angezeigt wird
-                    If lastSC > 1 Then
+                ' '' ''If isCockpitChart Then
+                ' '' ''    ' jetzt muss eine Dummy Series Collection eingeführt werde, damit das Datalabel über dem Balken angezeigt wird
+                ' '' ''    If lastSC > 1 Then
 
-                        maxwert = appInstance.WorksheetFunction.Max(seriesSumDatenreihe)
+                ' '' ''        maxwert = appInstance.WorksheetFunction.Max(seriesSumDatenreihe)
 
-                        For i = 0 To bis - von
-                            VarValues(i) = 0.5 * maxwert
-                        Next i
+                ' '' ''        For i = 0 To bis - von
+                ' '' ''            VarValues(i) = 0.5 * maxwert
+                ' '' ''        Next i
 
-                        With .SeriesCollection.NewSeries
-                            .name = "Dummy"
-                            .Interior.color = RGB(255, 255, 255)
-                            .Values = VarValues
-                            .XValues = Xdatenreihe
-                            .ChartType = Excel.XlChartType.xlColumnStacked
-                            .HasDataLabels = False
-                        End With
-                        lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
+                ' '' ''        With .SeriesCollection.NewSeries
+                ' '' ''            .name = "Dummy"
+                ' '' ''            .Interior.color = RGB(255, 255, 255)
+                ' '' ''            .Values = VarValues
+                ' '' ''            .XValues = Xdatenreihe
+                ' '' ''            .ChartType = Excel.XlChartType.xlColumnStacked
+                ' '' ''            .HasDataLabels = False
+                ' '' ''        End With
+                ' '' ''        lastSC = CType(.SeriesCollection, Excel.SeriesCollection).Count
 
-                    End If
-                    With .SeriesCollection(lastSC)
-                        .HasDataLabels = False
-                        VarValues = seriesSumDatenreihe
-                        nr_pts = CType(.Points, Excel.Points).Count
-                        minwert = VarValues.Min
-                        maxwert = VarValues.Max
+                ' '' ''    End If
+                ' '' ''    With .SeriesCollection(lastSC)
+                ' '' ''        .HasDataLabels = False
+                ' '' ''        VarValues = seriesSumDatenreihe
+                ' '' ''        nr_pts = CType(.Points, Excel.Points).Count
+                ' '' ''        minwert = VarValues.Min
+                ' '' ''        maxwert = VarValues.Max
 
-                        mindone = False
-                        maxdone = False
-                        i = 1
-                        While i <= nr_pts And (mindone = False Or maxdone = False)
+                ' '' ''        mindone = False
+                ' '' ''        maxdone = False
+                ' '' ''        i = 1
+                ' '' ''        While i <= nr_pts And (mindone = False Or maxdone = False)
 
-                            If VarValues(i - 1) = minwert And Not mindone Then
-                                mindone = True
-                                With .Points(i)
-                                    .HasDataLabel = True
-                                    .DataLabel.text = Format(minwert, "##,##0")
+                ' '' ''            If VarValues(i - 1) = minwert And Not mindone Then
+                ' '' ''                mindone = True
+                ' '' ''                With .Points(i)
+                ' '' ''                    .HasDataLabel = True
+                ' '' ''                    .DataLabel.text = Format(minwert, "##,##0")
 
-                                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
-                                    Try
+                ' '' ''                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
+                ' '' ''                    Try
 
-                                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
-                                    Catch ex As Exception
-                                    End Try
+                ' '' ''                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
+                ' '' ''                    Catch ex As Exception
+                ' '' ''                    End Try
 
 
-                                End With
-                            ElseIf VarValues(i - 1) = maxwert And Not maxdone Then
-                                maxdone = True
-                                With .Points(i)
-                                    .HasDataLabel = True
-                                    .DataLabel.text = Format(maxwert, "##,##0")
+                ' '' ''                End With
+                ' '' ''            ElseIf VarValues(i - 1) = maxwert And Not maxdone Then
+                ' '' ''                maxdone = True
+                ' '' ''                With .Points(i)
+                ' '' ''                    .HasDataLabel = True
+                ' '' ''                    .DataLabel.text = Format(maxwert, "##,##0")
 
-                                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
-                                    Try
+                ' '' ''                    .DataLabel.Font.Size = awinSettings.CPfontsizeItems
+                ' '' ''                    Try
 
-                                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
-                                    Catch ex As Exception
-                                    End Try
+                ' '' ''                        .DataLabel.Position = Excel.XlDataLabelPosition.xlLabelPositionBestFit
+                ' '' ''                    Catch ex As Exception
+                ' '' ''                    End Try
 
-                                End With
+                ' '' ''                End With
 
-                            End If
-                            i = i + 1
-                        End While
-                    End With
+                ' '' ''            End If
+                ' '' ''            i = i + 1
+                ' '' ''        End While
+                ' '' ''    End With
 
-                    ' es ist ein Mini-Diagramm, deswegen müssen folgende Einstellungen gelten:
+                ' '' ''    ' es ist ein Mini-Diagramm, deswegen müssen folgende Einstellungen gelten:
 
-                    .HasLegend = False
-                    .HasAxis(Excel.XlAxisType.xlCategory) = False
-                    .HasAxis(Excel.XlAxisType.xlValue) = False
-                    .Axes(Excel.XlAxisType.xlCategory).HasMajorGridlines = False
-                    With .Axes(Excel.XlAxisType.xlValue)
-                        .HasMajorGridlines = False
-                    End With
+                ' '' ''    .HasLegend = False
+                ' '' ''    .HasAxis(Excel.XlAxisType.xlCategory) = False
+                ' '' ''    .HasAxis(Excel.XlAxisType.xlValue) = False
+                ' '' ''    .Axes(Excel.XlAxisType.xlCategory).HasMajorGridlines = False
+                ' '' ''    With .Axes(Excel.XlAxisType.xlValue)
+                ' '' ''        .HasMajorGridlines = False
+                ' '' ''    End With
 
-                ElseIf myCollection.Count > 1 Then
+                ' '' ''ElseIf myCollection.Count > 1 Then
 
-                End If
+                ' '' ''End If
 
 
                 ' nur wenn auch Externe Ressourcen definiert / beauftragt sind, auch anzeigen
@@ -3722,19 +3731,26 @@ Public Module awinDiagrams
     End Sub
 
     '
-    ' zeigt für alle Projekte die Bedarfe für die jeweilige Rolle an
+    ' zeigt für alle/die selektierten Projekte die Bedarfe für die jeweilige Rolle an
     '
     Sub awinShowProjectNeeds1(ByRef mycollection As Collection, type As String)
         Dim formerSU As Boolean = appInstance.ScreenUpdating
 
         appInstance.ScreenUpdating = False
 
-        ' jetzt alle Shapes unsichtbar machen, die im Zeitraum liegen 
+        ' jetzt überprüfen, ob Projekte selektiert sind
+        If selectedProjekte.Count > 0 Then
+            ' dann die Werte in die Excel Zellen der selektierten Projekte schreiben 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
+            Next kvp
+        Else
 
-        ' dann die Werte in die Excel Zellen schreiben 
-        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-            Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
-        Next kvp
+            ' sonst die Werte aller geladenen Projekte in die Excel Zellen schreiben 
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                Call awinShowNeedsofProject1(mycollection, type, kvp.Key)
+            Next kvp
+        End If
 
 
         ' jetzt wieder alle Shapes sichtbar machen 
@@ -3749,14 +3765,10 @@ Public Module awinDiagrams
     ' löscht für alle Projekte die Bedarfe für die jeweilige Rolle an
     '
     Sub awinNoshowProjectNeeds()
-        Dim updateScreenWasTrue As Boolean
 
-        If appInstance.ScreenUpdating = True Then
-            updateScreenWasTrue = True
-            appInstance.ScreenUpdating = False
-        Else
-            updateScreenWasTrue = False
-        End If
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        appInstance.ScreenUpdating = False
+        
 
         Call diagramsVisible(False)
 
@@ -3766,9 +3778,9 @@ Public Module awinDiagrams
 
         Call diagramsVisible(True)
 
-        If updateScreenWasTrue Then
-            appInstance.ScreenUpdating = True
-        End If
+
+        appInstance.ScreenUpdating = formerSU
+
 
     End Sub
 
@@ -3813,10 +3825,50 @@ Public Module awinDiagrams
 
         Try
             shpelement = tmpshapes.Item(projektname)
+            ' jetzt muss unterschieden werden, um welche Art es sich handelt 
+
             With shpelement
-                .Fill.Transparency = 0.8
-                '.Shadow.Transparency = 0.8
-                .TextFrame2.TextRange.Text = ""
+
+                Try
+                    If .GroupItems.Count > 1 Then
+
+                        If CBool(.GroupItems.Item(1).TextFrame2.HasText) And Not awinSettings.drawProjectLine Then
+                            .GroupItems.Item(1).TextFrame2.TextRange.Text = ""
+                        End If
+
+                        For i = 1 To .GroupItems.Count
+
+                            If .GroupItems.Item(i).AlternativeText = "(Projektname)" Then
+                                .GroupItems.Item(i).Line.Transparency = 0.8
+                                .GroupItems.Item(i).Fill.Transparency = 1.0
+                                .TextFrame2.TextRange.Text = ""
+                            Else
+                                If awinSettings.drawProjectLine And i = 1 Then
+
+                                    .GroupItems.Item(i).Line.Transparency = 0.8
+
+                                Else
+
+                                    .GroupItems.Item(i).Fill.Transparency = 0.8
+
+                                End If
+                            End If
+
+                            
+
+                        Next
+                    Else
+                        .Fill.Transparency = 0.8
+                        .TextFrame2.TextRange.Text = ""
+                    End If
+
+                Catch ex1 As Exception
+
+                    .Fill.Transparency = 0.8
+                    .TextFrame2.TextRange.Text = ""
+
+                End Try
+
             End With
 
         Catch ex As Exception
@@ -3844,12 +3896,13 @@ Public Module awinDiagrams
 
             With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
 
-
+                Dim atleastOne As Boolean = False
                 For m = 1 To l
                     If tempArray(m - 1) > 0 And istInTimezone(k + m - 1) Then
 
                         Try
                             .Cells(i, k).Offset(0, m - 1).Value = tempArray(m - 1)
+                            atleastOne = True
                         Catch ex As Exception
 
                         End Try
@@ -3865,8 +3918,18 @@ Public Module awinDiagrams
                 Else
                     tmpgroesse = sgroesse
                 End If
-                .Range(.Cells(i, k), .Cells(i, k).Offset(0, l - 1)).Font.Color = sfarbe
-                .Range(.Cells(i, k), .Cells(i, k).Offset(0, l - 1)).Font.Size = tmpgroesse
+
+                If atleastOne Then
+
+                    Try
+                        .Range(.Cells(i, k), .Cells(i, k).Offset(0, l - 1)).Font.Color = sfarbe
+                        .Range(.Cells(i, k), .Cells(i, k).Offset(0, l - 1)).Font.Size = tmpgroesse
+                    Catch ex As Exception
+
+                    End Try
+                    
+                End If
+                
             End With
 
             appInstance.EnableEvents = formerEE
@@ -3917,16 +3980,29 @@ Public Module awinDiagrams
                 Try
                     If .GroupItems.Count > 1 Then
 
-                        If CBool(.GroupItems.Item(1).TextFrame2.HasText) Then
+                        If CBool(.GroupItems.Item(1).TextFrame2.HasText) And Not awinSettings.drawProjectLine Then
                             .GroupItems.Item(1).TextFrame2.TextRange.Text = projektname
                         End If
 
                         For i = 1 To .GroupItems.Count
-                            If pStatus = ProjektStatus(0) Then
-                                .GroupItems.Item(i).Fill.Transparency = 0.35
-                            Else
+
+                            If .GroupItems.Item(i).AlternativeText = "(Projektname)" Then
+                                .GroupItems.Item(i).Line.Transparency = 0.0
                                 .GroupItems.Item(i).Fill.Transparency = 0.0
+                                .TextFrame2.TextRange.Text = hproj.getShapeText
+
+                            ElseIf awinSettings.drawProjectLine And i = 1 Then
+
+                                .GroupItems.Item(i).Line.Transparency = 0.0
+
+                            Else
+                                If pStatus = ProjektStatus(0) Then
+                                    .GroupItems.Item(i).Fill.Transparency = 0.35
+                                Else
+                                    .GroupItems.Item(i).Fill.Transparency = 0.0
+                                End If
                             End If
+
                         Next
                     Else
 
@@ -4001,7 +4077,9 @@ Public Module awinDiagrams
     ''' <remarks></remarks>
     Function istInTimezone(ByVal spalte As Integer) As Boolean
 
-        If spalte >= showRangeLeft And spalte <= showRangeRight Then
+        If showRangeLeft <= 0 And showRangeRight <= 0 Then
+            istInTimezone = True
+        ElseIf spalte >= showRangeLeft And spalte <= showRangeRight Then
             istInTimezone = True
         Else
             istInTimezone = False
