@@ -3327,7 +3327,8 @@ Public Module awinGeneralModules
         Dim endedateProjekt As Date
 
 
-        ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
+        ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet
+
 
         zeile = 1
         spalte = 1
@@ -3879,7 +3880,7 @@ Public Module awinGeneralModules
                     Dim chkRolle As Boolean = True
                     Dim firsttime As Boolean = False
                     Dim fertig As Boolean = True
-                    Dim summe As Double = Nothing
+                    Dim summe As Double = -1        ' summe = -1: bedeutet, Summe wird nicht verwendet, oder hat einen unsinnigen Wert
                     Dim Xwerte As Double()
                     Dim oldXwerte As Double()
                     Dim crole As clsRolle
@@ -3904,6 +3905,20 @@ Public Module awinGeneralModules
                     Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
 
                     rng = .Range("Phasen_des_Projekts")
+
+                    Dim testrange As Excel.Range = CType(.Cells(1, 2000), Excel.Range)
+
+                    Dim gefundenRange As Excel.Range = testrange.Find(What:="Summe")
+                    If IsNothing(gefundenRange) Then
+                        ressOff = 1
+                        ressSumOffset = -1              ' keine Summe vorhanden
+                        Call logfileSchreiben("alte Version des ProjektSteckbriefes: ohne 'Summe'", hproj.name, anzFehler)
+                    Else
+                        ressOff = gefundenRange.Column - rng.Column - 1
+                        ressSumOffset = gefundenRange.Column - rng.Column - 2
+                        Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
+
+                    End If
 
                     Dim hstr As String = CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value)
                     hstr = elemNameOfElemID(rootPhaseName)
@@ -4141,10 +4156,10 @@ Public Module awinGeneralModules
                                                 Try
                                                     summe = CDbl(zelle.Offset(0, 1 + ressSumOffset).Value)
                                                 Catch ex As Exception
-                                                    summe = Nothing
+                                                    summe = -1
                                                 End Try
 
-                                                If summe <> 0.0 Then    ' Verteilung der Summe auf die Monate über Dauer der Phase
+                                                If summe > 0.0 Then    ' Verteilung der Summe auf die Monate über Dauer der Phase
 
                                                     ReDim oldXwerte(0)
                                                     oldXwerte(0) = summe
@@ -4218,63 +4233,67 @@ Public Module awinGeneralModules
 
                                                 k = CInt(CostDefinitions.getCostdef(hname).UID)
 
-                                                ''ur:12.10.2015: Eingabe einer Summe in Ressourcen nun möglich, 
-                                                Try
-                                                    summe = CDbl(zelle.Offset(0, 1 + ressSumOffset).Value)
-                                                Catch ex As Exception
-                                                    summe = Nothing
-                                                End Try
+                                                If IsNothing(gefundenRange) Then
 
-                                                If summe <> 0.0 Then        'Summe wird verteilt auf Dauer der Phase
 
-                                                    ReDim oldXwerte(0)
-                                                    oldXwerte(0) = summe
+                                                    ''ur:12.10.2015: Eingabe einer Summe in Ressourcen nun möglich, 
+                                                    Try
+                                                        summe = CDbl(zelle.Offset(0, 1 + ressSumOffset).Value)
+                                                    Catch ex As Exception
+                                                        summe = -1
+                                                    End Try
 
-                                                    With cphase
+                                                    If summe > 0.0 Then        'Summe wird verteilt auf Dauer der Phase
 
-                                                        anfang = .relStart
-                                                        ende = .relEnde
-                                                        ReDim Xwerte(ende - anfang)
+                                                        ReDim oldXwerte(0)
+                                                        oldXwerte(0) = summe
 
-                                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
-                                                    End With
+                                                        With cphase
 
-                                                    ''ur:12.10.2015: 
-                                                Else
+                                                            anfang = .relStart
+                                                            ende = .relEnde
+                                                            ReDim Xwerte(ende - anfang)
 
-                                                    '  Anfang Check , ob richtige Kästchen Werte enthalten
-                                                    Dim msgstr As String = " Fehler bei der Verteilung benötigter Kapazitäten:" & vbCrLf & "für Kostenart " & hname & " in Spalte "
-                                                    Dim checkok As Boolean = True
+                                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                                        End With
 
-                                                    Dim i As Integer
-                                                    For i = 1 To hproj.anzahlRasterElemente
-
-                                                        Dim wertvorhanden As Boolean = (CDbl(zelle.Offset(0, i + ressOff).Value) <> 0.0)
-                                                        If (i < anfang Or i > ende) And wertvorhanden Then
-                                                            msgstr = msgstr & " ," & i
-                                                            checkok = False
-                                                        End If
-
-                                                    Next
-                                                    If Not checkok Then
-                                                        Call logfileSchreiben(msgstr, hproj.name, anzFehler)
-                                                        'Call MsgBox(msgstr)
-                                                        'Throw New ArgumentException(msgstr)
                                                     End If
-                                                    ' Ende Check
-
-                                                    ReDim Xwerte(ende - anfang)
-                                                    Dim m As Integer
-                                                    For m = anfang To ende
-                                                        Try
-                                                            Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + ressOff).Value)
-                                                        Catch ex As Exception
-                                                            Xwerte(m - anfang) = 0.0
-                                                        End Try
-
-                                                    Next m
-
                                                 End If
+
+                                                ''ur:12.10.2015: 
+                                             
+                                                '  Anfang Check , ob richtige Kästchen Werte enthalten
+                                                Dim msgstr As String = " Fehler bei der Verteilung benötigter Kapazitäten:" & vbCrLf & "für Kostenart " & hname & " in Spalte "
+                                                Dim checkok As Boolean = True
+
+                                                Dim i As Integer
+                                                For i = 1 To hproj.anzahlRasterElemente
+
+                                                    Dim wertvorhanden As Boolean = (CDbl(zelle.Offset(0, i + ressOff).Value) <> 0.0)
+                                                    If (i < anfang Or i > ende) And wertvorhanden Then
+                                                        msgstr = msgstr & " ," & i
+                                                        checkok = False
+                                                    End If
+
+                                                Next
+                                                If Not checkok Then
+                                                    Call logfileSchreiben(msgstr, hproj.name, anzFehler)
+                                                    'Call MsgBox(msgstr)
+                                                    'Throw New ArgumentException(msgstr)
+                                                End If
+                                                ' Ende Check
+
+                                                ReDim Xwerte(ende - anfang)
+                                                Dim m As Integer
+                                                For m = anfang To ende
+                                                    Try
+                                                        Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + ressOff).Value)
+                                                    Catch ex As Exception
+                                                        Xwerte(m - anfang) = 0.0
+                                                    End Try
+
+                                                Next m
+
 
                                                 ccost = New clsKostenart(ende - anfang + 1)
                                                 With ccost

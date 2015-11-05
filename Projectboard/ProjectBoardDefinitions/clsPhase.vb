@@ -1248,7 +1248,6 @@
         Else
             Throw New Exception("Fehler: Kostenart '" & cost.name & "' ist bereits in der Phase '" & Me.name & "' enthalten")
         End If
-        AllCosts.Add(cost)
 
     End Sub
 
