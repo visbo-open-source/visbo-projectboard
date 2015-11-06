@@ -11,11 +11,10 @@
     <tabs>
       <tab id="PTX" label ="Multiprojekt-Info">
         <group id="PTXG1" label ="Analysen">
-          <!--<button id="PTXG1B1" label="Projekt-Ampeln" onAction="Tom2G2M5M1B3ShowStatus" />
+          <button id="PTXG1B1" label="Projekt-Ampeln" onAction="Tom2G2M5M1B3ShowStatus" />
           <separator id="PTXG1s1"/>
           <button id="PTXG1B2" label="Meilenstein-Ampeln" onAction="PT0ShowZieleUebersicht" />
-          <separator id="PTXG1s2"/>-->
-          <!--  <separator id="PTXG1s3"/>-->
+          <separator id="PTXG1s2"/>
           <menu id="PTXG1M1" label="Planelemente visualisieren" supertip="Meilensteine und Vorgänge visualisieren">
             <button id="PTXG1B4" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Element-Namen"/>
             <button id="PTXG1B5" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip="Auswahl für die Visualisierung erfolgt über die Hierarchie"/>   
@@ -33,19 +32,19 @@
             <button id="PTOPTB1" label ="optimale Varianten-Kombination" onAction ="PTOPTVariantenOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse die optimale Kombination von Projekt-Varianten ermitteln"/>
             <button id="PTOPTB2" label ="Spielraum nutzen" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>
           </menu>    
-          <!--<separator id="PTXG1s5"/>
+          <separator id="PTXG1s5"/>
           <button id="PTXG1B8" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
-          <button id="PTXG1B9" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />-->
+          <button id="PTXG1B9" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />
           <!--<button id="PTXG1B8" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />-->
-          <!--<separator id="PTXG1s6"/>
+          <separator id="PTXG1s6"/>
          
           <button id="PTFKB1" label="Budget/Kosten" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
-          <button id="PTFKB2" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>-->
+          <button id="PTFKB2" label="Budget/Kosten/Auslastung" onAction="PT0ShowPortfolioErgebnis" supertip="Gegenüberstellung von Budget und Kosten wie oben, aber unter zusätzlicher Berücksichtigung von Über- bzw. Unterauslastung"/>
         </group>
        
       </tab>
 
-      <!--<tab id="PT0" label="Einzelprojekt-Info">
+      <tab id="PT0" label="Einzelprojekt-Info">
         <group id="PT0G1" label="Analysen">
           <button id="PT0G1B0" label="Projekt-Ampel " onAction="PT0ShowProjektStatus" />
           <separator id="PT0G1s1"/>
@@ -80,7 +79,7 @@
           <separator id="PT0G1s7"/>
           <button id="PT0G1B7" label="Ergebnis" onAction="Tom2G2M1B7Ergebnis" />
         </group>
-      </tab>-->
+      </tab>
       
       <tab id="PT7" label ="Cockpit">
         <group id="PT7G1" label=" ">
@@ -163,15 +162,15 @@
             <button id="PT2G3M4B2" label="Charts"  onAction="PT6DeleteCharts" supertip ="alle aktuell angezeigten Charts werden gelöscht"/>
           </menu>
         </group>
-      
-        <!--<group id="PT2G4" label="Abhängigkeiten">
+
+        <group id="PT2G4" label="Abhängigkeiten">
           <button id="PT2G4B1" label="Definieren" onAction="PTDefineDependencies" />
           <separator id="PT2G4s1"/>
           <button id="PT2G4B2" label="Löschen" onAction="PTDeleteDependencies" enabled="false"/>
-        </group>-->
+        </group>
       </tab>
       <!---->
-      <!--<tab id ="PT3" label="Vergleichen">
+      <tab id ="PT3" label="Vergleichen">
         <group id="PT3G1" label="Einzelprojekt">
           <button id="PT3G1B0" label="Phasen vergleichen in 1 Chart" onAction="Tom2G3M1B1PhasenVgl" />
           <button id="PT3G1B1" label="mit Projekt bzw. Vorlage vergleichen" onAction="Tom2G3M1B2PhasenVgl" />
@@ -188,7 +187,7 @@
         <group id="PT3G2" label="Multiprojekt-Szenario">
           <button id="PT3G2B1" label="Vergleichen" onAction="awinSetModusHistory" enabled="false" />
         </group>
-      </tab>-->
+      </tab>
       <!---->    
       <tab id ="PT4" label="Datenmanagement">
 
@@ -214,7 +213,7 @@
             <button id="PT4G1M0B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Element-Namen"/>
             <button id="PT4G1M0B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip ="die Auswahl für den Export erfolgt über die Hierarchie"/>
           </menu>
-          <!--<button id="PT4G1B5" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />-->
+          <button id="PT4G1B5" label="Export Rollen-Zuordnung" onAction="Tom2G4M2B2ZuordnungRP" />
        </group>
         
        <group id= "PT4G12" label="Datenbank"> 
