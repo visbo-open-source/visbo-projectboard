@@ -3530,6 +3530,8 @@ Public Module awinGeneralModules
                         Dim lastLevel As Integer = 0
                         Dim lasthrchynode As New clsHierarchyNode
                         Dim lastelemID As String = ""
+                        Dim hilfselemID As String = ""
+
 
                         For zeile = rowOffset To lastrow
 
@@ -3717,7 +3719,7 @@ Public Module awinGeneralModules
                                             hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(lastelemID)
 
                                         ElseIf lastLevel - aktLevel >= 1 Then
-                                            Dim hilfselemID As String = lastelemID
+                                            hilfselemID = lastelemID
                                             For l As Integer = 1 To lastLevel - aktLevel
                                                 hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
                                             Next l

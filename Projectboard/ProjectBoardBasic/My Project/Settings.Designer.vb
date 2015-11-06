@@ -65,7 +65,7 @@ Namespace My
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("telairdemo")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("BMWDemo")>  _
         Public ReadOnly Property mongoDBname() As String
             Get
                 Return CType(Me("mongoDBname"),String)
@@ -74,8 +74,7 @@ Namespace My
         
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\Ute\Documents\Visual Studio 2012\Projects\Projectboard\project-board-rep"& _ 
-            "o\Projectboard\Projectboard\bin\Debug\")>  _
+         Global.System.Configuration.DefaultSettingValueAttribute("\\KOYTEK-NAS\backup\Ute\ProjectBoard Testdaten\BMW Demo\")>  _
         Public Property awinPath() As String
             Get
                 Return CType(Me("awinPath"),String)
