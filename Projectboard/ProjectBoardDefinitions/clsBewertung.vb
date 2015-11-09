@@ -1,9 +1,52 @@
 ﻿Public Class clsBewertung
+    ' Änderung tk 2.11.15
+    ' Property deliverables eingeführt 
 
     Private _color As Integer
-    Public Property description As String
+    Private _description As String = ""
+    Private _deliverables As String = ""
+
     Public Property bewerterName As String
     Public Property datum As Date
+
+    ''' <summary>
+    ''' es muss abgefangen werden, dass in description ein Nothing Wert stehen kann 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property description As String
+        Get
+            description = _description
+        End Get
+        Set(value As String)
+            If IsNothing(value) Then
+                _description = ""
+            Else
+                _description = value
+            End If
+        End Set
+    End Property
+    ''' <summary>
+    ''' liest/schreibt deliverables
+    ''' es muss abgefangen werden, dass in deliverables ein Nothing Wert stehen kann 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property deliverables As String
+        Get
+            deliverables = _deliverables
+        End Get
+        Set(value As String)
+            If IsNothing(value) Then
+                _deliverables = ""
+            Else
+                _deliverables = value
+            End If
+        End Set
+    End Property
+    
 
 
     ''' <summary>
@@ -67,13 +110,14 @@
 
         End Set
     End Property
-    
+
 
 
     Public Sub copyto(ByRef newb As clsBewertung)
 
         With newb
             .description = Me.description
+            .deliverables = Me.deliverables
             .color = Me.color
             .bewerterName = Me.bewerterName
             .datum = Me.datum
@@ -85,6 +129,7 @@
 
         With newb
             Me.description = .description
+            Me.deliverables = .deliverables
             Me.color = .color
             Me.bewerterName = .bewerterName
             Me.datum = .datum
@@ -97,7 +142,8 @@
         bewerterName = ""
         datum = Nothing
         color = awinSettings.AmpelNichtBewertet
-        description = ""
+        _description = ""
+        _deliverables = ""
     End Sub
 
 End Class

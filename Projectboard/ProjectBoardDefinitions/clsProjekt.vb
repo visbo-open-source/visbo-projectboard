@@ -3040,9 +3040,9 @@ Public Class clsProjekt
 
                     Next j
                 End If
+                
 
             Next mx
-
 
             drawMStoPhaseListe = drawMSinPhase
             anzLines = drawMStoPhaseListe.Count

@@ -276,15 +276,14 @@ Public Module awinGeneralModules
         ReDim exportOrdnerNames(4)
 
 
-
         ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
         'awinPath = appInstance.ActiveWorkbook.Path & "\"
 
-        If (Dir(My.Settings.awinPath, vbDirectory) <> "") Then
-            awinPath = My.Settings.awinPath
+        If (Dir(awinSettings.awinPath, vbDirectory) <> "") Then
+            awinPath = awinSettings.awinPath
         Else
 
-            Throw New ArgumentException("Requirementsordner " & My.Settings.awinPath & " existiert nicht")
+            Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
 
         End If
 
@@ -467,12 +466,11 @@ Public Module awinGeneralModules
         '' ''End Try
 
 
-        awinSettings.databaseURL = My.Settings.mongoDBURL
-        awinSettings.databaseName = My.Settings.mongoDBname
 
         ' ur: 23.01.2015: Abfragen der Login-Informationen
         loginErfolgreich = loginProzedur()
 
+        
         If Not loginErfolgreich Then
             ' Customization-File wird geschlossen
             xlsCustomization.Close(SaveChanges:=False)
@@ -3530,6 +3528,8 @@ Public Module awinGeneralModules
                         Dim lastLevel As Integer = 0
                         Dim lasthrchynode As New clsHierarchyNode
                         Dim lastelemID As String = ""
+                        Dim hilfselemID As String = ""
+
 
                         For zeile = rowOffset To lastrow
 
@@ -3717,7 +3717,7 @@ Public Module awinGeneralModules
                                             hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(lastelemID)
 
                                         ElseIf lastLevel - aktLevel >= 1 Then
-                                            Dim hilfselemID As String = lastelemID
+                                            hilfselemID = lastelemID
                                             For l As Integer = 1 To lastLevel - aktLevel
                                                 hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
                                             Next l
@@ -4937,6 +4937,7 @@ Public Module awinGeneralModules
                         Dim resultVerantwortlich As String = ""
                         Dim bewertungsAmpel As Integer
                         Dim explanation As String
+                        Dim deliverables As String
                         Dim bewertungsdatum As Date = importDatum
                         Dim Nummer As String
                         Dim tbl As Excel.Range
@@ -5276,8 +5277,16 @@ Public Module awinGeneralModules
                                     End If
 
                                     ' resultVerantwortlich = CType(.Cells(zeile, 5).value, String)
-                                    bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
+                                    Try
+                                        bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
+                                    Catch ex As Exception
+                                        bewertungsAmpel = 0
+                                    End Try
+
                                     explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
+
+                                    ' Ergänzung tk 2.11 deliverables ergänzt 
+                                    deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
 
 
                                     If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
@@ -5290,6 +5299,7 @@ Public Module awinGeneralModules
                                         .colorIndex = bewertungsAmpel
                                         .datum = importDatum
                                         .description = explanation
+                                        .deliverables = deliverables
                                     End With
 
 
@@ -7315,11 +7325,12 @@ Public Module awinGeneralModules
 
 
                     cphase = kvp.Value.getPhase(elemName, breadcrumb, lfdNr)
-                    Dim phaseName As String = kvp.Value.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+                    Dim phaseName As String
 
                     If Not IsNothing(cphase) Then
                         Try
 
+                            phaseName = kvp.Value.hierarchy.getBestNameOfID(cphase.nameID, True, False)
                             startDate = cphase.getStartDate
                             endDate = cphase.getEndDate
 

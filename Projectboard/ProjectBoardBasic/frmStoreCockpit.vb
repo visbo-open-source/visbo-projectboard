@@ -35,6 +35,14 @@ Public Class frmStoreCockpit
         Dim i As Integer
         Dim fileName As String
 
+
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+
+        Dim formerEO As Boolean = enableOnUpdate
+        enableOnUpdate = False
+
+
         Dim wsSheet As xlNS.Worksheet = Nothing
 
         fileName = awinPath & cockpitsFile
@@ -56,13 +64,6 @@ Public Class frmStoreCockpit
                     End If
                 End While
 
-                'If Not fileIsOpen Then
-                '    logMessage = "Öffnen von " & fileName & " fehlgeschlagen" & vbLf & _
-                '                                "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
-
-                '    Throw New ArgumentException(logMessage)
-                'End If
-
             End Try
         Else
             ' Cockpits-File neu anlegen 
@@ -76,12 +77,16 @@ Public Class frmStoreCockpit
 
         i = 1
         While i <= xlsCockpits.Worksheets.Count
-            wsSheet = CType(xlsCockpits.Worksheets.Item(i), Excel.Worksheet)
+            wsSheet = CType(xlsCockpits.Worksheets.Item(i), xlNS.Worksheet)
             ComboBox1.Items.Add(wsSheet.Name)
             i = i + 1
         End While
 
         xlsCockpits.Close(SaveChanges:=False)
+
+        appInstance.EnableEvents = formerEE
+        enableOnUpdate = formerEO
+
 
     End Sub
 

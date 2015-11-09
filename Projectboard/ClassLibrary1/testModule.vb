@@ -517,7 +517,7 @@ Public Module testModule
                         kennzeichnung = "Tabelle OneGlance letzter Stand" Or _
                         kennzeichnung = "Ergebnis" Or _
                         kennzeichnung = "Strategie/Risiko" Or _
-                        kennzeichnung = "Teilprojekte" Or _
+                        kennzeichnung = "Projektphasen" Or _
                         kennzeichnung = "Personalbedarf" Or _
                         kennzeichnung = "Personalkosten" Or _
                         kennzeichnung = "Sonstige Kosten" Or _
@@ -887,7 +887,7 @@ Public Module testModule
 
                                 End Try
 
-                            Case "Teilprojekte"
+                            Case "Projektphasen"
 
                                 Dim scale As Integer
                                 Dim continueWork As Boolean = True
@@ -6821,46 +6821,56 @@ Public Module testModule
     Sub zeichneProjektTabelleZiele(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt)
 
         Dim heute As Date = Date.Now
+        Dim anzSpalten As Integer = 0
         Dim index As Integer = 0
         Dim tabelle As pptNS.Table
         Dim todoCollection As Collection = hproj.getAllElemIDs(True)
 
         Try
             tabelle = pptShape.Table
+            anzSpalten = tabelle.Columns.Count
+
         Catch ex As Exception
             Throw New Exception("Shape hat keine Tabelle")
         End Try
 
-        pptShape.Title = ""
+        If anzSpalten < 4 Then
+            Throw New Exception("Shape hat zu wenige Spalten (min 4) ")
+        Else
+            pptShape.Title = ""
 
-        Dim msNumber As Integer = 1
+            Dim msNumber As Integer = 1
 
-        ' jetzt wird die todoListe abgearbeitet 
-        Dim tabellenzeile As Integer = 2
+            ' jetzt wird die todoListe abgearbeitet 
+            Dim tabellenzeile As Integer = 2
 
-        Try
+            Try
 
-            For m = 1 To todoCollection.Count
-                Dim cResult As clsMeilenstein = hproj.getMilestoneByID(CStr(todoCollection.Item(m)))
-                Dim cBewertung As clsBewertung = cResult.getBewertung(1)
+                For m = 1 To todoCollection.Count
+                    Dim cResult As clsMeilenstein = hproj.getMilestoneByID(CStr(todoCollection.Item(m)))
+                    Dim cBewertung As clsBewertung = cResult.getBewertung(1)
 
-                With tabelle
+                    With tabelle
 
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = msNumber.ToString
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(cBewertung.color)
+                        CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = msNumber.ToString
+                        CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+                        CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(cBewertung.color)
 
-                    CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.name
-                    CType(.Cell(tabellenzeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.getDate.ToShortDateString
-                    CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cBewertung.description
+                        CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.name
+                        CType(.Cell(tabellenzeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.getDate.ToShortDateString
+                        CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cBewertung.description
+                        If anzSpalten >= 5 Then
+                            CType(.Cell(tabellenzeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cBewertung.deliverables
+                        End If
 
-                End With
 
-                msNumber = msNumber + 1
-                tabelle.Rows.Add()
-                tabellenzeile = tabellenzeile + 1
+                    End With
 
-            Next
+                    msNumber = msNumber + 1
+                    tabelle.Rows.Add()
+                    tabellenzeile = tabellenzeile + 1
+
+                Next
 
 
                 Try
@@ -6869,10 +6879,13 @@ Public Module testModule
 
                 End Try
 
-        Catch ex As Exception
-            Throw New Exception("Tabelle Projektziele hat evtl unzulässige Anzahl Zeilen / Spalten ...")
-        End Try
+            Catch ex As Exception
+                Throw New Exception("Tabelle Projektziele hat evtl unzulässige Anzahl Zeilen / Spalten ...")
+            End Try
 
+        End If
+
+        
 
 
     End Sub
