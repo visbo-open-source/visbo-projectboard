@@ -28,6 +28,8 @@ Partial Class frmMilestoneInformation
         Me.resultName = New System.Windows.Forms.TextBox()
         Me.breadCrumb = New System.Windows.Forms.TextBox()
         Me.showOrigItem = New System.Windows.Forms.CheckBox()
+        Me.rdbDeliverables = New System.Windows.Forms.RadioButton()
+        Me.rdbExplanation = New System.Windows.Forms.RadioButton()
         Me.SuspendLayout()
         '
         'resultDate
@@ -96,6 +98,26 @@ Partial Class frmMilestoneInformation
         Me.showOrigItem.Text = "Original Name"
         Me.showOrigItem.UseVisualStyleBackColor = True
         '
+        'rdbDeliverables
+        '
+        Me.rdbDeliverables.AutoSize = True
+        Me.rdbDeliverables.Location = New System.Drawing.Point(182, 91)
+        Me.rdbDeliverables.Name = "rdbDeliverables"
+        Me.rdbDeliverables.Size = New System.Drawing.Size(77, 17)
+        Me.rdbDeliverables.TabIndex = 28
+        Me.rdbDeliverables.Text = "Ergebnisse"
+        Me.rdbDeliverables.UseVisualStyleBackColor = True
+        '
+        'rdbExplanation
+        '
+        Me.rdbExplanation.AutoSize = True
+        Me.rdbExplanation.Location = New System.Drawing.Point(292, 91)
+        Me.rdbExplanation.Name = "rdbExplanation"
+        Me.rdbExplanation.Size = New System.Drawing.Size(79, 17)
+        Me.rdbExplanation.TabIndex = 29
+        Me.rdbExplanation.Text = "Erläuterung"
+        Me.rdbExplanation.UseVisualStyleBackColor = True
+        '
         'frmMilestoneInformation
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
@@ -103,6 +125,8 @@ Partial Class frmMilestoneInformation
         Me.AutoSize = True
         Me.BackColor = System.Drawing.SystemColors.Window
         Me.ClientSize = New System.Drawing.Size(494, 277)
+        Me.Controls.Add(Me.rdbExplanation)
+        Me.Controls.Add(Me.rdbDeliverables)
         Me.Controls.Add(Me.showOrigItem)
         Me.Controls.Add(Me.breadCrumb)
         Me.Controls.Add(Me.resultName)
@@ -124,4 +148,6 @@ Partial Class frmMilestoneInformation
     Public WithEvents bewertungsText As System.Windows.Forms.TextBox
     Public WithEvents breadCrumb As System.Windows.Forms.TextBox
     Public WithEvents showOrigItem As System.Windows.Forms.CheckBox
+    Friend WithEvents rdbDeliverables As System.Windows.Forms.RadioButton
+    Friend WithEvents rdbExplanation As System.Windows.Forms.RadioButton
 End Class

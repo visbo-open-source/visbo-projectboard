@@ -1040,6 +1040,15 @@ Public Module awinDiagrams
             diagramTitle = diagramTitle.Replace("#", "-")
         End If
 
+        ' Änderung tk 26.10.15 
+        ' damit Diagramm-Title manuell geändert werden kann und dann beim Update , bis auf die Summe 
+        ' unverändert bleibt, wird der hier rausgelesen
+        Dim tmpstr() As String = chtobj.Chart.ChartTitle.Text.Split(New Char() {CChar("("), CChar(")")}, 20)
+        If tmpstr(0).Length > 0 Then
+            diagramTitle = tmpstr(0).TrimEnd
+        End If
+
+
         If prcTyp = DiagrammTypen(1) Then
             kdatenreihe = ShowProjekte.getRoleKapasInMonth(myCollection, False)
             kdatenreihePlus = ShowProjekte.getRoleKapasInMonth(myCollection, True)

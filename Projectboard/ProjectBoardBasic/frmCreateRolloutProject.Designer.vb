@@ -68,112 +68,99 @@ Partial Class frmCreateRolloutProject
         Me.GroupBox1.Controls.Add(Me.Label3)
         Me.GroupBox1.Controls.Add(Me.Label2)
         Me.GroupBox1.Controls.Add(Me.Label1)
-        Me.GroupBox1.Location = New System.Drawing.Point(36, 155)
-        Me.GroupBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox1.Location = New System.Drawing.Point(29, 124)
         Me.GroupBox1.Name = "GroupBox1"
-        Me.GroupBox1.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
-        Me.GroupBox1.Size = New System.Drawing.Size(511, 224)
+        Me.GroupBox1.Size = New System.Drawing.Size(409, 179)
         Me.GroupBox1.TabIndex = 0
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "Migration Project"
         '
         'endDateMigration
         '
-        Me.endDateMigration.Location = New System.Drawing.Point(309, 185)
-        Me.endDateMigration.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.endDateMigration.Location = New System.Drawing.Point(247, 148)
         Me.endDateMigration.Name = "endDateMigration"
-        Me.endDateMigration.Size = New System.Drawing.Size(132, 22)
+        Me.endDateMigration.Size = New System.Drawing.Size(106, 20)
         Me.endDateMigration.TabIndex = 10
         '
         'nrVeryComplexObjects
         '
-        Me.nrVeryComplexObjects.Location = New System.Drawing.Point(309, 151)
-        Me.nrVeryComplexObjects.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.nrVeryComplexObjects.Location = New System.Drawing.Point(247, 121)
         Me.nrVeryComplexObjects.Name = "nrVeryComplexObjects"
-        Me.nrVeryComplexObjects.Size = New System.Drawing.Size(132, 22)
+        Me.nrVeryComplexObjects.Size = New System.Drawing.Size(106, 20)
         Me.nrVeryComplexObjects.TabIndex = 9
         '
         'nrComplexObjects
         '
-        Me.nrComplexObjects.Location = New System.Drawing.Point(309, 118)
-        Me.nrComplexObjects.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.nrComplexObjects.Location = New System.Drawing.Point(247, 94)
         Me.nrComplexObjects.Name = "nrComplexObjects"
-        Me.nrComplexObjects.Size = New System.Drawing.Size(132, 22)
+        Me.nrComplexObjects.Size = New System.Drawing.Size(106, 20)
         Me.nrComplexObjects.TabIndex = 8
         '
         'nrMediumObjects
         '
-        Me.nrMediumObjects.Location = New System.Drawing.Point(309, 86)
-        Me.nrMediumObjects.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.nrMediumObjects.Location = New System.Drawing.Point(247, 69)
         Me.nrMediumObjects.Name = "nrMediumObjects"
-        Me.nrMediumObjects.Size = New System.Drawing.Size(132, 22)
+        Me.nrMediumObjects.Size = New System.Drawing.Size(106, 20)
         Me.nrMediumObjects.TabIndex = 7
         '
         'nrSimpleObjects
         '
-        Me.nrSimpleObjects.Location = New System.Drawing.Point(309, 54)
-        Me.nrSimpleObjects.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.nrSimpleObjects.Location = New System.Drawing.Point(247, 43)
         Me.nrSimpleObjects.Name = "nrSimpleObjects"
-        Me.nrSimpleObjects.Size = New System.Drawing.Size(132, 22)
+        Me.nrSimpleObjects.Size = New System.Drawing.Size(106, 20)
         Me.nrSimpleObjects.TabIndex = 6
         '
         'Label6
         '
         Me.Label6.AutoSize = True
-        Me.Label6.Location = New System.Drawing.Point(152, 188)
-        Me.Label6.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label6.Location = New System.Drawing.Point(122, 150)
         Me.Label6.Name = "Label6"
-        Me.Label6.Size = New System.Drawing.Size(99, 17)
+        Me.Label6.Size = New System.Drawing.Size(75, 13)
         Me.Label6.TabIndex = 5
         Me.Label6.Text = "latest Enddate"
         '
         'Label5
         '
         Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(111, 156)
-        Me.Label5.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label5.Location = New System.Drawing.Point(89, 125)
         Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(139, 17)
+        Me.Label5.Size = New System.Drawing.Size(106, 13)
         Me.Label5.TabIndex = 4
         Me.Label5.Text = "very complex objects"
         '
         'Label4
         '
         Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(141, 123)
-        Me.Label4.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label4.Location = New System.Drawing.Point(113, 98)
         Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(108, 17)
+        Me.Label4.Size = New System.Drawing.Size(83, 13)
         Me.Label4.TabIndex = 3
         Me.Label4.Text = "complex objects"
         '
         'Label3
         '
         Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(145, 91)
-        Me.Label3.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label3.Location = New System.Drawing.Point(116, 73)
         Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(106, 17)
+        Me.Label3.Size = New System.Drawing.Size(80, 13)
         Me.Label3.TabIndex = 2
         Me.Label3.Text = "medium objects"
         '
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(155, 59)
-        Me.Label2.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label2.Location = New System.Drawing.Point(124, 47)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(97, 17)
+        Me.Label2.Size = New System.Drawing.Size(73, 13)
         Me.Label2.TabIndex = 1
         Me.Label2.Text = "simple objects"
         '
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(41, 27)
-        Me.Label1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label1.Location = New System.Drawing.Point(33, 22)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(133, 17)
+        Me.Label1.Size = New System.Drawing.Size(98, 13)
         Me.Label1.TabIndex = 0
         Me.Label1.Text = "required number of "
         '
@@ -183,67 +170,59 @@ Partial Class frmCreateRolloutProject
         Me.GroupBox2.Controls.Add(Me.Label11)
         Me.GroupBox2.Controls.Add(Me.reqUsers)
         Me.GroupBox2.Controls.Add(Me.Label7)
-        Me.GroupBox2.Location = New System.Drawing.Point(36, 399)
-        Me.GroupBox2.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox2.Location = New System.Drawing.Point(29, 319)
         Me.GroupBox2.Name = "GroupBox2"
-        Me.GroupBox2.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
-        Me.GroupBox2.Size = New System.Drawing.Size(511, 96)
+        Me.GroupBox2.Size = New System.Drawing.Size(409, 77)
         Me.GroupBox2.TabIndex = 1
         Me.GroupBox2.TabStop = False
         Me.GroupBox2.Text = "Training Project"
         '
         'endDateTraining
         '
-        Me.endDateTraining.Location = New System.Drawing.Point(309, 59)
-        Me.endDateTraining.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.endDateTraining.Location = New System.Drawing.Point(247, 47)
         Me.endDateTraining.Name = "endDateTraining"
-        Me.endDateTraining.Size = New System.Drawing.Size(132, 22)
+        Me.endDateTraining.Size = New System.Drawing.Size(106, 20)
         Me.endDateTraining.TabIndex = 3
         '
         'Label11
         '
         Me.Label11.AutoSize = True
-        Me.Label11.Location = New System.Drawing.Point(152, 64)
-        Me.Label11.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label11.Location = New System.Drawing.Point(122, 51)
         Me.Label11.Name = "Label11"
-        Me.Label11.Size = New System.Drawing.Size(99, 17)
+        Me.Label11.Size = New System.Drawing.Size(75, 13)
         Me.Label11.TabIndex = 2
         Me.Label11.Text = "latest Enddate"
         '
         'reqUsers
         '
-        Me.reqUsers.Location = New System.Drawing.Point(309, 27)
-        Me.reqUsers.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.reqUsers.Location = New System.Drawing.Point(247, 22)
         Me.reqUsers.Name = "reqUsers"
-        Me.reqUsers.Size = New System.Drawing.Size(132, 22)
+        Me.reqUsers.Size = New System.Drawing.Size(106, 20)
         Me.reqUsers.TabIndex = 1
         '
         'Label7
         '
         Me.Label7.AutoSize = True
-        Me.Label7.Location = New System.Drawing.Point(41, 32)
-        Me.Label7.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label7.Location = New System.Drawing.Point(33, 26)
         Me.Label7.Name = "Label7"
-        Me.Label7.Size = New System.Drawing.Size(216, 17)
+        Me.Label7.Size = New System.Drawing.Size(158, 13)
         Me.Label7.TabIndex = 0
         Me.Label7.Text = "required number of trained users"
         '
         'OKButton
         '
-        Me.OKButton.Location = New System.Drawing.Point(81, 546)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.OKButton.Location = New System.Drawing.Point(65, 437)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(100, 28)
+        Me.OKButton.Size = New System.Drawing.Size(80, 22)
         Me.OKButton.TabIndex = 2
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
         '
         'AbbrButton
         '
-        Me.AbbrButton.Location = New System.Drawing.Point(377, 545)
-        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.AbbrButton.Location = New System.Drawing.Point(302, 436)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(100, 28)
+        Me.AbbrButton.Size = New System.Drawing.Size(80, 22)
         Me.AbbrButton.TabIndex = 3
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
@@ -251,10 +230,9 @@ Partial Class frmCreateRolloutProject
         'bestFit
         '
         Me.bestFit.AutoSize = True
-        Me.bestFit.Location = New System.Drawing.Point(345, 502)
-        Me.bestFit.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.bestFit.Location = New System.Drawing.Point(276, 402)
         Me.bestFit.Name = "bestFit"
-        Me.bestFit.Size = New System.Drawing.Size(76, 21)
+        Me.bestFit.Size = New System.Drawing.Size(60, 17)
         Me.bestFit.TabIndex = 4
         Me.bestFit.Text = "best Fit"
         Me.bestFit.UseVisualStyleBackColor = True
@@ -265,63 +243,56 @@ Partial Class frmCreateRolloutProject
         Me.GroupBox3.Controls.Add(Me.TextBox1)
         Me.GroupBox3.Controls.Add(Me.Label9)
         Me.GroupBox3.Controls.Add(Me.Label8)
-        Me.GroupBox3.Location = New System.Drawing.Point(36, 22)
-        Me.GroupBox3.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.GroupBox3.Location = New System.Drawing.Point(29, 18)
         Me.GroupBox3.Name = "GroupBox3"
-        Me.GroupBox3.Padding = New System.Windows.Forms.Padding(4, 4, 4, 4)
-        Me.GroupBox3.Size = New System.Drawing.Size(511, 112)
+        Me.GroupBox3.Size = New System.Drawing.Size(409, 90)
         Me.GroupBox3.TabIndex = 5
         Me.GroupBox3.TabStop = False
         Me.GroupBox3.Text = "General Information"
         '
         'TextBox2
         '
-        Me.TextBox2.Location = New System.Drawing.Point(180, 63)
-        Me.TextBox2.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox2.Location = New System.Drawing.Point(144, 50)
         Me.TextBox2.Name = "TextBox2"
-        Me.TextBox2.Size = New System.Drawing.Size(261, 22)
+        Me.TextBox2.Size = New System.Drawing.Size(210, 20)
         Me.TextBox2.TabIndex = 4
         '
         'TextBox1
         '
-        Me.TextBox1.Location = New System.Drawing.Point(180, 32)
-        Me.TextBox1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
+        Me.TextBox1.Location = New System.Drawing.Point(144, 26)
         Me.TextBox1.Name = "TextBox1"
-        Me.TextBox1.Size = New System.Drawing.Size(261, 22)
+        Me.TextBox1.Size = New System.Drawing.Size(210, 20)
         Me.TextBox1.TabIndex = 3
         '
         'Label9
         '
         Me.Label9.AutoSize = True
-        Me.Label9.Location = New System.Drawing.Point(60, 68)
-        Me.Label9.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label9.Location = New System.Drawing.Point(48, 54)
         Me.Label9.Name = "Label9"
-        Me.Label9.Size = New System.Drawing.Size(94, 17)
+        Me.Label9.Size = New System.Drawing.Size(71, 13)
         Me.Label9.TabIndex = 1
         Me.Label9.Text = "Business Unit"
         '
         'Label8
         '
         Me.Label8.AutoSize = True
-        Me.Label8.Location = New System.Drawing.Point(108, 37)
-        Me.Label8.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
+        Me.Label8.Location = New System.Drawing.Point(86, 30)
         Me.Label8.Name = "Label8"
-        Me.Label8.Size = New System.Drawing.Size(45, 17)
+        Me.Label8.Size = New System.Drawing.Size(35, 13)
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "Name"
         '
         'frmCreateRolloutProject
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.ClientSize = New System.Drawing.Size(607, 597)
+        Me.ClientSize = New System.Drawing.Size(486, 478)
         Me.Controls.Add(Me.GroupBox3)
         Me.Controls.Add(Me.bestFit)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.GroupBox2)
         Me.Controls.Add(Me.GroupBox1)
-        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "frmCreateRolloutProject"
         Me.Text = "Create new Rollout Project"
         Me.GroupBox1.ResumeLayout(False)

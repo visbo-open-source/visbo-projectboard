@@ -7424,11 +7424,21 @@ Public Module Projekte
         Dim wsPT As xlNS.Worksheet = Nothing
         Dim sichtbarerBereich As Excel.Range
 
+
+        ' Änderung tk: 5.11.15  
+        ' enableEvents = false , enableonUpdate = false; sonst werden stätnig Event getriggert und ausgeführt 
+
+        Dim formerEO As Boolean = enableOnUpdate
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
         Try
             ' Merken des aktuell gesetzten sichtbaren Bereich in der ProjektTafel
             With appInstance.ActiveWindow
                 sichtbarerBereich = .VisibleRange
             End With
+
             wsPT = CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
             With wsPT
                 ' benötigt um die Spaltenbreite und Zeilenhöhe  zu setzen für die Tabelle in "Project Board Cockpit.xlsx", in die das neue Cockpit gespeichert wird.
@@ -7464,7 +7474,8 @@ Public Module Projekte
                             If Not fileIsOpen Then
                                 logMessage = "Öffnen von " & fileName & " fehlgeschlagen" & vbLf & _
                                                             "falls die Datei bereits geöffnet ist: Schließen Sie sie bitte"
-
+                                appInstance.EnableEvents = formerEE
+                                enableOnUpdate = formerEO
                                 Throw New ArgumentException(logMessage)
                             End If
 
@@ -7604,7 +7615,8 @@ Public Module Projekte
 
                     appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                    enableOnUpdate = True
+                    enableOnUpdate = formerEO
+                    appInstance.EnableEvents = formerEE
                     appInstance.ScreenUpdating = True
 
                     Call MsgBox("Cockpit '" & cockpitname & "' wurde gespeichert")
@@ -7616,6 +7628,8 @@ Public Module Projekte
             End With
 
         Catch ex As Exception
+            enableOnUpdate = formerEO
+            appInstance.EnableEvents = formerEE
             Throw New Exception("Fehler beim Speichern des Cockpits '" & cockpitname & vbLf & ex.Message)
         End Try
 
@@ -14827,20 +14841,11 @@ Public Module Projekte
 
                     Dim indlevel As Integer = hproj.hierarchy.getIndentLevel(itemNameID)
 
-                    '' ''Dim phstr As String = ""
-
-                    ' '' '' in phstr werden nun soviele Leerzeichen hineingeschrieben, wie diese Phase Hierarchie-Stufen hat
-                    '' ''For i = 1 To indlevel
-                    '' ''    phstr = phstr & einrückJeStufe
-                    '' ''Next
-
-                    ' '' '' nun wird der PhasenName angehängt
-                    '' ''phstr = phstr & elemNameOfElemID(itemNameID)
-
                     .Cells(rowOffset + zeile, columnOffset).value = elemNameOfElemID(itemNameID)
                     With CType(.Cells(rowOffset + zeile, columnOffset), Excel.Range)
-                        .IndentLevel = indlevel * einrückTiefe
                         .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                        .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                        .IndentLevel = indlevel * einrückTiefe
                     End With
 
                 End If
@@ -14852,6 +14857,16 @@ Public Module Projekte
                 .Cells(rowOffset + zeile, columnOffset + 4).interior.color = awinSettings.AmpelNichtBewertet
                 .Cells(rowOffset + zeile, columnOffset + 5).value = " "
                 .Cells(rowOffset + zeile, columnOffset + 6).value = " "
+
+                ' Änderung tk 1.11.15: 
+                Try
+                    For offs As Integer = 2 To 6
+                        .Cells(rowOffset + zeile, columnOffset + offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    Next
+                Catch ex As Exception
+
+                End Try
+                ' Ende Änderung tk 1.11.15
 
                 zeile = zeile + 1
 
@@ -14877,9 +14892,10 @@ Public Module Projekte
                     .Cells(rowOffset + zeile, columnOffset).value = elemNameOfElemID(itemNameID)
                     With CType(.Cells(rowOffset + zeile, columnOffset), Excel.Range)
 
+                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
+                        .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
                         .IndentLevel = indlevel * einrückTiefe
                         .Font.Bold = True
-                        .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
 
                     End With
                     '.Cells(rowOffset + zeile, columnOffset + 2).value = cResult.getDate
@@ -14889,6 +14905,31 @@ Public Module Projekte
                     ' Zelle für Beschreibung in der Höhe anpassen, autom. Zeilenumbruch
                     .Cells(rowOffset + zeile, columnOffset + 5).value = cBewertung.description
                     .Cells(rowOffset + zeile, columnOffset + 5).WrapText = True
+                    ' Änderung tk 2.11 Ergänzung um Deliverables 
+                    .Cells(rowOffset + zeile, columnOffset + 6).value = cBewertung.deliverables
+                    .Cells(rowOffset + zeile, columnOffset + 6).WrapText = True
+
+                    '
+                    ' Änderung tk 1.11.15: immer die vollen Inhalte zeigen ...
+                    Try
+                        If Not IsNothing(cBewertung.description) Or Not IsNothing(cBewertung.deliverables) Then
+                            If cBewertung.description.Length > 0 Or cBewertung.deliverables.Length > 0 Then
+                                If cBewertung.description.Contains(vbLf) Or cBewertung.description.Contains(vbCr) Or _
+                                    cBewertung.deliverables.Contains(vbLf) Or cBewertung.deliverables.Contains(vbCr) Then
+                                    CType(.Rows(rowOffset + zeile), Excel.Range).AutoFit()
+                                End If
+                            End If
+                        End If
+
+
+                        For offs As Integer = 2 To 6
+                            .Cells(rowOffset + zeile, columnOffset + offs).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                        Next
+                    Catch ex As Exception
+
+                    End Try
+                    ' Ende Änderung tk 1.11.15 
+                    '
 
                     zeile = zeile + 1
                 Next
@@ -16740,7 +16781,17 @@ Public Module Projekte
 
                 '.projectName.Text = hproj.name
                 .projectName.Text = hproj.getShapeText
-                .bewertungsText.Text = description
+
+                '
+                ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
+                Dim tmpstr() As String = description.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+                Dim newString As String = ""
+                If tmpstr.Length > 0 Then
+                    .bewertungsText.Lines = tmpstr
+                Else
+                    .bewertungsText.Text = description
+                End If
+
 
                 If .Visible Then
                 Else
@@ -16774,6 +16825,7 @@ Public Module Projekte
 
         Dim projektName As String = ""
         Dim explanation As String = ""
+        Dim deliverables As String = ""
         Dim milestoneName As String = "-"
         Dim breadCrumb As String = "-"
         Dim dateText As String = ""
@@ -16875,6 +16927,7 @@ Public Module Projekte
 
         Catch ex As Exception
             explanation = milestoneNameID & " existiert nicht"
+            deliverables = milestoneNameID & " existiert nicht"
             ok = False
         End Try
 
@@ -16909,12 +16962,14 @@ Public Module Projekte
                 farbe = System.Drawing.Color.FromArgb(CInt(hb.color))
 
                 explanation = hb.description
+                deliverables = hb.deliverables
 
 
             Else
 
                 farbe = System.Drawing.Color.FromArgb(CInt(awinSettings.AmpelNichtBewertet))
-                explanation = "es existiert noch keine Bewertung ...."
+                explanation = ""
+                deliverables = ""
 
             End If
 
@@ -16935,13 +16990,27 @@ Public Module Projekte
             .resultDate.Text = dateText
             .resultName.Text = milestoneName
 
-            'If lfdNr > 1 Then
-            '    .lfdNr.Text = lfdNr.ToString("0#")
-            'Else
-            '    .lfdNr.Text = ""
-            'End If
+            '
+            ' Änderung tk: die Zeilen, die durch CRLF getrennt sind, sollen auch so dargestellt werden 
+            Dim tmpstr() As String
+            If .rdbDeliverables.Checked Then
+                tmpstr = deliverables.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+            Else
+                tmpstr = explanation.Split(New Char() {CChar(vbLf), CChar(vbCr)}, 100)
+            End If
 
-            .bewertungsText.Text = explanation
+            Dim newString As String = ""
+            If tmpstr.Length > 0 Then
+                .bewertungsText.Lines = tmpstr
+            Else
+                If .rdbDeliverables.Checked Then
+                    .bewertungsText.Text = deliverables
+                Else
+                    .bewertungsText.Text = explanation
+                End If
+
+            End If
+
 
             If .Visible Then
             Else
