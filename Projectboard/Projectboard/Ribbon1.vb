@@ -3018,6 +3018,98 @@ Imports System.Drawing
 
     End Sub
 
+    ''' <summary>
+    ''' importiert die Modul Batch Datei und fügt den Projekten die entsprechenden Elemente regelbasiert an  
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Public Sub PT4G1B10AddModularImport(control As IRibbonControl)
+
+        Dim dateiName As String
+        Dim myCollection As New Collection
+        Dim importDate As Date = Date.Now
+        Dim returnValue As DialogResult
+        Dim getModuleImport As New frmSelectRPlanImport
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+
+        getModuleImport.menueAswhl = PTImpExp.addElements
+        returnValue = getModuleImport.ShowDialog
+
+        If returnValue = DialogResult.OK Then
+            dateiName = getModuleImport.selectedDateiName
+
+            Try
+                appInstance.Workbooks.Open(dateiName)
+
+                ' jetzt werden die Regeln ausgelesen ...
+                Dim ruleSet As New clsAddElementRules
+                Call awinReadAddOnRules(ruleSet)
+                appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+
+                Dim awinSelection As Excel.ShapeRange
+                Dim hproj As clsProjekt
+
+                Try
+                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+                Catch ex As Exception
+                    awinSelection = Nothing
+                End Try
+
+                If Not awinSelection Is Nothing Then
+
+                    ' jetzt die Aktion durchführen ...
+
+                    For Each singleShp As Excel.Shape In awinSelection
+                        Dim shapeArt As Integer
+                        shapeArt = kindOfShape(singleShp)
+
+                        With singleShp
+                            If isProjectType(shapeArt) Then
+
+                                hproj = ShowProjekte.getProject(singleShp.Name)
+                                Call awinApplyAddOnRules(hproj, ruleSet)
+                            End If
+                        End With
+                    Next
+
+                    Call MsgBox("ok, alle ausgewählten Projekt wurden um " & ruleSet.name & " ergänzt")
+
+                Else
+
+                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                        Call awinApplyAddOnRules(kvp.Value, ruleSet)
+
+                    Next
+
+                    Call MsgBox("ok, alle Projekte wurden um " & ruleSet.name & " ergänzt")
+
+                End If
+
+
+            Catch ex As Exception
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                Call MsgBox("Fehler bei Lesen " & vbLf & dateiName & vbLf & ex.Message)
+            End Try
+        Else
+            Call MsgBox(" Ergänzungs-Vorgang wurde abgebrochen")
+        End If
+
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
+    End Sub
+
     Public Sub Tom2G4B1RPLANImport(control As IRibbonControl)
 
 

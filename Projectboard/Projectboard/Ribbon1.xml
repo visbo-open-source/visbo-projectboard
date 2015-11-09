@@ -194,6 +194,7 @@
         <group id="PT4G1" label="IMPORT">
           <button id="PT4G1B1" label="Import Projekte (Batch)" onAction="Tom2G4B1InventurImport" />
           <button id="PT4G1B9" label="Import Modular (Batch)" onAction="Tom2G4B1ModulImport" />
+          <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" />
           <separator id="PT4G1s1"/>
           <button id="PT4G1B2" label="Import RPLAN Projekte" onAction="Tom2G4B1RPLANImport" supertip ="es kann jeweils eine RPLAN Excel Datei aus dem Folder RPLANImport eingelesen werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
           <button id="PT4G1M1B1" label="Import Projekt-Steckbriefe" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>

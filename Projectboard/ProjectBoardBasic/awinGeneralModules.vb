@@ -272,7 +272,7 @@ Public Module awinGeneralModules
         Dim i As Integer
         Dim xlsCustomization As Excel.Workbook = Nothing
 
-        ReDim importOrdnerNames(4)
+        ReDim importOrdnerNames(5)
         ReDim exportOrdnerNames(4)
 
 
@@ -294,6 +294,7 @@ Public Module awinGeneralModules
         importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
         importOrdnerNames(PTImpExp.simpleScen) = awinPath & "Import\einfache Szenarien"
         importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\modulare Szenarien"
+        importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
 
         exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
         exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
@@ -2460,6 +2461,257 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' ergänzt das übergebene Projekt um die im Ruleset angegebenen Phasen und Meilensteine
+    ''' Wenn die Phase mit Namen ruleset.name schon existiert, werden die Elemente hinzugefügt, sofern sie nicht mit demselben Namen in dieser Phase bereits auftreten
+    ''' Andernfalls wird bestimmt, wie lange die Phase sein muss
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="ruleSet"></param>
+    ''' <remarks></remarks>
+    Public Sub awinApplyAddOnRules(ByRef hproj As clsProjekt, ByVal ruleSet As clsAddElementRules)
+
+        Dim phaseName As String
+        Dim elemID As String
+
+        Dim cphase As clsPhase
+        Dim cMilestone As clsMeilenstein
+
+
+        ' erst bestimmen, ob die Phase schon existiert 
+        phaseName = ruleSet.name
+        cphase = hproj.getPhase(phaseName)
+
+        Dim minDate As Date = Date.Now.AddYears(100)
+        Dim maxDate As Date = Date.Now.AddYears(-100)
+
+        Dim currentDate As Date
+        Dim currentRule As clsAddElementRule
+        Dim currentMS As clsMeilenstein
+        Dim index As Integer = 1
+        Do While index <= ruleSet.count
+            currentRule = ruleSet.getRule(index)
+            currentMS = hproj.getMilestone(currentRule.referenceName)
+            If Not IsNothing(currentMS) Then
+                currentDate = currentMS.getDate.AddDays(currentRule.offset)
+                If DateDiff(DateInterval.Day, minDate, currentDate) < 0 Then
+                    minDate = currentDate
+                End If
+                If DateDiff(DateInterval.Day, maxDate, currentDate) > 0 Then
+                    maxDate = currentDate
+                End If
+            Else
+                ' nichts tun - keine Änderung bei mindate , maxdate notwendig 
+            End If
+            index = index + 1
+        Loop
+
+
+        Dim startOffset As Integer = DateDiff(DateInterval.Day, hproj.startDate, minDate)
+        If startOffset < 0 Then
+            minDate = hproj.startDate
+            startOffset = 0
+        End If
+
+        Dim duration As Integer = DateDiff(DateInterval.Day, minDate, maxDate) + 1
+
+        If IsNothing(cphase) Then
+            ' die Phase existiert noch nicht
+            elemID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
+
+            cphase = New clsPhase(parent:=hproj)
+
+            cphase.nameID = elemID
+            cphase.changeStartandDauer(startOffset, duration)
+
+            ' der Aufbau der Hierarchie erfolgt in addphase
+            hproj.AddPhase(cphase, origName:="", _
+                           parentID:=rootPhaseName)
+            
+            
+
+
+        Else
+
+            elemID = cphase.nameID
+            ' die Phase existiert bereits; aber ist sie auch ausreichend dimensioniert ? 
+            ' ggf werden Start und Dauer angepasst 
+            If startOffset <> cphase.startOffsetinDays Or duration <> cphase.dauerInDays Then
+                cphase.changeStartandDauer(startOffset, duration)
+            End If
+
+        End If
+
+
+        ' jetzt müssen die Meilensteine / anderen Plan-Elemente eingetragen werden 
+        index = 1
+        Do While index <= ruleSet.count
+            Dim offs As Integer = 0
+            Dim anzIdenticalRules As Integer
+            Dim wasSuccessful As Boolean = False
+            Dim newItemDate As Date
+            Dim referenceMS As clsMeilenstein = Nothing
+            Dim referenceDate As Date
+
+            currentRule = ruleSet.getRule(index + offs)
+            
+
+            If IsNothing(cphase.getMilestone(currentRule.newElemName)) Then
+                ' der Meilenstein existiert in dieser Phase noch nicht 
+
+                anzIdenticalRules = ruleSet.getAnzahlRulesForElem(currentRule.newElemName)
+
+                Do Until wasSuccessful Or offs >= anzIdenticalRules
+
+                    referenceMS = hproj.getMilestone(currentRule.referenceName)
+
+                    If Not IsNothing(referenceMS) Then
+                        referenceDate = referenceMS.getDate
+                        newItemDate = referenceDate.AddDays(currentRule.offset)
+                        cMilestone = New clsMeilenstein(parent:=cphase)
+                        elemID = hproj.hierarchy.findUniqueElemKey(currentRule.newElemName, True)
+
+                        Dim cbewertung As clsBewertung = New clsBewertung
+
+                        With cbewertung
+                            '.bewerterName = resultVerantwortlich
+                            .colorIndex = 0
+                            .datum = Date.Now
+                            .description = ""
+                            .deliverables = currentRule.deliverables
+                        End With
+
+
+                        With cMilestone
+                            .nameID = elemID
+                            .setDate = newItemDate
+                            If Not cbewertung Is Nothing Then
+                                .addBewertung(cbewertung)
+                            End If
+                        End With
+
+                        Try
+                            With cphase
+                                .addMilestone(cMilestone)
+                            End With
+                        Catch ex As Exception
+
+                        End Try
+                        wasSuccessful = True
+                    Else
+
+                    End If
+                    offs = offs + 1
+                    currentRule = ruleSet.getRule(index + offs)
+                Loop
+            Else
+                ' dann gibt es diesen Meilenstein bereits in dieser Phase 
+                ' aktuell: nichts tun 
+                ' später: ggf den Meilenstein entsprechend verschieben 
+                offs = offs + 1
+            End If
+
+            index = index + anzIdenticalRules
+        Loop
+
+    End Sub
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="ruleSet"></param>
+    ''' <remarks></remarks>
+    Public Sub awinReadAddOnRules(ByRef ruleSet As clsAddElementRules)
+
+        Dim zeile As Integer, spalte As Integer
+        Dim newName As String
+        Dim referenceName As String
+        Dim offset As Integer
+        Dim deliverables As String = ""
+        ' faktor = 1 bedeutet Tage; faktor = 7 bedeutet Wochen 
+        Dim faktor As Integer = 1
+
+        Dim lastRow As Integer
+
+        Dim ok As Boolean = False
+
+        Dim firstZeile As Excel.Range
+
+        ' der Name des Rule-Sets wird später der Name der Phase, die ergänzt wird 
+        Dim fileName As String = appInstance.ActiveWorkbook.Name
+        Dim tmpName As String = ""
+
+        ' bestimme den Namen des Szenarios - das ist gleich der Name der Excel Datei 
+        Dim positionIX As Integer = fileName.IndexOf(".xls") - 1
+        tmpName = ""
+        For ih As Integer = 0 To positionIX
+            tmpName = tmpName & fileName.Chars(ih)
+        Next
+        ruleSet.name = tmpName.Trim
+
+        ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
+
+        zeile = 2
+        spalte = 1
+
+        Try
+            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Tabelle1"), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            With activeWSListe
+
+                firstZeile = CType(.Rows(1), Excel.Range)
+                lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+                While zeile <= lastRow
+                    ok = False
+
+                    Try
+                        newName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                        referenceName = CStr(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                        tmpName = CStr(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                        deliverables = CStr(CType(.Cells(zeile, 4), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        If IsNothing(deliverables) Then
+                            deliverables = ""
+                        Else
+                            If deliverables.Length > 0 Then
+                                deliverables = deliverables.Trim
+                            End If
+                        End If
+
+                        If tmpName.EndsWith("w") Or tmpName.EndsWith("W") Then
+                            faktor = 7
+                        Else
+                            faktor = 1
+                        End If
+                        Dim tmpstr() As String
+
+                        tmpstr = tmpName.Trim.Split(New Char() {CChar("w"), CChar("W"), CChar("d"), CChar("D")}, 5)
+                        offset = CInt(tmpstr(0)) * faktor
+
+                        Dim newRule As New clsAddElementRule
+                        With newRule
+                            .newElemName = newName
+                            .referenceName = referenceName
+                            .offset = offset
+                        End With
+
+                        ruleSet.addRule(newRule)
+
+                    Catch ex As Exception
+
+                    End Try
+
+                    zeile = zeile + 1
+
+                End While
+
+            End With
+        Catch ex As Exception
+            Throw New Exception("Fehler in Datei Module Import ...")
+        End Try
+
+
+    End Sub
 
     Public Sub awinImportProject(ByRef hprojekt As clsProjekt, ByRef hprojTemp As clsProjektvorlage, ByVal isTemplate As Boolean, ByVal importDatum As Date)
 
@@ -3317,6 +3569,7 @@ Public Module awinGeneralModules
         End If
 
     End Sub
+
     ''' <summary>
     ''' liest einen ProjektSteckbrief mit Hierarchie ein 
     ''' Außerdem gibt es die Spalte Summe, in der die Summe der Kosten enthalten sein kann.
@@ -4271,7 +4524,7 @@ Public Module awinGeneralModules
                                                 End If
 
                                                 ''ur:12.10.2015: 
-                                             
+
                                                 '  Anfang Check , ob richtige Kästchen Werte enthalten
                                                 Dim msgstr As String = " Fehler bei der Verteilung benötigter Kapazitäten:" & vbCrLf & "für Kostenart " & hname & " in Spalte "
                                                 Dim checkok As Boolean = True
@@ -4368,7 +4621,7 @@ Public Module awinGeneralModules
         End If
 
     End Sub
-   
+
     ''' <summary>
     ''' liest einen ProjektSteckbrief mit Hierarchie ein, vor mit PT113 die Spalte Summe hinzugefügt wurde
     ''' </summary>
@@ -6012,7 +6265,7 @@ Public Module awinGeneralModules
         End If
 
     End Sub
-    
+
 
 
 
@@ -7254,7 +7507,7 @@ Public Module awinGeneralModules
 
             Next
 
-           
+
         End With
 
 
@@ -7878,7 +8131,7 @@ Public Module awinGeneralModules
 
             End Try
         Else
-         
+
 
         End If
 
@@ -7927,7 +8180,7 @@ Public Module awinGeneralModules
 
                     Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(True)
                     For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
-                       
+
                         If Not selFilterDefinitions.Liste.ContainsKey(kvp.Key) Then
                             selFilterDefinitions.Liste.Add(kvp.Key, kvp.Value)
                         End If
@@ -8376,6 +8629,7 @@ Public Module awinGeneralModules
     ''' speichert den letzten Filter unter "fname" und setzt die temporären Collections wieder zurück 
     ''' </summary>
     ''' <remarks></remarks>
+    '''
     Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
                                               ByVal fBU As Collection, ByVal fTyp As Collection, _
                                               ByVal fPhase As Collection, ByVal fMilestone As Collection, _
@@ -8460,7 +8714,6 @@ Public Module awinGeneralModules
             End If
 
         End If
-
 
     End Sub
 
