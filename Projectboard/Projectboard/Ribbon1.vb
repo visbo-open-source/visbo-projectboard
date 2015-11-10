@@ -527,6 +527,7 @@ Imports System.Drawing
                         Call awinNeuZeichnenDiagramme(9)
 
                     Catch ex As Exception
+                        appInstance.ScreenUpdating = True
                         Call MsgBox("Fehler beim Laden ..")
                     End Try
 
@@ -3387,12 +3388,13 @@ Imports System.Drawing
 
 
 
+        
+        'Schließen des LogFiles
+        Call logfileSchliessen()
+
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
-
-        'Schließen des LogFiles
-        Call logfileSchliessen()
 
 
     End Sub
