@@ -2,12 +2,20 @@
 ''' Regel, um ein Element aus einem anderen per Abstands-Regel zu bestimmen 
 ''' </summary>
 ''' <remarks></remarks>
-Public Class clsAddElementRule
+Public Class clsAddElementRuleItem
 
     Private _newElemName As String
     Private _referenceName As String
+
+    ' wenn das angegebene Referenz-Objekt eine Phase ist 
+    Private _referenceIsPhase As Boolean
+
+    ' wenn das angegebene Referenz-Objekt eine Phase ist: von welchem Datum aus soll der Offset berechnet werden 
+    Private _referenceDateIsStart As Boolean
+
+    ' Abstand in Tagen
     Private _offset As Integer
-    Private _deliverables As String
+
 
 
     ''' <summary>
@@ -24,6 +32,7 @@ Public Class clsAddElementRule
             _newElemName = value
         End Set
     End Property
+
     ''' <summary>
     ''' liest/schreibt den Referenz-Namen , der benutzt wird, um das Element zu bestimmen 
     ''' </summary>
@@ -38,6 +47,39 @@ Public Class clsAddElementRule
             _referenceName = value
         End Set
     End Property
+
+    ''' <summary>
+    ''' liest schreibt, ob es sich bei dem Referenz-Element um eine Phase handelt 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property referenceIsPhase() As Boolean
+        Get
+            referenceIsPhase = _referenceIsPhase
+        End Get
+        Set(value As Boolean)
+            _referenceIsPhase = value
+        End Set
+    End Property
+
+    ''' <summary>
+    ''' wenn es sich beim Referenz-Element um eine Phase handelt:
+    ''' soll der Start als Referenzdatum verwendet werden; true: ja
+    ''' false: das Ende soll als Referenzdatum verwendet werden 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property referenceDateIsStart() As Boolean
+        Get
+            referenceDateIsStart = _referenceDateIsStart
+        End Get
+        Set(value As Boolean)
+            _referenceDateIsStart = value
+        End Set
+    End Property
+
     ''' <summary>
     ''' liest/schreibt den zeitlichen Abstand in Tagen, den das Element haben soll  
     ''' </summary>
@@ -53,20 +95,14 @@ Public Class clsAddElementRule
         End Set
     End Property
 
-    Public Property deliverables As String
-        Get
-            deliverables = _deliverables
-        End Get
-        Set(value As String)
-            _deliverables = value
-        End Set
-    End Property
 
+   
     Public Sub New()
         _newElemName = ""
         _referenceName = ""
         _offset = 0
-        _deliverables = ""
+        _referenceIsPhase = False
+        _referenceDateIsStart = True
     End Sub
 
 

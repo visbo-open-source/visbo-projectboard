@@ -3048,7 +3048,7 @@ Imports System.Drawing
                 appInstance.Workbooks.Open(dateiName)
 
                 ' jetzt werden die Regeln ausgelesen ...
-                Dim ruleSet As New clsAddElementRules
+                Dim ruleSet As New clsAddElements
                 Call awinReadAddOnRules(ruleSet)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
