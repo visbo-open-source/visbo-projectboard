@@ -344,6 +344,7 @@ Public Module Module1
         msproject = 2
         simpleScen = 3
         modulScen = 4
+        addElements = 5
     End Enum
 
    

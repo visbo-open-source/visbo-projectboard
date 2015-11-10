@@ -272,7 +272,7 @@ Public Module awinGeneralModules
         Dim i As Integer
         Dim xlsCustomization As Excel.Workbook = Nothing
 
-        ReDim importOrdnerNames(4)
+        ReDim importOrdnerNames(5)
         ReDim exportOrdnerNames(4)
 
 
@@ -294,6 +294,7 @@ Public Module awinGeneralModules
         importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
         importOrdnerNames(PTImpExp.simpleScen) = awinPath & "Import\einfache Szenarien"
         importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\modulare Szenarien"
+        importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
 
         exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
         exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
@@ -2460,6 +2461,442 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' ergänzt das übergebene Projekt um die im Ruleset angegebenen Phasen und Meilensteine
+    ''' Wenn die Phase mit Namen ruleset.name schon existiert, werden die Elemente hinzugefügt, sofern sie nicht mit demselben Namen in dieser Phase bereits auftreten
+    ''' Andernfalls wird bestimmt, wie lange die Phase sein muss
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="addElementSet"></param>
+    ''' <remarks></remarks>
+    Public Sub awinApplyAddOnRules(ByRef hproj As clsProjekt, ByVal addElementSet As clsAddElements)
+
+        Dim phaseName As String = ""
+        Dim topPhaseName As String = ""
+        Dim breadCrumb As String = ""
+        Dim milestoneName As String = ""
+        Dim elemID As String
+
+        Dim topPhase As clsPhase
+        Dim cMilestone As clsMeilenstein
+
+
+        ' erst bestimmen, ob die Phase schon existiert 
+        topPhaseName = addElementSet.name
+        topPhase = hproj.getPhase(topPhaseName)
+
+        Dim minDate As Date = Date.Now.AddYears(100)
+        Dim maxDate As Date = Date.Now.AddYears(-100)
+
+        Dim currentDate As Date
+        Dim currentElem As clsAddElementRules
+        Dim currentMS As clsMeilenstein
+        Dim currentPH As clsPhase
+        Dim index As Integer = 1
+
+        ' hier muss bestimmt werden,wie groß die aufnehmende Phase werden soll 
+        ' es werden Mindate und MAxdate bestimmt 
+        '
+        Do While index <= addElementSet.count
+            currentElem = addElementSet.getRule(index)
+
+            Dim anzRules As Integer = currentElem.count
+            Dim currentRule As clsAddElementRuleItem
+            Dim found As Boolean = False
+            
+            Dim i As Integer = 1
+
+            Do While i <= currentElem.count And Not found
+                currentRule = currentElem.getItem(i)
+
+                With currentRule
+                    If .referenceIsPhase Then
+                        ' existiert die Phase überhaupt? wenn nicht , weiter zu nächster Regel
+                        Call splitHryFullnameTo2(.referenceName, phaseName, breadCrumb)
+                        currentPH = hproj.getPhase(name:=phaseName, breadcrumb:=breadCrumb, lfdNr:=1)
+
+                        If Not IsNothing(currentPH) Then
+                            found = True
+                            If .referenceDateIsStart Then
+                                currentDate = currentPH.getStartDate.AddDays(currentRule.offset)
+                            Else
+                                currentDate = currentPH.getEndDate.AddDays(currentRule.offset)
+                            End If
+
+                            If DateDiff(DateInterval.Day, minDate, currentDate) < 0 Then
+                                minDate = currentDate
+                            End If
+
+                            If currentElem.elemToCreateIsPhase Then
+                                currentDate = currentDate.AddDays(currentElem.duration)
+                            End If
+                            If DateDiff(DateInterval.Day, maxDate, currentDate) > 0 Then
+                                maxDate = currentDate
+                            End If
+
+                        Else
+                            i = i + 1
+                        End If
+                    Else
+                        Call splitHryFullnameTo2(.referenceName, milestoneName, breadCrumb)
+                        currentMS = hproj.getMilestone(milestoneName, breadCrumb, 1)
+
+                        If Not IsNothing(currentMS) Then
+                            found = True
+                            currentDate = currentMS.getDate.AddDays(currentRule.offset)
+
+                            If DateDiff(DateInterval.Day, minDate, currentDate) < 0 Then
+                                minDate = currentDate
+                            End If
+
+                            If currentElem.elemToCreateIsPhase Then
+                                currentDate = currentDate.AddDays(currentElem.duration)
+                            End If
+
+                            If DateDiff(DateInterval.Day, maxDate, currentDate) > 0 Then
+                                maxDate = currentDate
+                            End If
+                        Else
+                            i = i + 1
+                        End If
+                    End If
+                End With
+
+            Loop
+
+            index = index + 1
+
+        Loop
+
+        ' jetzt wird die oberste Phase entsprechend aufgenommen 
+        '
+        Dim startOffset As Integer = DateDiff(DateInterval.Day, hproj.startDate, minDate)
+        If startOffset < 0 Then
+            minDate = hproj.startDate
+            startOffset = 0
+        End If
+
+        Dim duration As Integer = DateDiff(DateInterval.Day, minDate, maxDate) + 1
+
+        If IsNothing(topPhase) Then
+            ' die Phase existiert noch nicht
+            elemID = hproj.hierarchy.findUniqueElemKey(topPhaseName, False)
+
+            topPhase = New clsPhase(parent:=hproj)
+
+            topPhase.nameID = elemID
+            topPhase.changeStartandDauer(startOffset, duration)
+
+            ' der Aufbau der Hierarchie erfolgt in addphase
+            hproj.AddPhase(topPhase, origName:="", _
+                           parentID:=rootPhaseName)
+
+        Else
+
+            elemID = topPhase.nameID
+            ' die Phase existiert bereits; aber ist sie auch ausreichend dimensioniert ? 
+            ' ggf werden Start und Dauer angepasst 
+            If startOffset <> topPhase.startOffsetinDays Or duration <> topPhase.dauerInDays Then
+                topPhase.changeStartandDauer(startOffset, duration)
+            End If
+
+        End If
+
+
+        ' jetzt müssen die Meilensteine / anderen Plan-Elemente eingetragen werden 
+        '
+        index = 1
+        Do While index <= addElementSet.count
+
+            Dim offs As Integer = 1
+            Dim wasSuccessful As Boolean = False
+            Dim newItemDate As Date
+            Dim referenceMS As clsMeilenstein = Nothing
+            Dim referencePH As clsPhase = Nothing
+            Dim referenceDate As Date
+            Dim currentRule As clsAddElementRuleItem
+
+            currentElem = addElementSet.getRule(index)
+
+            ' soll ein Meilenstein oder eine Phase erzeugt werden ? 
+            If currentElem.elemToCreateIsPhase Then
+                ' es soll eine Phase erzeugt werden 
+            Else
+                ' es soll ein Meilenstein erzeugt werden 
+                Dim found As Boolean = False
+
+                If IsNothing(topPhase.getMilestone(currentElem.name)) Then
+                    ' nur wenn der nicht schon exitistiert, soll er auch erzeugt werden ... 
+
+                    Do While offs <= currentElem.count And Not found
+                        Dim ok As Boolean = False
+                        currentRule = currentElem.getItem(offs)
+
+                        If currentRule.referenceIsPhase Then
+                            Call splitHryFullnameTo2(currentRule.referenceName, phaseName, breadCrumb)
+                            referencePH = hproj.getPhase(name:=phaseName, breadcrumb:=breadCrumb)
+
+                            If Not IsNothing(referencePH) Then
+                                If currentRule.referenceDateIsStart Then
+                                    referenceDate = referencePH.getStartDate
+                                Else
+                                    referenceDate = referencePH.getEndDate
+                                End If
+
+                                ok = True
+                            Else
+                                ok = False
+                            End If
+
+                        Else
+                            Call splitHryFullnameTo2(currentRule.referenceName, milestoneName, breadCrumb)
+                            referenceMS = hproj.getMilestone(msName:=milestoneName, breadcrumb:=breadCrumb)
+                            If Not IsNothing(referenceMS) Then
+                                referenceDate = referenceMS.getDate
+                                ok = True
+                            Else
+                                ok = False
+                            End If
+                        End If
+
+                        ' wenn es ein Referenz-Datum gibt ....
+                        If ok Then
+                            newItemDate = referenceDate.AddDays(currentRule.offset)
+                            cMilestone = New clsMeilenstein(parent:=topPhase)
+                            elemID = hproj.hierarchy.findUniqueElemKey(currentRule.newElemName, True)
+
+                            Dim cbewertung As clsBewertung = New clsBewertung
+
+                            With cbewertung
+                                '.bewerterName = resultVerantwortlich
+                                .colorIndex = 0
+                                .datum = Date.Now
+                                Dim abstandsText As String = ""
+                                If currentRule.offset >= 0 Then
+                                    abstandsText = "+" & currentRule.offset.ToString & " Tage"
+                                Else
+                                    abstandsText = currentRule.offset.ToString & " Tage"
+                                End If
+                                .description = " = " & currentRule.referenceName & abstandsText
+                                .deliverables = currentElem.deliverables
+                            End With
+
+
+                            With cMilestone
+                                .nameID = elemID
+                                .setDate = newItemDate
+                                If Not cbewertung Is Nothing Then
+                                    .addBewertung(cbewertung)
+                                End If
+                            End With
+
+                            Try
+                                With topPhase
+                                    .addMilestone(cMilestone)
+                                End With
+                            Catch ex As Exception
+
+                            End Try
+                            found = True
+                        Else
+                            offs = offs + 1
+                        End If
+
+                    Loop
+
+
+                End If
+
+
+            End If
+
+            index = index + 1
+        Loop
+
+    End Sub
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="ruleSet"></param>
+    ''' <remarks></remarks>
+    Public Sub awinReadAddOnRules(ByRef ruleSet As clsAddElements)
+
+        Dim zeile As Integer, spalte As Integer
+        Dim newName As String
+        Dim duration As Integer = 0
+        Dim isPhase As Boolean
+
+        Dim referenceNameMS As String = ""
+        Dim referenceNamePH As String = ""
+        Dim refISStart As Boolean = True
+        Dim abstandsRegel As String = ""
+        Dim offset As Integer
+        Dim deliverables As String = ""
+        Dim newRule As clsAddElementRuleItem
+        ' faktor = 1 bedeutet Tage; faktor = 7 bedeutet Wochen 
+        Dim faktor As Integer = 1
+
+        Dim lastRow As Integer
+
+        Dim ok As Boolean = False
+
+        Dim firstZeile As Excel.Range
+
+        ' der Name des Rule-Sets wird später der Name der Phase, die ergänzt wird 
+        Dim fileName As String = appInstance.ActiveWorkbook.Name
+        Dim tmpName As String = ""
+
+        ' bestimme den Namen des Szenarios - das ist gleich der Name der Excel Datei 
+        Dim positionIX As Integer = fileName.IndexOf(".xls") - 1
+        tmpName = ""
+        For ih As Integer = 0 To positionIX
+            tmpName = tmpName & fileName.Chars(ih)
+        Next
+        ruleSet.name = tmpName.Trim
+
+        ' Vorbedingung: das Excel File. das importiert werden soll , ist bereits geöffnet 
+
+        zeile = 2
+        spalte = 1
+
+        Try
+            Dim activeWSListe As Excel.Worksheet = CType(appInstance.ActiveWorkbook.Worksheets("Tabelle1"), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+            With activeWSListe
+
+                firstZeile = CType(.Rows(1), Excel.Range)
+                lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+                While zeile <= lastRow
+                    ok = False
+
+                    Try
+                        ' Name des neuen Elements lesen  
+                        newName = CStr(CType(.Cells(zeile, 1), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+
+                        ' Dauer des neuen Elements lesen; bestimmt damit, ob es sich um eine Phase oder einen MEilenstein handelt
+                        Try
+                            duration = CInt(CType(.Cells(zeile, 2), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            If duration > 0 Then
+                                isPhase = True
+                            Else
+                                isPhase = False
+                            End If
+                        Catch ex1 As Exception
+                            duration = 0
+                            isPhase = False
+                        End Try
+
+                        ' Ergebnisse des Meilensteins lesen 
+                        deliverables = CStr(CType(.Cells(zeile, 3), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                        If IsNothing(deliverables) Then
+                            deliverables = ""
+                        Else
+                            If deliverables.Length > 0 Then
+                                deliverables = deliverables.Trim
+                            End If
+                        End If
+
+                        ' Rollenbedarfe der Phase lesen, spalte 4 
+
+                        ' Kostenbedarfe der Phase lesen , spalte 5
+
+                        ' Referenz-Name des Meilensteins lesen 
+                        Try
+                            referenceNameMS = CStr(CType(.Cells(zeile, 6), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                        Catch ex1 As Exception
+                            referenceNameMS = ""
+                        End Try
+
+
+                        ' Referenz-Name der Phase  lesen 
+                        Try
+                            referenceNamePH = CStr(CType(.Cells(zeile, 7), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                        Catch ex1 As Exception
+                            referenceNamePH = ""
+                        End Try
+
+
+                        ' Start oder Ende der Phase lesen 
+                        Try
+                            If CStr(CType(.Cells(zeile, 8), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim = "Ende" Then
+                                refISStart = False
+                            Else
+                                refISStart = True
+                            End If
+                        Catch ex As Exception
+                            refISStart = True
+                        End Try
+
+                        abstandsRegel = CStr(CType(.Cells(zeile, 9), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                        If abstandsRegel.EndsWith("w") Or tmpName.EndsWith("W") Then
+                            faktor = 7
+                        Else
+                            faktor = 1
+                        End If
+                        Dim tmpstr() As String
+
+                        tmpstr = abstandsRegel.Trim.Split(New Char() {CChar("w"), CChar("W"), CChar("d"), CChar("D")}, 5)
+                        offset = CInt(tmpstr(0)) * faktor
+
+                        ' wenn ein Meilenstein - Name angegeben wurde, wird jetzt die Regel für den Meilenstein angelegt
+                        If referenceNameMS.Length > 0 Then
+                            newRule = New clsAddElementRuleItem
+                            With newRule
+                                .newElemName = newName
+                                .referenceName = referenceNameMS
+                                .referenceIsPhase = False
+                                .offset = offset
+                            End With
+
+                            If ruleSet.containsElement(newName, isPhase) Then
+                                ruleSet.addRule(newRule, isPhase)
+                            Else
+                                Dim newElem As New clsAddElementRules(newName, isPhase, duration, deliverables)
+                                ruleSet.addElem(newElem, isPhase)
+                                ruleSet.addRule(newRule, isPhase)
+                            End If
+
+                        End If
+
+                        '
+                        If referenceNamePH.Length > 0 Then
+                            newRule = New clsAddElementRuleItem
+                            With newRule
+                                .newElemName = newName
+                                .referenceName = referenceNamePH
+                                .referenceIsPhase = True
+                                .referenceDateIsStart = refISStart
+                                .offset = offset
+                            End With
+
+                            If ruleSet.containsElement(newName, isPhase) Then
+                                ruleSet.addRule(newRule, isPhase)
+                            Else
+                                Dim newElem As New clsAddElementRules(newName, isPhase, duration, deliverables)
+                                ruleSet.addElem(newElem, isPhase)
+                                ruleSet.addRule(newRule, isPhase)
+                            End If
+
+                        End If
+
+
+                    Catch ex As Exception
+
+                    End Try
+
+                    zeile = zeile + 1
+
+                End While
+
+            End With
+        Catch ex As Exception
+            Throw New Exception("Fehler in Datei Module Import ...")
+        End Try
+
+
+    End Sub
 
     Public Sub awinImportProject(ByRef hprojekt As clsProjekt, ByRef hprojTemp As clsProjektvorlage, ByVal isTemplate As Boolean, ByVal importDatum As Date)
 
@@ -3317,6 +3754,7 @@ Public Module awinGeneralModules
         End If
 
     End Sub
+
     ''' <summary>
     ''' liest einen ProjektSteckbrief mit Hierarchie ein 
     ''' Außerdem gibt es die Spalte Summe, in der die Summe der Kosten enthalten sein kann.
@@ -4271,7 +4709,7 @@ Public Module awinGeneralModules
                                                 End If
 
                                                 ''ur:12.10.2015: 
-                                             
+
                                                 '  Anfang Check , ob richtige Kästchen Werte enthalten
                                                 Dim msgstr As String = " Fehler bei der Verteilung benötigter Kapazitäten:" & vbCrLf & "für Kostenart " & hname & " in Spalte "
                                                 Dim checkok As Boolean = True
@@ -4368,7 +4806,7 @@ Public Module awinGeneralModules
         End If
 
     End Sub
-   
+
     ''' <summary>
     ''' liest einen ProjektSteckbrief mit Hierarchie ein, vor mit PT113 die Spalte Summe hinzugefügt wurde
     ''' </summary>
@@ -6012,7 +6450,7 @@ Public Module awinGeneralModules
         End If
 
     End Sub
-    
+
 
 
 
@@ -7254,7 +7692,7 @@ Public Module awinGeneralModules
 
             Next
 
-           
+
         End With
 
 
@@ -7878,7 +8316,7 @@ Public Module awinGeneralModules
 
             End Try
         Else
-         
+
 
         End If
 
@@ -7927,7 +8365,7 @@ Public Module awinGeneralModules
 
                     Dim listofDBFilter As SortedList(Of String, clsFilter) = request.retrieveAllFilterFromDB(True)
                     For Each kvp As KeyValuePair(Of String, clsFilter) In listofDBFilter
-                       
+
                         If Not selFilterDefinitions.Liste.ContainsKey(kvp.Key) Then
                             selFilterDefinitions.Liste.Add(kvp.Key, kvp.Value)
                         End If
@@ -8376,6 +8814,7 @@ Public Module awinGeneralModules
     ''' speichert den letzten Filter unter "fname" und setzt die temporären Collections wieder zurück 
     ''' </summary>
     ''' <remarks></remarks>
+    '''
     Public Sub storeFilter(ByVal fName As String, ByVal menuOption As Integer, _
                                               ByVal fBU As Collection, ByVal fTyp As Collection, _
                                               ByVal fPhase As Collection, ByVal fMilestone As Collection, _
@@ -8460,7 +8899,6 @@ Public Module awinGeneralModules
             End If
 
         End If
-
 
     End Sub
 

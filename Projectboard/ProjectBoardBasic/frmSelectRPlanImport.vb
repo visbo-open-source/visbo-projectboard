@@ -24,6 +24,8 @@ Public Class frmSelectRPlanImport
             dirname = importOrdnerNames(PTImpExp.simpleScen)
         ElseIf menueAswhl = PTImpExp.modulScen Then
             dirname = importOrdnerNames(PTImpExp.modulScen)
+        ElseIf menueAswhl = PTImpExp.addElements Then
+            dirname = importOrdnerNames(PTImpExp.addElements)
         End If
 
 
@@ -60,7 +62,10 @@ Public Class frmSelectRPlanImport
             dirName = importOrdnerNames(PTImpExp.simpleScen)
         ElseIf menueAswhl = PTImpExp.modulScen Then
             dirName = importOrdnerNames(PTImpExp.modulScen)
+        ElseIf menueAswhl = PTImpExp.addElements Then
+            dirName = importOrdnerNames(PTImpExp.addElements)
         End If
+
         selectedDateiName = dirName & "\" & RPLANImportDropbox.Text
 
         MyBase.Close()
