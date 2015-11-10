@@ -3560,15 +3560,15 @@ Public Module awinGeneralModules
 
                                 Dim x As Integer = CInt(CType(.Cells(zeile, columnOffset), Excel.Range).IndentLevel)
                                 If x Mod einrückTiefe <> 0 Then
-                                    Call logfileSchreiben("Lesen Termine: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl", hproj.name, anzFehler)
-                                    Throw New ArgumentException("die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl")
+                                    Call logfileSchreiben("Fehler, Lesen Termine: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl", hproj.name, anzFehler)
+                                    Throw New ArgumentException("Fehler, Lesen Termine: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl")
                                 End If
                                 aktLevel = CInt(x / einrückTiefe)
 
                             Catch ex As Exception
                                 objectName = Nothing
-                                Call logfileSchreiben("Lesen Termine: In Tabelle 'Termine' ist der PhasenName nicht angegeben ", hproj.name, anzFehler)
-                                Throw New Exception("In Tabelle 'Termine' ist der PhasenName nicht angegeben ")
+                                Call logfileSchreiben("Fehler, Lesen Termine: In Tabelle 'Termine' ist der PhasenName nicht angegeben ", hproj.name, anzFehler)
+                                Throw New Exception("Fehler, Lesen Termine: In Tabelle 'Termine' ist der PhasenName nicht angegeben ")
                                 Exit For ' Ende der For-Schleife, wenn keine laufende Nummer mehr existiert
                             End Try
 
@@ -3576,8 +3576,8 @@ Public Module awinGeneralModules
                             If zeile = rowOffset Then
 
                                 If (aktLevel <> 0 And objectName <> elemNameOfElemID(rootPhaseName)) Then
-                                    Call logfileSchreiben("In Tabelle 'Termine' fehlt die ProjektPhase '.' !", hproj.name, anzFehler)
-                                    Throw New Exception("In Tabelle 'Termine' fehlt die ProjektPhase '.' !")
+                                    Call logfileSchreiben("Fehler, Lesen Termine: In Tabelle 'Termine' fehlt die ProjektPhase '.' !", hproj.name, anzFehler)
+                                    Throw New Exception("Fehler, Lesen Termine: In Tabelle 'Termine' fehlt die ProjektPhase '.' !")
                                     Exit For ' Ende der For-Schleife, wenn keine laufende Nummer mehr existiert
                                 Else
                                     ' erzeuge ProjektPhase rootPhaseName
@@ -3607,12 +3607,12 @@ Public Module awinGeneralModules
 
                                         If duration < 1 Or offset < 0 Then
                                             If startDate = Date.MinValue And endeDate = Date.MinValue Then
-                                                Call logfileSchreiben(" zu '" & objectName & "' wurde kein Datum eingetragen!", hproj.name, anzFehler)
-                                                Throw New Exception(" zu '" & objectName & "' wurde kein Datum eingetragen!")
+                                                Call logfileSchreiben("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!", hproj.name, anzFehler)
+                                                Throw New Exception("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!")
                                             Else
-                                                Call logfileSchreiben(("unzulässige Angaben für Offset und Dauer: " & _
+                                                Call logfileSchreiben(("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: " & _
                                                                     offset.ToString & ", " & duration.ToString), hproj.name, anzFehler)
-                                                Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
+                                                Throw New Exception("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: " & _
                                                                     offset.ToString & ", " & duration.ToString)
                                             End If
                                         End If
@@ -3620,9 +3620,9 @@ Public Module awinGeneralModules
                                         ' für die rootPhase muss gelten: offset = startoffset = 0 und duration = ProjektdauerIndays
                                         If duration <> ProjektdauerIndays Or offset <> 0 Then
 
-                                            Call logfileSchreiben(("unzulässige Angaben für Offset und Dauer: der ProjektPhase" & _
+                                            Call logfileSchreiben(("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: der ProjektPhase" & _
                                                                     offset.ToString & ", " & duration.ToString), hproj.name, anzFehler)
-                                            Throw New Exception("unzulässige Angaben für Offset und Dauer: der ProjektPhase" & _
+                                            Throw New Exception("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: der ProjektPhase" & _
                                                                     offset.ToString & ", " & duration.ToString)
                                         Else
                                             Dim startOffset As Integer = 0
@@ -3666,12 +3666,12 @@ Public Module awinGeneralModules
 
                                     If duration < 1 Or offset < 0 Then
                                         If startDate = Date.MinValue And endeDate = Date.MinValue Then
-                                            Call logfileSchreiben((" zu '" & objectName & "' wurde kein Datum eingetragen!"), hproj.name, anzFehler)
-                                            Throw New Exception(" zu '" & objectName & "' wurde kein Datum eingetragen!")
+                                            Call logfileSchreiben(("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!"), hproj.name, anzFehler)
+                                            Throw New Exception("Fehler, Lesen Termine:  zu '" & objectName & "' wurde kein Datum eingetragen!")
                                         Else
-                                            Call logfileSchreiben(("unzulässige Angaben für Offset und Dauer: " & _
+                                            Call logfileSchreiben(("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: " & _
                                                                 offset.ToString & ", " & duration.ToString), hproj.name, anzFehler)
-                                            Throw New Exception("unzulässige Angaben für Offset und Dauer: " & _
+                                            Throw New Exception("Fehler, Lesen Termine: unzulässige Angaben für Offset und Dauer: " & _
                                                                 offset.ToString & ", " & duration.ToString)
                                         End If
                                     End If
@@ -3723,8 +3723,8 @@ Public Module awinGeneralModules
                                             Next l
                                             hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
                                         Else
-                                            Call logfileSchreiben(("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden"), hproj.name, anzFehler)
-                                            Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
+                                            Call logfileSchreiben(("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden"), hproj.name, anzFehler)
+                                            Throw New ArgumentException("Fehler, Lesen Termine:  Hierarchie kann nicht richtig aufgebaut werden")
                                         End If
 
                                         hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
@@ -3758,10 +3758,10 @@ Public Module awinGeneralModules
                                             (DateDiff(DateInterval.Day, cphase.getStartDate, milestoneDate) < 0 Or _
                                              DateDiff(DateInterval.Day, cphase.getEndDate, milestoneDate) > 0) Then
 
-                                            Call logfileSchreiben(("Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
+                                            Call logfileSchreiben(("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
                                                                 milestoneName & " nicht innerhalb " & cphase.name & vbLf & _
                                                                      "Korrigieren Sie bitte diese Inkonsistenz in der Datei '"), hproj.name, anzFehler)
-                                            Throw New Exception("Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
+                                            Throw New Exception("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
                                                                 milestoneName & " nicht innerhalb " & cphase.name & vbLf & _
                                                                      "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
                                         End If
@@ -3772,7 +3772,7 @@ Public Module awinGeneralModules
                                             milestoneDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
                                         Else
                                             If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
-                                                Call logfileSchreiben(("der Meilenstein '" & milestoneName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
+                                                Call logfileSchreiben(("Fehler, Lesen Termine: der Meilenstein '" & milestoneName & "' liegt später als das Ende des gesamten Projekts" & vbLf &
                                                             "Bitte korrigieren Sie dies im Tabellenblatt Ressourcen der Datei '"), hproj.name & ".xlsx", anzFehler)
                                             End If
 
@@ -3891,7 +3891,7 @@ Public Module awinGeneralModules
                     Dim firsttime As Boolean = False
                     Dim fertig As Boolean = True
                     Dim summe As Double = -1        ' summe = -1: bedeutet, Summe wird nicht verwendet, oder hat einen unsinnigen Wert
-                    Dim Xwerte As Double()
+                    Dim Xwerte As Double() = Nothing
                     Dim oldXwerte As Double()
                     Dim crole As clsRolle
                     Dim cphase As clsPhase = Nothing
@@ -3964,7 +3964,8 @@ Public Module awinGeneralModules
                         hstr = CStr(zelle.Value)
                         Dim x As Integer = CInt(zelle.IndentLevel)
                         If x Mod einrückTiefe <> 0 Then
-                            Throw New ArgumentException("die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl")
+                            Call logfileSchreiben("Fehler beim Lesen Ressourcen: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl", hproj.name, anzFehler)
+                            Throw New ArgumentException("Fehler beim Lesen Ressourcen: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl")
                         End If
                         aktLevel = CInt(x / einrückTiefe)
 
@@ -4120,9 +4121,9 @@ Public Module awinGeneralModules
                                         End If
 
                                     Catch ex As Exception
-                                        Call logfileSchreiben("Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
+                                        Call logfileSchreiben("Fehler beim Lesen Ressourcen: Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
                                                                    "Bitte überprüfen Sie dies.", hproj.name, anzFehler)
-                                        Throw New ArgumentException("Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
+                                        Throw New ArgumentException("Fehler beim Lesen Ressourcen: Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
                                                                    "Bitte überprüfen Sie dies.")
                                     End Try
 
@@ -4161,6 +4162,7 @@ Public Module awinGeneralModules
                                         If RoleDefinitions.Contains(hname) Then
                                             Try
                                                 r = CInt(RoleDefinitions.getRoledef(hname).UID)
+
 
                                                 ''ur:12.10.2015: Eingabe einer Summe in Ressourcen nun möglich, 
                                                 Try
@@ -4233,6 +4235,7 @@ Public Module awinGeneralModules
                                                 With cphase
                                                     .addRole(crole)
                                                 End With
+
                                             Catch ex As Exception
                                                 Throw New Exception(ex.Message)
                                             End Try
@@ -4243,67 +4246,64 @@ Public Module awinGeneralModules
 
                                                 k = CInt(CostDefinitions.getCostdef(hname).UID)
 
-                                                If IsNothing(gefundenRange) Then
+                                                ''ur:12.10.2015: Eingabe einer Summe in Ressourcen nun möglich, 
+                                                Try
+                                                    summe = CDbl(zelle.Offset(0, 1 + ressSumOffset).Value)
+                                                Catch ex As Exception
+                                                    summe = -1
+                                                End Try
 
+                                                If summe > 0.0 Then        'Summe wird verteilt auf Dauer der Phase
 
-                                                    ''ur:12.10.2015: Eingabe einer Summe in Ressourcen nun möglich, 
-                                                    Try
-                                                        summe = CDbl(zelle.Offset(0, 1 + ressSumOffset).Value)
-                                                    Catch ex As Exception
-                                                        summe = -1
-                                                    End Try
+                                                    ReDim oldXwerte(0)
+                                                    oldXwerte(0) = summe
 
-                                                    If summe > 0.0 Then        'Summe wird verteilt auf Dauer der Phase
+                                                    With cphase
 
-                                                        ReDim oldXwerte(0)
-                                                        oldXwerte(0) = summe
+                                                        anfang = .relStart
+                                                        ende = .relEnde
+                                                        ReDim Xwerte(ende - anfang)
 
-                                                        With cphase
+                                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                                    End With
+                                               
+                                                Else
 
-                                                            anfang = .relStart
-                                                            ende = .relEnde
-                                                            ReDim Xwerte(ende - anfang)
+                                                    ''ur:12.10.2015: 
 
-                                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
-                                                        End With
+                                                    '  Anfang Check , ob richtige Kästchen Werte enthalten
+                                                    Dim msgstr As String = " Fehler bei der Verteilung benötigter Kapazitäten:" & vbCrLf & "für Kostenart " & hname & " in Spalte "
+                                                    Dim checkok As Boolean = True
 
+                                                    Dim i As Integer
+                                                    For i = 1 To hproj.anzahlRasterElemente
+
+                                                        Dim wertvorhanden As Boolean = (CDbl(zelle.Offset(0, i + ressOff).Value) <> 0.0)
+                                                        If (i < anfang Or i > ende) And wertvorhanden Then
+                                                            msgstr = msgstr & " ," & i
+                                                            checkok = False
+                                                        End If
+
+                                                    Next
+                                                    If Not checkok Then
+                                                        Call logfileSchreiben(msgstr, hproj.name, anzFehler)
+                                                        'Call MsgBox(msgstr)
+                                                        'Throw New ArgumentException(msgstr)
                                                     End If
+                                                    ' Ende Check
+
+                                                    ReDim Xwerte(ende - anfang)
+                                                    Dim m As Integer
+                                                    For m = anfang To ende
+                                                        Try
+                                                            Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + ressOff).Value)
+                                                        Catch ex As Exception
+                                                            Xwerte(m - anfang) = 0.0
+                                                        End Try
+
+                                                    Next m
+
                                                 End If
-
-                                                ''ur:12.10.2015: 
-                                             
-                                                '  Anfang Check , ob richtige Kästchen Werte enthalten
-                                                Dim msgstr As String = " Fehler bei der Verteilung benötigter Kapazitäten:" & vbCrLf & "für Kostenart " & hname & " in Spalte "
-                                                Dim checkok As Boolean = True
-
-                                                Dim i As Integer
-                                                For i = 1 To hproj.anzahlRasterElemente
-
-                                                    Dim wertvorhanden As Boolean = (CDbl(zelle.Offset(0, i + ressOff).Value) <> 0.0)
-                                                    If (i < anfang Or i > ende) And wertvorhanden Then
-                                                        msgstr = msgstr & " ," & i
-                                                        checkok = False
-                                                    End If
-
-                                                Next
-                                                If Not checkok Then
-                                                    Call logfileSchreiben(msgstr, hproj.name, anzFehler)
-                                                    'Call MsgBox(msgstr)
-                                                    'Throw New ArgumentException(msgstr)
-                                                End If
-                                                ' Ende Check
-
-                                                ReDim Xwerte(ende - anfang)
-                                                Dim m As Integer
-                                                For m = anfang To ende
-                                                    Try
-                                                        Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + ressOff).Value)
-                                                    Catch ex As Exception
-                                                        Xwerte(m - anfang) = 0.0
-                                                    End Try
-
-                                                Next m
-
 
                                                 ccost = New clsKostenart(ende - anfang + 1)
                                                 With ccost
@@ -8538,9 +8538,9 @@ Public Module awinGeneralModules
         Else
             ' Logfile neu anlegen 
             xlsLogfile = appInstance.Workbooks.Add
-            myLogfile = appInstance.ActiveWorkbook.Name
             Call logfileInit()
             xlsLogfile.SaveAs(awinPath & logFileName)
+            myLogfile = xlsLogfile.Name
 
         End If
 
