@@ -3945,6 +3945,7 @@ Public Module awinGeneralModules
                             Dim resultVerantwortlich As String = ""
                             Dim bewertungsAmpel As Integer
                             Dim explanation As String
+                            Dim deliverables As String
                             Dim bewertungsdatum As Date = importDatum
                             Dim tbl As Excel.Range
                             Dim rowOffset As Integer
@@ -4228,6 +4229,8 @@ Public Module awinGeneralModules
                                             bewertungsAmpel = CType(CType(.Cells(zeile, columnOffset + 4), Excel.Range).Value, Integer)
                                             explanation = CType(CType(.Cells(zeile, columnOffset + 5), Excel.Range).Value, String)
 
+                                            ' Ergänzung tk 2.11 deliverables ergänzt 
+                                            deliverables = CType(CType(.Cells(zeile, columnOffset + 6), Excel.Range).Value, String)
 
                                             If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
                                                 ' es gibt keine Bewertung
@@ -4239,6 +4242,7 @@ Public Module awinGeneralModules
                                                 .colorIndex = bewertungsAmpel
                                                 .datum = importDatum
                                                 .description = explanation
+                                                .deliverables = deliverables
                                             End With
 
 
@@ -4718,16 +4722,8 @@ Public Module awinGeneralModules
 
                                                     Else
 
-<<<<<<< HEAD
-                                                ''ur:12.10.2015: 
 
-                                                '  Anfang Check , ob richtige Kästchen Werte enthalten
-                                                Dim msgstr As String = " Fehler bei der Verteilung benötigter Kapazitäten:" & vbCrLf & "für Kostenart " & hname & " in Spalte "
-                                                Dim checkok As Boolean = True
-=======
                                                         ''ur:12.10.2015: 
->>>>>>> 320eb7b06a855038fb72e557ab5c8f25bf9d13f6
-
                                                         '  Anfang Check , ob richtige Kästchen Werte enthalten
                                                         Dim msgstr As String = " Fehler bei der Verteilung benötigter Kapazitäten:" & vbCrLf & "für Kostenart " & hname & " in Spalte "
                                                         Dim checkok As Boolean = True

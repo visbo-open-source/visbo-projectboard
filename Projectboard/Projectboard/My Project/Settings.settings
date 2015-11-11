@@ -5,11 +5,11 @@
     <Setting Name="mongoDBURL" Type="System.String" Scope="User">
       <Value Profile="(Default)">localhost</Value>
     </Setting>
-    <Setting Name="mongoDBname" Type="System.String" Scope="User">
-      <Value Profile="(Default)">autoDemo</Value>
-    </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="User">
       <Value Profile="(Default)">C:\Users\tom\Source\Repos\Project Board\Projectboard\Projectboard\bin\Debug\</Value>
+    </Setting>
+    <Setting Name="mongoDBname" Type="System.String" Scope="User">
+      <Value Profile="(Default)">ITDemo15</Value>
     </Setting>
   </Settings>
 </SettingsFile>

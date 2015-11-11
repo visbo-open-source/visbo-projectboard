@@ -64,28 +64,28 @@ Partial Public NotInheritable Class MySettings
             Me("mongoDBURL") = value
         End Set
     End Property
-
-    <Global.System.Configuration.UserScopedSettingAttribute(), _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
-     Global.System.Configuration.DefaultSettingValueAttribute("autoDemo")> _
-    Public Property mongoDBname() As String
-        Get
-            Return CType(Me("mongoDBname"), String)
-        End Get
-        Set(value As String)
-            Me("mongoDBname") = value
-        End Set
-    End Property
-
-    <Global.System.Configuration.UserScopedSettingAttribute(), _
-     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Source\Repos\Project Board\Projectboard\Projectboard\bin\Debug\")> _
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Source\Repos\Project Board\Projectboard\Projectboard\bin\Debug\")>  _
     Public Property awinPath() As String
         Get
-            Return CType(Me("awinPath"), String)
+            Return CType(Me("awinPath"),String)
         End Get
-        Set(value As String)
+        Set
             Me("awinPath") = value
+        End Set
+    End Property
+    
+    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+     Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+     Global.System.Configuration.DefaultSettingValueAttribute("ITDemo15")>  _
+    Public Property mongoDBname() As String
+        Get
+            Return CType(Me("mongoDBname"),String)
+        End Get
+        Set
+            Me("mongoDBname") = value
         End Set
     End Property
 End Class

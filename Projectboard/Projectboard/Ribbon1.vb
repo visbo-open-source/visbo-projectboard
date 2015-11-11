@@ -3830,39 +3830,38 @@ Imports System.Drawing
 
     End Sub
 
-    Sub awinSetModusHistory(control As IRibbonControl, ByRef pressed As Boolean)
+    Sub PTTestFunktion5(control As IRibbonControl)
 
         Dim demoModusDate As New frmdemoModusDate
         Dim returnValue As DialogResult
 
         Call projektTafelInit()
 
-        If pressed Then
 
-            demoModusHistory = True
+        demoModusHistory = True
 
-            returnValue = demoModusDate.ShowDialog
+        returnValue = demoModusDate.ShowDialog
 
-            If returnValue = DialogResult.OK Then
+        If returnValue = DialogResult.OK Then
 
-                If demoModusHistory Then
-                    Call MsgBox("Demo Modus History: Ein" & vbLf & "neues Datum: " & historicDate)
-                Else
-                    Call MsgBox("Demo Modus History: Aus")
-                End If
-
+            If demoModusHistory Then
+                Call MsgBox("Demo Modus History: Ein" & vbLf & "neues Datum: " & historicDate)
             Else
-                If demoModusHistory Then
-                    Call MsgBox("Demo Modus History: Ein" & vbLf & "altes Datum: " & historicDate)
-                Else
-                    Call MsgBox("Demo Modus History: Aus")
-                End If
-
+                Call MsgBox("Demo Modus History: Aus")
             End If
+
         Else
-            demoModusHistory = False
-            'Call MsgBox("Demo Modus History: Aus")
+            If demoModusHistory Then
+                Call MsgBox("Demo Modus History: Ein" & vbLf & "altes Datum: " & historicDate)
+            Else
+                Call MsgBox("Demo Modus History: Aus")
+            End If
+
         End If
+        
+
+
+
 
 
     End Sub
