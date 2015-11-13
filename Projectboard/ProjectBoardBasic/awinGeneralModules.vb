@@ -2256,18 +2256,39 @@ Public Module awinGeneralModules
                     Dim firstC As Integer = inputColumns.Max + 1
                     Dim lastC As Integer = lastColumn
                     Dim anzahlPhasenToAdd As Integer = CInt((lastC - firstC + 1) / 5)
+                    Dim allesOK As Boolean
+                    Dim ignore As Boolean
 
                     For i As Integer = 1 To anzahlPhasenToAdd
                         Dim tmpDate As Date
+                        Dim chkName As String
                         tmpDate = CDate(CType(.Cells(zeile, firstC + 1 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        If DateDiff(DateInterval.Day, projectStartDate, tmpDate) < 0 Then
-                            projectStartDate = tmpDate
+
+                        Try
+                            chkName = CStr(CType(.Cells(zeile, firstC + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                        Catch ex As Exception
+                            ignore = True
+                            chkName = ""
+                        End Try
+
+
+                        If DateDiff(DateInterval.Day, StartofCalendar, tmpDate) < 0 Or chkName = "-" Then
+                            ignore = True
+                        Else
+                            ignore = False
                         End If
 
-                        tmpDate = CDate(CType(.Cells(zeile, firstC + 2 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        If DateDiff(DateInterval.Day, projectEndDate, tmpDate) > 0 Then
-                            projectEndDate = tmpDate
+                        If Not ignore Then
+                            If DateDiff(DateInterval.Day, projectStartDate, tmpDate) < 0 Then
+                                projectStartDate = tmpDate
+                            End If
+
+                            tmpDate = CDate(CType(.Cells(zeile, firstC + 2 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            If DateDiff(DateInterval.Day, projectEndDate, tmpDate) > 0 Then
+                                projectEndDate = tmpDate
+                            End If
                         End If
+                        
                     Next
 
 
@@ -2383,47 +2404,55 @@ Public Module awinGeneralModules
                         Dim startOffset As Integer = CInt(DateDiff(DateInterval.Day, projectStartDate, start))
                         Dim endOffset As Integer = CInt(DateDiff(DateInterval.Day, projectStartDate, ende))
 
-                        phaseName = CStr(CType(.Cells(zeile, firstC + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        scaleRule = CInt(CType(.Cells(zeile, firstC + 3 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                        allNames = CStr(CType(.Cells(zeile, firstC + 4 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
-                        ' jetzt müssen die einzelnen Module ausgelesen werden 
-                        moduleNames = allNames.Split(New Char() {CChar("#")}, 20)
-                        Dim anzahl As Integer = moduleNames.Length
+                        Try
+                            phaseName = CStr(CType(.Cells(zeile, firstC + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
+                            If phaseName = "-" Or endOffset - startOffset = 0 Then
+                                allesOK = False
+                            Else
+                                allesOK = True
+                            End If
+                        Catch ex As Exception
+                            allesOK = False
+                        End Try
 
-                        For ix As Integer = 1 To anzahl
-                            moduleName = moduleNames(ix - 1)
-                            If ModulVorlagen.Contains(moduleName) Then
-                                planModul = ModulVorlagen.getProject(moduleName)
-                                Dim parentID As String = rootPhaseName
 
-                                Dim parentPhase As clsPhase
-                                Dim elemID As String = ""
+                        If allesOK Then
+                            scaleRule = CInt(CType(.Cells(zeile, firstC + 3 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            allNames = CStr(CType(.Cells(zeile, firstC + 4 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
-                                If Not IsNothing(phaseName) Then
+                            ' jetzt müssen die einzelnen Module ausgelesen werden 
+                            moduleNames = allNames.Split(New Char() {CChar("#")}, 20)
+                            Dim anzahl As Integer = moduleNames.Length
 
-                                    If phaseName.Length > 0 Then
-                                        parentPhase = New clsPhase(parent:=hproj)
-                                        elemID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
-                                        parentPhase.nameID = elemID
-                                        parentPhase.changeStartandDauer(startOffset, calcDauerIndays(start, ende))
+                            For ix As Integer = 1 To anzahl
+                                moduleName = moduleNames(ix - 1)
+                                If ModulVorlagen.Contains(moduleName) Then
+                                    planModul = ModulVorlagen.getProject(moduleName)
+                                    Dim parentID As String = rootPhaseName
 
-                                        hproj.AddPhase(parentPhase, origName:=phaseName, _
-                                               parentID:=parentID)
+                                    Dim parentPhase As clsPhase
+                                    Dim elemID As String = ""
 
-                                        parentID = elemID
+                                    If Not IsNothing(phaseName) Then
 
-                                        planModul.moduleCopyTo(hproj, parentID, moduleName, startOffset, endOffset, True)
+                                        If phaseName.Length > 0 Then
+                                            parentPhase = New clsPhase(parent:=hproj)
+                                            elemID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
+                                            parentPhase.nameID = elemID
+                                            parentPhase.changeStartandDauer(startOffset, calcDauerIndays(start, ende))
+
+                                            hproj.AddPhase(parentPhase, origName:=phaseName, _
+                                                   parentID:=parentID)
+
+                                            parentID = elemID
+
+                                            planModul.moduleCopyTo(hproj, parentID, moduleName, startOffset, endOffset, True)
+                                        End If
                                     End If
                                 End If
-
-
-
-
-
-                            End If
-                        Next
-
+                            Next
+                        End If
                     Next
 
                     ' jetzt die Projekt eintragen 

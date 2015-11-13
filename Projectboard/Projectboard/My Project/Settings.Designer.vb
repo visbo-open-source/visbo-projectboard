@@ -53,40 +53,31 @@ Partial Public NotInheritable Class MySettings
         End Get
     End Property
     
-    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("localhost")>  _
-    Public Property mongoDBURL() As String
+    Public ReadOnly Property mongoDBURL() As String
         Get
             Return CType(Me("mongoDBURL"),String)
         End Get
-        Set
-            Me("mongoDBURL") = value
-        End Set
     End Property
     
-    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Source\Repos\Project Board\Projectboard\Projectboard\bin\Debug\")>  _
-    Public Property awinPath() As String
+    Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
         End Get
-        Set
-            Me("awinPath") = value
-        End Set
     End Property
     
-    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("ITDemo15")>  _
-    Public Property mongoDBname() As String
+     Global.System.Configuration.DefaultSettingValueAttribute("telairdemo")>  _
+    Public ReadOnly Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)
         End Get
-        Set
-            Me("mongoDBname") = value
-        End Set
     End Property
 End Class
 
