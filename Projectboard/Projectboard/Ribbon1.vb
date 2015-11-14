@@ -1293,6 +1293,23 @@ Imports System.Drawing
 
     End Sub
 
+    ''' <summary>
+    ''' ein Formular wird aufgeschaltet zum Hinzufügen von Abbildungs-Regeln unbekannte Begriffe zu bekannten Begriffen 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT5editDictionary(control As IRibbonControl)
+
+        Dim editDictionary As New frmEditWoerterbuch
+        Dim returnValue As DialogResult
+
+        Call projektTafelInit()
+
+        returnValue = editDictionary.ShowDialog
+
+
+    End Sub
+
     Sub PT5changeTimeSpan(control As IRibbonControl)
 
         Dim mvTimeSpan As New frmMoveTimeSpan
