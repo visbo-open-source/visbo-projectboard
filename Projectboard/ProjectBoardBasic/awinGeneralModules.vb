@@ -1298,7 +1298,7 @@ Public Module awinGeneralModules
                 With CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range)
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
                     .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-                    .NumberFormat = "####0.0"
+                    .NumberFormat = "####0"
                     .WrapText = False
                     .Orientation = 0
                     .AddIndent = False
