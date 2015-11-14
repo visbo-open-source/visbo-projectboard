@@ -148,6 +148,8 @@ Public Class frmEditWoerterbuch
             Next
         End If
 
+        editUnknownItem.Text = ""
+
     End Sub
 
     Private Sub filterStandard_TextChanged(sender As Object, e As EventArgs) Handles filterStandard.TextChanged
@@ -176,6 +178,8 @@ Public Class frmEditWoerterbuch
             Next
         End If
 
+        editUnknownItem.Text = ""
+
     End Sub
 
     Private Sub clearUnknownList_Click(sender As Object, e As EventArgs) Handles clearUnknownList.Click
@@ -188,5 +192,21 @@ Public Class frmEditWoerterbuch
 
         standardList.SelectedItems.Clear()
 
+    End Sub
+
+    Private Sub unknownList_SelectedIndexChanged(sender As Object, e As EventArgs) Handles unknownList.SelectedIndexChanged
+        If unknownList.SelectedItems.Count = 1 And standardList.SelectedItems.Count = 0 Then
+            editUnknownItem.Text = unknownList.SelectedItem.ToString
+        Else
+            editUnknownItem.Text = ""
+        End If
+    End Sub
+
+    Private Sub standardList_SelectedIndexChanged(sender As Object, e As EventArgs) Handles standardList.SelectedIndexChanged
+        If standardList.SelectedItems.Count = 1 And unknownList.SelectedItems.Count = 0 Then
+            editUnknownItem.Text = standardList.SelectedItem.ToString
+        Else
+            editUnknownItem.Text = ""
+        End If
     End Sub
 End Class

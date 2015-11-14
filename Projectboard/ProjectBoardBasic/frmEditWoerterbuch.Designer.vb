@@ -30,7 +30,7 @@ Partial Class frmEditWoerterbuch
         Me.Label1 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.filterStandard = New System.Windows.Forms.TextBox()
-        Me.TextBox3 = New System.Windows.Forms.TextBox()
+        Me.editUnknownItem = New System.Windows.Forms.TextBox()
         Me.ignoreButton = New System.Windows.Forms.Button()
         Me.addRulesToDictionary = New System.Windows.Forms.Button()
         Me.replaceButton = New System.Windows.Forms.Button()
@@ -123,12 +123,12 @@ Partial Class frmEditWoerterbuch
         Me.filterStandard.Size = New System.Drawing.Size(341, 20)
         Me.filterStandard.TabIndex = 7
         '
-        'TextBox3
+        'editUnknownItem
         '
-        Me.TextBox3.Location = New System.Drawing.Point(22, 405)
-        Me.TextBox3.Name = "TextBox3"
-        Me.TextBox3.Size = New System.Drawing.Size(729, 20)
-        Me.TextBox3.TabIndex = 8
+        Me.editUnknownItem.Location = New System.Drawing.Point(22, 405)
+        Me.editUnknownItem.Name = "editUnknownItem"
+        Me.editUnknownItem.Size = New System.Drawing.Size(729, 20)
+        Me.editUnknownItem.TabIndex = 8
         '
         'ignoreButton
         '
@@ -244,7 +244,7 @@ Partial Class frmEditWoerterbuch
         Me.Controls.Add(Me.replaceButton)
         Me.Controls.Add(Me.addRulesToDictionary)
         Me.Controls.Add(Me.ignoreButton)
-        Me.Controls.Add(Me.TextBox3)
+        Me.Controls.Add(Me.editUnknownItem)
         Me.Controls.Add(Me.filterStandard)
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.Label1)
@@ -272,7 +272,7 @@ Partial Class frmEditWoerterbuch
     Friend WithEvents Label1 As System.Windows.Forms.Label
     Friend WithEvents Label2 As System.Windows.Forms.Label
     Friend WithEvents filterStandard As System.Windows.Forms.TextBox
-    Friend WithEvents TextBox3 As System.Windows.Forms.TextBox
+    Friend WithEvents editUnknownItem As System.Windows.Forms.TextBox
     Friend WithEvents ignoreButton As System.Windows.Forms.Button
     Friend WithEvents addRulesToDictionary As System.Windows.Forms.Button
     Friend WithEvents replaceButton As System.Windows.Forms.Button
