@@ -1230,7 +1230,9 @@ Public Module awinGeneralModules
                         .Orientation = 90
                         .AddIndent = False
                         .IndentLevel = 0
-                        .ShrinkToFit = False
+                        ' Änderung tk 14.11 - sonst können ja die Spaltenbreiten ud Höhen nicht explizit gesetzt werden 
+                        ' das ist vor allem auf der Zeichenfläche notwendig, weil sonst die Berechnung und Positionierung der Grafik Elemente nicht mehr stimmt 
+                        .ShrinkToFit = True
                         .ReadingOrder = Excel.Constants.xlContext
                         .MergeCells = False
                         .Interior.Color = noshowtimezone_color
@@ -1293,10 +1295,19 @@ Public Module awinGeneralModules
                 CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2
                 CType(.Columns, Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = awinSettings.spaltenbreite
 
-
-                .Range(.Cells(2, 1), .Cells(maxRows, maxColumns)).HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
-                .Range(.Cells(2, 1), .Cells(maxRows, maxColumns)).VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
-
+                With CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range)
+                    .HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter
+                    .VerticalAlignment = Excel.XlVAlign.xlVAlignCenter
+                    .NumberFormat = "####0.0"
+                    .WrapText = False
+                    .Orientation = 0
+                    .AddIndent = False
+                    ' Änderung tk 14.11 - sonst können ja die Spaltenbreiten ud Höhen nicht explizit gesetzt werden 
+                    ' das ist vor allem auf der Zeichenfläche notwendig, weil sonst die Berechnung und Positionierung der Grafik Elemente nicht mehr stimmt 
+                    .ShrinkToFit = True
+                    .ReadingOrder = Excel.Constants.xlContext
+                    .MergeCells = False
+                End With
 
                 boxWidth = CDbl(CType(.Cells(3, 3), Global.Microsoft.Office.Interop.Excel.Range).Width)
                 boxHeight = CDbl(CType(.Cells(3, 3), Global.Microsoft.Office.Interop.Excel.Range).Height)
