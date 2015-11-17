@@ -6,10 +6,10 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\tom\Source\Repos\Project Board\Projectboard\Projectboard\bin\Debug\</Value>
+      <Value Profile="(Default)">C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\EG-25\</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">ITDemo15</Value>
+      <Value Profile="(Default)">EG25</Value>
     </Setting>
   </Settings>
 </SettingsFile>

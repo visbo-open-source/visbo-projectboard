@@ -6803,7 +6803,7 @@ Imports System.Drawing
     Sub PTOPTVariantenOptimieren(control As IRibbonControl)
 
 
-        Dim optmierungsFenster As New frmOptimizeKPI
+        Dim optimierungsFenster As New frmOptimizeKPI
         Dim returnValue As DialogResult
 
 
@@ -6812,7 +6812,10 @@ Imports System.Drawing
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        returnValue = optmierungsFenster.ShowDialog
+        ' Varianten-Optimierung 
+        optimierungsFenster.menueOption = 1
+
+        returnValue = optimierungsFenster.ShowDialog
         'optmierungsFenster.Show()
 
         appInstance.EnableEvents = True
@@ -6820,6 +6823,26 @@ Imports System.Drawing
 
     End Sub
 
+    Sub PTOPTFreiraumOptimieren(control As IRibbonControl)
+
+        Dim optimierungsFenster As New frmOptimizeKPI
+        Dim returnValue As DialogResult
+
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        ' Spielraum-Optimierung 
+        optimierungsFenster.menueOption = 2
+
+        returnValue = optimierungsFenster.ShowDialog
+        'optmierungsFenster.Show()
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+    End Sub
 
     Sub PT0ShowPortfolioBudgetCost(control As IRibbonControl)
         Dim selectionType As Integer = -1 ' keine Einschränkung

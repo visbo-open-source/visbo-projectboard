@@ -470,6 +470,7 @@
         Dim newphase As clsPhase
         Dim headPhase As clsPhase
         Dim elemID As String
+        Dim parentPhase As clsPhase
 
 
         moduleDauerInDays = endOffset - modulStartOffset + 1
@@ -489,7 +490,22 @@
                 elemID = project.hierarchy.findUniqueElemKey(moduleName, False)
                 headPhase.nameID = elemID
 
+                ' Änderung tk 17.11.15: die Phase 0 Ressourcen und Kosten übernehmen ..
+                AllPhases.Item(0).korrCopyTo(headPhase, correctFactor, elemID)
+
                 headPhase.changeStartandDauer(modulStartOffset, CLng(Me.dauerInDays * correctFactor))
+                parentPhase = project.getPhaseByID(parentID)
+                ' jetzt werden die Earliest und latest Spielräume für die Headphase, dann für die einzelnen Module eingetragen 
+
+                headPhase.earliestStart = parentPhase.startOffsetinDays - headPhase.startOffsetinDays
+                If headPhase.earliestStart > 0 Then
+                    headPhase.earliestStart = 0
+                End If
+
+                headPhase.latestStart = parentPhase.startOffsetinDays + parentPhase.dauerInDays _
+                                - (headPhase.startOffsetinDays + headPhase.dauerInDays)
+
+
 
                 project.AddPhase(headPhase, origName:=moduleName, _
                        parentID:=parentID)
@@ -526,6 +542,25 @@
             Else
                 tmpParentID = parentNameIDs(currentLevel - 1)
             End If
+
+            parentPhase = project.getPhaseByID(tmpParentID)
+            ' jetzt werden die Earliest und latest Spielräume für die Headphase, dann für die einzelnen Module eingetragen 
+
+            newphase.earliestStart = parentPhase.startOffsetinDays - newphase.startOffsetinDays
+            If newphase.earliestStart > 0 Then
+                newphase.earliestStart = 0
+            End If
+
+            Try
+                newphase.latestStart = parentPhase.startOffsetinDays + parentPhase.dauerInDays _
+                            - (newphase.startOffsetinDays + newphase.dauerInDays)
+            Catch ex As Exception
+                Dim a = 2
+            End Try
+            
+
+
+
             project.AddPhase(phase:=newphase, origName:="", parentID:=tmpParentID)
         Next p
 
@@ -645,7 +680,7 @@
     End Property
 
     ''' <summary>
-    ''' gibt die Phase mit Index zurück, wenn Index kleiner bzw. gleich oder größer Anzahl Phasen, 
+    ''' gibt die Phase mit Index zurück, wenn Index kleiner bzw. gleich 1 oder größer Anzahl Phasen, 
     ''' dann Nothing 
     ''' </summary>
     ''' <param name="index"></param>

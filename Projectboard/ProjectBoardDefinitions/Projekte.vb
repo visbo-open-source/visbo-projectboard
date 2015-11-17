@@ -9314,7 +9314,7 @@ Public Module Projekte
                                   ByRef OptimierungsErgebnis As SortedList(Of String, clsOptimizationObject))
         Dim referenceValue As Double, newReferenceValue As Double, currentValue As Double
         Dim bestValue As Double
-        Dim startoffset As Integer
+        Dim startoffset() As Integer
         Dim versatz As Integer
         Dim ErgebnisListe As New SortedList(Of Double, clsOptimizationObject)
         'Dim ErgebnisListe As New SortedDictionary(Of Double, clsOptimizationObject)
@@ -9325,7 +9325,7 @@ Public Module Projekte
         Dim NrArgExceptions As Integer
         Dim avgValue As Double
 
-
+        ReDim startoffset(0)
 
         If diagrammTyp = DiagrammTypen(0) Then ' Phase 
             Call MsgBox("Phasen Optimierung noch nicht implementiert")
@@ -9354,7 +9354,7 @@ Public Module Projekte
                         If relevantForOptimization(kvp.Value) Then
 
                             bestValue = referenceValue  ' als Startwert, der hoffentlich unterboten wird .... 
-                            startoffset = 0
+                            startoffset(0) = 0
 
                             For versatz = kvp.Value.earliestStart To kvp.Value.latestStart
                                 If versatz <> 0 Then
@@ -9367,7 +9367,7 @@ Public Module Projekte
 
                                     If currentValue < bestValue Then
                                         bestValue = currentValue
-                                        startoffset = versatz
+                                        startoffset(0) = versatz
                                     End If
                                 End If
                             Next versatz
@@ -9375,12 +9375,12 @@ Public Module Projekte
                             ' zurücksetzen des StartOffsets im Projekt, weil hier ja erst verschiedene Konstellationen probiert werden  
                             kvp.Value.StartOffset = 0
 
-                            If startoffset <> 0 Then ' es gab eine Verbesserung 
+                            If startoffset(0) <> 0 Then ' es gab eine Verbesserung 
                                 lokalesOptimum = New clsOptimizationObject
                                 With lokalesOptimum
                                     .projectName = kvp.Key
                                     '.bestValue = bestValue
-                                    .startOffset = startoffset
+                                    .offset = startoffset
                                 End With
 
                                 Try
@@ -9410,7 +9410,7 @@ Public Module Projekte
 
                         hproj = ShowProjekte.getProject(ergebnis.Value.projectName)
                         saveOffset = hproj.StartOffset
-                        hproj.StartOffset = ergebnis.Value.startOffset
+                        hproj.StartOffset = ergebnis.Value.offset(0)
 
                         If diagrammTyp = DiagrammTypen(1) Then
                             currentValue = .getbadCostOfRole(myCollection)
@@ -9425,7 +9425,7 @@ Public Module Projekte
                         Else
                             hproj.StartOffset = saveOffset
                             anzahlVersuche = anzahlVersuche + 1
-                            If anzahlVersuche > 5 Or ergebnis.Value.startOffset = 0 Then
+                            If anzahlVersuche > 5 Or ergebnis.Value.offset(0) = 0 Then
                                 ' wenn startoffset = 0 , dann konnten keine Verbesserungen mehr erzielt werden , also Abbruch ...
                                 Exit For
                             End If
@@ -9439,7 +9439,8 @@ Public Module Projekte
                 End While
                 ' hier wird Gold gesetzt, das heißt alle Offsets gemerkt, die für die Optmierung notwendig sind 
                 ' anschließend werden alle startoffsets wieder auf 0 (=Ausgangswert) gesetzt 
-
+                Dim tmpOffset() As Integer
+                ReDim tmpOffset(0)
                 OptimierungsErgebnis.Clear()
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In .Liste
                     If kvp.Value.StartOffset <> 0 Then
@@ -9447,7 +9448,8 @@ Public Module Projekte
                         With lokalesOptimum
                             .projectName = kvp.Value.name
                             '.bestValue = bestValue
-                            .startOffset = kvp.Value.StartOffset
+                            tmpOffset(0) = kvp.Value.StartOffset
+                            .offset = tmpOffset
                         End With
                         OptimierungsErgebnis.Add(kvp.Value.name, lokalesOptimum)
                         'kvp.Value.StartOffset = 0
@@ -9810,13 +9812,17 @@ Public Module Projekte
                         ' zurücksetzen des StartOffsets im Projekt, weil hier ja erst verschiedene Konstellationen probiert werden  
                         curProj.StartOffset = 0
 
+                        Dim tmpOffset() As Integer
+                        ReDim tmpOffset(0)
+
                         If startoffset <> 0 Then ' es gab eine Verbesserung 
                             'lokalesOptimum = New clsOptimizationObject
                             With lokalesOptimum
                                 If bestValue < .bestValue Then
                                     .projectName = curProj.name
                                     .bestValue = bestValue
-                                    .startOffset = startoffset
+                                    tmpOffset(0) = startoffset
+                                    .offset = tmpOffset
                                     ' Call awinVisualizeProject
                                 End If
                             End With
@@ -9830,7 +9836,7 @@ Public Module Projekte
                     If lokalesOptimum.projectName <> " " Then
 
                         hproj = ShowProjekte.getProject(lokalesOptimum.projectName)
-                        hproj.StartOffset = lokalesOptimum.startOffset
+                        hproj.StartOffset = lokalesOptimum.offset(0)
                         OptimierungsErgebnis.Add(lokalesOptimum.projectName, lokalesOptimum)
                         toDoListe.Remove(lokalesOptimum.projectName)
                         Call visualisiereTeilErgebnis(lokalesOptimum.projectName)
@@ -9848,6 +9854,197 @@ Public Module Projekte
             End If
         Else
             Call MsgBox("Optimierung nicht implementiert")
+        End If
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' bereichnet auf Basis der Freiheitsgrade der Plan-Elemente Elemente  die beste Konstellation
+    ''' </summary>
+    ''' <param name="diagrammTyp"></param>
+    ''' <param name="myCollection"></param>
+    ''' <param name="OptimierungsErgebnis"></param>
+    ''' <remarks></remarks>
+    Public Sub awinCalcOptimizationElemFreiheitsgrade(ByVal diagrammTyp As String, ByVal myCollection As Collection, _
+                                       ByRef OptimierungsErgebnis As SortedList(Of String, clsOptimizationObject), _
+                                       ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
+        Dim currentValue As Double
+        Dim bestValue As Double
+        Dim versatz As Integer
+        Dim lokalesOptimum As New clsOptimizationObject
+        Dim deltaValues() As Integer
+        Dim hproj As clsProjekt
+        Dim NrArgExceptions As Integer
+        Dim toDoListe As New Collection
+        Dim NrLoops As Integer
+        Dim cphase As clsPhase
+        Dim zaehler As Integer = 1
+        Dim anzImprovements As Integer = 0
+        Dim backgroundMsg As String = ""
+
+        Dim phaseIndices() As Integer
+
+
+        If myCollection.Count = 1 Then
+
+
+            If diagrammTyp = DiagrammTypen(0) Or diagrammTyp = DiagrammTypen(1) Or diagrammTyp = DiagrammTypen(2) Or diagrammTyp = DiagrammTypen(4) Then
+
+                ' to do Liste aufbauen
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                    If relevantForOptimization(kvp.Value) Then
+                        toDoListe.Add(kvp.Key, kvp.Key)
+                    End If
+                Next kvp
+
+                bestValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
+                lokalesOptimum.bestValue = bestValue
+                lokalesOptimum.projectName = " "
+                OptimierungsErgebnis.Clear()
+
+                NrLoops = 0
+                NrArgExceptions = 0
+
+
+                Dim Abbruch As Boolean = False
+                While toDoListe.Count > 0 And Not Abbruch
+
+                    backgroundMsg = "Iteration " & zaehler.ToString("###0") & _
+                                    "; gefundene Verbesserungen: " & anzImprovements.ToString("###0")
+
+                    e.Result = backgroundMsg
+                    worker.ReportProgress(0, e)
+
+                    Dim i As Integer
+                    Dim curProj As clsProjekt
+                    Dim fullname As String = CStr(myCollection.Item(1))
+
+                    Dim elemName As String = ""
+                    Dim breadcrumb As String = ""
+                    Call splitHryFullnameTo2(fullname, elemName, breadcrumb)
+
+
+                    For i = 1 To toDoListe.Count
+
+                        curProj = ShowProjekte.getProject(CStr(toDoListe.Item(i)))
+                        phaseIndices = curProj.hierarchy.getPhaseIndices(elemName, breadcrumb)
+
+                        ' in den deltaValues sind jetzt die Werte drin, die sich für die Phasen-Verschiebungen ergeben 
+
+                        ReDim deltaValues(phaseIndices.Length - 1)
+
+                        Dim optimizationFound As Boolean = False
+
+                        If phaseIndices(0) > 0 Then
+                            ' nur dann wurde die Phase wenigstens einmal gefunden ...
+                            For ik As Integer = 1 To phaseIndices.Length
+
+                                ' jetzt die Phase holen
+
+                                cphase = curProj.getPhase(phaseIndices(ik))
+                                Dim phaseNameID As String = cphase.nameID
+
+                                ' hier wird der beste Wert für das einzelne Projekt gesucht ....  
+
+                                For versatz = curProj.earliestStart To curProj.latestStart
+                                    If versatz <> 0 Then
+                                        ' jetzt die Phase entsprechend verschieben ...
+                                        cphase.changeStartandDauer(cphase.startOffsetinDays + versatz, cphase.dauerInDays)
+
+                                        currentValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
+
+                                        If currentValue < bestValue Then
+                                            bestValue = currentValue
+                                            deltaValues(ik - 1) = versatz
+                                            optimizationFound = True
+                                            anzImprovements = anzImprovements + 1
+                                        End If
+                                    End If
+
+                                Next versatz
+
+
+
+                            Next
+
+                        End If
+
+
+                        ' zurücksetzen des Offsets in den einzelnen Phasen wieder auf ihre alte Position zurückgesetzt werden 
+
+                        For ik As Integer = 1 To phaseIndices.Length
+                            cphase = curProj.getPhase(phaseIndices(ik))
+                            Dim phaseNameID As String = cphase.nameID
+
+                            If deltaValues(ik - 1) <> 0 Then
+                                With cphase
+                                    .changeStartandDauer(.startOffsetinDays - deltaValues(ik - 1), .dauerInDays)
+                                End With
+                            End If
+
+                        Next
+
+
+                        If optimizationFound Then ' es gab eine Verbesserung 
+
+                            With lokalesOptimum
+                                If bestValue < .bestValue Then
+                                    .projectName = curProj.name
+                                    .bestValue = bestValue
+                                    .offset = deltaValues
+                                    ' Call awinVisualizeProject
+                                End If
+                            End With
+
+                        End If
+
+                    Next i
+                    '
+                    ' jetzt muss das Ergebnis abgearbeitet werden ... 
+                    '
+                    If lokalesOptimum.projectName <> " " Then
+
+                        hproj = ShowProjekte.getProject(lokalesOptimum.projectName)
+                        ' jetzt müssen die Phasen wieder auf Ihre optimierte Position gebracht werden
+
+                        phaseIndices = hproj.hierarchy.getPhaseIndices(elemName, breadcrumb)
+                        If phaseIndices(0) > 0 Then
+
+                            For ik As Integer = 1 To phaseIndices.Length
+                                cphase = hproj.getPhase(phaseIndices(ik))
+                                Dim phaseNameID As String = cphase.nameID
+                                If lokalesOptimum.offset(ik - 1) <> 0 Then
+                                    cphase.changeStartandDauer(cphase.startOffsetinDays + lokalesOptimum.offset(ik - 1), _
+                                                                cphase.dauerInDays)
+                                End If
+
+                            Next
+
+
+
+
+                        End If
+
+                        OptimierungsErgebnis.Add(lokalesOptimum.projectName, lokalesOptimum)
+                        toDoListe.Remove(lokalesOptimum.projectName)
+                        Call visualisiereTeilErgebnis(lokalesOptimum.projectName)
+                    Else
+                        Abbruch = True
+                    End If
+
+                    lokalesOptimum.projectName = " "
+                    NrLoops = NrLoops + 1
+
+                End While
+
+            Else
+                Call MsgBox("Optimierung noch nicht implementiert")
+            End If
+        Else
+            Call MsgBox("Optimierung für mehr als 1 Namen noch nicht implementiert")
         End If
 
 
@@ -9892,30 +10089,82 @@ Public Module Projekte
         berechneOptimierungsWert = value
 
     End Function
-    Public Function relevantForOptimization(ByRef project As clsProjekt) As Boolean
+    ''' <summary>
+    ''' bestimmt für ein übergebenes Projekt und eine optional übergebene Phasen-ID, ob dieses Projekt überhaupt betrachtet werden soll; 
+    ''' </summary>
+    ''' <param name="project"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function relevantForOptimization(ByVal project As clsProjekt, Optional ByVal elemID As String = "", Optional ByVal isMilestone As Boolean = False) As Boolean
         Dim relevant As Boolean = False
-        Dim bereichsAnfang As Integer, bereichsEnde As Integer
+        Dim bereichsAnfang As Integer = -1, bereichsEnde As Integer = -1
         ' hier können dann auch weitere Bedingungen abgefragt werden, ob bspweise das Projekt denn überhaupt Freiheitsgrade besitzt  
 
 
         With project
 
-            If .Status = ProjektStatus(0) Then
+            If elemID.Length = 0 Then
+                ' es soll das Projekt betrachtet werden 
+                If .Status = ProjektStatus(0) Then
 
-                ' nur dann darf das Projekt noch verschoben werden ...
+                    ' nur dann darf das Projekt noch verschoben werden ...
 
-                bereichsAnfang = .Start + .earliestStart
-                bereichsEnde = .Start + .anzahlRasterElemente - 1 + .latestStart
+                    bereichsAnfang = .Start + .earliestStart
+                    bereichsEnde = .Start + .anzahlRasterElemente - 1 + .latestStart
 
-                If project.StartOffset = 0 And (project.earliestStart < 0 Or project.latestStart > 0) _
-                                               And istBereichInTimezone(bereichsAnfang, bereichsEnde) Then
+                    If project.StartOffset = 0 And (project.earliestStart < 0 Or project.latestStart > 0) _
+                                                   And istBereichInTimezone(bereichsAnfang, bereichsEnde) Then
+                        relevant = True
+                    Else
+                        relevant = False
+                    End If
+                Else
+                    relevant = False
+                End If
+
+            Else
+                ' es soll die Phase oder ein Meilenstein betrachtet werden 
+
+                If isMilestone Then
+                    Dim cMilestone As clsMeilenstein = project.getMilestoneByID(elemID)
+                    If IsNothing(cMilestone) Then
+                        relevant = False
+                    Else
+                        If .Status = ProjektStatus(0) Then
+
+                            bereichsAnfang = getColumnOfDate(cMilestone.getDate.AddDays(-15))
+                            bereichsEnde = getColumnOfDate(cMilestone.getDate.AddDays(15))
+                            ' nur dann darf das Projekt noch verschoben werden ...
+                        Else
+                            relevant = False
+                        End If
+                    End If
+
+                Else
+                    Dim cphase As clsPhase = project.getPhaseByID(elemID)
+
+                    If IsNothing(cphase) Then
+                        relevant = False
+                    Else
+                        If .Status = ProjektStatus(0) Then
+
+                            bereichsAnfang = getColumnOfDate(cphase.getStartDate.AddDays(cphase.earliestStart))
+                            bereichsEnde = getColumnOfDate(cphase.getEndDate.AddDays(cphase.latestStart))
+                            ' nur dann darf das Projekt noch verschoben werden ...
+                        Else
+                            relevant = False
+                        End If
+                    End If
+                End If
+
+                If istBereichInTimezone(bereichsAnfang, bereichsEnde) Then
                     relevant = True
                 Else
                     relevant = False
                 End If
-            Else
-                relevant = False
+
             End If
+
 
         End With
 
@@ -13259,7 +13508,7 @@ Public Module Projekte
         appInstance.ScreenUpdating = False
         Call diagramsVisible(False)
         'Call ZeichneProjektinPlanTafel(pname)
-        Call ZeichneMoveLineOfProjekt(pname)
+        'Call ZeichneMoveLineOfProjekt(pname)
         Call awinNeuZeichnenDiagramme(1)
         Call diagramsVisible(True)
         appInstance.ScreenUpdating = True
