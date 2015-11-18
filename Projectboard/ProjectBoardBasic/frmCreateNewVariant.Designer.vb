@@ -23,7 +23,7 @@ Partial Class frmCreateNewVariant
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.Label1 = New System.Windows.Forms.Label()
-        Me.Label2 = New System.Windows.Forms.Label()
+        Me.infoText = New System.Windows.Forms.Label()
         Me.newVariant = New System.Windows.Forms.TextBox()
         Me.projektName = New System.Windows.Forms.TextBox()
         Me.variantenName = New System.Windows.Forms.TextBox()
@@ -41,14 +41,14 @@ Partial Class frmCreateNewVariant
         Me.Label1.TabIndex = 0
         Me.Label1.Text = "Neue Variante:"
         '
-        'Label2
+        'infoText
         '
-        Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(12, 81)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(319, 13)
-        Me.Label2.TabIndex = 1
-        Me.Label2.Text = "Die neue Variante wird auf Basis dieser Projekt-Variante angelegt: "
+        Me.infoText.AutoSize = True
+        Me.infoText.Location = New System.Drawing.Point(12, 81)
+        Me.infoText.Name = "infoText"
+        Me.infoText.Size = New System.Drawing.Size(319, 13)
+        Me.infoText.TabIndex = 1
+        Me.infoText.Text = "Die neue Variante wird auf Basis dieser Projekt-Variante angelegt: "
         '
         'newVariant
         '
@@ -111,20 +111,21 @@ Partial Class frmCreateNewVariant
         Me.Controls.Add(Me.variantenName)
         Me.Controls.Add(Me.projektName)
         Me.Controls.Add(Me.newVariant)
-        Me.Controls.Add(Me.Label2)
+        Me.Controls.Add(Me.infoText)
         Me.Controls.Add(Me.Label1)
         Me.Name = "frmCreateNewVariant"
         Me.Text = "Neue Variante anlegen"
+        Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
     Friend WithEvents Label1 As System.Windows.Forms.Label
-    Friend WithEvents Label2 As System.Windows.Forms.Label
-    Friend WithEvents newVariant As System.Windows.Forms.TextBox
+    Friend WithEvents infoText As System.Windows.Forms.Label
     Friend WithEvents projektName As System.Windows.Forms.TextBox
     Friend WithEvents variantenName As System.Windows.Forms.TextBox
     Friend WithEvents Label3 As System.Windows.Forms.Label
     Friend WithEvents Label4 As System.Windows.Forms.Label
     Friend WithEvents OKButton As System.Windows.Forms.Button
+    Public WithEvents newVariant As System.Windows.Forms.TextBox
 End Class

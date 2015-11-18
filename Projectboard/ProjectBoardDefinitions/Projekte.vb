@@ -9871,6 +9871,10 @@ Public Module Projekte
                                        ByRef OptimierungsErgebnis As SortedList(Of String, clsOptimizationObject), _
                                        ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
         Dim currentValue As Double
+        Dim fullname As String = ""
+        Dim elemName As String = ""
+        Dim elemID As String
+        Dim breadcrumb As String = ""
         Dim bestValue As Double
         Dim versatz As Integer
         Dim lokalesOptimum As New clsOptimizationObject
@@ -9883,21 +9887,46 @@ Public Module Projekte
         Dim zaehler As Integer = 1
         Dim anzImprovements As Integer = 0
         Dim backgroundMsg As String = ""
-
+        Dim i As Integer
+        Dim notAdded As Boolean = True
         Dim phaseIndices() As Integer
 
 
         If myCollection.Count = 1 Then
 
 
-            If diagrammTyp = DiagrammTypen(0) Or diagrammTyp = DiagrammTypen(1) Or diagrammTyp = DiagrammTypen(2) Or diagrammTyp = DiagrammTypen(4) Then
+            If diagrammTyp = DiagrammTypen(0) And myCollection.Count = 1 Then
 
                 ' to do Liste aufbauen
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                    If relevantForOptimization(kvp.Value) Then
-                        toDoListe.Add(kvp.Key, kvp.Key)
+                    ' tk 18.11.15 checken ob eines der angegebenen Elemente vorkommt 
+                    notAdded = True
+                    fullname = CStr(myCollection.Item(1))
+
+                    elemName = ""
+                    breadcrumb = ""
+                    Call splitHryFullnameTo2(fullname, elemName, breadcrumb)
+
+                    phaseIndices = kvp.Value.hierarchy.getPhaseIndices(elemName, breadcrumb)
+                    If phaseIndices(0) > 0 Then
+
+                        i = 1
+                        While i <= phaseIndices.Length And notAdded
+                            elemID = kvp.Value.getPhase(phaseIndices(i - 1)).nameID
+                            If relevantForOptimization(kvp.Value, elemID, False) Then
+                                If Not toDoListe.Contains(kvp.Key) Then
+                                    toDoListe.Add(kvp.Key, kvp.Key)
+                                End If
+                                notAdded = False
+                            Else
+                                i = i + 1
+                            End If
+                        End While
+
                     End If
+
+
                 Next kvp
 
                 bestValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
@@ -9918,12 +9947,11 @@ Public Module Projekte
                     e.Result = backgroundMsg
                     worker.ReportProgress(0, e)
 
-                    Dim i As Integer
                     Dim curProj As clsProjekt
-                    Dim fullname As String = CStr(myCollection.Item(1))
+                    fullname = CStr(myCollection.Item(1))
 
-                    Dim elemName As String = ""
-                    Dim breadcrumb As String = ""
+                    elemName = ""
+                    breadcrumb = ""
                     Call splitHryFullnameTo2(fullname, elemName, breadcrumb)
 
 
@@ -9944,7 +9972,7 @@ Public Module Projekte
 
                                 ' jetzt die Phase holen
 
-                                cphase = curProj.getPhase(phaseIndices(ik))
+                                cphase = curProj.getPhase(phaseIndices(ik - 1))
                                 Dim phaseNameID As String = cphase.nameID
 
                                 ' hier wird der beste Wert für das einzelne Projekt gesucht ....  
@@ -9970,38 +9998,42 @@ Public Module Projekte
 
                             Next
 
-                        End If
+                            ' zurücksetzen des Offsets in den einzelnen Phasen wieder auf ihre alte Position zurückgesetzt werden 
+
+                            For ik As Integer = 1 To phaseIndices.Length
+                                cphase = curProj.getPhase(phaseIndices(ik - 1))
+                                Dim phaseNameID As String = cphase.nameID
+
+                                If deltaValues(ik - 1) <> 0 Then
+                                    With cphase
+                                        .changeStartandDauer(.startOffsetinDays - deltaValues(ik - 1), .dauerInDays)
+                                    End With
+                                End If
+
+                            Next
 
 
-                        ' zurücksetzen des Offsets in den einzelnen Phasen wieder auf ihre alte Position zurückgesetzt werden 
+                            If optimizationFound Then ' es gab eine Verbesserung 
 
-                        For ik As Integer = 1 To phaseIndices.Length
-                            cphase = curProj.getPhase(phaseIndices(ik))
-                            Dim phaseNameID As String = cphase.nameID
-
-                            If deltaValues(ik - 1) <> 0 Then
-                                With cphase
-                                    .changeStartandDauer(.startOffsetinDays - deltaValues(ik - 1), .dauerInDays)
+                                With lokalesOptimum
+                                    If bestValue < .bestValue Then
+                                        .projectName = curProj.name
+                                        .bestValue = bestValue
+                                        .offset = deltaValues
+                                        ' Call awinVisualizeProject
+                                    End If
                                 End With
+
                             End If
 
-                        Next
-
-
-                        If optimizationFound Then ' es gab eine Verbesserung 
-
-                            With lokalesOptimum
-                                If bestValue < .bestValue Then
-                                    .projectName = curProj.name
-                                    .bestValue = bestValue
-                                    .offset = deltaValues
-                                    ' Call awinVisualizeProject
-                                End If
-                            End With
-
                         End If
 
+
+
+
                     Next i
+
+
                     '
                     ' jetzt muss das Ergebnis abgearbeitet werden ... 
                     '
@@ -10014,7 +10046,7 @@ Public Module Projekte
                         If phaseIndices(0) > 0 Then
 
                             For ik As Integer = 1 To phaseIndices.Length
-                                cphase = hproj.getPhase(phaseIndices(ik))
+                                cphase = hproj.getPhase(phaseIndices(ik - 1))
                                 Dim phaseNameID As String = cphase.nameID
                                 If lokalesOptimum.offset(ik - 1) <> 0 Then
                                     cphase.changeStartandDauer(cphase.startOffsetinDays + lokalesOptimum.offset(ik - 1), _
@@ -10023,14 +10055,14 @@ Public Module Projekte
 
                             Next
 
-
-
+                            OptimierungsErgebnis.Add(lokalesOptimum.projectName, lokalesOptimum)
+                            Call visualisiereTeilErgebnis(lokalesOptimum.projectName)
 
                         End If
 
-                        OptimierungsErgebnis.Add(lokalesOptimum.projectName, lokalesOptimum)
+
                         toDoListe.Remove(lokalesOptimum.projectName)
-                        Call visualisiereTeilErgebnis(lokalesOptimum.projectName)
+
                     Else
                         Abbruch = True
                     End If
