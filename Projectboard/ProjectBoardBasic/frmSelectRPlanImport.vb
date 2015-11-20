@@ -20,12 +20,15 @@ Public Class frmSelectRPlanImport
         'dirname = awinPath & rplanimportFilesOrdner
         If menueAswhl = PTImpExp.rplan Then
             dirname = importOrdnerNames(PTImpExp.rplan)
+        ElseIf menueAswhl = PTImpExp.rplanrxf Then
+            dirname = importOrdnerNames(PTImpExp.rplanrxf)
         ElseIf menueAswhl = PTImpExp.simpleScen Then
             dirname = importOrdnerNames(PTImpExp.simpleScen)
         ElseIf menueAswhl = PTImpExp.modulScen Then
             dirname = importOrdnerNames(PTImpExp.modulScen)
         ElseIf menueAswhl = PTImpExp.addElements Then
             dirname = importOrdnerNames(PTImpExp.addElements)
+       
         End If
 
 
@@ -58,6 +61,8 @@ Public Class frmSelectRPlanImport
         'dirName = awinPath & rplanimportFilesOrdner
         If menueAswhl = PTImpExp.rplan Then
             dirName = importOrdnerNames(PTImpExp.rplan)
+        ElseIf menueAswhl = PTImpExp.rplanrxf Then
+            dirName = importOrdnerNames(PTImpExp.rplanrxf)
         ElseIf menueAswhl = PTImpExp.simpleScen Then
             dirName = importOrdnerNames(PTImpExp.simpleScen)
         ElseIf menueAswhl = PTImpExp.modulScen Then

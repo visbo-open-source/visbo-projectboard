@@ -3161,6 +3161,55 @@ Imports System.Drawing
         appInstance.ScreenUpdating = True
 
     End Sub
+    Public Sub Tom2G4B3RPLANRxfImport(control As IRibbonControl)
+
+
+        Dim dateiName As String
+        Dim myCollection As New Collection
+        Dim importDate As Date = Date.Now
+        Dim returnValue As DialogResult
+        Dim getRPLANImport As New frmSelectRPlanImport
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        'dateiName = awinPath & projektInventurFile
+
+        getRPLANImport.menueAswhl = PTImpExp.rplanrxf
+        returnValue = getRPLANImport.ShowDialog
+
+        If returnValue = DialogResult.OK Then
+            dateiName = getRPLANImport.selectedDateiName
+
+            Try
+               
+                ' alle Import Projekte erstmal löschen
+                ImportProjekte.Clear()
+
+                Call RXFImport(myCollection, dateiName, False)
+
+                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+
+                Call awinWritePhaseDefinitions()
+
+            Catch ex As Exception
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+            End Try
+        Else
+            Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
+        End If
+
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+    End Sub
     Public Sub Tom2G4M1ImportOLD(control As IRibbonControl)
 
         Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
