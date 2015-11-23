@@ -64,7 +64,7 @@ Public Class clsPhasen
 
     ''' <summary>
     ''' gibt die Abkürzung, den Shortname für den Meilenstein zurück
-    ''' wenn er nicht gefunden wird: "n.a."
+    ''' wenn er nicht gefunden wird: "-"
     ''' </summary>
     ''' <param name="name">Langname Meilenstein</param>
     ''' <value></value>
@@ -72,7 +72,7 @@ Public Class clsPhasen
     ''' <remarks></remarks>
     Public ReadOnly Property getAbbrev(ByVal name As String) As String
         Get
-            Dim msAbbrev As String = "n.a."
+            Dim msAbbrev As String = "-"
 
             'Dim key As String = calcKey(name, belongsTo)
 

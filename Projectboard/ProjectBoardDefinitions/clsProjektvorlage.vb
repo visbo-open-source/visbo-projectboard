@@ -860,6 +860,7 @@
                 If firstIX < 0 Then
                     ' es gibt keine Meilensteine 
                 Else
+
                     For mx = firstIX To lastIX
                         elemID = Me.hierarchy.getIDAtIndex(mx)
 
@@ -874,16 +875,14 @@
 
                         End If
 
-                        'If Not iDCollection.Contains(elemID) Then
-                        '    iDCollection.Add(elemID, elemID)
-                        'End If
                     Next
+
                 End If
             Else
                 ' Phasen holen
                 firstIX = 1
                 lastIX = Me.hierarchy.getIndexOf1stMilestone - 1
-                
+
                 If lastIX < 0 Then
                     ' es gibt keine Meilensteine, sondern nur Phasen 
                     lastIX = Me.hierarchy.count
@@ -906,9 +905,6 @@
 
                     End If
 
-                    'If Not iDCollection.Contains(elemID) Then
-                    '    iDCollection.Add(elemID, elemID)
-                    'End If
                 Next
 
             End If
