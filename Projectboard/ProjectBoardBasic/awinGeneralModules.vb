@@ -8973,11 +8973,22 @@ Public Module awinGeneralModules
 
     End Sub
 
+    ''' <summary>
+    ''' Einlesen eines RXF-Files (XML-Ausleitung von RPLAN)
+    ''' </summary>
+    ''' <param name="myCollection"></param>
+    ''' <param name="xmlfilename"></param>Name des RXF-Files
+    ''' <param name="isVorlage"></param>Ist Vorlage, oder nicht
+    ''' <remarks></remarks>
     Sub RXFImport(ByRef myCollection As Collection, ByVal xmlfilename As String, ByVal isVorlage As Boolean)
 
         'Variablen-Definitionen für Projectboard 
 
         Dim hproj As clsProjekt
+
+        Dim vproj As clsProjektvorlage
+        Dim vorlagenName As String = ""
+
         Dim ProjektdauerinDays As Integer = 0
         Dim cphase As clsPhase = Nothing
 
@@ -8991,18 +9002,6 @@ Public Module awinGeneralModules
 
         Dim milestoneName As String = ""
 
-
-        ' Create an instance of the XmlSerializer class;
-        ' specify the type of object to be deserialized.
-        Dim deserializer As New XmlSerializer(GetType(rxf), "http://www.actano.de/2007/rxf")
-
-
-        ' If the XML document has been altered with unknown
-        ' nodes or attributes, handle them with the
-        ' UnknownNode and UnknownAttribute events.
-        AddHandler deserializer.UnknownNode, AddressOf deserializer_UnknownNode
-        AddHandler deserializer.UnknownAttribute, AddressOf deserializer_UnknownAttribute
-
         ' XML-Datei Öffnen
         ' A FileStream is needed to read the XML document.
         Dim fs As New FileStream(xmlfilename, FileMode.Open)
@@ -9010,180 +9009,142 @@ Public Module awinGeneralModules
         ' Declare an object variable of the type to be deserialized.
         Dim Rplan As New rxf            ' Class rxf wird in clsRplanRXF.vb definiert
 
-        ' Einlesen des kompletten XML-Dokument im die Klasse rxf
-        ' Use the Deserialize method to restore the object's state with
-        ' data from the XML document. 
-        Rplan = CType(deserializer.Deserialize(fs), rxf)
+        Try
+
+            ' Create an instance of the XmlSerializer class;
+            ' specify the type of object to be deserialized.
+            Dim deserializer As New XmlSerializer(GetType(rxf), "http://www.actano.de/2007/rxf")
 
 
-        ' Projekt suchen; VISBO Projekt suchen unter der RPLANTasks mit gegebenen MainProject
-        For i = 0 To Rplan.task.Length - 1
-
-            If Not IsNothing(Rplan.task(i).mainProject) Then
-                ' akt. Task ist Projekt 
-                Dim aktTask_i As rxfTask = Rplan.task(i)
-                hproj = New clsProjekt
-
-                hproj.name = aktTask_i.name
-                hproj.leadPerson = aktTask_i.owner
-                hproj.startDate = aktTask_i.actualDate.start.Value
-                ProjektdauerinDays = calcDauerIndays(aktTask_i.actualDate.start.Value, aktTask_i.actualDate.finish.Value)
-
-                ' ProjektPhase erzeugen
-                cphase = New clsPhase(parent:=hproj)
-
-                With cphase
-                    .nameID = rootPhaseName
-
-                    Dim Duration As Long = calcDauerIndays(aktTask_i.actualDate.start.Value, aktTask_i.actualDate.finish.Value)
-                    Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, aktTask_i.actualDate.start.Value)
-
-                    ' für die rootPhase muss gelten: offset = startoffset = 0 und duration = ProjektdauerIndays
-
-                    Dim startOffset As Integer = 0
-                    .changeStartandDauer(startOffset, Duration)
-                    Dim phaseStartdate As Date = .getStartDate
-                    Dim phaseEnddate As Date = .getEndDate
-
-                End With
-
-                ' ProjektPhase wird hinzugefügt
-                Dim hrchynode As New clsHierarchyNode
-                hrchynode.elemName = cphase.name
-                hrchynode.parentNodeKey = ""
-                hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
-                parentphase = cphase
-                parentelemID = cphase.nameID
-                lastphase = cphase
-                lastelemID = cphase.nameID
-
-                Call findTasksandInsert(aktTask_i, parentelemID, hproj, Rplan)
-
-                '
-                '' '' Bestimmung der BMW-Vorlage des jeweiligen Projektes
-                '' '' muss noch genauer herausgefunden werden, welche Vorlage für das jeweilige Projekt verwendet werden muss
-                '
-
-                Dim vproj As clsProjektvorlage
-                Dim vorNam1 = "rel 4"
-                Dim typkennung As String = hproj.VorlagenName      ' hier ist aber nur enthalten, eA, wA, E  usw.
-                Dim anlaufkennung As String = "03"
-                Dim firstMS As Integer = hproj.hierarchy.getIndexOf1stMilestone
+            ' If the XML document has been altered with unknown
+            ' nodes or attributes, handle them with the
+            ' UnknownNode and UnknownAttribute events.
+            AddHandler deserializer.UnknownNode, AddressOf deserializer_UnknownNode
+            AddHandler deserializer.UnknownAttribute, AddressOf deserializer_UnknownAttribute
 
 
-                Dim hrchyhproj As clsHierarchy = hproj.hierarchy
-                For phi = 1 To firstMS - 1
-                    Dim phID As String = hrchyhproj.getIDAtIndex(phi)
-                    Dim phName As String = elemNameOfElemID(phID)
-                    If phName.Contains("I-Stufen") Then
-                        Dim pharray() As String = Split(phName, " ", 5)
-                        vorNam1 = "rel 5"
-                    End If
-                Next phi
-                For msi = firstMS To hrchyhproj.count - 1
-                    Dim msID As String = hrchyhproj.getIDAtIndex(msi)
-                    Dim msName As String = elemNameOfElemID(msID)
-                    If msName.Contains("SOP") Then
-                        Dim msarray() As String = Split(msName, " ", 5)
-                        Try
-                            Dim sopdate As Date = hproj.getMilestoneDate(msID)
+            ' Einlesen des kompletten XML-Dokument im die Klasse rxf
+            ' Use the Deserialize method to restore the object's state with
+            ' data from the XML document. 
+            Rplan = CType(deserializer.Deserialize(fs), rxf)
 
-                            If DateDiff(DateInterval.Month, StartofCalendar, sopdate) > 0 Then
-                                Dim sopMonth As Integer = sopdate.Month
-                                If sopMonth >= 3 And sopMonth <= 6 Then
-                                    anlaufKennung = "03"
-                                ElseIf sopMonth >= 7 And sopMonth <= 10 Then
-                                    anlaufKennung = "07"
-                                Else
-                                    anlaufKennung = "11"
-                                End If
-                            Else
-                                anlaufkennung = sopdate.Month.ToString("D2")       ' Monat mindestens zweistellig angeben
-                            End If
 
-                        Catch ex As Exception
-                            anlaufkennung = "?"
-                        End Try
+            ' Projekt suchen; VISBO Projekt suchen unter der RPLANTasks mit gegebenen MainProject
+            For i = 0 To Rplan.task.Length - 1
 
-                    End If
-                Next
-                Try
-                    If Not IsNothing(typkennung) Then
+                If Not IsNothing(Rplan.task(i).mainProject) Then
+                    ' akt. Task ist Projekt 
+                    Dim aktTask_i As rxfTask = Rplan.task(i)
+                    hproj = New clsProjekt
 
-                        If typkennung.Contains("SB") Then
-                            typkennung = "SBWE"
-                        ElseIf typkennung.Contains("eA") Then
-                            typkennung = "eA"
-                        ElseIf typkennung.Contains("wA") Then
-                            typkennung = "wA"
-                        ElseIf typkennung.Contains("E") Then
-                            typkennung = "E"
-                        Else
-                            typkennung = "?"
-                        End If
+                    hproj.name = aktTask_i.name
+                    hproj.VorlagenName = ""
+                    hproj.leadPerson = aktTask_i.owner
+                    hproj.startDate = aktTask_i.actualDate.start.Value
+                    ProjektdauerinDays = calcDauerIndays(aktTask_i.actualDate.start.Value, aktTask_i.actualDate.finish.Value)
+
+                    ' ProjektPhase erzeugen
+                    cphase = New clsPhase(parent:=hproj)
+
+                    With cphase
+                        .nameID = rootPhaseName
+
+                        Dim Duration As Long = calcDauerIndays(aktTask_i.actualDate.start.Value, aktTask_i.actualDate.finish.Value)
+                        Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, aktTask_i.actualDate.start.Value)
+
+                        ' für die rootPhase muss gelten: offset = startoffset = 0 und duration = ProjektdauerIndays
+
+                        Dim startOffset As Integer = 0
+                        .changeStartandDauer(startOffset, Duration)
+                        Dim phaseStartdate As Date = .getStartDate
+                        Dim phaseEnddate As Date = .getEndDate
+
+                    End With
+
+                    ' ProjektPhase wird hinzugefügt
+                    Dim hrchynode As New clsHierarchyNode
+                    hrchynode.elemName = cphase.name
+                    hrchynode.parentNodeKey = ""
+                    hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
+                    parentphase = cphase
+                    parentelemID = cphase.nameID
+                    lastphase = cphase
+                    lastelemID = cphase.nameID
+
+                    ' Alle Tasks zu diesem Projekt mit deren Kinder und KindesKinder in hproj eintragen
+                    Call findAllTasksandInsert(aktTask_i, parentelemID, hproj, Rplan)
+
+                    '
+                    '' '' Bestimmung der BMW-Vorlage des jeweiligen Projektes
+                    '' '' muss noch genauer herausgefunden werden, welche Vorlage für das jeweilige Projekt verwendet werden muss
+                    '
+                    vorlagenName = findBMWVorlagenName(hproj)
+                    '
+                    ''''    Ende Bestimmung der BMW-Vorlage zu diesem Projekt
+                    '
+
+
+                    If Projektvorlagen.Contains(vorlagenName) Then
+                        vproj = Projektvorlagen.getProject(vorlagenName)
+
+                        hproj.VorlagenName = vorlagenName
+                        hproj.farbe = vproj.farbe
+                        hproj.Schrift = vproj.Schrift
+                        hproj.Schriftfarbe = vproj.Schriftfarbe
+                        hproj.earliestStart = vproj.earliestStart
+                        hproj.latestStart = vproj.latestStart
+
+                        'ElseIf Projektvorlagen.Contains("unknown") Then
+                        '    vproj = Projektvorlagen.getProject("unknown")
+                    Else
+                        'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
+                        hproj.VorlagenName = ""
+                        hproj.farbe = awinSettings.AmpelNichtBewertet
+                        hproj.Schrift = Projektvorlagen.getProject(1).Schrift
+                        hproj.Schriftfarbe = RGB(10, 10, 10)
+                        hproj.earliestStart = 0
+                        hproj.latestStart = 0
 
                     End If
-                Catch ex As Exception
-                    typkennung = "?"
-                End Try
-              
+
+                    Dim msPHdefcount As Integer = missingPhaseDefinitions.Count
+                    Dim msMSdefcount As Integer = missingMilestoneDefinitions.Count
+
+                    ' jetzt muss das Projekt eingetragen werden in die Listen Importierte Projekte und myCollection
+                    ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                    myCollection.Add(calcProjektKey(hproj))
 
 
-                Dim vorlagenName As String = vorNam1 & " " & typkennung & "-" & anlaufkennung
-
-                '
-                ''''    Ende Bestimmung der BMW-Vorlage zu diesem Projekt
-                '
-
-                If Projektvorlagen.Contains(vorlagenName) Then
-                    vproj = Projektvorlagen.getProject(vorlagenName)
-
-                    hproj.farbe = vproj.farbe
-                    hproj.Schrift = vproj.Schrift
-                    hproj.Schriftfarbe = vproj.Schriftfarbe
-                    hproj.earliestStart = vproj.earliestStart
-                    hproj.latestStart = vproj.latestStart
-
-                    'ElseIf Projektvorlagen.Contains("unknown") Then
-                    '    vproj = Projektvorlagen.getProject("unknown")
                 Else
-                    'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
-                    hproj.farbe = awinSettings.AmpelNichtBewertet
-                    hproj.Schrift = Projektvorlagen.getProject(1).Schrift
-                    hproj.Schriftfarbe = RGB(10, 10, 10)
-                    hproj.earliestStart = 0
-                    hproj.latestStart = 0
-
+                    ' aktuelle Task ist kein Projekt
                 End If
+            Next i
 
 
-                ' jetzt muss das Projekt eingetragen werden in die Listen Importierte Projekte und myCollection
-                ImportProjekte.Add(calcProjektKey(hproj), hproj)
-                myCollection.Add(calcProjektKey(hproj))
+            ' RXF-Datei (entspricht XML-Datei) Schliessen
+            fs.Close()
 
+        Catch ex As Exception
+            Throw New ArgumentException()
 
-            Else
-                ' aktuelle Task ist kein Projekt
-            End If
-        Next i
-
-
-        ' RXF-Datei (entspricht XML-Datei) Schliessen
-        fs.Close()
+            ' RXF-Datei (entspricht XML-Datei) Schliessen
+            fs.Close()
+        End Try
 
 
     End Sub
 
     
     ''' <summary>
-    ''' sucht alle Tasks, die die Task 'task' als Parent haben und dann für die gefundenen Tasks wird diese Funktion wieder rekursiv aufgerufen
+    ''' sucht zu der rxfTask 'task' alle Kinder und KindesKinder  und trägt diese in das Projekt 'hproj' ein 
+    ''' dazu wird diese Routine rekursiv aufgerufen
     ''' </summary>
-    ''' <param name="task"></param>Task, die Parent aller gesuchten Tasks ist
-    ''' <param name="parentelemID"></param>Parent der Task 'task'
+    ''' <param name="task"></param>rxfTask 'task', die Parent aller gesuchten Tasks ist
+    ''' <param name="parentelemID"></param>Parent dieser rxfTask 'task'
     ''' <param name="hproj"></param>aktuelles aufzubauendes Projekt
-    ''' <param name="RPLAN"></param>Komplette rxf Struktur wird übergeben
+    ''' <param name="RPLAN"></param>Komplette eingelesene rxf-Struktur 
     ''' <remarks></remarks>
-    Private Sub findTasksandInsert(ByVal task As rxfTask, ByVal parentelemID As String, ByRef hproj As clsProjekt, ByVal RPLAN As rxf)
+    Private Sub findAllTasksandInsert(ByVal task As rxfTask, ByVal parentelemID As String, ByRef hproj As clsProjekt, ByVal RPLAN As rxf)
 
 
         Dim cphase As clsPhase = Nothing
@@ -9205,180 +9166,325 @@ Public Module awinGeneralModules
 
                 Dim aktTask_j As rxfTask = RPLAN.task(j)
 
-
                 ' Herausfinden, ob aktTask_j Phase oder Meilenstein ist
                 If aktTask_j.actualDate.duration.Value <> 0 Then
 
-                    ' ist Phase
-                    If PhaseDefinitions.Contains(aktTask_j.name) Then
+                    ''''''  ist PHASE
 
-                        If aktTask_j.name = "Projektphasen" Then
+                    If aktTask_j.name = "Projektphasen" Then
 
-                            For i = 0 To aktTask_j.customvalue.Length - 1
-                                If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_A" Then
-                                    hproj.businessUnit = aktTask_j.customvalue(i).Value
-                                End If
+                        For i = 0 To aktTask_j.customvalue.Length - 1
+                            If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_A" Then
+                                hproj.businessUnit = aktTask_j.customvalue(i).Value
+                            End If
 
-                                If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_B" Then
-                                    hproj.VorlagenName = aktTask_j.customvalue(i).Value
-                                End If
-                            Next i
+                            If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_B" Then
+                                hproj.VorlagenName = aktTask_j.customvalue(i).Value
+                            End If
+                        Next i
+
+                    End If
+
+                    ' überprüfen, ob die Phase evt. ignoriert werden soll (wird im  CustomizationFile in Tabelle Phase-Mappings definiert)
+                    If Not phaseMappings.tobeIgnored(aktTask_j.name) Then
+
+                        If PhaseDefinitions.Contains(aktTask_j.name) Then
+
+                            ' '' ''If aktTask_j.name = "Projektphasen" Then
+
+                            ' '' ''    For i = 0 To aktTask_j.customvalue.Length - 1
+                            ' '' ''        If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_A" Then
+                            ' '' ''            hproj.businessUnit = aktTask_j.customvalue(i).Value
+                            ' '' ''        End If
+
+                            ' '' ''        If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_B" Then
+                            ' '' ''            hproj.VorlagenName = aktTask_j.customvalue(i).Value
+                            ' '' ''        End If
+                            ' '' ''    Next i
+
+                            ' '' ''End If
+
+                        Else
+                            ' aktTask_j.name existiert nicht in den PhaseDefinitions
+
+                            'wenn der PhasenName gemappt werden kann und dieser dann in phasedefinitions enthalten ist, so wird phasename ersetzt
+                            Dim mappedPhasename As String = phaseMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
+                            If PhaseDefinitions.Contains(mappedPhasename) Then
+                                ' neuer aktueller Name der Task
+                                aktTask_j.name = mappedPhasename
+                            Else
+
+                                Dim newPhaseDef As New clsPhasenDefinition
+                                newPhaseDef.name = aktTask_j.name
+                                newPhaseDef.shortName = ""
+                                newPhaseDef.darstellungsKlasse = aktTask_j.taskType.Value
+                                newPhaseDef.UID = PhaseDefinitions.Count + 1
+                                ' muss in missingPhaseDefinitions noch eingetragen werden
+                                missingPhaseDefinitions.Add(newPhaseDef)
+
+                                Call logfileSchreiben(("Achtung, RXFImport: Phase '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
+                            End If
+                        End If
+
+                        Dim phaseStartdate As Date
+                        Dim phaseEnddate As Date
+                        cphase = New clsPhase(hproj)
+                        With cphase
+                            .nameID = hproj.hierarchy.findUniqueElemKey(aktTask_j.name, False)
+
+                            Dim Duration As Integer = calcDauerIndays(aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value)
+                            Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, aktTask_j.actualDate.start.Value)
+
+                            .changeStartandDauer(offset, Duration)
+                            phaseStartdate = .getStartDate
+                            phaseEnddate = .getEndDate
+                        End With
+
+
+
+                        Dim ueberdeckung As Double = calcPhaseUeberdeckung(parentphase.getStartDate, parentphase.getEndDate, phaseStartdate, phaseEnddate)
+
+                        If awinSettings.eliminateDuplicates And ueberdeckung > 0.97 And parentphase.name = cphase.name Then
+
+                            Call logfileSchreiben("Achtung: RXFImport: Phase " & aktTask_j.name & " ist doppelt und wird ignoriert ", hproj.name, anzFehler)
+                        Else
+
+                            ' Phase wird ins Projekt mitaufgenommen
+
+                            Dim phrchynode As New clsHierarchyNode
+                            phrchynode.elemName = cphase.name
+                            phrchynode.parentNodeKey = parentelemID
+
+                            hproj.AddPhase(cphase, origName:=aktTask_j.original, parentID:=phrchynode.parentNodeKey)
+                            phrchynode.indexOfElem = hproj.AllPhases.Count
+
+                            ' merken von letzem Element (Knoten,Phase,Meilenstein)
+                            'lasthrchynode = phrchynode
+                            lastelemID = cphase.nameID
+                            lastphase = cphase
+
+                            Call findAllTasksandInsert(aktTask_j, lastelemID, hproj, RPLAN)
 
                         End If
 
                     Else
-                        ' aktTask_j.name existiert nicht in den PhaseDefinitions
-                        ' muss in missingPhaseDefinitions noch eingetragen werden
-                        If Not PhaseDefinitions.Contains(aktTask_j.name) Then
-                            Dim newPhaseDef As New clsPhasenDefinition
-                            newPhaseDef.name = aktTask_j.name
-                            newPhaseDef.shortName = aktTask_j.name
-                            newPhaseDef.UID = PhaseDefinitions.Count + 1
-                            missingPhaseDefinitions.Add(newPhaseDef)
-                        End If
 
-                        Call logfileSchreiben(("Fehler, RXFImport: Phase '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
 
                     End If
 
+                ElseIf aktTask_j.taskType.type = "SUMMARY" Then
 
-                    cphase = New clsPhase(hproj)
-                    With cphase
-                        .nameID = hproj.hierarchy.findUniqueElemKey(aktTask_j.name, False)
-
-                        Dim Duration As Integer = calcDauerIndays(aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value)
-                        Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, aktTask_j.actualDate.start.Value)
-
-                        .changeStartandDauer(offset, Duration)
-                        Dim phaseStartdate As Date = .getStartDate
-                        Dim phaseEnddate As Date = .getEndDate
-                    End With
-
-
-                    Dim phrchynode As New clsHierarchyNode
-                    phrchynode.elemName = cphase.name
-                    phrchynode.parentNodeKey = parentelemID
-
-                    hproj.AddPhase(cphase, parentID:=phrchynode.parentNodeKey)
-                    phrchynode.indexOfElem = hproj.AllPhases.Count
-
-                    ' merken von letzem Element (Knoten,Phase,Meilenstein)
-                    'lasthrchynode = phrchynode
-                    lastelemID = cphase.nameID
-                    lastphase = cphase
-
-                    Call findTasksandInsert(aktTask_j, lastelemID, hproj, RPLAN)
-
-
+                    Call logfileSchreiben("Achtung, RXFImport: Die aktuelle Task '" & aktTask_j.name & "' ist eine Summary-Task mit der Duration = 0 ", hproj.name, anzFehler)
 
                 ElseIf aktTask_j.taskType.type = "MILESTONE" Then
 
-                    ' ist Meilenstein
+                    ' ist MEILENSTEIN
+                    If Not milestoneMappings.tobeIgnored(aktTask_j.name) Then
 
-                    If MilestoneDefinitions.Contains(aktTask_j.name) Then
 
-                    Else
-                        Dim msDef As New clsMeilensteinDefinition
-                        msDef.belongsTo = parentphase.name
-                        msDef.name = aktTask_j.name
-                        msDef.schwellWert = 0
-                        msDef.shortName = ""
-                        msDef.UID = MilestoneDefinitions.Count + 1
-                        'MilestoneDefinitions.Add(msDef)
+                        If MilestoneDefinitions.Contains(aktTask_j.name) Then
+
+                        Else
+                            'wenn der MeilensteinName gemappt werden kann und dieser dann in milestonedefinitions enthalten ist, so wird Meilensteinname ersetzt
+                            Dim mappedMSname As String = milestoneMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
+                            If MilestoneDefinitions.Contains(mappedMSname) Then
+                                ' neuer aktueller Name der Task
+                                aktTask_j.name = mappedMSname
+                            Else
+
+                                Dim msDef As New clsMeilensteinDefinition
+                                msDef.belongsTo = parentphase.name
+                                msDef.name = aktTask_j.name
+                                msDef.schwellWert = 0
+                                msDef.shortName = ""
+                                msDef.darstellungsKlasse = aktTask_j.taskType.Value
+                                msDef.UID = MilestoneDefinitions.Count + 1
+
+                                Try
+                                    missingMilestoneDefinitions.Add(msDef)
+                                Catch ex As Exception
+                                End Try
+
+                            End If
+                        End If
+
+
+                        cmilestone = New clsMeilenstein(parent:=parentphase)
+                        cBewertung = New clsBewertung
+
+                        milestoneName = aktTask_j.name
+                        If DateDiff(DateInterval.Month, aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value) = 0 Then
+
+                            milestonedate = aktTask_j.actualDate.start.Value
+                        End If
+
+
+                        ' wenn der freefloat nicht zugelassen ist und der Meilenstein ausserhalb der Phasen-Grenzen liegt 
+                        ' muss abgebrochen werden 
+
+                        If Not awinSettings.milestoneFreeFloat And _
+                            (DateDiff(DateInterval.Day, parentphase.getStartDate, milestonedate) < 0 Or _
+                             DateDiff(DateInterval.Day, parentphase.getEndDate, milestonedate) > 0) Then
+
+                            Call logfileSchreiben(("Fehler, RXFImport: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
+                                                milestoneName & " nicht innerhalb " & parentphase.name & vbLf & _
+                                                     "Korrigieren Sie bitte diese Inkonsistenz in der Datei '"), hproj.name, anzFehler)
+                            Throw New Exception("Fehler, RXFImport: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
+                                                milestoneName & " nicht innerhalb " & parentphase.name & vbLf & _
+                                                     "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
+                        End If
+
+
+
+                        Dim resultVerantwortlich As String = aktTask_j.owner
+                        Dim bewertungsAmpel As Integer = 0
+                        Dim explanation As String = aktTask_j.note
+
+                        ' Ergänzung tk 2.11 deliverables ergänzt 
+                        Dim deliverables As String = ""
+
+                        If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                            ' es gibt keine Bewertung
+                            bewertungsAmpel = 0
+                        End If
+                        ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                        With cBewertung
+                            '.bewerterName = resultVerantwortlich
+                            .colorIndex = bewertungsAmpel
+                            .datum = Date.Now
+                            .description = explanation
+                            .deliverables = deliverables
+                        End With
+
+
+
+                        With cmilestone
+                            .setDate = milestonedate
+                            '.verantwortlich = resultVerantwortlich
+                            .nameID = hproj.hierarchy.findUniqueElemKey(milestoneName, True)
+                            If Not cBewertung Is Nothing Then
+                                .addBewertung(cBewertung)
+                            End If
+                        End With
+
+
                         Try
-                            missingMilestoneDefinitions.Add(msDef)
-                        Catch ex As Exception
+                            With parentphase
+                                .addMilestone(cmilestone)
+                            End With
+                        Catch ex1 As Exception
+                            Throw New Exception(ex1.Message)
                         End Try
 
 
-                    End If
+                    End If     ' Ende: Meilenstein soll ignoriert werden 
 
+                End If      '  Ende: ist MEILENSTEIN
 
-                    cmilestone = New clsMeilenstein(parent:=parentphase)
-                    cBewertung = New clsBewertung
-
-                    milestoneName = aktTask_j.name
-                    If DateDiff(DateInterval.Month, aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value) = 0 Then
-
-                        milestonedate = aktTask_j.actualDate.start.Value
-                    End If
-
-
-                    ' wenn der freefloat nicht zugelassen ist und der Meilenstein ausserhalb der Phasen-Grenzen liegt 
-                    ' muss abgebrochen werden 
-
-                    If Not awinSettings.milestoneFreeFloat And _
-                        (DateDiff(DateInterval.Day, parentphase.getStartDate, milestonedate) < 0 Or _
-                         DateDiff(DateInterval.Day, parentphase.getEndDate, milestonedate) > 0) Then
-
-                        Call logfileSchreiben(("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
-                                            milestoneName & " nicht innerhalb " & parentphase.name & vbLf & _
-                                                 "Korrigieren Sie bitte diese Inkonsistenz in der Datei '"), hproj.name, anzFehler)
-                        Throw New Exception("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
-                                            milestoneName & " nicht innerhalb " & parentphase.name & vbLf & _
-                                                 "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
-                    End If
-
-
-
-                    Dim resultVerantwortlich As String = aktTask_j.owner
-                    Dim bewertungsAmpel As Integer = 0
-                    Dim explanation As String = aktTask_j.note
-
-                    ' Ergänzung tk 2.11 deliverables ergänzt 
-                    Dim deliverables As String = ""
-
-                    If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
-                        ' es gibt keine Bewertung
-                        bewertungsAmpel = 0
-                    End If
-                    ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
-                    With cBewertung
-                        '.bewerterName = resultVerantwortlich
-                        .colorIndex = bewertungsAmpel
-                        .datum = Date.Now
-                        .description = explanation
-                        .deliverables = deliverables
-                    End With
-
-
-
-                    With cmilestone
-                        .setDate = milestonedate
-                        '.verantwortlich = resultVerantwortlich
-                        .nameID = hproj.hierarchy.findUniqueElemKey(milestoneName, True)
-                        If Not cBewertung Is Nothing Then
-                            .addBewertung(cBewertung)
-                        End If
-                    End With
-
-
-                    Try
-                        With parentphase
-                            .addMilestone(cmilestone)
-                        End With
-                    Catch ex1 As Exception
-                        Throw New Exception(ex1.Message)
-                    End Try
-                ElseIf aktTask_j.taskType.type = "SUMMARY" Then
-
-                    Call logfileSchreiben("Fehler, RXFImport: Die aktuelle Task '" & aktTask_j.name & "' ist eine Summary-Task mit der Duration = 0 ", hproj.name, anzFehler)
                 End If
 
-            End If
-
-        Next j
+        Next j    ' Ende Schleife über alle Tasks
     End Sub
 
+    ''' <summary>
+    ''' nach BMW-Vorgaben:
+    ''' bestimmt aus dem übergebenen VorlagenNamen ( =  der CustomValue "UsA_SERVICE_SPALTE_B" aus Phase "Projektphasen" ) 
+    ''' den tatsächlichen VorlagenNamen des Projekts 
+    '''     ''' </summary>
+    ''' <param name="hproj"></param>aktuelles zu lesendes Projekt
+    ''' <returns></returns>fertig zusammengesetzter VorlagenName des Projekts (gemäß BMW vorschriften
+    ''' <remarks></remarks>
+    Private Function findBMWVorlagenName(ByVal hproj As clsProjekt) As String
 
+
+        Dim vorNam1 = "rel 4"
+        Dim typkennung As String = hproj.VorlagenName      ' hier ist aber nur enthalten, eA, wA, E  usw.
+        Dim anlaufkennung As String = "03"
+        Dim firstMS As Integer = hproj.hierarchy.getIndexOf1stMilestone
+
+
+        Dim hrchyhproj As clsHierarchy = hproj.hierarchy
+        For phi = 1 To firstMS - 1
+            Dim phID As String = hrchyhproj.getIDAtIndex(phi)
+            Dim phName As String = elemNameOfElemID(phID)
+            If phName.Contains("I-Stufen") Then
+                Dim pharray() As String = Split(phName, " ", 5)
+                vorNam1 = "rel 5"
+            End If
+        Next phi
+        For msi = firstMS To hrchyhproj.count - 1
+            Dim msID As String = hrchyhproj.getIDAtIndex(msi)
+            Dim msName As String = elemNameOfElemID(msID)
+            If msName.Contains("SOP") Then
+                Dim msarray() As String = Split(msName, " ", 5)
+                Try
+                    Dim sopdate As Date = hproj.getMilestoneDate(msID)
+
+                    If DateDiff(DateInterval.Month, StartofCalendar, sopdate) > 0 Then
+                        Dim sopMonth As Integer = sopdate.Month
+                        If sopMonth >= 3 And sopMonth <= 6 Then
+                            anlaufkennung = "03"
+                        ElseIf sopMonth >= 7 And sopMonth <= 10 Then
+                            anlaufkennung = "07"
+                        Else
+                            anlaufkennung = "11"
+                        End If
+                    Else
+                        anlaufkennung = sopdate.Month.ToString("D2")       ' Monat mindestens zweistellig angeben
+                    End If
+
+                Catch ex As Exception
+                    anlaufkennung = "?"
+                End Try
+
+            End If
+        Next
+        Try
+            If Not IsNothing(typkennung) Then
+
+                If typkennung.Contains("SB") Then
+                    typkennung = "SBWE"
+                ElseIf typkennung.Contains("eA") Then
+                    typkennung = "eA"
+                ElseIf typkennung.Contains("wA") Then
+                    typkennung = "wA"
+                ElseIf typkennung.Contains("E") Then
+                    typkennung = "E"
+                Else
+                    typkennung = "?"
+                End If
+            Else
+                typkennung = "?"
+            End If
+        Catch ex As Exception
+            typkennung = "?"
+        End Try
+
+        findBMWVorlagenName = vorNam1 & " " & typkennung & "-" & anlaufkennung
+
+    End Function
+
+
+    ''' <summary>
+    ''' Behandelt den Fehler UnkonwnNode beim Einlesen des RXF-Files
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub deserializer_UnknownNode(sender As Object, e As XmlNodeEventArgs)
-        Console.WriteLine(("Unknown Node:" & e.Name & ControlChars.Tab & e.Text))
+        Call MsgBox(("RXFImport: Unknown Node:" & e.Name & ControlChars.Tab & e.Text))
     End Sub 'serializer_UnknownNode
 
 
+    ''' <summary>
+    ''' Behandelt den Fehler UnkonwnAttribute beim Einlesen des RXF-Files
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub deserializer_UnknownAttribute(sender As Object, e As XmlAttributeEventArgs)
         Dim attr As System.Xml.XmlAttribute = e.Attr
-        Console.WriteLine(("Unknown attribute " & attr.Name & "='" & attr.Value & "'"))
+        Call MsgBox(("RXFImport: Unknown attribute " & attr.Name & "='" & attr.Value & "'"))
     End Sub 'serializer_UnknownAttribute
 
 

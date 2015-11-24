@@ -3170,6 +3170,10 @@ Imports System.Drawing
         Dim returnValue As DialogResult
         Dim getRPLANImport As New frmSelectRPlanImport
 
+
+        ' öffnen des LogFiles
+        Call logfileOpen()
+
         Call projektTafelInit()
 
         appInstance.EnableEvents = False
@@ -3185,9 +3189,11 @@ Imports System.Drawing
             dateiName = getRPLANImport.selectedDateiName
 
             Try
-               
+
                 ' alle Import Projekte erstmal löschen
                 ImportProjekte.Clear()
+
+                Call logfileSchreiben("Beginn RXFImport ", dateiName, -1)
 
                 Call RXFImport(myCollection, dateiName, False)
 
@@ -3196,14 +3202,16 @@ Imports System.Drawing
                 Call awinWritePhaseDefinitions()
 
             Catch ex As Exception
-                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                Call MsgBox("Fehler bei Import " & vbLf & dateiName & vbLf & ex.Message)
+
+                Call MsgBox(ex.Message & vbLf & dateiName & vbLf & "Fehler bei RXFImport ")
             End Try
         Else
             Call MsgBox(" Import RPLAN-Projekte wurde abgebrochen")
         End If
 
 
+        ' Schließen des LogFiles
+        Call logfileSchliessen()
 
         enableOnUpdate = True
         appInstance.EnableEvents = True
