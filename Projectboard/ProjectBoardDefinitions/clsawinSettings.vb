@@ -82,6 +82,12 @@
     Public Property EinzelRessExport As Integer
     ' Settings ob die fehlenden Phase- und Meilenstein-Namen in die Customization eingetragen werden sollen
     Public Property addMissingPhaseMilestoneDef As Boolean
+    ' Setting, ob die NAmen eines Templates auf alle Fälle in die Phasedefinitions / MilestoneDefinitions aufgenommen werden soll oder nicht 
+    Public Property alwaysAcceptTemplateNames As Boolean
+    ' Setting, das regelt, ob unbekannte Namen by default in die Projekt-Struktur aufgenommen werden
+    ' sie werden aber auf alle Fälle nicht (!) in die PhaseDefinitions aufgenommen; 
+    ' Ausnahme: wenn es sich um ein Template handelt, und alwaysAcceptTemplateNames = true
+    Public Property importUnknownNames As Boolean
 
     ' Settings für ToleranzKorridor TimeCost
     Public Property timeToleranzRel As Double
@@ -171,6 +177,8 @@
         ' Settings für Import / Export 
         _EinzelRessExport = 0
         _addMissingPhaseMilestoneDef = False
+        _alwaysAcceptTemplateNames = False
+        _importUnknownNames = True
 
         ' Settings für Besser/Schlechter Diagramm 
         _timeToleranzRel = 0.02

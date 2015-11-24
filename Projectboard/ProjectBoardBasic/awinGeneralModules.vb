@@ -47,6 +47,7 @@ Public Module awinGeneralModules
         strategicFit = 4
         risiko = 5
         volume = 6
+        budget = 7
     End Enum
 
 
@@ -161,7 +162,14 @@ Public Module awinGeneralModules
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-                    PhaseDefinitions.Add(missPhaseDef)
+
+                    Try
+                        PhaseDefinitions.Add(missPhaseDef)
+                    Catch ex As Exception
+
+                    End Try
+
+
 
                 End If
 
@@ -2227,7 +2235,7 @@ Public Module awinGeneralModules
         spalte = 1
         geleseneProjekte = 0
 
-        Dim suchstr(6) As String
+        Dim suchstr(7) As String
         suchstr(ptModuleSpalten.produktlinie) = "Produktlinie"
         suchstr(ptModuleSpalten.name) = "Name"
         suchstr(ptModuleSpalten.projektTyp) = "Projekt-Typ"
@@ -2235,9 +2243,10 @@ Public Module awinGeneralModules
         suchstr(ptModuleSpalten.strategicFit) = "strat. Bedeutung"
         suchstr(ptModuleSpalten.risiko) = "Risiko der Umsetzung"
         suchstr(ptModuleSpalten.volume) = "Produktions-Volumen"
+        suchstr(ptModuleSpalten.budget) = "Budget"
 
 
-        Dim inputColumns(6) As Integer
+        Dim inputColumns(7) As Integer
 
 
 
@@ -2250,7 +2259,7 @@ Public Module awinGeneralModules
 
                 ' jetzt werden die Spalten bestimmt 
                 Try
-                    For i As Integer = 0 To 6
+                    For i As Integer = 0 To 7
                         inputColumns(i) = firstZeile.Find(What:=suchstr(i)).Column
                     Next
                 Catch ex As Exception
@@ -2323,7 +2332,7 @@ Public Module awinGeneralModules
                             start = projectStartDate
                             ende = projectEndDate
                             dauer = calcDauerIndays(start, ende)
-                            budget = 0
+                            budget = CDbl(CType(.Cells(zeile, inputColumns(ptModuleSpalten.budget)), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             risk = CDbl(CType(.Cells(zeile, inputColumns(ptModuleSpalten.risiko)), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             sfit = CDbl(CType(.Cells(zeile, inputColumns(ptModuleSpalten.strategicFit)), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             volume = CDbl(CType(.Cells(zeile, inputColumns(ptModuleSpalten.volume)), Global.Microsoft.Office.Interop.Excel.Range).Value)
@@ -2432,6 +2441,7 @@ Public Module awinGeneralModules
                             phaseName = CStr(CType(.Cells(zeile, firstC + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
                             If phaseName = "-" Or endOffset - startOffset = 0 Then
                                 allesOK = False
+                                phaseName = "-"
                             Else
                                 allesOK = True
                             End If
@@ -2439,42 +2449,61 @@ Public Module awinGeneralModules
                             allesOK = False
                         End Try
 
+                        Dim parentPhase As clsPhase = Nothing
+
+
 
                         If allesOK Then
+
+                            '
+                            ' jetzt muss die aufnehmende Phase erstmal angelegt werden 
+                            '
+                            If Not IsNothing(phaseName) Then
+
+                                If phaseName.Length > 0 Then
+
+                                    parentPhase = New clsPhase(parent:=hproj)
+                                    parentPhase.nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
+                                    parentPhase.changeStartandDauer(startOffset, calcDauerIndays(start, ende))
+
+                                    hproj.AddPhase(parentPhase, origName:=phaseName, _
+                                           parentID:=rootPhaseName)
+
+                                End If
+
+                            End If
+
+
                             scaleRule = CInt(CType(.Cells(zeile, firstC + 3 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             allNames = CStr(CType(.Cells(zeile, firstC + 4 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                             ' jetzt müssen die einzelnen Module ausgelesen werden 
-                            moduleNames = allNames.Split(New Char() {CChar("#")}, 20)
-                            Dim anzahl As Integer = moduleNames.Length
+                            ' aber nur, wenn überhaupt was drin steht und das auch als Modul existiert ...
+                            '
+                            If Not IsNothing(allNames) Then
 
-                            For ix As Integer = 1 To anzahl
-                                moduleName = moduleNames(ix - 1)
-                                If ModulVorlagen.Contains(moduleName) Then
-                                    planModul = ModulVorlagen.getProject(moduleName)
-                                    Dim parentID As String = rootPhaseName
+                                If Not allNames.Trim.Length = 0 Then
 
-                                    Dim parentPhase As clsPhase
-                                    Dim elemID As String = ""
+                                    moduleNames = allNames.Split(New Char() {CChar("#")}, 20)
+                                    Dim anzahl As Integer = moduleNames.Length
 
-                                    If Not IsNothing(phaseName) Then
+                                    For ix As Integer = 1 To anzahl
+                                        moduleName = moduleNames(ix - 1)
+                                        If ModulVorlagen.Contains(moduleName) Then
+                                            planModul = ModulVorlagen.getProject(moduleName)
 
-                                        If phaseName.Length > 0 Then
-                                            parentPhase = New clsPhase(parent:=hproj)
-                                            elemID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
-                                            parentPhase.nameID = elemID
-                                            parentPhase.changeStartandDauer(startOffset, calcDauerIndays(start, ende))
+                                            If Not IsNothing(parentPhase) Then
 
-                                            hproj.AddPhase(parentPhase, origName:=phaseName, _
-                                                   parentID:=parentID)
+                                                planModul.moduleCopyTo(hproj, parentPhase.nameID, moduleName, startOffset, endOffset, True)
 
-                                            parentID = elemID
-
-                                            planModul.moduleCopyTo(hproj, parentID, moduleName, startOffset, endOffset, True)
+                                            End If
                                         End If
-                                    End If
+                                    Next
+
                                 End If
-                            Next
+
+                            End If
+
                         End If
                     Next
 
@@ -7739,9 +7768,10 @@ Public Module awinGeneralModules
             CType(.Cells(zeile, spalte + 4), Excel.Range).Value = "strat. Bedeutung"
             CType(.Cells(zeile, spalte + 5), Excel.Range).Value = "Risiko der Umsetzung"
             CType(.Cells(zeile, spalte + 6), Excel.Range).Value = "Produktions-Volumen"
+            CType(.Cells(zeile, spalte + 7), Excel.Range).Value = "Budget"
 
 
-            spalte = spalte + 7
+            spalte = spalte + 8
 
 
             ' hier muss noch korrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses Namens und Breadcrumbs gibt, so 
@@ -7815,9 +7845,12 @@ Public Module awinGeneralModules
                 ' Produktions-Volumen schreiben 
                 CType(.Cells(zeile, spalte + 6), Excel.Range).Value = kvp.Value.volume
 
+                ' Budget schreiben 
+                CType(.Cells(zeile, spalte + 7), Excel.Range).Value = ""
+
                 ' Phasen Information schreiben
 
-                spalte = spalte + 7
+                spalte = spalte + 8
 
 
                 ' hier muss noch korrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses Namens und Breadcrumbs gibt, so 

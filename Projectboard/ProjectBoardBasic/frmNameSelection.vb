@@ -216,18 +216,18 @@ Public Class frmNameSelection
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts, False)
 
-        ElseIf Me.menuOption = PTmenue.visualisieren Then
+            'ElseIf Me.menuOption = PTmenue.visualisieren Then
 
-            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
-                (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
-                Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
-                ''Else
-                ''    filterName = filterDropbox.Text
-                ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-                ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-                ''                                           selectedPhases, selectedMilestones, _
-                ''                                           selectedRoles, selectedCosts, False)
-            End If
+            '    If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
+            '        (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
+            '        Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
+            '        ''Else
+            '        ''    filterName = filterDropbox.Text
+            '        ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+            '        ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+            '        ''                                           selectedPhases, selectedMilestones, _
+            '        ''                                           selectedRoles, selectedCosts, False)
+            '    End If
 
             ''Else    ' alle anderen PTmenues
 
@@ -330,8 +330,20 @@ Public Class frmNameSelection
         Else
 
             ' die Aktion Subroutine aufrufen 
-            Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
-                            selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, filterName)
+            '
+            ' hier unterscheiden, was denn gewünscht wird; dann nur das übergeben 
+            Dim tmpCollection As New Collection
+            If rdbPhases.Checked Or rdbMilestones.Checked Then
+                Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
+                            tmpCollection, tmpCollection, Me.chkbxOneChart.Checked, filterName)
+            ElseIf rdbRoles.Checked Then
+                Call frmHryNameActions(Me.menuOption, tmpCollection, tmpCollection, _
+                            selectedRoles, tmpCollection, Me.chkbxOneChart.Checked, filterName)
+            ElseIf rdbCosts.Checked Then
+                Call frmHryNameActions(Me.menuOption, tmpCollection, tmpCollection, _
+                            tmpCollection, selectedCosts, Me.chkbxOneChart.Checked, filterName)
+            End If
+            
 
         End If
 

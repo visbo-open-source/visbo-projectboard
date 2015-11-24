@@ -751,6 +751,7 @@ Public Class clsProjekte
             Dim costValues(zeitraum) As Double
             Dim ergebnisListe(zeitraum, maxAnzahl) As String
             Dim curElemIX(zeitraum) As Integer
+            Dim abbrev As String = "-"
 
 
 
@@ -773,6 +774,7 @@ Public Class clsProjekte
                         Dim ixZeitraum As Integer
                         Dim anzLoops As Integer
 
+
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
 
                             hproj = kvp.Value
@@ -789,6 +791,8 @@ Public Class clsProjekte
 
 
                                 If Not hphase Is Nothing Then
+
+                                    abbrev = PhaseDefinitions.getAbbrev(hphase.name)
 
                                     With hproj
                                         prAnfang = .Start + .StartOffset
@@ -815,10 +819,16 @@ Public Class clsProjekte
                                                 If ixZeitraum + al - 1 > zeitraum Then
                                                     ' Fehlerprotokoll schreiben ...  
                                                 Else
-                                                    ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText
+                                                    ' wenn mehr als ein Element angezeigt werden soll, soll die Abkürzung dazugeschrieben werden 
+                                                    If myCollection.Count > 1 Then
+                                                        ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & abbrev
+                                                    Else
+                                                        ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText
+                                                    End If
+
                                                     curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
                                                 End If
-                                                
+
                                             Next
 
                                         End If
@@ -941,13 +951,20 @@ Public Class clsProjekte
 
                                 If Not IsNothing(cMilestone) Then
 
+                                    abbrev = MilestoneDefinitions.getAbbrev(cMilestone.name)
+
                                     Dim ix As Integer
                                     ' bestimme den monatsbezogenen Index im Array 
                                     ix = getColumnOfDate(cMilestone.getDate) - showRangeLeft
 
                                     If ix >= 0 And ix <= zeitraum Then
 
-                                        ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText
+                                        If myCollection.Count > 1 Then
+                                            ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText & ":" & abbrev
+                                        Else
+                                            ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText
+                                        End If
+
                                         curElemIX(ix) = curElemIX(ix) + 1
 
                                     End If

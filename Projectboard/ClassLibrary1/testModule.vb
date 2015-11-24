@@ -664,7 +664,7 @@ Public Module testModule
 
                                 Try
 
-                                    Call zeichneProjektGrafik(pptSlide, pptShape, hproj)
+                                    Call zeichneProjektGrafik(pptSlide, pptShape, hproj, selectedMilestones)
 
                                 Catch ex As Exception
 
@@ -1273,7 +1273,8 @@ Public Module testModule
                             Case "Tabelle Projektziele"
 
                                 Try
-                                    Call zeichneProjektTabelleZiele(pptShape, hproj)
+
+                                    Call zeichneProjektTabelleZiele(pptShape, hproj, selectedMilestones)
 
                                 Catch ex As Exception
 
@@ -5647,7 +5648,7 @@ Public Module testModule
     ''' <param name="pptShape"></param>
     ''' <param name="hproj"></param>
     ''' <remarks></remarks>
-    Sub zeichneProjektGrafik(ByRef pptslide As pptNS.Slide, ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt)
+    Sub zeichneProjektGrafik(ByRef pptslide As pptNS.Slide, ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, Optional ByVal selectedMilestones As Collection = Nothing)
 
         Dim rng As xlNS.Range
         Dim selectionType As Integer = -1 ' keine Einschränkung
@@ -5681,6 +5682,13 @@ Public Module testModule
         Dim number As Integer = 0
         Dim nameList As New Collection
 
+
+        ' Änderung tk: damit nur die gewählten Milestones gezeichnet werden 
+        If Not IsNothing(selectedMilestones) Then
+            nameList = selectedMilestones
+        End If
+
+
         Call awinDeleteProjectChildShapes(0)
 
         With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
@@ -5702,7 +5710,8 @@ Public Module testModule
                 '.Width = CSng(pwidth)
             End With
 
-            Call zeichneStatusSymbolInPlantafel(hproj, 0)
+            ' Änderung tk 22.11.15 das Status Symbol ist hier eigentlich nicht gut aufgehoben ... 
+            'Call zeichneStatusSymbolInPlantafel(hproj, 0)
             ' das ist der aufruf, alle Meilensteine zu zeichnen, sie zu nummerieren;
             ' ausserdem wird die Kennung mitgegeben, dass dies für einen Report notwendig ist 
             Call zeichneMilestonesInProjekt(hproj, nameList, 4, 0, 0, True, number, True)
@@ -6818,13 +6827,29 @@ Public Module testModule
 
     End Sub
 
-    Sub zeichneProjektTabelleZiele(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt)
+    ''' <summary>
+    ''' zeichnet die Tabelle mit den Meilensteinen
+    ''' wenn eine Collection mit den Namen übergeben wird, dann werden nur die Meilensteine mit diesen Namen betrachtet 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="selectedItems"></param>
+    ''' <remarks></remarks>
+    Sub zeichneProjektTabelleZiele(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, Optional ByVal selectedItems As Collection = Nothing)
 
         Dim heute As Date = Date.Now
         Dim anzSpalten As Integer = 0
         Dim index As Integer = 0
         Dim tabelle As pptNS.Table
         Dim todoCollection As Collection = hproj.getAllElemIDs(True)
+
+        If IsNothing(selectedItems) Then
+            todoCollection = hproj.getAllElemIDs(True)
+        ElseIf selectedItems.Count = 0 Then
+            todoCollection = hproj.getAllElemIDs(True)
+        Else
+            todoCollection = hproj.getElemIdsOf(selectedItems, True)
+        End If
 
         Try
             tabelle = pptShape.Table
@@ -6885,7 +6910,7 @@ Public Module testModule
 
         End If
 
-        
+
 
 
     End Sub

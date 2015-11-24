@@ -25,8 +25,8 @@
             <button id="PTXG1B6" label="Auswahl über Namen" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Element-Namen"/>
             <button id="PTXG1B7" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction"  supertip="Auswahl für die Leistbarkeitsanalyse erfolgt über die Hierarchie"/>
           </menu>
-          <button id="PTXG1B10" label="Engpass" onAction="PTXShowEngpass" />
-          <button id="PTXG1B3" label="Auslastung" onAction="PT0ShowAuslastung" />
+          <!--<button id="PTXG1B10" label="Engpass" onAction="PTXShowEngpass" />
+          <button id="PTXG1B3" label="Auslastung" onAction="PT0ShowAuslastung" />-->
          <separator id="PTXG1s4"/>
           <menu id="PTOPT" label="Optimieren">
             <button id="PTOPTB1" label ="optimale Varianten-Kombination" onAction ="PTOPTVariantenOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse die optimale Kombination von Projekt-Varianten ermitteln"/>
@@ -35,7 +35,7 @@
           <separator id="PTXG1s5"/>
           <button id="PTXG1B8" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" />
           <button id="PTXG1B9" label="Strategie/Risiko/Volumen" onAction="PT0ShowStratRisikoVolume" />
-          <button id="PTXG1B11" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />
+          <!--<button id="PTXG1B8" label="Komplexität / Risiko" onAction="PT0ShowComplexRisiko" />-->
           <separator id="PTXG1s6"/>
          
           <button id="PTFKB1" label="Budget/Kosten" onAction="PT0ShowPortfolioBudgetCost" supertip="Gegenüberstellung von Budget und Kosten, die durch Personalkosten bzw. andere Kostenarten angefallen sind"/>
@@ -111,7 +111,7 @@
         <group id="PT2G1" label="Einzelprojekt">
           <menu id="PT2G1M0" label ="Neues Projekt anlegen">
             <button id="PT2G1M0B0" label="Neu auf Basis Vorlage" onAction="PT2ProjektNeu" supertip="auf Basis einer sogenannten Projekt-Generik ein neues Projekt anlegen; wenn eine von der Generik abweichende Dauer gewählt wird, werden die Termine so gelegt, daß die relativen Abstände der Plan-Elemente voneinander erhalten bleiben"/>
-            <button id="PT2G1M0B1" label="Neu auf Basis Projekt" onAction="PT2ProjektNeuBasisProjekt" />
+            <!--<button id="PT2G1M0B1" label="Neu auf Basis Projekt" onAction="PT2ProjektNeuBasisProjekt" />-->
           </menu>
           <separator id="PT2G1s0"/>
           <menu id ="PT2G1M1" label ="Variante">
@@ -127,7 +127,7 @@
             <button id="PT2G1M2B3" label="Zeitspanne f. Projektstart" onAction="Tom2G1EarliestLatestStart" supertip ="zu den gewählten Projekten kann angegeben werden, welchen Start-Spielraum, gerechnet in Monaten, das Projekt nach vorne bzw. nach hinten bekommen soll. Diese Werte werden in der Optimierungs-Analyse II verwendet"/>
           </menu>
           <separator id="PT2G1s2"/>
-       <button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />
+          <!--<button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />-->
           <button id="PT2G1B2" label="Fixieren" onAction="Tom2G1Beauftragen" supertip ="mit dem Fixieren können Termine von Phasen oder Meilensteinen und zugehörige Rollen- und Kostenbedarfe des Projektes nicht mehr verändert werden. Visuell ist ein fixiertes Projekt durch die eckigere Projektbalken Darstellung zu erkennen"/>
           <button id="PT2G1B3" label="Fixierung aufheben" onAction="Tom2GXBeauftragen" supertip ="mit dem Aufheben der Fixierung können Projekte bzw. Varianten in ihren Terminen und zugehörigen Rollen- und Kostenbedarfe verändert werden. Visuell ist ein nicht fixiertes Projekt durch die rundere Projektbalken Darstellung zu erkennen"/>
           <separator id="PT2G1s3"/>
@@ -197,7 +197,6 @@
           <button id="PT4G1B10" label="Add Modular Elements" onAction="PT4G1B10AddModularImport" />
           <separator id="PT4G1s1"/>
           <button id="PT4G1B2" label="Import RPLAN Projekte" onAction="Tom2G4B1RPLANImport" supertip ="es kann jeweils eine RPLAN Excel Datei aus dem Folder RPLANImport eingelesen werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
-          <button id="PT4G1B3" label="Import RPLAN rxf - Files" onAction="Tom2G4B3RPLANRxfImport" supertip =" " />
           <button id="PT4G1M1B1" label="Import Projekt-Steckbriefe" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
           <separator id="PT4G1s2"/>
             <menu id="PT4G1M2" label ="Batch-Vorlage für modulare Projekterzeugung" supertip ="es werden Modul-Vorlagen aus den ausgewählten Phasen erzeugt">
@@ -221,13 +220,13 @@
        <group id= "PT4G12" label="Datenbank"> 
          <menu id ="PT5G1" label ="Laden">
             <button id="PT5G1B1" label="Multiprojekt-Szenario" onAction="PTLadenKonstellation" supertip ="die Session wird - je nach Status der Checkbox - um das gewählte Szenario ergänzt; im anderen Fall wird die aktuelle Session gelöscht und das gewählte Szenario geladen. Vorsicht: vor kurzem in der Session definierte, aber noch nicht gespeicherte Varianten eines Projektes gehen hiermit verloren"/>
-            <button id="PT5G1B2" label="Programme" onAction="PT5DatenbankLoadPrograms" enabled="false"/>
+            <!--<button id="PT5G1B2" label="Programme" onAction="PT5DatenbankLoadPrograms" enabled="false"/>-->
             <button id="PT5G1B3" label="Projekte/Varianten" onAction="PT5DatenbankLoadProjekte" supertip ="es wird ein Auswahl-Fenster angezeigt mit allen Projekten und Varianten in der Datenbank; durch Selektieren können eine oder mehrere Projekte geladen werden; Selektieren eines Projektes lädt auch alle zugehörigen Varianten des Projektes aus der Datenbank; Achtung: wenn ein Filter definiert und aktiviert ist, so zeigt das Auswahlfenster auch nur diese Projekte an"/>
          </menu>
          <separator id="PT5G1s1"/>
          <menu id ="PT5G2" label ="Speichern">
            <button id="Pt5G2B1" label="Multiprojekt-Szenario" onAction="PTNeueKonstellation" supertip ="die aktuelle Session mit den Verweisen auf die darin enthaltenen Projekt-Varianten wird als neues Szenario in der Datenbank gespeichert "/>
-            <button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" enabled="false"/>
+            <!--<button id="Pt5G2B2" label="Programm " onAction="PT5StoreProgramme" enabled="false"/>-->
            <button id="Pt5G2B3" label="Projekte/Varianten " onAction="PT5StoreProjects" supertip ="die ausgewählten Projekte werden mit ihrem jeweiligen Zeitstempel in der Datenbank gespeichert; wenn zu diesen Projekten Varianten definiert sind, so werden diese mitgespeichert; wenn keine Projekte selektiert wurden, so werden alle Projekte der Session mit ihren Varianten gespeichert"/>
          </menu>
          <separator id="PT5G1s2"/>
@@ -241,7 +240,7 @@
       <!---->     
       <tab id ="PT6" label ="Einstellungen">
         <group id ="PT6G1" label ="Visualisierug">
-          <checkBox id="PT6G1B2" label="Extended Drawing Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen" supertip ="Es werden alle Projekte mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. In dieser Darstellung können einzelne Phasen oder Meilensteine selektiv verschoben werden; Achtung: es werden alle Projekte der Session im Extended Mode dargestellt - das kann nach Menge der Projekte einige Zeit dauern!"/>
+          <!--<checkBox id="PT6G1B2" label="Extended Drawing Mode" getPressed="PT5phasenZeichnenInit" onAction ="PT5phasenZeichnen" supertip ="Es werden alle Projekte mit all Ihren Phasen und Meilensteinen gezeichnet; die Projekte werden quasi aufgeklappt. In dieser Darstellung können einzelne Phasen oder Meilensteine selektiv verschoben werden; Achtung: es werden alle Projekte der Session im Extended Mode dargestellt - das kann nach Menge der Projekte einige Zeit dauern!"/>-->
           <checkBox id="PT6G1B3" label="Demo Mode History" getPressed="PTDemoModusHistory" onAction ="awinSetModusHistory"/>
           <checkBox id="PT6G1B4" label="Anzeigen selekt. Objekte im Summenchart" getPressed="PTShowSelectedObjects" onAction ="awinSetShowSelObj" supertip ="ist diese Option aktiviert, so werden in Leistbarkeitscharts der Anteil der selektierten Projekte im Leistbarkeits-Gebirge angezeigt; auf diese Art und Weise kann man leicht erkennen, welchen Anteil die selektierten Projekte am Gesamtverlauf haben"/>
           <checkBox id="PT6G1B5" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln" supertip ="ist diese Option aktiviert, so werden die Ampeln mit einem Schatten dargestellt, dessen Farbe der gesetzten Ampelfarbe des Meilensteines entspricht. So kann man schnell erkennen, wo die roten Ampeln liegen. Durch Klicken auf den Meilenstein wird eine Erläuterung des Projektleiters zur Meilensteinbewertung angezeigt"/>
@@ -251,7 +250,7 @@
           <checkBox id="PT6G2B1" label="Bei Dehnen/Stauchen proportional anpassen" getPressed="PTPropAnpassen" onAction ="awinSetPropAnpass" supertip ="diese Option wirkt nur auf Ressourcenbedarfe und Kostenbedarfe; ist diese Option aktiviert, so werden die Ressourcen und Kostenbedarfe proportional angepasst, wenn das Projekt / die Phase durch Dehnen oder Stauchen verlängert bzw. verkürzt wird. Das Budget bleibt allerdings unverändert !"/>
           <checkBox id="PT6G2B2" label="Phasenhäufigkeit anteilig berechnen" getPressed="PTPhaseAnteilig" onAction ="awinSetPhaseAnteilig" supertip ="diese Option wirkt nur auf die Berechnung von Häufigkeit Charts bei Phasen; ist diese Option aktiviert, so wird für die Phase in ihrem Start-Monat und Ende-Monat der prozentuale Wert angenommen. Andernfalls wird der Wert 1 zugrundegelegt, unabhängig wieviel vom Monat von der Phase belegt wird. Beispiel: die Phase beginnt erst zum 10. eines Monats, das bedeutet mit der aktivierten Option wird der Häufigkeits-Wert für diese Phase in diesem Monat auf ca 0.66 gesetzt, weil nur in knapp 2/3 des Monats die Phase aktiv ist"/>
         </group>
-        <group id ="PT6G3" label ="Lade- und Import-Filter">
+        <group id ="PT6G3" label ="Lade- und Import-Vorgänge">
           <checkBox id="PT6G3B1" label="DB Filter aktivieren" getPressed="PT5loadprojectsInit" onAction ="PT5loadProjectsOnChange" supertip ="diese Option wirkt auf alle Import- und Ladevorgänge aus der Datenbank; wenn der Filter aktiviert ist, so werden beispielsweise aus der Datenbank nur die Projekte geladen, die den gesetzten Kriterien entsprechen. Dabei gilt: wenn in einer Kategorie gar nichts ausgewählt wird, so gilt der Filter für diese Kategorie als nicht gesetzt"/>
           <menu id="PT6G3M1" label="DB Filter definieren" supertip="Hier können Sie definieren, das nur Projekte geladen bzw. berücksichtigt werden sollen, die bestimmte Kriterien erfüllen.">
             <button id="Pt6G3M1B1" label="Definition über Namen" onAction="NameHierarchySelAction" supertip ="für folgende Kategorien können Filter definiert werden: Plan-Elemente (Phasen und Meilensteine), Ressourcen Bedarfe, Kostenbedarfe, Produktlinien und Projekt-Typen. Dabei gilt: das Projekt passiert den Filter , das eines der angegebenen Planelemente im angegebenen Zeitraum enthält, und jeweils mindestens ein Kriterium in den anderen gesetzen Kategorien erfüllt. Ist gar kein Kriterium in einer Kategorie gesetzt, so gilt diese Kategorie als nicht gesetzt, es findet damit durch diese Kategorie keine Ausfilterung statt"/>
@@ -259,7 +258,9 @@
           </menu>
           <separator id="PT6G3s1"/>
           <button id="Pt6G3B3" label="Zeitraum verschieben" onAction="PT5changeTimeSpan" supertip ="mit diesem Formular kann das Zeitraumfenster jeweils um einen Monat nach rechts bzw. links verschoben werden; so kann man sich bei der Anzeige von Leistbarkeits-Charts einen schnellen Eindruck verschaffen, wie sich die Leistbarkeitskurve über die Zeit verändert"/>
-          <checkBox id="PT6G1B7" label="Missing Definitions hinzufügen" getPressed="PTAddMissingInit" onAction ="PTAddMissingDefinitions" supertip ="fehlende Phasen- oder Meilenstein-Namen werden im CustomizationFile ergänzt"/>
+          <separator id="PT6G3s2"/>
+          <button id="Pt6G3B4" label="Wörterbuch editieren" onAction="PT5editDictionary" supertip ="mit diesem Formular können unbekannte Bezeichnungen auf Standardbezeichnungen abgebildet werden; es können darüber hinaus Standardbezeichnungen gelöscht bzw. geändert werden"/>
+          <!--<checkBox id="PT6G1B7" label="Missing Definitions hinzufügen" getPressed="PTAddMissingInit" onAction ="PTAddMissingDefinitions" supertip ="fehlende Phasen- oder Meilenstein-Namen werden im CustomizationFile ergänzt"/>-->   
         </group>
         <!--<group id ="PT6G4" label ="Multiprojekt Sichten">
           <checkBox id="PT6G4B1" label="Strikte Zeitraum-Orientierung" getPressed="PT6StriktPressed" onAction ="PT6SetStrict"/>
@@ -276,6 +277,7 @@
           <button id="PT6G5B2" label="Test-Funktionen"  onAction ="PTTestFunktion3" />
           <button id="PT6G5B3" label="Demo-Funktion Ampel"  onAction ="PTTestFunktion4" />
           <button id="PT6G5B4" label="Demo-Funktion Historie"  onAction ="PTTestFunktion5" />
+          <button id="PT4G5B6" label="Import alte Projekt-Steckbriefe vor PT113" onAction="Tom2G4M1ImportOLD" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: Struktur von Feature PT113, Spalte Summe"/>
         </group>
      </tab>
     </tabs>

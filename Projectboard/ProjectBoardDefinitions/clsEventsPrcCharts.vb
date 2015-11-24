@@ -418,153 +418,110 @@ Public Class clsEventsPrcCharts
         Dim msNumber As Integer = 1
         Dim chtobj As xlNS.ChartObject
 
-        If (ElementID = xlNS.XlChartItem.xlSeries) And Arg2 > 0 Then
-            'Dim i As Integer
-            Dim selMonth As Integer = showRangeLeft + Arg2 - 1
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        appInstance.ScreenUpdating = False
+
+        Try
+            chtobjname = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject).Name
+
+            chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
+            Dim IDKennung As String
+            IDKennung = chtobj.Name
 
 
-            'Dim formerUpdate As Boolean = appInstance.ScreenUpdating
-            'appInstance.ScreenUpdating = False
-
-            'Jetzt muss bestimmt werden , um welches Chart es sich handelt 
-
-
-
-
-            Try
-                chtobjname = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject).Name
-
-                chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
-                Dim IDKennung As String
-                IDKennung = chtobj.Name
-
-
-                diagOBJ = DiagramList.getDiagramm(chtobjname)
+            diagOBJ = DiagramList.getDiagramm(chtobjname)
 
 
 
 
-                '
-                ' nur bei Phasen und Meilensteinen wird aktuell etwas gemacht 
-                '
-                If diagOBJ.diagrammTyp = DiagrammTypen(0) And diagOBJ.gsCollection.Count > 0 Then
+            If (ElementID = xlNS.XlChartItem.xlSeries) And Arg2 > 0 Then
+                ' hier wird der farbige Balken gezeichnet 
+                Dim selMonth As Integer = showRangeLeft + Arg2 - 1
 
-                    Call awinDeleteProjectChildShapes(3)
-
-                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
-
-                        Call zeichnePhasenInProjekt(kvp.Value, diagOBJ.gsCollection, False, msNumber, selMonth, selMonth)
-
-                    Next
-
-                    ' jetzt den selektierten Balken im ShowTimeZone anzeigen 
-                    Call awinShowSelectedMonth(selMonth)
-
-                ElseIf (diagOBJ.diagrammTyp = DiagrammTypen(1) Or diagOBJ.diagrammTyp = DiagrammTypen(2)) And _
-                    diagOBJ.gsCollection.Count > 0 Then
-
-                    'For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                Call awinShowSelectedMonth(selMonth)
 
 
-                    '    Call zeichneRollenKostenWerteInProjekt(kvp.Value, diagOBJ.gsCollection, selMonth, selMonth, diagOBJ.diagrammTyp)
+            ElseIf (ElementID = xlNS.XlChartItem.xlSeries) And Arg2 = -1 Then
 
-                    'Next
+                ' ggf Röntgenblick einschalten 
+                ' jetzt sind alle Balken selektiert 
+                ' im Falle Rolle / Kostenarten wird jetzt Röntgenblick eingeschaltet 
 
-                    ' jetzt den selektierten Balken im ShowTimeZone anzeigen 
-                    Call awinShowSelectedMonth(selMonth)
+                Try
 
+                    ' zeichne Phasen
+                    If diagOBJ.diagrammTyp = DiagrammTypen(0) And diagOBJ.gsCollection.Count > 0 Then
 
-                ElseIf diagOBJ.diagrammTyp = DiagrammTypen(5) And diagOBJ.gsCollection.Count > 0 Then
+                        Call awinDeleteProjectChildShapes(3)
 
-                    Call awinDeleteProjectChildShapes(1)
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                    For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+                            Call zeichnePhasenInProjekt(kvp.Value, diagOBJ.gsCollection, False, msNumber, showRangeLeft, showRangeRight)
 
-                        ' hier wird die zeichneMilestones aufgerufen mit den Element-Namen und nicht den Element-IDs
-                        ' d.h es ist wichtig, daß die Zeichen-Routine so schlau ist, im Falle des Aufrufes mit den Namen alle 
-                        ' Namen durch ihre auftretenden IDs zu ersetzen.  
-                        Call zeichneMilestonesInProjekt(kvp.Value, diagOBJ.gsCollection, 4, selMonth, selMonth, False, msNumber, False)
-
-                    Next
-
-                    ' jetzt den selektierten Balken im ShowTimeZone anzeigen 
-                    Call awinShowSelectedMonth(selMonth)
-
-                End If
+                        Next
 
 
+                    ElseIf (diagOBJ.diagrammTyp = DiagrammTypen(1) Or diagOBJ.diagrammTyp = DiagrammTypen(2)) And _
+                        diagOBJ.gsCollection.Count > 0 Then
 
-            Catch ex As Exception
-
-            End Try
-
-
-        ElseIf (ElementID = xlNS.XlChartItem.xlSeries) And Arg2 = -1 Then
-
-            ' ggf Röntgenblick einschalten 
-            ' jetzt sind alle Balken selektiert 
-            ' im Falle Rolle / Kostenarten wird jetzt Röntgenblick eingeschaltet 
-
-            Try
-
-                chtobjname = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject).Name
-
-                chtobj = CType(Me.PrcChartEvents.Parent, Microsoft.Office.Interop.Excel.ChartObject)
-                Dim IDKennung As String
-                IDKennung = chtobj.Name
+                        ' zeichne Rollen oder Kostenarten
 
 
-                diagOBJ = DiagramList.getDiagramm(chtobjname)
+                        Dim name As String = ""
 
-                If (diagOBJ.diagrammTyp = DiagrammTypen(1) Or diagOBJ.diagrammTyp = DiagrammTypen(2)) And _
-                    diagOBJ.gsCollection.Count > 0 Then
+                        If diagOBJ.gsCollection.Count < 1 Then
+                            name = ""
+                        ElseIf diagOBJ.gsCollection.Count = 1 Then
+                            name = CStr(diagOBJ.gsCollection.Item(1))
+                        ElseIf diagOBJ.gsCollection.Count > 1 Then
+                            name = "Collection"
+                        End If
 
-                    ' jetzt den Röntgenblick einschalten 
-                    Dim screenUpdateFormerState As Boolean = appInstance.ScreenUpdating
-                    Dim name As String = ""
-                    appInstance.ScreenUpdating = False
 
-                    If diagOBJ.gsCollection.Count < 1 Then
-                        name = ""
-                    ElseIf diagOBJ.gsCollection.Count = 1 Then
-                        name = CStr(diagOBJ.gsCollection.Item(1))
-                    ElseIf diagOBJ.gsCollection.Count > 1 Then
-                        name = "Collection"
-                        Dim myCollection As New Collection
+                        With roentgenBlick
+                            If .isOn Then
+                                Call awinNoshowProjectNeeds()
+                            End If
+                            .isOn = True
+                            .name = name
+                            .myCollection = diagOBJ.gsCollection
+                            .type = diagOBJ.diagrammTyp
+                            Call awinShowProjectNeeds1(diagOBJ.gsCollection, diagOBJ.diagrammTyp)
+                            'End If
+                        End With
+
+
+
+
+                    ElseIf diagOBJ.diagrammTyp = DiagrammTypen(5) And diagOBJ.gsCollection.Count > 0 Then
+
+                        Call awinDeleteProjectChildShapes(1)
+
+                        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                            ' hier wird die zeichneMilestones aufgerufen mit den Element-Namen und nicht den Element-IDs
+                            ' d.h es ist wichtig, daß die Zeichen-Routine so schlau ist, im Falle des Aufrufes mit den Namen alle 
+                            ' Namen durch ihre auftretenden IDs zu ersetzen.  
+                            Call zeichneMilestonesInProjekt(kvp.Value, diagOBJ.gsCollection, 4, showRangeLeft, showRangeRight, False, msNumber, False)
+
+                        Next
 
                     End If
+                Catch ex As Exception
+
+                End Try
 
 
-                    With roentgenBlick
-                        'If .isOn And .name = name And .type = diagOBJ.diagrammTyp Then
-                        '    .isOn = False
-                        '    .name = ""
-                        '    .myCollection = Nothing
-                        '    .type = ""
-                        '    Call awinNoshowProjectNeeds()
-                        'Else
-                        If .isOn Then
-                            Call awinNoshowProjectNeeds()
-                        End If
-                        .isOn = True
-                        .name = name
-                        .myCollection = diagOBJ.gsCollection
-                        .type = diagOBJ.diagrammTyp
-                        Call awinShowProjectNeeds1(diagOBJ.gsCollection, diagOBJ.diagrammTyp)
-                        'End If
-                    End With
+            End If
 
 
-                    appInstance.ScreenUpdating = screenUpdateFormerState
+        Catch ex As Exception
+
+        End Try
 
 
-                End If
-            Catch ex As Exception
-
-            End Try
-
-
-        End If
+        appInstance.ScreenUpdating = formerSU
+        
 
 
     End Sub

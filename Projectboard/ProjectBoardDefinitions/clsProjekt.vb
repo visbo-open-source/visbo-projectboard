@@ -1839,6 +1839,10 @@ Public Class clsProjekt
             'newproject.AddPhase(newphase, origName:="", parentID:=parentID)
         Next
 
+        ' Besonderheit: 17.11.15 erst durch den Aufruf con dauerindays wird die _Dauer nochmal explizit gesetzt .. 
+        If Me.dauerInDays <> newproject.dauerInDays Then
+            'Throw New ArgumentException("Dauern der beiden Projekte sind unterschiedlich ...")
+        End If
 
     End Sub
 

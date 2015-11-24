@@ -78,6 +78,36 @@
         End Set
     End Property
 
+    ''' <summary>
+    ''' kopiert in Me die Werte der übergebenen Phasen-Definition
+    ''' wenn der optionale Name angegeben ist, wird dieser Name, 
+    ''' nicht der Name der übergebenen Phasen-Definition angegeben  
+    ''' </summary>
+    ''' <param name="phDef"></param>
+    ''' <remarks></remarks>
+    Public Sub copyFrom(ByVal phDef As clsPhasenDefinition, Optional ByVal newName As String = "")
+
+        If Not IsNothing(phDef) Then
+            With Me
+
+                If newName = "" Then
+                    .name = phDef.name
+                Else
+                    .name = newName
+                End If
+                .schwellWert = phDef.schwellWert
+                .shortName = phDef.shortName
+                .darstellungsKlasse = phDef.darstellungsKlasse
+                .farbe = phDef.farbe
+
+            End With
+        Else
+            Throw New ArgumentException("Phase-Definition in Kopier-Funktion ist Nothing")
+        End If
+        
+
+    End Sub
+
     Public Sub New()
 
         _name = ""
