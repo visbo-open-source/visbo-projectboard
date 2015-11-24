@@ -151,7 +151,14 @@ Public Module awinGeneralModules
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-                    PhaseDefinitions.Add(missPhaseDef)
+
+                    Try
+                        PhaseDefinitions.Add(missPhaseDef)
+                    Catch ex As Exception
+
+                    End Try
+
+
 
                 End If
 

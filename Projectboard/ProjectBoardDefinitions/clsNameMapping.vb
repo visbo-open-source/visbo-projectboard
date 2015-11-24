@@ -11,6 +11,78 @@ Public Class clsNameMapping
     Private hrchy(10) As String
     Private hrchyIndex As Integer
 
+
+    ''' <summary>
+    ''' gibt die Anzahl an Synonymen und Regular Expressions zurück, die auf den 
+    ''' übergebenen Namen abbilden
+    ''' </summary>
+    ''' <param name="stdName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getAnzahlMappingsFor(ByVal stdName As String) As Integer
+        Get
+            Dim tmpAnz As Integer = 0
+
+            For Each synonym As KeyValuePair(Of String, String) In synonyms
+                If synonym.Value = stdName Then
+                    tmpAnz = tmpAnz + 1
+                End If
+            Next
+
+            For Each regExPress As KeyValuePair(Of String, String) In regExpressionNames
+                If regExPress.Value = stdName Then
+                    tmpAnz = tmpAnz + 1
+                End If
+            Next
+
+            getAnzahlMappingsFor = tmpAnz
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' nimmt aus den Listen Synonyms, Regular Expressions und NamesToComplement den übergebenen Standard-Namen heraus 
+    ''' </summary>
+    ''' <param name="stdName"></param>
+    ''' <remarks></remarks>
+    Public Sub removeStdName(ByVal stdName As String)
+        Dim todoList As New Collection
+        Dim tmpName As String
+
+        For Each synonym As KeyValuePair(Of String, String) In synonyms
+            If synonym.Value = stdName Then
+                todoList.Add(synonym.Key)
+            End If
+        Next
+
+        For Each tmpName In todoList
+            synonyms.Remove(tmpName)
+        Next
+
+        todoList.Clear()
+        For Each regExPress As KeyValuePair(Of String, String) In regExpressionNames
+            If regExPress.Value = stdName Then
+                todoList.Add(regExPress.Key)
+            End If
+        Next
+
+        For Each tmpName In todoList
+            regExpressionNames.Remove(tmpName)
+        Next
+
+        todoList.Clear()
+        For Each complementName As KeyValuePair(Of String, String) In namesToComplement
+            If complementName.Value = stdName Then
+                todoList.Add(complementName.Key)
+            End If
+        Next
+
+        For Each tmpName In todoList
+            namesToComplement.Remove(tmpName)
+        Next
+
+    End Sub
     ''' <summary>
     ''' ergänzt ein Synonym / Standard-Wert Paar  
     ''' </summary>

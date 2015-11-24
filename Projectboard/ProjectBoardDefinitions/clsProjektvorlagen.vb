@@ -63,10 +63,24 @@
 
     End Property
 
-    Public ReadOnly Property getProject(ID As Integer) As clsProjektvorlage
+    ''' <summary>
+    ''' gibt das Projekt an der Stelle mit Nummer Index zurück
+    ''' Index darf 0 bis count-1 sein 
+    ''' Wenn Index falsche Werte hat, wird Nothing zurückgegeben 
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getProject(index As Integer) As clsProjektvorlage
 
         Get
-            getProject = AllProjects.ElementAt(ID).Value
+            If index >= 0 Or index <= AllProjects.Count - 1 Then
+                getProject = AllProjects.ElementAt(index).Value
+            Else
+                getProject = Nothing
+            End If
+
         End Get
 
     End Property

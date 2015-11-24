@@ -11,15 +11,21 @@ Public Class clsMeilensteine
     Public Sub Add(milestone As clsMeilensteinDefinition)
 
         'Dim key As String = calcKey(milestone.name, milestone.belongsTo)
-        Dim key As String = milestone.name
 
-        If allMilestones.ContainsKey(key) Then
-            Throw New ArgumentException("Identifier " & key & _
-                                        " existiert bereits!")
+
+        If Not IsNothing(milestone) Then
+            Dim key As String = milestone.name
+            If allMilestones.ContainsKey(key) Then
+                Throw New ArgumentException("Identifier " & key & _
+                                            " existiert bereits!")
+            Else
+                allMilestones.Add(key, milestone)
+            End If
+
         Else
-            allMilestones.Add(key, milestone)
+            Throw New ArgumentException("Meilenstein Definition ist Nothing")
         End If
-
+        
 
     End Sub
 
@@ -221,6 +227,20 @@ Public Class clsMeilensteine
 
     Public Sub New()
         allMilestones = New SortedList(Of String, clsMeilensteinDefinition)
+    End Sub
+
+    ''' <summary>
+    ''' löscht die Meilenstein-Definition mit dem übergebenen Namen aus der Liste , sofern vorhanden
+    ''' wenn nicht vorhanden, keine Änderung; aber auch keine Mitteilung 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <remarks></remarks>
+    Public Sub remove(ByVal name As String)
+
+        If allMilestones.ContainsKey(name) Then
+            allMilestones.Remove(name)
+        End If
+
     End Sub
 
     Public Sub Clear()

@@ -19063,88 +19063,103 @@ Public Module Projekte
                 firstMS = .hierarchy.getIndexOf1stMilestone
                 lastMS = .hierarchy.count
 
-                For i As Integer = firstMS To lastMS
-                    Dim msID As String = .hierarchy.getIDAtIndex(i)
-                    Dim milestone As clsMeilenstein = .getMilestoneByID(msID)
-                    Dim msColumn As Integer = getColumnOfDate(milestone.getDate)
+                ' wenn es überhaupt keine Meilensteine gibt ...
+                If firstMS = 0 Then
+                    ' dann gar nichts machen, weiter mit nächstem Projekt 
+                Else
 
-                    If msColumn <= heuteColumn + 6 Then
+                    For i As Integer = firstMS To lastMS
+                        Dim msID As String = .hierarchy.getIDAtIndex(i)
+                        Dim milestone As clsMeilenstein = .getMilestoneByID(msID)
 
-                       
+                        If Not IsNothing(milestone) Then
 
-                        currentValue = zufall.NextDouble
-                        With milestone
-                            If currentValue >= redBaseValue And _
-                                currentValue <= redBaseValue + redPercentage Then
+                            Dim msColumn As Integer = getColumnOfDate(milestone.getDate)
 
-                                Dim b As clsBewertung
-
-                                If .bewertungsCount = 0 Then
-                                    b = New clsBewertung
-                                    b.description = "Erläuterung für die rote Ampel ..."
-                                    b.color = awinSettings.AmpelRot
-                                    .addBewertung(b)
-                                Else
-                                    b = .getBewertung(1)
-                                    b.description = "Erläuterung für die rote Ampel ..."
-                                    b.color = awinSettings.AmpelRot
-                                End If
-                                
-                                If msColumn > heuteColumn Then
-                                    redMilestones = redMilestones + 1
-                                End If
+                            If msColumn <= heuteColumn + 6 Then
 
 
 
-                            ElseIf currentValue >= yellowBaseValue And _
-                                currentValue <= yellowBaseValue + yellowPercentage Then
-                                Dim b As clsBewertung
+                                currentValue = zufall.NextDouble
+                                With milestone
+                                    If currentValue >= redBaseValue And _
+                                        currentValue <= redBaseValue + redPercentage Then
 
-                                If .bewertungsCount = 0 Then
-                                    b = New clsBewertung
-                                    b.description = "Erläuterung für die gelbe Ampel ..."
-                                    b.color = awinSettings.AmpelGelb
-                                    .addBewertung(b)
-                                Else
-                                    b = .getBewertung(1)
-                                    b.description = "Erläuterung für die gelbe Ampel ..."
-                                    b.color = awinSettings.AmpelGelb
-                                End If
+                                        Dim b As clsBewertung
 
-                                If msColumn > heuteColumn Then
-                                    yellowMilestones = yellowMilestones + 1
-                                End If
+                                        If .bewertungsCount = 0 Then
+                                            b = New clsBewertung
+                                            b.description = "Erläuterung für die rote Ampel ..."
+                                            b.color = awinSettings.AmpelRot
+                                            .addBewertung(b)
+                                        Else
+                                            b = .getBewertung(1)
+                                            b.description = "Erläuterung für die rote Ampel ..."
+                                            b.color = awinSettings.AmpelRot
+                                        End If
+
+                                        If msColumn > heuteColumn Then
+                                            redMilestones = redMilestones + 1
+                                        End If
 
 
 
+                                    ElseIf currentValue >= yellowBaseValue And _
+                                        currentValue <= yellowBaseValue + yellowPercentage Then
+                                        Dim b As clsBewertung
+
+                                        If .bewertungsCount = 0 Then
+                                            b = New clsBewertung
+                                            b.description = "Erläuterung für die gelbe Ampel ..."
+                                            b.color = awinSettings.AmpelGelb
+                                            .addBewertung(b)
+                                        Else
+                                            b = .getBewertung(1)
+                                            b.description = "Erläuterung für die gelbe Ampel ..."
+                                            b.color = awinSettings.AmpelGelb
+                                        End If
+
+                                        If msColumn > heuteColumn Then
+                                            yellowMilestones = yellowMilestones + 1
+                                        End If
+
+
+
+                                    Else
+                                        Dim b As clsBewertung
+
+                                        If .bewertungsCount = 0 Then
+                                            b = New clsBewertung
+                                            b.description = "aktuell alles i.O.  ..."
+                                            b.color = awinSettings.AmpelGruen
+                                            .addBewertung(b)
+                                        Else
+                                            b = .getBewertung(1)
+                                            b.description = "aktuell alles i.O.  ..."
+                                            b.color = awinSettings.AmpelGruen
+                                        End If
+
+                                        If msColumn > heuteColumn Then
+                                            greenMilestones = greenMilestones + 1
+                                        End If
+
+                                    End If
+
+
+                                End With
                             Else
-                                Dim b As clsBewertung
-
-                                If .bewertungsCount = 0 Then
-                                    b = New clsBewertung
-                                    b.description = "aktuell alles i.O.  ..."
-                                    b.color = awinSettings.AmpelGruen
-                                    .addBewertung(b)
-                                Else
-                                    b = .getBewertung(1)
-                                    b.description = "aktuell alles i.O.  ..."
-                                    b.color = awinSettings.AmpelGruen
-                                End If
-
-                                If msColumn > heuteColumn Then
-                                    greenMilestones = greenMilestones + 1
-                                End If
-
+                                ' nichts tun, alles unverändert lassen 
                             End If
+                        Else
+                            ' Test-Stelle/Break Punkt setzen für Debug , hat sonst keine Bedeutung 
+                            Dim checkDebug As Boolean = True
+                        End If
 
 
-                        End With
-                    Else
-                        ' nichts tun, alles unverändert lassen 
-                    End If
 
+                    Next
 
-                Next
+                End If
 
                 ' jetzt noch die Ampel-Farbe setzen 
                 If redMilestones > 0 Then
