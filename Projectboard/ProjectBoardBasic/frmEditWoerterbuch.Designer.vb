@@ -34,7 +34,7 @@ Partial Class frmEditWoerterbuch
         Me.ignoreButton = New System.Windows.Forms.Button()
         Me.addRulesToDictionary = New System.Windows.Forms.Button()
         Me.replaceButton = New System.Windows.Forms.Button()
-        Me.setItemToBeStandard = New System.Windows.Forms.Button()
+        Me.visElements = New System.Windows.Forms.Button()
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
         Me.createWordbasedWildCard = New System.Windows.Forms.CheckBox()
         Me.clearUnknownList = New System.Windows.Forms.PictureBox()
@@ -138,7 +138,7 @@ Partial Class frmEditWoerterbuch
         Me.ignoreButton.Name = "ignoreButton"
         Me.ignoreButton.Size = New System.Drawing.Size(75, 57)
         Me.ignoreButton.TabIndex = 9
-        Me.ignoreButton.Text = "Ignorieren"
+        Me.ignoreButton.Text = "Element immer ignorieren"
         Me.ignoreButton.UseVisualStyleBackColor = False
         '
         'addRulesToDictionary
@@ -160,19 +160,19 @@ Partial Class frmEditWoerterbuch
         Me.replaceButton.Name = "replaceButton"
         Me.replaceButton.Size = New System.Drawing.Size(75, 57)
         Me.replaceButton.TabIndex = 11
-        Me.replaceButton.Text = "Ersetzen"
+        Me.replaceButton.Text = "Std-Name ändern"
         Me.replaceButton.UseVisualStyleBackColor = False
         '
-        'setItemToBeStandard
+        'visElements
         '
-        Me.setItemToBeStandard.BackColor = System.Drawing.Color.SteelBlue
-        Me.setItemToBeStandard.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.setItemToBeStandard.Location = New System.Drawing.Point(288, 431)
-        Me.setItemToBeStandard.Name = "setItemToBeStandard"
-        Me.setItemToBeStandard.Size = New System.Drawing.Size(189, 28)
-        Me.setItemToBeStandard.TabIndex = 12
-        Me.setItemToBeStandard.Text = "Begriff zum Standard hinzufügen"
-        Me.setItemToBeStandard.UseVisualStyleBackColor = False
+        Me.visElements.BackColor = System.Drawing.Color.SteelBlue
+        Me.visElements.ForeColor = System.Drawing.SystemColors.ButtonHighlight
+        Me.visElements.Location = New System.Drawing.Point(288, 431)
+        Me.visElements.Name = "visElements"
+        Me.visElements.Size = New System.Drawing.Size(189, 28)
+        Me.visElements.TabIndex = 12
+        Me.visElements.Text = "ausgewählte Elemente visualisieren"
+        Me.visElements.UseVisualStyleBackColor = False
         '
         'StatusStrip1
         '
@@ -240,7 +240,7 @@ Partial Class frmEditWoerterbuch
         Me.Controls.Add(Me.setItemToBeUnknown)
         Me.Controls.Add(Me.setItemToBeKnown)
         Me.Controls.Add(Me.StatusStrip1)
-        Me.Controls.Add(Me.setItemToBeStandard)
+        Me.Controls.Add(Me.visElements)
         Me.Controls.Add(Me.replaceButton)
         Me.Controls.Add(Me.addRulesToDictionary)
         Me.Controls.Add(Me.ignoreButton)
@@ -276,7 +276,7 @@ Partial Class frmEditWoerterbuch
     Friend WithEvents ignoreButton As System.Windows.Forms.Button
     Friend WithEvents addRulesToDictionary As System.Windows.Forms.Button
     Friend WithEvents replaceButton As System.Windows.Forms.Button
-    Friend WithEvents setItemToBeStandard As System.Windows.Forms.Button
+    Friend WithEvents visElements As System.Windows.Forms.Button
     Friend WithEvents StatusStrip1 As System.Windows.Forms.StatusStrip
     Friend WithEvents setItemToBeKnown As System.Windows.Forms.PictureBox
     Friend WithEvents setItemToBeUnknown As System.Windows.Forms.PictureBox

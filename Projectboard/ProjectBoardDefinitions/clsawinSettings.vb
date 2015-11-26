@@ -1,4 +1,6 @@
-﻿Public Class clsawinSettings
+﻿Imports Microsoft.Office.Interop.Excel
+
+Public Class clsawinSettings
     ' Chart Settings 
     Public Property fontsizeTitle As Integer
     Public Property fontsizeLegend As Integer
@@ -12,6 +14,7 @@
     Public Property SollIstFarbeC As Long
     Public Property SollIstFarbeArea As Long
     Public Property timeSpanColor As Long
+    Public Property missingDefinitionColor As Long
     Public Property showTimeSpanInPT As Boolean
 
     Public Property AmpelGruen As Long
@@ -22,7 +25,7 @@
     Public Property glowColor As Long
 
     ' hier werden die Settings gesetzt  
-    
+
     ' Settings für die Projekteingabe
     Public Property lastProjektTyp As String
     Public Property lastModulTyp As String
@@ -139,6 +142,7 @@
         _SollIstFarbeC = RGB(80, 240, 80)
         _SollIstFarbeArea = RGB(200, 200, 200)
         _timeSpanColor = RGB(242, 242, 242)
+        _missingDefinitionColor = XlRgbColor.rgbCoral
         _showTimeSpanInPT = True
 
 

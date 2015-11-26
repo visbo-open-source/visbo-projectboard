@@ -201,16 +201,77 @@ Public Class frmEditWoerterbuch
         
     End Sub
 
-    ''' <summary>
-    ''' ein oder mehrere Elemente aus der Liste der unbekannten Bezeichnungen soll zum Standard Element gemacht werden 
-    ''' Vorbedingung: es ist kein Element in der Liste der Standard-Bezeichnungen selektiert 
-    ''' </summary>
-    ''' <param name="sender"></param>
-    ''' <param name="e"></param>
-    ''' <remarks></remarks>
-    Private Sub setItemToBeStandard_Click(sender As Object, e As EventArgs) Handles setItemToBeStandard.Click
 
-        Call makeItemToBeStandard()
+    ''' <summary>
+    ''' visualisiert die selektierten Elemente aus der Unknown-List bzw. aus der Standard-List
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub visualizeElements()
+
+        Dim selectedphases As New Collection
+        Dim selectedMilestones As New Collection
+        Dim tmpName As String
+        Dim deleteOtherShapes As Boolean = True
+        Dim numberIt As Boolean = False
+        Dim alleFarben As Integer = 4
+
+
+        If rdbListShowsPhases.Checked Then
+            ' es werden Phasen visualisiert 
+
+            ' Aufbau der Phasenliste aus den selektierten Elementen der linken Liste  
+            For i = 1 To unknownList.SelectedItems.Count
+                tmpName = CStr(unknownList.SelectedItems.Item(i - 1)).Trim
+                If Not selectedphases.Contains(tmpName) Then
+                    selectedphases.Add(tmpName, tmpName)
+                End If
+            Next
+
+            ' Erweiterung  der Phasenliste um die selektierten Elemente der rechten  Liste (Standard-Liste)   
+            For i = 1 To standardList.SelectedItems.Count
+                tmpName = CStr(standardList.SelectedItems.Item(i - 1)).Trim
+                If Not selectedphases.Contains(tmpName) Then
+                    selectedphases.Add(tmpName, tmpName)
+                End If
+            Next
+
+            ' Phasen sollen nicht nummeriert werden 
+            ' zuvor gezeichnete Phasen sollen gelöscht werden - oder auch nicht
+            If selectedphases.Count > 0 Then
+                Call awinZeichnePhasen(selectedphases, numberIt, deleteOtherShapes)
+            Else
+                Call MsgBox("bitte mindestens ein Element aus der linken und/oder rechten Liste auswählen")
+            End If
+
+
+        Else
+            ' es werden Meilensteine visualisiert 
+
+            ' Aufbau der Meilensteinliste aus den selektierten Elementen der linken Liste  
+            For i = 1 To unknownList.SelectedItems.Count
+                tmpName = CStr(unknownList.SelectedItems.Item(i - 1)).Trim
+                If Not selectedMilestones.Contains(tmpName) Then
+                    selectedMilestones.Add(tmpName, tmpName)
+                End If
+            Next
+
+            ' Erweiterung  der Phasenliste um die selektierten Elemente der rechten  Liste (Standard-Liste)   
+            For i = 1 To standardList.SelectedItems.Count
+                tmpName = CStr(standardList.SelectedItems.Item(i - 1)).Trim
+                If Not selectedMilestones.Contains(tmpName) Then
+                    selectedMilestones.Add(tmpName, tmpName)
+                End If
+            Next
+
+            ' Meilensteine sollen nicht nummeriert werden 
+            ' zuvor gezeichnete Meilensteine sollen gelöscht werden - oder auch nicht
+            If selectedMilestones.Count > 0 Then
+                Call awinZeichneMilestones(selectedMilestones, alleFarben, numberIt, deleteOtherShapes)
+            Else
+                Call MsgBox("bitte mindestens ein Element aus der linken und/oder rechten Liste auswählen")
+            End If
+
+        End If
 
     End Sub
 
@@ -453,7 +514,11 @@ Public Class frmEditWoerterbuch
 
                     If ok Then
                         Dim tmpMsDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(itemText)
-                        missingMilestoneDefinitions.Add(tmpMsDef)
+
+                        If Not missingMilestoneDefinitions.Contains(tmpMsDef.name) Then
+                            missingMilestoneDefinitions.Add(tmpMsDef)
+                        End If
+
                         unknownList.Items.Add(itemText)
 
                         MilestoneDefinitions.remove(itemText)
@@ -661,5 +726,11 @@ Public Class frmEditWoerterbuch
 
     Private Sub replaceButton_Click(sender As Object, e As EventArgs) Handles replaceButton.Click
         Call MsgBox("noch nicht implementiert ...")
+    End Sub
+
+    Private Sub visElements_Click(sender As Object, e As EventArgs) Handles visElements.Click
+
+        Call visualizeElements()
+
     End Sub
 End Class

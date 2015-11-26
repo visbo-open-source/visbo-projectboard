@@ -266,7 +266,10 @@ Public Module awinGeneralModules
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-                    MilestoneDefinitions.Add(msDef)
+                    If Not MilestoneDefinitions.Contains(msDef.name) Then
+                        MilestoneDefinitions.Add(msDef)
+                    End If
+
 
                 End If
 
@@ -994,6 +997,12 @@ Public Module awinGeneralModules
 
                 Catch ex As Exception
                     Throw New ArgumentException("Customization File fehlerhaft - Farben fehlen ... " & vbLf & ex.Message)
+                End Try
+
+                Try
+                    awinSettings.missingDefinitionColor = CLng(.Range("MissingDefinitionColor").Interior.Color)
+                Catch ex As Exception
+
                 End Try
 
                 ergebnisfarbe1 = .Range("Ergebnisfarbe1").Interior.Color
@@ -9133,7 +9142,7 @@ Public Module awinGeneralModules
                         'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
                         hproj.VorlagenName = ""
                         hproj.farbe = awinSettings.AmpelNichtBewertet
-                        hproj.Schrift = Projektvorlagen.getProject(1).Schrift
+                        hproj.Schrift = Projektvorlagen.getProject(0).Schrift
                         hproj.Schriftfarbe = RGB(10, 10, 10)
                         hproj.earliestStart = 0
                         hproj.latestStart = 0
@@ -9253,7 +9262,12 @@ Public Module awinGeneralModules
                                 newPhaseDef.darstellungsKlasse = aktTask_j.taskType.Value
                                 newPhaseDef.UID = PhaseDefinitions.Count + 1
                                 ' muss in missingPhaseDefinitions noch eingetragen werden
-                                missingPhaseDefinitions.Add(newPhaseDef)
+                                If Not missingPhaseDefinitions.Contains(newPhaseDef.name) Then
+                                    missingPhaseDefinitions.Add(newPhaseDef)
+                                End If
+
+                                
+
 
                                 Call logfileSchreiben(("Achtung, RXFImport: Phase '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
                             End If

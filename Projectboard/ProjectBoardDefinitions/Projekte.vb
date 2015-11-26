@@ -11647,6 +11647,7 @@ Public Module Projekte
                 For m As Integer = 1 To realNameList.Count
 
                     Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(CStr(realNameList.Item(m)))
+                    Dim isMissingDefinition As Boolean = False
 
                     If Not IsNothing(cMilestone) Then
                         Dim cBewertung As clsBewertung
@@ -11662,6 +11663,17 @@ Public Module Projekte
                             Else
                                 Dim zeilenoffset As Integer = 0
                                 ' hier die übergeordnete Phase holen ...
+
+                                ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
+                                If MilestoneDefinitions.Contains(cMilestone.name) Then
+                                    vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
+                                    isMissingDefinition = False
+                                Else
+                                    vorlagenShape = missingMilestoneDefinitions.getShape(cMilestone.name)
+                                    isMissingDefinition = True
+                                End If
+
+
                                 vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
                                 Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
 
@@ -12625,13 +12637,23 @@ Public Module Projekte
                 For p = 1 To todoListe.Count
 
                     Dim phaseNameID As String = CStr(todoListe(p))
+                    Dim isMissingDefinition As Boolean = False
 
                     If realNameList.Contains(phaseNameID) Then
 
                         cphase = hproj.getPhaseByID(phaseNameID)
 
+                        ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
+                        If PhaseDefinitions.Contains(cphase.name) Then
+                            vorlagenshape = PhaseDefinitions.getShape(cphase.name)
+                            isMissingDefinition = False
+                        Else
+                            vorlagenshape = missingPhaseDefinitions.getShape(cphase.name)
+                            isMissingDefinition = True
+                        End If
+
                         vorlagenshape = PhaseDefinitions.getShape(elemNameOfElemID(phaseNameID))
-                        linienDicke = boxHeight * 0.3
+
 
                         Try
                             'cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
@@ -12671,12 +12693,13 @@ Public Module Projekte
                                 End With
 
                                 msNumber = msNumber + 1
-                                'If numberIt Then
-                                '    Call defineLineAppearance(hproj, cphase, msNumber, phasenShape, linienDicke)
+                                linienDicke = 4
+                                If numberIt Then
+                                    Call definePhaseAppearance(hproj, cphase, msNumber, phasenShape, linienDicke, isMissingDefinition)
 
-                                'Else
-                                '    Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
-                                'End If
+                                Else
+                                    Call definePhaseAppearance(hproj, cphase, 0, phasenShape, linienDicke, isMissingDefinition)
+                                End If
 
                                 ' jetzt der Liste der ProjectboardShapes hinzufügen
                                 projectboardShapes.add(phasenShape)
@@ -12795,52 +12818,71 @@ Public Module Projekte
 
     End Sub
 
-    'Public Sub defineLineAppearance(ByVal myproject As clsProjekt, ByVal myphase As clsPhase, ByVal lnumber As Integer, ByRef myShape As Excel.Shape, ByVal linienDicke As Double)
-    '    'Dim pColor As Integer
-
-    '    'With myphase
-
-    '    '    pColor = CInt(.Farbe)
-
-    '    'End With
-
-    '    With myShape
-
-    '        'With .Line
-    '        '    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-    '        '    .ForeColor.RGB = pColor
-    '        '    .Transparency = 0
-    '        '    .Weight = CSng(linienDicke)
-    '        'End With
+    ''' <summary>
+    ''' bestimmt das Aussehen der Phase 
+    ''' </summary>
+    ''' <param name="myproject"></param>
+    ''' <param name="myphase"></param>
+    ''' <param name="lnumber"></param>
+    ''' <param name="myShape"></param>
+    ''' <param name="linienDicke"></param>
+    ''' <remarks></remarks>
+    Public Sub definePhaseAppearance(ByVal myproject As clsProjekt, ByVal myphase As clsPhase, ByVal lnumber As Integer, ByRef myShape As Excel.Shape, ByVal linienDicke As Double, _
+                                     Optional ByVal isMissingDefinition As Boolean = False)
 
 
-    '        '.TextFrame2.TextRange.Text = ""
-    '        'If lnumber > 0 And Not roentgenBlick.isOn Then
+        With myShape
 
-    '        '    With .TextFrame2
-    '        '        .MarginLeft = 0
-    '        '        .MarginRight = 0
-    '        '        .MarginBottom = 0
-    '        '        .MarginTop = 0
-    '        '        .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-    '        '        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-    '        '        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
-    '        '        .TextRange.Text = lnumber.ToString
-    '        '        .TextRange.Font.Size = awinSettings.fontsizeLegend
-    '        '        .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    '        '    End With
+            If isMissingDefinition Then
+                With .Line
+                    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                    .ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+                    .Transparency = 0
+                    .Weight = CSng(linienDicke)
+                End With
+            End If
+
+            
 
 
-    '        'End If
+            '.TextFrame2.TextRange.Text = ""
+            'If lnumber > 0 And Not roentgenBlick.isOn Then
+
+            '    With .TextFrame2
+            '        .MarginLeft = 0
+            '        .MarginRight = 0
+            '        .MarginBottom = 0
+            '        .MarginTop = 0
+            '        .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
+            '        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
+            '        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
+            '        .TextRange.Text = lnumber.ToString
+            '        .TextRange.Font.Size = awinSettings.fontsizeLegend
+            '        .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
+            '    End With
 
 
-    '    End With
+            'End If
 
 
-    'End Sub
+        End With
 
 
-    Public Sub defineResultAppearance(ByVal myproject As clsProjekt, ByVal number As Integer, ByRef resultShape As Excel.Shape, ByVal bewertung As clsBewertung)
+    End Sub
+
+
+    ''' <summary>
+    ''' setzt das Aussehen des Meilensteines fest; kann für Reporting Zwecke auch nummeriert werden; der optionale Parameter bestimmt, 
+    ''' ob die Phase/der Meilenstein ein dem System unbekannter Name ist 
+    ''' </summary>
+    ''' <param name="myproject"></param>
+    ''' <param name="number"></param>
+    ''' <param name="resultShape"></param>
+    ''' <param name="bewertung"></param>
+    ''' <param name="isMissingDefinition"></param>
+    ''' <remarks></remarks>
+    Public Sub defineResultAppearance(ByVal myproject As clsProjekt, ByVal number As Integer, ByRef resultShape As Excel.Shape, ByVal bewertung As clsBewertung, _
+                                          Optional ByVal isMissingDefinition As Boolean = False)
         'Dim pcolor As Object
         'Dim status As String
 
@@ -12859,13 +12901,13 @@ Public Module Projekte
                 .Glow.Color.RGB = CInt(bewertung.color)
             End If
 
-            'With .Line
-            '    '.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-            '    .Visible = MsoTriState.msoTrue
-            '    .ForeColor.RGB = RGB(255, 255, 255)
-            '    '.ForeColor.RGB = bewertung.color
-            '    '.Transparency = 0
-            'End With
+            If isMissingDefinition Then
+                With .Line
+                    .Visible = MsoTriState.msoTrue
+                    .ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+                End With
+            End If
+
 
             'With .Fill
             '    .ForeColor.RGB = CInt(bewertung.color)
@@ -12920,6 +12962,14 @@ Public Module Projekte
 
     End Sub
 
+    ''' <summary>
+    ''' sollte nur so ausgelegt werden, dass es ausschließlich die Projektlinie zeichnet 
+    ''' das Erscheinungsbild einer Phase soll separat bestimmt werden 
+    ''' </summary>
+    ''' <param name="myproject"></param>
+    ''' <param name="projectShape"></param>
+    ''' <param name="phasenindex"></param>
+    ''' <remarks></remarks>
     Public Sub defineShapeAppearance(ByRef myproject As clsProjekt, ByRef projectShape As Excel.Shape, Optional ByVal phasenindex As Integer = 0)
 
         Dim pcolor As Object = XlRgbColor.rgbAqua
@@ -18740,7 +18790,10 @@ Public Module Projekte
         If Not IsNothing(original) Then
             For i = 1 To original.Count
                 element = CStr(original.Item(i))
-                kopie.Add(element, element)
+                If Not kopie.Contains(element) Then
+                    kopie.Add(element, element)
+                End If
+
             Next
         End If
         copyCollection = kopie

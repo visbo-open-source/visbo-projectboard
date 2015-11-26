@@ -1301,11 +1301,11 @@ Imports System.Drawing
     Sub PT5editDictionary(control As IRibbonControl)
 
         Dim editDictionary As New frmEditWoerterbuch
-        Dim returnValue As DialogResult
+
 
         Call projektTafelInit()
 
-        returnValue = editDictionary.ShowDialog
+        editDictionary.Show()
 
 
     End Sub
