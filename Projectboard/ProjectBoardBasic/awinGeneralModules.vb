@@ -9044,9 +9044,16 @@ Public Module awinGeneralModules
 
         Dim milestoneName As String = ""
 
+        ' Ersetzen eines bestimmten Strings in der kompletten Datei 'xmlfilename'
+        ' Zurückgeben des Namens der neuen Datei 'newXMLfilename'
+
+        Dim newXMLfilename As String = replaceStringInFile(xmlfilename, "xsi:type=""subscribedtask""", "")
+
+
+
         ' XML-Datei Öffnen
         ' A FileStream is needed to read the XML document.
-        Dim fs As New FileStream(xmlfilename, FileMode.Open)
+        Dim fs As New FileStream(newXMLfilename, FileMode.Open)
 
         ' Declare an object variable of the type to be deserialized.
         Dim Rplan As New rxf            ' Class rxf wird in clsRplanRXF.vb definiert
@@ -9533,6 +9540,58 @@ Public Module awinGeneralModules
         Dim attr As System.Xml.XmlAttribute = e.Attr
         Call MsgBox(("RXFImport: Unknown attribute " & attr.Name & "='" & attr.Value & "'"))
     End Sub 'serializer_UnknownAttribute
+
+    ''' <summary>
+    ''' in der ganzen Datei sfilename wird der String searchstr durch replacestr ersetzt
+    ''' </summary>
+    ''' <param name="sfilename"></param>Name der Datei, in der die Ersetzung erfolgen soll
+    ''' <param name="searchstr"></param>zu ersetzender String
+    ''' <param name="replacestr"></param>neuer String
+    ''' <returns></returns>Name der neuen Datei
+    ''' <remarks></remarks>
+    Private Function replaceStringInFile(ByVal sfilename As String, ByVal searchstr As String, ByVal replacestr As String) As String
+
+        'Declare ALL of your variables :)
+        Const ForReading = 1    '
+        Dim fileToRead As String = sfilename  ' the path of the file to read
+        Dim tstr() As String = Split(sfilename, ".", 2)
+        Dim fileToWrite As String = tstr(0) & ".new"     ' the path of a new file
+        Dim FSO As Object
+        Dim readFile As Object  'the file you will READ
+        Dim writeFile As Object 'the file you will CREATE
+        Dim repLine As Object   'the array of lines you will WRITE
+        Dim ln As Object
+        Dim l As Long
+
+        FSO = CreateObject("Scripting.FileSystemObject")
+        readFile = FSO.OpenTextFile(fileToRead, ForReading, False)
+        writeFile = FSO.CreateTextFile(fileToWrite, True, False)
+
+        '# Read entire file into an array & close it
+        repLine = Split(readFile.ReadAll, vbNewLine)
+        readFile.Close()
+
+        '# iterate the array and do the replacement line by line
+        'repLine = Replace(repLine, searchstr, replacestr)
+
+        For Each ln In repLine
+            ' ''ln = IIf(InStr(1, ln, searchstr, vbTextCompare) > 0, Replace(ln, searchstr, replacestr), ln)
+            ln = Replace(ln, searchstr, replacestr)
+            repLine(l) = ln
+            l = l + 1
+        Next
+
+        '# Write to the array items to the file
+        writeFile.Write(Join(repLine, vbNewLine))
+        writeFile.Close()
+
+        '# clean up
+        readFile = Nothing
+        writeFile = Nothing
+        FSO = Nothing
+        replaceStringInFile = fileToWrite
+
+    End Function
 
 
 

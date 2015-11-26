@@ -40,7 +40,10 @@ Public Class frmSelectRPlanImport
             For i = 1 To listOfImportfiles.Count
                 dateiName = Dir(listOfImportfiles.Item(i - 1))
                 If Not IsNothing(dateiName) Then
-                    RPLANImportDropbox.Items.Add(dateiName)
+                    If dateiName.Contains(".rxf") Then
+                        RPLANImportDropbox.Items.Add(dateiName)
+                    End If
+
                 End If
 
             Next i
