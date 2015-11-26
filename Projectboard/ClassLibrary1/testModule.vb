@@ -5082,9 +5082,19 @@ Public Module testModule
         For j = 1 To uniquePhases.Count
 
             phaseName = CStr(uniquePhases(j))
+            Dim isMissingDefinition As Boolean
 
-            phaseShape = PhaseDefinitions.getShape(phaseName)
-            shortName = PhaseDefinitions.getAbbrev(phaseName)
+            If PhaseDefinitions.Contains(phaseName) Then
+                phaseShape = PhaseDefinitions.getShape(phaseName)
+                shortName = PhaseDefinitions.getAbbrev(phaseName)
+                isMissingDefinition = False
+            Else
+                phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                shortName = missingPhaseDefinitions.getAbbrev(phaseName)
+                isMissingDefinition = True
+            End If
+
+
             ' Phasen-Shape 
             phaseShape.Copy()
             copiedShape = pptslide.Shapes.Paste()
@@ -5126,7 +5136,14 @@ Public Module testModule
 
             milestoneName = CStr(uniqueMilestones(j))
 
-            milestoneShape = MilestoneDefinitions.getShape(milestoneName)
+            ' Änderung tk 26.11.15
+            If MilestoneDefinitions.Contains(milestoneName) Then
+                milestoneShape = MilestoneDefinitions.getShape(milestoneName)
+            Else
+                milestoneShape = missingMilestoneDefinitions.getShape(milestoneName)
+            End If
+
+
             factor = milestoneShape.Width / milestoneShape.Height
             shortName = MilestoneDefinitions.getAbbrev(milestoneName)
             ' Phasen-Shape 
@@ -8946,7 +8963,15 @@ Public Module testModule
                                 End If
 
 
-                                phaseShape = PhaseDefinitions.getShape(phaseName)
+
+                                ' Änderung tk 26.11 
+                                If PhaseDefinitions.Contains(phaseName) Then
+                                    phaseShape = PhaseDefinitions.getShape(phaseName)
+                                Else
+                                    phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                                End If
+
+
                                 Dim phaseStart As Date = cphase.getStartDate
                                 Dim phaseEnd As Date = cphase.getEndDate
                                 'Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName).Trim
@@ -9175,14 +9200,14 @@ Public Module testModule
 
 
 
-                                               
+
                                             End If
 
 
-                                    Else
-                                        ' selektierter Meilenstein 'milestoneName' nicht in dieser Phase enthalten
-                                        ' also: nichts tun
-                                    End If
+                                        Else
+                                            ' selektierter Meilenstein 'milestoneName' nicht in dieser Phase enthalten
+                                            ' also: nichts tun
+                                        End If
 
                                     End If
 
@@ -9606,7 +9631,15 @@ Public Module testModule
         Dim x2 As Double
 
 
-        milestoneTypShape = MilestoneDefinitions.getShape(MS.name)
+
+        ' Änderung tk 26.11.15
+        If MilestoneDefinitions.Contains(MS.name) Then
+            milestoneTypShape = MilestoneDefinitions.getShape(MS.name)
+        Else
+            milestoneTypShape = missingMilestoneDefinitions.getShape(MS.name)
+        End If
+
+
         Dim msdate As Date = MS.getDate
 
         Dim seitenverhaeltnis As Double
@@ -9980,7 +10013,12 @@ Public Module testModule
             phaseName = CStr(uniqueElemClasses(i))
             Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName)
 
-            phaseShape = PhaseDefinitions.getShape(phaseName)
+            ' Änderung tk 26.11.15
+            If PhaseDefinitions.Contains(phaseName) Then
+                phaseShape = PhaseDefinitions.getShape(phaseName)
+            Else
+                phaseShape = missingPhaseDefinitions.getShape(phaseName)
+            End If
 
             ' Phasen-Shape 
             phaseShape.Copy()
@@ -10054,7 +10092,13 @@ Public Module testModule
             msName = CStr(uniqueElemClasses.Item(i))
 
             msShortname = MilestoneDefinitions.getAbbrev(msName)
-            meilensteinShape = MilestoneDefinitions.getShape(msName)
+            
+            ' Änderung tk 26.11.15
+            If MilestoneDefinitions.Contains(msName) Then
+                meilensteinShape = MilestoneDefinitions.getShape(msName)
+            Else
+                meilensteinShape = missingMilestoneDefinitions.getShape(msName)
+            End If
 
 
             ' Meilenstein-Shape 
