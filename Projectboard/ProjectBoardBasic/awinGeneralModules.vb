@@ -9266,7 +9266,7 @@ Public Module awinGeneralModules
                                 Dim newPhaseDef As New clsPhasenDefinition
                                 newPhaseDef.name = aktTask_j.name
                                 newPhaseDef.shortName = ""
-                                newPhaseDef.darstellungsKlasse = aktTask_j.taskType.Value
+                                newPhaseDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, False)
                                 newPhaseDef.UID = PhaseDefinitions.Count + 1
                                 ' muss in missingPhaseDefinitions noch eingetragen werden
                                 If Not missingPhaseDefinitions.Contains(newPhaseDef.name) Then
@@ -9351,7 +9351,7 @@ Public Module awinGeneralModules
                                 msDef.name = aktTask_j.name
                                 msDef.schwellWert = 0
                                 msDef.shortName = ""
-                                msDef.darstellungsKlasse = aktTask_j.taskType.Value
+                                msDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, True)
                                 msDef.UID = MilestoneDefinitions.Count + 1
 
                                 Try
