@@ -657,6 +657,12 @@ Public Module BMWItOModul
                                     parentElemName = pHierarchy.getPhaseBeforeLevel(indentLevel).name
                                     ' das folgende wurde am 31.3. ergänzt, um die Hierarchie aufbauen zu können
                                     parentNodeID = pHierarchy.getIDBeforeLevel(indentLevel)
+                                    ' Plausibilitäts-Check: die beiden müssen identisch sein !!
+                                    ' tk Debug: 27.11.15
+                                    If elemNameOfElemID(parentNodeID) <> parentElemName Then
+                                        Call MsgBox("nicht konsistent in bmwImportProjekteITO15, zeile 663")
+                                    End If
+
 
                                     ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
                                     Try
@@ -670,6 +676,17 @@ Public Module BMWItOModul
                                     Catch ex As Exception
                                         stdName = itemName
                                     End Try
+
+                                    ' hier muss jetzt überprüft werden, ob es Geschwister mit gleichen Namen gibt
+                                    ' wenn ja , wird an den stdName solange eine ldfNR Ergänzung rangemacht, bis der NAme innerhalb der 
+                                    ' Geschwistergruppe eindeutig ist
+
+                                    ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase 
+                                    If awinSettings.createUniqueSiblingNames Then
+                                        stdName = hproj.hierarchy.findUniqueGeschwisterName(parentNodeID, stdName, False)
+                                    End If
+
+
 
                                     Dim ok1 As Boolean
 
@@ -894,6 +911,12 @@ Public Module BMWItOModul
                                         End Try
 
                                         Dim ok1 As Boolean
+
+                                        ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilenstein und Phase 
+                                        If awinSettings.createUniqueSiblingNames Then
+                                            stdName = hproj.hierarchy.findUniqueGeschwisterName(cphase.nameID, stdName, True)
+                                        End If
+
 
                                         elemID = calcHryElemKey(stdName, True)
                                         If hproj.hierarchy.containsKey(elemID) Then

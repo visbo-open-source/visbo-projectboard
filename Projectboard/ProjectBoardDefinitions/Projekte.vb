@@ -10251,7 +10251,7 @@ Public Module Projekte
 
 
                         Try
-                            hproj = ShowProjekte.getProject(singleShp.Name)
+                            hproj = ShowProjekte.getProject(singleShp.Name, True)
                         Catch ex As Exception
                             ok = False
                         End Try
@@ -10409,7 +10409,7 @@ Public Module Projekte
                     If isProjectType(kindOfShape(singleShp)) Then
 
                         Try
-                            hproj = ShowProjekte.getProject(singleShp.Name)
+                            hproj = ShowProjekte.getProject(singleShp.Name, True)
                         Catch ex As Exception
                             ok = False
                         End Try
@@ -11335,7 +11335,7 @@ Public Module Projekte
                         ElseIf isProjectType(shapeType) Then
 
                             projectboardShapes.add(shpElement)
-                            hproj = ShowProjekte.getProject(shpElement.Name)
+                            hproj = ShowProjekte.getProject(shpElement.Name, True)
                             'hproj.tfZeile = calcYCoordToZeile(shpElement.Top)
                             hproj.tfZeile = hproj.tfZeile + anzahlZeilen
 
@@ -11408,7 +11408,7 @@ Public Module Projekte
                             ElseIf isProjectType(shapeType) Then
 
                                 projectboardShapes.add(shpElement)
-                                hproj = ShowProjekte.getProject(shpElement.Name)
+                                hproj = ShowProjekte.getProject(shpElement.Name, True)
                                 hproj.tfZeile = calcYCoordToZeile(shpElement.Top)
 
                             End If
@@ -12024,7 +12024,7 @@ Public Module Projekte
                     Try
                         dpName = CStr(listeDep.Item(d))
                         dpShape = tmpshapes.Item(dpName)
-                        dProj = ShowProjekte.getProject(dpName)
+                        dProj = ShowProjekte.getProject(dpName, True)
                         Dim curDegree As Integer
                         curDependency = allDependencies.getDependency(PTdpndncyType.inhalt, pName, dpName)
                         If Not IsNothing(curDependency) Then
@@ -16847,7 +16847,7 @@ Public Module Projekte
             oldName = .Name
         End With
 
-        hproj = ShowProjekte.getProject(oldName)
+        hproj = ShowProjekte.getProject(oldName, True)
 
         If isSingleProjectShape(projectShape) Then
 

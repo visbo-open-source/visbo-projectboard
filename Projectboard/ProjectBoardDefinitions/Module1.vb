@@ -1532,7 +1532,10 @@ Public Module Module1
 
         If selectedProjekte.Count > 0 Then
             selectedProjekte.Clear()
-            Call awinNeuZeichnenDiagramme(8)
+            If awinSettings.showValuesOfSelected Then
+                Call awinNeuZeichnenDiagramme(8)
+            End If
+
         End If
 
 

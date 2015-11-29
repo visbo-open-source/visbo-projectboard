@@ -13,6 +13,96 @@ Public Class clsNameMapping
 
 
     ''' <summary>
+    ''' gibt die Anzahl der Synonyme zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property countSynonyms As Integer
+        Get
+            countSynonyms = synonyms.Count
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt ein keyValue Pair an der Position index  zurück: Synonym, Std-Name
+    ''' wenn ungültiger Index (kleiner Null oder größer count-1) dann Nothing
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSynonymMapping(ByVal index As Integer) As KeyValuePair(Of String, String)
+        Get
+            If index >= 0 Or index <= synonyms.Count - 1 Then
+                getSynonymMapping = synonyms.ElementAt(index)
+            Else
+                getSynonymMapping = Nothing
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Anzahl der regular Expressions zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property countRegEx As Integer
+        Get
+            countRegEx = regExpressionNames.Count
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt ein keyValue Pair an der Position index zurück: regular Expression, Std-Name
+    ''' wenn ungültiger Index (kleiner Null oder größer count-1) dann Nothing
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getRegExMapping(ByVal index As Integer) As KeyValuePair(Of String, String)
+        Get
+            If index >= 0 Or index <= regExpressionNames.Count - 1 Then
+                getRegExMapping = regExpressionNames.ElementAt(index)
+            Else
+                getRegExMapping = Nothing
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Anzahl an Namen zurück, die ignoriert werden sollen
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property countIgnore() As Integer
+        Get
+            countIgnore = ignoreNames.Count
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt ein zu ignorierendes Element an der Position index zurück  
+    ''' wenn ungültiger Index (kleiner Null oder größer count-1) dann Nothing
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getIgnoreElement(ByVal index As Integer) As String
+        Get
+            If index >= 0 Or index <= ignoreNames.Count - 1 Then
+                getIgnoreElement = ignoreNames.ElementAt(index).Key
+            Else
+                getIgnoreElement = Nothing
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt die Anzahl an Synonymen und Regular Expressions zurück, die auf den 
     ''' übergebenen Namen abbilden
     ''' </summary>
@@ -327,7 +417,7 @@ Public Class clsNameMapping
 
             ' check jetzt auf Hierarchie Names
             If Me.namesToComplement.ContainsKey(stdName) Then
-                stdName = stdName & " " & parentPhaseName
+                stdName = stdName & "(" & parentPhaseName & ")"
             End If
 
             mapToStdName = stdName
@@ -421,6 +511,40 @@ Public Class clsNameMapping
 
     End Function
 
+    ''' <summary>
+    ''' ersetzt in der synonyms Liste alle StdNames, deren Wert oldName ist mit dem neuen Wert newName
+    ''' </summary>
+    ''' <param name="oldName">alter Wert für den Standard-Namen</param>
+    ''' <param name="newName">neuer Wert für den Standard-Namen</param>
+    ''' <remarks></remarks>
+    Public Sub replaceInSynonyms(ByVal oldName As String, ByVal newName As String)
+
+        If oldName = newName Then
+            ' fertig 
+        Else
+            Dim todoList As New Collection
+
+
+            For Each kvp As KeyValuePair(Of String, String) In synonyms
+                ' merken, welche Elemente auf den alten Namen abgebildet werden 
+                If kvp.Value = oldName Then
+                    todoList.Add(kvp)
+                End If
+
+            Next
+
+            ' jetzt die synonyms aktualisieren 
+            For Each kvp As KeyValuePair(Of String, String) In todoList
+
+                synonyms.Remove(kvp.Key)
+                synonyms.Add(kvp.Key, newName)
+
+            Next
+
+
+        End If
+
+    End Sub
     Public Sub New()
 
         synonyms = New SortedList(Of String, String)

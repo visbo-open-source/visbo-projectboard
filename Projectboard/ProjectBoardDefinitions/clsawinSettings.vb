@@ -90,7 +90,18 @@ Public Class clsawinSettings
     ' Setting, das regelt, ob unbekannte Namen by default in die Projekt-Struktur aufgenommen werden
     ' sie werden aber auf alle Fälle nicht (!) in die PhaseDefinitions aufgenommen; 
     ' Ausnahme: wenn es sich um ein Template handelt, und alwaysAcceptTemplateNames = true
+
+    ' im BMW Import Kontext wichtiges Settings
+    Property importTyp As Integer
+
+    ' steuert, ob Kinder, die  Duplikate von ihren Eltern sind, eliminiert werden sollen  
+    ' Duplikat heisst: gleicher Name und gleicher Termin 
+    Property eliminateDuplicates As Boolean
+
     Public Property importUnknownNames As Boolean
+    ' wird beim Import verwendet; steuert, ob beim Import aus MS Project, RPLAN, Excel Files eindeutige Namen 
+    ' für gleichlautende Geschwisternamen generiert werden  
+    Public Property createUniqueSiblingNames As Boolean
 
     ' Settings für ToleranzKorridor TimeCost
     Public Property timeToleranzRel As Double
@@ -123,9 +134,7 @@ Public Class clsawinSettings
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
 
-    ' im BMW Import Kontext wichtiges Settings
-    Property importTyp As Integer
-    Property eliminateDuplicates As Boolean
+   
 
     Sub New()
 
@@ -182,7 +191,10 @@ Public Class clsawinSettings
         _EinzelRessExport = 0
         _addMissingPhaseMilestoneDef = False
         _alwaysAcceptTemplateNames = False
+        _importTyp = 1
+        _eliminateDuplicates = True
         _importUnknownNames = True
+        _createUniqueSiblingNames = True
 
         ' Settings für Besser/Schlechter Diagramm 
         _timeToleranzRel = 0.02
@@ -216,9 +228,7 @@ Public Class clsawinSettings
         _useHierarchy = True
         _isHryNameFrmActive = False
 
-        ' im Kontext BMW Import wichtige Settings
-        _importTyp = 1
-        _eliminateDuplicates = True
+       
 
     End Sub
 End Class

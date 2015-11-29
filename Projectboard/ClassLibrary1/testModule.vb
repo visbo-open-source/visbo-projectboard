@@ -56,8 +56,8 @@ Public Module testModule
                 With singleShp
                     If isProjectType(CInt(.AlternativeText)) Then
                         Try
-                            hproj = ShowProjekte.getProject(singleShp.Name)
-                            todoListe.Add(singleShp.Name)
+                            hproj = ShowProjekte.getProject(singleShp.Name, True)
+                            todoListe.Add(hproj.name)
                         Catch ex As Exception
                             Call MsgBox(singleShp.Name & " nicht gefunden ...")
                             Exit Sub
@@ -3825,7 +3825,7 @@ Public Module testModule
                     singleShp1 = awinSelection.Item(i)
 
                     Try
-                        hilfshproj = ShowProjekte.getProject(singleShp1.Name)
+                        hilfshproj = ShowProjekte.getProject(singleShp1.Name, True)
 
                     Catch ex As Exception
                         Throw New ArgumentException("Projekt nicht gefunden ...")
@@ -4140,6 +4140,11 @@ Public Module testModule
         Dim kennzeichnung As String
 
 
+        ' Checken, ob überhaupt was in der Projektliste drin ist ...
+        ' wenn nein, Exit 
+        If ProjektListe.Count = 0 Then
+            Exit Sub
+        End If
 
 
         If ProjektListe.Count > 1 Then

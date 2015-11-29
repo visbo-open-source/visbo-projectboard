@@ -457,17 +457,40 @@ Public Class clsProjekte
     ''' <summary>
     ''' gibt das vollständige Projekt aus der Liste zurück, das den angegebenen Namen hat 
     ''' </summary>
-    ''' <param name="projectname"></param>
+    ''' <param name="itemName"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getProject(projectname As String) As clsProjekt
+    Public ReadOnly Property getProject(itemName As String, _
+                                        Optional ByVal tryOnceMore As Boolean = False) As clsProjekt
 
         Get
             Try
-                getProject = AllProjects.Item(projectname)
+
+                getProject = AllProjects.Item(itemName)
+
             Catch ex As Exception
-                Throw New ArgumentException("projectname nicht vorhanden")
+
+                If tryOnceMore Then
+
+                    Dim pName As String = extractName(itemName, PTshty.projektN)
+                    If pName.Length > 0 Then
+
+                        If AllProjects.ContainsKey(pName) Then
+                            getProject = AllProjects.Item(pName)
+                        Else
+                            Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
+                        End If
+                    Else
+                        Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
+                    End If
+
+                Else
+                    Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
+                End If
+                
+
+
             End Try
 
         End Get

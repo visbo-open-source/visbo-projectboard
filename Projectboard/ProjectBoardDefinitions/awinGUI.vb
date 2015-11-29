@@ -59,6 +59,11 @@ Public Module awinGUI
         Dim titelTeile(1) As String
         Dim titelTeilLaengen(1) As Integer
 
+        ' Check zu Beginn: gibt es überhaupt etwas zu tun ? 
+        ' wenn nein, sofortiger Exit 
+        If ProjektListe.Count = 0 Then
+            Exit Sub
+        End If
 
 
         appInstance.ScreenUpdating = False

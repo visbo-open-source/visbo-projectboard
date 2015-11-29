@@ -11,6 +11,14 @@ Public Class frmEditWoerterbuch
     Private eventsShouldFire As Boolean = True
 
 
+    Private Sub frmEditWoerterbuch_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
+
+        Dim andMappings As Boolean = True
+        Call awinWritePhaseMilestoneDefinitions(andMappings)
+
+    End Sub
+
+
     ''' <summary>
     ''' wird beim Laden des Formuars durchlaufen 
     ''' </summary>
@@ -724,13 +732,88 @@ Public Class frmEditWoerterbuch
         
     End Sub
 
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub replaceButton_Click(sender As Object, e As EventArgs) Handles replaceButton.Click
-        Call MsgBox("noch nicht implementiert ...")
+
+        eventsShouldFire = False
+
+        ' erst müssen alle Wörterbuch Einträge ersetzt werden, die bisher auf diesen Standard-Namen abbilden
+        Dim newStdName As String = editUnknownItem.Text
+        Dim oldStdName As String = CStr(standardList.SelectedItem)
+
+        If newStdName = oldStdName Then
+            ' nichts machen , sind identisch 
+            Call MsgBox("beide Namen sind identisch - keine Ersetzung vorgenommen")
+        Else
+            If rdbListShowsPhases.Checked Then
+                ' Phasen
+                phaseMappings.replaceInSynonyms(oldStdName, newStdName)
+                Try
+                    phaseMappings.addSynonym(oldStdName, newStdName)
+                Catch ex As Exception
+                    Call MsgBox(ex.Message)
+                End Try
+
+                ' und jetzt muss der Eintrag in phaseDefinitions noch geändert werden
+                Dim phaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(oldStdName)
+                phaseDef.name = newStdName
+                PhaseDefinitions.remove(oldStdName)
+                PhaseDefinitions.Add(phaseDef)
+
+                ' löschen in der StandardListe
+                standardList.Items.Remove(oldStdName)
+                standardList.Items.Add(newStdName)
+
+                ' wenn vorhanden in MissingPhaseDefinitions: löschen , auch in der Unknownlist
+                If missingPhaseDefinitions.Contains(newStdName) Then
+                    missingPhaseDefinitions.remove(newStdName)
+                    unknownList.Items.Remove(newStdName)
+                End If
+
+
+            Else
+                ' Meilensteine
+                milestoneMappings.replaceInSynonyms(oldStdName, newStdName)
+                Try
+                    milestoneMappings.addSynonym(oldStdName, newStdName)
+                Catch ex As Exception
+                    Call MsgBox(ex.Message)
+                End Try
+
+                ' und jetzt muss der Eintrag in milestoneDefinitions noch geändert werden 
+
+                Dim milestoneDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(oldStdName)
+                milestoneDef.name = newStdName
+                MilestoneDefinitions.remove(oldStdName)
+                MilestoneDefinitions.Add(milestoneDef)
+
+                ' löschen in der StandardListe
+                standardList.Items.Remove(oldStdName)
+                standardList.Items.Add(newStdName)
+
+                ' wenn vorhanden in MissingPhaseDefinitions: löschen , auch in der Unknownlist
+                If missingMilestoneDefinitions.Contains(newStdName) Then
+                    missingMilestoneDefinitions.remove(newStdName)
+                    unknownList.Items.Remove(newStdName)
+                End If
+            End If
+        End If
+
+        eventsShouldFire = True
+
     End Sub
 
     Private Sub visElements_Click(sender As Object, e As EventArgs) Handles visElements.Click
 
+        Call awinDeSelect()
+
         Call visualizeElements()
 
     End Sub
+
 End Class

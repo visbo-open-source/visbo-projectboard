@@ -2,10 +2,64 @@
     Private _allNodes As SortedList(Of String, clsHierarchyNode)
 
     ''' <summary>
+    ''' gibt die eindeutigen Element-Namen oder Element-IDs der Kinder zurück , abhängig von Kennung werden 
+    ''' Meilenstein-, Phasen- oder alle Kinder zurückgegeben  
+    ''' provideIDs = true: ElemIDs der Kinder 
+    ''' provideIDs = false: ElemNames der Kinder  
+    ''' ACHTUNG: wenn beides zurückgegeben wird und nur die Element-Namen, kann es sein, dass 
+    ''' </summary>
+    ''' <param name="elemID">Element-ID , dessen Kinder gesucht werden </param>
+    ''' <param name="lookingForMilestones">true: es werden die Namen der Meilenstein Kinder zurückgegeben 
+    ''' false: es werden die NAmen der Phasen-Kinder zurückgegeben</param>
+    ''' <returns>Collection mit den sortierten Namen der jeweiligen Kinder</returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getChildNamesOf(ByVal elemID As String, ByVal lookingForMilestones As Boolean) As Collection
+        Get
+            Dim tmpCollection As New Collection
+            Dim currentNode As clsHierarchyNode = _allNodes.Item(elemID)
+            Dim currentChildID As String
+            Dim isMilestone As Boolean
+            Dim tmpName As String
+
+            If _allNodes.ContainsKey(elemID) Then
+                currentNode = _allNodes.Item(elemID)
+                If Not IsNothing(currentNode) Then
+
+                    For i As Integer = 1 To currentNode.childCount
+
+                        currentChildID = currentNode.getChild(i)
+                        isMilestone = elemIDIstMeilenstein(currentChildID)
+
+
+                        If lookingForMilestones Then
+                            If isMilestone Then
+                                tmpName = elemNameOfElemID(currentNode.getChild(i))
+                                tmpCollection.Add(tmpName, tmpName)
+                            End If
+                        Else
+                            If Not isMilestone Then
+                                tmpName = elemNameOfElemID(currentNode.getChild(i))
+                                tmpCollection.Add(tmpName, tmpName)
+                            End If
+                        End If
+                    Next
+
+                End If
+            Else
+                ' nichts tun, leere Collection zurück geben 
+            End If
+
+            getChildNamesOf = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' fügt der Hierarchy einen Knoten hinzu
     ''' </summary>
     ''' <param name="elemNode"></param>
     ''' <remarks></remarks>
+    ''' 
     Public Sub addNode(ByRef elemNode As clsHierarchyNode, ByVal elemKey As String)
 
         Dim parentNode As clsHierarchyNode
@@ -41,7 +95,7 @@
 
         End If
 
-        
+
 
 
     End Sub
@@ -95,7 +149,7 @@
 
             ' jetzt das eigentliche Element löschen 
             _allNodes.Remove(uniqueID)
-            
+
         Else
             ' nichts tun, ist eh nicht mehr existent ...
         End If
@@ -306,6 +360,45 @@
         End Get
     End Property
 
+    ''' <summary>
+    ''' findet für elemName einen innerhalb seiner Geschwister eindeutigen Namen; 
+    ''' wenn notwendig wird elemName solange mit einer lfdNr inkrementiert, bis der Name innerhalb seiner Geschwistergruppe eindeutig ist
+    ''' Zu Geschwistern zählen die Kinder des gleichen Vaters, die auch vom gleichen Typ (Phasen oder Meilensteine sind)
+    ''' es kann also einen Meilenstein und eine Phase gleichen Namens auf der gleichen Hierarchie-Stufe geben 
+    ''' </summary>
+    ''' <param name="parentElemID">ElemID des Vater-Knotens</param>
+    ''' <param name="elemName">Urspünglicher Name des Elements</param>
+    ''' <param name="isMilestone">handelt es sich um einen Meilenstein </param>
+    ''' <value></value>
+    ''' <returns>gibt einen eindeutigen Geschwister/Typ Namen zurück</returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property findUniqueGeschwisterName(ByVal parentElemID As String, ByVal elemName As String, ByVal isMilestone As Boolean) As String
+
+        Get
+            Dim kennung As Integer
+            If isMilestone Then
+                kennung = 1
+            Else
+                kennung = 0
+            End If
+
+            Dim geschwisterTypGruppe As Collection = Me.getChildNamesOf(parentElemID, isMilestone)
+            ' geschwistergruppe rechnest du dadrin aus ..
+            Dim lfdNr As Integer = 2
+
+            Dim uniqueSiblingName As String = elemName
+
+            ' wenn beriets enthalten: suche einen neuen, abgeleiteten Namen
+            Do While geschwisterTypGruppe.Contains(uniqueSiblingName)
+                uniqueSiblingName = elemName & " " & lfdNr.ToString
+                lfdNr = lfdNr + 1
+            Loop
+
+
+            findUniqueGeschwisterName = uniqueSiblingName
+
+        End Get
+    End Property
     ''' <summary>
     ''' berechnet den Unique Namen ElemKey für den gegebenen elemName und Angabe, ob Meilenstein oder nicht 
     ''' findet auf jeden Fall einen Namen, der in der sortedList noch nicht enthalten ist  
@@ -518,7 +611,7 @@
             End Try
 
             ' jetzt wird unterschieden, ob Abbrev gezeigt werden soll oder Standard Name ... 
-            If showStdNames Then
+            If ShowStdNames Then
                 If showAbbrev Then
 
                     If awinSettings.showBestName And Not awinSettings.drawphases Then
@@ -965,7 +1058,7 @@
             Dim elemID As String = calcHryElemKey(name, True)
             Dim i As Integer, k As Integer
             Dim anzahlNodes As Integer = _allNodes.Count
-            
+
             ' da die Liste sortiert ist, reicht es den Index des ersten und den Index des letzten Elements zu bestimmen 
 
             ReDim milestoneIndices(0)

@@ -834,6 +834,7 @@ Public Module PBBModules
 
                 Try
                     hproj = ShowProjekte.getProject(pName)
+                    pName = hproj.name
                     phaseList = projectboardShapes.getPhaseList(hproj.name)
                     milestoneList = projectboardShapes.getMilestoneList(hproj.name)
                 Catch ex As Exception
@@ -1243,7 +1244,7 @@ Public Module PBBModules
             If awinSelection.Count = 1 And isProjectType(kindOfShape(awinSelection.Item(1))) Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
-                hproj = ShowProjekte.getProject(singleShp.Name)
+                hproj = ShowProjekte.getProject(singleShp.Name, True)
                 With hproj
                     pName = .name
                     variantName = .variantName

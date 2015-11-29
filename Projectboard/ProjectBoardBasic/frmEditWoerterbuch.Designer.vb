@@ -256,6 +256,7 @@ Partial Class frmEditWoerterbuch
         Me.HelpButton = True
         Me.Name = "frmEditWoerterbuch"
         Me.Text = "Editieren des Wörterbuchs"
+        Me.TopMost = True
         CType(Me.clearUnknownList, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.setItemToBeUnknown, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.setItemToBeKnown, System.ComponentModel.ISupportInitialize).EndInit()
