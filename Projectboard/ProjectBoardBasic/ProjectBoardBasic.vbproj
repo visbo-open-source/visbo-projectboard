@@ -86,6 +86,7 @@
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
+    <Compile Include="clsProtokoll.vb" />
     <Compile Include="frmAmpelBewertung.Designer.vb">
       <DependentUpon>frmAmpelBewertung.vb</DependentUpon>
     </Compile>

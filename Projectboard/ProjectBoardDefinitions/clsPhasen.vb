@@ -63,10 +63,10 @@ Public Class clsPhasen
     End Property
 
     ''' <summary>
-    ''' gibt die Abkürzung, den Shortname für den Meilenstein zurück
+    ''' gibt die Abkürzung, den Shortname für die Phase zurück
     ''' wenn er nicht gefunden wird: "n.a."
     ''' </summary>
-    ''' <param name="name">Langname Meilenstein</param>
+    ''' <param name="name">Langname Phase</param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
