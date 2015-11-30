@@ -488,6 +488,7 @@
                 headPhase = New clsPhase(parent:=project)
                 elemID = project.hierarchy.findUniqueElemKey(moduleName, False)
                 headPhase.nameID = elemID
+
                 headPhase.changeStartandDauer(modulStartOffset, CLng(Me.dauerInDays * correctFactor))
 
                 project.AddPhase(headPhase, origName:=moduleName, _
