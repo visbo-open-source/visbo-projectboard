@@ -9364,7 +9364,7 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
-    ''' Einlesen eines RXF-Files (XML-Ausleitung von RPLAN)
+    ''' Einlesen eines RXF-Files (XML-Ausleitung von RPLAN) und dazu ein Protokoll in Tabellenblatt 'xmlfilename'protokoll in Datei Logfile
     ''' </summary>
     ''' <param name="myCollection"></param>
     ''' <param name="xmlfilename"></param>Name des RXF-Files
@@ -9425,12 +9425,28 @@ Public Module awinGeneralModules
             ' data from the XML document. 
             Rplan = CType(deserializer.Deserialize(fs), rxf)
 
+            ' Tabellenblatt "xmlfilename" im logfile.xlsx erzeugen fürs Protokoll (xmlfilename ohne ".rxf" Extension)
+
+            Dim tstr As String() = Split(xmlfilename, "\", -1)
+            Dim hstr As String = tstr(tstr.Length - 1)
+            Dim quelle As String = hstr
+            tstr = Split(hstr, ".", 2)
+
+            Dim tabblattname As String = tstr(0)
+            Dim wslogbuch As Excel.Worksheet
+
+           
+            Dim protokollLine As New clsProtokoll
+
+            protokollLine.InitProtokoll(wslogbuch, tabblattname)
+            Dim zeile As Integer = 3
 
             ' Projekt suchen; VISBO Projekt suchen unter der RPLANTasks mit gegebenen MainProject
             For i = 0 To Rplan.task.Length - 1
 
                 If Not IsNothing(Rplan.task(i).mainProject) Then
                     ' akt. Task ist Projekt 
+                    protokollLine.clear()
                     Dim aktTask_i As rxfTask = Rplan.task(i)
                     hproj = New clsProjekt
 
@@ -9439,6 +9455,12 @@ Public Module awinGeneralModules
                     hproj.leadPerson = aktTask_i.owner
                     hproj.startDate = aktTask_i.actualDate.start.Value
                     ProjektdauerinDays = calcDauerIndays(aktTask_i.actualDate.start.Value, aktTask_i.actualDate.finish.Value)
+
+                    ' Protokollzeile bestücken
+                    protokollLine.actDate = Date.Now.ToString
+                    protokollLine.Projekt = hproj.name
+                    protokollLine.quelle = quelle
+
 
                     ' ProjektPhase erzeugen
                     cphase = New clsPhase(parent:=hproj)
@@ -9469,7 +9491,7 @@ Public Module awinGeneralModules
                     lastelemID = cphase.nameID
 
                     ' Alle Tasks zu diesem Projekt mit deren Kinder und KindesKinder in hproj eintragen
-                    Call findAllTasksandInsert(aktTask_i, parentelemID, hproj, Rplan)
+                    Call findAllTasksandInsert(aktTask_i, parentelemID, hproj, Rplan, protokollLine, zeile)
 
                     '
                     '' '' Bestimmung der BMW-Vorlage des jeweiligen Projektes
@@ -9517,6 +9539,8 @@ Public Module awinGeneralModules
                 End If
             Next i
 
+            ' Protokolldatei sichern
+            protokollLine.close()
 
             ' RXF-Datei (entspricht XML-Datei) Schliessen
             fs.Close()
@@ -9541,7 +9565,7 @@ Public Module awinGeneralModules
     ''' <param name="hproj"></param>aktuelles aufzubauendes Projekt
     ''' <param name="RPLAN"></param>Komplette eingelesene rxf-Struktur 
     ''' <remarks></remarks>
-    Private Sub findAllTasksandInsert(ByVal task As rxfTask, ByVal parentelemID As String, ByRef hproj As clsProjekt, ByVal RPLAN As rxf)
+    Private Sub findAllTasksandInsert(ByVal task As rxfTask, ByVal parentelemID As String, ByRef hproj As clsProjekt, ByVal RPLAN As rxf, ByRef prtLine As clsProtokoll, ByRef zeile As Integer)
 
 
         Dim cphase As clsPhase = Nothing
@@ -9556,12 +9580,15 @@ Public Module awinGeneralModules
         Dim milestoneName As String = ""
         Dim milestonedate As Date
 
+
+
         ' weitere Tasks finden, die zu diesem Projekt (mit ID=aktTask.id) gehören, d.h. ID muss als Parent auftreten
         For j = 0 To RPLAN.task.Length - 1
 
             If RPLAN.task(j).parent = task.id Then
 
                 Dim aktTask_j As rxfTask = RPLAN.task(j)
+
 
                 ' Herausfinden, ob aktTask_j Phase oder Meilenstein ist
                 If aktTask_j.actualDate.duration.Value <> 0 Then
@@ -9584,8 +9611,14 @@ Public Module awinGeneralModules
 
                     ' überprüfen, ob die Phase evt. ignoriert werden soll (wird im  CustomizationFile in Tabelle Phase-Mappings definiert)
                     If Not phaseMappings.tobeIgnored(aktTask_j.name) Then
+                        Dim mappedPhasename As String = ""
+
+                        prtLine.planelement = aktTask_j.name
 
                         If PhaseDefinitions.Contains(aktTask_j.name) Then
+
+
+                            mappedPhasename = aktTask_j.name
 
                             ' '' ''If aktTask_j.name = "Projektphasen" Then
 
@@ -9605,15 +9638,19 @@ Public Module awinGeneralModules
                             ' aktTask_j.name existiert nicht in den PhaseDefinitions
 
                             'wenn der PhasenName gemappt werden kann und dieser dann in phasedefinitions enthalten ist, so wird phasename ersetzt
-                            Dim mappedPhasename As String = phaseMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
+                            mappedPhasename = phaseMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
                             If PhaseDefinitions.Contains(mappedPhasename) Then
                                 ' neuer aktueller Name der Task
-                                aktTask_j.name = mappedPhasename
+
+
                             Else
 
                                 Dim newPhaseDef As New clsPhasenDefinition
                                 newPhaseDef.name = aktTask_j.name
-                                newPhaseDef.shortName = ""
+
+                                mappedPhasename = aktTask_j.name
+                                newPhaseDef.shortName = aktTask_j.remark
+
                                 newPhaseDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, False)
                                 newPhaseDef.UID = PhaseDefinitions.Count + 1
                                 ' muss in missingPhaseDefinitions noch eingetragen werden
@@ -9621,7 +9658,7 @@ Public Module awinGeneralModules
                                     missingPhaseDefinitions.Add(newPhaseDef)
                                 End If
 
-                                
+
 
 
                                 Call logfileSchreiben(("Achtung, RXFImport: Phase '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
@@ -9632,7 +9669,11 @@ Public Module awinGeneralModules
                         Dim phaseEnddate As Date
                         cphase = New clsPhase(hproj)
                         With cphase
-                            .nameID = hproj.hierarchy.findUniqueElemKey(aktTask_j.name, False)
+
+                            ' hier muss für gleiche PhasenNamen als Geschwister noch eine lfdNummer angehängt werden
+                            ' TODO
+                            '
+                            .nameID = hproj.hierarchy.findUniqueElemKey(mappedPhasename, False)
 
                             Dim Duration As Integer = calcDauerIndays(aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value)
                             Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, aktTask_j.actualDate.start.Value)
@@ -9657,7 +9698,7 @@ Public Module awinGeneralModules
                             phrchynode.elemName = cphase.name
                             phrchynode.parentNodeKey = parentelemID
 
-                            hproj.AddPhase(cphase, origName:=aktTask_j.original, parentID:=phrchynode.parentNodeKey)
+                            hproj.AddPhase(cphase, origName:=aktTask_j.name, parentID:=phrchynode.parentNodeKey)
                             phrchynode.indexOfElem = hproj.AllPhases.Count
 
                             ' merken von letzem Element (Knoten,Phase,Meilenstein)
@@ -9665,7 +9706,19 @@ Public Module awinGeneralModules
                             lastelemID = cphase.nameID
                             lastphase = cphase
 
-                            Call findAllTasksandInsert(aktTask_j, lastelemID, hproj, RPLAN)
+                            prtLine.hierarchie = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                            prtLine.PThierarchie = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                            prtLine.planelement = aktTask_j.name
+                            prtLine.abkürzung = PhaseDefinitions.getAbbrev(cphase.name)
+                            prtLine.planeleÜbern = cphase.name
+
+                            prtLine.klasse = mapToAppearance(aktTask_j.taskType.Value, False)
+                            prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, False)
+                            prtLine.writeLog(zeile)
+
+                            prtLine.actDate = ""
+
+                            Call findAllTasksandInsert(aktTask_j, lastelemID, hproj, RPLAN, prtLine, zeile)
 
                         End If
 
@@ -9681,24 +9734,30 @@ Public Module awinGeneralModules
                 ElseIf aktTask_j.taskType.type = "MILESTONE" Then
 
                     ' ist MEILENSTEIN
-                    If Not milestoneMappings.tobeIgnored(aktTask_j.name) Then
 
+                    Dim mappedMSname As String = ""
+
+                    If Not milestoneMappings.tobeIgnored(aktTask_j.name) Then
 
                         If MilestoneDefinitions.Contains(aktTask_j.name) Then
 
+                            mappedMSname = aktTask_j.name
+
                         Else
                             'wenn der MeilensteinName gemappt werden kann und dieser dann in milestonedefinitions enthalten ist, so wird Meilensteinname ersetzt
-                            Dim mappedMSname As String = milestoneMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
+                            mappedMSname = milestoneMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
                             If MilestoneDefinitions.Contains(mappedMSname) Then
-                                ' neuer aktueller Name der Task
-                                aktTask_j.name = mappedMSname
+
                             Else
 
                                 Dim msDef As New clsMeilensteinDefinition
                                 msDef.belongsTo = parentphase.name
                                 msDef.name = aktTask_j.name
+                                mappedMSname = aktTask_j.name
                                 msDef.schwellWert = 0
-                                msDef.shortName = ""
+
+                                msDef.shortName = aktTask_j.remark
+
                                 msDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, True)
                                 msDef.UID = MilestoneDefinitions.Count + 1
 
@@ -9774,6 +9833,18 @@ Public Module awinGeneralModules
                             With parentphase
                                 .addMilestone(cmilestone)
                             End With
+
+                            prtLine.hierarchie = hproj.hierarchy.getBreadCrumb(cmilestone.nameID)
+                            prtLine.PThierarchie = hproj.hierarchy.getBreadCrumb(cmilestone.nameID)
+                            prtLine.planelement = aktTask_j.name
+                            prtLine.abkürzung = MilestoneDefinitions.getAbbrev(cmilestone.name)
+                            prtLine.planeleÜbern = cmilestone.name
+
+                            prtLine.klasse = mapToAppearance(aktTask_j.taskType.Value, False)
+                            prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, False)
+                            prtLine.writeLog(zeile)
+
+                            prtLine.actDate = ""
                         Catch ex1 As Exception
                             Throw New Exception(ex1.Message)
                         End Try
@@ -9783,7 +9854,7 @@ Public Module awinGeneralModules
 
                 End If      '  Ende: ist MEILENSTEIN
 
-                End If
+            End If
 
         Next j    ' Ende Schleife über alle Tasks
     End Sub
@@ -9920,10 +9991,8 @@ Public Module awinGeneralModules
         readFile.Close()
 
         '# iterate the array and do the replacement line by line
-        'repLine = Replace(repLine, searchstr, replacestr)
 
         For Each ln In repLine
-            ' ''ln = IIf(InStr(1, ln, searchstr, vbTextCompare) > 0, Replace(ln, searchstr, replacestr), ln)
             ln = Replace(ln, searchstr, replacestr)
             repLine(l) = ln
             l = l + 1
@@ -9952,6 +10021,7 @@ Public Module awinGeneralModules
         Try
 
             With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
+                .Name = "logBuch"
                 CType(.Cells(1, 1), Excel.Range).Value = "logfile erzeugt " & Date.Now.ToString
                 CType(.Columns(1), Excel.Range).ColumnWidth = 100
                 CType(.Columns(2), Excel.Range).ColumnWidth = 50
@@ -9974,9 +10044,9 @@ Public Module awinGeneralModules
         Dim obj As Object
 
         Try
-            obj = CType(CType(xlsLogfile.Worksheets(1), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+            obj = CType(CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet).Rows(1), Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
 
-            With CType(xlsLogfile.Worksheets(1), Excel.Worksheet)
+            With CType(xlsLogfile.Worksheets("logBuch"), Excel.Worksheet)
                 CType(.Cells(1, 1), Excel.Range).Value = text
                 CType(.Cells(1, 2), Excel.Range).Value = addOn
                 CType(.Cells(1, 3), Excel.Range).Value = Date.Now

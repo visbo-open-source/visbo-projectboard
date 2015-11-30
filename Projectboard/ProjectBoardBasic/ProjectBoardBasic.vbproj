@@ -92,6 +92,7 @@
     <Compile Include="frmEditWoerterbuch.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="clsProtokoll.vb" />
     <Compile Include="frmAmpelBewertung.Designer.vb">
       <DependentUpon>frmAmpelBewertung.vb</DependentUpon>
     </Compile>
