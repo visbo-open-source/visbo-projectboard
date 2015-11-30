@@ -2,15 +2,18 @@
 
 Public Class frmEditWoerterbuch
 
-    'Private allStandardPhases As New Collection
-    'Private allUnknownPhases As New Collection
-
-    'Private allStandardMilestones As New Collection
-    'Private allUnknownMilestones As New Collection
+    
     ' wird benutzt , um beim Listen Aktualisieren eine Aktion zu triggern oder eben nicht 
     Private eventsShouldFire As Boolean = True
 
 
+    ''' <summary>
+    ''' triggert das Wegschreiben der Phasen-, Meilenstein-Definitionen und der 
+    ''' Phasen- und Meilenstein Mappings  
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub frmEditWoerterbuch_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
 
         Dim andMappings As Boolean = True
@@ -21,6 +24,8 @@ Public Class frmEditWoerterbuch
 
     ''' <summary>
     ''' wird beim Laden des Formuars durchlaufen 
+    ''' normalerweise wird gestartet mit Radio-Button Phases aktiv, 
+    ''' ausser es gibt keine missing PhaseDefinitions, aber es gibt MissingMilestoneDefinitions 
     ''' </summary>
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
@@ -38,6 +43,14 @@ Public Class frmEditWoerterbuch
 
     End Sub
 
+    ''' <summary>
+    ''' wird getriggert, wenn Radiobutton Phasen aktiv/inaktiv  gesetzt wird 
+    ''' je nachdem werden die Listen standardlist und unknownlist mit den Werten aus PhaseDefinitions, missingPhaseDefinitions bzw 
+    ''' MilestoneDefinitions, missingMilestonedefinitions besetzt   
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub rdbListShowsPhases_CheckedChanged(sender As Object, e As EventArgs) Handles rdbListShowsPhases.CheckedChanged
 
         Dim tmpPhDef As clsPhasenDefinition
@@ -93,6 +106,12 @@ Public Class frmEditWoerterbuch
 
     End Sub
 
+    ''' <summary>
+    ''' wird getriggert, sobald sich der Filter zum Feld Unknown ändert 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub filterUnknown_TextChanged(sender As Object, e As EventArgs) Handles filterUnknown.TextChanged
 
         Dim suchstr As String = filterUnknown.Text
@@ -132,6 +151,12 @@ Public Class frmEditWoerterbuch
 
     End Sub
 
+    ''' <summary>
+    ''' wird getriggert, sobald sich der Text im Filter zu Standard ändert 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub filterStandard_TextChanged(sender As Object, e As EventArgs) Handles filterStandard.TextChanged
 
         Dim suchstr As String = filterStandard.Text
@@ -171,18 +196,46 @@ Public Class frmEditWoerterbuch
 
     End Sub
 
+    ''' <summary>
+    ''' löscht die Liste der unbekannten Bezeichnungen 
+    ''' wenn in der Liste der Standard-Bezeichnungen 1 selektiert ist, wird das auch in das Feld EditUnknowItem geschrieben 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub clearUnknownList_Click(sender As Object, e As EventArgs) Handles clearUnknownList.Click
 
         unknownList.SelectedItems.Clear()
+        If standardList.SelectedItems.Count = 1 Then
+            editUnknownItem.Text = CStr(standardList.SelectedItem)
+        End If
 
     End Sub
 
+
+    ''' <summary>
+    ''' löscht die Liste der Standard-Bezeichnungen 
+    ''' wenn in der Liste der Unknown-Bezeichnungen 1 selektiert ist, wird das auch in das Feld EditUnknowItem geschrieben
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub clearStandardList_Click(sender As Object, e As EventArgs) Handles clearStandardList.Click
 
         standardList.SelectedItems.Clear()
+        If unknownList.SelectedItems.Count = 1 Then
+            editUnknownItem.Text = CStr(unknownList.SelectedItem)
+        End If
 
     End Sub
 
+    ''' <summary>
+    ''' wird aufgerufen, sobald sich was in der Selektion der unknownlist verändert
+    ''' wenn nur ein Item selektiert ist, und in der anderen Liste nichts, wird das Eingabe Feld unten auf diesen Wert gesetzt 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub unknownList_SelectedIndexChanged(sender As Object, e As EventArgs) Handles unknownList.SelectedIndexChanged
 
         If eventsShouldFire Then
@@ -193,9 +246,16 @@ Public Class frmEditWoerterbuch
             End If
         End If
 
-        
+
     End Sub
 
+    ''' <summary>
+    ''' wird aufgerufen, sobald sich was in der Selektion der standardList verändert
+    ''' wenn nur ein Item selektiert ist, und in der unknownList nichts, wird das Eingabe Feld unten auf diesen Wert gesetzt 
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub standardList_SelectedIndexChanged(sender As Object, e As EventArgs) Handles standardList.SelectedIndexChanged
 
         If eventsShouldFire Then
@@ -204,14 +264,14 @@ Public Class frmEditWoerterbuch
             Else
                 editUnknownItem.Text = ""
             End If
-        
+
         End If
-        
+
     End Sub
 
 
     ''' <summary>
-    ''' visualisiert die selektierten Elemente aus der Unknown-List bzw. aus der Standard-List
+    ''' visualisiert die selektierten Elemente aus der Unknown-List bzw. aus der Standard-List auf der Multiprojekt Tafel 
     ''' </summary>
     ''' <remarks></remarks>
     Private Sub visualizeElements()
@@ -284,7 +344,9 @@ Public Class frmEditWoerterbuch
     End Sub
 
     ''' <summary>
-    ''' 
+    ''' macht eine bisher unbekannte Bezeichnung zum Standard , also ergänzt ..Definitions und löscht aus ..missingDefinitions
+    ''' der String kann zuvor noch editiert werden; in diesem Fall wird nicht aus missingDefinitions gelöscht; 
+    ''' Bedingung: es dürfen mehrere Elemente aus der unknownList selektiert sein, aber kein einziges aus der StandardList
     ''' </summary>
     ''' <remarks></remarks>
     Private Sub makeItemToBeStandard()
@@ -361,6 +423,8 @@ Public Class frmEditWoerterbuch
 
                                 Dim tmpMsDef As clsMeilensteinDefinition = missingMilestoneDefinitions.getMilestoneDef(itemText)
                                 MilestoneDefinitions.Add(tmpMsDef)
+                                standardList.Items.Add(itemText)
+
                                 missingMilestoneDefinitions.remove(itemText)
                                 unknownList.Items.Remove(itemText)
 
@@ -446,6 +510,13 @@ Public Class frmEditWoerterbuch
 
     
 
+    ''' <summary>
+    ''' ruft die Methode auf, um ein Item aus der unbekannten Liste zu einem Standard-Item zu machen 
+    ''' die entsprechenden Definitionen werden dabei aus der missingPhaseDefinitions übernommen  
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub setItemToBeKnown_Click(sender As Object, e As EventArgs) Handles setItemToBeKnown.Click
 
         Call makeItemToBeStandard()
@@ -617,7 +688,7 @@ Public Class frmEditWoerterbuch
 
     ''' <summary>
     ''' fügt den oder die selektierten Namen in die Liste der zu ignorierenden Elemente ein
-    ''' Vorbedingung: kein Element aus der Standard-Liste darfselektiert sein 
+    ''' Vorbedingung: kein Element aus der Standard-Liste darf selektiert sein 
     ''' </summary>
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
@@ -733,7 +804,8 @@ Public Class frmEditWoerterbuch
     End Sub
 
     ''' <summary>
-    ''' 
+    ''' ersetzt eine Standardbezeichnung durch eine andere; dabei werden auch alle Abbildungsregeln entsprechend auf den neuen Wert gesetzt;
+    ''' nimmt auch eine neue Abbildungsregel auf : alter Wert -> neuer Wert 
     ''' </summary>
     ''' <param name="sender"></param>
     ''' <param name="e"></param>
@@ -808,6 +880,12 @@ Public Class frmEditWoerterbuch
 
     End Sub
 
+    ''' <summary>
+    ''' visualisiert die selektierten Elemente aus der Standard- und Unknownlist auf der Multiprojekt-Tafel
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
     Private Sub visElements_Click(sender As Object, e As EventArgs) Handles visElements.Click
 
         Call awinDeSelect()

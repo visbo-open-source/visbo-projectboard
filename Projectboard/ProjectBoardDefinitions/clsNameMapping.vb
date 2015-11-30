@@ -417,7 +417,7 @@ Public Class clsNameMapping
 
             ' check jetzt auf Hierarchie Names
             If Me.namesToComplement.ContainsKey(stdName) Then
-                stdName = stdName & "(" & parentPhaseName & ")"
+                stdName = stdName & " (" & parentPhaseName & ")"
             End If
 
             mapToStdName = stdName
