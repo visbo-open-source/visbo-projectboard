@@ -9314,7 +9314,7 @@ Public Module Projekte
                                   ByRef OptimierungsErgebnis As SortedList(Of String, clsOptimizationObject))
         Dim referenceValue As Double, newReferenceValue As Double, currentValue As Double
         Dim bestValue As Double
-        Dim startoffset As Integer
+        Dim startoffset() As Integer
         Dim versatz As Integer
         Dim ErgebnisListe As New SortedList(Of Double, clsOptimizationObject)
         'Dim ErgebnisListe As New SortedDictionary(Of Double, clsOptimizationObject)
@@ -9325,7 +9325,7 @@ Public Module Projekte
         Dim NrArgExceptions As Integer
         Dim avgValue As Double
 
-
+        ReDim startoffset(0)
 
         If diagrammTyp = DiagrammTypen(0) Then ' Phase 
             Call MsgBox("Phasen Optimierung noch nicht implementiert")
@@ -9354,7 +9354,7 @@ Public Module Projekte
                         If relevantForOptimization(kvp.Value) Then
 
                             bestValue = referenceValue  ' als Startwert, der hoffentlich unterboten wird .... 
-                            startoffset = 0
+                            startoffset(0) = 0
 
                             For versatz = kvp.Value.earliestStart To kvp.Value.latestStart
                                 If versatz <> 0 Then
@@ -9367,7 +9367,7 @@ Public Module Projekte
 
                                     If currentValue < bestValue Then
                                         bestValue = currentValue
-                                        startoffset = versatz
+                                        startoffset(0) = versatz
                                     End If
                                 End If
                             Next versatz
@@ -9375,12 +9375,12 @@ Public Module Projekte
                             ' zurücksetzen des StartOffsets im Projekt, weil hier ja erst verschiedene Konstellationen probiert werden  
                             kvp.Value.StartOffset = 0
 
-                            If startoffset <> 0 Then ' es gab eine Verbesserung 
+                            If startoffset(0) <> 0 Then ' es gab eine Verbesserung 
                                 lokalesOptimum = New clsOptimizationObject
                                 With lokalesOptimum
                                     .projectName = kvp.Key
                                     '.bestValue = bestValue
-                                    .startOffset = startoffset
+                                    .offset = startoffset
                                 End With
 
                                 Try
@@ -9410,7 +9410,7 @@ Public Module Projekte
 
                         hproj = ShowProjekte.getProject(ergebnis.Value.projectName)
                         saveOffset = hproj.StartOffset
-                        hproj.StartOffset = ergebnis.Value.startOffset
+                        hproj.StartOffset = ergebnis.Value.offset(0)
 
                         If diagrammTyp = DiagrammTypen(1) Then
                             currentValue = .getbadCostOfRole(myCollection)
@@ -9425,7 +9425,7 @@ Public Module Projekte
                         Else
                             hproj.StartOffset = saveOffset
                             anzahlVersuche = anzahlVersuche + 1
-                            If anzahlVersuche > 5 Or ergebnis.Value.startOffset = 0 Then
+                            If anzahlVersuche > 5 Or ergebnis.Value.offset(0) = 0 Then
                                 ' wenn startoffset = 0 , dann konnten keine Verbesserungen mehr erzielt werden , also Abbruch ...
                                 Exit For
                             End If
@@ -9439,7 +9439,8 @@ Public Module Projekte
                 End While
                 ' hier wird Gold gesetzt, das heißt alle Offsets gemerkt, die für die Optmierung notwendig sind 
                 ' anschließend werden alle startoffsets wieder auf 0 (=Ausgangswert) gesetzt 
-
+                Dim tmpOffset() As Integer
+                ReDim tmpOffset(0)
                 OptimierungsErgebnis.Clear()
                 For Each kvp As KeyValuePair(Of String, clsProjekt) In .Liste
                     If kvp.Value.StartOffset <> 0 Then
@@ -9447,7 +9448,8 @@ Public Module Projekte
                         With lokalesOptimum
                             .projectName = kvp.Value.name
                             '.bestValue = bestValue
-                            .startOffset = kvp.Value.StartOffset
+                            tmpOffset(0) = kvp.Value.StartOffset
+                            .offset = tmpOffset
                         End With
                         OptimierungsErgebnis.Add(kvp.Value.name, lokalesOptimum)
                         'kvp.Value.StartOffset = 0
@@ -9810,13 +9812,17 @@ Public Module Projekte
                         ' zurücksetzen des StartOffsets im Projekt, weil hier ja erst verschiedene Konstellationen probiert werden  
                         curProj.StartOffset = 0
 
+                        Dim tmpOffset() As Integer
+                        ReDim tmpOffset(0)
+
                         If startoffset <> 0 Then ' es gab eine Verbesserung 
                             'lokalesOptimum = New clsOptimizationObject
                             With lokalesOptimum
                                 If bestValue < .bestValue Then
                                     .projectName = curProj.name
                                     .bestValue = bestValue
-                                    .startOffset = startoffset
+                                    tmpOffset(0) = startoffset
+                                    .offset = tmpOffset
                                     ' Call awinVisualizeProject
                                 End If
                             End With
@@ -9830,7 +9836,7 @@ Public Module Projekte
                     If lokalesOptimum.projectName <> " " Then
 
                         hproj = ShowProjekte.getProject(lokalesOptimum.projectName)
-                        hproj.StartOffset = lokalesOptimum.startOffset
+                        hproj.StartOffset = lokalesOptimum.offset(0)
                         OptimierungsErgebnis.Add(lokalesOptimum.projectName, lokalesOptimum)
                         toDoListe.Remove(lokalesOptimum.projectName)
                         Call visualisiereTeilErgebnis(lokalesOptimum.projectName)
@@ -9848,6 +9854,229 @@ Public Module Projekte
             End If
         Else
             Call MsgBox("Optimierung nicht implementiert")
+        End If
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' bereichnet auf Basis der Freiheitsgrade der Plan-Elemente Elemente  die beste Konstellation
+    ''' </summary>
+    ''' <param name="diagrammTyp"></param>
+    ''' <param name="myCollection"></param>
+    ''' <param name="OptimierungsErgebnis"></param>
+    ''' <remarks></remarks>
+    Public Sub awinCalcOptimizationElemFreiheitsgrade(ByVal diagrammTyp As String, ByVal myCollection As Collection, _
+                                       ByRef OptimierungsErgebnis As SortedList(Of String, clsOptimizationObject), _
+                                       ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs)
+        Dim currentValue As Double
+        Dim fullname As String = ""
+        Dim elemName As String = ""
+        Dim elemID As String
+        Dim breadcrumb As String = ""
+        Dim bestValue As Double
+        Dim versatz As Integer
+        Dim lokalesOptimum As New clsOptimizationObject
+        Dim deltaValues() As Integer
+        Dim hproj As clsProjekt
+        Dim NrArgExceptions As Integer
+        Dim toDoListe As New Collection
+        Dim NrLoops As Integer
+        Dim cphase As clsPhase
+        Dim zaehler As Integer = 1
+        Dim anzImprovements As Integer = 0
+        Dim backgroundMsg As String = ""
+        Dim i As Integer
+        Dim notAdded As Boolean = True
+        Dim phaseIndices() As Integer
+
+
+        If myCollection.Count = 1 Then
+
+
+            If diagrammTyp = DiagrammTypen(0) And myCollection.Count = 1 Then
+
+                ' to do Liste aufbauen
+                For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+                    ' tk 18.11.15 checken ob eines der angegebenen Elemente vorkommt 
+                    notAdded = True
+                    fullname = CStr(myCollection.Item(1))
+
+                    elemName = ""
+                    breadcrumb = ""
+                    Call splitHryFullnameTo2(fullname, elemName, breadcrumb)
+
+                    phaseIndices = kvp.Value.hierarchy.getPhaseIndices(elemName, breadcrumb)
+                    If phaseIndices(0) > 0 Then
+
+                        i = 1
+                        While i <= phaseIndices.Length And notAdded
+                            elemID = kvp.Value.getPhase(phaseIndices(i - 1)).nameID
+                            If relevantForOptimization(kvp.Value, elemID, False) Then
+                                If Not toDoListe.Contains(kvp.Key) Then
+                                    toDoListe.Add(kvp.Key, kvp.Key)
+                                End If
+                                notAdded = False
+                            Else
+                                i = i + 1
+                            End If
+                        End While
+
+                    End If
+
+
+                Next kvp
+
+                bestValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
+                lokalesOptimum.bestValue = bestValue
+                lokalesOptimum.projectName = " "
+                OptimierungsErgebnis.Clear()
+
+                NrLoops = 0
+                NrArgExceptions = 0
+
+
+                Dim Abbruch As Boolean = False
+                While toDoListe.Count > 0 And Not Abbruch
+
+                    backgroundMsg = "Iteration " & zaehler.ToString("###0") & _
+                                    "; gefundene Verbesserungen: " & anzImprovements.ToString("###0")
+
+                    e.Result = backgroundMsg
+                    worker.ReportProgress(0, e)
+
+                    Dim curProj As clsProjekt
+                    fullname = CStr(myCollection.Item(1))
+
+                    elemName = ""
+                    breadcrumb = ""
+                    Call splitHryFullnameTo2(fullname, elemName, breadcrumb)
+
+
+                    For i = 1 To toDoListe.Count
+
+                        curProj = ShowProjekte.getProject(CStr(toDoListe.Item(i)))
+                        phaseIndices = curProj.hierarchy.getPhaseIndices(elemName, breadcrumb)
+
+                        ' in den deltaValues sind jetzt die Werte drin, die sich für die Phasen-Verschiebungen ergeben 
+
+                        ReDim deltaValues(phaseIndices.Length - 1)
+
+                        Dim optimizationFound As Boolean = False
+
+                        If phaseIndices(0) > 0 Then
+                            ' nur dann wurde die Phase wenigstens einmal gefunden ...
+                            For ik As Integer = 1 To phaseIndices.Length
+
+                                ' jetzt die Phase holen
+
+                                cphase = curProj.getPhase(phaseIndices(ik - 1))
+                                Dim phaseNameID As String = cphase.nameID
+
+                                ' hier wird der beste Wert für das einzelne Projekt gesucht ....  
+
+                                For versatz = curProj.earliestStart To curProj.latestStart
+                                    If versatz <> 0 Then
+                                        ' jetzt die Phase entsprechend verschieben ...
+                                        cphase.changeStartandDauer(cphase.startOffsetinDays + versatz, cphase.dauerInDays)
+
+                                        currentValue = berechneOptimierungsWert(ShowProjekte, diagrammTyp, myCollection)
+
+                                        If currentValue < bestValue Then
+                                            bestValue = currentValue
+                                            deltaValues(ik - 1) = versatz
+                                            optimizationFound = True
+                                            anzImprovements = anzImprovements + 1
+                                        End If
+                                    End If
+
+                                Next versatz
+
+
+
+                            Next
+
+                            ' zurücksetzen des Offsets in den einzelnen Phasen wieder auf ihre alte Position zurückgesetzt werden 
+
+                            For ik As Integer = 1 To phaseIndices.Length
+                                cphase = curProj.getPhase(phaseIndices(ik - 1))
+                                Dim phaseNameID As String = cphase.nameID
+
+                                If deltaValues(ik - 1) <> 0 Then
+                                    With cphase
+                                        .changeStartandDauer(.startOffsetinDays - deltaValues(ik - 1), .dauerInDays)
+                                    End With
+                                End If
+
+                            Next
+
+
+                            If optimizationFound Then ' es gab eine Verbesserung 
+
+                                With lokalesOptimum
+                                    If bestValue < .bestValue Then
+                                        .projectName = curProj.name
+                                        .bestValue = bestValue
+                                        .offset = deltaValues
+                                        ' Call awinVisualizeProject
+                                    End If
+                                End With
+
+                            End If
+
+                        End If
+
+
+
+
+                    Next i
+
+
+                    '
+                    ' jetzt muss das Ergebnis abgearbeitet werden ... 
+                    '
+                    If lokalesOptimum.projectName <> " " Then
+
+                        hproj = ShowProjekte.getProject(lokalesOptimum.projectName)
+                        ' jetzt müssen die Phasen wieder auf Ihre optimierte Position gebracht werden
+
+                        phaseIndices = hproj.hierarchy.getPhaseIndices(elemName, breadcrumb)
+                        If phaseIndices(0) > 0 Then
+
+                            For ik As Integer = 1 To phaseIndices.Length
+                                cphase = hproj.getPhase(phaseIndices(ik - 1))
+                                Dim phaseNameID As String = cphase.nameID
+                                If lokalesOptimum.offset(ik - 1) <> 0 Then
+                                    cphase.changeStartandDauer(cphase.startOffsetinDays + lokalesOptimum.offset(ik - 1), _
+                                                                cphase.dauerInDays)
+                                End If
+
+                            Next
+
+                            OptimierungsErgebnis.Add(lokalesOptimum.projectName, lokalesOptimum)
+                            Call visualisiereTeilErgebnis(lokalesOptimum.projectName)
+
+                        End If
+
+
+                        toDoListe.Remove(lokalesOptimum.projectName)
+
+                    Else
+                        Abbruch = True
+                    End If
+
+                    lokalesOptimum.projectName = " "
+                    NrLoops = NrLoops + 1
+
+                End While
+
+            Else
+                Call MsgBox("Optimierung noch nicht implementiert")
+            End If
+        Else
+            Call MsgBox("Optimierung für mehr als 1 Namen noch nicht implementiert")
         End If
 
 
@@ -9892,30 +10121,82 @@ Public Module Projekte
         berechneOptimierungsWert = value
 
     End Function
-    Public Function relevantForOptimization(ByRef project As clsProjekt) As Boolean
+    ''' <summary>
+    ''' bestimmt für ein übergebenes Projekt und eine optional übergebene Phasen-ID, ob dieses Projekt überhaupt betrachtet werden soll; 
+    ''' </summary>
+    ''' <param name="project"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function relevantForOptimization(ByVal project As clsProjekt, Optional ByVal elemID As String = "", Optional ByVal isMilestone As Boolean = False) As Boolean
         Dim relevant As Boolean = False
-        Dim bereichsAnfang As Integer, bereichsEnde As Integer
+        Dim bereichsAnfang As Integer = -1, bereichsEnde As Integer = -1
         ' hier können dann auch weitere Bedingungen abgefragt werden, ob bspweise das Projekt denn überhaupt Freiheitsgrade besitzt  
 
 
         With project
 
-            If .Status = ProjektStatus(0) Then
+            If elemID.Length = 0 Then
+                ' es soll das Projekt betrachtet werden 
+                If .Status = ProjektStatus(0) Then
 
-                ' nur dann darf das Projekt noch verschoben werden ...
+                    ' nur dann darf das Projekt noch verschoben werden ...
 
-                bereichsAnfang = .Start + .earliestStart
-                bereichsEnde = .Start + .anzahlRasterElemente - 1 + .latestStart
+                    bereichsAnfang = .Start + .earliestStart
+                    bereichsEnde = .Start + .anzahlRasterElemente - 1 + .latestStart
 
-                If project.StartOffset = 0 And (project.earliestStart < 0 Or project.latestStart > 0) _
-                                               And istBereichInTimezone(bereichsAnfang, bereichsEnde) Then
+                    If project.StartOffset = 0 And (project.earliestStart < 0 Or project.latestStart > 0) _
+                                                   And istBereichInTimezone(bereichsAnfang, bereichsEnde) Then
+                        relevant = True
+                    Else
+                        relevant = False
+                    End If
+                Else
+                    relevant = False
+                End If
+
+            Else
+                ' es soll die Phase oder ein Meilenstein betrachtet werden 
+
+                If isMilestone Then
+                    Dim cMilestone As clsMeilenstein = project.getMilestoneByID(elemID)
+                    If IsNothing(cMilestone) Then
+                        relevant = False
+                    Else
+                        If .Status = ProjektStatus(0) Then
+
+                            bereichsAnfang = getColumnOfDate(cMilestone.getDate.AddDays(-15))
+                            bereichsEnde = getColumnOfDate(cMilestone.getDate.AddDays(15))
+                            ' nur dann darf das Projekt noch verschoben werden ...
+                        Else
+                            relevant = False
+                        End If
+                    End If
+
+                Else
+                    Dim cphase As clsPhase = project.getPhaseByID(elemID)
+
+                    If IsNothing(cphase) Then
+                        relevant = False
+                    Else
+                        If .Status = ProjektStatus(0) Then
+
+                            bereichsAnfang = getColumnOfDate(cphase.getStartDate.AddDays(cphase.earliestStart))
+                            bereichsEnde = getColumnOfDate(cphase.getEndDate.AddDays(cphase.latestStart))
+                            ' nur dann darf das Projekt noch verschoben werden ...
+                        Else
+                            relevant = False
+                        End If
+                    End If
+                End If
+
+                If istBereichInTimezone(bereichsAnfang, bereichsEnde) Then
                     relevant = True
                 Else
                     relevant = False
                 End If
-            Else
-                relevant = False
+
             End If
+
 
         End With
 
@@ -9970,7 +10251,7 @@ Public Module Projekte
 
 
                         Try
-                            hproj = ShowProjekte.getProject(singleShp.Name)
+                            hproj = ShowProjekte.getProject(singleShp.Name, True)
                         Catch ex As Exception
                             ok = False
                         End Try
@@ -10128,7 +10409,7 @@ Public Module Projekte
                     If isProjectType(kindOfShape(singleShp)) Then
 
                         Try
-                            hproj = ShowProjekte.getProject(singleShp.Name)
+                            hproj = ShowProjekte.getProject(singleShp.Name, True)
                         Catch ex As Exception
                             ok = False
                         End Try
@@ -10460,6 +10741,7 @@ Public Module Projekte
         Dim heute As Date = Date.Now
         Dim tmpShapeRange As Excel.ShapeRange
         Dim vorlagenShape As xlNS.Shape
+        Dim isMissingDefinition As Boolean = False
 
         Dim shpExists As Boolean
         Dim oldAlternativeText As String = ""
@@ -10553,7 +10835,7 @@ Public Module Projekte
 
                     Try
                         phaseShape = worksheetShapes.Item(phaseShapeName)
-                        Call defineShapeAppearance(hproj, phaseShape, i)
+                        Call definePhaseAppearance(hproj, cphase, 0, phaseShape, False)
                     Catch ex As Exception
 
                     End Try
@@ -10623,7 +10905,8 @@ Public Module Projekte
 
                 For i = 1 To hproj.CountPhases
 
-                    With hproj.getPhase(i)
+                    Dim cphase As clsPhase = hproj.getPhase(i)
+                    With cphase
 
                         phasenNameID = .nameID
 
@@ -10648,7 +10931,16 @@ Public Module Projekte
                             End If
 
                         Else
-                            vorlagenShape = PhaseDefinitions.getShape(elemNameOfElemID(phasenNameID))
+
+                            Dim tmpName As String = elemNameOfElemID(phasenNameID)
+                            If PhaseDefinitions.Contains(tmpName) Then
+                                vorlagenShape = PhaseDefinitions.getShape(tmpName)
+                                isMissingDefinition = False
+                            Else
+                                vorlagenShape = missingPhaseDefinitions.getShape(tmpName)
+                                isMissingDefinition = True
+                            End If
+
 
                             phaseShape = worksheetShapes.AddShape(Type:=vorlagenShape.AutoShapeType, _
                                 Left:=CSng(left), Top:=CSng(top), Width:=CSng(width), Height:=CSng(height))
@@ -10670,10 +10962,10 @@ Public Module Projekte
                         .AlternativeText = CInt(PTshty.phaseE).ToString
                     End With
 
-                    If i = 1 And awinSettings.drawProjectLine Then
+                    If i = 1 Then
                         Call defineShapeAppearance(hproj, phaseShape)
                     Else
-                        Call defineShapeAppearance(hproj, phaseShape, i)
+                        Call definePhaseAppearance(hproj, cphase, 0, phaseShape, isMissingDefinition)
                     End If
 
 
@@ -10701,7 +10993,16 @@ Public Module Projekte
                             cMilestone = .getMilestone(r)
                             cBewertung = cMilestone.getBewertung(1)
 
-                            vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
+                            ' Änderung tk 26.11.15
+                            If MilestoneDefinitions.Contains(cMilestone.name) Then
+                                vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
+                                isMissingDefinition = False
+                            Else
+                                vorlagenShape = missingMilestoneDefinitions.getShape(cMilestone.name)
+                                isMissingDefinition = True
+                            End If
+
+
                             Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
 
                             hproj.calculateMilestoneCoord(cMilestone.getDate, zeilenOffset, factorB2H, top, left, width, height)
@@ -10739,7 +11040,7 @@ Public Module Projekte
 
                                 msShape.Rotation = vorlagenShape.Rotation
 
-                                Call defineResultAppearance(hproj, 0, msShape, cBewertung)
+                                Call defineResultAppearance(hproj, 0, msShape, cBewertung, isMissingDefinition)
 
                                 ' jetzt der Liste der ProjectboardShapes hinzufügen
                                 projectboardShapes.add(msShape)
@@ -11034,7 +11335,7 @@ Public Module Projekte
                         ElseIf isProjectType(shapeType) Then
 
                             projectboardShapes.add(shpElement)
-                            hproj = ShowProjekte.getProject(shpElement.Name)
+                            hproj = ShowProjekte.getProject(shpElement.Name, True)
                             'hproj.tfZeile = calcYCoordToZeile(shpElement.Top)
                             hproj.tfZeile = hproj.tfZeile + anzahlZeilen
 
@@ -11107,7 +11408,7 @@ Public Module Projekte
                             ElseIf isProjectType(shapeType) Then
 
                                 projectboardShapes.add(shpElement)
-                                hproj = ShowProjekte.getProject(shpElement.Name)
+                                hproj = ShowProjekte.getProject(shpElement.Name, True)
                                 hproj.tfZeile = calcYCoordToZeile(shpElement.Top)
 
                             End If
@@ -11366,6 +11667,7 @@ Public Module Projekte
                 For m As Integer = 1 To realNameList.Count
 
                     Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(CStr(realNameList.Item(m)))
+                    Dim isMissingDefinition As Boolean = False
 
                     If Not IsNothing(cMilestone) Then
                         Dim cBewertung As clsBewertung
@@ -11381,7 +11683,17 @@ Public Module Projekte
                             Else
                                 Dim zeilenoffset As Integer = 0
                                 ' hier die übergeordnete Phase holen ...
-                                vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
+
+                                ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
+                                If MilestoneDefinitions.Contains(cMilestone.name) Then
+                                    vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
+                                    isMissingDefinition = False
+                                Else
+                                    vorlagenShape = missingMilestoneDefinitions.getShape(cMilestone.name)
+                                    isMissingDefinition = True
+                                End If
+
+
                                 Dim factorB2H As Double = vorlagenShape.Width / vorlagenShape.Height
 
                                 hproj.calculateMilestoneCoord(cMilestone.getDate, zeilenoffset, factorB2H, top, left, width, height)
@@ -11421,10 +11733,10 @@ Public Module Projekte
 
                                     msNumber = msNumber + 1
                                     If numberIt Then
-                                        Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung)
+                                        Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung, isMissingDefinition)
 
                                     Else
-                                        Call defineResultAppearance(hproj, 0, resultShape, cBewertung)
+                                        Call defineResultAppearance(hproj, 0, resultShape, cBewertung, isMissingDefinition)
                                     End If
 
                                     ' jetzt der Liste der ProjectboardShapes hinzufügen
@@ -11712,7 +12024,7 @@ Public Module Projekte
                     Try
                         dpName = CStr(listeDep.Item(d))
                         dpShape = tmpshapes.Item(dpName)
-                        dProj = ShowProjekte.getProject(dpName)
+                        dProj = ShowProjekte.getProject(dpName, True)
                         Dim curDegree As Integer
                         curDependency = allDependencies.getDependency(PTdpndncyType.inhalt, pName, dpName)
                         If Not IsNothing(curDependency) Then
@@ -12267,7 +12579,6 @@ Public Module Projekte
         Dim found As Boolean = True
 
 
-        Dim linienDicke As Double = 2.0
         Dim ok As Boolean = True
 
         ' alle Phasen auslesen , die NameIDs dazu holen 
@@ -12344,13 +12655,21 @@ Public Module Projekte
                 For p = 1 To todoListe.Count
 
                     Dim phaseNameID As String = CStr(todoListe(p))
+                    Dim isMissingDefinition As Boolean = False
 
                     If realNameList.Contains(phaseNameID) Then
 
                         cphase = hproj.getPhaseByID(phaseNameID)
 
-                        vorlagenshape = PhaseDefinitions.getShape(elemNameOfElemID(phaseNameID))
-                        linienDicke = boxHeight * 0.3
+                        ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
+                        If PhaseDefinitions.Contains(cphase.name) Then
+                            vorlagenshape = PhaseDefinitions.getShape(cphase.name)
+                            isMissingDefinition = False
+                        Else
+                            vorlagenshape = missingPhaseDefinitions.getShape(cphase.name)
+                            isMissingDefinition = True
+                        End If
+
 
                         Try
                             'cphase.calculateLineCoord(hproj.tfZeile, nummer, gesamtZahl, top1, left1, top2, left2, linienDicke)
@@ -12390,12 +12709,12 @@ Public Module Projekte
                                 End With
 
                                 msNumber = msNumber + 1
-                                'If numberIt Then
-                                '    Call defineLineAppearance(hproj, cphase, msNumber, phasenShape, linienDicke)
+                                If numberIt Then
+                                    Call definePhaseAppearance(hproj, cphase, msNumber, phasenShape, isMissingDefinition)
 
-                                'Else
-                                '    Call defineLineAppearance(hproj, cphase, 0, phasenShape, linienDicke)
-                                'End If
+                                Else
+                                    Call definePhaseAppearance(hproj, cphase, 0, phasenShape, isMissingDefinition)
+                                End If
 
                                 ' jetzt der Liste der ProjectboardShapes hinzufügen
                                 projectboardShapes.add(phasenShape)
@@ -12514,52 +12833,47 @@ Public Module Projekte
 
     End Sub
 
-    'Public Sub defineLineAppearance(ByVal myproject As clsProjekt, ByVal myphase As clsPhase, ByVal lnumber As Integer, ByRef myShape As Excel.Shape, ByVal linienDicke As Double)
-    '    'Dim pColor As Integer
-
-    '    'With myphase
-
-    '    '    pColor = CInt(.Farbe)
-
-    '    'End With
-
-    '    With myShape
-
-    '        'With .Line
-    '        '    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-    '        '    .ForeColor.RGB = pColor
-    '        '    .Transparency = 0
-    '        '    .Weight = CSng(linienDicke)
-    '        'End With
+    ''' <summary>
+    ''' bestimmt das Aussehen der Phase 
+    ''' </summary>
+    ''' <param name="myproject"></param>
+    ''' <param name="myphase"></param>
+    ''' <param name="lnumber"></param>
+    ''' <param name="myShape"></param>
+    ''' <remarks></remarks>
+    Public Sub definePhaseAppearance(ByVal myproject As clsProjekt, ByVal myphase As clsPhase, ByVal lnumber As Integer, ByRef myShape As Excel.Shape, _
+                                     Optional ByVal isMissingDefinition As Boolean = False)
 
 
-    '        '.TextFrame2.TextRange.Text = ""
-    '        'If lnumber > 0 And Not roentgenBlick.isOn Then
+        With myShape
 
-    '        '    With .TextFrame2
-    '        '        .MarginLeft = 0
-    '        '        .MarginRight = 0
-    '        '        .MarginBottom = 0
-    '        '        .MarginTop = 0
-    '        '        .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
-    '        '        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-    '        '        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorCenter
-    '        '        .TextRange.Text = lnumber.ToString
-    '        '        .TextRange.Font.Size = awinSettings.fontsizeLegend
-    '        '        .TextRange.Font.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    '        '    End With
+            If isMissingDefinition Then
+                With .Line
+                    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                    .ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+                    .Transparency = 0
+                    .Weight = 2
+                End With
+            End If
+
+        End With
 
 
-    '        'End If
+    End Sub
 
 
-    '    End With
-
-
-    'End Sub
-
-
-    Public Sub defineResultAppearance(ByVal myproject As clsProjekt, ByVal number As Integer, ByRef resultShape As Excel.Shape, ByVal bewertung As clsBewertung)
+    ''' <summary>
+    ''' setzt das Aussehen des Meilensteines fest; kann für Reporting Zwecke auch nummeriert werden; der optionale Parameter bestimmt, 
+    ''' ob die Phase/der Meilenstein ein dem System unbekannter Name ist 
+    ''' </summary>
+    ''' <param name="myproject"></param>
+    ''' <param name="number"></param>
+    ''' <param name="resultShape"></param>
+    ''' <param name="bewertung"></param>
+    ''' <param name="isMissingDefinition"></param>
+    ''' <remarks></remarks>
+    Public Sub defineResultAppearance(ByVal myproject As clsProjekt, ByVal number As Integer, ByRef resultShape As Excel.Shape, ByVal bewertung As clsBewertung, _
+                                          Optional ByVal isMissingDefinition As Boolean = False)
         'Dim pcolor As Object
         'Dim status As String
 
@@ -12578,13 +12892,14 @@ Public Module Projekte
                 .Glow.Color.RGB = CInt(bewertung.color)
             End If
 
-            'With .Line
-            '    '.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-            '    .Visible = MsoTriState.msoTrue
-            '    .ForeColor.RGB = RGB(255, 255, 255)
-            '    '.ForeColor.RGB = bewertung.color
-            '    '.Transparency = 0
-            'End With
+            If isMissingDefinition Then
+                With .Line
+                    .Visible = MsoTriState.msoTrue
+                    .ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+                    .Weight = 2
+                End With
+            End If
+
 
             'With .Fill
             '    .ForeColor.RGB = CInt(bewertung.color)
@@ -12639,7 +12954,14 @@ Public Module Projekte
 
     End Sub
 
-    Public Sub defineShapeAppearance(ByRef myproject As clsProjekt, ByRef projectShape As Excel.Shape, Optional ByVal phasenindex As Integer = 0)
+    ''' <summary>
+    ''' ist ausgelegt werden, dass es ausschließlich die Projektlinie bzw. das Projektshape zeichnet  
+    ''' das Erscheinungsbild einer Phase wird separat bestimmt  
+    ''' </summary>
+    ''' <param name="myproject"></param>
+    ''' <param name="projectShape"></param>
+    ''' <remarks></remarks>
+    Public Sub defineShapeAppearance(ByRef myproject As clsProjekt, ByRef projectShape As Excel.Shape)
 
         Dim pcolor As Object = XlRgbColor.rgbAqua
         Dim schriftFarbe As Long
@@ -12652,38 +12974,23 @@ Public Module Projekte
         Dim showAmpel As Boolean = False
         Dim showResults As Boolean = True
         Dim myshape As Excel.Shape
-        Dim myphase As clsPhase
-
-        If phasenindex = 0 Then
+        
 
 
-            Try
-                If projectShape.AlternativeText = CInt(PTshty.projektL).ToString Or _
-                        projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
-                    myshape = projectShape
-                Else
-                    myshape = CType(projectShape.GroupItems.Item(1), Excel.Shape)
-                End If
-            Catch ex As Exception
+        Try
+
+            If projectShape.AlternativeText = CInt(PTshty.projektL).ToString Or _
+                    projectShape.AutoShapeType = MsoAutoShapeType.msoShapeRoundedRectangle Then
                 myshape = projectShape
-            End Try
-        Else
-            Try
-                myphase = myproject.getPhase(phasenindex)
+            Else
+                myshape = CType(projectShape.GroupItems.Item(1), Excel.Shape)
+            End If
+        Catch ex As Exception
 
-            Catch ex As Exception
-                Throw New ArgumentException("Phase " & phasenindex.ToString & _
-                                            " existiert nicht ...")
-            End Try
+            myshape = projectShape
 
-            Try
+        End Try
 
-                myshape = CType(projectShape.GroupItems.Item(phasenindex), Excel.Shape)
-
-            Catch ex As Exception
-                myshape = projectShape
-            End Try
-        End If
 
 
         Try
@@ -12722,111 +13029,107 @@ Public Module Projekte
 
             End Try
 
-            If phasenindex <= 1 Then
 
 
-                ' hier muss jetzt unterschieden werden, ob die Projektlinie gezeichnet wurde oder der Balken 
+            ' hier muss jetzt unterschieden werden, ob die Projektlinie gezeichnet wurde oder der Balken 
 
-                If awinSettings.drawProjectLine Then
+            If awinSettings.drawProjectLine Then
 
-                    Try
-                        With .Line
-                            .ForeColor.RGB = CInt(pcolor)
-                            .Transparency = 0
-                            .Weight = 4.0
-                            .DashStyle = MsoLineDashStyle.msoLineDash
-                        End With
-                    Catch ex As Exception
+                Try
+                    With .Line
+                        .ForeColor.RGB = CInt(pcolor)
+                        .Transparency = 0
+                        .Weight = 4.0
+                        .DashStyle = MsoLineDashStyle.msoLineDash
+                    End With
+                Catch ex As Exception
 
-                    End Try
+                End Try
 
-                    ' Darstellung, fixiert oder nicht fixiert 
+                ' Darstellung, fixiert oder nicht fixiert 
+                Try
 
-                    Try
+                    With .Line
+                        If status = ProjektStatus(0) Then
+                            .BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadOval
+                            .EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadOval
+                        Else
+                            .BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadDiamond
+                            .EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadDiamond
+                        End If
 
-                        With .Line
-                            If status = ProjektStatus(0) Then
-                                .BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadOval
-                                .EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadOval
-                            Else
-                                .BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadDiamond
-                                .EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadDiamond
-                            End If
-
-                        End With
+                    End With
 
 
 
-                    Catch ex As Exception
+                Catch ex As Exception
 
-                    End Try
+                End Try
 
-                Else
+            Else
 
-                    Try
-                        With .Fill
-                            '.Visible = msoTrue
-                            .ForeColor.RGB = CInt(pcolor)
-                            .ForeColor.TintAndShade = 0
-                            .ForeColor.Brightness = -0.25
+                Try
+                    With .Fill
 
-                            If roentgenBlick.isOn Then
-                                .Transparency = 0.8
-                            Else
-                                .Transparency = 0.0
-                            End If
-
-                            .Solid()
-
-                        End With
-                    Catch ex As Exception
-
-                    End Try
-
-
-                    Try
-                        With .TextFrame2
-                            .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
-                            .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
-                            .TextRange.Font.Size = schriftGroesse
-                            .TextRange.Font.Fill.ForeColor.RGB = CInt(schriftFarbe)
-                        End With
+                        .ForeColor.RGB = CInt(pcolor)
+                        .ForeColor.TintAndShade = 0
+                        .ForeColor.Brightness = -0.25
 
                         If roentgenBlick.isOn Then
-
-                            .TextFrame2.TextRange.Text = ""
-
-
+                            .Transparency = 0.8
                         Else
-                            ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
-
-                            .TextFrame2.TextRange.Text = myproject.getShapeText
-
-                            ' Ende Änderung 13.10.14
-                        End If
-                    Catch ex As Exception
-
-                    End Try
-                    ' nur verändern, wenn es auch veränderbar ist 
-                    Try
-
-                        If .Adjustments.Count > 0 Then
-                            If status = ProjektStatus(0) Then
-                                .Adjustments.Item(1) = 0.5
-                            Else
-                                .Adjustments.Item(1) = 0.25
-                            End If
+                            .Transparency = 0.0
                         End If
 
-                    Catch ex As Exception
+                        .Solid()
 
-                    End Try
+                    End With
+                Catch ex As Exception
+
+                End Try
 
 
-                End If
-            Else
-                '' phasenindex > 1
+                Try
+                    With .TextFrame2
+                        .VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
+                        .HorizontalAnchor = MsoHorizontalAnchor.msoAnchorNone
+                        .TextRange.Font.Size = schriftGroesse
+                        .TextRange.Font.Fill.ForeColor.RGB = CInt(schriftFarbe)
+                    End With
+
+                    If roentgenBlick.isOn Then
+
+                        .TextFrame2.TextRange.Text = ""
+
+
+                    Else
+                        ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
+
+                        .TextFrame2.TextRange.Text = myproject.getShapeText
+
+                        ' Ende Änderung 13.10.14
+                    End If
+                Catch ex As Exception
+
+                End Try
+                ' nur verändern, wenn es auch veränderbar ist 
+                Try
+
+                    If .Adjustments.Count > 0 Then
+                        If status = ProjektStatus(0) Then
+                            .Adjustments.Item(1) = 0.5
+                        Else
+                            .Adjustments.Item(1) = 0.25
+                        End If
+                    End If
+
+                Catch ex As Exception
+
+                End Try
+
+
             End If
+
 
         End With
 
@@ -13259,7 +13562,7 @@ Public Module Projekte
         appInstance.ScreenUpdating = False
         Call diagramsVisible(False)
         'Call ZeichneProjektinPlanTafel(pname)
-        Call ZeichneMoveLineOfProjekt(pname)
+        'Call ZeichneMoveLineOfProjekt(pname)
         Call awinNeuZeichnenDiagramme(1)
         Call diagramsVisible(True)
         appInstance.ScreenUpdating = True
@@ -16544,7 +16847,7 @@ Public Module Projekte
             oldName = .Name
         End With
 
-        hproj = ShowProjekte.getProject(oldName)
+        hproj = ShowProjekte.getProject(oldName, True)
 
         If isSingleProjectShape(projectShape) Then
 
@@ -18459,7 +18762,10 @@ Public Module Projekte
         If Not IsNothing(original) Then
             For i = 1 To original.Count
                 element = CStr(original.Item(i))
-                kopie.Add(element, element)
+                If Not kopie.Contains(element) Then
+                    kopie.Add(element, element)
+                End If
+
             Next
         End If
         copyCollection = kopie
@@ -18782,88 +19088,103 @@ Public Module Projekte
                 firstMS = .hierarchy.getIndexOf1stMilestone
                 lastMS = .hierarchy.count
 
-                For i As Integer = firstMS To lastMS
-                    Dim msID As String = .hierarchy.getIDAtIndex(i)
-                    Dim milestone As clsMeilenstein = .getMilestoneByID(msID)
-                    Dim msColumn As Integer = getColumnOfDate(milestone.getDate)
+                ' wenn es überhaupt keine Meilensteine gibt ...
+                If firstMS = 0 Then
+                    ' dann gar nichts machen, weiter mit nächstem Projekt 
+                Else
 
-                    If msColumn <= heuteColumn + 6 Then
+                    For i As Integer = firstMS To lastMS
+                        Dim msID As String = .hierarchy.getIDAtIndex(i)
+                        Dim milestone As clsMeilenstein = .getMilestoneByID(msID)
 
-                       
+                        If Not IsNothing(milestone) Then
 
-                        currentValue = zufall.NextDouble
-                        With milestone
-                            If currentValue >= redBaseValue And _
-                                currentValue <= redBaseValue + redPercentage Then
+                            Dim msColumn As Integer = getColumnOfDate(milestone.getDate)
 
-                                Dim b As clsBewertung
-
-                                If .bewertungsCount = 0 Then
-                                    b = New clsBewertung
-                                    b.description = "Erläuterung für die rote Ampel ..."
-                                    b.color = awinSettings.AmpelRot
-                                    .addBewertung(b)
-                                Else
-                                    b = .getBewertung(1)
-                                    b.description = "Erläuterung für die rote Ampel ..."
-                                    b.color = awinSettings.AmpelRot
-                                End If
-                                
-                                If msColumn > heuteColumn Then
-                                    redMilestones = redMilestones + 1
-                                End If
+                            If msColumn <= heuteColumn + 6 Then
 
 
 
-                            ElseIf currentValue >= yellowBaseValue And _
-                                currentValue <= yellowBaseValue + yellowPercentage Then
-                                Dim b As clsBewertung
+                                currentValue = zufall.NextDouble
+                                With milestone
+                                    If currentValue >= redBaseValue And _
+                                        currentValue <= redBaseValue + redPercentage Then
 
-                                If .bewertungsCount = 0 Then
-                                    b = New clsBewertung
-                                    b.description = "Erläuterung für die gelbe Ampel ..."
-                                    b.color = awinSettings.AmpelGelb
-                                    .addBewertung(b)
-                                Else
-                                    b = .getBewertung(1)
-                                    b.description = "Erläuterung für die gelbe Ampel ..."
-                                    b.color = awinSettings.AmpelGelb
-                                End If
+                                        Dim b As clsBewertung
 
-                                If msColumn > heuteColumn Then
-                                    yellowMilestones = yellowMilestones + 1
-                                End If
+                                        If .bewertungsCount = 0 Then
+                                            b = New clsBewertung
+                                            b.description = "Erläuterung für die rote Ampel ..."
+                                            b.color = awinSettings.AmpelRot
+                                            .addBewertung(b)
+                                        Else
+                                            b = .getBewertung(1)
+                                            b.description = "Erläuterung für die rote Ampel ..."
+                                            b.color = awinSettings.AmpelRot
+                                        End If
+
+                                        If msColumn > heuteColumn Then
+                                            redMilestones = redMilestones + 1
+                                        End If
 
 
 
+                                    ElseIf currentValue >= yellowBaseValue And _
+                                        currentValue <= yellowBaseValue + yellowPercentage Then
+                                        Dim b As clsBewertung
+
+                                        If .bewertungsCount = 0 Then
+                                            b = New clsBewertung
+                                            b.description = "Erläuterung für die gelbe Ampel ..."
+                                            b.color = awinSettings.AmpelGelb
+                                            .addBewertung(b)
+                                        Else
+                                            b = .getBewertung(1)
+                                            b.description = "Erläuterung für die gelbe Ampel ..."
+                                            b.color = awinSettings.AmpelGelb
+                                        End If
+
+                                        If msColumn > heuteColumn Then
+                                            yellowMilestones = yellowMilestones + 1
+                                        End If
+
+
+
+                                    Else
+                                        Dim b As clsBewertung
+
+                                        If .bewertungsCount = 0 Then
+                                            b = New clsBewertung
+                                            b.description = "aktuell alles i.O.  ..."
+                                            b.color = awinSettings.AmpelGruen
+                                            .addBewertung(b)
+                                        Else
+                                            b = .getBewertung(1)
+                                            b.description = "aktuell alles i.O.  ..."
+                                            b.color = awinSettings.AmpelGruen
+                                        End If
+
+                                        If msColumn > heuteColumn Then
+                                            greenMilestones = greenMilestones + 1
+                                        End If
+
+                                    End If
+
+
+                                End With
                             Else
-                                Dim b As clsBewertung
-
-                                If .bewertungsCount = 0 Then
-                                    b = New clsBewertung
-                                    b.description = "aktuell alles i.O.  ..."
-                                    b.color = awinSettings.AmpelGruen
-                                    .addBewertung(b)
-                                Else
-                                    b = .getBewertung(1)
-                                    b.description = "aktuell alles i.O.  ..."
-                                    b.color = awinSettings.AmpelGruen
-                                End If
-
-                                If msColumn > heuteColumn Then
-                                    greenMilestones = greenMilestones + 1
-                                End If
-
+                                ' nichts tun, alles unverändert lassen 
                             End If
+                        Else
+                            ' Test-Stelle/Break Punkt setzen für Debug , hat sonst keine Bedeutung 
+                            Dim checkDebug As Boolean = True
+                        End If
 
 
-                        End With
-                    Else
-                        ' nichts tun, alles unverändert lassen 
-                    End If
 
+                    Next
 
-                Next
+                End If
 
                 ' jetzt noch die Ampel-Farbe setzen 
                 If redMilestones > 0 Then

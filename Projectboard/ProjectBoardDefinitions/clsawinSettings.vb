@@ -1,4 +1,6 @@
-﻿Public Class clsawinSettings
+﻿Imports Microsoft.Office.Interop.Excel
+
+Public Class clsawinSettings
     ' Chart Settings 
     Public Property fontsizeTitle As Integer
     Public Property fontsizeLegend As Integer
@@ -12,6 +14,7 @@
     Public Property SollIstFarbeC As Long
     Public Property SollIstFarbeArea As Long
     Public Property timeSpanColor As Long
+    Public Property missingDefinitionColor As Long
     Public Property showTimeSpanInPT As Boolean
 
     Public Property AmpelGruen As Long
@@ -22,7 +25,7 @@
     Public Property glowColor As Long
 
     ' hier werden die Settings gesetzt  
-    
+
     ' Settings für die Projekteingabe
     Public Property lastProjektTyp As String
     Public Property lastModulTyp As String
@@ -82,6 +85,23 @@
     Public Property EinzelRessExport As Integer
     ' Settings ob die fehlenden Phase- und Meilenstein-Namen in die Customization eingetragen werden sollen
     Public Property addMissingPhaseMilestoneDef As Boolean
+    ' Setting, ob die NAmen eines Templates auf alle Fälle in die Phasedefinitions / MilestoneDefinitions aufgenommen werden soll oder nicht 
+    Public Property alwaysAcceptTemplateNames As Boolean
+    ' Setting, das regelt, ob unbekannte Namen by default in die Projekt-Struktur aufgenommen werden
+    ' sie werden aber auf alle Fälle nicht (!) in die PhaseDefinitions aufgenommen; 
+    ' Ausnahme: wenn es sich um ein Template handelt, und alwaysAcceptTemplateNames = true
+
+    ' im BMW Import Kontext wichtiges Settings
+    Property importTyp As Integer
+
+    ' steuert, ob Kinder, die  Duplikate von ihren Eltern sind, eliminiert werden sollen  
+    ' Duplikat heisst: gleicher Name und gleicher Termin 
+    Property eliminateDuplicates As Boolean
+
+    Public Property importUnknownNames As Boolean
+    ' wird beim Import verwendet; steuert, ob beim Import aus MS Project, RPLAN, Excel Files eindeutige Namen 
+    ' für gleichlautende Geschwisternamen generiert werden  
+    Public Property createUniqueSiblingNames As Boolean
 
     ' Settings für ToleranzKorridor TimeCost
     Public Property timeToleranzRel As Double
@@ -114,9 +134,7 @@
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
 
-    ' im BMW Import Kontext wichtiges Settings
-    Property importTyp As Integer
-    Property eliminateDuplicates As Boolean
+   
 
     Sub New()
 
@@ -133,6 +151,7 @@
         _SollIstFarbeC = RGB(80, 240, 80)
         _SollIstFarbeArea = RGB(200, 200, 200)
         _timeSpanColor = RGB(242, 242, 242)
+        _missingDefinitionColor = XlRgbColor.rgbCoral
         _showTimeSpanInPT = True
 
 
@@ -171,6 +190,11 @@
         ' Settings für Import / Export 
         _EinzelRessExport = 0
         _addMissingPhaseMilestoneDef = False
+        _alwaysAcceptTemplateNames = False
+        _importTyp = 1
+        _eliminateDuplicates = True
+        _importUnknownNames = True
+        _createUniqueSiblingNames = True
 
         ' Settings für Besser/Schlechter Diagramm 
         _timeToleranzRel = 0.02
@@ -204,9 +228,7 @@
         _useHierarchy = True
         _isHryNameFrmActive = False
 
-        ' im Kontext BMW Import wichtige Settings
-        _importTyp = 1
-        _eliminateDuplicates = True
+       
 
     End Sub
 End Class

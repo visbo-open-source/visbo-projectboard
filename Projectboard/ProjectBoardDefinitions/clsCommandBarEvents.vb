@@ -59,7 +59,7 @@ Public Class clsCommandBarEvents
 
                     With shpelement
                         Try
-                            If .ID = CInt(ShowProjekte.getProject(.Name).shpUID) Then
+                            If .ID = CInt(ShowProjekte.getProject(.Name, True).shpUID) Then
                                 selCollection.Add(.Name, .Name)
                             End If
                         Catch ex1 As Exception
@@ -229,7 +229,7 @@ Public Class clsCommandBarEvents
                             Dim oldproj As clsProjekt
                             Dim tmpCollection As New Collection
                             Try
-                                oldproj = ShowProjekte.getProject(shpName) ' der shpName ist identisch mit dem Projekt-Namen aus dem kopiert wurde
+                                oldproj = ShowProjekte.getProject(shpName, True) ' der shpName ist identisch mit dem Projekt-Namen aus dem kopiert wurde
 
                                 ' Änderung 25.3.14 wegen Kopiertes Projekt soll einfach in der nächsten Zeile gezeichnet werden  
                                 anzahlZeilen = oldproj.calcNeededLines(tmpCollection, tmpCollection, awinSettings.drawphases Or oldproj.extendedView, False)

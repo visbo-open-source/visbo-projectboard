@@ -7,6 +7,7 @@ Public Class frmOptimizeKPI
 
     Friend tmpListe As New SortedList(Of String, String)
     Friend kennung As String
+    Public menueOption As Integer
     Friend calledFrom As String = "menu"
 
 
@@ -121,6 +122,7 @@ Public Class frmOptimizeKPI
         Dim tmpDiagramm As clsDiagramm
 
 
+
         tmpDiagramm = DiagramList.getDiagramm(bgKennung)
 
         With tmpDiagramm
@@ -131,7 +133,56 @@ Public Class frmOptimizeKPI
         ' Aufruf der Optimierungs-Schleife ....
 
         enableOnUpdate = False
-        Call awinCalcOptimizationVarianten(diagrammTyp, myCollection, worker, e)
+        If menueOption = 1 Then
+            ' Varianten Optimierung
+            Call awinCalcOptimizationVarianten(diagrammTyp, myCollection, worker, e)
+        Else
+            ' Phasen Freiraum Optimierung 
+            Dim OptimierungsErgebnis As New SortedList(Of String, clsOptimizationObject)
+            Call awinCalcOptimizationElemFreiheitsgrade(diagrammTyp, myCollection, OptimierungsErgebnis, worker, e)
+
+            If OptimierungsErgebnis.Count > 0 Then
+
+
+                For Each kvp In OptimierungsErgebnis
+                    Try
+
+                        With kvp.Value
+
+                            Dim pName As String = kvp.Value.projectName
+                            Dim hproj As clsProjekt = ShowProjekte.getProject(pName)
+                            Dim phaseName As String = CStr(myCollection.Item(1))
+
+                            Dim phaseList As Collection = projectboardShapes.getPhaseList(pName)
+                            Dim milestoneList As Collection = projectboardShapes.getMilestoneList(pName)
+
+                            Call clearProjektinPlantafel(pName)
+
+                            ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
+                            ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
+                            Dim tmpCollection As New Collection
+                            Call ZeichneProjektinPlanTafel(tmpCollection, pName, hproj.tfZeile, phaseList, milestoneList)
+
+
+                        End With
+                    Catch ex As Exception
+                        Call MsgBox("Projekt: " & kvp.Key & " : Startzeitpunkt liegt in der Vergangenheit ")
+                    End Try
+
+                Next
+
+                    Call visualisiereErgebnis()
+                    OptimierungsErgebnis.Clear()
+                
+
+            Else
+                MsgBox("es waren keine Verbesserungen zu erzielen")
+            End If
+
+
+
+        End If
+
         enableOnUpdate = False
 
 
@@ -177,18 +228,24 @@ Public Class frmOptimizeKPI
         Me.abbruchButton.Visible = False
         Me.startButton.Visible = False
 
-        If projectConstellations.Contains(autoSzenarioNamen(3)) Then
-            Me.bronceMedal.Visible = True
-            Me.silverMedal.Visible = True
-            Me.goldMedal.Visible = True
-        ElseIf projectConstellations.Contains(autoSzenarioNamen(2)) Then
-            Me.silverMedal.Visible = True
-            Me.goldMedal.Visible = True
-        ElseIf projectConstellations.Contains(autoSzenarioNamen(1)) Then
-            Me.goldMedal.Visible = True
+        If menueOption = 1 Then
+            ' Varianten Optimierung 
+            If projectConstellations.Contains(autoSzenarioNamen(3)) Then
+                Me.bronceMedal.Visible = True
+                Me.silverMedal.Visible = True
+                Me.goldMedal.Visible = True
+            ElseIf projectConstellations.Contains(autoSzenarioNamen(2)) Then
+                Me.silverMedal.Visible = True
+                Me.goldMedal.Visible = True
+            ElseIf projectConstellations.Contains(autoSzenarioNamen(1)) Then
+                Me.goldMedal.Visible = True
+            Else
+                Me.progressText.Text = "es waren keine Verbesserungen zu erzielen !"
+            End If
         Else
-            Me.progressText.Text = "es waren keine Verbesserungen zu erzielen !"
+            Me.progressText.Text = "... Fertig ! "
         End If
+        
 
 
 

@@ -74,7 +74,7 @@ Public Module BMWItOModul
 
         ' 
         Dim logMessage As String = ""
-        Dim fullProtocol As Boolean = False
+        Dim fullProtocol As Boolean = True
 
 
         Dim milestoneIX As Integer = MilestoneDefinitions.Count + 1
@@ -185,7 +185,7 @@ Public Module BMWItOModul
 
 
 
-        ' Hier wird die Stelle und die Informationen für das Visbo Protocoll ermittel und gesetzt 
+        ' Hier wird die Stelle und die Informationen für das Visbo Protocoll ermittelt und gesetzt 
         Dim protocolCellName As String = "VISBO_Protocol"
         Dim pCell As Excel.Range
 
@@ -316,19 +316,6 @@ Public Module BMWItOModul
                     Dim doADD As Boolean = False
 
                     pName = tmpStr(0)
-                    'If tmpStr(0).Contains("SOP") Then
-                    '    Dim positionIX As Integer = tmpStr(0).IndexOf("SOP") - 1
-                    '    pName = ""
-                    '    For ih As Integer = 0 To positionIX
-                    '        pName = pName & tmpStr(0).Chars(ih)
-                    '    Next
-                    '    pName = pName.Trim
-                    '    ' doADD = True
-                    '    doADD = False
-                    'Else
-                    '    pName = tmpStr(0).Trim
-                    'End If
-                    ' Ende Änderung PT-71 22.1.15 (tk)
 
                     If Not isVorlage Then
                         If tmpStr(0).Trim.EndsWith("eA") Then
@@ -670,6 +657,12 @@ Public Module BMWItOModul
                                     parentElemName = pHierarchy.getPhaseBeforeLevel(indentLevel).name
                                     ' das folgende wurde am 31.3. ergänzt, um die Hierarchie aufbauen zu können
                                     parentNodeID = pHierarchy.getIDBeforeLevel(indentLevel)
+                                    ' Plausibilitäts-Check: die beiden müssen identisch sein !!
+                                    ' tk Debug: 27.11.15
+                                    If elemNameOfElemID(parentNodeID) <> parentElemName Then
+                                        Call MsgBox("nicht konsistent in bmwImportProjekteITO15, zeile 663")
+                                    End If
+
 
                                     ' jetzt den tatsächlichen Namen bestimmen , ggf wird dazu der Parent Phase Name benötigt 
                                     Try
@@ -683,6 +676,17 @@ Public Module BMWItOModul
                                     Catch ex As Exception
                                         stdName = itemName
                                     End Try
+
+                                    ' hier muss jetzt überprüft werden, ob es Geschwister mit gleichen Namen gibt
+                                    ' wenn ja , wird an den stdName solange eine ldfNR Ergänzung rangemacht, bis der NAme innerhalb der 
+                                    ' Geschwistergruppe eindeutig ist
+
+                                    ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilensten  und Phase 
+                                    If awinSettings.createUniqueSiblingNames Then
+                                        stdName = hproj.hierarchy.findUniqueGeschwisterName(parentNodeID, stdName, False)
+                                    End If
+
+
 
                                     Dim ok1 As Boolean
 
@@ -776,6 +780,7 @@ Public Module BMWItOModul
 
 
                                     ' jetzt muss geprüft werden, ob das Element in Std Definitions aufgenommen werden muss 
+                                    Dim ok2 As Boolean = True
                                     If Not PhaseDefinitions.Contains(stdName) Then
 
                                         Dim hphaseDef As clsPhasenDefinition
@@ -788,17 +793,20 @@ Public Module BMWItOModul
                                         phaseIX = phaseIX + 1
 
 
-                                        If isVorlage Then
+                                        If isVorlage And awinSettings.alwaysAcceptTemplateNames Then
                                             ' in die Phase-Definitions aufnehmen 
                                             Try
                                                 PhaseDefinitions.Add(hphaseDef)
                                             Catch ex As Exception
                                             End Try
                                         Else
-                                            ' Änderung tk: es sollen die nicht bekannten Elemente nicht mehr ausgegrenzt werden ! 
-                                            ' wenn die nicht bekannten Namen ausgegrenzt werden sollen , muss hier ein ok2 eingeführt werdne 
-                                            ' in die Missing Phase-Definitions aufnehmen 
+                                            ' in Abhängigkeit vom Setting die Elemente aufnehmen oder nicht 
                                             Try
+                                                If awinSettings.importUnknownNames Then
+                                                    ok2 = True
+                                                Else
+                                                    ok2 = False
+                                                End If
                                                 missingPhaseDefinitions.Add(hphaseDef)
                                             Catch ex As Exception
                                             End Try
@@ -809,7 +817,7 @@ Public Module BMWItOModul
                                     End If
 
 
-                                    If ok1 Then
+                                    If ok1 And ok2 Then
 
 
                                         ' das muss auf alle Fälle gemacht werden 
@@ -904,6 +912,12 @@ Public Module BMWItOModul
 
                                         Dim ok1 As Boolean
 
+                                        ' Bestimmung des eindeutigen Namens innerhalb der Geschwister, unterschieden nach Meilenstein und Phase 
+                                        If awinSettings.createUniqueSiblingNames Then
+                                            stdName = hproj.hierarchy.findUniqueGeschwisterName(cphase.nameID, stdName, True)
+                                        End If
+
+
                                         elemID = calcHryElemKey(stdName, True)
                                         If hproj.hierarchy.containsKey(elemID) Then
 
@@ -961,7 +975,8 @@ Public Module BMWItOModul
                                         End If
 
 
-                                        ' jetzt muss geprüft werden, ob stdName bereits aufgenommen ist 
+                                        ' jetzt muss geprüft werden, ob stdName bereits aufgenommen ist
+                                        Dim ok2 As Boolean = True
                                         If Not MilestoneDefinitions.Contains(stdName) And ok1 Then
 
                                             Dim hMilestoneDef As New clsMeilensteinDefinition
@@ -976,7 +991,7 @@ Public Module BMWItOModul
 
                                             milestoneIX = milestoneIX + 1
 
-                                            If isVorlage Then
+                                            If isVorlage And awinSettings.alwaysAcceptTemplateNames Then
                                                 ' in die Milestone-Definitions aufnehmen 
                                                 Try
                                                     MilestoneDefinitions.Add(hMilestoneDef)
@@ -984,12 +999,18 @@ Public Module BMWItOModul
                                                 End Try
 
                                             Else
-                                                ' auch diese Elemente werden aufgenommen ; wenn das nicht mehr der Fall sein soll, muss hier die Log-Message erweitert
-                                                ' werden und eine Variable ok2 eingeführt werden 
+
                                                 logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
 
                                                 ' in die Missing Milestone-Definitions aufnehmen 
                                                 Try
+                                                    ' das Element aufnehmen, in Abhängigkeit vom Setting 
+                                                    If awinSettings.importUnknownNames Then
+                                                        ok2 = True
+                                                    Else
+                                                        ok2 = False
+                                                    End If
+
                                                     missingMilestoneDefinitions.Add(hMilestoneDef)
                                                 Catch ex As Exception
                                                 End Try
@@ -998,7 +1019,7 @@ Public Module BMWItOModul
 
                                         End If
 
-                                        If ok1 Then
+                                        If ok1 And ok2 Then
 
 
                                             With cmilestone
@@ -1155,7 +1176,7 @@ Public Module BMWItOModul
                                 Else
                                     'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
                                     hproj.farbe = awinSettings.AmpelNichtBewertet
-                                    hproj.Schrift = Projektvorlagen.getProject(1).Schrift
+                                    hproj.Schrift = Projektvorlagen.getProject(0).Schrift
                                     hproj.Schriftfarbe = RGB(10, 10, 10)
                                     hproj.earliestStart = 0
                                     hproj.latestStart = 0

@@ -47,6 +47,7 @@ Public Module awinGeneralModules
         strategicFit = 4
         risiko = 5
         volume = 6
+        budget = 7
     End Enum
 
 
@@ -129,6 +130,7 @@ Public Module awinGeneralModules
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
                 CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
 
+
             End If
 
 
@@ -161,7 +163,14 @@ Public Module awinGeneralModules
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-                    PhaseDefinitions.Add(missPhaseDef)
+
+                    Try
+                        PhaseDefinitions.Add(missPhaseDef)
+                    Catch ex As Exception
+
+                    End Try
+
+
 
                 End If
 
@@ -258,7 +267,10 @@ Public Module awinGeneralModules
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
                     CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-                    MilestoneDefinitions.Add(msDef)
+                    If Not MilestoneDefinitions.Contains(msDef.name) Then
+                        MilestoneDefinitions.Add(msDef)
+                    End If
+
 
                 End If
 
@@ -271,6 +283,350 @@ Public Module awinGeneralModules
         appInstance.ActiveWorkbook.Close(SaveChanges:=True)
         'appInstance.ScreenUpdating = True
         appInstance.EnableEvents = True
+
+    End Sub
+
+    ''' <summary>
+    ''' schreibt evtl neu hinzugekommene Phasen und Meilensteine in 
+    ''' das Customization File 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Public Sub awinWritePhaseMilestoneDefinitions(Optional ByVal writeMappings As Boolean = False)
+
+        Dim phaseDefs As Excel.Range
+        Dim milestoneDefs As Excel.Range
+        'Dim foundRow As Integer
+        Dim phName As String
+        Dim lastrow As Excel.Range
+        Dim firstrow As Excel.Range
+        Dim tmpAnzahl As Integer
+
+        Dim msName As String
+        Dim shortName As String
+
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        appInstance.ScreenUpdating = False
+        appInstance.EnableEvents = False
+
+
+
+        ' hier muss jetzt das File Projekt Tafel Definitions.xlsx aufgemacht werden ...
+        ' das File 
+        Try
+            appInstance.Workbooks.Open(awinPath & customizationFile)
+
+        Catch ex As Exception
+            Call MsgBox("Customization File nicht gefunden - Abbruch")
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = formerSU
+            Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
+        End Try
+
+        appInstance.Workbooks(myCustomizationFile).Activate()
+        ' (4) ist Registerblatt Einstellungen 
+        Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+        phaseDefs = wsName4.Range("awin_Phasen_Definition")
+
+        ' diese Range sollte auf alle Fälle mindestens eine Zeile haben 
+        Dim anzZeilen As Integer = phaseDefs.Rows.Count
+        lastrow = CType(phaseDefs.Rows(anzZeilen), Excel.Range)
+        firstrow = CType(phaseDefs.Rows(1), Excel.Range)
+
+        Dim delPosition As Integer = firstrow.row
+
+        ' jetzt wird geprüft, ob die missingPhaseDefinitions in PhaseDefinitions übertragen werden 
+        If awinSettings.addMissingPhaseMilestoneDef Then
+
+            For ix As Integer = 1 To missingPhaseDefinitions.Count
+                Try
+                    PhaseDefinitions.Add(missingPhaseDefinitions.getPhaseDef(ix))
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+            missingPhaseDefinitions.Clear()
+
+            ' jetzt die Meilensteine
+            For ix As Integer = 1 To missingMilestoneDefinitions.Count
+                Try
+                    MilestoneDefinitions.Add(missingMilestoneDefinitions.getMilestoneDef(ix))
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+            missingMilestoneDefinitions.Clear()
+
+        End If
+
+        ' jetzt können erst diue PhaseDefinitions, dann die MilestoneDefiitions geschrieben werden 
+
+
+
+        ' hier muss erst mal geprüft werden, ob Zeilen eingefügt oder gelöscht werden müssen 
+        Dim anzDefinitions As Integer = PhaseDefinitions.Count
+        If anzZeilen = anzDefinitions Then
+        ElseIf anzZeilen < anzDefinitions Then
+            ' Zeilen einfügen 
+
+            tmpAnzahl = anzDefinitions - anzZeilen
+            For ix As Integer = 1 To tmpAnzahl
+                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+            Next
+
+            ' anzZeilen und phaseDefinitions.count müssen jetzt genau gleich sein 
+            anzZeilen = phaseDefs.Rows.Count
+
+            ' tk test-Schleife
+            If anzZeilen <> PhaseDefinitions.Count Then
+                Dim dDBG As Integer = -1
+            End If
+        Else
+            ' Zeilen löschen
+            tmpAnzahl = anzZeilen - anzDefinitions
+            If tmpAnzahl >= 2 Then
+                ' das stellt sicher, dass am Ende mindestetens 2 Zeilen übrig sind 
+                tmpAnzahl = tmpAnzahl - 2
+            End If
+            For ix As Integer = 1 To tmpAnzahl
+                CType(phaseDefs.Rows(2), Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
+            Next
+
+            ' jetzt sind mindestens zwei Zeilen übrig , und zwar genau dann wenn phaseDefinitions.count = 0 
+            anzZeilen = phaseDefs.Rows.Count
+
+        End If
+
+        ' jetzt können die Phase-Definitions in den Range geschrieben werden 
+        If anzDefinitions > anzZeilen Then
+            Dim dDBG As Integer = -1
+        Else
+
+            Dim darstellungsKlasse As String
+            For ix As Integer = 1 To anzDefinitions
+
+                With PhaseDefinitions.getPhaseDef(ix)
+                    phName = .name
+                    shortName = .shortName
+                    darstellungsKlasse = .darstellungsKlasse
+                End With
+
+                CType(firstrow.Cells(ix, 1), Excel.Range).Offset(0, 0).Value = phName.ToString
+                CType(firstrow.Cells(ix, 1), Excel.Range).Offset(0, 5).Value = shortName
+                CType(firstrow.Cells(ix, 1), Excel.Range).Offset(0, 6).Value = darstellungsKlasse
+
+
+            Next ix
+
+        End If
+
+        ' jetzt müssen ggf noch zwei Zeilen gelöscht werden, damit die awin_PhaseDefinitions wieder stimmt 
+        While anzZeilen > anzDefinitions
+            CType(phaseDefs.Rows(anzZeilen), Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
+            anzZeilen = anzZeilen - 1
+        End While
+
+
+        '
+        ' jetzt werden die Meilensteine geschrieben 
+        '
+
+        ' erste , letzte Zeile des Meilenstein Ranges setzen 
+        ' diese Range sollte auf alle Fälle mindestens eine Zeile haben 
+
+        milestoneDefs = wsName4.Range("awin_Meilenstein_Definition")
+        anzZeilen = milestoneDefs.Rows.Count
+        lastrow = CType(milestoneDefs.Rows(anzZeilen), Excel.Range)
+        firstrow = CType(milestoneDefs.Rows(1), Excel.Range)
+
+        delPosition = firstrow.Row
+
+        ' hier muss erst mal geprüft werden, ob Zeilen eingefügt oder gelöscht werden müssen 
+        anzDefinitions = MilestoneDefinitions.Count
+        If anzZeilen = anzDefinitions Then
+        ElseIf anzZeilen < anzDefinitions Then
+            ' Zeilen einfügen 
+
+            tmpAnzahl = anzDefinitions - anzZeilen
+
+            For ix As Integer = 1 To tmpAnzahl
+                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+            Next
+
+            ' anzZeilen und phaseDefinitions.count müssen jetzt genau gleich sein 
+            anzZeilen = milestoneDefs.Rows.Count
+
+            ' tk test-Schleife
+            If anzZeilen <> milestoneDefs.Count Then
+                Dim dDBG As Integer = -1
+            End If
+
+        Else
+            ' Zeilen löschen
+            tmpAnzahl = anzZeilen - anzDefinitions
+            If tmpAnzahl >= 2 Then
+                ' das stellt sicher, dass am Ende mindestetens 2 Zeilen übrig sind 
+                tmpAnzahl = tmpAnzahl - 2
+            End If
+            For ix As Integer = 1 To tmpAnzahl
+                CType(milestoneDefs.Rows(2), Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
+            Next
+
+            ' jetzt sind mindestens zwei Zeilen übrig , und zwar genau dann wenn phaseDefinitions.count = 0 
+            anzZeilen = milestoneDefs.Rows.Count
+
+        End If
+
+        ' jetzt können die Phase-Definitions in den Range geschrieben werden 
+        If anzDefinitions > anzZeilen Then
+            Dim dDBG As Integer = -1
+        Else
+
+            Dim darstellungsKlasse As String
+            For ix As Integer = 1 To anzDefinitions
+
+                With MilestoneDefinitions.getMilestoneDef(ix)
+                    msName = .name
+                    shortName = .shortName
+                    darstellungsKlasse = .darstellungsKlasse
+                End With
+
+                CType(firstrow.Cells(ix, 1), Excel.Range).Offset(0, 0).Value = msName.ToString
+                CType(firstrow.Cells(ix, 1), Excel.Range).Offset(0, 5).Value = shortName
+                CType(firstrow.Cells(ix, 1), Excel.Range).Offset(0, 6).Value = darstellungsKlasse
+
+
+            Next ix
+
+        End If
+
+        ' jetzt müssen ggf noch zwei Zeilen gelöscht werden, damit die awin_PhaseDefinitions wieder stimmt 
+        While anzZeilen > anzDefinitions
+            CType(milestoneDefs.Rows(anzZeilen), Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
+            anzZeilen = anzZeilen - 1
+        End While
+
+        '
+        ' Ende der Behandlung der Phasen-/Meilenstein Behandlung 
+
+        ' prüfen , ob die Mappings-Behandlung auch gemacht werden soll ...
+        If writeMappings Then
+
+            '
+            ' jetzt werden erstmal die Phase Mappings geschrieben  
+            '
+            Dim wsName8 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(8)), _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Dim area As Excel.Range
+            Dim letzteZeile As Integer
+            Dim aktuelleZeile As Integer
+
+            With wsName8
+
+                ' Synonyme schreiben 
+                letzteZeile = CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+                If letzteZeile >= 3 Then
+                    area = CType(.Range(.Cells(3, 1), .Cells(letzteZeile, 2)), Excel.Range)
+                    ' alte Area löschen
+                    area.Clear()
+                End If
+                
+
+                ' neue Area definieren
+                area = CType(.Range(.Cells(3, 1), .Cells(phaseMappings.countSynonyms + phaseMappings.countRegEx + 4, 2)), Excel.Range)
+
+                aktuelleZeile = 1
+                For ix As Integer = 1 To phaseMappings.countSynonyms
+                    CType(area.Cells(aktuelleZeile, 1), Excel.Range).Value = phaseMappings.getSynonymMapping(ix - 1).Key
+                    CType(area.Cells(aktuelleZeile, 2), Excel.Range).Value = phaseMappings.getSynonymMapping(ix - 1).Value
+                    aktuelleZeile = aktuelleZeile + 1
+                Next
+
+                ' regular expressions schreiben 
+                For ix As Integer = 1 To phaseMappings.countRegEx
+                    CType(area.Cells(aktuelleZeile, 1), Excel.Range).Value = phaseMappings.getRegExMapping(ix - 1).Key
+                    CType(area.Cells(aktuelleZeile, 2), Excel.Range).Value = phaseMappings.getRegExMapping(ix - 1).Value
+                    aktuelleZeile = aktuelleZeile + 1
+                Next
+
+                ' ignoreNames schreiben 
+                letzteZeile = CType(.Cells(20000, 6), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+
+                ' alte area löschen
+                If letzteZeile >= 3 Then
+                    area = CType(.Range(.Cells(3, 6), .Cells(letzteZeile, 6)), Excel.Range)
+                    area.Clear()
+                End If
+                
+                area = CType(.Range(.Cells(3, 6), .Cells(phaseMappings.countIgnore + 4, 6)), Excel.Range)
+                aktuelleZeile = 1
+
+                For ix As Integer = 1 To phaseMappings.countIgnore
+                    CType(area.Cells(aktuelleZeile, 1), Excel.Range).Value = phaseMappings.getIgnoreElement(ix - 1)
+                    aktuelleZeile = aktuelleZeile + 1
+                Next
+            End With
+
+            '
+            ' jetzt werden erstmal die Phase Mappings geschrieben  
+            '
+            Dim wsName10 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(10)), _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+            With wsName10
+
+                ' Synonyme schreiben 
+                letzteZeile = CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                area = CType(.Range(.Cells(3, 1), .Cells(letzteZeile, 2)), Excel.Range)
+                ' alte Area löschen
+                area.Clear()
+
+                ' neue Area definieren
+                area = CType(.Range(.Cells(3, 1), .Cells(milestoneMappings.countSynonyms + milestoneMappings.countRegEx + 4, 2)), Excel.Range)
+
+                aktuelleZeile = 1
+                For ix As Integer = 1 To milestoneMappings.countSynonyms
+                    CType(area.Cells(aktuelleZeile, 1), Excel.Range).Value = milestoneMappings.getSynonymMapping(ix - 1).Key
+                    CType(area.Cells(aktuelleZeile, 2), Excel.Range).Value = milestoneMappings.getSynonymMapping(ix - 1).Value
+                    aktuelleZeile = aktuelleZeile + 1
+                Next
+
+                ' regular expressions schreiben 
+                For ix As Integer = 1 To milestoneMappings.countRegEx
+                    CType(area.Cells(aktuelleZeile, 1), Excel.Range).Value = milestoneMappings.getRegExMapping(ix - 1).Key
+                    CType(area.Cells(aktuelleZeile, 2), Excel.Range).Value = milestoneMappings.getRegExMapping(ix - 1).Value
+                    aktuelleZeile = aktuelleZeile + 1
+                Next
+
+                ' ignoreNames schreiben 
+                letzteZeile = CType(.Cells(20000, 6), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                area = CType(.Range(.Cells(3, 6), .Cells(letzteZeile, 6)), Excel.Range)
+                ' alte Area löschen
+                area.Clear()
+
+
+                area = CType(.Range(.Cells(3, 6), .Cells(milestoneMappings.countIgnore + 4, 6)), Excel.Range)
+                aktuelleZeile = 1
+
+                For ix As Integer = 1 To milestoneMappings.countIgnore
+                    CType(area.Cells(aktuelleZeile, 1), Excel.Range).Value = milestoneMappings.getIgnoreElement(ix - 1)
+                    aktuelleZeile = aktuelleZeile + 1
+                Next
+            End With
+
+
+        End If
+
+
+        appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = formerSU
 
     End Sub
 
@@ -988,6 +1344,12 @@ Public Module awinGeneralModules
                     Throw New ArgumentException("Customization File fehlerhaft - Farben fehlen ... " & vbLf & ex.Message)
                 End Try
 
+                Try
+                    awinSettings.missingDefinitionColor = CLng(.Range("MissingDefinitionColor").Interior.Color)
+                Catch ex As Exception
+
+                End Try
+
                 ergebnisfarbe1 = .Range("Ergebnisfarbe1").Interior.Color
                 ergebnisfarbe2 = .Range("Ergebnisfarbe2").Interior.Color
                 weightStrategicFit = CDbl(.Range("WeightStrategicFit").Value)
@@ -1173,13 +1535,16 @@ Public Module awinGeneralModules
                 If isModulVorlage Then
                     If ModulVorlagen.Count > 0 Then
                         awinSettings.lastModulTyp = ModulVorlagen.Liste.ElementAt(0).Value.VorlagenName
-                        Call awinWritePhaseDefinitions()
+                        ' Änderung tk 26.11.15 muss doch hier gar nicht gemacht werden .. erst mit Beenden des Wörterbuchs bzw. Beenden der Applikation
+                        'Call awinWritePhaseDefinitions()
+                        'Call awinWritePhaseMilestoneDefinitions 
                     End If
 
                 Else
                     If Projektvorlagen.Count > 0 Then
                         awinSettings.lastProjektTyp = Projektvorlagen.Liste.ElementAt(0).Value.VorlagenName
-                        Call awinWritePhaseDefinitions()
+                        'Call awinWritePhaseDefinitions()
+                        'Call awinWritePhaseMilestoneDefinitions 
                     End If
 
                 End If
@@ -2227,7 +2592,7 @@ Public Module awinGeneralModules
         spalte = 1
         geleseneProjekte = 0
 
-        Dim suchstr(6) As String
+        Dim suchstr(7) As String
         suchstr(ptModuleSpalten.produktlinie) = "Produktlinie"
         suchstr(ptModuleSpalten.name) = "Name"
         suchstr(ptModuleSpalten.projektTyp) = "Projekt-Typ"
@@ -2235,9 +2600,10 @@ Public Module awinGeneralModules
         suchstr(ptModuleSpalten.strategicFit) = "strat. Bedeutung"
         suchstr(ptModuleSpalten.risiko) = "Risiko der Umsetzung"
         suchstr(ptModuleSpalten.volume) = "Produktions-Volumen"
+        suchstr(ptModuleSpalten.budget) = "Budget"
 
 
-        Dim inputColumns(6) As Integer
+        Dim inputColumns(7) As Integer
 
 
 
@@ -2250,7 +2616,7 @@ Public Module awinGeneralModules
 
                 ' jetzt werden die Spalten bestimmt 
                 Try
-                    For i As Integer = 0 To 6
+                    For i As Integer = 0 To 7
                         inputColumns(i) = firstZeile.Find(What:=suchstr(i)).Column
                     Next
                 Catch ex As Exception
@@ -2323,7 +2689,7 @@ Public Module awinGeneralModules
                             start = projectStartDate
                             ende = projectEndDate
                             dauer = calcDauerIndays(start, ende)
-                            budget = 0
+                            budget = CDbl(CType(.Cells(zeile, inputColumns(ptModuleSpalten.budget)), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             risk = CDbl(CType(.Cells(zeile, inputColumns(ptModuleSpalten.risiko)), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             sfit = CDbl(CType(.Cells(zeile, inputColumns(ptModuleSpalten.strategicFit)), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             volume = CDbl(CType(.Cells(zeile, inputColumns(ptModuleSpalten.volume)), Global.Microsoft.Office.Interop.Excel.Range).Value)
@@ -2432,6 +2798,7 @@ Public Module awinGeneralModules
                             phaseName = CStr(CType(.Cells(zeile, firstC + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value).Trim
                             If phaseName = "-" Or endOffset - startOffset = 0 Then
                                 allesOK = False
+                                phaseName = "-"
                             Else
                                 allesOK = True
                             End If
@@ -2439,42 +2806,61 @@ Public Module awinGeneralModules
                             allesOK = False
                         End Try
 
+                        Dim parentPhase As clsPhase = Nothing
+
+
 
                         If allesOK Then
+
+                            '
+                            ' jetzt muss die aufnehmende Phase erstmal angelegt werden 
+                            '
+                            If Not IsNothing(phaseName) Then
+
+                                If phaseName.Length > 0 Then
+
+                                    parentPhase = New clsPhase(parent:=hproj)
+                                    parentPhase.nameID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
+                                    parentPhase.changeStartandDauer(startOffset, calcDauerIndays(start, ende))
+
+                                    hproj.AddPhase(parentPhase, origName:=phaseName, _
+                                           parentID:=rootPhaseName)
+
+                                End If
+
+                            End If
+
+
                             scaleRule = CInt(CType(.Cells(zeile, firstC + 3 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             allNames = CStr(CType(.Cells(zeile, firstC + 4 + (i - 1) * 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                             ' jetzt müssen die einzelnen Module ausgelesen werden 
-                            moduleNames = allNames.Split(New Char() {CChar("#")}, 20)
-                            Dim anzahl As Integer = moduleNames.Length
+                            ' aber nur, wenn überhaupt was drin steht und das auch als Modul existiert ...
+                            '
+                            If Not IsNothing(allNames) Then
 
-                            For ix As Integer = 1 To anzahl
-                                moduleName = moduleNames(ix - 1)
-                                If ModulVorlagen.Contains(moduleName) Then
-                                    planModul = ModulVorlagen.getProject(moduleName)
-                                    Dim parentID As String = rootPhaseName
+                                If Not allNames.Trim.Length = 0 Then
 
-                                    Dim parentPhase As clsPhase
-                                    Dim elemID As String = ""
+                                    moduleNames = allNames.Split(New Char() {CChar("#")}, 20)
+                                    Dim anzahl As Integer = moduleNames.Length
 
-                                    If Not IsNothing(phaseName) Then
+                                    For ix As Integer = 1 To anzahl
+                                        moduleName = moduleNames(ix - 1)
+                                        If ModulVorlagen.Contains(moduleName) Then
+                                            planModul = ModulVorlagen.getProject(moduleName)
 
-                                        If phaseName.Length > 0 Then
-                                            parentPhase = New clsPhase(parent:=hproj)
-                                            elemID = hproj.hierarchy.findUniqueElemKey(phaseName, False)
-                                            parentPhase.nameID = elemID
-                                            parentPhase.changeStartandDauer(startOffset, calcDauerIndays(start, ende))
+                                            If Not IsNothing(parentPhase) Then
 
-                                            hproj.AddPhase(parentPhase, origName:=phaseName, _
-                                                   parentID:=parentID)
+                                                planModul.moduleCopyTo(hproj, parentPhase.nameID, moduleName, startOffset, endOffset, True)
 
-                                            parentID = elemID
-
-                                            planModul.moduleCopyTo(hproj, parentID, moduleName, startOffset, endOffset, True)
+                                            End If
                                         End If
-                                    End If
+                                    Next
+
                                 End If
-                            Next
+
+                            End If
+
                         End If
                     Next
 
@@ -7739,9 +8125,10 @@ Public Module awinGeneralModules
             CType(.Cells(zeile, spalte + 4), Excel.Range).Value = "strat. Bedeutung"
             CType(.Cells(zeile, spalte + 5), Excel.Range).Value = "Risiko der Umsetzung"
             CType(.Cells(zeile, spalte + 6), Excel.Range).Value = "Produktions-Volumen"
+            CType(.Cells(zeile, spalte + 7), Excel.Range).Value = "Budget"
 
 
-            spalte = spalte + 7
+            spalte = spalte + 8
 
 
             ' hier muss noch korrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses Namens und Breadcrumbs gibt, so 
@@ -7815,9 +8202,12 @@ Public Module awinGeneralModules
                 ' Produktions-Volumen schreiben 
                 CType(.Cells(zeile, spalte + 6), Excel.Range).Value = kvp.Value.volume
 
+                ' Budget schreiben 
+                CType(.Cells(zeile, spalte + 7), Excel.Range).Value = ""
+
                 ' Phasen Information schreiben
 
-                spalte = spalte + 7
+                spalte = spalte + 8
 
 
                 ' hier muss noch korrigiert werden: wenn es bei einem oder mehreren Projekten mehrere Elemente dieses Namens und Breadcrumbs gibt, so 
@@ -8665,7 +9055,7 @@ Public Module awinGeneralModules
 
                     Try
 
-                        hproj = ShowProjekte.getProject(singleShp.Name)
+                        hproj = ShowProjekte.getProject(singleShp.Name, True)
                         nameList = hproj.getMilestones
                         listOfItems = hproj.getElemIdsOf(selectedMilestones, True)
 
@@ -9129,7 +9519,7 @@ Public Module awinGeneralModules
                         'Throw New Exception("es gibt weder die Vorlage 'unknown' noch die Vorlage " & vorlagenName)
                         hproj.VorlagenName = ""
                         hproj.farbe = awinSettings.AmpelNichtBewertet
-                        hproj.Schrift = Projektvorlagen.getProject(1).Schrift
+                        hproj.Schrift = Projektvorlagen.getProject(0).Schrift
                         hproj.Schriftfarbe = RGB(10, 10, 10)
                         hproj.earliestStart = 0
                         hproj.latestStart = 0
@@ -9257,12 +9647,19 @@ Public Module awinGeneralModules
 
                                 Dim newPhaseDef As New clsPhasenDefinition
                                 newPhaseDef.name = aktTask_j.name
+
                                 mappedPhasename = aktTask_j.name
                                 newPhaseDef.shortName = aktTask_j.remark
+
                                 newPhaseDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, False)
                                 newPhaseDef.UID = PhaseDefinitions.Count + 1
                                 ' muss in missingPhaseDefinitions noch eingetragen werden
-                                missingPhaseDefinitions.Add(newPhaseDef)
+                                If Not missingPhaseDefinitions.Contains(newPhaseDef.name) Then
+                                    missingPhaseDefinitions.Add(newPhaseDef)
+                                End If
+
+
+
 
                                 Call logfileSchreiben(("Achtung, RXFImport: Phase '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
                             End If
@@ -9358,7 +9755,9 @@ Public Module awinGeneralModules
                                 msDef.name = aktTask_j.name
                                 mappedMSname = aktTask_j.name
                                 msDef.schwellWert = 0
+
                                 msDef.shortName = aktTask_j.remark
+
                                 msDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, True)
                                 msDef.UID = MilestoneDefinitions.Count + 1
 

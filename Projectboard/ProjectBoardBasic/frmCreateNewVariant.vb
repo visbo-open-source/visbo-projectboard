@@ -2,8 +2,27 @@
 Imports MongoDbAccess
 Public Class frmCreateNewVariant
 
+    Public multiSelect As Boolean = False
+
+    Private Sub frmCreateNewVariant_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
+
+        frmCoord(PTfrm.createVariant, PTpinfo.top) = Me.Top
+        frmCoord(PTfrm.createVariant, PTpinfo.left) = Me.Left
+
+    End Sub
 
     Private Sub frmCreateNewVariant_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Me.Top = frmCoord(PTfrm.createVariant, PTpinfo.top)
+        Me.Left = frmCoord(PTfrm.createVariant, PTpinfo.left)
+
+        If multiSelect Then
+            infoText.Text = "den oben angegebenen Namen für alle selektierten Projekte verwenden"
+            Label3.Visible = False
+            Label4.Visible = False
+            projektName.Visible = False
+            variantenName.Visible = False
+        End If
 
     End Sub
 
@@ -41,6 +60,14 @@ Public Class frmCreateNewVariant
     End Sub
 
     Private Sub newVariant_TextChanged(sender As Object, e As EventArgs) Handles newVariant.TextChanged
+
+    End Sub
+
+    Private Sub infoText_Click(sender As Object, e As EventArgs) Handles infoText.Click
+
+    End Sub
+
+    Private Sub Label3_Click(sender As Object, e As EventArgs) Handles Label3.Click
 
     End Sub
 End Class

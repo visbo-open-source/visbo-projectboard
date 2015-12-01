@@ -56,8 +56,8 @@ Public Module testModule
                 With singleShp
                     If isProjectType(CInt(.AlternativeText)) Then
                         Try
-                            hproj = ShowProjekte.getProject(singleShp.Name)
-                            todoListe.Add(singleShp.Name)
+                            hproj = ShowProjekte.getProject(singleShp.Name, True)
+                            todoListe.Add(hproj.name)
                         Catch ex As Exception
                             Call MsgBox(singleShp.Name & " nicht gefunden ...")
                             Exit Sub
@@ -664,7 +664,7 @@ Public Module testModule
 
                                 Try
 
-                                    Call zeichneProjektGrafik(pptSlide, pptShape, hproj)
+                                    Call zeichneProjektGrafik(pptSlide, pptShape, hproj, selectedMilestones)
 
                                 Catch ex As Exception
 
@@ -1273,7 +1273,8 @@ Public Module testModule
                             Case "Tabelle Projektziele"
 
                                 Try
-                                    Call zeichneProjektTabelleZiele(pptShape, hproj)
+
+                                    Call zeichneProjektTabelleZiele(pptShape, hproj, selectedMilestones)
 
                                 Catch ex As Exception
 
@@ -3824,7 +3825,7 @@ Public Module testModule
                     singleShp1 = awinSelection.Item(i)
 
                     Try
-                        hilfshproj = ShowProjekte.getProject(singleShp1.Name)
+                        hilfshproj = ShowProjekte.getProject(singleShp1.Name, True)
 
                     Catch ex As Exception
                         Throw New ArgumentException("Projekt nicht gefunden ...")
@@ -4139,6 +4140,11 @@ Public Module testModule
         Dim kennzeichnung As String
 
 
+        ' Checken, ob überhaupt was in der Projektliste drin ist ...
+        ' wenn nein, Exit 
+        If ProjektListe.Count = 0 Then
+            Exit Sub
+        End If
 
 
         If ProjektListe.Count > 1 Then
@@ -5081,9 +5087,19 @@ Public Module testModule
         For j = 1 To uniquePhases.Count
 
             phaseName = CStr(uniquePhases(j))
+            Dim isMissingDefinition As Boolean
 
-            phaseShape = PhaseDefinitions.getShape(phaseName)
-            shortName = PhaseDefinitions.getAbbrev(phaseName)
+            If PhaseDefinitions.Contains(phaseName) Then
+                phaseShape = PhaseDefinitions.getShape(phaseName)
+                shortName = PhaseDefinitions.getAbbrev(phaseName)
+                isMissingDefinition = False
+            Else
+                phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                shortName = missingPhaseDefinitions.getAbbrev(phaseName)
+                isMissingDefinition = True
+            End If
+
+
             ' Phasen-Shape 
             phaseShape.Copy()
             copiedShape = pptslide.Shapes.Paste()
@@ -5125,7 +5141,14 @@ Public Module testModule
 
             milestoneName = CStr(uniqueMilestones(j))
 
-            milestoneShape = MilestoneDefinitions.getShape(milestoneName)
+            ' Änderung tk 26.11.15
+            If MilestoneDefinitions.Contains(milestoneName) Then
+                milestoneShape = MilestoneDefinitions.getShape(milestoneName)
+            Else
+                milestoneShape = missingMilestoneDefinitions.getShape(milestoneName)
+            End If
+
+
             factor = milestoneShape.Width / milestoneShape.Height
             shortName = MilestoneDefinitions.getAbbrev(milestoneName)
             ' Phasen-Shape 
@@ -5647,7 +5670,7 @@ Public Module testModule
     ''' <param name="pptShape"></param>
     ''' <param name="hproj"></param>
     ''' <remarks></remarks>
-    Sub zeichneProjektGrafik(ByRef pptslide As pptNS.Slide, ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt)
+    Sub zeichneProjektGrafik(ByRef pptslide As pptNS.Slide, ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, Optional ByVal selectedMilestones As Collection = Nothing)
 
         Dim rng As xlNS.Range
         Dim selectionType As Integer = -1 ' keine Einschränkung
@@ -5681,6 +5704,13 @@ Public Module testModule
         Dim number As Integer = 0
         Dim nameList As New Collection
 
+
+        ' Änderung tk: damit nur die gewählten Milestones gezeichnet werden 
+        If Not IsNothing(selectedMilestones) Then
+            nameList = selectedMilestones
+        End If
+
+
         Call awinDeleteProjectChildShapes(0)
 
         With CType(appInstance.Worksheets(arrWsNames(3)), xlNS.Worksheet)
@@ -5702,7 +5732,8 @@ Public Module testModule
                 '.Width = CSng(pwidth)
             End With
 
-            Call zeichneStatusSymbolInPlantafel(hproj, 0)
+            ' Änderung tk 22.11.15 das Status Symbol ist hier eigentlich nicht gut aufgehoben ... 
+            'Call zeichneStatusSymbolInPlantafel(hproj, 0)
             ' das ist der aufruf, alle Meilensteine zu zeichnen, sie zu nummerieren;
             ' ausserdem wird die Kennung mitgegeben, dass dies für einen Report notwendig ist 
             Call zeichneMilestonesInProjekt(hproj, nameList, 4, 0, 0, True, number, True)
@@ -6818,13 +6849,29 @@ Public Module testModule
 
     End Sub
 
-    Sub zeichneProjektTabelleZiele(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt)
+    ''' <summary>
+    ''' zeichnet die Tabelle mit den Meilensteinen
+    ''' wenn eine Collection mit den Namen übergeben wird, dann werden nur die Meilensteine mit diesen Namen betrachtet 
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="selectedItems"></param>
+    ''' <remarks></remarks>
+    Sub zeichneProjektTabelleZiele(ByRef pptShape As pptNS.Shape, ByVal hproj As clsProjekt, Optional ByVal selectedItems As Collection = Nothing)
 
         Dim heute As Date = Date.Now
         Dim anzSpalten As Integer = 0
         Dim index As Integer = 0
         Dim tabelle As pptNS.Table
         Dim todoCollection As Collection = hproj.getAllElemIDs(True)
+
+        If IsNothing(selectedItems) Then
+            todoCollection = hproj.getAllElemIDs(True)
+        ElseIf selectedItems.Count = 0 Then
+            todoCollection = hproj.getAllElemIDs(True)
+        Else
+            todoCollection = hproj.getElemIdsOf(selectedItems, True)
+        End If
 
         Try
             tabelle = pptShape.Table
@@ -6885,7 +6932,7 @@ Public Module testModule
 
         End If
 
-        
+
 
 
     End Sub
@@ -8921,7 +8968,15 @@ Public Module testModule
                                 End If
 
 
-                                phaseShape = PhaseDefinitions.getShape(phaseName)
+
+                                ' Änderung tk 26.11 
+                                If PhaseDefinitions.Contains(phaseName) Then
+                                    phaseShape = PhaseDefinitions.getShape(phaseName)
+                                Else
+                                    phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                                End If
+
+
                                 Dim phaseStart As Date = cphase.getStartDate
                                 Dim phaseEnd As Date = cphase.getEndDate
                                 'Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName).Trim
@@ -9150,14 +9205,14 @@ Public Module testModule
 
 
 
-                                               
+
                                             End If
 
 
-                                    Else
-                                        ' selektierter Meilenstein 'milestoneName' nicht in dieser Phase enthalten
-                                        ' also: nichts tun
-                                    End If
+                                        Else
+                                            ' selektierter Meilenstein 'milestoneName' nicht in dieser Phase enthalten
+                                            ' also: nichts tun
+                                        End If
 
                                     End If
 
@@ -9581,7 +9636,15 @@ Public Module testModule
         Dim x2 As Double
 
 
-        milestoneTypShape = MilestoneDefinitions.getShape(MS.name)
+
+        ' Änderung tk 26.11.15
+        If MilestoneDefinitions.Contains(MS.name) Then
+            milestoneTypShape = MilestoneDefinitions.getShape(MS.name)
+        Else
+            milestoneTypShape = missingMilestoneDefinitions.getShape(MS.name)
+        End If
+
+
         Dim msdate As Date = MS.getDate
 
         Dim seitenverhaeltnis As Double
@@ -9955,7 +10018,12 @@ Public Module testModule
             phaseName = CStr(uniqueElemClasses(i))
             Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName)
 
-            phaseShape = PhaseDefinitions.getShape(phaseName)
+            ' Änderung tk 26.11.15
+            If PhaseDefinitions.Contains(phaseName) Then
+                phaseShape = PhaseDefinitions.getShape(phaseName)
+            Else
+                phaseShape = missingPhaseDefinitions.getShape(phaseName)
+            End If
 
             ' Phasen-Shape 
             phaseShape.Copy()
@@ -10029,7 +10097,13 @@ Public Module testModule
             msName = CStr(uniqueElemClasses.Item(i))
 
             msShortname = MilestoneDefinitions.getAbbrev(msName)
-            meilensteinShape = MilestoneDefinitions.getShape(msName)
+            
+            ' Änderung tk 26.11.15
+            If MilestoneDefinitions.Contains(msName) Then
+                meilensteinShape = MilestoneDefinitions.getShape(msName)
+            Else
+                meilensteinShape = missingMilestoneDefinitions.getShape(msName)
+            End If
 
 
             ' Meilenstein-Shape 

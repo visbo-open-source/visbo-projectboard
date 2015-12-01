@@ -86,6 +86,12 @@
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
+    <Compile Include="frmEditWoerterbuch.Designer.vb">
+      <DependentUpon>frmEditWoerterbuch.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmEditWoerterbuch.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="clsProtokoll.vb" />
     <Compile Include="frmAmpelBewertung.Designer.vb">
       <DependentUpon>frmAmpelBewertung.vb</DependentUpon>
@@ -239,6 +245,9 @@
     <EmbeddedResource Include="frmDependencies.resx">
       <DependentUpon>frmDependencies.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmEditWoerterbuch.resx">
+      <DependentUpon>frmEditWoerterbuch.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmHierarchySelection.resx">
       <DependentUpon>frmHierarchySelection.vb</DependentUpon>
     </EmbeddedResource>
@@ -310,6 +319,18 @@
       <Project>{0934cc5e-361f-443e-8af2-2468a38214a1}</Project>
       <Name>WpfWindow</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_right.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pfeil rechts 32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pfeil links 32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\selection_delete.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

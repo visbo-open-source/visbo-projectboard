@@ -511,7 +511,7 @@ Imports System.Drawing
                                 singleShp = awinSelection.Item(1)
 
                                 Try
-                                    hproj = ShowProjekte.getProject(singleShp.Name)
+                                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                                 Catch ex As Exception
                                     Call MsgBox("Projekt nicht gefunden ..." & singleShp.Name)
                                     Exit Sub
@@ -592,7 +592,7 @@ Imports System.Drawing
 
                 singleShp = awinSelection.Item(i)
                 key = singleShp.Name
-                hproj = ShowProjekte.getProject(singleShp.Name)
+                hproj = ShowProjekte.getProject(singleShp.Name, True)
                 vglWert = calcYCoordToZeile(singleShp.Top)
                 curCoord = projectboardShapes.getCoord(singleShp.Name)
 
@@ -701,7 +701,7 @@ Imports System.Drawing
 
                             ' jetzt muss Pname und Variant-Name ermittel werde 
                             Try
-                                hproj = ShowProjekte.getProject(.Name)
+                                hproj = ShowProjekte.getProject(.Name, True)
 
 
                                 If hproj.getShapeText <> .TextFrame2.TextRange.Text Then
@@ -1033,7 +1033,7 @@ Imports System.Drawing
                     singleShp = awinSelection.Item(i)
 
                     Try
-                        hproj = ShowProjekte.getProject(singleShp.Name)
+                        hproj = ShowProjekte.getProject(singleShp.Name, True)
                         hproj.extendedView = True
 
                     Catch ex As Exception
@@ -1096,7 +1096,7 @@ Imports System.Drawing
                     singleShp = awinSelection.Item(i)
 
                     Try
-                        hproj = ShowProjekte.getProject(singleShp.Name)
+                        hproj = ShowProjekte.getProject(singleShp.Name, True)
                         hproj.extendedView = False
 
                     Catch ex As Exception
@@ -1208,7 +1208,7 @@ Imports System.Drawing
             For i = 1 To awinSelection.Count
 
                 singleShp = awinSelection.Item(i)
-                hproj = ShowProjekte.getProject(singleShp.Name)
+                hproj = ShowProjekte.getProject(singleShp.Name, True)
 
                 ' das Projekt zur Standard Variante machen 
                 If hproj.variantName <> "" Then
@@ -1289,6 +1289,23 @@ Imports System.Drawing
 
         ' ''    Call MsgBox(ex.Message)
         ' ''End Try
+
+
+    End Sub
+
+    ''' <summary>
+    ''' ein Formular wird aufgeschaltet zum Hinzufügen von Abbildungs-Regeln unbekannte Begriffe zu bekannten Begriffen 
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT5editDictionary(control As IRibbonControl)
+
+        Dim editDictionary As New frmEditWoerterbuch
+
+
+        Call projektTafelInit()
+
+        editDictionary.Show()
 
 
     End Sub
@@ -1391,7 +1408,7 @@ Imports System.Drawing
                 singleShp = awinSelection.Item(1)
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                     pname = hproj.name
                 Catch ex As Exception
                     Call MsgBox(" Fehler in EditProject " & singleShp.Name & " , Modul: Tom2G1Resources")
@@ -1479,7 +1496,7 @@ Imports System.Drawing
                 singleShp = awinSelection.Item(1)
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
 
                     If hproj.Status = ProjektStatus(0) Then
 
@@ -1605,7 +1622,7 @@ Imports System.Drawing
                 singleShp = awinSelection.Item(i)
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                     pname = hproj.name
                 Catch ex As Exception
                     Call MsgBox(" Fehler! Projekt " & singleShp.Name & " nicht im Hauptspeicher")
@@ -3073,7 +3090,7 @@ Imports System.Drawing
                         With singleShp
                             If isProjectType(shapeArt) Then
 
-                                hproj = ShowProjekte.getProject(singleShp.Name)
+                                hproj = ShowProjekte.getProject(singleShp.Name, True)
                                 Call awinApplyAddOnRules(hproj, ruleSet)
                             End If
                         End With
@@ -3144,7 +3161,8 @@ Imports System.Drawing
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
                 Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
 
-                Call awinWritePhaseDefinitions()
+                'Call awinWritePhaseDefinitions()
+                'Call awinWritePhaseMilestoneDefinitions()
 
             Catch ex As Exception
                 appInstance.ActiveWorkbook.Close(SaveChanges:=False)
@@ -3199,7 +3217,10 @@ Imports System.Drawing
 
                 Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
 
-                Call awinWritePhaseDefinitions()
+                ' tk Änderung 26.11.15 das muss doch nach dem Import noch nicht gemacht werden
+                ' sondern erst nach Editieren Wörterbuch oder ganz am Schluss beim Beenden 
+                'Call awinWritePhaseDefinitions()
+                'Call awinWritePhaseMilestoneDefinitions()
 
             Catch ex As Exception
 
@@ -3494,24 +3515,24 @@ Imports System.Drawing
 
                 ' hier muss jetzt die todo Liste aufgebaut werden 
 
-                Dim shapeArt As Integer
-                shapeArt = kindOfShape(singleShp)
+                'Dim shapeArt As Integer
+                'shapeArt = kindOfShape(singleShp)
 
                 With singleShp
-                    If isProjectType(shapeArt) Then
+                    'If isProjectType(shapeArt) Then
 
-                        Try
+                    Try
 
-                            hproj = ShowProjekte.getProject(singleShp.Name)
-                            fileListe.Add(hproj.name, hproj.name)
+                        hproj = ShowProjekte.getProject(singleShp.Name, True)
+                        fileListe.Add(hproj.name, hproj.name)
 
-                        Catch ex As Exception
+                    Catch ex As Exception
 
-                            Call MsgBox(singleShp.Name & ": Fehler bei Aufbau todo Liste für Export ...")
+                        Call MsgBox(singleShp.Name & ": Fehler bei Aufbau todo Liste für Export ...")
 
-                        End Try
+                    End Try
 
-                    End If
+                    'End If
                 End With
 
             Next
@@ -3645,7 +3666,7 @@ Imports System.Drawing
                         If isProjectType(shapeArt) Then
 
                             Try
-                                hproj = ShowProjekte.getProject(singleShp.Name)
+                                hproj = ShowProjekte.getProject(singleShp.Name, True)
 
                                 ' jetzt wird dieses Projekt exportiert ... 
                                 Try
@@ -4218,9 +4239,10 @@ Imports System.Drawing
                 singleShp = awinSelection.Item(1)
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                 Catch ex As Exception
                     Call MsgBox("Projekt nicht gefunden ..." & singleShp.Name)
+                    enableOnUpdate = True
                     Exit Sub
                 End Try
 
@@ -4296,9 +4318,11 @@ Imports System.Drawing
                 pname = singleShp.Name
 
                 Try
-                    hproj = ShowProjekte.getProject(pname)
+                    hproj = ShowProjekte.getProject(pname, True)
+                    pname = hproj.name
                 Catch ex As Exception
                     Call MsgBox("Projekt nicht gefunden ..." & pname)
+                    enableOnUpdate = True
                     Exit Sub
                 End Try
 
@@ -4365,6 +4389,7 @@ Imports System.Drawing
 
             If awinSelection.Count = 1 Then
                 ' jetzt die Aktion durchführen ...
+                Dim ok As Boolean = True
                 singleShp = awinSelection.Item(1)
                 With singleShp
                     top = .Top + boxHeight + 5
@@ -4373,32 +4398,36 @@ Imports System.Drawing
                 height = 180
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                 Catch ex As Exception
-                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
-                    Exit Sub
+                    ok = False
+                    hproj = Nothing
                 End Try
 
-                Dim repObj As Excel.ChartObject
-                appInstance.EnableEvents = False
-                appInstance.ScreenUpdating = False
+                If ok Then
 
-                repObj = Nothing
+                    Dim repObj As Excel.ChartObject
+                    appInstance.EnableEvents = False
+                    appInstance.ScreenUpdating = False
 
-                width = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 6 * boxWidth + 10)
-
-                Try
-                    Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)
-
-                    ' jetzt wird das Pie-Diagramm gezeichnet 
-                    left = left + width + 10
-                    width = boxWidth * 14
-                    height = boxHeight * 10
                     repObj = Nothing
-                    Call createRessPieOfProject(hproj, repObj, auswahl, top, left, height, width)
-                Catch ex As Exception
-                    Call MsgBox(ex.Message)
-                End Try
+
+                    width = System.Math.Max(hproj.anzahlRasterElemente * boxWidth + 10, 6 * boxWidth + 10)
+
+                    Try
+                        Call createRessBalkenOfProject(hproj, repObj, auswahl, top, left, height, width)
+
+                        ' jetzt wird das Pie-Diagramm gezeichnet 
+                        left = left + width + 10
+                        width = boxWidth * 14
+                        height = boxHeight * 10
+                        repObj = Nothing
+                        Call createRessPieOfProject(hproj, repObj, auswahl, top, left, height, width)
+                    Catch ex As Exception
+                        Call MsgBox(ex.Message)
+                    End Try
+
+                End If
 
 
                 appInstance.EnableEvents = True
@@ -4454,9 +4483,10 @@ Imports System.Drawing
                 height = 180
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                 Catch ex As Exception
                     Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                    enableOnUpdate = True
                     Exit Sub
                 End Try
 
@@ -4536,9 +4566,10 @@ Imports System.Drawing
                 height = 180
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                 Catch ex As Exception
                     Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                    enableOnUpdate = True
                     Exit Sub
                 End Try
 
@@ -4614,9 +4645,10 @@ Imports System.Drawing
                 height = 180
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                 Catch ex As Exception
                     Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                    enableOnUpdate = True
                     Exit Sub
                 End Try
 
@@ -5078,10 +5110,11 @@ Imports System.Drawing
                 width = 400
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
 
                 Catch ex As Exception
                     Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                    enableOnUpdate = True
                     Exit Sub
                 End Try
 
@@ -5213,7 +5246,7 @@ Imports System.Drawing
                     If isProjectType(shapeArt) Then
 
                         Try
-                            hproj = ShowProjekte.getProject(.Name)
+                            hproj = ShowProjekte.getProject(.Name, True)
                             pName = hproj.name
                             If istLaufendesProjekt(hproj) Then
 
@@ -5335,7 +5368,7 @@ Imports System.Drawing
             For Each singleShp In awinSelection
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                     selektierteProjekte.Add(hproj)
                 Catch ex As Exception
                     Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
@@ -5618,7 +5651,7 @@ Imports System.Drawing
             For Each singleShp In awinSelection
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                     Call zeichneStatusSymbolInPlantafel(hproj, 0)
                 Catch ex As Exception
                     Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
@@ -5678,7 +5711,7 @@ Imports System.Drawing
 
                 Try
 
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                     Call zeichneDependenciesOfProject(hproj, PTdpndncyType.inhalt, 0)
                     atleastOne = True
 
@@ -5763,7 +5796,7 @@ Imports System.Drawing
             For Each singleshp In awinSelection
 
                 Try
-                    hproj = ShowProjekte.getProject(singleshp.Name)
+                    hproj = ShowProjekte.getProject(singleshp.Name, True)
                     selektierteProjekte.Add(hproj)
                 Catch ex As Exception
                     Call MsgBox("Projekt " & singleshp.Name & " nicht gefunden ...")
@@ -6843,7 +6876,7 @@ Imports System.Drawing
     Sub PTOPTVariantenOptimieren(control As IRibbonControl)
 
 
-        Dim optmierungsFenster As New frmOptimizeKPI
+        Dim optimierungsFenster As New frmOptimizeKPI
         Dim returnValue As DialogResult
 
 
@@ -6852,7 +6885,10 @@ Imports System.Drawing
         appInstance.EnableEvents = False
         enableOnUpdate = False
 
-        returnValue = optmierungsFenster.ShowDialog
+        ' Varianten-Optimierung 
+        optimierungsFenster.menueOption = 1
+
+        returnValue = optimierungsFenster.ShowDialog
         'optmierungsFenster.Show()
 
         appInstance.EnableEvents = True
@@ -6860,6 +6896,26 @@ Imports System.Drawing
 
     End Sub
 
+    Sub PTOPTFreiraumOptimieren(control As IRibbonControl)
+
+        Dim optimierungsFenster As New frmOptimizeKPI
+        Dim returnValue As DialogResult
+
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        ' Spielraum-Optimierung 
+        optimierungsFenster.menueOption = 2
+
+        returnValue = optimierungsFenster.ShowDialog
+        'optmierungsFenster.Show()
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+    End Sub
 
     Sub PT0ShowPortfolioBudgetCost(control As IRibbonControl)
         Dim selectionType As Integer = -1 ' keine Einschränkung
@@ -7053,7 +7109,7 @@ Imports System.Drawing
                 Dim dummyObj As Excel.ChartObject = Nothing
                 Dim hproj As clsProjekt
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                     Call createProjektErgebnisCharakteristik2(hproj, dummyObj, PThis.current)
                 Catch ex As Exception
                     Call MsgBox("Name nicht gefunden : " & singleShp.Name)
@@ -7114,7 +7170,7 @@ Imports System.Drawing
                 Dim hproj As clsProjekt
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                     Dim cproj As New clsProjekt
                     Dim top As Double = singleShp.Top + boxHeight + 2
                     Dim left As Double = singleShp.Left - boxWidth
@@ -7183,8 +7239,8 @@ Imports System.Drawing
                 singleShp2 = awinSelection.Item(2)
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp1.Name)
-                    cproj = ShowProjekte.getProject(singleShp2.Name)
+                    hproj = ShowProjekte.getProject(singleShp1.Name, True)
+                    cproj = ShowProjekte.getProject(singleShp2.Name, True)
                 Catch ex As Exception
                     Call MsgBox("Projekt nicht gefunden ...")
                     enableOnUpdate = True
@@ -7272,7 +7328,7 @@ Imports System.Drawing
                 singleShp1 = awinSelection.Item(1)
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp1.Name)
+                    hproj = ShowProjekte.getProject(singleShp1.Name, True)
                     vproj = Projektvorlagen.getProject(hproj.VorlagenName)
                     If IsNothing(vproj) Then
                         Call MsgBox("Vorlage" & hproj.VorlagenName & " nicht gefunden ...")
@@ -7325,8 +7381,8 @@ Imports System.Drawing
                 singleShp2 = awinSelection.Item(2)
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp1.Name)
-                    cproj = ShowProjekte.getProject(singleShp2.Name)
+                    hproj = ShowProjekte.getProject(singleShp1.Name, True)
+                    cproj = ShowProjekte.getProject(singleShp2.Name, True)
                 Catch ex As Exception
                     Call MsgBox("Projekt nicht gefunden ...")
                     enableOnUpdate = True
@@ -7415,7 +7471,7 @@ Imports System.Drawing
 
 
                         Try
-                            hproj = ShowProjekte.getProject(singleShp1.Name)
+                            hproj = ShowProjekte.getProject(singleShp1.Name, True)
                         Catch ex As Exception
                             Call MsgBox("Projekt nicht gefunden ...")
                             enableOnUpdate = True
@@ -7557,7 +7613,7 @@ Imports System.Drawing
 
 
                     Try
-                        hproj = ShowProjekte.getProject(singleShp1.Name)
+                        hproj = ShowProjekte.getProject(singleShp1.Name, True)
                     Catch ex As Exception
                         Call MsgBox("Projekt nicht gefunden ...")
                         enableOnUpdate = True
@@ -7686,8 +7742,8 @@ Imports System.Drawing
                 Dim hproj As clsProjekt
                 Dim cproj As clsProjekt
                 Try
-                    hproj = ShowProjekte.getProject(singleShp1.Name)
-                    cproj = ShowProjekte.getProject(singleShp2.Name)
+                    hproj = ShowProjekte.getProject(singleShp1.Name, True)
+                    cproj = ShowProjekte.getProject(singleShp2.Name, True)
                     Dim top As Double = singleShp1.Top + boxHeight + 2
                     Dim left As Double = singleShp1.Left - boxWidth
                     If left <= 0 Then
@@ -7752,7 +7808,7 @@ Imports System.Drawing
                     singleShp = awinSelection.Item(1)
 
 
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
                     With hproj
                         pName = .name
                         variantName = .variantName
@@ -7858,7 +7914,7 @@ Imports System.Drawing
                 singleShp = awinSelection.Item(1)
 
 
-                hproj = ShowProjekte.getProject(singleShp.Name)
+                hproj = ShowProjekte.getProject(singleShp.Name, True)
                 With hproj
                     pName = .name
                     variantName = .variantName
@@ -8206,7 +8262,7 @@ Imports System.Drawing
                 For i = 1 To anzElements
 
                     singleShp = awinSelection.Item(i)
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(singleShp.Name, True)
 
                     If i = 1 Then
                         schluessel = calcProjektKey(hproj)

@@ -294,7 +294,7 @@ Public Module Module1
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
     ' die Koordinaten werden in der Reihenfolge gespeichert: top, left, width, height 
-    Public frmCoord(19, 3) As Double
+    Public frmCoord(20, 3) As Double
 
     ' Enumeration Formulare - muss in Korrelation sein mit frmCoord: Dim von frmCoord muss der Anzahl Elemente entsprechen
     Public Enum PTfrm
@@ -318,6 +318,7 @@ Public Module Module1
         listSelR = 17
         listSelM = 18
         phaseInfo = 19
+        createVariant = 20
     End Enum
 
     Public Enum PTpinfo
@@ -1532,7 +1533,10 @@ Public Module Module1
 
         If selectedProjekte.Count > 0 Then
             selectedProjekte.Clear()
-            Call awinNeuZeichnenDiagramme(8)
+            If awinSettings.showValuesOfSelected Then
+                Call awinNeuZeichnenDiagramme(8)
+            End If
+
         End If
 
 

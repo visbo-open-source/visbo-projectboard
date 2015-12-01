@@ -49,7 +49,7 @@ Public Class frmProjektEingabe1
             Try
                 vorlagenDauer = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex).dauerInDays
             Catch ex As Exception
-                vorlagenDauer = Projektvorlagen.getProject(1).dauerInDays
+                vorlagenDauer = Projektvorlagen.getProject(0).dauerInDays
             End Try
 
 
