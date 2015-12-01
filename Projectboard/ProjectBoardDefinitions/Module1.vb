@@ -35,7 +35,7 @@ Public Module Module1
     Public xlsLogfile As Excel.Workbook = Nothing
     Public logmessage As String = ""
     Public anzFehler As Long = 0
-    Public fullprotocol As Boolean = True
+    Public fullProtocol As Boolean = False
 
 
     Public vergleichsfarbe0 As Object

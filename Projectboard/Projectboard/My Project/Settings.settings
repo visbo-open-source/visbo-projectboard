@@ -6,10 +6,10 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\BMW ItO2015\</Value>
+      <Value Profile="(Default)">\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BMW Demo\</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">MPPIto15</Value>
+      <Value Profile="(Default)">BMWDemo</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -28,6 +28,8 @@ Partial Public Class rxf
     
     Private projectproxyField() As rxfProjectproxy
     
+    Private rplandocumentField As rxfRplandocument
+    
     Private projectField() As rxfProject
     
     Private ratingField() As rxfRating
@@ -50,6 +52,16 @@ Partial Public Class rxf
         End Get
         Set
             Me.projectproxyField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property rplandocument() As rxfRplandocument
+        Get
+            Return Me.rplandocumentField
+        End Get
+        Set
+            Me.rplandocumentField = value
         End Set
     End Property
     
@@ -140,6 +152,172 @@ End Class
 Partial Public Class rxfProjectproxy
     
     Private idField As String
+    
+    '''<remarks/>
+    <System.Xml.Serialization.XmlAttributeAttribute()>  _
+    Public Property id() As String
+        Get
+            Return Me.idField
+        End Get
+        Set
+            Me.idField = value
+        End Set
+    End Property
+End Class
+
+'''<remarks/>
+<System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.0.30319.33440"),  _
+ System.SerializableAttribute(),  _
+ System.Diagnostics.DebuggerStepThroughAttribute(),  _
+ System.ComponentModel.DesignerCategoryAttribute("code"),  _
+ System.Xml.Serialization.XmlTypeAttribute(AnonymousType:=true, [Namespace]:="http://www.actano.de/2007/rxf")>  _
+Partial Public Class rxfRplandocument
+    
+    Private creationDateField As Date
+    
+    Private modificationDateField As Date
+    
+    Private positionField As Byte
+    
+    Private versionField As Byte
+    
+    Private descriptionField As String
+    
+    Private documentTypeField As String
+    
+    Private enabledField As Boolean
+    
+    Private parentRPlanObjectField As String
+    
+    Private nameField As String
+    
+    Private uRLField As String
+    
+    Private responsibleField As String
+    
+    Private documentStatusField As String
+    
+    Private idField As String
+    
+    '''<remarks/>
+    Public Property creationDate() As Date
+        Get
+            Return Me.creationDateField
+        End Get
+        Set
+            Me.creationDateField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property modificationDate() As Date
+        Get
+            Return Me.modificationDateField
+        End Get
+        Set
+            Me.modificationDateField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property position() As Byte
+        Get
+            Return Me.positionField
+        End Get
+        Set
+            Me.positionField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property version() As Byte
+        Get
+            Return Me.versionField
+        End Get
+        Set
+            Me.versionField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property description() As String
+        Get
+            Return Me.descriptionField
+        End Get
+        Set
+            Me.descriptionField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property documentType() As String
+        Get
+            Return Me.documentTypeField
+        End Get
+        Set
+            Me.documentTypeField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property enabled() As Boolean
+        Get
+            Return Me.enabledField
+        End Get
+        Set
+            Me.enabledField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property parentRPlanObject() As String
+        Get
+            Return Me.parentRPlanObjectField
+        End Get
+        Set
+            Me.parentRPlanObjectField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property name() As String
+        Get
+            Return Me.nameField
+        End Get
+        Set
+            Me.nameField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property URL() As String
+        Get
+            Return Me.uRLField
+        End Get
+        Set
+            Me.uRLField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property responsible() As String
+        Get
+            Return Me.responsibleField
+        End Get
+        Set
+            Me.responsibleField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property documentStatus() As String
+        Get
+            Return Me.documentStatusField
+        End Get
+        Set
+            Me.documentStatusField = value
+        End Set
+    End Property
     
     '''<remarks/>
     <System.Xml.Serialization.XmlAttributeAttribute()>  _
@@ -323,6 +501,8 @@ Partial Public Class rxfRating
     
     Private lastAuthorField As String
     
+    Private completionStatusField As Byte
+    
     Private prognosisField As Object
     
     Private resultField As Object
@@ -368,6 +548,16 @@ Partial Public Class rxfRating
         End Get
         Set
             Me.lastAuthorField = value
+        End Set
+    End Property
+    
+    '''<remarks/>
+    Public Property completionStatus() As Byte
+        Get
+            Return Me.completionStatusField
+        End Get
+        Set
+            Me.completionStatusField = value
         End Set
     End Property
     
