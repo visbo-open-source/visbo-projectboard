@@ -9433,7 +9433,7 @@ Public Module awinGeneralModules
             tstr = Split(hstr, ".", 2)
 
             Dim tabblattname As String = tstr(0)
-            Dim wslogbuch As Excel.Worksheet
+            Dim wslogbuch As Excel.Worksheet = Nothing
 
            
             Dim protokollLine As New clsProtokoll
@@ -9671,8 +9671,14 @@ Public Module awinGeneralModules
                         With cphase
 
                             ' hier muss für gleiche PhasenNamen als Geschwister noch eine lfdNummer angehängt werden
-                            ' TODO
-                            '
+                            ' es muss überprüft werden, ob es Geschwister mit gleichem Namen gibt:
+                            ' wenn ja, wird an den mappedPhaseName eine LFdNr. ergänzt,bis der Name innerhalb der Geschwistergruppe eindeutig ist.
+
+                            If awinSettings.createUniqueSiblingNames Then
+                                mappedPhasename = hproj.hierarchy.findUniqueGeschwisterName(parentelemID, mappedPhasename, False)
+                            End If
+
+
                             .nameID = hproj.hierarchy.findUniqueElemKey(mappedPhasename, False)
 
                             Dim Duration As Integer = calcDauerIndays(aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value)
@@ -9773,7 +9779,7 @@ Public Module awinGeneralModules
                         cmilestone = New clsMeilenstein(parent:=parentphase)
                         cBewertung = New clsBewertung
 
-                        milestoneName = aktTask_j.name
+                        milestoneName = mappedMSname
                         If DateDiff(DateInterval.Month, aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value) = 0 Then
 
                             milestonedate = aktTask_j.actualDate.start.Value
@@ -9822,7 +9828,16 @@ Public Module awinGeneralModules
                         With cmilestone
                             .setDate = milestonedate
                             '.verantwortlich = resultVerantwortlich
-                            .nameID = hproj.hierarchy.findUniqueElemKey(milestoneName, True)
+
+                            ' hier muss für gleiche PhasenNamen als Geschwister noch eine lfdNummer angehängt werden
+                            ' es muss überprüft werden, ob es Geschwister mit gleichem Namen gibt:
+                            ' wenn ja, wird an den mappedPhaseName eine LFdNr. ergänzt,bis der Name innerhalb der Geschwistergruppe eindeutig ist.
+
+                            If awinSettings.createUniqueSiblingNames Then
+                                mappedMSname = hproj.hierarchy.findUniqueGeschwisterName(parentelemID, mappedMSname, False)
+                            End If
+
+                            .nameID = hproj.hierarchy.findUniqueElemKey(mappedMSname, True)
                             If Not cBewertung Is Nothing Then
                                 .addBewertung(cBewertung)
                             End If
