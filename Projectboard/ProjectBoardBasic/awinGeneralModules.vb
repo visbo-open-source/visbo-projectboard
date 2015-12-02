@@ -4629,8 +4629,37 @@ Public Module awinGeneralModules
                                     ElseIf isMeilenstein Then
                                         If MilestoneDefinitions.Contains(objectName) Then
 
-                                            phaseNameID = lastPhase.nameID
-                                            cMilestone = New clsMeilenstein(parent:=lastPhase)
+                                            Dim hrchynode As New clsHierarchyNode
+                                            hrchynode.elemName = cphase.name
+
+                                            If aktLevel = 0 Then
+                                                ' Fehler, denn Meilenstein kann nicht parallel zu Rootphase sein??
+                                                Call logfileSchreiben(("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden:" & vbLf & "Level des Meilensteins ist nicht akzeptabel" & objectName), hproj.name, anzFehler)
+                                                Throw New ArgumentException("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden:" & vbLf & "Level des Meilensteins ist nicht akzeptabel" & objectName)
+
+                                            ElseIf aktLevel = 1 Then
+                                                phaseNameID = rootPhaseName
+
+                                            ElseIf aktLevel - lastLevel = 1 Then
+                                                phaseNameID = lastelemID
+
+                                            ElseIf aktLevel - lastLevel = 0 Then
+                                                phaseNameID = hproj.hierarchy.getParentIDOfID(lastelemID)
+
+                                            ElseIf lastLevel - aktLevel >= 1 Then
+                                                hilfselemID = lastelemID
+                                                For l As Integer = 1 To lastLevel - aktLevel
+                                                    hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                                                Next l
+                                                phaseNameID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                                            Else
+                                                Call logfileSchreiben(("Fehler, Lesen Termine: Hierarchie kann nicht richtig aufgebaut werden: Meilenstein " & objectName), hproj.name, anzFehler)
+                                                Throw New ArgumentException("Fehler, Lesen Termine:  Hierarchie kann nicht richtig aufgebaut werden: Meilenstein " & objectName)
+                                            End If
+
+
+                                            Dim hilfsPhase As clsPhase = hproj.getPhaseByID(phaseNameID)
+                                            cMilestone = New clsMeilenstein(parent:=hproj.getPhaseByID(phaseNameID))
                                             cBewertung = New clsBewertung
 
                                             milestoneName = objectName.Trim
@@ -4640,21 +4669,21 @@ Public Module awinGeneralModules
                                             ' muss abgebrochen werden 
 
                                             If Not awinSettings.milestoneFreeFloat And _
-                                                (DateDiff(DateInterval.Day, cphase.getStartDate, milestoneDate) < 0 Or _
-                                                 DateDiff(DateInterval.Day, cphase.getEndDate, milestoneDate) > 0) Then
+                                                (DateDiff(DateInterval.Day, hilfsPhase.getStartDate, milestoneDate) < 0 Or _
+                                                 DateDiff(DateInterval.Day, hilfsPhase.getEndDate, milestoneDate) > 0) Then
 
                                                 Call logfileSchreiben(("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
-                                                                    milestoneName & " nicht innerhalb " & cphase.name & vbLf & _
+                                                                    milestoneName & " nicht innerhalb " & hilfsPhase.name & vbLf & _
                                                                          "Korrigieren Sie bitte diese Inkonsistenz in der Datei '"), hproj.name, anzFehler)
                                                 Throw New Exception("Fehler, Lesen Termine: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
-                                                                    milestoneName & " nicht innerhalb " & cphase.name & vbLf & _
+                                                                    milestoneName & " nicht innerhalb " & hilfsPhase.name & vbLf & _
                                                                          "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
                                             End If
 
 
                                             ' wenn kein Datum angegeben wurde, soll das Ende der Phase als Datum angenommen werden 
                                             If DateDiff(DateInterval.Month, hproj.startDate, milestoneDate) < -1 Then
-                                                milestoneDate = hproj.startDate.AddDays(cphase.startOffsetinDays + cphase.dauerInDays)
+                                                milestoneDate = hproj.startDate.AddDays(hilfsPhase.startOffsetinDays + hilfsPhase.dauerInDays)
                                             Else
                                                 If DateDiff(DateInterval.Day, endedateProjekt, endeDate) > 0 Then
                                                     Call logfileSchreiben(("Fehler, Lesen Termine: der Meilenstein '" & milestoneName & "' liegt später als das Ende des gesamten Projekts" & vbLf &

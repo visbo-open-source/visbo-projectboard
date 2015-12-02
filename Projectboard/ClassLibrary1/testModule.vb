@@ -9240,66 +9240,69 @@ Public Module testModule
 
                     Call hproj.selMilestonesToselPhase(selectedPhases, selectedMilestones, True, tmpint, drawliste)
 
-                    ' Abfrage, ob zur letzten gezeichneten Phase noch Meilensteine aus untergeordneten Phasen gezeichnet werden müssen
-                    If drawliste.ContainsKey(lastPhase.nameID) Then
+                    If Not IsNothing(lastPhase) Then
+                        ' Abfrage, ob zur letzten gezeichneten Phase noch Meilensteine aus untergeordneten Phasen gezeichnet werden müssen
+                        If drawliste.ContainsKey(lastPhase.nameID) Then
 
-                        ' es müssen zur letzten Phase noch Meilensteine gezeichnet werden, die in einer nicht selektierten Phase liegen, die Child von der lastphase ist
-                        ' dafür: weiterschalten der Zeile
-                        phasenGrafikYPos = phasenGrafikYPos + zeilenhoehe
-                        ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
-                        '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
-                        ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
-                        projektNamenYPos = projektNamenYPos + zeilenhoehe
-                        ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
-                        milestoneGrafikYPos = milestoneGrafikYPos + zeilenhoehe
-                        ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
-                        ampelGrafikYPos = ampelGrafikYPos + zeilenhoehe
-                        anzZeilenGezeichnet = anzZeilenGezeichnet + 1
+                            ' es müssen zur letzten Phase noch Meilensteine gezeichnet werden, die in einer nicht selektierten Phase liegen, die Child von der lastphase ist
+                            ' dafür: weiterschalten der Zeile
+                            phasenGrafikYPos = phasenGrafikYPos + zeilenhoehe
+                            ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
+                            '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
+                            ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
+                            projektNamenYPos = projektNamenYPos + zeilenhoehe
+                            ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
+                            milestoneGrafikYPos = milestoneGrafikYPos + zeilenhoehe
+                            ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
+                            ampelGrafikYPos = ampelGrafikYPos + zeilenhoehe
+                            anzZeilenGezeichnet = anzZeilenGezeichnet + 1
 
 
-                        ' ur: Meilensteine aus drawliste.value zeichnen
-                        Dim zeichnenMS As Boolean = False
-                        Dim msliste As SortedList
-                        Dim msi As Integer
-                        msliste = drawliste(lastPhase.nameID)
+                            ' ur: Meilensteine aus drawliste.value zeichnen
+                            Dim zeichnenMS As Boolean = False
+                            Dim msliste As SortedList
+                            Dim msi As Integer
+                            msliste = drawliste(lastPhase.nameID)
 
-                        For msi = 0 To msliste.Count - 1
+                            For msi = 0 To msliste.Count - 1
 
-                            Dim msID As String = msliste.GetByIndex(msi)
-                            Dim milestone As clsMeilenstein = hproj.getMilestoneByID(msID)
+                                Dim msID As String = msliste.GetByIndex(msi)
+                                Dim milestone As clsMeilenstein = hproj.getMilestoneByID(msID)
 
-                            ' Nachsehen, ob MS -Datum existiert und größer StartofCalender ist und im Zeitraum liegt, oder evt. trotzdem gezeichnet werden soll
-                            If IsNothing(milestone.getDate) Then
-                                zeichnenMS = False
-                            Else
-                                If DateDiff(DateInterval.Day, StartofCalendar, milestone.getDate) >= 0 Then
+                                ' Nachsehen, ob MS -Datum existiert und größer StartofCalender ist und im Zeitraum liegt, oder evt. trotzdem gezeichnet werden soll
+                                If IsNothing(milestone.getDate) Then
+                                    zeichnenMS = False
+                                Else
+                                    If DateDiff(DateInterval.Day, StartofCalendar, milestone.getDate) >= 0 Then
 
-                                    ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
-                                    If awinSettings.mppShowAllIfOne Then
-                                        zeichnenMS = True
-                                    Else
-                                        If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
+                                        ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+                                        If awinSettings.mppShowAllIfOne Then
                                             zeichnenMS = True
                                         Else
-                                            zeichnenMS = False
+                                            If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
+                                                zeichnenMS = True
+                                            Else
+                                                zeichnenMS = False
+                                            End If
                                         End If
+                                    Else
+                                        zeichnenMS = False
                                     End If
-                                Else
-                                    zeichnenMS = False
                                 End If
-                            End If
 
-                            If zeichnenMS Then
-                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, milestone, hproj, milestoneGrafikYPos, _
-                                                                    StartofPPTCalendar, endOFPPTCalendar, _
-                                                                    drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
-                                                                    MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
-                                                                    yOffsetMsToText, yOffsetMsToDate)
-                            End If
-                        Next
+                                If zeichnenMS Then
+                                    Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, milestone, hproj, milestoneGrafikYPos, _
+                                                                        StartofPPTCalendar, endOFPPTCalendar, _
+                                                                        drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
+                                                                        MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
+                                                                        yOffsetMsToText, yOffsetMsToDate)
+                                End If
+                            Next
+
+                        End If
 
                     End If
-
+                   
                     '''' ur: 01.10.2015: selektierte Meilensteine zeichnen, die zu keiner der selektierten Phasen gehören.
 
                     If drawliste.ContainsKey(rootPhaseName) Then

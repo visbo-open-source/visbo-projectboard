@@ -40,11 +40,17 @@ Public Class frmSelectRPlanImport
             For i = 1 To listOfImportfiles.Count
                 dateiName = Dir(listOfImportfiles.Item(i - 1))
                 If Not IsNothing(dateiName) Then
-                    If dateiName.Contains(".rxf") Then
-                        RPLANImportDropbox.Items.Add(dateiName)
+                    If dirname = importOrdnerNames(PTImpExp.rplanrxf) Then
+                        If dateiName.Contains(".rxf") Then
+                            RPLANImportDropbox.Items.Add(dateiName)
+                        End If
+                    Else
+                        If dateiName.Contains(".xls") Then
+                            RPLANImportDropbox.Items.Add(dateiName)
+                        End If
                     End If
-
                 End If
+
 
             Next i
         Catch ex As Exception
