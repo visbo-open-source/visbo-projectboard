@@ -9344,9 +9344,9 @@ Public Module testModule
 
                     Call hproj.selMilestonesToselPhase(selectedPhases, selectedMilestones, True, tmpint, drawliste)
 
-                    ' Abfrage, ob zur letzten gezeichneten Phase noch Meilensteine aus untergeordneten Phasen gezeichnet werden müssen
-                    ' Änderung tk 1.12.15 lastPhase darf nicht Nothing sein, sonst gibt es Fehler ...
+
                     If Not IsNothing(lastPhase) Then
+                        ' Abfrage, ob zur letzten gezeichneten Phase noch Meilensteine aus untergeordneten Phasen gezeichnet werden müssen
 
                         If drawliste.ContainsKey(lastPhase.nameID) Then
 
@@ -9405,15 +9405,16 @@ Public Module testModule
                                 End If
                             Next
 
+
                         End If
 
+
                     End If
-                    
 
                     '''' ur: 01.10.2015: selektierte Meilensteine zeichnen, die zu keiner der selektierten Phasen gehören.
 
                     If drawliste.ContainsKey(rootPhaseName) Then
-                  
+
                         phasenGrafikYPos = phasenGrafikYPos + zeilenhoehe
                         ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
                         '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
