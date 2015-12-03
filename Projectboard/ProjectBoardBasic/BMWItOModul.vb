@@ -74,7 +74,10 @@ Public Module BMWItOModul
 
         ' 
         Dim logMessage As String = ""
-        Dim fullProtocol As Boolean = True
+
+        ' ur: 1.12.2015: wird nun Public fullProtocol As Boolean = True  
+        ' und damit global definiert, da auch in RXFImport benötigt.
+        ' Dim fullProtocol As Boolean = True
 
 
         Dim milestoneIX As Integer = MilestoneDefinitions.Count + 1

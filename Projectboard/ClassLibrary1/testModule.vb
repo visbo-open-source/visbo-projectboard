@@ -1338,28 +1338,32 @@ Public Module testModule
                             Case "Ergebnis"
 
 
+                                Try
+                                    If qualifier = "letzter Stand" Then
+                                        Call createProjektErgebnisCharakteristik2(lproj, obj, PThis.letzterStand)
 
-                                If qualifier = "letzter Stand" Then
-                                    Call createProjektErgebnisCharakteristik2(lproj, obj, PThis.letzterStand)
+                                    ElseIf qualifier = "Beauftragung" Then
+                                        Call createProjektErgebnisCharakteristik2(bproj, obj, PThis.beauftragung)
 
-                                ElseIf qualifier = "Beauftragung" Then
-                                    Call createProjektErgebnisCharakteristik2(bproj, obj, PThis.beauftragung)
+                                    Else
+                                        Call createProjektErgebnisCharakteristik2(hproj, obj, PThis.current)
 
-                                Else
-                                    Call createProjektErgebnisCharakteristik2(hproj, obj, PThis.current)
-
-                                End If
+                                    End If
 
 
 
-                                reportObj = obj
+                                    reportObj = obj
 
-                                Dim ax As xlNS.Axis = CType(reportObj.Chart.Axes(xlNS.XlAxisType.xlCategory), Excel.Axis)
-                                With ax
-                                    .TickLabels.Font.Size = 12
-                                End With
+                                    Dim ax As xlNS.Axis = CType(reportObj.Chart.Axes(xlNS.XlAxisType.xlCategory), Excel.Axis)
+                                    With ax
+                                        .TickLabels.Font.Size = 12
+                                    End With
 
-                                notYetDone = True
+                                    notYetDone = True
+                                Catch ex As Exception
+
+                                End Try
+                                
 
 
                             Case "Strategie/Risiko"
@@ -1367,52 +1371,45 @@ Public Module testModule
                                 Dim mycollection As New Collection
 
                                 'deleteStack.Add(.Name, .Name)
+                                Try
+                                    mycollection.Add(pname)
 
-                                mycollection.Add(pname)
+                                    Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight)
+                                    notYetDone = True
+                                Catch ex As Exception
 
-                                'htop = topOfMagicBoard + hproj.tfZeile * boxHeight
-                                'hleft = hproj.tfSpalte * boxWidth - 10
-                                'hwidth = 12 * boxWidth
-                                'hheight = 8 * boxHeight
-
-                                Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight)
-
-                                notYetDone = True
+                                End Try
+                                
 
                             Case "Personalbedarf"
 
-                                'htop = 100
-                                'hleft = 100
-                                'hwidth = boxWidth * 14
-                                'hheight = boxHeight * 10
+                                Try
+                                    auswahl = 1
+                                    Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
 
-
-                                auswahl = 1
-                                Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
-
-                                reportObj = obj
-                                notYetDone = True
+                                    reportObj = obj
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Personal-Bedarf ist Null"
+                                End Try
+                                
 
                             Case "Personalkosten"
 
-                                'htop = 100
-                                'hleft = 100
-                                'hwidth = boxWidth * 14
-                                'hheight = boxHeight * 10
+                                Try
+                                    auswahl = 2
+                                    Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
 
-                                auswahl = 2
-                                Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                    reportObj = obj
+                                    notYetDone = True
 
-                                reportObj = obj
-                                notYetDone = True
-
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Personal-Kosten sind Null"
+                                End Try
+                                
                             Case "Sonstige Kosten"
 
 
-                                'htop = 100
-                                'hleft = 100
-                                'hwidth = boxWidth * 14
-                                'hheight = boxHeight * 10
 
                                 Try
                                     auswahl = 1
@@ -1667,226 +1664,328 @@ Public Module testModule
 
                             Case "Soll-Ist1 Personalkosten"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
-                                Dim vglBaseline As Boolean = True
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
+                                    Dim vglBaseline As Boolean = True
 
-                                Call createSollIstOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Personalkosten" & ke
-                                notYetDone = True
+                                    boxName = "Personalkosten" & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist2 Personalkosten"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
-                                Dim vglBaseline As Boolean = False
+
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
+                                    Dim vglBaseline As Boolean = False
 
 
-                                Call createSollIstOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Personalkosten" & ke
-                                notYetDone = True
+                                    boxName = "Personalkosten" & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist1C Personalkosten"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
-                                Dim vglBaseline As Boolean = True
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
+                                    Dim vglBaseline As Boolean = True
 
-                                Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Personalkosten" & ke
-                                notYetDone = True
+                                    boxName = "Personalkosten" & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist2C Personalkosten"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
-                                Dim vglBaseline As Boolean = False
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
+                                    Dim vglBaseline As Boolean = False
 
-                                Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 1, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Personalkosten" & ke
-                                notYetDone = True
+                                    boxName = "Personalkosten" & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
+                                End Try
+                               
 
 
                             Case "Soll-Ist1 Sonstige Kosten"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
-                                Dim vglBaseline As Boolean = True
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
+                                    Dim vglBaseline As Boolean = True
 
-                                reportObj = Nothing
-                                Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Sonstige Kosten" & ke
-                                notYetDone = True
+                                    boxName = "Sonstige Kosten" & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist2 Sonstige Kosten"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
-                                Dim vglBaseline As Boolean = False
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
+                                    Dim vglBaseline As Boolean = False
 
-                                reportObj = Nothing
-                                Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Sonstige Kosten" & ke
-                                notYetDone = True
+                                    boxName = "Sonstige Kosten" & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist1C Sonstige Kosten"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
-                                Dim vglBaseline As Boolean = True
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
+                                    Dim vglBaseline As Boolean = True
 
 
-                                reportObj = Nothing
-                                Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Sonstige Kosten" & ke
-                                notYetDone = True
+                                    boxName = "Sonstige Kosten" & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist2C Sonstige Kosten"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
-                                Dim vglBaseline As Boolean = False
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
+                                    Dim vglBaseline As Boolean = False
 
 
-                                reportObj = Nothing
-                                Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Sonstige Kosten" & ke
-                                notYetDone = True
+                                    boxName = "Sonstige Kosten" & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist1 Gesamtkosten"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
-                                Dim vglBaseline As Boolean = True
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
+                                    Dim vglBaseline As Boolean = True
 
-                                reportObj = Nothing
-                                Call createSollIstOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Gesamtkosten" & ke
-                                notYetDone = True
+                                    boxName = "Gesamtkosten" & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist2 Gesamtkosten"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
-                                Dim vglBaseline As Boolean = False
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
+                                    Dim vglBaseline As Boolean = False
 
-                                reportObj = Nothing
-                                Call createSollIstOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Gesamtkosten" & ke
-                                notYetDone = True
+                                    boxName = "Gesamtkosten" & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist1C Gesamtkosten"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
-                                Dim vglBaseline As Boolean = True
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Baseline verglichen
+                                    Dim vglBaseline As Boolean = True
 
-                                reportObj = Nothing
-                                Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Gesamtkosten" & ke
-                                notYetDone = True
+                                    boxName = "Gesamtkosten" & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist2C Gesamtkosten"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
-                                Dim vglBaseline As Boolean = False
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
+                                    Dim vglBaseline As Boolean = False
 
-                                reportObj = Nothing
-                                Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 3, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Gesamtkosten" & ke
-                                notYetDone = True
+                                    boxName = "Gesamtkosten" & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
+                                End Try
+                                
 
 
                             Case "Soll-Ist1 Rolle"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Beauftragung verglichen
-                                Dim vglBaseline As Boolean = True
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Beauftragung verglichen
+                                    Dim vglBaseline As Boolean = True
 
-                                reportObj = Nothing
-                                Call createSollIstOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Rolle " & qualifier & ze
-                                notYetDone = True
+                                    boxName = "Rolle " & qualifier & ze
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist2 Rolle"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
-                                Dim vglBaseline As Boolean = False
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
+                                    Dim vglBaseline As Boolean = False
 
-                                reportObj = Nothing
-                                Call createSollIstOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Rolle " & qualifier & ze
-                                notYetDone = True
+                                    boxName = "Rolle " & qualifier & ze
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist1C Rolle"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Beauftragung verglichen
-                                Dim vglBaseline As Boolean = True
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Beauftragung verglichen
+                                    Dim vglBaseline As Boolean = True
 
 
-                                reportObj = Nothing
-                                Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Rolle " & qualifier & ze
-                                notYetDone = True
+                                    boxName = "Rolle " & qualifier & ze
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist2C Rolle"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
-                                Dim vglBaseline As Boolean = False
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
+                                    Dim vglBaseline As Boolean = False
 
 
-                                reportObj = Nothing
-                                Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 4, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Rolle " & qualifier & ze
-                                notYetDone = True
+                                    boxName = "Rolle " & qualifier & ze
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
+                                End Try
+                               
 
                             Case "Soll-Ist1 Kostenart"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Beauftragung verglichen
-                                Dim vglBaseline As Boolean = True
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Beauftragung verglichen
+                                    Dim vglBaseline As Boolean = True
 
-                                reportObj = Nothing
-                                Call createSollIstOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Kostenart " & qualifier & ke
-                                notYetDone = True
+                                    boxName = "Kostenart " & qualifier & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist2 Kostenart"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
-                                Dim vglBaseline As Boolean = False
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Last Freigabe verglichen
+                                    Dim vglBaseline As Boolean = False
 
-                                reportObj = Nothing
-                                Call createSollIstOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Kostenart " & qualifier & ke
-                                notYetDone = True
+                                    boxName = "Kostenart " & qualifier & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
+                                End Try
+                                
 
                             Case "Soll-Ist1C Kostenart"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der Beauftragung verglichen
-                                Dim vglBaseline As Boolean = True
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der Beauftragung verglichen
+                                    Dim vglBaseline As Boolean = True
 
-                                reportObj = Nothing
-                                Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Kostenart " & qualifier & ke
-                                notYetDone = True
+                                    boxName = "Kostenart " & qualifier & ke
+                                    notYetDone = True
 
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
+                                End Try
+
+                                
                             Case "Soll-Ist2C Kostenart"
 
-                                ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
-                                Dim vglBaseline As Boolean = False
+                                Try
+                                    ' bei bereits beauftragten Projekten: es wird Current mit der last freigabe verglichen
+                                    Dim vglBaseline As Boolean = False
 
-                                reportObj = Nothing
-                                Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
+                                    reportObj = Nothing
+                                    Call createSollIstCurveOfProject(hproj, reportObj, Date.Now, 5, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                boxName = "Kostenart " & qualifier & ke
-                                notYetDone = True
+                                    boxName = "Kostenart " & qualifier & ke
+                                    notYetDone = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
+                                End Try
+                                
 
                             Case "Ampel-Farbe"
 
@@ -2386,7 +2485,8 @@ Public Module testModule
                             Try
                                 Call zeichneSzenarioTabelle(pptShape, pptSlide)
                             Catch ex As Exception
-                                .TextFrame2.TextRange.Text = ex.Message
+                                ' in einer Tabelle führt der folgende Befehl zu einem Fehler 
+                                '.TextFrame2.TextRange.Text = ex.Message
                             End Try
 
 
@@ -2399,7 +2499,8 @@ Public Module testModule
                             Try
                                 Call zeichneTabelleProjekteMitElemImMonat(pptShape, pptSlide, myCollection, DiagrammTypen(5))
                             Catch ex As Exception
-                                .TextFrame2.TextRange.Text = ex.Message
+                                ' in einer Tabelle führt der folgende Befehl zu einem Fehler 
+                                '.TextFrame2.TextRange.Text = ex.Message
                             End Try
 
                         Case "Tabelle ProjekteMitPhImMonat"
@@ -2411,7 +2512,8 @@ Public Module testModule
                             Try
                                 Call zeichneTabelleProjekteMitElemImMonat(pptShape, pptSlide, myCollection, DiagrammTypen(0))
                             Catch ex As Exception
-                                .TextFrame2.TextRange.Text = ex.Message
+                                ' in einer Tabelle führt der folgende Befehl zu einem Fehler 
+                                '.TextFrame2.TextRange.Text = ex.Message
                             End Try
 
 
@@ -2423,7 +2525,8 @@ Public Module testModule
                             Try
                                 Call zeichneTabelleProjekteMitElemImMonat(pptShape, pptSlide, myCollection, DiagrammTypen(1))
                             Catch ex As Exception
-                                .TextFrame2.TextRange.Text = ex.Message
+                                ' in einer Tabelle führt der folgende Befehl zu einem Fehler 
+                                '.TextFrame2.TextRange.Text = ex.Message
                             End Try
 
                         Case "Tabelle ProjekteMitKostenartImMonat"
@@ -2434,7 +2537,8 @@ Public Module testModule
                             Try
                                 Call zeichneTabelleProjekteMitElemImMonat(pptShape, pptSlide, myCollection, DiagrammTypen(2))
                             Catch ex As Exception
-                                .TextFrame2.TextRange.Text = ex.Message
+                                ' in einer Tabelle führt der folgende Befehl zu einem Fehler 
+                                '.TextFrame2.TextRange.Text = ex.Message
                             End Try
 
                         Case "Portfolio-Name"
@@ -9240,70 +9344,77 @@ Public Module testModule
 
                     Call hproj.selMilestonesToselPhase(selectedPhases, selectedMilestones, True, tmpint, drawliste)
 
-                    ' Abfrage, ob zur letzten gezeichneten Phase noch Meilensteine aus untergeordneten Phasen gezeichnet werden müssen
-                    If drawliste.ContainsKey(lastPhase.nameID) Then
 
-                        ' es müssen zur letzten Phase noch Meilensteine gezeichnet werden, die in einer nicht selektierten Phase liegen, die Child von der lastphase ist
-                        ' dafür: weiterschalten der Zeile
-                        phasenGrafikYPos = phasenGrafikYPos + zeilenhoehe
-                        ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
-                        '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
-                        ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
-                        projektNamenYPos = projektNamenYPos + zeilenhoehe
-                        ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
-                        milestoneGrafikYPos = milestoneGrafikYPos + zeilenhoehe
-                        ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
-                        ampelGrafikYPos = ampelGrafikYPos + zeilenhoehe
-                        anzZeilenGezeichnet = anzZeilenGezeichnet + 1
+                    If Not IsNothing(lastPhase) Then
+                        ' Abfrage, ob zur letzten gezeichneten Phase noch Meilensteine aus untergeordneten Phasen gezeichnet werden müssen
+
+                        If drawliste.ContainsKey(lastPhase.nameID) Then
+
+                            ' es müssen zur letzten Phase noch Meilensteine gezeichnet werden, die in einer nicht selektierten Phase liegen, die Child von der lastphase ist
+                            ' dafür: weiterschalten der Zeile
+                            phasenGrafikYPos = phasenGrafikYPos + zeilenhoehe
+                            ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
+                            '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
+                            ' Y-Position für Projektnamen erhöhen je gezeichneter Phase
+                            projektNamenYPos = projektNamenYPos + zeilenhoehe
+                            ' Y-Position für Meilensteine der aktuellen Phase erhöhen je gezeichneter Phase
+                            milestoneGrafikYPos = milestoneGrafikYPos + zeilenhoehe
+                            ' Y-Position der Ampel, sofern sie zu dem Projekt gezeichnet werden soll
+                            ampelGrafikYPos = ampelGrafikYPos + zeilenhoehe
+                            anzZeilenGezeichnet = anzZeilenGezeichnet + 1
 
 
-                        ' ur: Meilensteine aus drawliste.value zeichnen
-                        Dim zeichnenMS As Boolean = False
-                        Dim msliste As SortedList
-                        Dim msi As Integer
-                        msliste = drawliste(lastPhase.nameID)
+                            ' ur: Meilensteine aus drawliste.value zeichnen
+                            Dim zeichnenMS As Boolean = False
+                            Dim msliste As SortedList
+                            Dim msi As Integer
+                            msliste = drawliste(lastPhase.nameID)
 
-                        For msi = 0 To msliste.Count - 1
+                            For msi = 0 To msliste.Count - 1
 
-                            Dim msID As String = msliste.GetByIndex(msi)
-                            Dim milestone As clsMeilenstein = hproj.getMilestoneByID(msID)
+                                Dim msID As String = msliste.GetByIndex(msi)
+                                Dim milestone As clsMeilenstein = hproj.getMilestoneByID(msID)
 
-                            ' Nachsehen, ob MS -Datum existiert und größer StartofCalender ist und im Zeitraum liegt, oder evt. trotzdem gezeichnet werden soll
-                            If IsNothing(milestone.getDate) Then
-                                zeichnenMS = False
-                            Else
-                                If DateDiff(DateInterval.Day, StartofCalendar, milestone.getDate) >= 0 Then
+                                ' Nachsehen, ob MS -Datum existiert und größer StartofCalender ist und im Zeitraum liegt, oder evt. trotzdem gezeichnet werden soll
+                                If IsNothing(milestone.getDate) Then
+                                    zeichnenMS = False
+                                Else
+                                    If DateDiff(DateInterval.Day, StartofCalendar, milestone.getDate) >= 0 Then
 
-                                    ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
-                                    If awinSettings.mppShowAllIfOne Then
-                                        zeichnenMS = True
-                                    Else
-                                        If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
+                                        ' erst noch prüfen , ob dieser Meilenstein tatsächlich im Zeitraum enthalten ist 
+                                        If awinSettings.mppShowAllIfOne Then
                                             zeichnenMS = True
                                         Else
-                                            zeichnenMS = False
+                                            If milestoneWithinTimeFrame(milestone.getDate, showRangeLeft, showRangeRight) Then
+                                                zeichnenMS = True
+                                            Else
+                                                zeichnenMS = False
+                                            End If
                                         End If
+                                    Else
+                                        zeichnenMS = False
                                     End If
-                                Else
-                                    zeichnenMS = False
                                 End If
-                            End If
 
-                            If zeichnenMS Then
-                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, milestone, hproj, milestoneGrafikYPos, _
-                                                                    StartofPPTCalendar, endOFPPTCalendar, _
-                                                                    drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
-                                                                    MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
-                                                                    yOffsetMsToText, yOffsetMsToDate)
-                            End If
-                        Next
+                                If zeichnenMS Then
+                                    Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, milestone, hproj, milestoneGrafikYPos, _
+                                                                        StartofPPTCalendar, endOFPPTCalendar, _
+                                                                        drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
+                                                                        MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
+                                                                        yOffsetMsToText, yOffsetMsToDate)
+                                End If
+                            Next
+
+
+                        End If
+
 
                     End If
 
                     '''' ur: 01.10.2015: selektierte Meilensteine zeichnen, die zu keiner der selektierten Phasen gehören.
 
                     If drawliste.ContainsKey(rootPhaseName) Then
-                  
+
                         phasenGrafikYPos = phasenGrafikYPos + zeilenhoehe
                         ' Y-Position für BU und Hintergrund-einfärbung erhöhen je gezeichneter Zeile
                         '''' ur:20.04.2015:  rowYPos = rowYPos + zeilenhoehe
