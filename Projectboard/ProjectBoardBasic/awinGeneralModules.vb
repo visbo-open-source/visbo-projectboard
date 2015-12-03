@@ -9620,7 +9620,7 @@ Public Module awinGeneralModules
 
 
                 ' Herausfinden, ob aktTask_j Phase oder Meilenstein ist
-                If aktTask_j.actualDate.duration.Value <> 0 Then
+                If aktTask_j.actualDate.duration.Value <> 0 And aktTask_j.taskType.type <> "MILESTONE" Then
 
                     ''''''  ist PHASE
 
@@ -9646,22 +9646,7 @@ Public Module awinGeneralModules
 
                         If PhaseDefinitions.Contains(aktTask_j.name) Then
 
-
                             mappedPhasename = aktTask_j.name
-
-                            ' '' ''If aktTask_j.name = "Projektphasen" Then
-
-                            ' '' ''    For i = 0 To aktTask_j.customvalue.Length - 1
-                            ' '' ''        If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_A" Then
-                            ' '' ''            hproj.businessUnit = aktTask_j.customvalue(i).Value
-                            ' '' ''        End If
-
-                            ' '' ''        If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_B" Then
-                            ' '' ''            hproj.VorlagenName = aktTask_j.customvalue(i).Value
-                            ' '' ''        End If
-                            ' '' ''    Next i
-
-                            ' '' ''End If
 
                         Else
                             ' aktTask_j.name existiert nicht in den PhaseDefinitions
@@ -9687,10 +9672,8 @@ Public Module awinGeneralModules
                                     missingPhaseDefinitions.Add(newPhaseDef)
                                 End If
 
-
-
-
                                 Call logfileSchreiben(("Achtung, RXFImport: Phase '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
+
                             End If
                         End If
 
@@ -9706,7 +9689,6 @@ Public Module awinGeneralModules
                             If awinSettings.createUniqueSiblingNames Then
                                 mappedPhasename = hproj.hierarchy.findUniqueGeschwisterName(parentelemID, mappedPhasename, False)
                             End If
-
 
                             .nameID = hproj.hierarchy.findUniqueElemKey(mappedPhasename, False)
 
@@ -9798,6 +9780,9 @@ Public Module awinGeneralModules
 
                                 Try
                                     missingMilestoneDefinitions.Add(msDef)
+
+                                    Call logfileSchreiben(("Achtung, RXFImport: Meilenstein '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
+
                                 Catch ex As Exception
                                 End Try
 
@@ -9895,6 +9880,9 @@ Public Module awinGeneralModules
 
 
                     End If     ' Ende: Meilenstein soll ignoriert werden 
+                Else
+
+                    Call logfileSchreiben("Achtung, RXFImport: Die aktuelle Task '" & aktTask_j.name & "' enthält Inkonsistenzen ", hproj.name, anzFehler)
 
                 End If      '  Ende: ist MEILENSTEIN
 

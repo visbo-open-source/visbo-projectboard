@@ -33,7 +33,7 @@ Public Class frmSelectRPlanImport
         ElseIf menueAswhl = PTImpExp.addElements Then
             dirname = importOrdnerNames(PTImpExp.addElements)
             Me.Text = "Regel-Dateien auswählen"
-       
+
         End If
 
 
