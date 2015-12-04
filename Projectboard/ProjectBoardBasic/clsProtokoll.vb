@@ -244,7 +244,7 @@ Public Class clsProtokoll
             CType(.Rows(1), xlNS.Range).RowHeight = 30
             CType(.Rows(1), xlNS.Range).Font.Bold = True
 
-            If fullProtocol Then
+            If awinSettings.fullProtocol Then
                 CType(.Cells(1, 1), xlNS.Range).Value() = "Datum"
                 CType(.Cells(1, 2), xlNS.Range).Value() = "Projekt"
                 CType(.Cells(1, 3), xlNS.Range).Value() = "Hierarchie"
@@ -314,7 +314,7 @@ Public Class clsProtokoll
             rowoffset = rowoffset + 1
             zelle = CType(wsLogbuch.Rows(rowoffset), xlNS.Range)
             With zelle
-                If fullProtocol Then
+                If awinSettings.fullProtocol Then
 
                     CType(.Cells(1, 1), xlNS.Range).Value = _actDate
                     CType(.Cells(1, 2), xlNS.Range).Value = _Projekt
