@@ -91,6 +91,9 @@ Public Class clsawinSettings
     ' sie werden aber auf alle Fälle nicht (!) in die PhaseDefinitions aufgenommen; 
     ' Ausnahme: wenn es sich um ein Template handelt, und alwaysAcceptTemplateNames = true
 
+    ' soll beim rxf-, BMW Excel Import das volle Protokoll ausgegeben werden 
+    Public Property fullProtocol As Boolean
+
     ' im BMW Import Kontext wichtiges Settings
     Property importTyp As Integer
 
@@ -191,7 +194,9 @@ Public Class clsawinSettings
         _EinzelRessExport = 0
         _addMissingPhaseMilestoneDef = False
         _alwaysAcceptTemplateNames = False
+        _fullProtocol = False
         _importTyp = 1
+
         _eliminateDuplicates = True
         _importUnknownNames = True
         _createUniqueSiblingNames = True

@@ -229,7 +229,7 @@ Public Module BMWItOModul
 
         ' Die Überschriften für das Protokoll werden alle wieder gesetzt 
         With aktivesSheet
-            If fullProtocol Then
+            If awinSettings.fullProtocol Then
                 CType(.Cells(1, colProtocol), Excel.Range).Value = "Projekt"
                 CType(.Cells(1, colProtocol + 1), Excel.Range).Value = "Hierarchie"
                 CType(.Cells(1, colProtocol + 2), Excel.Range).Value = "Plan-Element"
@@ -465,7 +465,7 @@ Public Module BMWItOModul
 
                                         anzProcessedElements = anzProcessedElements + 1
 
-                                        If fullProtocol Then
+                                        If awinSettings.fullProtocol Then
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 2), Excel.Range).Value = origItem.Trim
                                             CType(aktivesSheet.Cells(curZeile, colProtocol), Excel.Range).Value = completeName
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 5), Excel.Range).Value = currentDateiName
@@ -504,7 +504,7 @@ Public Module BMWItOModul
 
                                                             found = True
                                                             hproj.businessUnit = tmpBU
-                                                            If fullProtocol Then
+                                                            If awinSettings.fullProtocol Then
                                                                 CType(aktivesSheet.Cells(curZeile, colProtocol - 1), Excel.Range).Value = tmpBU
                                                             End If
 
@@ -515,7 +515,7 @@ Public Module BMWItOModul
                                                     End While
                                                 End If
 
-                                                If Not found And fullProtocol Then
+                                                If Not found And awinSettings.fullProtocol Then
 
                                                     CType(aktivesSheet.Cells(curZeile, colProtocol - 1), Excel.Range).Value = hproj.businessUnit
 
@@ -620,7 +620,7 @@ Public Module BMWItOModul
                                 oLevel = origHierarchy.getLevel(origItem)
                                 Dim oBreadCrumb As String = origHierarchy.getFootPrint(oLevel)
 
-                                If fullProtocol Then
+                                If awinSettings.fullProtocol Then
                                     ' Original Footprint
                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 1), Excel.Range).Value = oBreadCrumb
                                     ' Textvorgangsklasse
@@ -839,7 +839,7 @@ Public Module BMWItOModul
 
                                         Dim PTBreadCrumb As String = hproj.hierarchy.getBreadCrumb(elemID)
 
-                                        If fullProtocol Then
+                                        If awinSettings.fullProtocol Then
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 8), Excel.Range).Value = PTBreadCrumb
                                             CType(aktivesSheet.Cells(curZeile, colProtocol + 9), Excel.Range).Value = txtVorgangsKlasse
                                         End If
@@ -1046,7 +1046,7 @@ Public Module BMWItOModul
                                                 'Dim PTBreadCrumb As String = pHierarchy.getFootPrint(indentLevel)
                                                 Dim PTBreadCrumb As String = hproj.hierarchy.getBreadCrumb(elemID)
 
-                                                If fullProtocol Then
+                                                If awinSettings.fullProtocol Then
                                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 8), Excel.Range).Value = PTBreadCrumb
                                                     CType(aktivesSheet.Cells(curZeile, colProtocol + 9), Excel.Range).Value = txtVorgangsKlasse
                                                 End If
@@ -1195,7 +1195,7 @@ Public Module BMWItOModul
                             Throw New Exception(ex.Message)
                         End Try
 
-                        If Not isVorlage And fullProtocol Then
+                        If Not isVorlage And awinSettings.fullProtocol Then
                             ' jetzt werden Projekt-Name, Business Unit und Vorlagen-Kennung weggeschreiben 
                             CType(aktivesSheet.Cells(anfang - 1, colProtocol - 3), Excel.Range).Value = hproj.name
                             CType(aktivesSheet.Cells(anfang - 1, colProtocol - 2), Excel.Range).Value = hproj.VorlagenName
@@ -1233,7 +1233,7 @@ Public Module BMWItOModul
 
                 ' aber nur, wenn fullProtocol = true 
 
-                If fullProtocol Then
+                If awinSettings.fullProtocol Then
 
                     Dim tmpzeile As Integer
                     tmpzeile = 1

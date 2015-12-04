@@ -50,241 +50,242 @@ Public Module awinGeneralModules
         budget = 7
     End Enum
 
+    ' Änderung tk: ist ersetzt worden durch writePhaseMilestoneDefinitions
 
-    ''' <summary>
-    ''' schreibt evtl neu durch Inventur hinzugekommene Phasen in 
-    ''' das Customization File 
-    ''' </summary>
-    ''' <remarks></remarks>
-    Public Sub awinWritePhaseDefinitions()
+    ' ''' <summary>
+    ' ''' schreibt evtl neu durch Inventur hinzugekommene Phasen in 
+    ' ''' das Customization File 
+    ' ''' </summary>
+    ' ''' <remarks></remarks>
+    'Public Sub awinWritePhaseDefinitions()
 
-        Dim phaseDefs As Excel.Range
-        Dim milestoneDefs As Excel.Range
-        'Dim foundRow As Integer
-        Dim phName As String, phColor As Long
-        Dim lastrow As Excel.Range
+    '    Dim phaseDefs As Excel.Range
+    '    Dim milestoneDefs As Excel.Range
+    '    'Dim foundRow As Integer
+    '    Dim phName As String, phColor As Long
+    '    Dim lastrow As Excel.Range
 
-        'appInstance.ScreenUpdating = False
-        appInstance.EnableEvents = False
+    '    'appInstance.ScreenUpdating = False
+    '    appInstance.EnableEvents = False
 
 
 
-        ' hier muss jetzt das File Projekt Tafel Definitions.xlsx aufgemacht werden ...
-        ' das File 
-        Try
-            appInstance.Workbooks.Open(awinPath & customizationFile)
+    '    ' hier muss jetzt das File Projekt Tafel Definitions.xlsx aufgemacht werden ...
+    '    ' das File 
+    '    Try
+    '        appInstance.Workbooks.Open(awinPath & customizationFile)
 
-        Catch ex As Exception
-            Call MsgBox("Customization File nicht gefunden - Abbruch")
-            Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
-        End Try
+    '    Catch ex As Exception
+    '        Call MsgBox("Customization File nicht gefunden - Abbruch")
+    '        Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
+    '    End Try
 
-        appInstance.Workbooks(myCustomizationFile).Activate()
-        Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
-                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+    '    appInstance.Workbooks(myCustomizationFile).Activate()
+    '    Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
+    '                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-        phaseDefs = wsName4.Range("awin_Phasen_Definition")
+    '    phaseDefs = wsName4.Range("awin_Phasen_Definition")
 
-        Dim anzZeilen As Integer = phaseDefs.Rows.Count
-        lastrow = CType(phaseDefs.Rows(anzZeilen), Excel.Range)
+    '    Dim anzZeilen As Integer = phaseDefs.Rows.Count
+    '    lastrow = CType(phaseDefs.Rows(anzZeilen), Excel.Range)
 
-        Dim vglsListe As New SortedList(Of String, String)
-        Dim ergStr As String
+    '    Dim vglsListe As New SortedList(Of String, String)
+    '    Dim ergStr As String
 
-        For Each c As Excel.Range In phaseDefs
-            Try
-                ergStr = CStr(c.Value).Trim
+    '    For Each c As Excel.Range In phaseDefs
+    '        Try
+    '            ergStr = CStr(c.Value).Trim
 
-                If ergStr.Length > 0 And Not vglsListe.ContainsKey(ergStr) Then
+    '            If ergStr.Length > 0 And Not vglsListe.ContainsKey(ergStr) Then
 
-                    vglsListe.Add(ergStr, ergStr)
+    '                vglsListe.Add(ergStr, ergStr)
 
-                End If
-            Catch ex As Exception
+    '            End If
+    '        Catch ex As Exception
 
-            End Try
+    '        End Try
 
-        Next
+    '    Next
 
 
-        ' jetzt muss getestet werden, ob jede Phase in PhaseDefinitions bereits in der Customization vorkommt 
+    '    ' jetzt muss getestet werden, ob jede Phase in PhaseDefinitions bereits in der Customization vorkommt 
 
-        Dim i As Integer
-        Dim darstellungsKlasse As String
-        For i = 1 To PhaseDefinitions.Count
+    '    Dim i As Integer
+    '    Dim darstellungsKlasse As String
+    '    For i = 1 To PhaseDefinitions.Count
 
-            With PhaseDefinitions.getPhaseDef(i)
-                phName = .name
-                phColor = CLng(PhaseDefinitions.getPhaseDef(i).farbe)
-                darstellungsKlasse = .darstellungsKlasse
-            End With
+    '        With PhaseDefinitions.getPhaseDef(i)
+    '            phName = .name
+    '            phColor = CLng(PhaseDefinitions.getPhaseDef(i).farbe)
+    '            darstellungsKlasse = .darstellungsKlasse
+    '        End With
 
 
-            If vglsListe.ContainsKey(phName) Then
-                ' nichts zu tun 
-            Else
-                ' eintragen 
-                lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
-                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
+    '        If vglsListe.ContainsKey(phName) Then
+    '            ' nichts zu tun 
+    '        Else
+    '            ' eintragen 
+    '            lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
+    '            CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
 
 
-            End If
+    '        End If
 
 
 
-        Next i
+    '    Next i
 
 
-        If awinSettings.addMissingPhaseMilestoneDef Then
+    '    If awinSettings.addMissingPhaseMilestoneDef Then
 
-            'jede Phase, die noch nicht in dem CustomizationFile ist, wird noch hinzugefügt 
-            ' und in die PhaseDefinitions eingetragen
+    '        'jede Phase, die noch nicht in dem CustomizationFile ist, wird noch hinzugefügt 
+    '        ' und in die PhaseDefinitions eingetragen
 
-            For mPh As Integer = 1 To missingPhaseDefinitions.Count
+    '        For mPh As Integer = 1 To missingPhaseDefinitions.Count
 
-                Dim missPhaseDef As clsPhasenDefinition = missingPhaseDefinitions.getPhaseDef(mPh)
+    '            Dim missPhaseDef As clsPhasenDefinition = missingPhaseDefinitions.getPhaseDef(mPh)
 
-                With missPhaseDef
-                    phName = .name
-                    phColor = CLng(missingPhaseDefinitions.getPhaseDef(mPh).farbe)
-                    darstellungsKlasse = .darstellungsKlasse
-                End With
+    '            With missPhaseDef
+    '                phName = .name
+    '                phColor = CLng(missingPhaseDefinitions.getPhaseDef(mPh).farbe)
+    '                darstellungsKlasse = .darstellungsKlasse
+    '            End With
 
 
-                If vglsListe.ContainsKey(phName) Then
-                    ' nichts zu tun 
-                Else
-                    ' eintragen 
-                    lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
-                    CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
+    '            If vglsListe.ContainsKey(phName) Then
+    '                ' nichts zu tun 
+    '            Else
+    '                ' eintragen 
+    '                lastrow = CType(phaseDefs.Rows(phaseDefs.Rows.Count), Excel.Range)
+    '                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = phName.ToString
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
 
-                    Try
-                        PhaseDefinitions.Add(missPhaseDef)
-                    Catch ex As Exception
+    '                Try
+    '                    PhaseDefinitions.Add(missPhaseDef)
+    '                Catch ex As Exception
 
-                    End Try
+    '                End Try
 
 
 
-                End If
+    '            End If
 
 
-            Next mPh
+    '        Next mPh
 
-            missingPhaseDefinitions.Clear()
+    '        missingPhaseDefinitions.Clear()
 
-        End If
+    '    End If
 
-        ' jetzt noch die Meilensteine schreiben 
-        ' awin_Meilenstein_Definition
+    '    ' jetzt noch die Meilensteine schreiben 
+    '    ' awin_Meilenstein_Definition
 
-        milestoneDefs = wsName4.Range("awin_Meilenstein_Definition")
-        anzZeilen = milestoneDefs.Rows.Count
-        lastrow = CType(milestoneDefs.Rows(anzZeilen), Excel.Range)
+    '    milestoneDefs = wsName4.Range("awin_Meilenstein_Definition")
+    '    anzZeilen = milestoneDefs.Rows.Count
+    '    lastrow = CType(milestoneDefs.Rows(anzZeilen), Excel.Range)
 
-        ' jetzt muss getestet werden, ob jede Meilenstein  in MilestoneDefinitions bereits in der Customization vorkommt 
+    '    ' jetzt muss getestet werden, ob jede Meilenstein  in MilestoneDefinitions bereits in der Customization vorkommt 
 
-        vglsListe.Clear()
+    '    vglsListe.Clear()
 
-        For Each c As Excel.Range In milestoneDefs
-            Try
-                ergStr = CStr(c.Value).Trim
+    '    For Each c As Excel.Range In milestoneDefs
+    '        Try
+    '            ergStr = CStr(c.Value).Trim
 
-                If ergStr.Length > 0 And Not vglsListe.ContainsKey(ergStr) Then
+    '            If ergStr.Length > 0 And Not vglsListe.ContainsKey(ergStr) Then
 
-                    vglsListe.Add(ergStr, ergStr)
+    '                vglsListe.Add(ergStr, ergStr)
 
-                End If
-            Catch ex As Exception
+    '            End If
+    '        Catch ex As Exception
 
-            End Try
+    '        End Try
 
-        Next
+    '    Next
 
 
-        Dim msName As String
-        Dim shortName As String
-        Dim belongsTo As String
+    '    Dim msName As String
+    '    Dim shortName As String
+    '    Dim belongsTo As String
 
 
-        For i = 1 To MilestoneDefinitions.Count
+    '    For i = 1 To MilestoneDefinitions.Count
 
-            With MilestoneDefinitions.elementAt(i - 1)
-                msName = .name
-                shortName = .shortName
-                belongsTo = .belongsTo
-                darstellungsKlasse = .darstellungsKlasse
-            End With
+    '        With MilestoneDefinitions.elementAt(i - 1)
+    '            msName = .name
+    '            shortName = .shortName
+    '            belongsTo = .belongsTo
+    '            darstellungsKlasse = .darstellungsKlasse
+    '        End With
 
-            If vglsListe.ContainsKey(msName) Then
-                ' nichts zu tun 
-            Else
-                ' eintragen 
-                lastrow = CType(milestoneDefs.Rows(milestoneDefs.Rows.Count), Excel.Range)
-                CType(lastrow.EntireRow, Excel.Range).Insert(XlInsertShiftDirection.xlShiftDown)
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = msName
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 4).Value = belongsTo
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
+    '        If vglsListe.ContainsKey(msName) Then
+    '            ' nichts zu tun 
+    '        Else
+    '            ' eintragen 
+    '            lastrow = CType(milestoneDefs.Rows(milestoneDefs.Rows.Count), Excel.Range)
+    '            CType(lastrow.EntireRow, Excel.Range).Insert(XlInsertShiftDirection.xlShiftDown)
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = msName
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 4).Value = belongsTo
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
+    '            CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
 
-            End If
+    '        End If
 
 
 
-        Next i
+    '    Next i
 
 
-        If awinSettings.addMissingPhaseMilestoneDef Then
+    '    If awinSettings.addMissingPhaseMilestoneDef Then
 
-            ' die Meilensteine, die noch nicht in MilestoneDefinitions enthalten sind, werden nun in CustomizationFile eingetragen 
-            ' und in die MilestoneDefinitions
+    '        ' die Meilensteine, die noch nicht in MilestoneDefinitions enthalten sind, werden nun in CustomizationFile eingetragen 
+    '        ' und in die MilestoneDefinitions
 
-            For mMs As Integer = 1 To missingMilestoneDefinitions.Count
+    '        For mMs As Integer = 1 To missingMilestoneDefinitions.Count
 
-                Dim msDef As clsMeilensteinDefinition = missingMilestoneDefinitions.elementAt(mMs - 1)
-                With msDef
-                    msName = .name
-                    shortName = .shortName
-                    belongsTo = .belongsTo
-                    darstellungsKlasse = .darstellungsKlasse
-                End With
+    '            Dim msDef As clsMeilensteinDefinition = missingMilestoneDefinitions.elementAt(mMs - 1)
+    '            With msDef
+    '                msName = .name
+    '                shortName = .shortName
+    '                belongsTo = .belongsTo
+    '                darstellungsKlasse = .darstellungsKlasse
+    '            End With
 
-                If vglsListe.ContainsKey(msName) Then
-                    ' nichts zu tun 
-                Else
-                    ' eintragen 
-                    lastrow = CType(milestoneDefs.Rows(milestoneDefs.Rows.Count), Excel.Range)
-                    CType(lastrow.EntireRow, Excel.Range).Insert(XlInsertShiftDirection.xlShiftDown)
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = msName
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 4).Value = belongsTo
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
-                    CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
-                    If Not MilestoneDefinitions.Contains(msDef.name) Then
-                        MilestoneDefinitions.Add(msDef)
-                    End If
+    '            If vglsListe.ContainsKey(msName) Then
+    '                ' nichts zu tun 
+    '            Else
+    '                ' eintragen 
+    '                lastrow = CType(milestoneDefs.Rows(milestoneDefs.Rows.Count), Excel.Range)
+    '                CType(lastrow.EntireRow, Excel.Range).Insert(XlInsertShiftDirection.xlShiftDown)
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Value = msName
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 4).Value = belongsTo
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 5).Value = shortName
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 6).Value = darstellungsKlasse
+    '                CType(lastrow.Cells(1, 1), Excel.Range).Offset(-1, 0).Interior.Color = awinSettings.AmpelNichtBewertet
+    '                If Not MilestoneDefinitions.Contains(msDef.name) Then
+    '                    MilestoneDefinitions.Add(msDef)
+    '                End If
 
 
-                End If
+    '            End If
 
-            Next mMs
-            missingMilestoneDefinitions.Clear()
+    '        Next mMs
+    '        missingMilestoneDefinitions.Clear()
 
-        End If
+    '    End If
 
 
-        appInstance.ActiveWorkbook.Close(SaveChanges:=True)
-        'appInstance.ScreenUpdating = True
-        appInstance.EnableEvents = True
+    '    appInstance.ActiveWorkbook.Close(SaveChanges:=True)
+    '    'appInstance.ScreenUpdating = True
+    '    appInstance.EnableEvents = True
 
-    End Sub
+    'End Sub
 
     ''' <summary>
     ''' schreibt evtl neu hinzugekommene Phasen und Meilensteine in 
@@ -303,6 +304,8 @@ Public Module awinGeneralModules
 
         Dim msName As String
         Dim shortName As String
+
+        Dim darstellungsKlasse As String
 
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         appInstance.ScreenUpdating = False
@@ -334,7 +337,6 @@ Public Module awinGeneralModules
         lastrow = CType(phaseDefs.Rows(anzZeilen), Excel.Range)
         firstrow = CType(phaseDefs.Rows(1), Excel.Range)
 
-        Dim delPosition As Integer = firstrow.row
 
         ' jetzt wird geprüft, ob die missingPhaseDefinitions in PhaseDefinitions übertragen werden 
         If awinSettings.addMissingPhaseMilestoneDef Then
@@ -369,9 +371,11 @@ Public Module awinGeneralModules
 
 
         ' hier muss erst mal geprüft werden, ob Zeilen eingefügt oder gelöscht werden müssen 
+        ' anzZeilen muss immer um 2 größer sein als die Anzahl der Definitionen ; 
+        ' die erste und letzte Zeile des Bereichs sind leer  
         Dim anzDefinitions As Integer = PhaseDefinitions.Count
-        If anzZeilen = anzDefinitions Then
-        ElseIf anzZeilen < anzDefinitions Then
+        If anzZeilen = anzDefinitions + 2 Then
+        ElseIf anzZeilen < anzDefinitions + 2 Then
             ' Zeilen einfügen 
 
             tmpAnzahl = anzDefinitions - anzZeilen
@@ -382,10 +386,6 @@ Public Module awinGeneralModules
             ' anzZeilen und phaseDefinitions.count müssen jetzt genau gleich sein 
             anzZeilen = phaseDefs.Rows.Count
 
-            ' tk test-Schleife
-            If anzZeilen <> PhaseDefinitions.Count Then
-                Dim dDBG As Integer = -1
-            End If
         Else
             ' Zeilen löschen
             tmpAnzahl = anzZeilen - anzDefinitions
@@ -403,30 +403,29 @@ Public Module awinGeneralModules
         End If
 
         ' jetzt können die Phase-Definitions in den Range geschrieben werden 
-        If anzDefinitions > anzZeilen Then
-            Dim dDBG As Integer = -1
-        Else
+        ' und zwar so, dass sie mit der 2. Zeile beginnen 
+        
 
-            Dim darstellungsKlasse As String
-            For ix As Integer = 1 To anzDefinitions
+        For ix As Integer = 1 To anzDefinitions
 
-                With PhaseDefinitions.getPhaseDef(ix)
-                    phName = .name
-                    shortName = .shortName
-                    darstellungsKlasse = .darstellungsKlasse
-                End With
+            With PhaseDefinitions.getPhaseDef(ix)
+                phName = .name
+                shortName = .shortName
+                darstellungsKlasse = .darstellungsKlasse
+            End With
 
-                CType(firstrow.Cells(ix, 1), Excel.Range).Offset(0, 0).Value = phName.ToString
-                CType(firstrow.Cells(ix, 1), Excel.Range).Offset(0, 5).Value = shortName
-                CType(firstrow.Cells(ix, 1), Excel.Range).Offset(0, 6).Value = darstellungsKlasse
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 0).Value = phName.ToString
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6).Value = darstellungsKlasse
 
 
-            Next ix
+        Next ix
 
-        End If
+
 
         ' jetzt müssen ggf noch zwei Zeilen gelöscht werden, damit die awin_PhaseDefinitions wieder stimmt 
-        While anzZeilen > anzDefinitions
+        ' aber eigentlich darf das Programm hier gar nicht mehr reinkommen ...
+        While anzZeilen > anzDefinitions + 2
             CType(phaseDefs.Rows(anzZeilen), Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
             anzZeilen = anzZeilen - 1
         End While
@@ -444,12 +443,11 @@ Public Module awinGeneralModules
         lastrow = CType(milestoneDefs.Rows(anzZeilen), Excel.Range)
         firstrow = CType(milestoneDefs.Rows(1), Excel.Range)
 
-        delPosition = firstrow.Row
 
         ' hier muss erst mal geprüft werden, ob Zeilen eingefügt oder gelöscht werden müssen 
         anzDefinitions = MilestoneDefinitions.Count
-        If anzZeilen = anzDefinitions Then
-        ElseIf anzZeilen < anzDefinitions Then
+        If anzZeilen = anzDefinitions + 2 Then
+        ElseIf anzZeilen < anzDefinitions + 2 Then
             ' Zeilen einfügen 
 
             tmpAnzahl = anzDefinitions - anzZeilen
@@ -483,30 +481,28 @@ Public Module awinGeneralModules
         End If
 
         ' jetzt können die Phase-Definitions in den Range geschrieben werden 
-        If anzDefinitions > anzZeilen Then
-            Dim dDBG As Integer = -1
-        Else
+        
 
-            Dim darstellungsKlasse As String
-            For ix As Integer = 1 To anzDefinitions
+        For ix As Integer = 1 To anzDefinitions
 
-                With MilestoneDefinitions.getMilestoneDef(ix)
-                    msName = .name
-                    shortName = .shortName
-                    darstellungsKlasse = .darstellungsKlasse
-                End With
+            With MilestoneDefinitions.getMilestoneDef(ix)
+                msName = .name
+                shortName = .shortName
+                darstellungsKlasse = .darstellungsKlasse
+            End With
 
-                CType(firstrow.Cells(ix, 1), Excel.Range).Offset(0, 0).Value = msName.ToString
-                CType(firstrow.Cells(ix, 1), Excel.Range).Offset(0, 5).Value = shortName
-                CType(firstrow.Cells(ix, 1), Excel.Range).Offset(0, 6).Value = darstellungsKlasse
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 0).Value = msName.ToString
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6).Value = darstellungsKlasse
 
 
-            Next ix
+        Next ix
 
-        End If
+
 
         ' jetzt müssen ggf noch zwei Zeilen gelöscht werden, damit die awin_PhaseDefinitions wieder stimmt 
-        While anzZeilen > anzDefinitions
+        ' da darf das Programm aber eigentlich nicht mehr reinkommen ... 
+        While anzZeilen > anzDefinitions + 2
             CType(milestoneDefs.Rows(anzZeilen), Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
             anzZeilen = anzZeilen - 1
         End While
@@ -972,8 +968,10 @@ Public Module awinGeneralModules
 
                     tmpBU.name = CType(c.Value, String).Trim
                     tmpBU.color = CLng(c.Interior.Color)
-                    businessUnitDefinitions.Add(index, tmpBU)
-                    index = index + 1
+                    If tmpBU.name.Length > 0 Then
+                        businessUnitDefinitions.Add(index, tmpBU)
+                        index = index + 1
+                    End If
 
                 Catch ex As Exception
                     ' nichts tun ...
@@ -1001,76 +999,81 @@ Public Module awinGeneralModules
 
             For Each c As Excel.Range In .Range("awin_Phasen_Definition")
 
-                If CStr(c.Value) <> "" Then
-                    i = i + 1
-                    tmpStr = CType(c.Value, String)
-                    ' das neue ...
-                    hphase = New clsPhasenDefinition
-                    With hphase
-                        .farbe = CLng(c.Interior.Color)
-                        .name = tmpStr.Trim
-                        .UID = i
+                If Not IsNothing(c.Value) Then
 
-                        ' hat die Phase einen Schwellwert ? 
-                        Try
-                            If CInt(c.Offset(0, 1).Value) > 0 Then
-                                .schwellWert = CInt(c.Offset(0, 1).Value)
+                    If CStr(c.Value) <> "" Then
+                        i = i + 1
+                        tmpStr = CType(c.Value, String)
+                        ' das neue ...
+                        hphase = New clsPhasenDefinition
+                        With hphase
+                            .farbe = CLng(c.Interior.Color)
+                            .name = tmpStr.Trim
+                            .UID = i
+
+                            ' hat die Phase einen Schwellwert ? 
+                            Try
+                                If CInt(c.Offset(0, 1).Value) > 0 Then
+                                    .schwellWert = CInt(c.Offset(0, 1).Value)
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+
+                            ' ist die Phase eine special Phase ? 
+                            Try
+                                If CStr(c.Offset(0, 2).Value).Trim = "LeLe" Then
+                                    specialListofPhases.Add(hphase.name, hphase.name)
+                                End If
+                            Catch ex As Exception
+                            End Try
+
+
+
+                            ' hat die Phase eine Abkürzung ? 
+                            Dim abbrev As String = ""
+                            If Not IsNothing(c.Offset(0, 5).Value) Then
+                                abbrev = CStr(c.Offset(0, 5).Value).Trim
                             End If
-                        Catch ex As Exception
 
-                        End Try
-
-                        ' ist die Phase eine special Phase ? 
-                        Try
-                            If CStr(c.Offset(0, 2).Value).Trim = "LeLe" Then
-                                specialListofPhases.Add(hphase.name, hphase.name)
-                            End If
-                        Catch ex As Exception
-                        End Try
+                            .shortName = abbrev
 
 
+                            ' hat die Phase eine Darstellungsklasse ? 
+                            Try
+                                Dim darstellungsklasse As String
+                                If Not IsNothing(c.Offset(0, 6).Value) Then
 
-                        ' hat die Phase eine Abkürzung ? 
-                        Dim abbrev As String = ""
-                        If Not IsNothing(c.Offset(0, 5).Value) Then
-                            abbrev = CStr(c.Offset(0, 5).Value).Trim
-                        End If
-
-                        .shortName = abbrev
-
-
-                        ' hat die Phase eine Darstellungsklasse ? 
-                        Try
-                            Dim darstellungsklasse As String
-                            If Not IsNothing(c.Offset(0, 6).Value) Then
-
-                                If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
-                                    darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
-                                    If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
-                                        .darstellungsKlasse = darstellungsklasse
-                                    Else
-                                        .darstellungsKlasse = ""
+                                    If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
+                                        darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
+                                        If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
+                                            .darstellungsKlasse = darstellungsklasse
+                                        Else
+                                            .darstellungsKlasse = ""
+                                        End If
                                     End If
+
                                 End If
 
-                            End If
+                            Catch ex As Exception
+                                .darstellungsKlasse = ""
+                            End Try
 
+
+
+                        End With
+
+                        Try
+                            PhaseDefinitions.Add(hphase)
                         Catch ex As Exception
-                            .darstellungsKlasse = ""
+
                         End Try
 
 
-
-                    End With
-
-                    Try
-                        PhaseDefinitions.Add(hphase)
-                    Catch ex As Exception
-
-                    End Try
-
+                    End If
 
                 End If
+                
 
             Next c
 
@@ -1094,77 +1097,82 @@ Public Module awinGeneralModules
             For Each c As Excel.Range In .Range("awin_Meilenstein_Definition")
 
                 ' hier muss das Aufbauen der MilestoneDefinitions gemacht werden  
-                If CStr(c.Value) <> "" Then
-                    i = i + 1
-                    tmpStr = CType(c.Value, String)
-                    ' das neue ...
-                    hMilestone = New clsMeilensteinDefinition
-                    With hMilestone
-                        .name = tmpStr.Trim
-                        .UID = i
+                If Not IsNothing(c.Value) Then
 
-                        ' hat der Milestone einen Schwellwert ? 
+                    If CStr(c.Value) <> "" Then
+                        i = i + 1
+                        tmpStr = CType(c.Value, String)
+                        ' das neue ...
+                        hMilestone = New clsMeilensteinDefinition
+                        With hMilestone
+                            .name = tmpStr.Trim
+                            .UID = i
 
-                        If IsNothing(c.Offset(0, 1).Value) Then
-                        ElseIf IsNumeric(c.Offset(0, 1).Value) Then
-                            If CInt(c.Offset(0, 1).Value) > 0 Then
-                                .schwellWert = CInt(c.Offset(0, 1).Value)
-                            End If
-                        End If
+                            ' hat der Milestone einen Schwellwert ? 
 
-
-                        ' hat der Milestone einen Bezug ? 
-                        Dim bezug As String = ""
-                        If Not IsNothing(c.Offset(0, 4).Value) Then
-
-                            bezug = CStr(c.Offset(0, 4).Value).Trim
-
-                            If PhaseDefinitions.Contains(bezug) Then
-                            Else
-                                bezug = ""
-                            End If
-
-                        End If
-
-                        .belongsTo = bezug
-
-                        ' hat der Milestone eine Abkürzung ? 
-                        Dim abbrev As String = ""
-                        If Not IsNothing(c.Offset(0, 5).Value) Then
-                            abbrev = CStr(c.Offset(0, 5).Value).Trim
-                        End If
-
-                        .shortName = abbrev
-
-
-                        ' hat der Milestone eine Darstellungsklasse ? 
-
-                        Dim darstellungsklasse As String = ""
-                        If Not IsNothing(c.Offset(0, 6).Value) Then
-
-                            If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
-                                darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
-                                If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
-                                    .darstellungsKlasse = darstellungsklasse
-                                Else
-                                    .darstellungsKlasse = ""
+                            If IsNothing(c.Offset(0, 1).Value) Then
+                            ElseIf IsNumeric(c.Offset(0, 1).Value) Then
+                                If CInt(c.Offset(0, 1).Value) > 0 Then
+                                    .schwellWert = CInt(c.Offset(0, 1).Value)
                                 End If
                             End If
 
-                        End If
+
+                            ' hat der Milestone einen Bezug ? 
+                            Dim bezug As String = ""
+                            If Not IsNothing(c.Offset(0, 4).Value) Then
+
+                                bezug = CStr(c.Offset(0, 4).Value).Trim
+
+                                If PhaseDefinitions.Contains(bezug) Then
+                                Else
+                                    bezug = ""
+                                End If
+
+                            End If
+
+                            .belongsTo = bezug
+
+                            ' hat der Milestone eine Abkürzung ? 
+                            Dim abbrev As String = ""
+                            If Not IsNothing(c.Offset(0, 5).Value) Then
+                                abbrev = CStr(c.Offset(0, 5).Value).Trim
+                            End If
+
+                            .shortName = abbrev
+
+
+                            ' hat der Milestone eine Darstellungsklasse ? 
+
+                            Dim darstellungsklasse As String = ""
+                            If Not IsNothing(c.Offset(0, 6).Value) Then
+
+                                If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
+                                    darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
+                                    If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
+                                        .darstellungsKlasse = darstellungsklasse
+                                    Else
+                                        .darstellungsKlasse = ""
+                                    End If
+                                End If
+
+                            End If
 
 
 
-                    End With
+                        End With
 
-                    Try
-                        MilestoneDefinitions.Add(hMilestone)
-                    Catch ex As Exception
+                        Try
+                            MilestoneDefinitions.Add(hMilestone)
+                        Catch ex As Exception
 
-                    End Try
+                        End Try
 
+
+                    End If
 
                 End If
+                
 
             Next
 
@@ -1370,6 +1378,13 @@ Public Module awinGeneralModules
                 Throw New ArgumentException("fehlende Einstellung im Customization-File ... Abbruch " & vbLf & ex.Message)
             End Try
 
+            ' ist Einstellung für volles Protokoll vorhanden ? 
+            Try
+
+                awinSettings.fullProtocol = CBool(.Range("volles_Protokol").Value)
+            Catch ex As Exception
+                awinSettings.fullProtocol = False
+            End Try
             StartofCalendar = awinSettings.kalenderStart
             StartofCalendar = StartofCalendar.ToLocalTime()
 
@@ -9731,7 +9746,7 @@ Public Module awinGeneralModules
 
                             prtLine.klasse = mapToAppearance(aktTask_j.taskType.Value, False)
                             prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, False)
-                            prtLine.writeLog(zeile)
+                            'prtLine.writeLog(zeile)
 
                             prtLine.actDate = ""
 
@@ -9871,7 +9886,7 @@ Public Module awinGeneralModules
 
                             prtLine.klasse = mapToAppearance(aktTask_j.taskType.Value, False)
                             prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, False)
-                            prtLine.writeLog(zeile)
+                            'prtLine.writeLog(zeile)
 
                             prtLine.actDate = ""
                         Catch ex1 As Exception
