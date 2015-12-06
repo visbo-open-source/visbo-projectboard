@@ -5,6 +5,7 @@ Public Class frmEditWoerterbuch
     
     ' wird benutzt , um beim Listen Aktualisieren eine Aktion zu triggern oder eben nicht 
     Private eventsShouldFire As Boolean = True
+    Private listOfSummaryTasks As New Collection
 
 
     ''' <summary>
@@ -32,6 +33,7 @@ Public Class frmEditWoerterbuch
     ''' <remarks></remarks>
     Private Sub frmEditWoerterbuch_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        showOnlySummaryTasks.Checked = False
 
         ' jetzt Radio-Button setzen 
         If missingPhaseDefinitions.Count = 0 And missingMilestoneDefinitions.Count > 0 Then
@@ -53,6 +55,13 @@ Public Class frmEditWoerterbuch
     ''' <remarks></remarks>
     Private Sub rdbListShowsPhases_CheckedChanged(sender As Object, e As EventArgs) Handles rdbListShowsPhases.CheckedChanged
 
+        showOnlySummaryTasks.Visible = True
+
+        If listOfSummaryTasks.Count = 0 Then
+            listOfSummaryTasks = buildListOfSummaryTasks()
+        End If
+
+
         Dim tmpPhDef As clsPhasenDefinition
         Dim tmpMsDef As clsMeilensteinDefinition
 
@@ -61,14 +70,8 @@ Public Class frmEditWoerterbuch
             unknownList.Items.Clear()
             standardList.Items.Clear()
 
-            ' die Liste der unbekannten Phasen Bezeichnungen aufbauen 
-            For i = 1 To missingPhaseDefinitions.Count
-                tmpPhDef = missingPhaseDefinitions.getPhaseDef(i)
-                If Not IsNothing(tmpPhDef) Then
-                    unknownList.Items.Add(tmpPhDef.name)
-                End If
-
-            Next
+            Call buildUnknownPhaseList()
+           
 
             ' die Liste der Standard Bezeichnungen aufbauen 
             For i = 1 To PhaseDefinitions.Count
@@ -117,20 +120,13 @@ Public Class frmEditWoerterbuch
         Dim suchstr As String = filterUnknown.Text
         Dim tmpName As String
 
+        eventsShouldFire = False
+
         unknownList.Items.Clear()
 
         If rdbListShowsPhases.Checked Then
 
-            For i = 1 To missingPhaseDefinitions.Count
-                tmpName = missingPhaseDefinitions.getPhaseDef(i).name
-                If filterUnknown.Text = "" Then
-                    unknownList.Items.Add(tmpName)
-                Else
-                    If tmpName.Contains(suchstr) Then
-                        unknownList.Items.Add(tmpName)
-                    End If
-                End If
-            Next
+            Call buildUnknownPhaseList()
 
         Else
             ' Meilensteine
@@ -148,6 +144,8 @@ Public Class frmEditWoerterbuch
         End If
 
         editUnknownItem.Text = ""
+
+        eventsShouldFire = True
 
     End Sub
 
@@ -523,6 +521,80 @@ Public Class frmEditWoerterbuch
 
     End Sub
 
+
+    ''' <summary>
+    ''' baut in Abhängigkeit vom Filter und dem Status von ShowSummaryTasksOnly die Liste der Unknown-Elemente auf 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub buildUnknownPhaseList()
+
+        Dim suchstr As String = filterUnknown.Text
+        Dim tmpName As String
+
+
+
+        For i = 1 To missingPhaseDefinitions.Count
+            tmpName = missingPhaseDefinitions.getPhaseDef(i).name
+            If filterUnknown.Text = "" Then
+                If showOnlySummaryTasks.Checked Then
+                    If listOfSummaryTasks.Contains(tmpName) Then
+                        unknownList.Items.Add(tmpName)
+                    End If
+                Else
+                    unknownList.Items.Add(tmpName)
+                End If
+
+            Else
+                If tmpName.Contains(suchstr) Then
+                    If showOnlySummaryTasks.Checked Then
+                        If listOfSummaryTasks.Contains(tmpName) Then
+                            unknownList.Items.Add(tmpName)
+                        End If
+                    Else
+                        unknownList.Items.Add(tmpName)
+                    End If
+                End If
+            End If
+        Next
+
+        
+    End Sub
+
+    ''' <summary>
+    ''' erzeugt aus den aktuell geladenen Projekten die Liste aller Phasen, die Summary Tasks sind 
+    ''' </summary>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function buildListOfSummaryTasks() As Collection
+
+        Dim lastPhaseIndex As Integer
+        Dim tmpCollection As New Collection
+        Dim nodeItem As clsHierarchyNode
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            lastPhaseIndex = kvp.Value.hierarchy.getIndexOf1stMilestone - 1
+            If lastPhaseIndex < 0 Then
+                ' es gibt keine Meilensteine, sondern nur Phasen 
+                lastPhaseIndex = kvp.Value.hierarchy.count
+            End If
+
+            For i As Integer = 1 To lastPhaseIndex
+                nodeItem = kvp.Value.hierarchy.nodeItem(i)
+                If nodeItem.childCount > 0 Then
+                    If Not tmpCollection.Contains(nodeItem.elemName) Then
+                        tmpCollection.Add(nodeItem.elemName, nodeItem.elemName)
+                    End If
+                End If
+            Next
+
+
+        Next
+
+        buildListOfSummaryTasks = tmpCollection
+
+    End Function
+
     ''' <summary>
     ''' nimmt das Item aus derListe der bekannten Standard-Namen heraus; muss aber sicherstellen, 
     ''' dass alle Wörterbuch Abbildungen auf dieses Element auch rausgenommen werden 
@@ -894,4 +966,24 @@ Public Class frmEditWoerterbuch
 
     End Sub
 
+    Private Sub showOnlySummaryTasks_CheckedChanged(sender As Object, e As EventArgs) Handles showOnlySummaryTasks.CheckedChanged
+
+
+        eventsShouldFire = False
+
+        unknownList.Items.Clear()
+
+        Call buildUnknownPhaseList()
+
+        editUnknownItem.Text = ""
+
+        eventsShouldFire = True
+
+    End Sub
+
+    Private Sub rdbListShowsMilestones_CheckedChanged(sender As Object, e As EventArgs) Handles rdbListShowsMilestones.CheckedChanged
+
+        showOnlySummaryTasks.Visible = False
+
+    End Sub
 End Class

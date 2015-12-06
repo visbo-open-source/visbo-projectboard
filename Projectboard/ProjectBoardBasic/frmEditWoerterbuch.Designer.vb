@@ -41,6 +41,7 @@ Partial Class frmEditWoerterbuch
         Me.setItemToBeUnknown = New System.Windows.Forms.PictureBox()
         Me.setItemToBeKnown = New System.Windows.Forms.PictureBox()
         Me.clearStandardList = New System.Windows.Forms.PictureBox()
+        Me.showOnlySummaryTasks = New System.Windows.Forms.CheckBox()
         CType(Me.clearUnknownList, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.setItemToBeUnknown, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.setItemToBeKnown, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -229,11 +230,23 @@ Partial Class frmEditWoerterbuch
         Me.clearStandardList.TabIndex = 20
         Me.clearStandardList.TabStop = False
         '
+        'showOnlySummaryTasks
+        '
+        Me.showOnlySummaryTasks.AutoSize = True
+        Me.showOnlySummaryTasks.Location = New System.Drawing.Point(23, 102)
+        Me.showOnlySummaryTasks.Name = "showOnlySummaryTasks"
+        Me.showOnlySummaryTasks.Size = New System.Drawing.Size(172, 17)
+        Me.showOnlySummaryTasks.TabIndex = 21
+        Me.showOnlySummaryTasks.Text = "nur Sammelvorgänge anzeigen"
+        Me.showOnlySummaryTasks.UseVisualStyleBackColor = True
+        Me.showOnlySummaryTasks.Visible = False
+        '
         'frmEditWoerterbuch
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(774, 562)
+        Me.Controls.Add(Me.showOnlySummaryTasks)
         Me.Controls.Add(Me.clearStandardList)
         Me.Controls.Add(Me.clearUnknownList)
         Me.Controls.Add(Me.createWordbasedWildCard)
@@ -284,4 +297,5 @@ Partial Class frmEditWoerterbuch
     Friend WithEvents createWordbasedWildCard As System.Windows.Forms.CheckBox
     Friend WithEvents clearUnknownList As System.Windows.Forms.PictureBox
     Friend WithEvents clearStandardList As System.Windows.Forms.PictureBox
+    Friend WithEvents showOnlySummaryTasks As System.Windows.Forms.CheckBox
 End Class
