@@ -9465,17 +9465,20 @@ Public Module awinGeneralModules
             Dim wslogbuch As Excel.Worksheet = Nothing
 
            
-            Dim protokollLine As New clsProtokoll
+            Dim protokollLine As New clsProtokoll("", quelle)
+            ' ''protokollLine.InitProtokoll(wslogbuch, tabblattname)
 
-            protokollLine.InitProtokoll(wslogbuch, tabblattname)
+            Dim protokollliste As New SortedList(Of Integer, clsProtokoll)
             Dim zeile As Integer = 3
+
 
             ' Projekt suchen; VISBO Projekt suchen unter der RPLANTasks mit gegebenen MainProject
             For i = 0 To Rplan.task.Length - 1
 
                 If Not IsNothing(Rplan.task(i).mainProject) Then
                     ' akt. Task ist Projekt 
-                    protokollLine.clear()
+
+
                     Dim aktTask_i As rxfTask = Rplan.task(i)
                     hproj = New clsProjekt
 
@@ -9486,9 +9489,7 @@ Public Module awinGeneralModules
                     ProjektdauerinDays = calcDauerIndays(aktTask_i.actualDate.start.Value, aktTask_i.actualDate.finish.Value)
 
                     ' Protokollzeile bestücken
-                    protokollLine.actDate = Date.Now.ToString
-                    protokollLine.Projekt = hproj.name
-                    protokollLine.quelle = quelle
+                    protokollLine = New clsProtokoll(hproj.name, quelle)
 
 
                     ' ProjektPhase erzeugen
@@ -9520,7 +9521,7 @@ Public Module awinGeneralModules
                     lastelemID = cphase.nameID
 
                     ' Alle Tasks zu diesem Projekt mit deren Kinder und KindesKinder in hproj eintragen
-                    Call findAllTasksandInsert(aktTask_i, parentelemID, hproj, Rplan, protokollLine, zeile)
+                    Call findAllTasksandInsert(aktTask_i, parentelemID, hproj, Rplan, protokollLine, zeile, protokollliste)
 
                     '
                     '' '' Bestimmung der BMW-Vorlage des jeweiligen Projektes
@@ -9569,7 +9570,8 @@ Public Module awinGeneralModules
             Next i
 
             ' Protokolldatei sichern
-            protokollLine.close()
+            Call writeProtokoll(protokollliste, tabblattname)
+
 
             ' RXF-Datei (entspricht XML-Datei) Schliessen
             fs.Close()
@@ -9594,7 +9596,7 @@ Public Module awinGeneralModules
     ''' <param name="hproj"></param>aktuelles aufzubauendes Projekt
     ''' <param name="RPLAN"></param>Komplette eingelesene rxf-Struktur 
     ''' <remarks></remarks>
-    Private Sub findAllTasksandInsert(ByVal task As rxfTask, ByVal parentelemID As String, ByRef hproj As clsProjekt, ByVal RPLAN As rxf, ByRef prtLine As clsProtokoll, ByRef zeile As Integer)
+    Private Sub findAllTasksandInsert(ByVal task As rxfTask, ByVal parentelemID As String, ByRef hproj As clsProjekt, ByVal RPLAN As rxf, ByRef prtLine As clsProtokoll, ByRef zeile As Integer, ByRef prtliste As SortedList(Of Integer, clsProtokoll))
 
 
         Dim cphase As clsPhase = Nothing
@@ -9606,7 +9608,7 @@ Public Module awinGeneralModules
         Dim phaseNameID As String = ""
         Dim cBewertung As clsBewertung = Nothing
 
-        Dim milestoneName As String = ""
+        Dim origMSname As String = ""
         Dim milestonedate As Date
 
 
@@ -9731,11 +9733,16 @@ Public Module awinGeneralModules
 
                             prtLine.klasse = mapToAppearance(aktTask_j.taskType.Value, False)
                             prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, False)
-                            prtLine.writeLog(zeile)
+                            prtliste.Add(zeile, prtLine)
+                            zeile = zeile + 1
+                            'prtLine.writeLog(zeile)
 
+                            Dim quelle As String = prtLine.quelle
+
+                            prtLine = New clsProtokoll(hproj.name, quelle)
                             prtLine.actDate = ""
 
-                            Call findAllTasksandInsert(aktTask_j, lastelemID, hproj, RPLAN, prtLine, zeile)
+                            Call findAllTasksandInsert(aktTask_j, lastelemID, hproj, RPLAN, prtLine, zeile, prtliste)
 
                         End If
 
@@ -9793,7 +9800,7 @@ Public Module awinGeneralModules
                         cmilestone = New clsMeilenstein(parent:=parentphase)
                         cBewertung = New clsBewertung
 
-                        milestoneName = mappedMSname
+                        origMSname = aktTask_j.name
                         If DateDiff(DateInterval.Month, aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value) = 0 Then
 
                             milestonedate = aktTask_j.actualDate.start.Value
@@ -9808,10 +9815,10 @@ Public Module awinGeneralModules
                              DateDiff(DateInterval.Day, parentphase.getEndDate, milestonedate) > 0) Then
 
                             Call logfileSchreiben(("Fehler, RXFImport: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
-                                                milestoneName & " nicht innerhalb " & parentphase.name & vbLf & _
+                                                origMSname & " nicht innerhalb " & parentphase.name & vbLf & _
                                                      "Korrigieren Sie bitte diese Inkonsistenz in der Datei '"), hproj.name, anzFehler)
                             Throw New Exception("Fehler, RXFImport: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
-                                                milestoneName & " nicht innerhalb " & parentphase.name & vbLf & _
+                                                origMSname & " nicht innerhalb " & parentphase.name & vbLf & _
                                                      "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
                         End If
 
@@ -9860,7 +9867,7 @@ Public Module awinGeneralModules
 
                         Try
                             With parentphase
-                                .addMilestone(cmilestone)
+                                .addMilestone(cmilestone, origName:=origMSname)
                             End With
 
                             prtLine.hierarchie = hproj.hierarchy.getBreadCrumb(cmilestone.nameID)
@@ -9871,7 +9878,9 @@ Public Module awinGeneralModules
 
                             prtLine.klasse = mapToAppearance(aktTask_j.taskType.Value, False)
                             prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, False)
-                            prtLine.writeLog(zeile)
+                            prtliste.Add(zeile, prtLine)
+                            zeile = zeile + 1
+                            'prtLine.writeLog(zeile)
 
                             prtLine.actDate = ""
                         Catch ex1 As Exception
@@ -10148,5 +10157,132 @@ Public Module awinGeneralModules
         appInstance.EnableEvents = True
     End Sub
 
+    ''' <summary>
+    ''' initialisert im Inputfile die Tabelle 'Logbuch'
+    ''' 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Sub InitProtokoll(ByRef wslogbuch As Excel.Worksheet, ByVal tabblattname As String)
 
+        Try
+            wslogbuch = CType(xlsLogfile.Worksheets(tabblattname), _
+               Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+
+            If Not IsNothing(wslogbuch) Then
+
+                xlsLogfile.Worksheets.Application.DisplayAlerts = False
+                wslogbuch.Delete()
+                xlsLogfile.Worksheets.Application.DisplayAlerts = True
+
+                wslogbuch = CType(xlsLogfile.Worksheets.Add(), _
+                   Global.Microsoft.Office.Interop.Excel.Worksheet)
+                wslogbuch.Name = tabblattname
+            End If
+        Catch ex As Exception
+            'wsLogbuch = CType(xlsInput.Worksheets.Add(After:=xlsInput.Worksheets.Count), _
+            '   Global.Microsoft.Office.Interop.Excel.Worksheet)
+            wslogbuch = CType(xlsLogfile.Worksheets.Add(), _
+                Global.Microsoft.Office.Interop.Excel.Worksheet)
+            wslogbuch.Name = tabblattname
+        End Try
+
+
+        With wslogbuch
+            .Rows.RowHeight = 15
+            CType(.Rows(1), Excel.Range).RowHeight = 30
+            CType(.Rows(1), Excel.Range).Font.Bold = True
+
+            If awinSettings.fullProtokoll Then
+                CType(.Cells(1, 1), Excel.Range).Value() = "Datum"
+                CType(.Cells(1, 2), Excel.Range).Value() = "Projekt"
+                CType(.Cells(1, 3), Excel.Range).Value() = "Hierarchie"
+                CType(.Cells(1, 4), Excel.Range).Value() = "Plan-Element"
+                CType(.Cells(1, 5), Excel.Range).Value() = "Klasse"
+                CType(.Cells(1, 6), Excel.Range).Value() = "Abkürzung"
+                CType(.Cells(1, 7), Excel.Range).Value() = "Quelle"
+                CType(.Cells(1, 8), Excel.Range).Value() = "Übernommen als"
+                CType(.Cells(1, 9), Excel.Range).Value() = "Grund"
+                CType(.Cells(1, 10), Excel.Range).Value() = "PT Hierarchie"
+                CType(.Cells(1, 11), Excel.Range).Value() = "PT Klasse"
+                CType(.Columns(1), Excel.Range).ColumnWidth = 40
+                CType(.Columns(2), Excel.Range).ColumnWidth = 40
+                CType(.Columns(3), Excel.Range).ColumnWidth = 40
+                CType(.Columns(4), Excel.Range).ColumnWidth = 40
+                CType(.Columns(5), Excel.Range).ColumnWidth = 40
+                CType(.Columns(6), Excel.Range).ColumnWidth = 40
+                CType(.Columns(7), Excel.Range).ColumnWidth = 40
+                CType(.Columns(8), Excel.Range).ColumnWidth = 40
+                CType(.Columns(9), Excel.Range).ColumnWidth = 40
+                CType(.Columns(10), Excel.Range).ColumnWidth = 40
+                CType(.Columns(11), Excel.Range).ColumnWidth = 40
+            Else
+                CType(.Cells(1, 1), Excel.Range).Value() = "Datum"
+                CType(.Cells(1, 8), Excel.Range).Value() = "Übernommen als"
+                CType(.Cells(1, 9), Excel.Range).Value() = "Grund"
+                CType(.Columns(1), Excel.Range).ColumnWidth = 40
+                CType(.Columns(8), Excel.Range).ColumnWidth = 40
+                CType(.Columns(9), Excel.Range).ColumnWidth = 40
+
+            End If
+
+        End With
+
+    End Sub
+    Sub writeProtokoll(ByRef prtliste As SortedList(Of Integer, clsProtokoll), ByVal tabblattname As String)
+
+        Dim zelle As Excel.Range = Nothing
+        Dim zeile As Integer
+
+        Dim wsLogbuch As Excel.Worksheet = Nothing
+
+        Try
+            Call InitProtokoll(wsLogbuch, tabblattname) ' Tabelle Logbuch wird initialisiert
+            If Not IsNothing(xlsLogfile) Then
+                xlsLogfile.Save()
+            End If
+
+
+        Catch ex As Exception
+
+            Call MsgBox("Fehler beim Initialisieren des Protokolls")
+        End Try
+
+        For Each prtline As KeyValuePair(Of Integer, clsProtokoll) In prtliste
+            Try
+                'rowOffset = CType(CType(xlsLogfile.Worksheets(Me.tabblattname), Excel.Worksheet).Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                zeile = prtline.Key
+
+                With wsLogbuch
+
+                    If awinSettings.fullProtokoll Then
+
+                        CType(.Cells(zeile, 1), Excel.Range).Value() = prtline.Value.actDate
+                        .Cells(zeile, 2).Value() = prtline.Value.Projekt
+                        .Cells(zeile, 3).Value() = prtline.Value.hierarchie
+                        .Cells(zeile, 4).Value() = prtline.Value.planelement
+                        .Cells(zeile, 5).Value() = prtline.Value.klasse
+                        .Cells(zeile, 6).Value() = prtline.Value.abkürzung
+                        .Cells(zeile, 7).Value() = prtline.Value.quelle
+                        .Cells(zeile, 8).Value() = prtline.Value.planeleÜbern
+                        .Cells(zeile, 9).Value() = prtline.Value.grund
+                        .Cells(zeile, 10).Value() = prtline.Value.PThierarchie
+                        .Cells(zeile, 11).Value() = prtline.Value.PTklasse
+                    Else
+                        CType(.Cells(zeile, 1), Excel.Range).Value() = prtline.Value.actDate
+                        CType(.Cells(zeile, 8), Excel.Range).Value() = prtline.Value.planeleÜbern
+                        CType(.Cells(zeile, 9), Excel.Range).Value() = prtline.Value.grund
+                    End If
+                End With
+            Catch ex As Exception
+
+            End Try
+
+        Next
+        ' Logbuch sichern
+        If Not IsNothing(xlsLogfile) Then
+            xlsLogfile.Save()
+        End If
+
+    End Sub
 End Module

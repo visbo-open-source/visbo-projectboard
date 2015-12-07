@@ -6,10 +6,10 @@
       <Value Profile="(Default)">localhost</Value>
     </Setting>
     <Setting Name="awinPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">\\KOYTEK-NAS\backup\Projekt-Tafel Folder\LuR Engineering Demo\</Value>
+      <Value Profile="(Default)">\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BMW Demo\</Value>
     </Setting>
     <Setting Name="mongoDBname" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">LuRDemo</Value>
+      <Value Profile="(Default)">BMWDemo</Value>
     </Setting>
   </Settings>
 </SettingsFile>

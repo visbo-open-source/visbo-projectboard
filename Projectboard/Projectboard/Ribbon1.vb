@@ -3671,8 +3671,7 @@ Imports System.Drawing
                                 ' jetzt wird dieses Projekt exportiert ... 
                                 Try
                                     Call awinExportProjectmitHrchy(hproj)
-                                    ' ur: 06.05.2015: zu Testzwecken mit Hierarchie
-                                    ' Call awinExportProject(hproj)
+                                    
                                     outputString = outputString & hproj.getShapeText & " erfolgreich .." & vbLf
                                 Catch ex As Exception
                                     outputString = outputString & hproj.getShapeText & " nicht erfolgreich .." & vbLf & _
