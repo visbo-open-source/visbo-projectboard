@@ -36,8 +36,6 @@ Public Module Module1
     Public logmessage As String = ""
     Public anzFehler As Long = 0
 
-
-
     Public vergleichsfarbe0 As Object
     Public vergleichsfarbe1 As Object
     Public vergleichsfarbe2 As Object
@@ -59,7 +57,7 @@ Public Module Module1
     Public selectedProjekte As New clsProjekte
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
-    
+
     Public ImportProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
     Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
@@ -87,7 +85,7 @@ Public Module Module1
     Public RoleDefinitions As New clsRollen
     Public PhaseDefinitions As New clsPhasen
     Public MilestoneDefinitions As New clsMeilensteine
-   
+
 
     Public CostDefinitions As New clsKostenarten
     ' Welche Business-Units gibt es ? 
@@ -105,7 +103,7 @@ Public Module Module1
     Public DiagramList As New clsDiagramme
     Public awinButtonEvents As New clsAwinEvents
 
-   
+
 
 
     ' damit ist das Formular Milestone / Status / Phase überall verfügbar
@@ -155,7 +153,7 @@ Public Module Module1
     Public Const maxProjektdauer As Integer = 60
 
 
-   
+
 
 
     Public Enum PTbubble
@@ -350,7 +348,7 @@ Public Module Module1
         rplanrxf = 6
     End Enum
 
-   
+
     Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
 
     Public weightStrategicFit As Double
@@ -436,7 +434,7 @@ Public Module Module1
 
 
 
- 
+
 
 
     ''' <summary>

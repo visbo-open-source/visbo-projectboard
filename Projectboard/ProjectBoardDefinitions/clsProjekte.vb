@@ -417,11 +417,18 @@ Public Class clsProjekte
     ''' <remarks></remarks>
     Public ReadOnly Property getProject(index As Integer) As clsProjekt
         Get
-            Try
+
+            If index >= 1 And index <= AllProjects.Count Then
                 getProject = AllProjects.ElementAt(index - 1).Value
-            Catch ex As Exception
-                Throw New ArgumentException("Index nicht vorhanden:" & index.ToString)
-            End Try
+            Else
+                getProject = Nothing
+            End If
+            ' Änderung tk 6.12.15 ein Get sollte keine Exception werfen, nur Nothing zurückgeben 
+            'Try
+            '    getProject = AllProjects.ElementAt(index - 1).Value
+            'Catch ex As Exception
+            '    Throw New ArgumentException("Index nicht vorhanden:" & index.ToString)
+            'End Try
         End Get
     End Property
 

@@ -195,6 +195,7 @@ Public Class clsProtokoll
     End Sub
 
 
+
     ' '' ''' <summary>
     ' '' ''' initialisert im Inputfile die Tabelle 'Logbuch'
     ' '' ''' 
@@ -385,6 +386,7 @@ Public Class clsProtokoll
     ' ''    End If
 
     ' ''End Sub
+
     Sub clear()
         _actDate = ""
         ' ''_Projekt = ""
