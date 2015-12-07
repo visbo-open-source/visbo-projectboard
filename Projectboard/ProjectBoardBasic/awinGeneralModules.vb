@@ -378,7 +378,7 @@ Public Module awinGeneralModules
         ElseIf anzZeilen < anzDefinitions + 2 Then
             ' Zeilen einfügen 
 
-            tmpAnzahl = anzDefinitions - anzZeilen
+            tmpAnzahl = anzDefinitions + 2 - anzZeilen
             For ix As Integer = 1 To tmpAnzahl
                 CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
             Next
@@ -388,11 +388,8 @@ Public Module awinGeneralModules
 
         Else
             ' Zeilen löschen
-            tmpAnzahl = anzZeilen - anzDefinitions
-            If tmpAnzahl >= 2 Then
-                ' das stellt sicher, dass am Ende mindestetens 2 Zeilen übrig sind 
-                tmpAnzahl = tmpAnzahl - 2
-            End If
+            tmpAnzahl = anzZeilen - (anzDefinitions + 2)
+            
             For ix As Integer = 1 To tmpAnzahl
                 CType(phaseDefs.Rows(2), Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
             Next
@@ -423,13 +420,6 @@ Public Module awinGeneralModules
 
 
 
-        ' jetzt müssen ggf noch zwei Zeilen gelöscht werden, damit die awin_PhaseDefinitions wieder stimmt 
-        ' aber eigentlich darf das Programm hier gar nicht mehr reinkommen ...
-        While anzZeilen > anzDefinitions + 2
-            CType(phaseDefs.Rows(anzZeilen), Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
-            anzZeilen = anzZeilen - 1
-        End While
-
 
         '
         ' jetzt werden die Meilensteine geschrieben 
@@ -450,7 +440,7 @@ Public Module awinGeneralModules
         ElseIf anzZeilen < anzDefinitions + 2 Then
             ' Zeilen einfügen 
 
-            tmpAnzahl = anzDefinitions - anzZeilen
+            tmpAnzahl = anzDefinitions + 2 - anzZeilen
 
             For ix As Integer = 1 To tmpAnzahl
                 CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
@@ -459,18 +449,11 @@ Public Module awinGeneralModules
             ' anzZeilen und phaseDefinitions.count müssen jetzt genau gleich sein 
             anzZeilen = milestoneDefs.Rows.Count
 
-            ' tk test-Schleife
-            If anzZeilen <> milestoneDefs.Count Then
-                Dim dDBG As Integer = -1
-            End If
 
         Else
             ' Zeilen löschen
-            tmpAnzahl = anzZeilen - anzDefinitions
-            If tmpAnzahl >= 2 Then
-                ' das stellt sicher, dass am Ende mindestetens 2 Zeilen übrig sind 
-                tmpAnzahl = tmpAnzahl - 2
-            End If
+            tmpAnzahl = anzZeilen - (anzDefinitions + 2)
+            
             For ix As Integer = 1 To tmpAnzahl
                 CType(milestoneDefs.Rows(2), Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
             Next
@@ -480,7 +463,7 @@ Public Module awinGeneralModules
 
         End If
 
-        ' jetzt können die Phase-Definitions in den Range geschrieben werden 
+        ' jetzt können die Meilenstein-Definitions in den Range geschrieben werden 
         
 
         For ix As Integer = 1 To anzDefinitions
@@ -499,13 +482,6 @@ Public Module awinGeneralModules
         Next ix
 
 
-
-        ' jetzt müssen ggf noch zwei Zeilen gelöscht werden, damit die awin_PhaseDefinitions wieder stimmt 
-        ' da darf das Programm aber eigentlich nicht mehr reinkommen ... 
-        While anzZeilen > anzDefinitions + 2
-            CType(milestoneDefs.Rows(anzZeilen), Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
-            anzZeilen = anzZeilen - 1
-        End While
 
         '
         ' Ende der Behandlung der Phasen-/Meilenstein Behandlung 
@@ -946,6 +922,7 @@ Public Module awinGeneralModules
     ''' <summary>
     ''' liest die Business Unit Definitionen aus der awinsetTypen
     ''' die globale Variable businessUnitDefinitions wird dabei befüllt
+    ''' die erste und letzte Zeile des Range wird ignoriert 
     ''' </summary>
     ''' <param name="wsname">Name des Excel Worksheets, das die Infos im aktuellen Workbook enthält</param>
     ''' <remarks></remarks>
@@ -953,34 +930,44 @@ Public Module awinGeneralModules
 
         ' hier werden jetzt die Business Unit Informationen ausgelesen 
         businessUnitDefinitions = New SortedList(Of Integer, clsBusinessUnit)
-        With wsname
-            '
-            ' Business Unit Definitionen auslesen - im bereich awin_BusinessUnit_Definitions
-            '
-            Dim index As Integer = 1
-            Dim tmpBU As clsBusinessUnit
 
-            For Each c As Excel.Range In .Range("awin_BusinessUnit_Definitions")
+        Try
 
-                tmpBU = New clsBusinessUnit
+            With wsname
+                '
+                ' Business Unit Definitionen auslesen - im bereich awin_BusinessUnit_Definitions
+                '
+                Dim index As Integer = 1
+                Dim tmpBU As clsBusinessUnit
 
-                Try
+                Dim BURange As Excel.Range = CType(.Range("awin_BusinessUnit_Definitions"), Excel.Range)
+                Dim anzZeilen As Integer = BURange.Rows.Count
 
-                    tmpBU.name = CType(c.Value, String).Trim
-                    tmpBU.color = CLng(c.Interior.Color)
-                    If tmpBU.name.Length > 0 Then
-                        businessUnitDefinitions.Add(index, tmpBU)
-                        index = index + 1
-                    End If
+                For i As Integer = 2 To anzZeilen - 1
 
-                Catch ex As Exception
-                    ' nichts tun ...
-                    index = index + 1
-                End Try
+                    tmpBU = New clsBusinessUnit
 
-            Next
+                    Try
+                        tmpBU.name = CStr(BURange.Cells(i, 1).value).Trim
+                        tmpBU.color = CLng(BURange.Cells(i, 1).Interior.color)
 
-        End With
+                        If tmpBU.name.Length > 0 Then
+                            businessUnitDefinitions.Add(i - 1, tmpBU)
+                        End If
+
+                    Catch ex As Exception
+                        ' nichts tun ...
+
+                    End Try
+
+                Next
+
+            End With
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler im Customization-File: BU Definition")
+        End Try
+        
 
     End Sub
     
@@ -992,92 +979,107 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Private Sub readPhaseDefinitions(ByVal wsname As Excel.Worksheet)
 
-        Dim i As Integer = 0
         Dim hphase As clsPhasenDefinition
         Dim tmpStr As String = ""
-        With wsname
 
-            For Each c As Excel.Range In .Range("awin_Phasen_Definition")
+        Try
 
-                If Not IsNothing(c.Value) Then
+            With wsname
 
-                    If CStr(c.Value) <> "" Then
-                        i = i + 1
-                        tmpStr = CType(c.Value, String)
-                        ' das neue ...
-                        hphase = New clsPhasenDefinition
-                        With hphase
-                            .farbe = CLng(c.Interior.Color)
-                            .name = tmpStr.Trim
-                            .UID = i
+                Dim phaseRange As Excel.Range = .Range("awin_Phasen_Definition")
+                Dim anzZeilen As Integer = phaseRange.Rows.Count
+                Dim c As Excel.Range
 
-                            ' hat die Phase einen Schwellwert ? 
-                            Try
-                                If CInt(c.Offset(0, 1).Value) > 0 Then
-                                    .schwellWert = CInt(c.Offset(0, 1).Value)
+                For iZeile As Integer = 2 To anzZeilen - 1
+
+                    c = CType(phaseRange.Cells(iZeile, 1), Excel.Range)
+
+                    If Not IsNothing(c.Value) Then
+
+                        If CStr(c.Value) <> "" Then
+                            tmpStr = CType(c.Value, String)
+                            ' das neue ...
+                            hphase = New clsPhasenDefinition
+                            With hphase
+                                .farbe = CLng(c.Interior.Color)
+                                .name = tmpStr.Trim
+                                .UID = iZeile - 1
+
+                                ' hat die Phase einen Schwellwert ? 
+                                Try
+                                    If CInt(c.Offset(0, 1).Value) > 0 Then
+                                        .schwellWert = CInt(c.Offset(0, 1).Value)
+                                    End If
+                                Catch ex As Exception
+
+                                End Try
+
+                                ' ist die Phase eine special Phase ? 
+                                Try
+                                    If CStr(c.Offset(0, 2).Value).Trim = "LeLe" Then
+                                        specialListofPhases.Add(hphase.name, hphase.name)
+                                    End If
+                                Catch ex As Exception
+                                End Try
+
+
+
+                                ' hat die Phase eine Abkürzung ? 
+                                Dim abbrev As String = ""
+                                If Not IsNothing(c.Offset(0, 5).Value) Then
+                                    abbrev = CStr(c.Offset(0, 5).Value).Trim
                                 End If
-                            Catch ex As Exception
 
-                            End Try
-
-                            ' ist die Phase eine special Phase ? 
-                            Try
-                                If CStr(c.Offset(0, 2).Value).Trim = "LeLe" Then
-                                    specialListofPhases.Add(hphase.name, hphase.name)
-                                End If
-                            Catch ex As Exception
-                            End Try
+                                .shortName = abbrev
 
 
+                                ' hat die Phase eine Darstellungsklasse ? 
+                                Try
+                                    Dim darstellungsklasse As String
+                                    If Not IsNothing(c.Offset(0, 6).Value) Then
 
-                            ' hat die Phase eine Abkürzung ? 
-                            Dim abbrev As String = ""
-                            If Not IsNothing(c.Offset(0, 5).Value) Then
-                                abbrev = CStr(c.Offset(0, 5).Value).Trim
-                            End If
-
-                            .shortName = abbrev
-
-
-                            ' hat die Phase eine Darstellungsklasse ? 
-                            Try
-                                Dim darstellungsklasse As String
-                                If Not IsNothing(c.Offset(0, 6).Value) Then
-
-                                    If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
-                                        darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
-                                        If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
-                                            .darstellungsKlasse = darstellungsklasse
-                                        Else
-                                            .darstellungsKlasse = ""
+                                        If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
+                                            darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
+                                            If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
+                                                .darstellungsKlasse = darstellungsklasse
+                                            Else
+                                                .darstellungsKlasse = ""
+                                            End If
                                         End If
+
                                     End If
 
-                                End If
+                                Catch ex As Exception
+                                    .darstellungsKlasse = ""
+                                End Try
 
+
+
+                            End With
+
+                            Try
+                                PhaseDefinitions.Add(hphase)
                             Catch ex As Exception
-                                .darstellungsKlasse = ""
+
                             End Try
 
 
-
-                        End With
-
-                        Try
-                            PhaseDefinitions.Add(hphase)
-                        Catch ex As Exception
-
-                        End Try
-
+                        End If
 
                     End If
 
-                End If
-                
 
-            Next c
+                Next
 
-        End With
+
+            End With
+
+        Catch ex As Exception
+
+            Throw New ArgumentException("Fehler in Customization File: Phasen")
+
+        End Try
+
 
     End Sub
 
@@ -1092,91 +1094,106 @@ Public Module awinGeneralModules
         Dim hMilestone As clsMeilensteinDefinition
         Dim tmpStr As String
 
-        With wsname
 
-            For Each c As Excel.Range In .Range("awin_Meilenstein_Definition")
+        Try
 
-                ' hier muss das Aufbauen der MilestoneDefinitions gemacht werden  
-                If Not IsNothing(c.Value) Then
+            With wsname
 
-                    If CStr(c.Value) <> "" Then
-                        i = i + 1
-                        tmpStr = CType(c.Value, String)
-                        ' das neue ...
-                        hMilestone = New clsMeilensteinDefinition
-                        With hMilestone
-                            .name = tmpStr.Trim
-                            .UID = i
+                Dim milestoneRange As Excel.Range = .Range("awin_Meilenstein_Definition")
+                Dim anzZeilen As Integer = milestoneRange.Rows.Count
+                Dim c As Excel.Range
 
-                            ' hat der Milestone einen Schwellwert ? 
+                For iZeile As Integer = 2 To anzZeilen - 1
 
-                            If IsNothing(c.Offset(0, 1).Value) Then
-                            ElseIf IsNumeric(c.Offset(0, 1).Value) Then
-                                If CInt(c.Offset(0, 1).Value) > 0 Then
-                                    .schwellWert = CInt(c.Offset(0, 1).Value)
-                                End If
-                            End If
+                    c = CType(milestoneRange.Cells(iZeile, 1), Excel.Range)
 
+                    ' hier muss das Aufbauen der MilestoneDefinitions gemacht werden  
+                    If Not IsNothing(c.Value) Then
 
-                            ' hat der Milestone einen Bezug ? 
-                            Dim bezug As String = ""
-                            If Not IsNothing(c.Offset(0, 4).Value) Then
+                        If CStr(c.Value) <> "" Then
+                            i = i + 1
+                            tmpStr = CType(c.Value, String)
+                            ' das neue ...
+                            hMilestone = New clsMeilensteinDefinition
+                            With hMilestone
+                                .name = tmpStr.Trim
+                                .UID = i
 
-                                bezug = CStr(c.Offset(0, 4).Value).Trim
+                                ' hat der Milestone einen Schwellwert ? 
 
-                                If PhaseDefinitions.Contains(bezug) Then
-                                Else
-                                    bezug = ""
-                                End If
-
-                            End If
-
-                            .belongsTo = bezug
-
-                            ' hat der Milestone eine Abkürzung ? 
-                            Dim abbrev As String = ""
-                            If Not IsNothing(c.Offset(0, 5).Value) Then
-                                abbrev = CStr(c.Offset(0, 5).Value).Trim
-                            End If
-
-                            .shortName = abbrev
-
-
-                            ' hat der Milestone eine Darstellungsklasse ? 
-
-                            Dim darstellungsklasse As String = ""
-                            If Not IsNothing(c.Offset(0, 6).Value) Then
-
-                                If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
-                                    darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
-                                    If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
-                                        .darstellungsKlasse = darstellungsklasse
-                                    Else
-                                        .darstellungsKlasse = ""
+                                If IsNothing(c.Offset(0, 1).Value) Then
+                                ElseIf IsNumeric(c.Offset(0, 1).Value) Then
+                                    If CInt(c.Offset(0, 1).Value) > 0 Then
+                                        .schwellWert = CInt(c.Offset(0, 1).Value)
                                     End If
                                 End If
 
-                            End If
+
+                                ' hat der Milestone einen Bezug ? 
+                                Dim bezug As String = ""
+                                If Not IsNothing(c.Offset(0, 4).Value) Then
+
+                                    bezug = CStr(c.Offset(0, 4).Value).Trim
+
+                                    If PhaseDefinitions.Contains(bezug) Then
+                                    Else
+                                        bezug = ""
+                                    End If
+
+                                End If
+
+                                .belongsTo = bezug
+
+                                ' hat der Milestone eine Abkürzung ? 
+                                Dim abbrev As String = ""
+                                If Not IsNothing(c.Offset(0, 5).Value) Then
+                                    abbrev = CStr(c.Offset(0, 5).Value).Trim
+                                End If
+
+                                .shortName = abbrev
+
+
+                                ' hat der Milestone eine Darstellungsklasse ? 
+
+                                Dim darstellungsklasse As String = ""
+                                If Not IsNothing(c.Offset(0, 6).Value) Then
+
+                                    If CStr(c.Offset(0, 6).Value).Trim.Length > 0 Then
+                                        darstellungsklasse = CStr(c.Offset(0, 6).Value).Trim
+                                        If appearanceDefinitions.ContainsKey(darstellungsklasse) Then
+                                            .darstellungsKlasse = darstellungsklasse
+                                        Else
+                                            .darstellungsKlasse = ""
+                                        End If
+                                    End If
+
+                                End If
 
 
 
-                        End With
+                            End With
 
-                        Try
-                            MilestoneDefinitions.Add(hMilestone)
-                        Catch ex As Exception
+                            Try
+                                MilestoneDefinitions.Add(hMilestone)
+                            Catch ex As Exception
 
-                        End Try
+                            End Try
 
+
+                        End If
 
                     End If
 
-                End If
-                
+                Next
 
-            Next
+            End With
 
-        End With
+        Catch ex As Exception
+
+            Throw New ArgumentException("Fehler in Customization File: Meilensteine")
+
+        End Try
+        
 
     End Sub
 
@@ -1191,69 +1208,75 @@ Public Module awinGeneralModules
         '
         ' Rollen Definitionen auslesen - im bereich awin_Rollen_Definition
         '
-        Dim i As Integer = 0
+        Dim index As Integer = 0
         Dim tmpStr As String
         Dim hrole As clsRollenDefinition
 
-        With wsname
 
-            For Each c As Excel.Range In .Range("awin_Rollen_Definition")
-                If CStr(c.Value) <> "" Then
-                    i = i + 1
-                    tmpStr = CType(c.Value, String)
-                    If i = 1 Then
-                        rollenKapaFarbe = c.Offset(0, 1).Interior.Color
+        Try
+
+
+            With wsname
+
+                Dim rolesRange As Excel.Range = .Range("awin_Rollen_Definition")
+                Dim anzZeilen As Integer = rolesRange.Rows.Count
+                Dim c As Excel.Range
+
+                For i = 2 To anzZeilen - 1
+                    c = CType(rolesRange.Cells(i, 1), Excel.Range)
+
+                    If CStr(c.Value) <> "" Then
+                        index = index + 1
+                        tmpStr = CType(c.Value, String)
+                        If index = 1 Then
+                            rollenKapaFarbe = c.Offset(0, 1).Interior.Color
+                        End If
+
+
+                        ' jetzt kommt die Rollen Definition 
+                        hrole = New clsRollenDefinition
+                        Dim cp As Integer
+                        With hrole
+                            .name = tmpStr.Trim
+                            .Startkapa = CDbl(c.Offset(0, 1).Value)
+                            .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
+
+                            Try
+                                If CDbl(c.Offset(0, 3).Value) = 0.0 Then
+                                    .tagessatzExtern = .tagessatzIntern * 1.35
+                                Else
+                                    .tagessatzExtern = CDbl(c.Offset(0, 3).Value)
+                                End If
+                            Catch ex As Exception
+                                .tagessatzExtern = .tagessatzIntern * 1.35
+                            End Try
+
+                            ' Auslesen der zukünftigen Kapazität
+                            ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
+                            For cp = 1 To 240
+
+                                .kapazitaet(cp) = .Startkapa
+                                .externeKapazitaet(cp) = 0.0
+
+                            Next
+                            .farbe = c.Interior.Color
+                            .UID = index
+                        End With
+
+                        '
+                        RoleDefinitions.Add(hrole)
+                        'hrole = Nothing
+
                     End If
 
+                Next
 
-                    ' jetzt kommt die Rollen Definition 
-                    hrole = New clsRollenDefinition
-                    Dim cp As Integer
-                    With hrole
-                        .name = tmpStr.Trim
-                        .Startkapa = CDbl(c.Offset(0, 1).Value)
-                        .tagessatzIntern = CDbl(c.Offset(0, 2).Value)
+            End With
 
-                        Try
-                            If CDbl(c.Offset(0, 3).Value) = 0.0 Then
-                                .tagessatzExtern = .tagessatzIntern * 1.35
-                            Else
-                                .tagessatzExtern = CDbl(c.Offset(0, 3).Value)
-                            End If
-                        Catch ex As Exception
-                            .tagessatzExtern = .tagessatzIntern * 1.35
-                        End Try
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler im Customization-File: Rolle")
+        End Try
 
-                        ' Auslesen der zukünftigen Kapazität
-                        ' Änderung 29.5.14: von StartofCalendar 240 Monate nach vorne kucken ... 
-                        For cp = 1 To 240
-                            .kapazitaet(cp) = .Startkapa
-                            .externeKapazitaet(cp) = 0.0
-
-                            ' Änderung 29.5.14 Wurde ersetzt durch das Auslesen der Rollen-Kapa Files
-                            ' siehe weiter unten 
-                            '.kapazitaet(cp) = CType(c.Offset(0, 3 + cp).Value, Double)
-                            'If .kapazitaet(cp) < 0 Then
-                            '    ' Kapa kann nicht negative sein
-                            '    ' wenn nichts angegeben wird, soll die Startkapa verwendet werden 
-                            '    .kapazitaet(cp) = .Startkapa
-                            'End If
-                        Next
-                        .farbe = c.Interior.Color
-                        .UID = i
-                    End With
-
-                    ' später, wenn die Customization File bereits geschlossen ist, werden die 
-                    ' evtl vorhandenen Rolle Kapazität Files ausgelesen 
-
-                    RoleDefinitions.Add(hrole)
-                    'hrole = Nothing
-
-                End If
-
-            Next c
-
-        End With
         
 
     End Sub
@@ -1268,37 +1291,49 @@ Public Module awinGeneralModules
     Private Sub readCostDefinitions(ByVal wsname As Excel.Worksheet)
 
 
-        Dim i As Integer = 0
+        Dim index As Integer = 0
         Dim hcost As clsKostenartDefinition
         Dim tmpStr As String
 
-        With wsname
 
-            For Each c As Excel.Range In .Range("awin_Kosten_Definition")
+        Try
 
-                If CStr(c.Value) <> "" Or i > 0 Then
-                    i = i + 1
+            With wsname
 
+                Dim costRange As Excel.Range = .Range("awin_Kosten_Definition")
+                Dim anzZeilen As Integer = costRange.Rows.Count
+                Dim c As Excel.Range
 
-                    ' jetzt kommt die Kostenarten Definition
-                    hcost = New clsKostenartDefinition
-                    With hcost
-                        If CStr(c.Value) <> "" Then
-                            tmpStr = CType(c.Value, String)
-                            .name = tmpStr.Trim
-                        Else
-                            .name = "Personalkosten"
-                        End If
-                        .farbe = c.Interior.Color
-                        .UID = i
-                    End With
+                For i As Integer = 2 To anzZeilen - 1
 
-                    CostDefinitions.Add(hcost)
-                End If
+                    c = CType(costRange.Cells(i, 1), Excel.Range)
+                    If CStr(c.Value) <> "" Or index > 0 Then
+                        index = index + 1
 
-            Next c
+                        ' jetzt kommt die Kostenarten Definition
+                        hcost = New clsKostenartDefinition
+                        With hcost
+                            If CStr(c.Value) <> "" Then
+                                tmpStr = CType(c.Value, String)
+                                .name = tmpStr.Trim
+                            Else
+                                .name = "Personalkosten"
+                            End If
+                            .farbe = c.Interior.Color
+                            .UID = index
+                        End With
 
-        End With
+                        CostDefinitions.Add(hcost)
+                    End If
+
+                Next
+
+            End With
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler in Customization File: Kosten")
+        End Try
+        
 
     End Sub
 
@@ -9668,6 +9703,7 @@ Public Module awinGeneralModules
 
                             'wenn der PhasenName gemappt werden kann und dieser dann in phasedefinitions enthalten ist, so wird phasename ersetzt
                             mappedPhasename = phaseMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
+
                             If PhaseDefinitions.Contains(mappedPhasename) Then
                                 ' neuer aktueller Name der Task
 
@@ -9675,9 +9711,13 @@ Public Module awinGeneralModules
                             Else
 
                                 Dim newPhaseDef As New clsPhasenDefinition
-                                newPhaseDef.name = aktTask_j.name
 
-                                mappedPhasename = aktTask_j.name
+                                ' Änderung tk 6.12.15: das muss auf den mappedPhasename gesetzt werdne, da sonst Eltern-Ersetzungen, die noch nicht 
+                                ' in der phasedefinitions sind , nicht in der Liste der unbekannten aufgenommen werden ... 
+                                'newPhaseDef.name = aktTask_j.name
+                                'mappedPhasename = aktTask_j.name
+
+                                newPhaseDef.name = mappedPhasename
                                 newPhaseDef.shortName = aktTask_j.remark
 
                                 newPhaseDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, False)
@@ -9783,11 +9823,16 @@ Public Module awinGeneralModules
                             Else
 
                                 Dim msDef As New clsMeilensteinDefinition
-                                msDef.belongsTo = parentphase.name
-                                msDef.name = aktTask_j.name
-                                mappedMSname = aktTask_j.name
-                                msDef.schwellWert = 0
 
+
+                                ' Änderung tk 6.12.15: das muss auf den mappedMSNamen gesetzt werdne, da sonst Eltern-Ersetzungen, die noch nicht 
+                                ' in der milestonedefinitions sind , nicht in der Liste der unbekannten aufgenommen werden ... 
+                                'msDef.name = aktTask_j.name
+                                'mappedMSname = aktTask_j.name
+
+                                msDef.name = mappedMSname
+                                msDef.schwellWert = 0
+                                msDef.belongsTo = parentphase.name
                                 msDef.shortName = aktTask_j.remark
 
                                 msDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, True)

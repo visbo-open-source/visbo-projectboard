@@ -836,6 +836,169 @@
         End Get
     End Property
 
+
+    ''' <summary>
+    ''' gibt zurück, ob die Parent-Phase mit ID=parentID identisch zur Phase mit Name elemName, startdate, endDate ist) 
+    ''' </summary>
+    ''' <param name="elemName">Name der Phase</param>
+    ''' <param name="startDate">Start-Datum der Phase</param>
+    ''' <param name="endDate">Ende-Datum der Phase</param>
+    ''' <param name="tolerance" >tolerance = 1.0: bedeutet, daß 100% üÜbereinstimmung vorliegen muss</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function isCloneToParent(ByVal elemName As String, ByVal parentID As String, ByVal startDate As Date, ByVal endDate As Date, _
+                                         Optional ByVal tolerance As Double = 1.0) As Boolean
+
+        Dim parentPhase As clsPhase = Me.getPhaseByID(parentID)
+        Dim istIdentisch As Boolean = False
+
+        If Not IsNothing(parentPhase) Then
+
+            Dim parentStartDate As Date = parentPhase.getStartDate
+            Dim parentEndDate As Date = parentPhase.getEndDate
+
+            Dim ueberdeckung As Double = calcPhaseUeberdeckung(parentStartDate, parentEndDate, _
+                                                                startDate, endDate)
+
+            If elemNameOfElemID(parentID) = elemName And ueberdeckung >= tolerance Then
+                istIdentisch = True
+            Else
+                istIdentisch = False
+            End If
+
+
+        Else
+            istIdentisch = False
+        End If
+
+        isCloneToParent = istIdentisch
+
+    End Function
+
+    ''' <summary>
+    ''' gibt die ID des Sibling Elements zurück, das von Namen, Start , Ausdehnung innerhalb der Toleranz identisch ist 
+    ''' leerer String, wenn das Element nicht existiert
+    ''' </summary>
+    ''' <param name="parentID">ID in der Hierachy vom Parent-Knoten</param>
+    ''' <param name="elemName">Name der Phase</param>
+    ''' <param name="startDate">Start-Datum der Phase</param>
+    ''' <param name="endDate">Ende-Datum der Phase</param>
+    ''' <param name="tolerance">Toleranz, innerhalb der die Überdeckung als identisch gilt; ohne Angabe wird nur 100% Überdeckung als identisch angesehen</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getDuplicatePhaseSiblingID(ByVal elemName As String, ByVal parentID As String, ByVal startDate As Date, ByVal endDate As Date, _
+                                             Optional ByVal tolerance As Double = 1.0) As String
+
+        Dim parentNode As clsHierarchyNode = Me.hierarchy.nodeItem(parentID)
+        Dim siblingID As String
+        Dim identicalID As String = ""
+
+        Dim anzahlKinder As Integer = parentNode.childCount
+        Dim istIdentisch As Boolean = False
+        Dim currentChildNr As Integer = 1
+
+        Dim siblingPhase As clsPhase = Me.getPhaseByID(parentID)
+
+        Do While Not istIdentisch And currentChildNr <= anzahlKinder
+
+            siblingID = parentNode.getChild(currentChildNr)
+
+            If Not elemIDIstMeilenstein(siblingID) Then
+
+                siblingPhase = Me.getPhaseByID(siblingID)
+
+                If Not IsNothing(siblingPhase) Then
+
+                    Dim siblingStartDate As Date = siblingPhase.getStartDate
+                    Dim siblingEndDate As Date = siblingPhase.getEndDate
+
+                    Dim ueberdeckung As Double = calcPhaseUeberdeckung(siblingStartDate, siblingEndDate, _
+                                                                        startDate, endDate)
+
+                    If siblingPhase.name = elemName And ueberdeckung >= tolerance Then
+                        istIdentisch = True
+                        identicalID = siblingID
+                    Else
+                        istIdentisch = False
+                    End If
+
+
+                Else
+                    istIdentisch = False
+                End If
+
+            End If
+
+            currentChildNr = currentChildNr + 1
+
+        Loop
+
+
+        getDuplicatePhaseSiblingID = identicalID
+
+    End Function
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="parentID"></param>
+    ''' <param name="msName"></param>
+    ''' <param name="msDate"></param>
+    ''' <param name="toleranceInDays"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getDuplicateMsSiblingID(ByVal msName As String, ByVal parentID As String, ByVal msDate As Date, _
+                                                  Optional ByVal toleranceInDays As Integer = 0) As String
+
+        Dim parentNode As clsHierarchyNode = Me.hierarchy.nodeItem(parentID)
+        Dim siblingID As String
+        Dim identicalID As String = ""
+
+        Dim anzahlKinder As Integer = parentNode.childCount
+        Dim istIdentisch As Boolean = False
+        Dim currentChildNr As Integer = 1
+
+        Dim siblingMilestone As clsMeilenstein
+
+        Do While Not istIdentisch And currentChildNr <= anzahlKinder
+
+            siblingID = parentNode.getChild(currentChildNr)
+
+            If elemIDIstMeilenstein(siblingID) Then
+
+                siblingMilestone = Me.getMilestoneByID(siblingID)
+
+                If Not IsNothing(siblingMilestone) Then
+
+                    Dim siblingDate As Date = siblingMilestone.getDate
+
+                    Dim diffInDays = DateDiff(DateInterval.Day, siblingDate, msDate)
+                    If diffInDays < 0 Then
+                        diffInDays = diffInDays * -1
+                    End If
+
+                    If diffInDays <= toleranceInDays And siblingMilestone.name = msName Then
+                        istIdentisch = True
+                        identicalID = siblingMilestone.nameID
+                    Else
+                        istIdentisch = False
+                    End If
+
+                Else
+                    istIdentisch = False
+                End If
+
+            End If
+
+            currentChildNr = currentChildNr + 1
+
+        Loop
+
+
+        getDuplicateMsSiblingID = identicalID
+
+
+    End Function
     ''' <summary>
     ''' gibt alle Phasen bzw. Milestone ElemIDs in einer Collection zurück 
     ''' die Milestones gehen alle mit 1§ los, die Phasen alle mit 0§; 
