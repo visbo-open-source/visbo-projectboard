@@ -3217,18 +3217,22 @@ Imports System.Drawing
 
                 Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
 
-                appInstance.ScreenUpdating = True
+                Dim result As Integer = MsgBox("Soll ein Protokoll geschrieben werden?", MsgBoxStyle.YesNo)
+                If result = MsgBoxResult.Yes Then
 
-                ' Tabellenblattname aus dateiname erstellen fürs Protokoll (dateiname ohne ".rxf" Extension)
-                Dim tstr As String() = Split(dateiName, "\", -1)
-                Dim hstr As String = tstr(tstr.Length - 1)
-                tstr = Split(hstr, ".", 2)
-                Dim tabblattname As String = tstr(0)
+                    appInstance.ScreenUpdating = True
 
-                appInstance.ScreenUpdating = False
+                    ' Tabellenblattname aus dateiname erstellen fürs Protokoll (dateiname ohne ".rxf" Extension)
+                    Dim tstr As String() = Split(dateiName, "\", -1)
+                    Dim hstr As String = tstr(tstr.Length - 1)
+                    tstr = Split(hstr, ".", 2)
+                    Dim tabblattname As String = tstr(0)
 
-                ' Protokoll aus der Liste protokoll in Logfile mit tabellenblatt tabblattname ausleiten
-                Call writeProtokoll(protokoll, tabblattname)
+                    appInstance.ScreenUpdating = False
+                    ' Protokoll aus der Liste protokoll in Logfile mit tabellenblatt tabblattname ausleiten
+                    Call writeProtokoll(protokoll, tabblattname)
+                End If
+
 
                 ' tk Änderung 26.11.15 das muss doch nach dem Import noch nicht gemacht werden
                 ' sondern erst nach Editieren Wörterbuch oder ganz am Schluss beim Beenden 
