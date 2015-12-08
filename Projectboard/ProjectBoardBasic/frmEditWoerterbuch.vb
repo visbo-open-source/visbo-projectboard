@@ -654,7 +654,7 @@ Public Class frmEditWoerterbuch
 
                     Dim ok As Boolean = True
                     If anzEintraege > 0 Then
-                        Call MsgBox(itemText & " hat " & anzEintraege & " im Wörterbuch. Trotzdem fortfahren?", MsgBoxStyle.OkCancel)
+                        Call MsgBox(itemText & " hat " & anzEintraege & " Einträge im Wörterbuch. Trotzdem fortfahren?", MsgBoxStyle.OkCancel)
                         If MsgBoxResult.Ok Then
                             milestoneMappings.removeStdName(itemText)
                             ok = True
@@ -695,7 +695,7 @@ Public Class frmEditWoerterbuch
 
                     Dim ok As Boolean = True
                     If anzEintraege > 0 Then
-                        Call MsgBox(itemText & " hat " & anzEintraege & " im Wörterbuch. Trotzdem fortfahren?", MsgBoxStyle.OkCancel)
+                        Call MsgBox(itemText & " hat " & anzEintraege & " Einträge im Wörterbuch. Trotzdem fortfahren?", MsgBoxStyle.OkCancel)
                         If MsgBoxResult.Ok Then
                             phaseMappings.removeStdName(itemText)
                             ok = True
@@ -775,6 +775,8 @@ Public Class frmEditWoerterbuch
         Else
             If unknownList.SelectedItems.Count > 0 Then
 
+                Dim todoList As New Collection
+
                 If rdbListShowsPhases.Checked Then
 
                     For Each Obj As Object In unknownList.SelectedItems
@@ -782,8 +784,8 @@ Public Class frmEditWoerterbuch
                             Dim itemName As String = CStr(Obj)
                             phaseMappings.addIgnoreName(itemName)
                             missingPhaseDefinitions.remove(itemName)
-                            unknownList.Items.Remove(itemName)
-
+                            todoList.Add(itemName)
+                            
                         Catch ex As Exception
 
                         End Try
@@ -796,13 +798,21 @@ Public Class frmEditWoerterbuch
                             Dim itemName As String = CStr(Obj)
                             milestoneMappings.addIgnoreName(itemName)
                             missingMilestoneDefinitions.remove(itemName)
-                            unknownList.Items.Remove(itemName)
+                            todoList.Add(itemName)
                         Catch ex As Exception
 
                         End Try
                     Next
 
                 End If
+
+                ' jetzt müssen aus der unknownList alle Einträge der todoList raus 
+                For i As Integer = 1 To todoList.Count
+                    Dim itemName As String = CStr(todoList.Item(i))
+                    unknownList.Items.Remove(itemName)
+                Next
+
+                todoList.Clear()
 
             Else
                 Call MsgBox("wenigstens ein Element aus der Liste der unbekannten Bezeichnungen selektieren ...")

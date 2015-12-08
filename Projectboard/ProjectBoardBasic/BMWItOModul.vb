@@ -747,6 +747,7 @@ Public Module BMWItOModul
                                                     ok2 = True
                                                 Else
                                                     ok2 = False
+                                                    logMessage = "ist nicht in der Liste der zugelassenen Elemente enthalten"
                                                 End If
                                                 missingPhaseDefinitions.Add(hphaseDef)
                                             Catch ex As Exception

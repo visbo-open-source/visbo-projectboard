@@ -391,7 +391,7 @@ Public Module awinGeneralModules
             tmpAnzahl = anzZeilen - (anzDefinitions + 2)
             
             For ix As Integer = 1 To tmpAnzahl
-                CType(phaseDefs.Rows(2), Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
+                CType(phaseDefs.Rows(2).EntireRow, Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
             Next
 
             ' jetzt sind mindestens zwei Zeilen übrig , und zwar genau dann wenn phaseDefinitions.count = 0 
@@ -455,7 +455,7 @@ Public Module awinGeneralModules
             tmpAnzahl = anzZeilen - (anzDefinitions + 2)
             
             For ix As Integer = 1 To tmpAnzahl
-                CType(milestoneDefs.Rows(2), Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
+                CType(milestoneDefs.Rows(2).EntireRow, Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
             Next
 
             ' jetzt sind mindestens zwei Zeilen übrig , und zwar genau dann wenn phaseDefinitions.count = 0 
@@ -501,11 +501,12 @@ Public Module awinGeneralModules
             With wsName8
 
                 ' Synonyme schreiben 
-                letzteZeile = CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
+                letzteZeile = System.Math.Max(CInt(CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row), _
+                                                CInt(CType(.Cells(20000, 6), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row))
 
                 If letzteZeile >= 3 Then
                     area = CType(.Range(.Cells(3, 1), .Cells(letzteZeile, 2)), Excel.Range)
-                    ' alte Area löschen
+                    ' alte Synonym / regEX Area löschen
                     area.Clear()
                 End If
                 
@@ -526,6 +527,7 @@ Public Module awinGeneralModules
                     CType(area.Cells(aktuelleZeile, 2), Excel.Range).Value = phaseMappings.getRegExMapping(ix - 1).Value
                     aktuelleZeile = aktuelleZeile + 1
                 Next
+
 
                 ' ignoreNames schreiben 
                 letzteZeile = CType(.Cells(20000, 6), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
@@ -554,10 +556,16 @@ Public Module awinGeneralModules
             With wsName10
 
                 ' Synonyme schreiben 
-                letzteZeile = CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
-                area = CType(.Range(.Cells(3, 1), .Cells(letzteZeile, 2)), Excel.Range)
-                ' alte Area löschen
-                area.Clear()
+                letzteZeile = System.Math.Max(CInt(CType(.Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row), _
+                                                CInt(CType(.Cells(20000, 6), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row))
+
+
+                If letzteZeile >= 3 Then
+                    area = CType(.Range(.Cells(3, 1), .Cells(letzteZeile, 2)), Excel.Range)
+                    ' alte Area löschen
+                    area.Clear()
+                End If
+                
 
                 ' neue Area definieren
                 area = CType(.Range(.Cells(3, 1), .Cells(milestoneMappings.countSynonyms + milestoneMappings.countRegEx + 4, 2)), Excel.Range)
@@ -577,12 +585,12 @@ Public Module awinGeneralModules
                 Next
 
                 ' ignoreNames schreiben 
-                letzteZeile = CType(.Cells(20000, 6), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
-                area = CType(.Range(.Cells(3, 6), .Cells(letzteZeile, 6)), Excel.Range)
-                ' alte Area löschen
-                area.Clear()
-
-
+                If letzteZeile >= 3 Then
+                    area = CType(.Range(.Cells(3, 6), .Cells(letzteZeile, 6)), Excel.Range)
+                    ' alte Area löschen
+                    area.Clear()
+                End If
+                
                 area = CType(.Range(.Cells(3, 6), .Cells(milestoneMappings.countIgnore + 4, 6)), Excel.Range)
                 aktuelleZeile = 1
 
@@ -1420,6 +1428,44 @@ Public Module awinGeneralModules
             Catch ex As Exception
                 awinSettings.fullProtocol = False
             End Try
+
+            ' Einstellung für addMissingDefinitions
+            Try
+                awinSettings.addMissingPhaseMilestoneDef = CBool(.Range("addMissingDefinitions").Value)
+            Catch ex As Exception
+                awinSettings.addMissingPhaseMilestoneDef = False
+            End Try
+
+            ' Einstellung für alwaysAcceptTemplate Names 
+            Try
+                awinSettings.alwaysAcceptTemplateNames = CBool(.Range("alywaysAcceptTemplateDefs").Value)
+            Catch ex As Exception
+                awinSettings.alwaysAcceptTemplateNames = False
+            End Try
+
+            ' Einstellungen, um Duplikate zu eliminieren ; 
+            Try
+                awinSettings.eliminateDuplicates = CBool(.Range("eliminate_Duplicates").Value)
+            Catch ex As Exception
+                awinSettings.eliminateDuplicates = True
+            End Try
+
+            ' Einstellungen, um unbekannte Namen zu importieren 
+            Try
+                awinSettings.importUnknownNames = CBool(.Range("importUnknownNames").Value)
+            Catch ex As Exception
+                awinSettings.importUnknownNames = True
+            End Try
+
+            ' Einstellung, um Geschwister-Namen immer eindeutig zu machen
+            Try
+                awinSettings.createUniqueSiblingNames = CBool(.Range("uniqueSiblingNames").Value)
+            Catch ex As Exception
+                awinSettings.createUniqueSiblingNames = True
+            End Try
+
+
+
             StartofCalendar = awinSettings.kalenderStart
             StartofCalendar = StartofCalendar.ToLocalTime()
 
