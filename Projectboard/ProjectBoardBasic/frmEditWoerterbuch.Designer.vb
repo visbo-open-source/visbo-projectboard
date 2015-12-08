@@ -166,13 +166,13 @@ Partial Class frmEditWoerterbuch
         '
         'visElements
         '
-        Me.visElements.BackColor = System.Drawing.Color.SteelBlue
+        Me.visElements.BackColor = System.Drawing.Color.Green
         Me.visElements.ForeColor = System.Drawing.SystemColors.ButtonHighlight
         Me.visElements.Location = New System.Drawing.Point(288, 431)
         Me.visElements.Name = "visElements"
-        Me.visElements.Size = New System.Drawing.Size(189, 28)
+        Me.visElements.Size = New System.Drawing.Size(189, 31)
         Me.visElements.TabIndex = 12
-        Me.visElements.Text = "ausgewählte Elemente visualisieren"
+        Me.visElements.Text = "Elemente visualisieren"
         Me.visElements.UseVisualStyleBackColor = False
         '
         'StatusStrip1
