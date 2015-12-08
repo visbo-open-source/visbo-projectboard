@@ -1363,7 +1363,7 @@ Public Module testModule
                                 Catch ex As Exception
 
                                 End Try
-                                
+
 
 
                             Case "Strategie/Risiko"
@@ -1379,7 +1379,7 @@ Public Module testModule
                                 Catch ex As Exception
 
                                 End Try
-                                
+
 
                             Case "Personalbedarf"
 
@@ -1392,7 +1392,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Personal-Bedarf ist Null"
                                 End Try
-                                
+
 
                             Case "Personalkosten"
 
@@ -1406,7 +1406,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Personal-Kosten sind Null"
                                 End Try
-                                
+
                             Case "Sonstige Kosten"
 
 
@@ -1675,7 +1675,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist2 Personalkosten"
 
@@ -1692,7 +1692,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist1C Personalkosten"
 
@@ -1707,7 +1707,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist2C Personalkosten"
 
@@ -1722,7 +1722,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Personalkosten nicht möglich ..."
                                 End Try
-                               
+
 
 
                             Case "Soll-Ist1 Sonstige Kosten"
@@ -1739,7 +1739,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist2 Sonstige Kosten"
 
@@ -1755,7 +1755,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist1C Sonstige Kosten"
 
@@ -1772,7 +1772,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist2C Sonstige Kosten"
 
@@ -1789,7 +1789,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist1 Gesamtkosten"
 
@@ -1805,7 +1805,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist2 Gesamtkosten"
 
@@ -1821,7 +1821,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist1C Gesamtkosten"
 
@@ -1837,7 +1837,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist2C Gesamtkosten"
 
@@ -1853,7 +1853,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Gesamtkosten nicht möglich ..."
                                 End Try
-                                
+
 
 
                             Case "Soll-Ist1 Rolle"
@@ -1870,7 +1870,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist2 Rolle"
 
@@ -1886,7 +1886,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist1C Rolle"
 
@@ -1903,7 +1903,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist2C Rolle"
 
@@ -1920,7 +1920,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Rolle " & qualifier & " nicht möglich ..."
                                 End Try
-                               
+
 
                             Case "Soll-Ist1 Kostenart"
 
@@ -1936,7 +1936,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist2 Kostenart"
 
@@ -1952,7 +1952,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Soll-Ist1C Kostenart"
 
@@ -1970,7 +1970,7 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
                                 End Try
 
-                                
+
                             Case "Soll-Ist2C Kostenart"
 
                                 Try
@@ -1985,7 +1985,7 @@ Public Module testModule
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Kostenart " & qualifier & " nicht möglich ..."
                                 End Try
-                                
+
 
                             Case "Ampel-Farbe"
 
@@ -2547,7 +2547,7 @@ Public Module testModule
 
                         Case "Projekt-Tafel"
 
-                            
+
                             Dim farbtyp As Integer
                             Dim rng As xlNS.Range
                             Dim colorrng As xlNS.Range
@@ -3760,7 +3760,7 @@ Public Module testModule
                 pptFirstTime = True         ' für die LegendenVorlage
                 projToDo = 0
                 projDone = 0
-          
+
             End If
             ' Next 
 
@@ -5107,7 +5107,7 @@ Public Module testModule
         anzMaxZeilen = (pptslide.CustomLayout.Height - (pptShape.Top + zeilenHoeheTitel)) / zeilenHoehe - 1
         toDraw = uniquePhases.Count + uniqueMilestones.Count
 
-        
+
 
 
         Dim curZeile As Integer = 2
@@ -8081,7 +8081,7 @@ Public Module testModule
                 tmpMinimum = StartofCalendar.AddMonths(von - 1)
                 tmpMaximum = StartofCalendar.AddMonths(bis).AddDays(-1)
             End If
-            
+
 
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
@@ -8257,7 +8257,7 @@ Public Module testModule
             linksDatum = minDate
             rechtsDatum = maxDate
         End If
-        
+
         ' Änderung tk: es soll nicht mehr links und rechts ein zusätzlicher Bereich aufgespannt werden 
         'If Not awinSettings.mppFullyContained And Not awinSettings.mppShowAllIfOne Then
         '    firstDate = StartofCalendar.AddMonths(showRangeLeft - 1 - 3)
@@ -8822,7 +8822,7 @@ Public Module testModule
                     worker.ReportProgress(0, e)
                 End If
 
-             
+
                 '
                 ' zeichne den Projekt-Namen
                 projectNameVorlagenShape.Copy()
@@ -9338,7 +9338,7 @@ Public Module testModule
 
                 If awinSettings.mppExtendedMode Then
 
-                   
+
                     Dim tmpint As Integer
                     Dim drawliste As New SortedList(Of String, SortedList)
 
