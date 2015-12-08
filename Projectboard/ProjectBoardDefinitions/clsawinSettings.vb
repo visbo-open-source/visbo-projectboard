@@ -202,7 +202,6 @@ Public Class clsawinSettings
         _eliminateDuplicates = True
         _importUnknownNames = True
         _createUniqueSiblingNames = True
-        _fullProtokoll = True
 
         ' Settings für Besser/Schlechter Diagramm 
         _timeToleranzRel = 0.02

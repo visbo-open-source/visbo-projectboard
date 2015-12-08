@@ -3187,7 +3187,7 @@ Imports System.Drawing
         Dim importDate As Date = Date.Now
         Dim returnValue As DialogResult
         Dim getRPLANImport As New frmSelectRPlanImport
-
+        Dim protokoll As New SortedList(Of Integer, clsProtokoll)
 
         ' öffnen des LogFiles
         Call logfileOpen()
@@ -3213,9 +3213,22 @@ Imports System.Drawing
 
                 Call logfileSchreiben("Beginn RXFImport ", dateiName, -1)
 
-                Call RXFImport(myCollection, dateiName, False)
+                Call RXFImport(myCollection, dateiName, False, protokoll)
 
                 Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+
+                appInstance.ScreenUpdating = True
+
+                ' Tabellenblattname aus dateiname erstellen fürs Protokoll (dateiname ohne ".rxf" Extension)
+                Dim tstr As String() = Split(dateiName, "\", -1)
+                Dim hstr As String = tstr(tstr.Length - 1)
+                tstr = Split(hstr, ".", 2)
+                Dim tabblattname As String = tstr(0)
+
+                appInstance.ScreenUpdating = False
+
+                ' Protokoll aus der Liste protokoll in Logfile mit tabellenblatt tabblattname ausleiten
+                Call writeProtokoll(protokoll, tabblattname)
 
                 ' tk Änderung 26.11.15 das muss doch nach dem Import noch nicht gemacht werden
                 ' sondern erst nach Editieren Wörterbuch oder ganz am Schluss beim Beenden 
