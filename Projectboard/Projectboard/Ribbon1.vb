@@ -3217,8 +3217,6 @@ Imports System.Drawing
 
                 Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
 
-                Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
-
                 Dim result As Integer = MsgBox("Soll ein Protokoll geschrieben werden?", MsgBoxStyle.YesNo)
                 If result = MsgBoxResult.Yes Then
 
