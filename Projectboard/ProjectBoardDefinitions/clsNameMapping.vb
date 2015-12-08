@@ -18,11 +18,69 @@ Public Class clsNameMapping
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property countSynonyms As Integer
+    Public ReadOnly Property countSynonyms(Optional ByVal stdName As String = "") As Integer
         Get
-            countSynonyms = synonyms.Count
+            If stdName = "" Then
+                countSynonyms = synonyms.Count
+            Else
+                Dim summe As Integer = 0
+                For Each kvp As KeyValuePair(Of String, String) In synonyms
+                    If kvp.Value = stdName Then
+                        summe = summe + 1
+                    End If
+                Next
+                countSynonyms = summe
+            End If
+
         End Get
     End Property
+
+    Public ReadOnly Property getSynonymsOf(ByVal stdName As String, ByVal lfdNr As Integer)
+        Get
+            Dim summe As Integer = 0
+            Dim erg As String = ""
+            For Each kvp As KeyValuePair(Of String, String) In synonyms
+
+                If kvp.Value = stdName Then
+                    summe = summe + 1
+                    If summe = lfdNr Then
+                        erg = kvp.Key
+                        Exit For ' weil fertig 
+                    End If
+
+                End If
+            Next
+
+            getSynonymsOf = erg
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zurück, ob Synonym syn in der Liste überhaupt enthalten ist 
+    ''' </summary>
+    ''' <param name="syn"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsSynonym(ByVal syn As String) As Boolean
+        Get
+            containsSynonym = synonyms.ContainsKey(syn)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' löscht aus der Liste der Synonyme den Eintrag mit Schlüssel syn 
+    ''' </summary>
+    ''' <param name="syn"></param>
+    ''' <remarks></remarks>
+    Public Sub removeSynonym(ByVal syn As String)
+
+        If synonyms.ContainsKey(syn) Then
+            synonyms.Remove(syn)
+        End If
+
+    End Sub
 
     ''' <summary>
     ''' gibt ein keyValue Pair an der Position index  zurück: Synonym, Std-Name

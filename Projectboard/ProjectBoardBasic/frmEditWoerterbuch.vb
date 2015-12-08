@@ -6,6 +6,7 @@ Public Class frmEditWoerterbuch
     ' wird benutzt , um beim Listen Aktualisieren eine Aktion zu triggern oder eben nicht 
     Private eventsShouldFire As Boolean = True
     Private listOfSummaryTasks As New Collection
+    Dim somethingChanged As Boolean = False
 
 
     ''' <summary>
@@ -17,8 +18,14 @@ Public Class frmEditWoerterbuch
     ''' <remarks></remarks>
     Private Sub frmEditWoerterbuch_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
 
-        Dim andMappings As Boolean = True
-        Call awinWritePhaseMilestoneDefinitions(andMappings)
+        If somethingChanged Then
+            
+            If MsgBox("Vorher Speichern?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
+                Call awinWritePhaseMilestoneDefinitions(True)
+            End If
+
+        End If
+
 
     End Sub
 
@@ -34,6 +41,7 @@ Public Class frmEditWoerterbuch
     Private Sub frmEditWoerterbuch_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         showOnlySummaryTasks.Checked = False
+        ToolStripStatusLabel1.Text = ""
 
         ' jetzt Radio-Button setzen 
         If missingPhaseDefinitions.Count = 0 And missingMilestoneDefinitions.Count > 0 Then
@@ -87,12 +95,10 @@ Public Class frmEditWoerterbuch
             standardList.Items.Clear()
 
             ' die Liste der unbekannten Meilenstein Bezeichnungen aufbauen 
-            For i = 1 To missingMilestoneDefinitions.Count
-                tmpMsDef = missingMilestoneDefinitions.getMilestoneDef(i)
-                If Not IsNothing(tmpMsDef) Then
-                    unknownList.Items.Add(tmpMsDef.name)
-                End If
-            Next
+
+            Call buildUnknownMilestoneList()
+
+            
 
             ' die Liste der Standard Bezeichnungen aufbauen 
             For i = 1 To MilestoneDefinitions.Count
@@ -228,6 +234,29 @@ Public Class frmEditWoerterbuch
     End Sub
 
     ''' <summary>
+    ''' wird aufgerufen, wenn auf ein Item in der UnknowList ein Doppelklick gemacht wird 
+    ''' zeigt die Liste der Projekte an, wo das Element vorkommt ...
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub unknownList_MouseDoubleClick(sender As Object, e As Windows.Forms.MouseEventArgs) Handles unknownList.MouseDoubleClick
+
+        If unknownList.SelectedItems.Count = 1 Then
+
+            Dim infoFrm As New frmWbListInfo
+            infoFrm.elementName.Text = CStr(unknownList.SelectedItem)
+            infoFrm.phasesChecked = rdbListShowsPhases.Checked
+            infoFrm.calledFromStdList = False
+            infoFrm.ShowDialog()
+
+        Else
+            Call MsgBox("Info kann nur für ein Element gezeigt werden ... ")
+        End If
+
+    End Sub
+
+    ''' <summary>
     ''' wird aufgerufen, sobald sich was in der Selektion der unknownlist verändert
     ''' wenn nur ein Item selektiert ist, und in der anderen Liste nichts, wird das Eingabe Feld unten auf diesen Wert gesetzt 
     ''' </summary>
@@ -244,6 +273,52 @@ Public Class frmEditWoerterbuch
             End If
         End If
 
+        ToolStripStatusLabel1.Text = ""
+
+    End Sub
+
+    ''' <summary>
+    ''' wird beim Doppelklick auf ein Element der Standardliste aufgerufen
+    ''' zeigt die Liste der definierten Synonyme an
+    ''' </summary>
+    ''' <param name="sender"></param>
+    ''' <param name="e"></param>
+    ''' <remarks></remarks>
+    Private Sub standardList_MouseDoubleClick(sender As Object, e As Windows.Forms.MouseEventArgs) Handles standardList.MouseDoubleClick
+
+        If standardList.SelectedItems.Count = 1 Then
+
+            Dim infoFrm As New frmWbListInfo
+            Dim anzahlElem As Integer
+            If rdbListShowsPhases.Checked Then
+                anzahlElem = missingPhaseDefinitions.Count
+            Else
+                anzahlElem = missingMilestoneDefinitions.Count
+            End If
+
+            infoFrm.elementName.Text = CStr(standardList.SelectedItem)
+            infoFrm.phasesChecked = rdbListShowsPhases.Checked
+            infoFrm.calledFromStdList = True
+            infoFrm.ShowDialog()
+
+            If rdbListShowsPhases.Checked Then
+                If anzahlElem <> missingPhaseDefinitions.Count Then
+                    eventsShouldFire = False
+                    unknownList.Items.Clear()
+                    Call buildUnknownPhaseList()
+                    eventsShouldFire = True
+                End If
+            Else
+                If anzahlElem <> missingMilestoneDefinitions.Count Then
+                    eventsShouldFire = False
+                    unknownList.Items.Clear()
+                    Call buildUnknownMilestoneList()
+                    eventsShouldFire = True
+                End If
+            End If
+        Else
+            Call MsgBox("Info kann nur für ein Element gezeigt werden ... ")
+        End If
 
     End Sub
 
@@ -264,6 +339,8 @@ Public Class frmEditWoerterbuch
             End If
 
         End If
+
+        ToolStripStatusLabel1.Text = ""
 
     End Sub
 
@@ -351,8 +428,10 @@ Public Class frmEditWoerterbuch
 
         Dim itemText As String
         Dim editText As String
+        Dim anzahlElements As Integer = unknownList.SelectedItems.Count
 
         eventsShouldFire = False
+
 
         ' Vorbedingung prüfen: es darf kein Element in der Liste der Standard-Bezeichnungen selektiert sein ! 
         If standardList.SelectedItems.Count > 0 Then
@@ -502,6 +581,15 @@ Public Class frmEditWoerterbuch
 
         End If
 
+        editUnknownItem.Text = ""
+        If anzahlElements = 1 Then
+            ToolStripStatusLabel1.Text = "ok, 1 Element als Standard-Name aufgenommen"
+        ElseIf anzahlElements > 1 Then
+            ToolStripStatusLabel1.Text = "ok, " & anzahlElements & " Elemente als Standard-Name aufgenommen"
+        End If
+
+
+
         eventsShouldFire = True
 
     End Sub
@@ -517,7 +605,10 @@ Public Class frmEditWoerterbuch
     ''' <remarks></remarks>
     Private Sub setItemToBeKnown_Click(sender As Object, e As EventArgs) Handles setItemToBeKnown.Click
 
+        somethingChanged = True
         Call makeItemToBeStandard()
+
+
 
     End Sub
 
@@ -558,6 +649,29 @@ Public Class frmEditWoerterbuch
         Next
 
         
+    End Sub
+
+    ''' <summary>
+    ''' baut in Abhängigkeit von Filter aus der Missing-Definitions die Meilenstein Liste auf 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub buildUnknownMilestoneList()
+        ' Meilensteine
+        Dim tmpName As String
+        Dim suchstr As String = filterUnknown.Text
+
+        For i = 1 To missingMilestoneDefinitions.Count
+            tmpName = missingMilestoneDefinitions.getMilestoneDef(i).name
+            If filterUnknown.Text = "" Then
+                unknownList.Items.Add(tmpName)
+            Else
+                If tmpName.Contains(suchstr) Then
+                    unknownList.Items.Add(tmpName)
+                End If
+            End If
+        Next
+
+
     End Sub
 
     ''' <summary>
@@ -607,8 +721,10 @@ Public Class frmEditWoerterbuch
 
         Dim itemText As String
         Dim editText As String
+        Dim anzahlElements As Integer = standardList.SelectedItems.Count
 
         eventsShouldFire = False
+        somethingChanged = True
 
         If unknownList.SelectedItems.Count > 0 Then
 
@@ -753,6 +869,16 @@ Public Class frmEditWoerterbuch
 
         End If
 
+        editUnknownItem.Text = ""
+
+        If anzahlElements = 1 Then
+            ToolStripStatusLabel1.Text = "ok, 1 Element aus Standard-Liste entfernt"
+        ElseIf anzahlElements > 1 Then
+            ToolStripStatusLabel1.Text = "ok, " & anzahlElements & " Elemente aus Standard-Liste entfernt"
+        End If
+
+
+
         eventsShouldFire = True
         
 
@@ -767,8 +893,11 @@ Public Class frmEditWoerterbuch
     ''' <remarks></remarks>
     Private Sub ignoreButton_Click(sender As Object, e As EventArgs) Handles ignoreButton.Click
 
+        Dim anzahlElements As Integer = unknownList.SelectedItems.Count
 
         eventsShouldFire = False
+
+        somethingChanged = True
 
         If standardList.SelectedItems.Count > 0 Then
             Call MsgBox("in der Liste der bekannten Namen darf kein Eintrag selektiert sein ...")
@@ -819,6 +948,19 @@ Public Class frmEditWoerterbuch
             End If
         End If
 
+        If anzahlElements > 0 Then
+
+        End If
+
+        editUnknownItem.Text = ""
+        If anzahlElements = 1 Then
+            ToolStripStatusLabel1.Text = "ok, 1 Element wird zukünftig ignoriert ..."
+        ElseIf anzahlElements > 1 Then
+            ToolStripStatusLabel1.Text = "ok, " & anzahlElements & " Element(e werden zukünftig ignoriert ..."
+        End If
+
+
+
         eventsShouldFire = True
 
     End Sub
@@ -836,9 +978,11 @@ Public Class frmEditWoerterbuch
         Dim itemName As String
         Dim stdName As String
         Dim todoList As New Collection
-
+        Dim anzahlElements As Integer = unknownList.SelectedItems.Count
 
         eventsShouldFire = False
+
+        somethingChanged = True
 
         If unknownList.SelectedItems.Count > 0 And standardList.SelectedItems.Count > 0 Then
 
@@ -881,6 +1025,14 @@ Public Class frmEditWoerterbuch
         ' die Standard-Name jetzt de-selektieren 
         standardList.SelectedItems.Clear()
 
+        editUnknownItem.Text = ""
+
+        If anzahlElements = 1 Then
+            ToolStripStatusLabel1.Text = "ok, 1 Regel wurde im Wörterbuch aufgenommen  ..."
+        ElseIf anzahlElements > 1 Then
+            ToolStripStatusLabel1.Text = "ok, " & anzahlElements & " Regeln wurden im Wörterbuch aufgenommen  ..."
+        End If
+
         eventsShouldFire = True
         
     End Sub
@@ -895,6 +1047,8 @@ Public Class frmEditWoerterbuch
     Private Sub replaceButton_Click(sender As Object, e As EventArgs) Handles replaceButton.Click
 
         eventsShouldFire = False
+
+        somethingChanged = True
 
         ' erst müssen alle Wörterbuch Einträge ersetzt werden, die bisher auf diesen Standard-Namen abbilden
         Dim newStdName As String = editUnknownItem.Text
@@ -958,6 +1112,9 @@ Public Class frmEditWoerterbuch
             End If
         End If
 
+        editUnknownItem.Text = ""
+        ToolStripStatusLabel1.Text = "ok, " & oldStdName & " wurde durch " & newStdName & " ersetzt ..."
+
         eventsShouldFire = True
 
     End Sub
@@ -994,6 +1151,15 @@ Public Class frmEditWoerterbuch
     Private Sub rdbListShowsMilestones_CheckedChanged(sender As Object, e As EventArgs) Handles rdbListShowsMilestones.CheckedChanged
 
         showOnlySummaryTasks.Visible = False
+
+    End Sub
+
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+
+        Call awinWritePhaseMilestoneDefinitions(True)
+        somethingChanged = False
+
+        ToolStripStatusLabel1.Text = "ok, Änderungen wurden im Customization File gespeichert ..."
 
     End Sub
 End Class
