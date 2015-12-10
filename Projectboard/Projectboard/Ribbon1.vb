@@ -156,7 +156,9 @@ Imports System.Drawing
             appInstance.ScreenUpdating = False
             'Call diagramsVisible(False)
             Call awinClearPlanTafel()
-            Call awinZeichnePlanTafel(False)
+            ' Änderung tk 8.12.15 wegen Darstellung Portfolio szenario 
+            'Call awinZeichnePlanTafel(False)
+            Call awinZeichnePlanTafel(True)
             Call awinNeuZeichnenDiagramme(2)
             'Call diagramsVisible(True)
             appInstance.ScreenUpdating = True
