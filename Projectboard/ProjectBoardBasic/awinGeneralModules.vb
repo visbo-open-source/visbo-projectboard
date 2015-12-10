@@ -9696,10 +9696,12 @@ Public Module awinGeneralModules
                         Dim mappedPhasename As String = ""
 
                         prtLine.planelement = aktTask_j.name
+                        prtLine.hgColor = awinSettings.AmpelNichtBewertet
 
                         If PhaseDefinitions.Contains(aktTask_j.name) Then
 
                             mappedPhasename = aktTask_j.name
+                            prtLine.hgColor = awinSettings.AmpelGruen
 
                         Else
                             ' aktTask_j.name existiert nicht in den PhaseDefinitions
@@ -9709,7 +9711,7 @@ Public Module awinGeneralModules
 
                             If PhaseDefinitions.Contains(mappedPhasename) Then
                                 ' neuer aktueller Name der Task
-
+                                prtLine.hgColor = awinSettings.AmpelGelb
 
                             Else
                                 ' PhasenName ist nicht bekannt
@@ -9762,6 +9764,7 @@ Public Module awinGeneralModules
                                     If hproj.isCloneToParent(mappedPhasename, parentphase.nameID, phaseStartdate, phaseEnddate, 0.97) Then
                                         isNotDuplikate = False
                                         prtLine.planelement = aktTask_j.name
+                                        prtLine.hgColor = awinSettings.AmpelRot
                                         prtLine.grund = "Phase wurde eliminiert: Duplikat zur Parent-Phase"
                                         Call logfileSchreiben("Fehler in RXFImport: " & mappedPhasename & " ist Duplikat zu Parent " & parentphase.name & " und wird ignoriert ", hproj.name, anzFehler)
 
@@ -9774,6 +9777,7 @@ Public Module awinGeneralModules
                                         Else
                                             isNotDuplikate = False
                                             prtLine.planelement = aktTask_j.name
+                                            prtLine.hgColor = awinSettings.AmpelRot
                                             prtLine.grund = "Phase wurde eliminiert: Duplikat zur Geschwister-Phase"
                                             Call logfileSchreiben(" Fehler in RXFImport: " & mappedPhasename & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
                                                        " und wird ignoriert ", hproj.name, anzFehler)
@@ -9841,6 +9845,7 @@ Public Module awinGeneralModules
 
                         Else
                             prtLine.planelement = aktTask_j.name
+                            prtLine.hgColor = awinSettings.AmpelRot
                             prtLine.grund = "Phase wurde ignoriert: unbekannter Bezeichner"
 
                             prtliste.Add(zeile, prtLine)
@@ -9853,6 +9858,7 @@ Public Module awinGeneralModules
 
                     Else
                         prtLine.planelement = aktTask_j.name
+                        prtLine.hgColor = awinSettings.AmpelRot
                         prtLine.grund = "Phase wurde ignoriert: gemäß Eintrag TOBEIGNORED im Wörterbuch"
 
                         prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
@@ -9879,11 +9885,14 @@ Public Module awinGeneralModules
                         If MilestoneDefinitions.Contains(aktTask_j.name) Then
 
                             mappedMSname = aktTask_j.name
+                            prtLine.hgColor = awinSettings.AmpelGruen
+
                         Else
                             'wenn der MeilensteinName gemappt werden kann und dieser dann in milestonedefinitions enthalten ist, so wird Meilensteinname ersetzt
                             mappedMSname = milestoneMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
                             If MilestoneDefinitions.Contains(mappedMSname) Then
 
+                                prtLine.hgColor = awinSettings.AmpelGelb
                             Else
 
                                 isUnkownName = True
@@ -9976,6 +9985,7 @@ Public Module awinGeneralModules
                                 Else
                                     isNotDuplikate = False
                                     prtLine.planelement = aktTask_j.name
+                                    prtLine.hgColor = awinSettings.AmpelRot
                                     prtLine.grund = "Meilenstein wurde eliminiert: Duplikat zur Geschwister-Phase"
                                     Call logfileSchreiben("Fehler, RXFImport:" & mappedMSname & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
                                                  " und wird ignoriert ", hproj.name, anzFehler)
@@ -10039,6 +10049,7 @@ Public Module awinGeneralModules
 
                         Else
                             prtLine.planelement = aktTask_j.name
+                            prtLine.hgColor = awinSettings.AmpelRot
                             prtLine.grund = "Meilenstein wurde ignoriert: unbekannter Bezeichner"
 
                             prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
@@ -10051,6 +10062,7 @@ Public Module awinGeneralModules
                        
                     Else
                         prtLine.planelement = aktTask_j.name
+                        prtLine.hgColor = awinSettings.AmpelRot
                         prtLine.grund = "Meilenstein wurde ignoriert gemäß Eintrag im Wörterbuch"
 
                         prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
@@ -10447,6 +10459,7 @@ Public Module awinGeneralModules
                         CType(.Cells(zeile, 6), Excel.Range).Value() = prtline.Value.abkürzung
                         CType(.Cells(zeile, 7), Excel.Range).Value() = prtline.Value.quelle
                         CType(.Cells(zeile, 8), Excel.Range).Value() = prtline.Value.planeleÜbern
+                        CType(.Cells(zeile, 8), Excel.Range).Interior.Color = prtline.Value.hgColor
                         CType(.Cells(zeile, 9), Excel.Range).Value() = prtline.Value.grund
                         CType(.Cells(zeile, 10), Excel.Range).Value() = prtline.Value.PThierarchie
                         CType(.Cells(zeile, 11), Excel.Range).Value() = prtline.Value.PTklasse
@@ -10455,8 +10468,10 @@ Public Module awinGeneralModules
                         CType(.Cells(zeile, 2), Excel.Range).Value() = prtline.Value.Projekt
                         CType(.Cells(zeile, 4), Excel.Range).Value() = prtline.Value.planelement
                         CType(.Cells(zeile, 8), Excel.Range).Value() = prtline.Value.planeleÜbern
+                        CType(.Cells(zeile, 8), Excel.Range).Interior.Color = prtline.Value.hgColor
                         CType(.Cells(zeile, 9), Excel.Range).Value() = prtline.Value.grund
                     End If
+
                 End With
             Catch ex As Exception
 

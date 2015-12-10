@@ -12,6 +12,7 @@ Public Class clsProtokoll
     Private _abkürzung As String
     Private _quelle As String
     Private _planeleÜbern As String
+    Private _hgColor As Long
     Private _grund As String
     Private _PThierarchie As String
     Private _PTklasse As String
@@ -119,6 +120,20 @@ Public Class clsProtokoll
         End Set
     End Property
     ''' <summary>
+    ''' Liest und schreibt die HintergrundFarbe für Spalte Name der Übernahme dieses Planelements ins Projekt
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property hgColor As Long
+        Get
+            hgColor = _hgColor
+        End Get
+        Set(value As Long)
+            _hgColor = value
+        End Set
+    End Property
+    ''' <summary>
     ''' Liest und schreibt Name der Übernahme dieses Planelements ins Projekt
     ''' </summary>
     ''' <value></value>
@@ -177,7 +192,7 @@ Public Class clsProtokoll
 
 
     ''' <summary>
-    ''' erzeugt ein neues Element der Klasse clsLogbuchline
+    ''' erzeugt ein neues Element der Klasse clsProtokoll
     ''' </summary>
     ''' <remarks></remarks>
     Sub New(ByVal projname As String, ByVal quelldatei As String)
@@ -189,6 +204,7 @@ Public Class clsProtokoll
         _abkürzung = ""
         _quelle = quelldatei
         _planeleÜbern = ""
+        _hgColor = awinSettings.AmpelNichtBewertet
         _grund = ""
         _PThierarchie = ""
         _PTklasse = ""
@@ -396,6 +412,7 @@ Public Class clsProtokoll
         _abkürzung = ""
         _quelle = ""
         _planeleÜbern = ""
+        _hgColor = awinSettings.AmpelNichtBewertet
         _grund = ""
         _PThierarchie = ""
         _PTklasse = ""
