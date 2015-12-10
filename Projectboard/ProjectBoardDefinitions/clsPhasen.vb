@@ -4,12 +4,24 @@ Public Class clsPhasen
     Private AllPhasen As SortedList(Of String, clsPhasenDefinition)
 
 
+    ''' <summary>
+    ''' nimmt die Phase auf; wenn der Name bereits vergeben ist, wird Exception geworfen und nichts gemacht ...
+    ''' wenn PhaseDef = Nothing, wird auch Exception geworfen
+    ''' </summary>
+    ''' <param name="phaseDef"></param>
+    ''' <remarks></remarks>
     Public Sub Add(phaseDef As clsPhasenDefinition)
 
-
-        If Not AllPhasen.ContainsKey(phaseDef.name) Then
-            AllPhasen.Add(phaseDef.name, phaseDef)
+        If Not IsNothing(phaseDef) Then
+            If Not AllPhasen.ContainsKey(phaseDef.name) Then
+                AllPhasen.Add(phaseDef.name, phaseDef)
+            Else
+                Throw New ArgumentException("Name bereits vergeben")
+            End If
+        Else
+            Throw New ArgumentException("übergebene Phasen-Defiition ist Nothing")
         End If
+        
 
 
     End Sub
@@ -21,6 +33,7 @@ Public Class clsPhasen
         End Get
 
     End Property
+
 
     Public ReadOnly Property Contains(name As String) As Boolean
         Get
@@ -64,15 +77,15 @@ Public Class clsPhasen
 
     ''' <summary>
     ''' gibt die Abkürzung, den Shortname für den Meilenstein zurück
-    ''' wenn er nicht gefunden wird: "n.a."
+    ''' wenn er nicht gefunden wird: "-"
     ''' </summary>
-    ''' <param name="name">Langname Meilenstein</param>
+    ''' <param name="name">Langname Phase</param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public ReadOnly Property getAbbrev(ByVal name As String) As String
         Get
-            Dim msAbbrev As String = "n.a."
+            Dim msAbbrev As String = "-"
 
             'Dim key As String = calcKey(name, belongsTo)
 
@@ -118,14 +131,33 @@ Public Class clsPhasen
         End Get
     End Property
 
-    Public Sub New()
+    ''' <summary>
+    ''' löscht die Phasen-Definition mit dem übergebenen Namen aus der Liste , sofern vorhanden
+    ''' wenn nicht vorhanden, keine Änderung; aber auch keine Mitteilung 
+    ''' </summary>
+    ''' <param name="name"></param>
+    ''' <remarks></remarks>
+    Public Sub remove(ByVal name As String)
 
-        AllPhasen = New SortedList(Of String, clsPhasenDefinition)
+        If AllPhasen.ContainsKey(name) Then
+            AllPhasen.Remove(name)
+        End If
 
     End Sub
+    
+    ''' <summary>
+    ''' leert die komplette Liste 
+    ''' </summary>
+    ''' <remarks></remarks>
     Public Sub Clear()
 
         AllPhasen.Clear()
+
+    End Sub
+
+    Public Sub New()
+
+        AllPhasen = New SortedList(Of String, clsPhasenDefinition)
 
     End Sub
 End Class

@@ -198,7 +198,8 @@ Public Class ThisWorkbook
 
             ' hier sollen jetzt noch die Phasen weggeschrieben werden 
             Try
-                Call awinWritePhaseDefinitions()
+                'Call awinWritePhaseDefinitions()
+                Call awinWritePhaseMilestoneDefinitions()
             Catch ex As Exception
                 Call MsgBox("Fehler bei Schreiben Customization File")
             End Try

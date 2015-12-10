@@ -73,6 +73,37 @@
     ' Angabe der UID des Meilensteins
     Public Property UID As Long
 
+    ''' <summary>
+    ''' kopiert in Me die Werte der übergebenen Phasen-Definition
+    ''' wenn der optionale Name angegeben ist, wird dieser Name, 
+    ''' nicht der Name der übergebenen Phasen-Definition angegeben  
+    ''' </summary>
+    ''' <param name="msDef"></param>
+    ''' <remarks></remarks>
+    Public Sub copyFrom(ByVal msDef As clsMeilensteinDefinition, Optional ByVal newName As String = "")
+
+        If Not IsNothing(msDef) Then
+            With Me
+
+                If newName = "" Then
+                    .name = msDef.name
+                Else
+                    .name = newName
+                End If
+                .schwellWert = msDef.schwellWert
+                .shortName = msDef.shortName
+                .darstellungsKlasse = msDef.darstellungsKlasse
+                .farbe = msDef.farbe
+                .belongsTo = msDef.belongsTo
+
+            End With
+        Else
+            Throw New ArgumentException("Phase-Definition in Kopier-Funktion ist Nothing")
+        End If
+
+
+    End Sub
+
     Public Sub New()
         _name = ""
         _shortName = ""

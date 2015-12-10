@@ -795,7 +795,6 @@ Public Module PBBModules
     ''' <remarks></remarks>
     Sub PBBVarianteNeu(control As IRibbonControl)
 
-        Dim singleShp As Excel.Shape
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
         Dim neueVariante As New frmCreateNewVariant
@@ -805,6 +804,11 @@ Public Module PBBModules
         Dim key As String
         Dim phaseList As New Collection
         Dim milestoneList As New Collection
+        Dim neuerVariantenName As String = ""
+        Dim ok As Boolean = True
+        Dim zaehler As Integer = 1
+        Dim nameCollection As New Collection
+        Dim abbruch As Boolean = False
 
 
         Call projektTafelInit()
@@ -819,16 +823,22 @@ Public Module PBBModules
 
         If Not awinSelection Is Nothing Then
 
-            If awinSelection.Count = 1 Then
+            For i As Integer = 1 To awinSelection.count
+                nameCollection.Add(awinSelection.Item(i).Name)
+            Next
+
+            While zaehler <= nameCollection.Count And Not abbruch
+
                 ' jetzt die Aktion durchführen ...
-                singleShp = awinSelection.Item(1)
+                Dim pName As String = CStr(nameCollection.Item(zaehler))
 
                 Try
-                    hproj = ShowProjekte.getProject(singleShp.Name)
+                    hproj = ShowProjekte.getProject(pName)
+                    pName = hproj.name
                     phaseList = projectboardShapes.getPhaseList(hproj.name)
                     milestoneList = projectboardShapes.getMilestoneList(hproj.name)
                 Catch ex As Exception
-                    Call MsgBox("Projekt " & singleShp.Name & " nicht gefunden ...")
+                    Call MsgBox("Projekt " & pName & " nicht gefunden ...")
                     enableOnUpdate = True
                     Exit Sub
                 End Try
@@ -840,7 +850,7 @@ Public Module PBBModules
                 With neueVariante
                     .projektName.Text = hproj.name
                     .variantenName.Text = hproj.variantName
-                    .newVariant.Text = ""
+                    .newVariant.Text = neuerVariantenName
                 End With
 
                 resultat = neueVariante.ShowDialog
@@ -849,9 +859,15 @@ Public Module PBBModules
                     newproj = New clsProjekt
                     hproj.copyTo(newproj)
 
+                    If newproj.dauerInDays <> hproj.dauerInDays Then
+                        'Call MsgBox("ungleich: " & newproj.dauerInDays & " versus " & hproj.dauerInDays)
+                    End If
+
+                    neuerVariantenName = neueVariante.newVariant.Text
+
                     With newproj
                         .name = hproj.name
-                        .variantName = neueVariante.newVariant.Text
+                        .variantName = neuerVariantenName
                         .ampelErlaeuterung = hproj.ampelErlaeuterung
                         .ampelStatus = hproj.ampelStatus
                         .timeStamp = Date.Now
@@ -885,13 +901,13 @@ Public Module PBBModules
 
                     End Try
 
-
+                    zaehler = zaehler + 1
+                Else
+                    abbruch = True
                 End If
 
-            Else
-                Call MsgBox("bitte nur ein Projekt selektieren")
+            End While
 
-            End If
         Else
             Call MsgBox("vorher Projekt selektieren ...")
         End If
@@ -1228,7 +1244,7 @@ Public Module PBBModules
             If awinSelection.Count = 1 And isProjectType(kindOfShape(awinSelection.Item(1))) Then
                 ' jetzt die Aktion durchführen ...
                 singleShp = awinSelection.Item(1)
-                hproj = ShowProjekte.getProject(singleShp.Name)
+                hproj = ShowProjekte.getProject(singleShp.Name, True)
                 With hproj
                     pName = .name
                     variantName = .variantName

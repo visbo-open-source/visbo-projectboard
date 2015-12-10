@@ -36,7 +36,6 @@ Public Module Module1
     Public logmessage As String = ""
     Public anzFehler As Long = 0
 
-
     Public vergleichsfarbe0 As Object
     Public vergleichsfarbe1 As Object
     Public vergleichsfarbe2 As Object
@@ -58,7 +57,7 @@ Public Module Module1
     Public selectedProjekte As New clsProjekte
     'Public AlleProjekte As New SortedList(Of String, clsProjekt)
     Public AlleProjekte As New clsProjekteAlle
-    
+
     Public ImportProjekte As New clsProjekteAlle
     Public projectConstellations As New clsConstellations
     Public currentConstellation As String = "" ' hier wird mitgeführt, was die aktuelle Projekt-Konstellation ist 
@@ -86,7 +85,7 @@ Public Module Module1
     Public RoleDefinitions As New clsRollen
     Public PhaseDefinitions As New clsPhasen
     Public MilestoneDefinitions As New clsMeilensteine
-   
+
 
     Public CostDefinitions As New clsKostenarten
     ' Welche Business-Units gibt es ? 
@@ -104,7 +103,7 @@ Public Module Module1
     Public DiagramList As New clsDiagramme
     Public awinButtonEvents As New clsAwinEvents
 
-   
+
 
 
     ' damit ist das Formular Milestone / Status / Phase überall verfügbar
@@ -154,7 +153,7 @@ Public Module Module1
     Public Const maxProjektdauer As Integer = 60
 
 
-   
+
 
 
     Public Enum PTbubble
@@ -293,7 +292,7 @@ Public Module Module1
 
     ' dieser array nimmt die Koordinaten der Formulare auf 
     ' die Koordinaten werden in der Reihenfolge gespeichert: top, left, width, height 
-    Public frmCoord(19, 3) As Double
+    Public frmCoord(21, 3) As Double
 
     ' Enumeration Formulare - muss in Korrelation sein mit frmCoord: Dim von frmCoord muss der Anzahl Elemente entsprechen
     Public Enum PTfrm
@@ -317,6 +316,8 @@ Public Module Module1
         listSelR = 17
         listSelM = 18
         phaseInfo = 19
+        createVariant = 20
+        listInfo = 21
     End Enum
 
     Public Enum PTpinfo
@@ -345,9 +346,10 @@ Public Module Module1
         simpleScen = 3
         modulScen = 4
         addElements = 5
+        rplanrxf = 6
     End Enum
 
-   
+
     Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
 
     Public weightStrategicFit As Double
@@ -433,7 +435,7 @@ Public Module Module1
 
 
 
- 
+
 
 
     ''' <summary>
@@ -1530,7 +1532,10 @@ Public Module Module1
 
         If selectedProjekte.Count > 0 Then
             selectedProjekte.Clear()
-            Call awinNeuZeichnenDiagramme(8)
+            If awinSettings.showValuesOfSelected Then
+                Call awinNeuZeichnenDiagramme(8)
+            End If
+
         End If
 
 

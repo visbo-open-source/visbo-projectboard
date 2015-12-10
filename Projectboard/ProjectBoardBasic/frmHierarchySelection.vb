@@ -174,18 +174,19 @@ Public Class frmHierarchySelection
             Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts, False)
-        ElseIf Me.menuOption = PTmenue.visualisieren Then
+            ' tk 18.11.15 braucht man nicht, weil hier nur Phasen / Meilensteine ausgewählt werden können
+            'ElseIf Me.menuOption = PTmenue.visualisieren Then
 
-            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
-                (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
-                Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
-                ''Else
-                ''    filterName = filterDropbox.Text
-                ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-                ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-                ''                                           selectedPhases, selectedMilestones, _
-                ''                                           selectedRoles, selectedCosts, False)
-            End If
+            '    If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
+            '        (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
+            '        Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
+            '        ''Else
+            '        ''    filterName = filterDropbox.Text
+            '        ''    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+            '        ''    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+            '        ''                                           selectedPhases, selectedMilestones, _
+            '        ''                                           selectedRoles, selectedCosts, False)
+            '    End If
 
             ''Else    ' alle anderen PTmenues
 
@@ -289,8 +290,10 @@ Public Class frmHierarchySelection
 
         Else
             ' die Aktion Subroutine aufrufen 
+            ' hier können nur Phasen / Meilensteine ausgewählt werden; 
+            Dim tmpCollection As New Collection
             Call frmHryNameActions(Me.menuOption, selectedPhases, selectedMilestones, _
-                            selectedRoles, selectedCosts, Me.chkbxOneChart.Checked, lastfilter)
+                            tmpCollection, tmpCollection, Me.chkbxOneChart.Checked, lastfilter)
         End If
 
         appInstance.EnableEvents = True

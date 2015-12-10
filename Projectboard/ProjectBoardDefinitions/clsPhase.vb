@@ -415,49 +415,50 @@
     End Property
 
 
+    ''' <summary>
+    ''' ist die Anzahl in Tagen, die die Phase vor ihrem aktuellen Startdatum beginnen kann
+    ''' 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property earliestStart As Integer
         Get
             earliestStart = _earliestStart
         End Get
         Set(value As Integer)
-            If value >= 0 Then
-                If _relStart <> -999 Then
-                    If value <= _relStart Then
-                        _earliestStart = value
-                    Else
-                        Throw New ApplicationException("Wert für Earliest Start liegt nach dem aktuellen Start")
-                    End If
-                Else
+            If value <= 0 Then
+                ' tk 17.11.15: hier muss noch eine Konsistenzprüfung rein ...
                     _earliestStart = value
-                End If
+
             ElseIf value = -999 Then ' die undefiniert Bedingung
                 _earliestStart = value
             Else
-                Throw New ApplicationException("Wert für Earliest Start kann nicht negativ sein")
+                Throw New ApplicationException("Wert für Earliest Start kann nicht größer Null sein")
             End If
 
         End Set
     End Property
 
+    ''' <summary>
+    ''' ist die Anzahl in Tagen, die die Phase nach ihrem aktuellen Startdatum beginnen kann
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property latestStart As Integer
         Get
             latestStart = _latestStart
         End Get
         Set(value As Integer)
             If value >= 0 Then
-                If _relStart <> -999 Then
-                    If value >= _relStart Then
-                        _latestStart = value
-                    Else
-                        Throw New ApplicationException("Wert für Latest Start liegt vor dem aktuellen Start")
-                    End If
-                Else
-                    _latestStart = value
-                End If
+                ' tk 17.11.15 hier muss noch eine Konsistenzprüfung rein ... 
+                _latestStart = value
+                
             ElseIf value = -999 Then ' die undefiniert Bedingung
                 _latestStart = value
             Else
-                Throw New ApplicationException("Wert für Earliest Start kann nicht negativ sein")
+                Throw New ApplicationException("Wert für Latest Start kann nicht negativ sein")
             End If
 
         End Set

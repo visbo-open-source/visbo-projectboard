@@ -417,11 +417,18 @@ Public Class clsProjekte
     ''' <remarks></remarks>
     Public ReadOnly Property getProject(index As Integer) As clsProjekt
         Get
-            Try
+
+            If index >= 1 And index <= AllProjects.Count Then
                 getProject = AllProjects.ElementAt(index - 1).Value
-            Catch ex As Exception
-                Throw New ArgumentException("Index nicht vorhanden:" & index.ToString)
-            End Try
+            Else
+                getProject = Nothing
+            End If
+            ' Änderung tk 6.12.15 ein Get sollte keine Exception werfen, nur Nothing zurückgeben 
+            'Try
+            '    getProject = AllProjects.ElementAt(index - 1).Value
+            'Catch ex As Exception
+            '    Throw New ArgumentException("Index nicht vorhanden:" & index.ToString)
+            'End Try
         End Get
     End Property
 
@@ -457,17 +464,40 @@ Public Class clsProjekte
     ''' <summary>
     ''' gibt das vollständige Projekt aus der Liste zurück, das den angegebenen Namen hat 
     ''' </summary>
-    ''' <param name="projectname"></param>
+    ''' <param name="itemName"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getProject(projectname As String) As clsProjekt
+    Public ReadOnly Property getProject(itemName As String, _
+                                        Optional ByVal tryOnceMore As Boolean = False) As clsProjekt
 
         Get
             Try
-                getProject = AllProjects.Item(projectname)
+
+                getProject = AllProjects.Item(itemName)
+
             Catch ex As Exception
-                Throw New ArgumentException("projectname nicht vorhanden")
+
+                If tryOnceMore Then
+
+                    Dim pName As String = extractName(itemName, PTshty.projektN)
+                    If pName.Length > 0 Then
+
+                        If AllProjects.ContainsKey(pName) Then
+                            getProject = AllProjects.Item(pName)
+                        Else
+                            Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
+                        End If
+                    Else
+                        Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
+                    End If
+
+                Else
+                    Throw New ArgumentException("ProjektName " & itemName & " nicht vorhanden")
+                End If
+                
+
+
             End Try
 
         End Get
@@ -751,6 +781,7 @@ Public Class clsProjekte
             Dim costValues(zeitraum) As Double
             Dim ergebnisListe(zeitraum, maxAnzahl) As String
             Dim curElemIX(zeitraum) As Integer
+            Dim abbrev As String = "-"
 
 
 
@@ -773,6 +804,7 @@ Public Class clsProjekte
                         Dim ixZeitraum As Integer
                         Dim anzLoops As Integer
 
+
                         For Each kvp As KeyValuePair(Of String, clsProjekt) In AllProjects
 
                             hproj = kvp.Value
@@ -789,6 +821,8 @@ Public Class clsProjekte
 
 
                                 If Not hphase Is Nothing Then
+
+                                    abbrev = PhaseDefinitions.getAbbrev(hphase.name)
 
                                     With hproj
                                         prAnfang = .Start + .StartOffset
@@ -815,10 +849,16 @@ Public Class clsProjekte
                                                 If ixZeitraum + al - 1 > zeitraum Then
                                                     ' Fehlerprotokoll schreiben ...  
                                                 Else
-                                                    ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText
+                                                    ' wenn mehr als ein Element angezeigt werden soll, soll die Abkürzung dazugeschrieben werden 
+                                                    If myCollection.Count > 1 Then
+                                                        ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & abbrev
+                                                    Else
+                                                        ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText
+                                                    End If
+
                                                     curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
                                                 End If
-                                                
+
                                             Next
 
                                         End If
@@ -941,13 +981,20 @@ Public Class clsProjekte
 
                                 If Not IsNothing(cMilestone) Then
 
+                                    abbrev = MilestoneDefinitions.getAbbrev(cMilestone.name)
+
                                     Dim ix As Integer
                                     ' bestimme den monatsbezogenen Index im Array 
                                     ix = getColumnOfDate(cMilestone.getDate) - showRangeLeft
 
                                     If ix >= 0 And ix <= zeitraum Then
 
-                                        ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText
+                                        If myCollection.Count > 1 Then
+                                            ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText & ":" & abbrev
+                                        Else
+                                            ergebnisListe(ix, curElemIX(ix)) = hproj.getShapeText
+                                        End If
+
                                         curElemIX(ix) = curElemIX(ix) + 1
 
                                     End If

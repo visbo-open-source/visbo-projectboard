@@ -86,6 +86,19 @@
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
+    <Compile Include="frmWbListInfo.Designer.vb">
+      <DependentUpon>frmWbListInfo.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmWbListInfo.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmEditWoerterbuch.Designer.vb">
+      <DependentUpon>frmEditWoerterbuch.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmEditWoerterbuch.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="clsProtokoll.vb" />
     <Compile Include="frmAmpelBewertung.Designer.vb">
       <DependentUpon>frmAmpelBewertung.vb</DependentUpon>
     </Compile>
@@ -210,6 +223,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="PBBModules.vb" />
+    <Compile Include="clsRplanRXF.vb" />
     <Compile Include="Settings.vb" />
   </ItemGroup>
   <ItemGroup>
@@ -236,6 +250,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmDependencies.resx">
       <DependentUpon>frmDependencies.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmEditWoerterbuch.resx">
+      <DependentUpon>frmEditWoerterbuch.vb</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="frmHierarchySelection.resx">
       <DependentUpon>frmHierarchySelection.vb</DependentUpon>
@@ -267,6 +285,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmStoreCockpit.resx">
       <DependentUpon>frmStoreCockpit.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmWbListInfo.resx">
+      <DependentUpon>frmWbListInfo.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
@@ -308,6 +329,18 @@
       <Project>{0934cc5e-361f-443e-8af2-2468a38214a1}</Project>
       <Name>WpfWindow</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\navigate_right.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pfeil rechts 32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pfeil links 32x32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\selection_delete.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -20,12 +20,20 @@ Public Class frmSelectRPlanImport
         'dirname = awinPath & rplanimportFilesOrdner
         If menueAswhl = PTImpExp.rplan Then
             dirname = importOrdnerNames(PTImpExp.rplan)
+            Me.Text = "RPLAN Excel Dateien auswählen"
+        ElseIf menueAswhl = PTImpExp.rplanrxf Then
+            dirname = importOrdnerNames(PTImpExp.rplanrxf)
+            Me.Text = "RPLAN RXF Dateien auswählen"
         ElseIf menueAswhl = PTImpExp.simpleScen Then
             dirname = importOrdnerNames(PTImpExp.simpleScen)
+            Me.Text = "Szenario Dateien auswählen"
         ElseIf menueAswhl = PTImpExp.modulScen Then
             dirname = importOrdnerNames(PTImpExp.modulScen)
+            Me.Text = "modulare Szenario Dateien auswählen"
         ElseIf menueAswhl = PTImpExp.addElements Then
             dirname = importOrdnerNames(PTImpExp.addElements)
+            Me.Text = "Regel-Dateien auswählen"
+
         End If
 
 
@@ -37,8 +45,23 @@ Public Class frmSelectRPlanImport
             For i = 1 To listOfImportfiles.Count
                 dateiName = Dir(listOfImportfiles.Item(i - 1))
                 If Not IsNothing(dateiName) Then
-                    RPLANImportDropbox.Items.Add(dateiName)
+
+                    If menueAswhl = PTImpExp.rplanrxf Then
+                        If dateiName.Contains(".rxf") Then
+                            RPLANImportDropbox.Items.Add(dateiName)
+                        End If
+                    ElseIf menueAswhl = PTImpExp.msproject Then
+                        If dateiName.Contains(".mpp") Then
+                            RPLANImportDropbox.Items.Add(dateiName)
+                        End If
+
+                    Else
+                        If dateiName.Contains(".xls") Then
+                            RPLANImportDropbox.Items.Add(dateiName)
+                        End If
+                    End If
                 End If
+
 
             Next i
         Catch ex As Exception
@@ -58,6 +81,8 @@ Public Class frmSelectRPlanImport
         'dirName = awinPath & rplanimportFilesOrdner
         If menueAswhl = PTImpExp.rplan Then
             dirName = importOrdnerNames(PTImpExp.rplan)
+        ElseIf menueAswhl = PTImpExp.rplanrxf Then
+            dirName = importOrdnerNames(PTImpExp.rplanrxf)
         ElseIf menueAswhl = PTImpExp.simpleScen Then
             dirName = importOrdnerNames(PTImpExp.simpleScen)
         ElseIf menueAswhl = PTImpExp.modulScen Then
