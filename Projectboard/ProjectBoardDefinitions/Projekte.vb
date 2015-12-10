@@ -18331,6 +18331,7 @@ Public Module Projekte
             End If
 
             Call awinZeichnePlanTafel(True)
+            Call awinNeuZeichnenDiagramme(2)
 
         End If
 

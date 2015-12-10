@@ -42,6 +42,9 @@ Partial Class frmEditWoerterbuch
         Me.setItemToBeKnown = New System.Windows.Forms.PictureBox()
         Me.clearStandardList = New System.Windows.Forms.PictureBox()
         Me.showOnlySummaryTasks = New System.Windows.Forms.CheckBox()
+        Me.Button1 = New System.Windows.Forms.Button()
+        Me.ToolStripStatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel()
+        Me.StatusStrip1.SuspendLayout()
         CType(Me.clearUnknownList, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.setItemToBeUnknown, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.setItemToBeKnown, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -95,6 +98,7 @@ Partial Class frmEditWoerterbuch
         Me.standardList.Location = New System.Drawing.Point(410, 122)
         Me.standardList.Name = "standardList"
         Me.standardList.Size = New System.Drawing.Size(341, 264)
+        Me.standardList.Sorted = True
         Me.standardList.TabIndex = 4
         '
         'Label1
@@ -177,6 +181,7 @@ Partial Class frmEditWoerterbuch
         '
         'StatusStrip1
         '
+        Me.StatusStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripStatusLabel1})
         Me.StatusStrip1.Location = New System.Drawing.Point(0, 540)
         Me.StatusStrip1.Name = "StatusStrip1"
         Me.StatusStrip1.Size = New System.Drawing.Size(774, 22)
@@ -241,11 +246,27 @@ Partial Class frmEditWoerterbuch
         Me.showOnlySummaryTasks.UseVisualStyleBackColor = True
         Me.showOnlySummaryTasks.Visible = False
         '
+        'Button1
+        '
+        Me.Button1.Location = New System.Drawing.Point(676, 502)
+        Me.Button1.Name = "Button1"
+        Me.Button1.Size = New System.Drawing.Size(75, 23)
+        Me.Button1.TabIndex = 22
+        Me.Button1.Text = "Speichern"
+        Me.Button1.UseVisualStyleBackColor = True
+        '
+        'ToolStripStatusLabel1
+        '
+        Me.ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
+        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(134, 17)
+        Me.ToolStripStatusLabel1.Text = "ToolStripStatusLabel1"
+        '
         'frmEditWoerterbuch
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(774, 562)
+        Me.Controls.Add(Me.Button1)
         Me.Controls.Add(Me.showOnlySummaryTasks)
         Me.Controls.Add(Me.clearStandardList)
         Me.Controls.Add(Me.clearUnknownList)
@@ -270,6 +291,8 @@ Partial Class frmEditWoerterbuch
         Me.Name = "frmEditWoerterbuch"
         Me.Text = "Editieren des Wörterbuchs"
         Me.TopMost = True
+        Me.StatusStrip1.ResumeLayout(False)
+        Me.StatusStrip1.PerformLayout()
         CType(Me.clearUnknownList, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.setItemToBeUnknown, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.setItemToBeKnown, System.ComponentModel.ISupportInitialize).EndInit()
@@ -298,4 +321,6 @@ Partial Class frmEditWoerterbuch
     Friend WithEvents clearUnknownList As System.Windows.Forms.PictureBox
     Friend WithEvents clearStandardList As System.Windows.Forms.PictureBox
     Friend WithEvents showOnlySummaryTasks As System.Windows.Forms.CheckBox
+    Friend WithEvents Button1 As System.Windows.Forms.Button
+    Friend WithEvents ToolStripStatusLabel1 As System.Windows.Forms.ToolStripStatusLabel
 End Class
