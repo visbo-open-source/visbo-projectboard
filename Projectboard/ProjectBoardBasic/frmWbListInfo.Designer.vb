@@ -60,13 +60,13 @@ Partial Class frmWbListInfo
         '
         'deleteButton
         '
-        Me.deleteButton.BackColor = System.Drawing.Color.Firebrick
-        Me.deleteButton.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.deleteButton.Location = New System.Drawing.Point(92, 274)
+        Me.deleteButton.BackColor = System.Drawing.SystemColors.Control
+        Me.deleteButton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText
+        Me.deleteButton.Location = New System.Drawing.Point(37, 274)
         Me.deleteButton.Name = "deleteButton"
-        Me.deleteButton.Size = New System.Drawing.Size(103, 27)
+        Me.deleteButton.Size = New System.Drawing.Size(196, 27)
         Me.deleteButton.TabIndex = 3
-        Me.deleteButton.Text = "Löschen"
+        Me.deleteButton.Text = "Regel aus Wörterbuch entfernen"
         Me.deleteButton.UseVisualStyleBackColor = False
         '
         'frmWbListInfo
