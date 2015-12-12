@@ -6564,10 +6564,6 @@ Public Module Projekte
         width = 450
 
 
-
-
-
-
         With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
             anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
 
@@ -18234,7 +18230,8 @@ Public Module Projekte
                             ' 5.5.2014 ur: soll nicht wieder auf 0 gesetzt werden, sondern Einstellung beibehalten
                             '.latestStart = 0
                             .latestStartDate = .startDate
-                            .leadPerson = " "
+                            ' Änderung tk 12.12.15: LeadPerson darf doch nicht auf leer gesetzt werden ...
+                            '.leadPerson = " "
                             .shpUID = ""
                             .StartOffset = 0
 

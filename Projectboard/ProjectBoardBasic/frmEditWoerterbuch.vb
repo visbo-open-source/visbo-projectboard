@@ -22,6 +22,8 @@ Public Class frmEditWoerterbuch
             
             If MsgBox("Vorher Speichern?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
                 Call awinWritePhaseMilestoneDefinitions(True)
+
+                Call MsgBox("Bitte beachten:" & vbLf & "um die neuen Regeln und Definitionen anzuwenden," & vbLf & "müssen die Projekte neu importiert werden !")
             End If
 
         End If
@@ -1159,7 +1161,9 @@ Public Class frmEditWoerterbuch
         Call awinWritePhaseMilestoneDefinitions(True)
         somethingChanged = False
 
-        ToolStripStatusLabel1.Text = "ok, Änderungen wurden im Customization File gespeichert ..."
+        ToolStripStatusLabel1.Text = "ok, Änderungen wurden gespeichert ..."
+
+        Call MsgBox("Bitte beachten:" & vbLf & "um die neuen Regeln und Definitionen anzuwenden," & vbLf & "müssen die Projekte neu importiert werden !")
 
     End Sub
 End Class

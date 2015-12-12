@@ -549,7 +549,9 @@ Public Module testModule
                         kennzeichnung = "Soll-Ist1C Kostenart" Or _
                         kennzeichnung = "Soll-Ist2C Kostenart" Or _
                         kennzeichnung = "Ampel-Farbe" Or _
+                        kennzeichnung = "Ampel-Text" Or _
                         kennzeichnung = "Beschreibung" Or _
+                        kennzeichnung = "Business-Unit:" Or _
                         kennzeichnung = "Stand:" Or _
                         kennzeichnung = "Laufzeit:" Or _
                         kennzeichnung = "Verantwortlich:" Then
@@ -2001,8 +2003,14 @@ Public Module testModule
                                     Case Else
                                 End Select
 
-                            Case "Beschreibung"
+                            Case "Ampel-Text"
                                 .TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
+
+                            Case "Business-Unit:"
+                                .TextFrame2.TextRange.Text = boxName & " " & hproj.businessUnit
+
+                            Case "Beschreibung"
+                                .TextFrame2.TextRange.Text = hproj.description
 
                             Case "Stand:"
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToShortDateString
@@ -7009,9 +7017,9 @@ Public Module testModule
 
                         CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.name
                         CType(.Cell(tabellenzeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cResult.getDate.ToShortDateString
-                        CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cBewertung.description
+                        CType(.Cell(tabellenzeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cBewertung.deliverables
                         If anzSpalten >= 5 Then
-                            CType(.Cell(tabellenzeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cBewertung.deliverables
+                            CType(.Cell(tabellenzeile, 5), pptNS.Cell).Shape.TextFrame2.TextRange.Text = cBewertung.description
                         End If
 
 
