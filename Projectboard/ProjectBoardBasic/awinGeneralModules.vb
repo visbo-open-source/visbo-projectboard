@@ -3160,7 +3160,7 @@ Public Module awinGeneralModules
                 Dim found As Boolean = False
 
                 If IsNothing(topPhase.getMilestone(currentElem.name)) Then
-                    ' nur wenn der nicht schon exitistiert, soll er auch erzeugt werden ... 
+                    ' nur wenn der nicht schon existiert, soll er auch erzeugt werden ... 
 
                     Do While offs <= currentElem.count And Not found
                         Dim ok As Boolean = False
