@@ -3063,60 +3063,92 @@ Imports System.Drawing
 
         If returnValue = DialogResult.OK Then
             dateiName = getModuleImport.selectedDateiName
-
+            Dim ruleSet As New clsAddElements
+            Dim ok As Boolean = True
             Try
                 appInstance.Workbooks.Open(dateiName)
 
                 ' jetzt werden die Regeln ausgelesen ...
-                Dim ruleSet As New clsAddElements
                 Call awinReadAddOnRules(ruleSet)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
 
-                Dim awinSelection As Excel.ShapeRange
-                Dim hproj As clsProjekt
+            Catch ex As Exception
+                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                Call MsgBox("Fehler bei Lesen " & vbLf & dateiName & vbLf & ex.Message)
+                ok = False
+            End Try
 
-                Try
-                    awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
-                Catch ex As Exception
-                    awinSelection = Nothing
-                End Try
+
+            Dim awinSelection As Excel.ShapeRange
+            Dim hproj As clsProjekt
+
+            Try
+                awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+            Catch ex As Exception
+                awinSelection = Nothing
+            End Try
+
+
+            If ok Then
+
+                Dim allOK As Boolean = True
 
                 If Not awinSelection Is Nothing Then
 
                     ' jetzt die Aktion durchführen ...
 
+
                     For Each singleShp As Excel.Shape In awinSelection
                         Dim shapeArt As Integer
                         shapeArt = kindOfShape(singleShp)
 
+
                         With singleShp
                             If isProjectType(shapeArt) Then
-
                                 hproj = ShowProjekte.getProject(singleShp.Name, True)
-                                Call awinApplyAddOnRules(hproj, ruleSet)
+
+                                Try
+                                    Call awinApplyAddOnRules(hproj, ruleSet)
+                                Catch ex As Exception
+                                    Call MsgBox(hproj.name & ":" & vbLf & ex.Message)
+                                    allOK = False
+                                End Try
+
                             End If
                         End With
                     Next
 
-                    Call MsgBox("ok, alle ausgewählten Projekt wurden um " & ruleSet.name & " ergänzt")
+                    If allOK Then
+                        Call MsgBox("ok, alle Projekte wurden um " & ruleSet.name & " ergänzt")
+                    Else
+                        Call MsgBox("ok, ergänzt, was möglich war ...")
+                    End If
+
 
                 Else
 
                     For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
 
-                        Call awinApplyAddOnRules(kvp.Value, ruleSet)
+                        Try
+                            Call awinApplyAddOnRules(kvp.Value, ruleSet)
+                        Catch ex As Exception
+                            Call MsgBox(kvp.Value.name & ":" & vbLf & ex.Message)
+                            allOK = False
+                        End Try
+
 
                     Next
 
-                    Call MsgBox("ok, alle Projekte wurden um " & ruleSet.name & " ergänzt")
+                    If allOK Then
+                        Call MsgBox("ok, alle Projekte wurden um " & ruleSet.name & " ergänzt")
+                    Else
+                        Call MsgBox("ok, ergänzt, was möglich war ...")
+                    End If
 
                 End If
 
-
-            Catch ex As Exception
-                appInstance.ActiveWorkbook.Close(SaveChanges:=False)
-                Call MsgBox("Fehler bei Lesen " & vbLf & dateiName & vbLf & ex.Message)
-            End Try
+            End If
+            
         Else
             Call MsgBox(" Ergänzungs-Vorgang wurde abgebrochen")
         End If
