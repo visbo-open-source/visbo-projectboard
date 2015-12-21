@@ -1009,7 +1009,7 @@ Public Module awinGeneralModules
                             ' das neue ...
                             hphase = New clsPhasenDefinition
                             With hphase
-                                .farbe = CLng(c.Interior.Color)
+                                '.farbe = CLng(c.Interior.Color)
                                 .name = tmpStr.Trim
                                 .UID = iZeile - 1
 
@@ -2231,7 +2231,7 @@ Public Module awinGeneralModules
                                     Dim hphase As clsPhasenDefinition
                                     hphase = New clsPhasenDefinition
 
-                                    hphase.farbe = CLng(CType(.Cells(i, 1), Excel.Range).Interior.Color)
+                                    'hphase.farbe = CLng(CType(.Cells(i, 1), Excel.Range).Interior.Color)
                                     hphase.name = phaseName
                                     hphase.UID = phaseIX
                                     phaseIX = phaseIX + 1
@@ -10050,7 +10050,7 @@ Public Module awinGeneralModules
                                     ' wenn ja, wird an den mappedPhaseName eine LFdNr. ergänzt,bis der Name innerhalb der Geschwistergruppe eindeutig ist.
 
                                     If awinSettings.createUniqueSiblingNames Then
-                                        mappedMSname = hproj.hierarchy.findUniqueGeschwisterName(parentelemID, mappedMSname, False)
+                                        mappedMSname = hproj.hierarchy.findUniqueGeschwisterName(parentelemID, mappedMSname, True)
                                     End If
 
                                     .nameID = hproj.hierarchy.findUniqueElemKey(mappedMSname, True)
@@ -10424,7 +10424,7 @@ Public Module awinGeneralModules
             CType(.Rows(1), Excel.Range).RowHeight = 30
             CType(.Rows(1), Excel.Range).Font.Bold = True
 
-            If awinSettings.fullProtokoll Then
+            If awinSettings.fullProtocol Then
                 CType(.Cells(1, 1), Excel.Range).Value() = "Datum"
                 CType(.Cells(1, 2), Excel.Range).Value() = "Projekt"
                 CType(.Cells(1, 3), Excel.Range).Value() = "Hierarchie"
@@ -10462,7 +10462,7 @@ Public Module awinGeneralModules
                 CType(.Columns(7), Excel.Range).ColumnWidth = 10
                 CType(.Columns(8), Excel.Range).ColumnWidth = 40
                 CType(.Columns(9), Excel.Range).ColumnWidth = 40
-              
+
 
             End If
 
@@ -10495,7 +10495,7 @@ Public Module awinGeneralModules
 
                 With wsLogbuch
 
-                    If awinSettings.fullProtokoll Then
+                    If awinSettings.fullProtocol Then
 
                         CType(.Cells(zeile, 1), Excel.Range).Value() = prtline.Value.actDate
                         CType(.Cells(zeile, 2), Excel.Range).Value() = prtline.Value.Projekt
@@ -10524,6 +10524,7 @@ Public Module awinGeneralModules
             End Try
 
         Next
+
         ' Logbuch sichern
         If Not IsNothing(xlsLogfile) Then
             xlsLogfile.Save()

@@ -105,8 +105,6 @@ Public Class clsawinSettings
     ' wird beim Import verwendet; steuert, ob beim Import aus MS Project, RPLAN, Excel Files eindeutige Namen 
     ' für gleichlautende Geschwisternamen generiert werden  
     Public Property createUniqueSiblingNames As Boolean
-    ' beim Import von MS Project, RPLAN, Excel Files wird Protokoll erstellt (full - notfull)
-    Public Property fullProtokoll As Boolean
 
     ' Settings für ToleranzKorridor TimeCost
     Public Property timeToleranzRel As Double
@@ -219,7 +217,7 @@ Public Class clsawinSettings
         _mppShowProjectLine = True
         _mppVertikalesRaster = False
         _mppShowLegend = False
-        _mppFullyContained = True
+        _mppFullyContained = False
         _mppSortiertDauer = False
         _mppOnePage = False
         _mppExtendedMode = False

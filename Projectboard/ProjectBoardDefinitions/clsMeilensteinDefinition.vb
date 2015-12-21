@@ -43,12 +43,11 @@
     ''' liest die Farbe entsprechend der Definition der Darstellungsklasse 
     ''' wenn es die nicht gibt, wird der Default für diese Phase verwendet  
     ''' </summary>
-    ''' <value>setzt den Default Wert der Farbe für diese Phase, unabhängig von der Darstellungsklasse</value>
+    ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Property farbe As Long
+    Public ReadOnly Property farbe As Long
         Get
-            'Try
 
             If appearanceDefinitions.ContainsKey(_darstellungsKlasse) Then
                 _farbe = appearanceDefinitions.Item(_darstellungsKlasse).form.Fill.ForeColor.RGB
@@ -56,18 +55,15 @@
                 _farbe = awinSettings.AmpelNichtBewertet
             End If
 
-            'Catch ex As Exception
-            '    _farbe = awinSettings.AmpelNichtBewertet
-            'End Try
 
             farbe = _farbe
 
         End Get
-        Set(value As Long)
+        'Set(value As Long)
 
-            _farbe = value
+        '    _farbe = value
 
-        End Set
+        'End Set
     End Property
 
     ' Angabe der UID des Meilensteins
@@ -93,7 +89,7 @@
                 .schwellWert = msDef.schwellWert
                 .shortName = msDef.shortName
                 .darstellungsKlasse = msDef.darstellungsKlasse
-                .farbe = msDef.farbe
+                '.farbe = msDef.farbe
                 .belongsTo = msDef.belongsTo
 
             End With

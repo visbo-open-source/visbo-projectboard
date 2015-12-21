@@ -362,6 +362,7 @@
 
     ''' <summary>
     ''' findet für elemName einen innerhalb seiner Geschwister eindeutigen Namen; 
+    ''' falls ein neuer Name erzeugt wird, wird ein einentsprechender Eintrag in Phase/milestone bzw. den entsprechenden MissingDefs gemacht
     ''' wenn notwendig wird elemName solange mit einer lfdNr inkrementiert, bis der Name innerhalb seiner Geschwistergruppe eindeutig ist
     ''' Zu Geschwistern zählen die Kinder des gleichen Vaters, die auch vom gleichen Typ (Phasen oder Meilensteine sind)
     ''' es kann also einen Meilenstein und eine Phase gleichen Namens auf der gleichen Hierarchie-Stufe geben 
@@ -388,12 +389,85 @@
 
             Dim uniqueSiblingName As String = elemName
 
-            ' wenn beriets enthalten: suche einen neuen, abgeleiteten Namen
+            ' wenn bereits enthalten: suche einen neuen, abgeleiteten Namen
             Do While geschwisterTypGruppe.Contains(uniqueSiblingName)
                 uniqueSiblingName = elemName & " " & lfdNr.ToString
                 lfdNr = lfdNr + 1
             Loop
 
+            ' hier muss ggf das Element noch in Phase- bzw. Milestone-Definitions bzw. die entsprechenden Missing-Definitions aufgenommen werden 
+            If uniqueSiblingName <> elemName Then
+                Dim isMissing As Boolean = False
+
+                If isMilestone Then
+                    ' Meilenstein-Behandlung 
+                    '
+                    Dim newMSDef As New clsMeilensteinDefinition
+                    Dim sisterDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(elemName)
+
+                    If IsNothing(sisterDef) Then
+                        sisterDef = missingMilestoneDefinitions.getMilestoneDef(elemName)
+                        isMissing = True
+                    End If
+
+                    If Not IsNothing(sisterDef) Then
+
+                        With newMSDef
+                            .name = uniqueSiblingName
+                            .schwellWert = 0
+                            .shortName = sisterDef.shortName
+                            .darstellungsKlasse = sisterDef.darstellungsKlasse
+                            '.farbe = sisterDef.farbe
+                        End With
+
+                        If Not isMissing Then
+                            If Not MilestoneDefinitions.Contains(newMSDef.name) Then
+                                MilestoneDefinitions.Add(newMSDef)
+                            End If
+                        Else
+                            If Not missingMilestoneDefinitions.Contains(newMSDef.name) Then
+                                missingMilestoneDefinitions.Add(newMSDef)
+                            End If
+                        End If
+
+
+                    End If
+                Else
+                    ' Phasen-Behandlung 
+                    '
+                    Dim newPhDef As New clsPhasenDefinition
+                    Dim sisterDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(elemName)
+
+                    If IsNothing(sisterDef) Then
+                        sisterDef = missingPhaseDefinitions.getPhaseDef(elemName)
+                        isMissing = True
+                    End If
+
+                    If Not IsNothing(sisterDef) Then
+
+                        With newPhDef
+                            .name = uniqueSiblingName
+                            .schwellWert = 0
+                            .shortName = sisterDef.shortName
+                            .darstellungsKlasse = sisterDef.darstellungsKlasse
+                            '.farbe = sisterDef.farbe
+                        End With
+
+                        If Not isMissing Then
+                            If Not PhaseDefinitions.Contains(newPhDef.name) Then
+                                PhaseDefinitions.Add(newPhDef)
+                            End If
+                        Else
+                            If Not missingPhaseDefinitions.Contains(newPhDef.name) Then
+                                missingPhaseDefinitions.Add(newPhDef)
+                            End If
+                        End If
+
+
+                    End If
+                End If
+            End If
+            ' Ende der Aufnahme in Phase/MilestoneDes; notwenig aufgrund neuen Sibling Namens 
 
             findUniqueGeschwisterName = uniqueSiblingName
 

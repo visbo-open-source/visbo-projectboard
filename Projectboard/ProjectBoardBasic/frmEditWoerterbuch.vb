@@ -8,6 +8,27 @@ Public Class frmEditWoerterbuch
     Private listOfSummaryTasks As New Collection
     Dim somethingChanged As Boolean = False
 
+    Private Sub frmEditWoerterbuch_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles Me.FormClosed
+
+        Me.TopMost = False
+
+        If somethingChanged Then
+
+            If MsgBox(Prompt:="Bitte beachten:" & vbLf & "um die neuen Regeln und Definitionen anzuwenden," & vbLf & "müssen die Projekte neu importiert werden !" & vbLf & vbLf & _
+                      "Sollen die Änderungen im Customization File gespeichert werden?", _
+                      Buttons:=MsgBoxStyle.YesNo, _
+                      Title:=" ") = MsgBoxResult.Yes Then
+
+                Call awinWritePhaseMilestoneDefinitions(True)
+
+                'Call MsgBox("Bitte beachten:" & vbLf & "um die neuen Regeln und Definitionen anzuwenden," & vbLf & "müssen die Projekte neu importiert werden !")
+            End If
+
+        End If
+
+
+    End Sub
+    
 
     ''' <summary>
     ''' triggert das Wegschreiben der Phasen-, Meilenstein-Definitionen und der 
@@ -18,15 +39,7 @@ Public Class frmEditWoerterbuch
     ''' <remarks></remarks>
     Private Sub frmEditWoerterbuch_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
 
-        If somethingChanged Then
-            
-            If MsgBox("Vorher Speichern?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
-                Call awinWritePhaseMilestoneDefinitions(True)
-
-                Call MsgBox("Bitte beachten:" & vbLf & "um die neuen Regeln und Definitionen anzuwenden," & vbLf & "müssen die Projekte neu importiert werden !")
-            End If
-
-        End If
+        
 
 
     End Sub
