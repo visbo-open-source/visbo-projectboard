@@ -4802,6 +4802,69 @@ Imports System.Drawing
 
     End Sub
 
+    ''' <summary>
+    ''' Charakteristik Strategie / Risiko / Abhängigkeiten
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub Tom2G2M1B6SFITDEP(control As IRibbonControl)
+
+
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim singleShp As Excel.Shape
+        Dim myCollection As New Collection
+        Dim awinSelection As Excel.ShapeRange
+
+        Call projektTafelInit()
+
+        Dim formerSU As Boolean = appInstance.ScreenUpdating
+        Dim formerEE As Boolean = appInstance.EnableEvents
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+
+        enableOnUpdate = False
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If Not awinSelection Is Nothing Then
+
+            ' jetzt die Aktion durchführen ...
+
+            For Each singleShp In awinSelection
+                Dim shapeArt As Integer
+                shapeArt = kindOfShape(singleShp)
+
+                With singleShp
+                    If isProjectType(shapeArt) Then
+
+                        myCollection.Add(.Name)
+                        top = .Top + boxHeight + 2
+                        left = .Left - 3
+                        width = 12 * boxWidth
+                        height = 8 * boxHeight
+
+                    End If
+                End With
+            Next
+            Dim obj As Excel.ChartObject = Nothing
+            Call awinCreatePortfolioDiagrams(myCollection, obj, True, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+        Else
+            Call MsgBox("vorher Projekt selektieren ...")
+        End If
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = formerEE
+        appInstance.ScreenUpdating = formerSU
+
+
+    End Sub
+
+
     Sub Tom2G2M1B6SFITVOl(control As IRibbonControl)
 
         Dim top As Double, left As Double, width As Double, height As Double
@@ -6454,6 +6517,74 @@ Imports System.Drawing
 
         appInstance.EnableEvents = True
         enableOnUpdate = True
+
+    End Sub
+
+    ''' <summary>
+    ''' zeigt das Portfolio Chart Strategie, Risiko, Abhängigkeiten an 
+    ''' die Größe der Kugel entspricht der Anzahl der Abhängigkeiten, also wieviele Projekte sind von diesem Projekt abhängig  
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub PT0ShowSFitRisikoDependency(control As IRibbonControl)
+
+        Dim selectionType As Integer = -1 ' keine Einschränkung
+        Dim myCollection As New Collection
+        Dim top As Double, left As Double, width As Double, height As Double
+        Dim sichtbarerBereich As Excel.Range
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        enableOnUpdate = False
+
+        myCollection = ShowProjekte.withinTimeFrame(selectionType, showRangeLeft, showRangeRight)
+
+        If myCollection.Count > 0 Then
+
+            With appInstance.ActiveWindow
+                sichtbarerBereich = .VisibleRange
+                left = CDbl(sichtbarerBereich.Left) + (CDbl(sichtbarerBereich.Width) - 600) / 2
+                If left < CDbl(sichtbarerBereich.Left) Then
+                    left = CDbl(sichtbarerBereich.Left) + 2
+                End If
+
+                top = CDbl(sichtbarerBereich.Top) + (CDbl(sichtbarerBereich.Height) - 450) / 2
+                If top < CDbl(sichtbarerBereich.Top) Then
+                    top = CDbl(sichtbarerBereich.Top) + 2
+                End If
+
+            End With
+
+            width = 600
+            height = 450
+
+            Dim obj As Excel.ChartObject = Nothing
+
+            Try
+                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, top, left, width, height)
+            Catch ex As Exception
+
+            End Try
+
+        Else
+
+            If ShowProjekte.Count = 0 Then
+                Call MsgBox("es sind keine Projekte angezeigt")
+
+            Else
+                Call MsgBox("im angezeigten Zeitraum " & textZeitraum(showRangeLeft, showRangeRight) & vbLf & _
+                            "gibt es keine Projekte")
+            End If
+
+
+        End If
+
+
+
+        appInstance.EnableEvents = True
+        enableOnUpdate = True
+
 
     End Sub
 

@@ -517,6 +517,7 @@ Public Module testModule
                         kennzeichnung = "Tabelle OneGlance letzter Stand" Or _
                         kennzeichnung = "Ergebnis" Or _
                         kennzeichnung = "Strategie/Risiko" Or _
+                        kennzeichnung = "Strategie/Risiko/Ausstrahlung" Or _
                         kennzeichnung = "Projektphasen" Or _
                         kennzeichnung = "Personalbedarf" Or _
                         kennzeichnung = "Personalkosten" Or _
@@ -1379,6 +1380,20 @@ Public Module testModule
                                     mycollection.Add(pname)
 
                                     Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight)
+                                    notYetDone = True
+                                Catch ex As Exception
+
+                                End Try
+
+                            Case "Strategie/Risiko/Ausstrahlung"
+
+                                Dim mycollection As New Collection
+
+                                'deleteStack.Add(.Name, .Name)
+                                Try
+                                    mycollection.Add(pname)
+
+                                    Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight)
                                     notYetDone = True
                                 Catch ex As Exception
 
@@ -2365,6 +2380,7 @@ Public Module testModule
                         kennzeichnung = "Projekt-Tafel Phasen" Or _
                         kennzeichnung = "Tabelle Zielerreichung" Or _
                         kennzeichnung = "Tabelle Projektstatus" Or _
+                        kennzeichnung = "Tabelle Projektabhängigkeiten" Or _
                         kennzeichnung = "Übersicht Besser/Schlechter" Or _
                         kennzeichnung = "Tabelle Besser/Schlechter" Or _
                         kennzeichnung = "Tabelle ProjekteMitMsImMonat" Or _
@@ -2382,6 +2398,7 @@ Public Module testModule
                         kennzeichnung = "Strategie/Risiko/Marge" Or _
                         kennzeichnung = "Strategie/Risiko/Volumen" Or _
                         kennzeichnung = "Zeit/Risiko/Volumen" Or _
+                        kennzeichnung = "Strategie/Risiko/Ausstrahlung" Or _
                         kennzeichnung = "Übersicht Auslastung" Or _
                         kennzeichnung = "Details Unterauslastung" Or _
                         kennzeichnung = "Details Überauslastung" Or _
@@ -2865,6 +2882,14 @@ Public Module testModule
 
                             End Try
 
+                        Case "Tabelle Projektabhängigkeiten"
+
+                            Try
+                                Call zeichneTabelleProjektabhaengigkeiten(pptShape)
+                            Catch ex As Exception
+
+                            End Try
+
 
                         Case "Fortschritt Personalkosten"
 
@@ -3070,6 +3095,56 @@ Public Module testModule
 
                             End Try
 
+                        Case "Strategie/Risiko/Ausstrahlung"
+
+                            pptSize = .TextFrame2.TextRange.Font.Size
+                            .TextFrame2.TextRange.Text = " "
+
+
+                            Dim selectionType As Integer = -1 ' keine Einschränkung
+                            von = showRangeLeft
+                            bis = showRangeRight
+                            myCollection = ShowProjekte.withinTimeFrame(selectionType, von, bis)
+
+                            htop = 50
+                            hleft = (showRangeRight - 1) * boxWidth
+                            hwidth = 0.4 * maxScreenWidth
+                            hheight = 0.6 * maxScreenHeight
+                            obj = Nothing
+
+                            If qualifier = "Ampel" Then
+                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.AmpelFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                            Else
+                                Call awinCreatePortfolioDiagrams(myCollection, obj, False, PTpfdk.FitRisikoDependency, PTpfdk.ProjektFarbe, False, True, True, htop, hleft, hwidth, hheight)
+                            End If
+
+
+
+                            reportObj = obj
+
+                            With reportObj
+                                .Chart.ChartTitle.Text = boxName
+                                .Chart.ChartTitle.Font.Size = pptSize
+                            End With
+
+                            reportObj.Copy()
+                            newShapeRange = pptSlide.Shapes.Paste
+
+                            With newShapeRange.Item(1)
+                                .Top = CSng(top + 0.02 * height)
+                                .Left = CSng(left + 0.02 * width)
+                                .Width = CSng(width * 0.96)
+                                .Height = CSng(height * 0.96)
+                            End With
+
+                            'Call awinDeleteChart(reportObj)
+
+                            Try
+                                reportObj.Delete()
+                                'DiagramList.Remove(DiagramList.Count)
+                            Catch ex As Exception
+
+                            End Try
 
                         Case "Strategie/Risiko/Volumen"
 
@@ -7051,6 +7126,89 @@ Public Module testModule
 
     End Sub
 
+    ''' <summary>
+    ''' schreibt für jedes Projekt, das Abhängigkeiten hat, diese in eine Tabelle
+    ''' </summary>
+    ''' <param name="pptshape"></param>
+    ''' <remarks></remarks>
+    Sub zeichneTabelleProjektabhaengigkeiten(ByRef pptshape As pptNS.Shape)
+
+        Dim heute As Date = Date.Now
+        Dim index As Integer = 0
+        Dim tabelle As pptNS.Table
+
+        Try
+            tabelle = pptshape.Table
+        Catch ex As Exception
+            Throw New Exception("Shape hat keine Tabelle")
+        End Try
+
+
+        Dim todoListe As New SortedList(Of Integer, clsProjekt)
+
+        For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
+
+            Dim anzDependencies As Integer = allDependencies.activeNumber(kvp.Value.name, PTdpndncyType.inhalt)
+
+            If anzDependencies > 0 Then
+
+                todoListe.Add(kvp.Value.tfZeile, kvp.Value)
+
+            End If
+
+        Next
+
+        ' jetzt wird die todoListe abgearbeitet 
+        Dim tabellenzeile As Integer = 2
+        Dim msNumber As Integer = 1
+
+
+        For Each kvp As KeyValuePair(Of Integer, clsProjekt) In todoListe
+
+            Dim depListe As Collection = allDependencies.activeListe(kvp.Value.name, PTdpndncyType.inhalt)
+            Dim ergebnisString As String = ""
+
+            With tabelle
+
+                If kvp.Value.ampelStatus = 0 Then
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
+                ElseIf kvp.Value.ampelStatus = 1 Then
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelGruen)
+                ElseIf kvp.Value.ampelStatus = 2 Then
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelGelb)
+                ElseIf kvp.Value.ampelStatus = 3 Then
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelRot)
+                Else
+                    CType(.Cell(tabellenzeile, 1), pptNS.Cell).Shape.Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
+                End If
+
+                For i As Integer = 1 To depListe.Count
+                    If i = 1 Then
+                        ergebnisString = CStr(depListe.Item(i)).Trim
+                    Else
+                        ergebnisString = ergebnisString & "; " & CStr(depListe.Item(i)).Trim
+                    End If
+                Next
+
+                CType(.Cell(tabellenzeile, 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = kvp.Value.name
+                CType(.Cell(tabellenzeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = ergebnisString
+
+
+            End With
+            msNumber = msNumber + 1
+            tabelle.Rows.Add()
+            tabellenzeile = tabellenzeile + 1
+
+        Next
+
+        Try
+            tabelle.Rows(msNumber + 1).Delete()
+        Catch ex As Exception
+
+        End Try
+
+    End Sub
+
     Sub zeichneTabelleStatus(ByRef pptshape As pptNS.Shape)
         Dim heute As Date = Date.Now
         Dim index As Integer = 0
@@ -9868,7 +10026,7 @@ Public Module testModule
 
         End If
 
-    
+
         ' Erst jetzt wird der Meilenstein gezeichnet 
         milestoneTypShape.Copy()
         copiedShape = pptslide.Shapes.Paste()
@@ -10258,7 +10416,7 @@ Public Module testModule
             msName = CStr(uniqueElemClasses.Item(i))
 
             msShortname = MilestoneDefinitions.getAbbrev(msName)
-            
+
             ' Änderung tk 26.11.15
             If MilestoneDefinitions.Contains(msName) Then
                 meilensteinShape = MilestoneDefinitions.getShape(msName)
@@ -11035,7 +11193,7 @@ Public Module testModule
         Dim completeMppDefinition() As Integer
         ReDim completeMppDefinition(18)
 
-       
+
         Dim anzShapes As Integer = pptslide.Shapes.Count
         Dim pptShape As pptNS.Shape
         ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
@@ -11581,7 +11739,7 @@ Public Module testModule
                 Else
                     ' erstmal sonst nichts 
                 End If
-                
+
 
             End Try
 
@@ -11632,7 +11790,7 @@ Public Module testModule
                             .TextFrame2.TextRange.Text = ex.Message
                         End With
                     End If
-                    
+
                 End Try
             Else
                 legendStartShape.Delete()

@@ -24,7 +24,7 @@ Public Class clsEventsPfCharts
 
     Private Sub PfChartEvents_BeforeRightClick(ByRef Cancel As Boolean) Handles PfChartEvents.BeforeRightClick
 
-        Cancel = True
+        'Cancel = True
         'appInstance.CommandBars("awinRightClickinPortfolio").ShowPopup()
 
 
@@ -42,7 +42,8 @@ Public Class clsEventsPfCharts
 
        
 
-        CancelDefault = True
+        ' Änderung tk 30.12.15 auskommentiert, damit man mit Right Click die Größen der Schriften etc verändern kann 
+        'CancelDefault = True
 
        
         'Select Case Ctrl.Tag

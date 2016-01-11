@@ -191,6 +191,7 @@ Public Module Module1
         betterWorseL = 17 ' es wird mit dem letzten Stand verglichen
         betterWorseB = 18 ' es wird mit dem Beauftragunsg-Stand verglichen
         Budget = 19
+        FitRisikoDependency = 20
     End Enum
 
     ' immer darauf achten daß die identischen Begriffe PTpfdk und PTprdk auch die gleichen Nummern haben 

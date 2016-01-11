@@ -673,7 +673,7 @@ Public Module awinGeneralModules
         ergebnisChartName(2) = "Verbesserungs-Potential"
         ergebnisChartName(3) = "Risiko-Abschlag"
 
-        ReDim portfolioDiagrammtitel(20)
+        ReDim portfolioDiagrammtitel(21)
         portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
         portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
@@ -694,6 +694,7 @@ Public Module awinGeneralModules
         portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
         portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
         portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
+        portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = "strategischer Fit, Risiko & Ausstrahlung"
 
 
         autoSzenarioNamen(0) = "vor Optimierung"
@@ -2342,6 +2343,11 @@ Public Module awinGeneralModules
     End Sub
 
 
+    ''' <summary>
+    ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
+    ''' </summary>
+    ''' <param name="myCollection"></param>
+    ''' <remarks></remarks>
     Public Sub awinImportProjektInventur(ByRef myCollection As Collection)
         Dim zeile As Integer, spalte As Integer
         Dim pName As String = ""
@@ -2420,7 +2426,7 @@ Public Module awinGeneralModules
 
                 ' jetzt werden die Spalten bestimmt 
                 Try
-                    For i As Integer = 0 To 11
+                    For i As Integer = 0 To 13
                         inputColumns(i) = firstZeile.Find(What:=suchstr(i)).Column
                     Next
                 Catch ex As Exception
@@ -2520,7 +2526,7 @@ Public Module awinGeneralModules
 
                         vorgabeDauer = calcDauerIndays(start, ende)
                         Try
-                            
+
                             If Not IsNothing(startElem) Then
                                 If startElem.Trim.Length > 0 Then
                                     sMilestone = refProj.getMilestone(startElem)
@@ -2570,7 +2576,7 @@ Public Module awinGeneralModules
                         Catch ex As Exception
 
                         End Try
-                        
+
 
                     Else
                         CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
@@ -2581,7 +2587,7 @@ Public Module awinGeneralModules
                     If ok Then
                         If AlleProjekte.Containskey(vglName) Then
                             ' nichts tun ...
-                            Call MsgBox("Projekt aus Inventur Liste existiert bereits - keine Neuanlage")
+                            Call MsgBox("Projekt aus Batch-Liste existiert bereits - keine Neuanlage")
                         Else
                             'Projekt anlegen ,Verschiebung um 
                             hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
