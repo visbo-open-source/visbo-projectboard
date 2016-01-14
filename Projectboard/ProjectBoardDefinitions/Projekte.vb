@@ -7080,7 +7080,8 @@ Public Module Projekte
     ''' <remarks></remarks>
     Public Sub TrageivProjektein(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, _
                                  ByVal endedate As Date, ByVal erloes As Double, _
-                                 ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal volume As Double)
+                                 ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal volume As Double, _
+                                 ByVal kurzBeschreibung As String)
         Dim newprojekt As Boolean
         Dim hproj As clsProjekt
         Dim pStatus As String = ProjektStatus(0)
@@ -7123,6 +7124,7 @@ Public Module Projekte
                 .earliestStartDate = .startDate.AddMonths(.earliestStart)
                 .latestStartDate = .startDate.AddMonths(.latestStart)
                 .Status = ProjektStatus(0)
+                .description = kurzBeschreibung
 
                 .volume = volume
                 .StrategicFit = sfit

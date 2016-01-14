@@ -27,33 +27,38 @@ Partial Class frmProjektEingabe1
         Me.Label1 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.Label3 = New System.Windows.Forms.Label()
-        Me.kennzeichnungDate = New System.Windows.Forms.Label()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.projectName = New System.Windows.Forms.TextBox()
         Me.pName = New System.Windows.Forms.Label()
-        Me.selectedMonth = New System.Windows.Forms.NumericUpDown()
-        Me.calcMonth = New System.Windows.Forms.Label()
         Me.Erloes = New System.Windows.Forms.TextBox()
         Me.sFit = New System.Windows.Forms.TextBox()
         Me.risiko = New System.Windows.Forms.TextBox()
         Me.vorlagenDropbox = New System.Windows.Forms.ComboBox()
         Me.Label5 = New System.Windows.Forms.Label()
         Me.volume = New System.Windows.Forms.TextBox()
-        Me.DateTimeProject = New System.Windows.Forms.DateTimePicker()
+        Me.DateTimeStart = New System.Windows.Forms.DateTimePicker()
         Me.dauerUnverändert = New System.Windows.Forms.CheckBox()
-        Me.kennzeichnungEnde = New System.Windows.Forms.Label()
         Me.DateTimeEnde = New System.Windows.Forms.DateTimePicker()
-        CType(Me.selectedMonth, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.Lbl_Beschreibung = New System.Windows.Forms.Label()
+        Me.projektKurzBeschreibung = New System.Windows.Forms.TextBox()
+        Me.lbl_BusinessUnit = New System.Windows.Forms.Label()
+        Me.businessUnitDropBox = New System.Windows.Forms.ComboBox()
+        Me.lbl_Referenz1 = New System.Windows.Forms.Label()
+        Me.startMilestoneDropbox = New System.Windows.Forms.ComboBox()
+        Me.lbl_Referenz2 = New System.Windows.Forms.Label()
+        Me.endMilestoneDropbox = New System.Windows.Forms.ComboBox()
+        Me.lbl_Laufzeit = New System.Windows.Forms.Label()
+        Me.propRessourcenAnpassung = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'OKButton
         '
         Me.OKButton.DialogResult = System.Windows.Forms.DialogResult.OK
         Me.OKButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.OKButton.Location = New System.Drawing.Point(45, 351)
-        Me.OKButton.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.OKButton.Location = New System.Drawing.Point(114, 374)
+        Me.OKButton.Margin = New System.Windows.Forms.Padding(2, 3, 2, 3)
         Me.OKButton.Name = "OKButton"
-        Me.OKButton.Size = New System.Drawing.Size(87, 28)
+        Me.OKButton.Size = New System.Drawing.Size(119, 22)
         Me.OKButton.TabIndex = 1
         Me.OKButton.Text = "OK"
         Me.OKButton.UseVisualStyleBackColor = True
@@ -62,10 +67,10 @@ Partial Class frmProjektEingabe1
         '
         Me.AbbrButton.DialogResult = System.Windows.Forms.DialogResult.Cancel
         Me.AbbrButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.AbbrButton.Location = New System.Drawing.Point(367, 351)
-        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.AbbrButton.Location = New System.Drawing.Point(672, 374)
+        Me.AbbrButton.Margin = New System.Windows.Forms.Padding(2, 3, 2, 3)
         Me.AbbrButton.Name = "AbbrButton"
-        Me.AbbrButton.Size = New System.Drawing.Size(101, 28)
+        Me.AbbrButton.Size = New System.Drawing.Size(119, 22)
         Me.AbbrButton.TabIndex = 10
         Me.AbbrButton.Text = "Abbrechen"
         Me.AbbrButton.UseVisualStyleBackColor = True
@@ -75,9 +80,10 @@ Partial Class frmProjektEingabe1
         Me.Label1.AutoSize = True
         Me.Label1.Enabled = False
         Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.Location = New System.Drawing.Point(41, 143)
+        Me.Label1.Location = New System.Drawing.Point(13, 226)
+        Me.Label1.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(98, 20)
+        Me.Label1.Size = New System.Drawing.Size(78, 16)
         Me.Label1.TabIndex = 5
         Me.Label1.Text = "Budget (T€)"
         '
@@ -86,9 +92,10 @@ Partial Class frmProjektEingabe1
         Me.Label2.AutoSize = True
         Me.Label2.Enabled = False
         Me.Label2.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label2.Location = New System.Drawing.Point(41, 178)
+        Me.Label2.Location = New System.Drawing.Point(199, 226)
+        Me.Label2.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(133, 20)
+        Me.Label2.Size = New System.Drawing.Size(104, 16)
         Me.Label2.TabIndex = 6
         Me.Label2.Text = "Strategischer Fit"
         '
@@ -97,40 +104,32 @@ Partial Class frmProjektEingabe1
         Me.Label3.AutoSize = True
         Me.Label3.Enabled = False
         Me.Label3.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label3.Location = New System.Drawing.Point(41, 213)
+        Me.Label3.Location = New System.Drawing.Point(403, 226)
+        Me.Label3.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(155, 20)
+        Me.Label3.Size = New System.Drawing.Size(124, 16)
         Me.Label3.TabIndex = 7
         Me.Label3.Text = "Umsetzungs-Risiko"
-        '
-        'kennzeichnungDate
-        '
-        Me.kennzeichnungDate.AutoSize = True
-        Me.kennzeichnungDate.Enabled = False
-        Me.kennzeichnungDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.kennzeichnungDate.Location = New System.Drawing.Point(41, 248)
-        Me.kennzeichnungDate.Name = "kennzeichnungDate"
-        Me.kennzeichnungDate.Size = New System.Drawing.Size(50, 20)
-        Me.kennzeichnungDate.TabIndex = 9
-        Me.kennzeichnungDate.Text = "Start "
         '
         'Label4
         '
         Me.Label4.AutoSize = True
         Me.Label4.Enabled = False
         Me.Label4.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label4.Location = New System.Drawing.Point(41, 71)
+        Me.Label4.Location = New System.Drawing.Point(447, 28)
+        Me.Label4.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label4.Name = "Label4"
-        Me.Label4.Size = New System.Drawing.Size(94, 20)
+        Me.Label4.Size = New System.Drawing.Size(56, 16)
         Me.Label4.TabIndex = 14
-        Me.Label4.Text = "Projekt-Typ"
+        Me.Label4.Text = "Vorlage"
         '
         'projectName
         '
         Me.projectName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.projectName.Location = New System.Drawing.Point(167, 33)
+        Me.projectName.Location = New System.Drawing.Point(114, 25)
+        Me.projectName.Margin = New System.Windows.Forms.Padding(2)
         Me.projectName.Name = "projectName"
-        Me.projectName.Size = New System.Drawing.Size(259, 26)
+        Me.projectName.Size = New System.Drawing.Size(254, 22)
         Me.projectName.TabIndex = 0
         '
         'pName
@@ -138,64 +137,48 @@ Partial Class frmProjektEingabe1
         Me.pName.AutoSize = True
         Me.pName.Enabled = False
         Me.pName.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.pName.Location = New System.Drawing.Point(41, 36)
+        Me.pName.Location = New System.Drawing.Point(13, 28)
+        Me.pName.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.pName.Name = "pName"
-        Me.pName.Size = New System.Drawing.Size(111, 20)
+        Me.pName.Size = New System.Drawing.Size(91, 16)
         Me.pName.TabIndex = 16
         Me.pName.Text = "Projekt-Name"
-        '
-        'selectedMonth
-        '
-        Me.selectedMonth.Location = New System.Drawing.Point(256, 353)
-        Me.selectedMonth.Maximum = New Decimal(New Integer() {120, 0, 0, 0})
-        Me.selectedMonth.Name = "selectedMonth"
-        Me.selectedMonth.Size = New System.Drawing.Size(17, 24)
-        Me.selectedMonth.TabIndex = 6
-        Me.selectedMonth.Visible = False
-        '
-        'calcMonth
-        '
-        Me.calcMonth.AutoSize = True
-        Me.calcMonth.Enabled = False
-        Me.calcMonth.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.calcMonth.Location = New System.Drawing.Point(184, 355)
-        Me.calcMonth.Name = "calcMonth"
-        Me.calcMonth.Size = New System.Drawing.Size(66, 20)
-        Me.calcMonth.TabIndex = 19
-        Me.calcMonth.Text = "Mon YY"
-        Me.calcMonth.Visible = False
         '
         'Erloes
         '
         Me.Erloes.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Erloes.Location = New System.Drawing.Point(199, 143)
+        Me.Erloes.Location = New System.Drawing.Point(114, 223)
+        Me.Erloes.Margin = New System.Windows.Forms.Padding(2)
         Me.Erloes.Name = "Erloes"
-        Me.Erloes.Size = New System.Drawing.Size(74, 26)
+        Me.Erloes.Size = New System.Drawing.Size(60, 22)
         Me.Erloes.TabIndex = 20
         '
         'sFit
         '
         Me.sFit.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.sFit.Location = New System.Drawing.Point(199, 175)
+        Me.sFit.Location = New System.Drawing.Point(307, 223)
+        Me.sFit.Margin = New System.Windows.Forms.Padding(2)
         Me.sFit.Name = "sFit"
-        Me.sFit.Size = New System.Drawing.Size(74, 26)
+        Me.sFit.Size = New System.Drawing.Size(60, 22)
         Me.sFit.TabIndex = 21
         '
         'risiko
         '
         Me.risiko.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.risiko.Location = New System.Drawing.Point(199, 214)
+        Me.risiko.Location = New System.Drawing.Point(531, 223)
+        Me.risiko.Margin = New System.Windows.Forms.Padding(2)
         Me.risiko.Name = "risiko"
-        Me.risiko.Size = New System.Drawing.Size(74, 26)
+        Me.risiko.Size = New System.Drawing.Size(60, 22)
         Me.risiko.TabIndex = 22
         '
         'vorlagenDropbox
         '
         Me.vorlagenDropbox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.vorlagenDropbox.FormattingEnabled = True
-        Me.vorlagenDropbox.Location = New System.Drawing.Point(167, 65)
+        Me.vorlagenDropbox.Location = New System.Drawing.Point(506, 25)
+        Me.vorlagenDropbox.Margin = New System.Windows.Forms.Padding(2)
         Me.vorlagenDropbox.Name = "vorlagenDropbox"
-        Me.vorlagenDropbox.Size = New System.Drawing.Size(259, 28)
+        Me.vorlagenDropbox.Size = New System.Drawing.Size(285, 24)
         Me.vorlagenDropbox.TabIndex = 23
         '
         'Label5
@@ -204,9 +187,10 @@ Partial Class frmProjektEingabe1
         Me.Label5.AutoSize = True
         Me.Label5.Enabled = False
         Me.Label5.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label5.Location = New System.Drawing.Point(297, 178)
+        Me.Label5.Location = New System.Drawing.Point(628, 226)
+        Me.Label5.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(74, 20)
+        Me.Label5.Size = New System.Drawing.Size(61, 16)
         Me.Label5.TabIndex = 24
         Me.Label5.Text = "Volumen"
         Me.Label5.Visible = False
@@ -214,82 +198,195 @@ Partial Class frmProjektEingabe1
         'volume
         '
         Me.volume.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.volume.Location = New System.Drawing.Point(384, 172)
+        Me.volume.Location = New System.Drawing.Point(693, 223)
+        Me.volume.Margin = New System.Windows.Forms.Padding(2)
         Me.volume.Name = "volume"
-        Me.volume.Size = New System.Drawing.Size(74, 26)
+        Me.volume.Size = New System.Drawing.Size(98, 22)
         Me.volume.TabIndex = 25
         Me.volume.Visible = False
         '
-        'DateTimeProject
+        'DateTimeStart
         '
-        Me.DateTimeProject.Location = New System.Drawing.Point(199, 248)
-        Me.DateTimeProject.Name = "DateTimeProject"
-        Me.DateTimeProject.Size = New System.Drawing.Size(259, 24)
-        Me.DateTimeProject.TabIndex = 26
+        Me.DateTimeStart.CustomFormat = ""
+        Me.DateTimeStart.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.DateTimeStart.Location = New System.Drawing.Point(672, 290)
+        Me.DateTimeStart.Margin = New System.Windows.Forms.Padding(2)
+        Me.DateTimeStart.Name = "DateTimeStart"
+        Me.DateTimeStart.Size = New System.Drawing.Size(119, 21)
+        Me.DateTimeStart.TabIndex = 26
         '
         'dauerUnverändert
         '
         Me.dauerUnverändert.AutoSize = True
         Me.dauerUnverändert.Checked = True
         Me.dauerUnverändert.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.dauerUnverändert.Location = New System.Drawing.Point(301, 213)
+        Me.dauerUnverändert.Location = New System.Drawing.Point(114, 258)
+        Me.dauerUnverändert.Margin = New System.Windows.Forms.Padding(2)
         Me.dauerUnverändert.Name = "dauerUnverändert"
-        Me.dauerUnverändert.Size = New System.Drawing.Size(150, 22)
+        Me.dauerUnverändert.Size = New System.Drawing.Size(127, 19)
         Me.dauerUnverändert.TabIndex = 27
         Me.dauerUnverändert.Text = "Dauer wie Vorlage"
         Me.dauerUnverändert.UseVisualStyleBackColor = True
         '
-        'kennzeichnungEnde
-        '
-        Me.kennzeichnungEnde.AutoSize = True
-        Me.kennzeichnungEnde.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.kennzeichnungEnde.ForeColor = System.Drawing.SystemColors.ControlText
-        Me.kennzeichnungEnde.Location = New System.Drawing.Point(42, 285)
-        Me.kennzeichnungEnde.Name = "kennzeichnungEnde"
-        Me.kennzeichnungEnde.Size = New System.Drawing.Size(47, 20)
-        Me.kennzeichnungEnde.TabIndex = 28
-        Me.kennzeichnungEnde.Text = "Ende"
-        '
         'DateTimeEnde
         '
-        Me.DateTimeEnde.Location = New System.Drawing.Point(199, 285)
+        Me.DateTimeEnde.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.DateTimeEnde.Location = New System.Drawing.Point(672, 321)
+        Me.DateTimeEnde.Margin = New System.Windows.Forms.Padding(2)
         Me.DateTimeEnde.Name = "DateTimeEnde"
-        Me.DateTimeEnde.Size = New System.Drawing.Size(259, 24)
+        Me.DateTimeEnde.Size = New System.Drawing.Size(119, 21)
         Me.DateTimeEnde.TabIndex = 29
+        '
+        'Lbl_Beschreibung
+        '
+        Me.Lbl_Beschreibung.AutoSize = True
+        Me.Lbl_Beschreibung.Enabled = False
+        Me.Lbl_Beschreibung.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Lbl_Beschreibung.Location = New System.Drawing.Point(13, 100)
+        Me.Lbl_Beschreibung.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.Lbl_Beschreibung.Name = "Lbl_Beschreibung"
+        Me.Lbl_Beschreibung.Size = New System.Drawing.Size(91, 16)
+        Me.Lbl_Beschreibung.TabIndex = 30
+        Me.Lbl_Beschreibung.Text = "Beschreibung"
+        '
+        'projektKurzBeschreibung
+        '
+        Me.projektKurzBeschreibung.Location = New System.Drawing.Point(114, 97)
+        Me.projektKurzBeschreibung.Multiline = True
+        Me.projektKurzBeschreibung.Name = "projektKurzBeschreibung"
+        Me.projektKurzBeschreibung.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
+        Me.projektKurzBeschreibung.Size = New System.Drawing.Size(677, 113)
+        Me.projektKurzBeschreibung.TabIndex = 31
+        '
+        'lbl_BusinessUnit
+        '
+        Me.lbl_BusinessUnit.AutoSize = True
+        Me.lbl_BusinessUnit.Enabled = False
+        Me.lbl_BusinessUnit.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lbl_BusinessUnit.Location = New System.Drawing.Point(13, 65)
+        Me.lbl_BusinessUnit.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.lbl_BusinessUnit.Name = "lbl_BusinessUnit"
+        Me.lbl_BusinessUnit.Size = New System.Drawing.Size(89, 16)
+        Me.lbl_BusinessUnit.TabIndex = 33
+        Me.lbl_BusinessUnit.Text = "Business Unit"
+        '
+        'businessUnitDropBox
+        '
+        Me.businessUnitDropBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.businessUnitDropBox.FormattingEnabled = True
+        Me.businessUnitDropBox.Location = New System.Drawing.Point(114, 60)
+        Me.businessUnitDropBox.Margin = New System.Windows.Forms.Padding(2)
+        Me.businessUnitDropBox.Name = "businessUnitDropBox"
+        Me.businessUnitDropBox.Size = New System.Drawing.Size(254, 24)
+        Me.businessUnitDropBox.TabIndex = 34
+        '
+        'lbl_Referenz1
+        '
+        Me.lbl_Referenz1.AutoSize = True
+        Me.lbl_Referenz1.Enabled = False
+        Me.lbl_Referenz1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lbl_Referenz1.Location = New System.Drawing.Point(13, 292)
+        Me.lbl_Referenz1.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.lbl_Referenz1.Name = "lbl_Referenz1"
+        Me.lbl_Referenz1.Size = New System.Drawing.Size(86, 16)
+        Me.lbl_Referenz1.TabIndex = 35
+        Me.lbl_Referenz1.Text = "Meilenstein 1"
+        '
+        'startMilestoneDropbox
+        '
+        Me.startMilestoneDropbox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.startMilestoneDropbox.FormattingEnabled = True
+        Me.startMilestoneDropbox.Location = New System.Drawing.Point(114, 288)
+        Me.startMilestoneDropbox.Margin = New System.Windows.Forms.Padding(2)
+        Me.startMilestoneDropbox.Name = "startMilestoneDropbox"
+        Me.startMilestoneDropbox.Size = New System.Drawing.Size(532, 24)
+        Me.startMilestoneDropbox.TabIndex = 36
+        '
+        'lbl_Referenz2
+        '
+        Me.lbl_Referenz2.AutoSize = True
+        Me.lbl_Referenz2.Enabled = False
+        Me.lbl_Referenz2.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lbl_Referenz2.Location = New System.Drawing.Point(13, 323)
+        Me.lbl_Referenz2.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.lbl_Referenz2.Name = "lbl_Referenz2"
+        Me.lbl_Referenz2.Size = New System.Drawing.Size(86, 16)
+        Me.lbl_Referenz2.TabIndex = 37
+        Me.lbl_Referenz2.Text = "Meilenstein 2"
+        '
+        'endMilestoneDropbox
+        '
+        Me.endMilestoneDropbox.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.endMilestoneDropbox.FormattingEnabled = True
+        Me.endMilestoneDropbox.Location = New System.Drawing.Point(114, 319)
+        Me.endMilestoneDropbox.Margin = New System.Windows.Forms.Padding(2)
+        Me.endMilestoneDropbox.Name = "endMilestoneDropbox"
+        Me.endMilestoneDropbox.Size = New System.Drawing.Size(532, 24)
+        Me.endMilestoneDropbox.TabIndex = 38
+        '
+        'lbl_Laufzeit
+        '
+        Me.lbl_Laufzeit.AutoSize = True
+        Me.lbl_Laufzeit.Enabled = False
+        Me.lbl_Laufzeit.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lbl_Laufzeit.Location = New System.Drawing.Point(447, 68)
+        Me.lbl_Laufzeit.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
+        Me.lbl_Laufzeit.Name = "lbl_Laufzeit"
+        Me.lbl_Laufzeit.Size = New System.Drawing.Size(53, 16)
+        Me.lbl_Laufzeit.TabIndex = 39
+        Me.lbl_Laufzeit.Text = "Laufzeit"
+        '
+        'propRessourcenAnpassung
+        '
+        Me.propRessourcenAnpassung.AutoSize = True
+        Me.propRessourcenAnpassung.Checked = True
+        Me.propRessourcenAnpassung.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.propRessourcenAnpassung.Location = New System.Drawing.Point(400, 350)
+        Me.propRessourcenAnpassung.Margin = New System.Windows.Forms.Padding(2)
+        Me.propRessourcenAnpassung.Name = "propRessourcenAnpassung"
+        Me.propRessourcenAnpassung.Size = New System.Drawing.Size(391, 19)
+        Me.propRessourcenAnpassung.TabIndex = 40
+        Me.propRessourcenAnpassung.Text = "Ressourcen und Kostenbedarfe der Vorlage proportional anpassen"
+        Me.propRessourcenAnpassung.UseVisualStyleBackColor = True
         '
         'frmProjektEingabe1
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(120.0!, 120.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.BackColor = System.Drawing.SystemColors.Window
-        Me.ClientSize = New System.Drawing.Size(530, 401)
+        Me.ClientSize = New System.Drawing.Size(827, 415)
+        Me.Controls.Add(Me.propRessourcenAnpassung)
+        Me.Controls.Add(Me.lbl_Laufzeit)
+        Me.Controls.Add(Me.endMilestoneDropbox)
+        Me.Controls.Add(Me.lbl_Referenz2)
+        Me.Controls.Add(Me.startMilestoneDropbox)
+        Me.Controls.Add(Me.lbl_Referenz1)
+        Me.Controls.Add(Me.businessUnitDropBox)
+        Me.Controls.Add(Me.lbl_BusinessUnit)
+        Me.Controls.Add(Me.projektKurzBeschreibung)
+        Me.Controls.Add(Me.Lbl_Beschreibung)
         Me.Controls.Add(Me.DateTimeEnde)
-        Me.Controls.Add(Me.kennzeichnungEnde)
         Me.Controls.Add(Me.dauerUnverändert)
-        Me.Controls.Add(Me.DateTimeProject)
+        Me.Controls.Add(Me.DateTimeStart)
         Me.Controls.Add(Me.volume)
         Me.Controls.Add(Me.Label5)
         Me.Controls.Add(Me.vorlagenDropbox)
         Me.Controls.Add(Me.risiko)
         Me.Controls.Add(Me.sFit)
         Me.Controls.Add(Me.Erloes)
-        Me.Controls.Add(Me.calcMonth)
-        Me.Controls.Add(Me.selectedMonth)
         Me.Controls.Add(Me.pName)
         Me.Controls.Add(Me.projectName)
         Me.Controls.Add(Me.Label4)
-        Me.Controls.Add(Me.kennzeichnungDate)
         Me.Controls.Add(Me.Label3)
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
         Me.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
+        Me.Margin = New System.Windows.Forms.Padding(2, 3, 2, 3)
         Me.Name = "frmProjektEingabe1"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
         Me.Text = "Neues Projekt anlegen"
-        CType(Me.selectedMonth, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -299,20 +396,26 @@ Partial Class frmProjektEingabe1
     Public WithEvents Label1 As System.Windows.Forms.Label
     Public WithEvents Label2 As System.Windows.Forms.Label
     Public WithEvents Label3 As System.Windows.Forms.Label
-    Public WithEvents kennzeichnungDate As System.Windows.Forms.Label
     Public WithEvents Label4 As System.Windows.Forms.Label
     Public WithEvents projectName As System.Windows.Forms.TextBox
     Public WithEvents pName As System.Windows.Forms.Label
-    Public WithEvents selectedMonth As System.Windows.Forms.NumericUpDown
-    Public WithEvents calcMonth As System.Windows.Forms.Label
     Public WithEvents Erloes As System.Windows.Forms.TextBox
     Public WithEvents sFit As System.Windows.Forms.TextBox
     Public WithEvents risiko As System.Windows.Forms.TextBox
     Public WithEvents vorlagenDropbox As System.Windows.Forms.ComboBox
     Public WithEvents Label5 As System.Windows.Forms.Label
     Public WithEvents volume As System.Windows.Forms.TextBox
-    Public WithEvents DateTimeProject As System.Windows.Forms.DateTimePicker
+    Public WithEvents DateTimeStart As System.Windows.Forms.DateTimePicker
     Friend WithEvents dauerUnverändert As System.Windows.Forms.CheckBox
     Friend WithEvents DateTimeEnde As System.Windows.Forms.DateTimePicker
-    Public WithEvents kennzeichnungEnde As System.Windows.Forms.Label
+    Public WithEvents Lbl_Beschreibung As System.Windows.Forms.Label
+    Public WithEvents lbl_BusinessUnit As System.Windows.Forms.Label
+    Public WithEvents businessUnitDropBox As System.Windows.Forms.ComboBox
+    Public WithEvents lbl_Referenz1 As System.Windows.Forms.Label
+    Public WithEvents startMilestoneDropbox As System.Windows.Forms.ComboBox
+    Public WithEvents lbl_Referenz2 As System.Windows.Forms.Label
+    Public WithEvents endMilestoneDropbox As System.Windows.Forms.ComboBox
+    Public WithEvents lbl_Laufzeit As System.Windows.Forms.Label
+    Friend WithEvents propRessourcenAnpassung As System.Windows.Forms.CheckBox
+    Public WithEvents projektKurzBeschreibung As System.Windows.Forms.TextBox
 End Class

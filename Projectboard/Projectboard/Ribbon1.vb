@@ -816,7 +816,8 @@ Imports System.Drawing
 
                         Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
                                            CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text))
+                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
+                                           CStr(.projektKurzBeschreibung.Text))
                     Else
                         Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
                     End If
@@ -829,7 +830,8 @@ Imports System.Drawing
                     ' Projekt soll trotzdem angezeigt werden
                     Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
                                            CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
-                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text))
+                                           CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
+                                           CStr(.projektKurzBeschreibung.Text))
 
                 End If
 

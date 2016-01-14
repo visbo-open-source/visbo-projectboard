@@ -443,7 +443,12 @@ Public Module awinGUI
 
                         ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
                         If bubbleValues(i - 1) < 0 Then
-                            .DataLabel.Font.Color = awinSettings.AmpelRot
+                            Try
+                                .DataLabel.Font.Color = awinSettings.AmpelRot
+                            Catch ex As Exception
+
+                            End Try
+
                         End If
 
                     End With
@@ -1245,7 +1250,12 @@ Public Module awinGUI
                         
                         ' bei negativen Werten erfolgt die Beschriftung in roter Farbe  ..
                         If bubbleValues(i - 1) < 0 Then
-                            .DataLabel.Font.Color = awinSettings.AmpelRot
+                            Try
+                                .DataLabel.Font.Color = awinSettings.AmpelRot
+                            Catch ex As Exception
+
+                            End Try
+
                         End If
                     End With
                 Next i

@@ -6903,13 +6903,18 @@ Public Module awinGeneralModules
             Next
 
             ' jetzt alle Timestamps in der Datenbank löschen 
-            If request.deleteProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
+            Try
+                If request.deleteProjectHistoryFromDB(projectname:=pname, variantName:=variantName, _
                                                   storedEarliest:=projekthistorie.First.timeStamp, _
                                                   storedLatest:=projekthistorie.Last.timeStamp) Then
 
-            Else
-                Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName)
-            End If
+                Else
+                    Call MsgBox("Fehler beim Löschen von " & pname & ", " & variantName)
+                End If
+            Catch ex As Exception
+
+            End Try
+            
 
 
         ElseIf kennung = PTTvActions.delFromSession Or _

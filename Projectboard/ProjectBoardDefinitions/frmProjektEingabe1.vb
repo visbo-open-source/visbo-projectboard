@@ -4,15 +4,22 @@ Public Class frmProjektEingabe1
 
 
     ' notwendig, weil sonst eine Fehlermeldung kommt bezgl ValueChanged und zugelassenen Werten 
-    Private vorlagenDauer As Integer = 365
+    Private dauerVorlage As Integer = 365
+    Private listOFMilestones As New SortedList(Of Date, String)
+    Private startMsOffset As Integer = 0
+    Private endMsOffset As Integer = 0
+    Private vproj As clsProjektvorlage
 
-    Public calcProjektStart As Date
-    Public calcProjektEnde As Date
+    Public calcProjektStart As Date = Date.Now
+    Public calcProjektEnde As Date = Date.Now.AddMonths(6)
+    Public newProjektDauer As Integer = 0
 
     Private Sub frmProjektEingabe1_FormClosed(sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
 
         frmCoord(PTfrm.eingabeProj, PTpinfo.top) = Me.Top
         frmCoord(PTfrm.eingabeProj, PTpinfo.left) = Me.Left
+
+        awinSettings.propAnpassRess = propRessourcenAnpassung.Checked
 
     End Sub
 
@@ -20,6 +27,7 @@ Public Class frmProjektEingabe1
 
     Private Sub frmProjektEingabe1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Dim randomValue As Double
+
 
         With Me
 
@@ -45,19 +53,29 @@ Public Class frmProjektEingabe1
                 awinSettings.lastProjektTyp = CStr(vorlagenDropbox.Items(1))
             End If
 
-            ' jetzt die Vorlagen dauer bestimmen 
+
             Try
-                vorlagenDauer = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex).dauerInDays
+                Call setParametersOfVorlage()
             Catch ex As Exception
-                vorlagenDauer = Projektvorlagen.getProject(0).dauerInDays
+                Call MsgBox(ex.Message)
+                Exit Sub
             End Try
+
+            ' Projekt-Dauer setzen 
+            newProjektDauer = dauerVorlage
+
+            ' jetzt die Business-Unit Dropbox aufbauen 
+            For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                businessUnitDropBox.Items.Add(kvp.Value.name)
+            Next kvp
+            businessUnitDropBox.Text = ""
 
 
             ' Jetzt den Wert für den Erlös bestimmen 
 
-            Dim hvalue As Integer
+            Dim hvalue As Integer = 0
             Try
-                hvalue = CType(System.Math.Round(Projektvorlagen.getProject(vorlagenDropbox.Text).getGesamtKostenBedarf.Sum / 10, _
+                hvalue = CType(System.Math.Round(vproj.getGesamtKostenBedarf.Sum / 10, _
                                                                      mode:=MidpointRounding.ToEven) * 10, Integer)
             Catch ex As Exception
 
@@ -65,35 +83,42 @@ Public Class frmProjektEingabe1
 
             .Erloes.Text = hvalue.ToString("N0")
 
-            ' Die Dauer des Projekts soll gleich der Dauer der Vorlage sein.
-            If dauerUnverändert.Checked Then
-                .kennzeichnungDate.Text = "Start"
-                .DateTimeProject.Value = Date.Now.AddMonths(1)
-                .DateTimeEnde.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
-            Else
-                .kennzeichnungDate.Text = "Start"
-                .DateTimeProject.Value = Date.Now.AddMonths(1)
-                .DateTimeEnde.Value = Date.Now.AddMonths(2)
-
-            End If
-
-
-
-            .Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
-            .Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
-
             '.selectedMonth.Value = DateDiff(DateInterval.Month, StartofCalendar, Date.Now) + 2
 
             randomValue = appInstance.WorksheetFunction.RandBetween(1, 100) / 10
-            .risiko.Text = randomValue.ToString("0.0")
+            ' immer als Vorgabe 5 
+            .risiko.Text = "5"
+            '.risiko.Text = randomValue.ToString("0.0")
             randomValue = appInstance.WorksheetFunction.RandBetween(1, 100) / 10
-            .sFit.Text = randomValue.ToString("0.0")
+            .sFit.Text = "5"
+            '.sFit.Text = randomValue.ToString("0.0")
 
-            .volume.Text = "150"
+            .volume.Text = ""
 
-            '.calcMonth.Text = Date.Now.AddMonths(1).ToString("MMM yy")
+            ' Ressourcennapssung 
+            .propRessourcenAnpassung.Checked = awinSettings.propAnpassRess
+
+            .dauerUnverändert.Checked = True
+            .calcProjektStart = Date.Now.AddMonths(1)
+            .calcProjektEnde = .calcProjektStart.AddDays(dauerVorlage - 1)
+
+            .DateTimeStart.Value = .calcProjektStart
+            .DateTimeEnde.Value = .calcProjektEnde
 
 
+            .lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+                                    calcProjektEnde.ToShortDateString
+
+            .lbl_Referenz1.Text = "Referenz"
+            .lbl_Referenz2.Text = "Referenz 2"
+            .lbl_Referenz2.Visible = False
+            .endMilestoneDropbox.Visible = False
+            .DateTimeEnde.Visible = False
+            .propRessourcenAnpassung.Visible = False
+
+            ' das Formular an die letzte / Default-Position setzen 
+            .Top = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.top))
+            .Left = CInt(frmCoord(PTfrm.eingabeProj, PTpinfo.left))
 
         End With
     End Sub
@@ -130,6 +155,13 @@ Public Class frmProjektEingabe1
     Private Sub OKButton_Click(sender As Object, e As EventArgs) Handles OKButton.Click
 
 
+        Try
+            If Me.volume.Text = "" Then
+                Me.volume.Text = "0"
+            End If
+        Catch ex As Exception
+
+        End Try
 
         With projectName
 
@@ -164,16 +196,16 @@ Public Class frmProjektEingabe1
                     DialogResult = System.Windows.Forms.DialogResult.None
                 Else
 
+                    ' Änderung: das wird ja bereits in den Eingabefeldern entsprechend berechnet
+                    'If dauerUnverändert.Checked Then
+                    '    calcProjektStart = DateTimeStart.Value
+                    '    calcProjektEnde = DateTimeStart.Value.AddDays(dauerVorlage - 1)
 
-                    If dauerUnverändert.Checked Then
-                        calcProjektStart = DateTimeProject.Value
-                        calcProjektEnde = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
+                    'Else
+                    '    calcProjektStart = DateTimeStart.Value
+                    '    calcProjektEnde = DateTimeEnde.Value
 
-                    Else
-                        calcProjektStart = DateTimeProject.Value
-                        calcProjektEnde = DateTimeEnde.Value
-
-                    End If
+                    'End If
 
                     DialogResult = System.Windows.Forms.DialogResult.OK
                     MyBase.Close()
@@ -283,25 +315,52 @@ Public Class frmProjektEingabe1
     Private Sub vorlagenDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles vorlagenDropbox.SelectedIndexChanged
 
 
-        Dim oldVorlagenDauer As Integer = vorlagenDauer
+        Dim oldVorlagenDauer As Integer = dauerVorlage
         Dim diff As Integer
 
         Try
-            vorlagenDauer = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex).dauerInDays
-            diff = vorlagenDauer - oldVorlagenDauer
+            vproj = Projektvorlagen.getProject(vorlagenDropbox.SelectedIndex)
+            dauerVorlage = vproj.dauerInDays
+            diff = dauerVorlage - oldVorlagenDauer
 
-            If dauerUnverändert.Checked Then
-                ' Startdatum bleibt, EndeDatum wird aus neuer Vorlage und Startdatum errechnet
-                DateTimeProject.Value = DateTimeProject.Value
-                DateTimeEnde.Value = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
-            Else
-                ' Startdatum und Endedatum bleiben identisch
-            End If
 
         Catch ex As Exception
             Call MsgBox("Vorlagen Dauer konnte nicht bestimmt werden ...")
         End Try
 
+        Call setParametersOfVorlage()
+
+
+        If dauerUnverändert.Checked Then
+            'StartDatum muss gemäß Vorlagendauer errechnet werden
+            
+            calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
+            calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+
+            DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
+
+
+        Else
+            
+            calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
+            calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
+
+            DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
+
+        End If
+
+        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+                                    calcProjektEnde.ToShortDateString
+
+        Dim hvalue As Integer = 0
+        Try
+            hvalue = CType(System.Math.Round(vproj.getGesamtKostenBedarf.Sum / 10, _
+                                                                 mode:=MidpointRounding.ToEven) * 10, Integer)
+        Catch ex As Exception
+
+        End Try
+
+        Erloes.Text = hvalue.ToString("N0")
 
     End Sub
 
@@ -310,77 +369,96 @@ Public Class frmProjektEingabe1
 
     Private Sub DateTimeEnde_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeEnde.ValueChanged
 
-
-
         If dauerUnverändert.Checked Then
             'StartDatum muss gemäß Vorlagendauer errechnet werden
-            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeProject.Value, DateTimeEnde.Value) < 0 Then
+            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeStart.Value, DateTimeEnde.Value) < 0 Then
                 Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
-                DateTimeEnde.Value = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
+                DateTimeEnde.Value = DateTimeStart.Value.AddDays(dauerVorlage - 1)
             Else
-                calcProjektEnde = DateTimeEnde.Value
-                DateTimeProject.Value = DateTimeEnde.Value.AddDays(-(vorlagenDauer - 1))
-                calcProjektStart = DateTimeProject.Value
+                calcProjektEnde = DateTimeEnde.Value.AddDays(dauerVorlage - 1 - endMsOffset)
+                calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1))
+
+                DateTimeStart.Value = calcProjektStart.AddDays(startMsOffset)
+
             End If
         Else
-            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeProject.Value, DateTimeEnde.Value) < 0 Then
+            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeEnde.Value) < 0 Or DateDiff(DateInterval.Month, DateTimeStart.Value, DateTimeEnde.Value) < 0 Then
 
                 Call MsgBox("Ende-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders" & vbLf & "und nicht vor dem Start des Projektes liegen ...")
-                DateTimeEnde.Value = DateTimeProject.Value.AddMonths(1)
+                DateTimeEnde.Value = DateTimeStart.Value.AddMonths(6)
 
             Else
-                calcProjektStart = DateTimeProject.Value
-                calcProjektEnde = DateTimeEnde.Value
+                calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
+                calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
+
             End If
         End If
 
-
+        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+                                    calcProjektEnde.ToShortDateString
     End Sub
 
-    Private Sub DateTimeProject_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeProject.ValueChanged
-
+    Private Sub DateTimeStart_ValueChanged(sender As Object, e As EventArgs) Handles DateTimeStart.ValueChanged
 
 
         If dauerUnverändert.Checked Then
             'StartDatum muss gemäß Vorlagendauer errechnet werden
-            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeProject.Value) < 0 Then
+            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeStart.Value) < 0 Then
                 Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
-                DateTimeProject.Value = Date.Now.AddMonths(1)
+                DateTimeStart.Value = Date.Now.AddMonths(1)
             Else
-                calcProjektStart = DateTimeProject.Value
-                DateTimeEnde.Value = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
-                calcProjektEnde = DateTimeEnde.Value
+                calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
+                calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+
+                DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
+
 
             End If
         Else
-            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeProject.Value) < 0 Then
+            If DateDiff(DateInterval.Month, StartofCalendar, DateTimeStart.Value) < 0 Then
                 Call MsgBox("Start-Datum kann nicht vor dem Start des Projekt-Tafel Kalenders liegen ...")
-                DateTimeProject.Value = Date.Now.AddMonths(1)
+                DateTimeStart.Value = Date.Now.AddMonths(1)
                 'DateTimeProject.Value = Date.Now.AddDays(vorlagenDauer - 1).AddMonths(1)
             Else
-                calcProjektStart = DateTimeProject.Value
-                calcProjektEnde = DateTimeEnde.Value
+                calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
+                calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
             End If
         End If
 
+        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+                                    calcProjektEnde.ToShortDateString
 
     End Sub
 
     Private Sub dauerUnverändert_CheckedChanged(sender As Object, e As EventArgs) Handles dauerUnverändert.CheckedChanged
 
         If dauerUnverändert.Checked Then
-            ' es war vorher auf Datum = End-Datum
-            'kennzeichnungDate.Text = "Start"
-            'DateTimeProject.Value = DateTimeProject.Value
-            DateTimeEnde.Value = DateTimeProject.Value.AddDays(vorlagenDauer - 1)
+
+            lbl_Referenz1.Text = "Referenz"
+            lbl_Referenz2.Visible = False
+            endMilestoneDropbox.Visible = False
+            DateTimeEnde.Visible = False
+            propRessourcenAnpassung.Visible = False
+
+            calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
+            calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+
+            DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
+            calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
         Else
-            ' es war vorher auf Datum = Start-Datum
-            'kennzeichnungDate.Text = "Start"
-            'DateTimeEnde.Value = DateTimeEnde.Value
+
+            lbl_Referenz1.Text = "Referenz 1"
+            lbl_Referenz2.Text = "Referenz 2"
+            lbl_Referenz2.Visible = True
+            endMilestoneDropbox.Visible = True
+            DateTimeEnde.Visible = True
+            propRessourcenAnpassung.Visible = True
 
         End If
 
-    
+        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+                                    calcProjektEnde.ToShortDateString
+
     End Sub
 
     Public Sub New()
@@ -398,4 +476,186 @@ Public Class frmProjektEingabe1
     End Sub
 
 
+    Private Sub Label6_Click(sender As Object, e As EventArgs) Handles Lbl_Beschreibung.Click
+
+    End Sub
+
+    Private Sub Label6_Click_1(sender As Object, e As EventArgs) Handles lbl_Referenz1.Click
+
+    End Sub
+
+    Private Sub volume_TextChanged(sender As Object, e As EventArgs) Handles volume.TextChanged
+        If IsNumeric(volume.Text) Then
+            If CInt(volume.Text) < 0 Then
+                Call MsgBox("Volumen muss eine Zahl >= 0 sein ")
+                volume.Text = "0"
+            End If
+        Else
+            Call MsgBox("Volumen muss eine Zahl >= 0 sein ")
+            volume.Text = "0"
+        End If
+    End Sub
+
+    Private Sub startMilestoneDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles startMilestoneDropbox.SelectedIndexChanged
+
+        If startMilestoneDropbox.Text = "Projektstart" Then
+            startMsOffset = 0
+        Else
+            startMsOffset = CInt(vproj.getMilestoneOffsetToProjectStart(startMilestoneDropbox.Text))
+        End If
+
+        If dauerUnverändert.Checked Then
+            calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset)
+            calcProjektEnde = calcProjektStart.AddDays(dauerVorlage - 1)
+            DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset)
+        Else
+            calcProjektStart = DateTimeStart.Value.AddDays(-1 * startMsOffset * faktorfuerDauer)
+            calcProjektEnde = calcProjektStart.AddDays((dauerVorlage - 1) * faktorfuerDauer)
+            DateTimeEnde.Value = calcProjektStart.AddDays(endMsOffset * faktorfuerDauer)
+        End If
+
+        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+                                    calcProjektEnde.ToShortDateString
+
+    End Sub
+
+    Private Sub endMilestoneDropbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles endMilestoneDropbox.SelectedIndexChanged
+
+        If endMilestoneDropbox.Text = "Projektende" Then
+            endMsOffset = dauerVorlage - 1
+        Else
+            endMsOffset = CInt(vproj.getMilestoneOffsetToProjectStart(endMilestoneDropbox.Text))
+        End If
+
+        If dauerUnverändert.Checked Then
+            calcProjektEnde = DateTimeEnde.Value.AddDays(dauerVorlage - 1 - endMsOffset)
+            calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1))
+
+            DateTimeStart.Value = calcProjektStart.AddDays(startMsOffset)
+        Else
+            calcProjektEnde = DateTimeEnde.Value.AddDays((dauerVorlage - 1 - endMsOffset) * faktorfuerDauer)
+            calcProjektStart = calcProjektEnde.AddDays(-1 * (dauerVorlage - 1) * faktorfuerDauer)
+
+        End If
+
+        lbl_Laufzeit.Text = "Laufzeit von " & calcProjektStart.ToShortDateString & " - " & _
+                                    calcProjektEnde.ToShortDateString
+
+    End Sub
+
+    ''' <summary>
+    ''' bestimmt den Abstand in Tagen zwischen Start-Meilenstein und Ende-Meilenstein in der Vorlage
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private ReadOnly Property abschnittsDauerVorlage As Integer
+        Get
+            abschnittsDauerVorlage = endMsOffset - startMsOffset + 1
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' betimmt den Abstand in Tagen zwischen Start- und Ende-Datum
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private ReadOnly Property abschnittsDauerNeu As Integer
+        Get
+            abschnittsDauerNeu = CInt(DateDiff(DateInterval.Day, CDate(DateTimeStart.Text), CDate(DateTimeEnde.Text)))
+        End Get
+    End Property
+
+    Private ReadOnly Property faktorfuerDauer As Double
+        Get
+            faktorfuerDauer = abschnittsDauerNeu / abschnittsDauerVorlage
+        End Get
+    End Property
+
+    Private Sub businessUnitDropBox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles businessUnitDropBox.SelectedIndexChanged
+
+    End Sub
+
+    Private Sub Erloes_TextChanged(sender As Object, e As EventArgs) Handles Erloes.TextChanged
+        If IsNumeric(Erloes.Text) Then
+            If CDbl(Erloes.Text) < 0.0 Then
+                Call MsgBox("Budget kann nicht negativ sein")
+                Erloes.Text = "0"
+            End If
+        Else
+            Call MsgBox("Budget muss eine positive Zahl sein ")
+            Erloes.Text = "0"
+        End If
+    End Sub
+
+    Private Sub sFit_TextChanged(sender As Object, e As EventArgs) Handles sFit.TextChanged
+        If IsNumeric(sFit.Text) Then
+            If CDbl(sFit.Text) < 0.01 Or CDbl(sFit.Text) > 9.99 Then
+                Call MsgBox("Kennzahl Strategie muss eine Zahl zwischen 0.01 und 9.99 sein")
+                sFit.Text = "5"
+            End If
+        Else
+            Call MsgBox("Kennzahl Strategie muss eine Zahl zwischen 0.01 und 9.99 sein")
+            sFit.Text = "5"
+        End If
+    End Sub
+
+    Private Sub risiko_TextChanged(sender As Object, e As EventArgs) Handles risiko.TextChanged
+        If IsNumeric(risiko.Text) Then
+            If CDbl(risiko.Text) < 0.01 Or CDbl(risiko.Text) > 9.99 Then
+                Call MsgBox("Kennzahl Risiko muss eine Zahl zwischen 0.01 und 9.99 sein")
+                risiko.Text = "5"
+            End If
+        Else
+            Call MsgBox("Kennzahl Risiko muss eine Zahl zwischen 0.01 und 9.99 sein")
+            risiko.Text = "5"
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' wird aufgerufen, wenn die Vorlage wechselt: dann muss die Meilenstein Liste neu aufgebaut werden  
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub setParametersOfVorlage()
+
+        ' jetzt das Vorlagen Projekt bestimmen 
+        vproj = Projektvorlagen.getProject(vorlagenDropbox.Text)
+
+        If IsNothing(vproj) Then
+            Throw New ArgumentException("Vorlage" & vorlagenDropbox.Text & " existiert nicht ...")
+        End If
+
+        ' jetzt die Dauer der Vorlage bestimmen 
+        dauerVorlage = vproj.dauerInDays
+
+
+        ' jetzt die listOfMilestones bestimmen
+        Try
+            listOFMilestones = Projektvorlagen.getProject(vorlagenDropbox.Text).getMilestones
+        Catch ex As Exception
+
+        End Try
+
+        ' jetzt die Start- und End-Milestone Dropboxen aufbauen 
+        startMilestoneDropbox.Items.Clear()
+        endMilestoneDropbox.Items.Clear()
+
+        startMilestoneDropbox.Items.Add("Projektstart")
+        For Each kvp As KeyValuePair(Of Date, String) In listOFMilestones
+            Dim msName As String = elemNameOfElemID(kvp.Value)
+            startMilestoneDropbox.Items.Add(msName)
+            endMilestoneDropbox.Items.Add(msName)
+        Next kvp
+        endMilestoneDropbox.Items.Add("Projektende")
+
+        startMilestoneDropbox.Text = "Projektstart"
+        endMilestoneDropbox.Text = "Projektende"
+
+        ' die Offsets bestimmen 
+        startMsOffset = 0
+        endMsOffset = dauerVorlage - 1
+
+
+    End Sub
 End Class

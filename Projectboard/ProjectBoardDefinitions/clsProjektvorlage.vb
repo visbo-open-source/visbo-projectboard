@@ -337,6 +337,39 @@
     End Property
 
     ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="msName"></param>
+    ''' <param name="breadcrumb"></param>
+    ''' <param name="lfdNr"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getMilestoneOffsetToProjectStart(ByVal msName As String, Optional ByVal breadcrumb As String = "", Optional ByVal lfdNr As Integer = 1) As Long
+        Get
+            Dim tmpMilestone As clsMeilenstein = Nothing
+            Dim found As Boolean = False
+
+            Dim milestoneIndices(,) As Integer
+            milestoneIndices = Me.hierarchy.getMilestoneIndices(msName, breadcrumb)
+
+            If lfdNr > CInt(milestoneIndices.Length / 2) Or lfdNr < 1 Then
+                ' kein gültiger Meilenstein 
+            Else
+                If milestoneIndices(0, lfdNr - 1) > 0 And milestoneIndices(1, lfdNr - 1) > 0 Then
+                    ' nur dann existiert dieser Meilenstein
+                    tmpMilestone = Me.getMilestone(milestoneIndices(0, lfdNr - 1), milestoneIndices(1, lfdNr - 1))
+                End If
+
+            End If
+
+            getMilestoneOffsetToProjectStart = tmpMilestone.offset + tmpMilestone.Parent.startOffsetinDays
+
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' gibt den Meilenstein zurück, der in der Phase mit Index PhaseIndex, 
     ''' und dort in der Meilenstein Liste mit Index milestoneIndex vorkommt  
     ''' </summary>
@@ -1436,15 +1469,11 @@
                     tmpDate = cresult.getDate
 
                     Dim ok As Boolean = False
-                    Do Until ok
-                        Try
-                            tmpValues.Add(tmpDate, cresult.nameID)
-                            ok = True
-                        Catch ex As Exception
-                            tmpDate = tmpDate.AddSeconds(1)
-                        End Try
+                    Do While tmpValues.ContainsKey(tmpDate)
+                        tmpDate = tmpDate.AddMilliseconds(1)
                     Loop
-
+                    ' jetzt gibt es tmpdate noch nicht in der Liste ...
+                    tmpValues.Add(tmpDate, cresult.nameID)
                 Next r
 
             Next p

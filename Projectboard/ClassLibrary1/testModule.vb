@@ -436,7 +436,7 @@ Public Module testModule
             If pptFirstTime Or _
                 Not (kennzeichnung = "Multivariantensicht" _
                 Or kennzeichnung = "Multiprojektsicht" _
-                Or kennzeichnung = "AllePlanElement") Then
+                Or kennzeichnung = "AllePlanElemente") Then
                 anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
                 tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
                                                                               SlideStart:=folieIX, SlideEnd:=folieIX)
@@ -1382,7 +1382,7 @@ Public Module testModule
                                     Call awinCreatePortfolioDiagrams(mycollection, reportObj, True, PTpfdk.FitRisiko, PTpfdk.ProjektFarbe, True, False, True, htop, hleft, hwidth, hheight)
                                     notYetDone = True
                                 Catch ex As Exception
-
+                                    Dim a As Integer = -1
                                 End Try
 
                             Case "Strategie/Risiko/Ausstrahlung"

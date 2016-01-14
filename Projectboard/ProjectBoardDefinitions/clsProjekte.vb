@@ -36,6 +36,7 @@ Public Class clsProjekte
 
     End Sub
 
+
     ''' <summary>
     ''' trägt die Zuordnung Shape/Projekt in die AllShape Liste ein 
     ''' Fehler, wenn pname gar nicht in der AllProjects Liste ist 

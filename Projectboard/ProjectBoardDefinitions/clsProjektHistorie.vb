@@ -534,7 +534,11 @@
     ''' <remarks></remarks>
     Public ReadOnly Property First As clsProjekt
         Get
-            First = _liste.First.Value
+            If _liste.Count > 0 Then
+                First = _liste.First.Value
+            Else
+                First = Nothing
+            End If
             _currentIndex = 0
         End Get
     End Property
@@ -548,8 +552,15 @@
     ''' <remarks></remarks>
     Public ReadOnly Property Last As clsProjekt
         Get
-            Last = _liste.Last.Value
-            _currentIndex = _liste.Count - 1
+
+            If _liste.Count > 0 Then
+                Last = _liste.Last.Value
+                _currentIndex = _liste.Count - 1
+            Else
+                Last = Nothing
+                _currentIndex = 0
+            End If
+            
 
         End Get
     End Property
