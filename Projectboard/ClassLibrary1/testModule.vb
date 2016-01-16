@@ -9087,7 +9087,7 @@ Public Module testModule
 
                 '
                 ' zeichne jetzt das Projekt 
-                Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, hproj.startDate, hproj.endeDate, _
+                Call calculatePPTx1x2OLD(StartofPPTCalendar, endOFPPTCalendar, hproj.startDate, hproj.endeDate, _
                                         drawingAreaLeft, drawingAreaWidth, x1, x2)
 
 
@@ -9297,7 +9297,7 @@ Public Module testModule
                                 Dim phShortname As String = ""
                                 phShortname = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
 
-                                Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, phaseStart, phaseEnd, _
+                                Call calculatePPTx1x2OLD(StartofPPTCalendar, endOFPPTCalendar, phaseStart, phaseEnd, _
                                                     drawingAreaLeft, drawingAreaWidth, x1, x2)
 
 
@@ -9975,7 +9975,7 @@ Public Module testModule
         End With
 
 
-        Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, msdate, msdate, _
+        Call calculatePPTx1x2OLD(StartofPPTCalendar, endOFPPTCalendar, msdate, msdate, _
                             drawingAreaLeft, drawingAreaRight - drawingAreaLeft, x1, x2)
 
 
