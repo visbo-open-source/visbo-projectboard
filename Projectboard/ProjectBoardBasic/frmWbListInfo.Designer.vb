@@ -61,6 +61,7 @@ Partial Class frmWbListInfo
         'deleteButton
         '
         Me.deleteButton.BackColor = System.Drawing.SystemColors.Control
+        Me.deleteButton.Enabled = False
         Me.deleteButton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText
         Me.deleteButton.Location = New System.Drawing.Point(37, 274)
         Me.deleteButton.Name = "deleteButton"

@@ -143,5 +143,10 @@ Public Class frmWbListInfo
 
     Private Sub ergebnisListe_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ergebnisListe.SelectedIndexChanged
 
+        If ergebnisListe.SelectedItems.Count > 0 Then
+            deleteButton.Enabled = True
+        Else
+            deleteButton.Enabled = False
+        End If
     End Sub
 End Class

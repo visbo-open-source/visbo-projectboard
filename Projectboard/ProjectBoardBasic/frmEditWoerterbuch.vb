@@ -6,7 +6,9 @@ Public Class frmEditWoerterbuch
     ' wird benutzt , um beim Listen Aktualisieren eine Aktion zu triggern oder eben nicht 
     Private eventsShouldFire As Boolean = True
     Private listOfSummaryTasks As New Collection
+    ' wenn sich etwas geändert hat, was in der Customization zurückgespeichert werden müsste 
     Dim somethingChanged As Boolean = False
+    Dim dontUpdate2ndTime As Boolean = False
 
     Private Sub frmEditWoerterbuch_FormClosed(sender As Object, e As Windows.Forms.FormClosedEventArgs) Handles Me.FormClosed
 
@@ -128,6 +130,8 @@ Public Class frmEditWoerterbuch
         filterUnknown.Text = ""
         filterStandard.Text = ""
 
+        Call enableButtons()
+
     End Sub
 
     ''' <summary>
@@ -139,7 +143,6 @@ Public Class frmEditWoerterbuch
     Private Sub filterUnknown_TextChanged(sender As Object, e As EventArgs) Handles filterUnknown.TextChanged
 
         Dim suchstr As String = filterUnknown.Text
-        Dim tmpName As String
 
         eventsShouldFire = False
 
@@ -151,22 +154,24 @@ Public Class frmEditWoerterbuch
 
         Else
             ' Meilensteine
-            For i = 1 To missingMilestoneDefinitions.Count
-                tmpName = missingMilestoneDefinitions.getMilestoneDef(i).name
-                If filterUnknown.Text = "" Then
-                    unknownList.Items.Add(tmpName)
-                Else
-                    If tmpName.Contains(suchstr) Then
-                        unknownList.Items.Add(tmpName)
-                    End If
-                End If
-            Next
+
+            Call buildUnknownMilestoneList()
 
         End If
 
         editUnknownItem.Text = ""
 
+        ' um die Suche zu erleichtern
+        If filtersAreCoupled.Checked And Not dontUpdate2ndTime Then
+            dontUpdate2ndTime = True
+            filterStandard.Text = filterUnknown.Text
+        Else
+            dontUpdate2ndTime = False
+        End If
+
         eventsShouldFire = True
+
+        Call enableButtons()
 
     End Sub
 
@@ -213,6 +218,16 @@ Public Class frmEditWoerterbuch
 
         editUnknownItem.Text = ""
 
+        ' um die Suche zu erleichtern
+        If filtersAreCoupled.Checked And Not dontUpdate2ndTime Then
+            dontUpdate2ndTime = True
+            filterUnknown.Text = filterStandard.Text
+        Else
+            dontUpdate2ndTime = False
+        End If
+
+        Call enableButtons()
+
     End Sub
 
     ''' <summary>
@@ -228,6 +243,8 @@ Public Class frmEditWoerterbuch
         If standardList.SelectedItems.Count = 1 Then
             editUnknownItem.Text = CStr(standardList.SelectedItem)
         End If
+
+        Call enableButtons()
 
     End Sub
 
@@ -245,6 +262,8 @@ Public Class frmEditWoerterbuch
         If unknownList.SelectedItems.Count = 1 Then
             editUnknownItem.Text = CStr(unknownList.SelectedItem)
         End If
+
+        Call enableButtons()
 
     End Sub
 
@@ -288,7 +307,9 @@ Public Class frmEditWoerterbuch
             End If
         End If
 
+
         ToolStripStatusLabel1.Text = ""
+        Call enableButtons()
 
     End Sub
 
@@ -321,6 +342,7 @@ Public Class frmEditWoerterbuch
                     eventsShouldFire = False
                     unknownList.Items.Clear()
                     Call buildUnknownPhaseList()
+                    somethingChanged = True
                     eventsShouldFire = True
                 End If
             Else
@@ -328,12 +350,15 @@ Public Class frmEditWoerterbuch
                     eventsShouldFire = False
                     unknownList.Items.Clear()
                     Call buildUnknownMilestoneList()
+                    somethingChanged = True
                     eventsShouldFire = True
                 End If
             End If
         Else
             Call MsgBox("Info kann nur für ein Element gezeigt werden ... ")
         End If
+
+        Call enableButtons()
 
     End Sub
 
@@ -356,6 +381,7 @@ Public Class frmEditWoerterbuch
         End If
 
         ToolStripStatusLabel1.Text = ""
+        Call enableButtons()
 
     End Sub
 
@@ -623,7 +649,7 @@ Public Class frmEditWoerterbuch
         somethingChanged = True
         Call makeItemToBeStandard()
 
-
+        Call enableButtons()
 
     End Sub
 
@@ -895,7 +921,8 @@ Public Class frmEditWoerterbuch
 
 
         eventsShouldFire = True
-        
+
+        Call enableButtons()
 
     End Sub
 
@@ -974,9 +1001,8 @@ Public Class frmEditWoerterbuch
             ToolStripStatusLabel1.Text = "ok, " & anzahlElements & " Element(e werden zukünftig ignoriert ..."
         End If
 
-
-
         eventsShouldFire = True
+        Call enableButtons()
 
     End Sub
 
@@ -1049,6 +1075,7 @@ Public Class frmEditWoerterbuch
         End If
 
         eventsShouldFire = True
+        Call enableButtons()
         
     End Sub
 
@@ -1131,6 +1158,7 @@ Public Class frmEditWoerterbuch
         ToolStripStatusLabel1.Text = "ok, " & oldStdName & " wurde durch " & newStdName & " ersetzt ..."
 
         eventsShouldFire = True
+        Call enableButtons()
 
     End Sub
 
@@ -1161,6 +1189,8 @@ Public Class frmEditWoerterbuch
 
         eventsShouldFire = True
 
+        Call enableButtons()
+
     End Sub
 
     Private Sub rdbListShowsMilestones_CheckedChanged(sender As Object, e As EventArgs) Handles rdbListShowsMilestones.CheckedChanged
@@ -1169,14 +1199,101 @@ Public Class frmEditWoerterbuch
 
     End Sub
 
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+    ''' <summary>
+    ''' enables / disables buttons in Abhängigkeit, ob sie im aktuellen Status gedrück werden können 
+    ''' </summary>
+    ''' <remarks></remarks>
+    Private Sub enableButtons()
+
+        ' Button ignorieren
+        If unknownList.SelectedItems.Count > 0 And standardList.SelectedItems.Count = 0 Then
+            ignoreButton.Enabled = True
+            If unknownList.SelectedItems.Count = 1 Then
+                ignoreButton.Text = "Element immer ignorieren"
+            Else
+                ignoreButton.Text = "Elemente immer ignorieren"
+            End If
+        Else
+            ignoreButton.Enabled = False
+        End If
+
+        ' Button Visualisieren 
+        If unknownList.SelectedItems.Count + standardList.SelectedItems.Count > 0 Then
+            If unknownList.SelectedItems.Count + standardList.SelectedItems.Count = 1 Then
+                visElements.Text = "Element visualisieren"
+            Else
+                visElements.Text = "Elemente visualisieren"
+            End If
+            visElements.Enabled = True
+        Else
+            visElements.Enabled = False
+        End If
+
+        ' Button Paar(e) zum Wörterbuch hinzufügen
+        If unknownList.SelectedItems.Count > 0 And standardList.SelectedItems.Count = 1 Then
+            If unknownList.SelectedItems.Count = 1 Then
+                addRulesToDictionary.Text = "Paar zum Wörterbuch hinzufügen"
+            Else
+                addRulesToDictionary.Text = "Paare zum Wörterbuch hinzufügen"
+            End If
+            addRulesToDictionary.Enabled = True
+        Else
+            addRulesToDictionary.Enabled = False
+        End If
+
+        ' Standard-Bezeichnung ändern 
+        If unknownList.SelectedItems.Count = 0 And standardList.SelectedItems.Count = 1 Then
+            replaceButton.Enabled = True
+        Else
+            replaceButton.Enabled = False
+        End If
+
+        ' Speichern Button 
+        If somethingChanged Then
+            storeButton.Enabled = True
+        Else
+            storeButton.Enabled = False
+        End If
+
+        ' Move to StandardList Button 
+        If unknownList.SelectedItems.Count > 0 And standardList.SelectedItems.Count = 0 Then
+            setItemToBeKnown.Enabled = True
+        Else
+            setItemToBeKnown.Enabled = False
+        End If
+
+        ' Move to UnknownList Button 
+        If unknownList.SelectedItems.Count = 0 And standardList.SelectedItems.Count = 1 Then
+            setItemToBeUnknown.Enabled = True
+        Else
+            setItemToBeUnknown.Enabled = False
+        End If
+
+        ' Edit Text-Zeile  
+        If unknownList.SelectedItems.Count = 0 And standardList.SelectedItems.Count = 1 Or _
+            unknownList.SelectedItems.Count = 1 And standardList.SelectedItems.Count = 0 Then
+            editUnknownItem.Enabled = True
+        Else
+            editUnknownItem.Enabled = False
+        End If
+
+    End Sub
+
+    Private Sub storeButton_Click(sender As Object, e As EventArgs) Handles storeButton.Click
 
         Call awinWritePhaseMilestoneDefinitions(True)
         somethingChanged = False
 
         ToolStripStatusLabel1.Text = "ok, Änderungen wurden gespeichert ..."
 
-        Call MsgBox("Bitte beachten:" & vbLf & "um die neuen Regeln und Definitionen anzuwenden," & vbLf & "müssen die Projekte neu importiert werden !")
+        Call MsgBox("Bitte beachten:" & vbLf & "Um die neuen Regeln und Definitionen anzuwenden," & vbLf & "müssen die Projekte neu importiert werden !")
+
+        Call enableButtons()
+
+    End Sub
+
+    
+    Private Sub CheckBox1_CheckedChanged(sender As Object, e As EventArgs) Handles filtersAreCoupled.CheckedChanged
 
     End Sub
 End Class

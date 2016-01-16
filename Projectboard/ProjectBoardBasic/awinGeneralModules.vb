@@ -9508,6 +9508,8 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Sub RXFImport(ByRef myCollection As Collection, ByVal xmlfilename As String, _
                   ByVal isVorlage As Boolean, ByRef protokollliste As SortedList(Of Integer, clsProtokoll))
+        ' akt. Name zum Zweck des Fehlersuchens
+        Dim aktuellerName As String = ""
 
         'Variablen-Definitionen für Projectboard 
 
@@ -9583,6 +9585,7 @@ Public Module awinGeneralModules
                 If Not IsNothing(Rplan.task(i).mainProject) Then
                     ' akt. Task ist Projekt 
 
+                    aktuellerName = Rplan.task(i).name
 
                     Dim aktTask_i As rxfTask = Rplan.task(i)
                     hproj = New clsProjekt
@@ -9665,6 +9668,25 @@ Public Module awinGeneralModules
                     Dim msMSdefcount As Integer = missingMilestoneDefinitions.Count
 
                     ' jetzt muss das Projekt eingetragen werden in die Listen Importierte Projekte und myCollection
+                    ' Änderung tk: falls es das Projekt unter diesem Namen bereits gibt, wird eine Variante angelegt ... 
+                    Dim lfdNr As Integer = 2
+                    Do While ImportProjekte.Containskey(calcProjektKey(hproj))
+                        hproj.variantName = lfdNr.ToString
+                        lfdNr = lfdNr + 1
+                    Loop
+
+                    Dim hlptxt As String = ""
+                    If lfdNr - 2 > 0 Then
+                        If lfdNr - 2 = 1 Then
+                            hlptxt = "es wurde eine Variante angelegt"
+                        Else
+                            hlptxt = "es wurden " & lfdNr - 2 & " Varianten angelegt."
+                        End If
+                        Call MsgBox("Projekt " & hproj.name & " kommt mehrmals vor! " & vbLf & hlptxt)
+                    End If
+                    
+
+                    ' jetzt ist sichergestellt, dass calcProjektKey nicht mehr vorkommt 
                     ImportProjekte.Add(calcProjektKey(hproj), hproj)
                     myCollection.Add(calcProjektKey(hproj))
 
@@ -9682,7 +9704,8 @@ Public Module awinGeneralModules
             fs.Close()
 
         Catch ex As Exception
-            Throw New ArgumentException()
+            Call logfileSchreiben(ex.Message & vbLf & "Fehler bei Name " & CStr(aktuellerName), aktuellerName, anzFehler)
+            Throw New ArgumentException("Fehler bei Name " & CStr(aktuellerName))
 
             ' RXF-Datei (entspricht XML-Datei) Schliessen
             fs.Close()
@@ -9730,7 +9753,7 @@ Public Module awinGeneralModules
 
                 Dim taskdauerinDays As Long = calcDauerIndays(aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value)
                 ' Herausfinden, ob aktTask_j Phase oder Meilenstein ist
-                If taskdauerinDays > 1 Then                                    'And aktTask_j.taskType.type <> "MILESTONE" _
+                If taskdauerinDays > 0 And aktTask_j.taskType.type <> "MILESTONE" Then
 
                     ''''''  ist PHASE
 
@@ -9791,7 +9814,8 @@ Public Module awinGeneralModules
                                     missingPhaseDefinitions.Add(newPhaseDef)
                                 End If
 
-                                Call logfileSchreiben(("Achtung, RXFImport: Phase '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
+                                ' Änderung tk: wird auskommentiert, das steht ja im Protokoll
+                                'Call logfileSchreiben(("Achtung, RXFImport: Phase '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
 
                             End If
                         End If
@@ -9823,7 +9847,7 @@ Public Module awinGeneralModules
                                         prtLine.planelement = aktTask_j.name
                                         prtLine.hgColor = awinSettings.AmpelRot
                                         prtLine.grund = "Phase wurde eliminiert: Duplikat zur Parent-Phase"
-                                        Call logfileSchreiben("Fehler in RXFImport: " & mappedPhasename & " ist Duplikat zu Parent " & parentphase.name & " und wird ignoriert ", hproj.name, anzFehler)
+                                        'Call logfileSchreiben("Fehler in RXFImport: " & mappedPhasename & " ist Duplikat zu Parent " & parentphase.name & " und wird ignoriert ", hproj.name, anzFehler)
 
                                     Else
                                         Dim duplicateSiblingID As String = hproj.getDuplicatePhaseSiblingID(mappedPhasename, parentphase.nameID, _
@@ -9836,8 +9860,8 @@ Public Module awinGeneralModules
                                             prtLine.planelement = aktTask_j.name
                                             prtLine.hgColor = awinSettings.AmpelRot
                                             prtLine.grund = "Phase wurde eliminiert: Duplikat zur Geschwister-Phase"
-                                            Call logfileSchreiben(" Fehler in RXFImport: " & mappedPhasename & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
-                                                       " und wird ignoriert ", hproj.name, anzFehler)
+                                            'Call logfileSchreiben(" Fehler in RXFImport: " & mappedPhasename & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
+                                            '" und wird ignoriert ", hproj.name, anzFehler)
                                         End If
                                     End If
 
@@ -9877,7 +9901,7 @@ Public Module awinGeneralModules
                                 prtLine.abkürzung = PhaseDefinitions.getAbbrev(cphase.name)
                                 prtLine.planeleÜbern = cphase.name
 
-                                prtLine.klasse = mapToAppearance(aktTask_j.taskType.Value, False)
+                                prtLine.klasse = aktTask_j.taskType.Value
                                 prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, False)
 
                                 prtliste.Add(zeile, prtLine)
@@ -9927,11 +9951,11 @@ Public Module awinGeneralModules
 
                     End If       'Ende of tobeignored phase
 
-                ElseIf aktTask_j.taskType.type = "SUMMARY" Then
+                ElseIf taskdauerinDays = 0 And aktTask_j.taskType.type = "SUMMARY" Then
 
                     Call logfileSchreiben("Achtung, RXFImport: Die aktuelle Task '" & aktTask_j.name & "' ist eine Summary-Task mit der Duration = 0 ", hproj.name, anzFehler)
 
-                ElseIf aktTask_j.taskType.type = "MILESTONE" Or aktTask_j.taskType.type = "STANDARD" Then
+                ElseIf taskdauerinDays > 0 And aktTask_j.taskType.type = "MILESTONE" Then
 
                     ' ist MEILENSTEIN
 
@@ -9973,7 +9997,7 @@ Public Module awinGeneralModules
                                 Try
                                     missingMilestoneDefinitions.Add(msDef)
 
-                                    Call logfileSchreiben(("Achtung, RXFImport: Meilenstein '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
+                                    'Call logfileSchreiben(("Achtung, RXFImport: Meilenstein '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
 
                                 Catch ex As Exception
                                 End Try
@@ -10044,8 +10068,8 @@ Public Module awinGeneralModules
                                     prtLine.planelement = aktTask_j.name
                                     prtLine.hgColor = awinSettings.AmpelRot
                                     prtLine.grund = "Meilenstein wurde eliminiert: Duplikat zur Geschwister-Phase"
-                                    Call logfileSchreiben("Fehler, RXFImport:" & mappedMSname & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
-                                                 " und wird ignoriert ", hproj.name, anzFehler)
+                                    'Call logfileSchreiben("Fehler, RXFImport:" & mappedMSname & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
+                                    '" und wird ignoriert ", hproj.name, anzFehler)
                                 End If
 
                             End If
@@ -10082,8 +10106,8 @@ Public Module awinGeneralModules
                                     prtLine.abkürzung = MilestoneDefinitions.getAbbrev(cmilestone.name)
                                     prtLine.planeleÜbern = cmilestone.name
 
-                                    prtLine.klasse = mapToAppearance(aktTask_j.taskType.Value, False)
-                                    prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, False)
+                                    prtLine.klasse = aktTask_j.taskType.Value
+                                    prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, True)
 
                                     prtliste.Add(zeile, prtLine)
                                     zeile = zeile + 1
@@ -10116,7 +10140,7 @@ Public Module awinGeneralModules
                             prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
                             prtLine.actDate = ""
                         End If
-                       
+
                     Else
                         prtLine.planelement = aktTask_j.name
                         prtLine.hgColor = awinSettings.AmpelRot
@@ -10131,9 +10155,10 @@ Public Module awinGeneralModules
 
                     End If     ' Ende: Meilenstein soll ignoriert werden
 
+
                 Else
 
-                    Call logfileSchreiben("Achtung, RXFImport: Die aktuelle Task '" & aktTask_j.name & "' enthält Inkonsistenzen ", hproj.name, anzFehler)
+                    Call logfileSchreiben("Achtung, RXFImport: Die Task '" & aktTask_j.name & "' kann nicht als Meilenstein oder Phase identifiziert werden ", hproj.name, anzFehler)
 
                 End If      '  Ende: ist MEILENSTEIN
 
@@ -10406,6 +10431,9 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Sub InitProtokoll(ByRef wslogbuch As Excel.Worksheet, ByVal tabblattname As String)
 
+        ' diese Variable sagt, ob das Tabellenblatt existiert hat; wenn nein, müssen die Spalten-Breiten gesetzt werden 
+        Dim didntExist As Boolean
+
         Try
             wslogbuch = CType(xlsLogfile.Worksheets(tabblattname), _
                Global.Microsoft.Office.Interop.Excel.Worksheet)
@@ -10413,13 +10441,17 @@ Public Module awinGeneralModules
 
             If Not IsNothing(wslogbuch) Then
 
-                xlsLogfile.Worksheets.Application.DisplayAlerts = False
-                wslogbuch.Delete()
-                xlsLogfile.Worksheets.Application.DisplayAlerts = True
+                ' Änderung tk: 16.1.16
+                ' es reicht die Inhalte zu löschen ...  
+                wslogbuch.Cells.Clear()
+                didntExist = False
+                'xlsLogfile.Worksheets.Application.DisplayAlerts = False
+                'wslogbuch.Delete()
+                'xlsLogfile.Worksheets.Application.DisplayAlerts = True
 
-                wslogbuch = CType(xlsLogfile.Worksheets.Add(), _
-                   Global.Microsoft.Office.Interop.Excel.Worksheet)
-                wslogbuch.Name = tabblattname
+                'wslogbuch = CType(xlsLogfile.Worksheets.Add(), _
+                '   Global.Microsoft.Office.Interop.Excel.Worksheet)
+                'wslogbuch.Name = tabblattname
             End If
         Catch ex As Exception
             'wsLogbuch = CType(xlsInput.Worksheets.Add(After:=xlsInput.Worksheets.Count), _
@@ -10427,14 +10459,19 @@ Public Module awinGeneralModules
             wslogbuch = CType(xlsLogfile.Worksheets.Add(), _
                 Global.Microsoft.Office.Interop.Excel.Worksheet)
             wslogbuch.Name = tabblattname
+            didntExist = True
         End Try
 
 
         With wslogbuch
-            .Rows.RowHeight = 15
-            CType(.Rows(1), Excel.Range).RowHeight = 30
-            CType(.Rows(1), Excel.Range).Font.Bold = True
 
+            If didntExist Then
+                .Rows.RowHeight = 15
+                CType(.Rows(1), Excel.Range).RowHeight = 30
+                CType(.Rows(1), Excel.Range).Font.Bold = True
+            End If
+
+            
             If awinSettings.fullProtocol Then
                 CType(.Cells(1, 1), Excel.Range).Value() = "Datum"
                 CType(.Cells(1, 2), Excel.Range).Value() = "Projekt"
@@ -10447,43 +10484,64 @@ Public Module awinGeneralModules
                 CType(.Cells(1, 9), Excel.Range).Value() = "Grund"
                 CType(.Cells(1, 10), Excel.Range).Value() = "PT Hierarchie"
                 CType(.Cells(1, 11), Excel.Range).Value() = "PT Klasse"
-                CType(.Columns(1), Excel.Range).ColumnWidth = 10
-                CType(.Columns(2), Excel.Range).ColumnWidth = 40
-                CType(.Columns(3), Excel.Range).ColumnWidth = 40
-                CType(.Columns(4), Excel.Range).ColumnWidth = 40
-                CType(.Columns(5), Excel.Range).ColumnWidth = 40
-                CType(.Columns(6), Excel.Range).ColumnWidth = 40
-                CType(.Columns(7), Excel.Range).ColumnWidth = 40
-                CType(.Columns(8), Excel.Range).ColumnWidth = 40
-                CType(.Columns(9), Excel.Range).ColumnWidth = 40
-                CType(.Columns(10), Excel.Range).ColumnWidth = 40
-                CType(.Columns(11), Excel.Range).ColumnWidth = 40
+
+                ' nur verändern, wenn es nicht vorher schon existiert hat ... 
+                ' falls der Anwender sich die Breiten so hingerichtet hat , wie er es gerne hätte, 
+                ' sollte das nicht verändert werden 
+                If didntExist Then
+                    CType(.Columns(1), Excel.Range).ColumnWidth = 10
+                    CType(.Columns(2), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(3), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(4), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(5), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(6), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(7), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(8), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(9), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(10), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(11), Excel.Range).ColumnWidth = 40
+                End If
+                
             Else
                 CType(.Cells(1, 1), Excel.Range).Value() = "Datum"
                 CType(.Cells(1, 2), Excel.Range).Value() = "Projekt"
                 CType(.Cells(1, 4), Excel.Range).Value() = "Plan-Element"
                 CType(.Cells(1, 8), Excel.Range).Value() = "Übernommen als"
                 CType(.Cells(1, 9), Excel.Range).Value() = "Grund"
-                CType(.Columns(1), Excel.Range).ColumnWidth = 18
-                CType(.Columns(2), Excel.Range).ColumnWidth = 35
-                CType(.Columns(3), Excel.Range).ColumnWidth = 5
-                CType(.Columns(4), Excel.Range).ColumnWidth = 40
-                CType(.Columns(5), Excel.Range).ColumnWidth = 10
-                CType(.Columns(6), Excel.Range).ColumnWidth = 10
-                CType(.Columns(7), Excel.Range).ColumnWidth = 10
-                CType(.Columns(8), Excel.Range).ColumnWidth = 40
-                CType(.Columns(9), Excel.Range).ColumnWidth = 40
 
+                ' nur verändern, wenn es nicht vorher schon existiert hat ... 
+                ' falls der Anwender sich die Breiten so hingerichtet hat , wie er es gerne hätte, 
+                ' sollte das nicht verändert werden 
+                If didntExist Then
+                    CType(.Columns(1), Excel.Range).ColumnWidth = 18
+                    CType(.Columns(2), Excel.Range).ColumnWidth = 35
+                    CType(.Columns(3), Excel.Range).ColumnWidth = 5
+                    CType(.Columns(4), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(5), Excel.Range).ColumnWidth = 10
+                    CType(.Columns(6), Excel.Range).ColumnWidth = 10
+                    CType(.Columns(7), Excel.Range).ColumnWidth = 10
+                    CType(.Columns(8), Excel.Range).ColumnWidth = 40
+                    CType(.Columns(9), Excel.Range).ColumnWidth = 40
+                End If
 
             End If
 
         End With
 
     End Sub
+    ''' <summary>
+    ''' schreibt das Protokoll in das Tabellenblatt
+    ''' es wird eine Range definiert, die soviele Zeilen enthält wie öt 
+    ''' </summary>
+    ''' <param name="prtliste"></param>
+    ''' <param name="tabblattname"></param>
+    ''' <remarks></remarks>
     Sub writeProtokoll(ByRef prtliste As SortedList(Of Integer, clsProtokoll), ByVal tabblattname As String)
 
         Dim zelle As Excel.Range = Nothing
         Dim zeile As Integer
+
+        Dim anzZeilen As Integer = prtliste.Count
 
         Dim wsLogbuch As Excel.Worksheet = Nothing
 
@@ -10499,6 +10557,9 @@ Public Module awinGeneralModules
             Call MsgBox("Fehler beim Initialisieren des Protokolls")
         End Try
 
+        Dim protokollRange As Excel.Range = wsLogbuch.Cells
+
+
         For Each prtline As KeyValuePair(Of Integer, clsProtokoll) In prtliste
             Try
                 'rowOffset = CType(CType(xlsLogfile.Worksheets(Me.tabblattname), Excel.Worksheet).Cells(20000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
@@ -10506,27 +10567,49 @@ Public Module awinGeneralModules
 
                 With wsLogbuch
 
-                    If awinSettings.fullProtocol Then
+                    ' Änderung tk: das dauert sehr lange ... 
+                    'If awinSettings.fullProtocol Then
+                    '    CType(.Cells(zeile, 1), Excel.Range).Value() = prtline.Value.actDate
+                    '    CType(.Cells(zeile, 2), Excel.Range).Value() = prtline.Value.Projekt
+                    '    CType(.Cells(zeile, 3), Excel.Range).Value() = prtline.Value.hierarchie
+                    '    CType(.Cells(zeile, 4), Excel.Range).Value() = prtline.Value.planelement
+                    '    CType(.Cells(zeile, 5), Excel.Range).Value() = prtline.Value.klasse
+                    '    CType(.Cells(zeile, 6), Excel.Range).Value() = prtline.Value.abkürzung
+                    '    CType(.Cells(zeile, 7), Excel.Range).Value() = prtline.Value.quelle
+                    '    CType(.Cells(zeile, 8), Excel.Range).Value() = prtline.Value.planeleÜbern
+                    '    CType(.Cells(zeile, 8), Excel.Range).Interior.Color = prtline.Value.hgColor
+                    '    CType(.Cells(zeile, 9), Excel.Range).Value() = prtline.Value.grund
+                    '    CType(.Cells(zeile, 10), Excel.Range).Value() = prtline.Value.PThierarchie
+                    '    CType(.Cells(zeile, 11), Excel.Range).Value() = prtline.Value.PTklasse
+                    'Else
+                    '    CType(.Cells(zeile, 1), Excel.Range).Value() = prtline.Value.actDate
+                    '    CType(.Cells(zeile, 2), Excel.Range).Value() = prtline.Value.Projekt
+                    '    CType(.Cells(zeile, 4), Excel.Range).Value() = prtline.Value.planelement
+                    '    CType(.Cells(zeile, 8), Excel.Range).Value() = prtline.Value.planeleÜbern
+                    '    CType(.Cells(zeile, 8), Excel.Range).Interior.Color = prtline.Value.hgColor
+                    '    CType(.Cells(zeile, 9), Excel.Range).Value() = prtline.Value.grund
+                    'End If
 
-                        CType(.Cells(zeile, 1), Excel.Range).Value() = prtline.Value.actDate
-                        CType(.Cells(zeile, 2), Excel.Range).Value() = prtline.Value.Projekt
-                        CType(.Cells(zeile, 3), Excel.Range).Value() = prtline.Value.hierarchie
-                        CType(.Cells(zeile, 4), Excel.Range).Value() = prtline.Value.planelement
-                        CType(.Cells(zeile, 5), Excel.Range).Value() = prtline.Value.klasse
-                        CType(.Cells(zeile, 6), Excel.Range).Value() = prtline.Value.abkürzung
-                        CType(.Cells(zeile, 7), Excel.Range).Value() = prtline.Value.quelle
-                        CType(.Cells(zeile, 8), Excel.Range).Value() = prtline.Value.planeleÜbern
-                        CType(.Cells(zeile, 8), Excel.Range).Interior.Color = prtline.Value.hgColor
-                        CType(.Cells(zeile, 9), Excel.Range).Value() = prtline.Value.grund
-                        CType(.Cells(zeile, 10), Excel.Range).Value() = prtline.Value.PThierarchie
-                        CType(.Cells(zeile, 11), Excel.Range).Value() = prtline.Value.PTklasse
+                    If awinSettings.fullProtocol Then
+                        protokollRange.Cells(zeile, 1).Value = prtline.Value.actDate
+                        protokollRange.Cells(zeile, 2).Value = prtline.Value.Projekt
+                        protokollRange.Cells(zeile, 3).Value = prtline.Value.hierarchie
+                        protokollRange.Cells(zeile, 4).Value = prtline.Value.planelement
+                        protokollRange.Cells(zeile, 5).Value = prtline.Value.klasse
+                        protokollRange.Cells(zeile, 6).Value = prtline.Value.abkürzung
+                        protokollRange.Cells(zeile, 7).Value = prtline.Value.quelle
+                        protokollRange.Cells(zeile, 8).Value = prtline.Value.planeleÜbern
+                        protokollRange.Cells(zeile, 8).Interior.Color = prtline.Value.hgColor
+                        protokollRange.Cells(zeile, 9).Value = prtline.Value.grund
+                        protokollRange.Cells(zeile, 10).Value = prtline.Value.PThierarchie
+                        protokollRange.Cells(zeile, 11).Value = prtline.Value.PTklasse
                     Else
-                        CType(.Cells(zeile, 1), Excel.Range).Value() = prtline.Value.actDate
-                        CType(.Cells(zeile, 2), Excel.Range).Value() = prtline.Value.Projekt
-                        CType(.Cells(zeile, 4), Excel.Range).Value() = prtline.Value.planelement
-                        CType(.Cells(zeile, 8), Excel.Range).Value() = prtline.Value.planeleÜbern
-                        CType(.Cells(zeile, 8), Excel.Range).Interior.Color = prtline.Value.hgColor
-                        CType(.Cells(zeile, 9), Excel.Range).Value() = prtline.Value.grund
+                        protokollRange.Cells(zeile, 1).Value = prtline.Value.actDate
+                        protokollRange.Cells(zeile, 2).Value = prtline.Value.Projekt
+                        protokollRange.Cells(zeile, 4).Value = prtline.Value.planelement
+                        protokollRange.Cells(zeile, 8).Value = prtline.Value.planeleÜbern
+                        protokollRange.Cells(zeile, 8).Interior.Color = prtline.Value.hgColor
+                        protokollRange.Cells(zeile, 9).Value = prtline.Value.grund
                     End If
 
                 End With

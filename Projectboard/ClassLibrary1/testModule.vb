@@ -9090,6 +9090,7 @@ Public Module testModule
                 Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, hproj.startDate, hproj.endeDate, _
                                         drawingAreaLeft, drawingAreaWidth, x1, x2)
 
+
                 ' jetzt muss überprüft werden, ob projectName zu lang ist - dann wird der Name entsprechend abgekürzt ...
                 With projectNameShape
                     If .Left + .Width > x1 Then
@@ -9298,6 +9299,8 @@ Public Module testModule
 
                                 Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, phaseStart, phaseEnd, _
                                                     drawingAreaLeft, drawingAreaWidth, x1, x2)
+
+
 
                                 If minX1 > x1 Then
                                     minX1 = x1
@@ -10568,6 +10571,8 @@ Public Module testModule
 
     ''' <summary>
     ''' berechnet die x1 und x2-Koordinaten , also den Start und das Ende des Elements in x-Koordinaten
+    ''' im Gegensatz zu ...OLD werden hier die Koordinaten in Abhängigkeit von dem Abstand Tagen vom linken Rand gemessen. 
+    ''' bei ...OLD wurde gemessen, wieviel volle Monate Abstand waren plus wieviele Rest-Tage 
     ''' </summary>
     ''' <param name="pptStartOfCalendar">linker Rand es Kalenders</param>
     ''' <param name="pptEndOfCalendar">rechter Rand des Kalenders</param>
@@ -10582,6 +10587,46 @@ Public Module testModule
                                      ByVal startdate As Date, ByVal enddate As Date, _
                                      ByVal linkerRand As Double, ByVal breite As Double, _
                                      ByRef x1Pos As Double, ByRef x2Pos As Double)
+
+
+
+        Dim anzahlTageImKalender As Integer = DateDiff(DateInterval.Day, pptStartOfCalendar, pptEndOfCalendar)
+        Dim tagesbreite As Double = breite / anzahlTageImKalender
+
+        Dim offset1 As Integer = DateDiff(DateInterval.Day, pptStartOfCalendar, startdate)
+        If offset1 <= 0 Then
+            x1Pos = linkerRand
+        Else
+            x1Pos = linkerRand + offset1 * tagesbreite
+        End If
+
+
+        Dim offset2 As Integer = DateDiff(DateInterval.Day, pptStartOfCalendar, enddate)
+        If offset2 >= anzahlTageImKalender Then
+            x2Pos = linkerRand + breite
+        Else
+            x2Pos = linkerRand + offset2 * tagesbreite
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' Änderung tk: das war die Routine bis 14.1
+    ''' das war unnötig kompliziert 
+    ''' </summary>
+    ''' <param name="pptStartOfCalendar"></param>
+    ''' <param name="pptEndOfCalendar"></param>
+    ''' <param name="startdate"></param>
+    ''' <param name="enddate"></param>
+    ''' <param name="linkerRand"></param>
+    ''' <param name="breite"></param>
+    ''' <param name="x1Pos"></param>
+    ''' <param name="x2Pos"></param>
+    ''' <remarks></remarks>
+    Private Sub calculatePPTx1x2OLD(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date, _
+                                         ByVal startdate As Date, ByVal enddate As Date, _
+                                         ByVal linkerRand As Double, ByVal breite As Double, _
+                                         ByRef x1Pos As Double, ByRef x2Pos As Double)
 
         Dim tageProMonat(12) As Integer
         tageProMonat(0) = 30 ' dummy
