@@ -1,0 +1,41 @@
+﻿Imports Microsoft.Office.Tools.Ribbon
+Imports Microsoft.Office.Interop.Excel
+Imports System.Windows.Forms
+Imports ProjectBoardBasic
+Imports ProjectBoardDefinitions
+
+
+Public Class VisboReportRibbon
+
+
+    Private Sub VisboReportRibbon_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
+        Call MsgBox("VisboReportLoad")
+
+        Try
+
+          
+
+            awinSettings.awinPath = My.Settings.awinPath
+
+            Call awinsetTypenNEW("BHTC")
+
+        Catch ex As Exception
+
+            Call MsgBox(ex.Message)
+
+        Finally
+
+        End Try
+
+
+    End Sub
+
+    Private Sub EPReport_Click(sender As Object, e As RibbonControlEventArgs) Handles EPReport.Click
+        Call MsgBox("EPReport_Click")
+        ' Laden des aktuell geladenen Projektes
+        Call awinImport()
+        Dim reportAuswahl As New frmReportProfil
+        Dim returnvalue As DialogResult
+        returnvalue = reportAuswahl.ShowDialog
+    End Sub
+End Class
