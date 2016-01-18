@@ -78,6 +78,7 @@ Public Module PBBModules
             End With
 
         ElseIf control.Id = "Pt6G3M1B2" Then
+            ' DB Filter definieren, Definition über Hierarchie
 
             awinSettings.useHierarchy = True
 
@@ -120,7 +121,8 @@ Public Module PBBModules
             If awinSettings.isHryNameFrmActive Then
                 Call MsgBox("es kann nur ein Fenster zur Hierarchie- bzw. Namenauswahl geöffnet sein ...")
             ElseIf control.Id = "PTXG1B4" Or control.Id = "PT0G1B8" Then
-                ' Namen auswählen, Visualisieren
+                ' Multiprojekt-Info: Plan-Elemente visualisieren, Auswahl über Namen
+                ' Einzelprojekt-Info: Plan-Elemente visualisieren, Auswahl über Namen
                 awinSettings.useHierarchy = False
                 With nameFormular
                     .Text = "Plan-Elemente visualisieren"
@@ -160,7 +162,8 @@ Public Module PBBModules
                 End With
 
             ElseIf control.Id = "PTXG1B5" Or control.Id = "PT0G1B9" Then
-                ' Hierarchie auswählen, visualisieren
+                ' Multiprojekt-Info: Plan-Elemente visualisieren, Auswahl über Hierarchie
+                ' Einzelprojekt-Info: Plan-Elemente visualisieren, Auswahl über Hierarchie
                 awinSettings.useHierarchy = True
                 With hryFormular
                     .Text = "Plan-Elemente visualisieren"
@@ -190,7 +193,8 @@ Public Module PBBModules
                     'returnValue = .ShowDialog
                 End With
             ElseIf control.Id = "PTXG1B6" Then
-                ' Namen auswählen, Leistbarkeit
+                ' Multiprojekt-Info, Leistbarkeit, Auswahl über Namen 
+                ' 
                 awinSettings.useHierarchy = False
                 With nameFormular
                     .Text = "Leistbarkeits-Charts erstellen"
@@ -228,7 +232,8 @@ Public Module PBBModules
                     'returnValue = .ShowDialog
                 End With
             ElseIf control.Id = "PTXG1B7" Then
-                ' Hierarchie auswählen, Leistbarkeit
+                ' Multiprojekt-Info, Leistbarkeit, Auswahl über Hierarchie 
+                ' 
                 awinSettings.useHierarchy = True
                 With hryFormular
                     .Text = "Leistbarkeits-Charts erstellen"
@@ -260,7 +265,8 @@ Public Module PBBModules
 
 
             ElseIf control.Id = "PT1G1M1B1" Then
-                ' Namen auswählen, Einzelprojekt Berichte 
+                ' Reports - Einzelprojekt Typ II, Auswahl über Namen 
+                '
 
                 Try
                     awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
@@ -318,7 +324,8 @@ Public Module PBBModules
                 End If
 
             ElseIf control.Id = "PT1G1M1B2" Then
-
+                ' Reports - Einzelprojekt Typ II, Auswahl über Hierarchie 
+                '
                 Try
                     awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
                 Catch ex As Exception
@@ -370,6 +377,9 @@ Public Module PBBModules
 
             ElseIf control.Id = "PT1G1M2B1" Then
 
+                ' Reports - Multiprojektbericht Typ II, Auswahl über Namen 
+                '
+
                 If showRangeRight - showRangeLeft <= 6 Then
                     Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
                 Else
@@ -420,6 +430,8 @@ Public Module PBBModules
                 End If
 
             ElseIf control.Id = "PT1G1M2B2" Then
+                ' Reports - Multiprojektbericht Typ II, Auswahl über Hierarchie 
+                '
 
                 If showRangeRight - showRangeLeft <= 6 Then
                     Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
@@ -464,7 +476,7 @@ Public Module PBBModules
                 End If
 
             ElseIf control.Id = "PT4G1M0B1" Then
-                ' Auswahl über Namen, Typ II Export
+                ' Export, Elemente auswählen und exportieren , Auswaqhl über Namen
                 appInstance.ScreenUpdating = False
 
                 With nameFormular
@@ -503,8 +515,8 @@ Public Module PBBModules
                 appInstance.ScreenUpdating = True
 
             ElseIf control.Id = "PT4G1M0B2" Then
-
-                ' Auswahl über Hierarchie, Typ II Export
+                ' Export, Elemente auswählen und exportieren , Auswaqhl über Hierarchie
+                ' 
                 appInstance.ScreenUpdating = False
 
                 awinSettings.useHierarchy = True
@@ -538,7 +550,8 @@ Public Module PBBModules
                     'returnValue = .ShowDialog
                 End With
             ElseIf control.Id = "PT4G1M2B1" Then
-                ' Auswahl über Namen, Vorlagen erzeugen
+                ' Batch-Vorlage für modulare Projekterzeugung, 
+                ' Auswahl über Namen
                 appInstance.ScreenUpdating = False
 
                 With nameFormular
@@ -577,7 +590,8 @@ Public Module PBBModules
 
 
             ElseIf control.Id = "PT4G1M2B2" Then
-                ' Auswahl über Hierarchie, Vorlagen Export
+                ' Batch-Vorlage für modulare Projekterzeugung, 
+                ' Auswahl über Hierarchie
                 appInstance.ScreenUpdating = False
 
                 awinSettings.useHierarchy = True
@@ -610,6 +624,7 @@ Public Module PBBModules
                 End With
 
             ElseIf control.Id = "PT0G1M2B7" Then
+                ' Charts - Meilenstein Trendanalyse
                 ' Auswahl über Namen, Meilensteine für Meilenstein Trendanalyse
                 Try
                     awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)

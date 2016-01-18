@@ -764,32 +764,47 @@
             Dim iDItem As String
             Dim phaseIndices() As Integer
             Dim milestoneIndices(,) As Integer
+            Dim tmpMS As clsMeilenstein
+            Dim tmpPhase As clsPhase
+
+            ' found wird benötigt, um festzustellen, ob es das Element überhaupt gibt; vorher gab es einen Fehler, der nicht abgefangen war
+            ' dann war die ganze Liste immer Null 
+            Dim found As Boolean
 
             For i As Integer = 1 To namenListe.Count
 
                 itemName = CStr(namenListe.Item(i))
+                found = False
 
                 If istElemID(itemName) Then
 
                     If namesAreMilestones Then
-                        sortDate = Me.getMilestoneByID(itemName).getDate
+                        tmpMS = Me.getMilestoneByID(itemName)
+                        If Not IsNothing(tmpMS) Then
+                            found = True
+                            sortDate = tmpMS.getDate
+                        End If
+
                     Else
-                        sortDate = Me.getPhaseByID(itemName).getStartDate
+                        tmpPhase = Me.getPhaseByID(itemName)
+                        If Not IsNothing(tmpPhase) Then
+                            found = True
+                            sortDate = tmpPhase.getStartDate
+                        End If
                     End If
 
-                    If Not tmpSortList.ContainsValue(itemName) Then
+                    If found Then
+                        If Not tmpSortList.ContainsValue(itemName) Then
 
-                        Do While tmpSortList.ContainsKey(sortDate)
-                            sortDate = sortDate.AddMilliseconds(1)
-                        Loop
+                            Do While tmpSortList.ContainsKey(sortDate)
+                                sortDate = sortDate.AddMilliseconds(1)
+                            Loop
 
-                        tmpSortList.Add(sortDate, itemName)
+                            tmpSortList.Add(sortDate, itemName)
 
+                        End If
                     End If
-                    'If Not iDCollection.Contains(itemName) Then
-                    '    iDCollection.Add(itemName, itemName)
-                    'End If
-
+                    
                 Else
                     Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb)
 
