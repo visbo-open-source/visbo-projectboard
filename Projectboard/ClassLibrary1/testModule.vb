@@ -1404,7 +1404,16 @@ Public Module testModule
 
                                 Try
                                     auswahl = 1
-                                    Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+
+                                    If qualifier.Length > 0 Then
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Else
+                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        End If
+                                    Else
+                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                    End If
 
                                     reportObj = obj
                                     notYetDone = True
@@ -1417,10 +1426,22 @@ Public Module testModule
 
                                 Try
                                     auswahl = 2
-                                    Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
 
-                                    reportObj = obj
-                                    notYetDone = True
+                                    If qualifier.Length > 0 Then
+
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Else
+                                            Call createRessBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        End If
+
+                                    Else
+                                        Call createRessPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                    End If
+
+
+                                        reportObj = obj
+                                        notYetDone = True
 
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Personal-Kosten sind Null"
@@ -1432,7 +1453,20 @@ Public Module testModule
 
                                 Try
                                     auswahl = 1
-                                    Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+
+                                    If qualifier.Length > 0 Then
+
+                                        If qualifier.Trim <> "Balken" Then
+                                            Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        Else
+                                            Call createCostBalkenOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                        End If
+
+                                    Else
+                                        Call createCostPieOfProject(hproj, obj, auswahl, htop, hleft, hheight, hwidth)
+                                    End If
+
+
 
                                     reportObj = obj
                                     notYetDone = True
