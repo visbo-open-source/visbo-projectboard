@@ -36,14 +36,14 @@ Partial Class frmEditWoerterbuch
         Me.replaceButton = New System.Windows.Forms.Button()
         Me.visElements = New System.Windows.Forms.Button()
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
-        Me.createWordbasedWildCard = New System.Windows.Forms.CheckBox()
+        Me.ToolStripStatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel()
         Me.clearUnknownList = New System.Windows.Forms.PictureBox()
         Me.setItemToBeUnknown = New System.Windows.Forms.PictureBox()
         Me.setItemToBeKnown = New System.Windows.Forms.PictureBox()
         Me.clearStandardList = New System.Windows.Forms.PictureBox()
         Me.showOnlySummaryTasks = New System.Windows.Forms.CheckBox()
-        Me.Button1 = New System.Windows.Forms.Button()
-        Me.ToolStripStatusLabel1 = New System.Windows.Forms.ToolStripStatusLabel()
+        Me.storeButton = New System.Windows.Forms.Button()
+        Me.filtersAreCoupled = New System.Windows.Forms.CheckBox()
         Me.StatusStrip1.SuspendLayout()
         CType(Me.clearUnknownList, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.setItemToBeUnknown, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -130,6 +130,7 @@ Partial Class frmEditWoerterbuch
         '
         'editUnknownItem
         '
+        Me.editUnknownItem.Enabled = False
         Me.editUnknownItem.Location = New System.Drawing.Point(22, 405)
         Me.editUnknownItem.Name = "editUnknownItem"
         Me.editUnknownItem.Size = New System.Drawing.Size(729, 20)
@@ -138,10 +139,11 @@ Partial Class frmEditWoerterbuch
         'ignoreButton
         '
         Me.ignoreButton.BackColor = System.Drawing.Color.Firebrick
+        Me.ignoreButton.Enabled = False
         Me.ignoreButton.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.ignoreButton.Location = New System.Drawing.Point(142, 468)
+        Me.ignoreButton.Location = New System.Drawing.Point(138, 468)
         Me.ignoreButton.Name = "ignoreButton"
-        Me.ignoreButton.Size = New System.Drawing.Size(75, 57)
+        Me.ignoreButton.Size = New System.Drawing.Size(82, 57)
         Me.ignoreButton.TabIndex = 9
         Me.ignoreButton.Text = "Element immer ignorieren"
         Me.ignoreButton.UseVisualStyleBackColor = False
@@ -149,28 +151,31 @@ Partial Class frmEditWoerterbuch
         'addRulesToDictionary
         '
         Me.addRulesToDictionary.BackColor = System.Drawing.Color.SteelBlue
+        Me.addRulesToDictionary.Enabled = False
         Me.addRulesToDictionary.ForeColor = System.Drawing.SystemColors.ButtonHighlight
         Me.addRulesToDictionary.Location = New System.Drawing.Point(288, 468)
         Me.addRulesToDictionary.Name = "addRulesToDictionary"
         Me.addRulesToDictionary.Size = New System.Drawing.Size(189, 57)
         Me.addRulesToDictionary.TabIndex = 10
-        Me.addRulesToDictionary.Text = "Paar(e zum Wörterbuch hinzufügen"
+        Me.addRulesToDictionary.Text = "Paar zum Wörterbuch hinzufügen"
         Me.addRulesToDictionary.UseVisualStyleBackColor = False
         '
         'replaceButton
         '
         Me.replaceButton.BackColor = System.Drawing.Color.DarkOrange
+        Me.replaceButton.Enabled = False
         Me.replaceButton.ForeColor = System.Drawing.SystemColors.ControlLightLight
         Me.replaceButton.Location = New System.Drawing.Point(552, 468)
         Me.replaceButton.Name = "replaceButton"
-        Me.replaceButton.Size = New System.Drawing.Size(75, 57)
+        Me.replaceButton.Size = New System.Drawing.Size(82, 57)
         Me.replaceButton.TabIndex = 11
-        Me.replaceButton.Text = "Std-Name ändern"
+        Me.replaceButton.Text = "Standard Bezeichnung ändern"
         Me.replaceButton.UseVisualStyleBackColor = False
         '
         'visElements
         '
         Me.visElements.BackColor = System.Drawing.Color.Green
+        Me.visElements.Enabled = False
         Me.visElements.ForeColor = System.Drawing.SystemColors.ButtonHighlight
         Me.visElements.Location = New System.Drawing.Point(288, 431)
         Me.visElements.Name = "visElements"
@@ -188,16 +193,11 @@ Partial Class frmEditWoerterbuch
         Me.StatusStrip1.TabIndex = 13
         Me.StatusStrip1.Text = "StatusStrip1"
         '
-        'createWordbasedWildCard
+        'ToolStripStatusLabel1
         '
-        Me.createWordbasedWildCard.AutoSize = True
-        Me.createWordbasedWildCard.Location = New System.Drawing.Point(370, 17)
-        Me.createWordbasedWildCard.Name = "createWordbasedWildCard"
-        Me.createWordbasedWildCard.Size = New System.Drawing.Size(205, 17)
-        Me.createWordbasedWildCard.TabIndex = 18
-        Me.createWordbasedWildCard.Text = "Wortbasierte WildCard Regel erstellen"
-        Me.createWordbasedWildCard.UseVisualStyleBackColor = True
-        Me.createWordbasedWildCard.Visible = False
+        Me.ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
+        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(134, 17)
+        Me.ToolStripStatusLabel1.Text = "ToolStripStatusLabel1"
         '
         'clearUnknownList
         '
@@ -210,6 +210,7 @@ Partial Class frmEditWoerterbuch
         '
         'setItemToBeUnknown
         '
+        Me.setItemToBeUnknown.Enabled = False
         Me.setItemToBeUnknown.Image = Global.ProjectBoardBasic.My.Resources.Resources.Pfeil_links_32x321
         Me.setItemToBeUnknown.Location = New System.Drawing.Point(370, 268)
         Me.setItemToBeUnknown.Name = "setItemToBeUnknown"
@@ -219,6 +220,7 @@ Partial Class frmEditWoerterbuch
         '
         'setItemToBeKnown
         '
+        Me.setItemToBeKnown.Enabled = False
         Me.setItemToBeKnown.Image = Global.ProjectBoardBasic.My.Resources.Resources.Pfeil_rechts_32x321
         Me.setItemToBeKnown.Location = New System.Drawing.Point(370, 176)
         Me.setItemToBeKnown.Name = "setItemToBeKnown"
@@ -246,31 +248,38 @@ Partial Class frmEditWoerterbuch
         Me.showOnlySummaryTasks.UseVisualStyleBackColor = True
         Me.showOnlySummaryTasks.Visible = False
         '
-        'Button1
+        'storeButton
         '
-        Me.Button1.Location = New System.Drawing.Point(676, 502)
-        Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(75, 23)
-        Me.Button1.TabIndex = 22
-        Me.Button1.Text = "Speichern"
-        Me.Button1.UseVisualStyleBackColor = True
+        Me.storeButton.Enabled = False
+        Me.storeButton.Location = New System.Drawing.Point(676, 502)
+        Me.storeButton.Name = "storeButton"
+        Me.storeButton.Size = New System.Drawing.Size(75, 23)
+        Me.storeButton.TabIndex = 22
+        Me.storeButton.Text = "Speichern"
+        Me.storeButton.UseVisualStyleBackColor = True
         '
-        'ToolStripStatusLabel1
+        'filtersAreCoupled
         '
-        Me.ToolStripStatusLabel1.Name = "ToolStripStatusLabel1"
-        Me.ToolStripStatusLabel1.Size = New System.Drawing.Size(134, 17)
-        Me.ToolStripStatusLabel1.Text = "ToolStripStatusLabel1"
+        Me.filtersAreCoupled.AutoSize = True
+        Me.filtersAreCoupled.Checked = True
+        Me.filtersAreCoupled.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.filtersAreCoupled.Location = New System.Drawing.Point(372, 82)
+        Me.filtersAreCoupled.Name = "filtersAreCoupled"
+        Me.filtersAreCoupled.Size = New System.Drawing.Size(32, 17)
+        Me.filtersAreCoupled.TabIndex = 23
+        Me.filtersAreCoupled.Text = "="
+        Me.filtersAreCoupled.UseVisualStyleBackColor = True
         '
         'frmEditWoerterbuch
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(774, 562)
-        Me.Controls.Add(Me.Button1)
+        Me.Controls.Add(Me.filtersAreCoupled)
+        Me.Controls.Add(Me.storeButton)
         Me.Controls.Add(Me.showOnlySummaryTasks)
         Me.Controls.Add(Me.clearStandardList)
         Me.Controls.Add(Me.clearUnknownList)
-        Me.Controls.Add(Me.createWordbasedWildCard)
         Me.Controls.Add(Me.setItemToBeUnknown)
         Me.Controls.Add(Me.setItemToBeKnown)
         Me.Controls.Add(Me.StatusStrip1)
@@ -288,9 +297,9 @@ Partial Class frmEditWoerterbuch
         Me.Controls.Add(Me.rdbListShowsMilestones)
         Me.Controls.Add(Me.rdbListShowsPhases)
         Me.HelpButton = True
+        Me.MaximizeBox = False
         Me.Name = "frmEditWoerterbuch"
         Me.Text = "Editieren des Wörterbuchs"
-        Me.TopMost = True
         Me.StatusStrip1.ResumeLayout(False)
         Me.StatusStrip1.PerformLayout()
         CType(Me.clearUnknownList, System.ComponentModel.ISupportInitialize).EndInit()
@@ -317,10 +326,10 @@ Partial Class frmEditWoerterbuch
     Friend WithEvents StatusStrip1 As System.Windows.Forms.StatusStrip
     Friend WithEvents setItemToBeKnown As System.Windows.Forms.PictureBox
     Friend WithEvents setItemToBeUnknown As System.Windows.Forms.PictureBox
-    Friend WithEvents createWordbasedWildCard As System.Windows.Forms.CheckBox
     Friend WithEvents clearUnknownList As System.Windows.Forms.PictureBox
     Friend WithEvents clearStandardList As System.Windows.Forms.PictureBox
     Friend WithEvents showOnlySummaryTasks As System.Windows.Forms.CheckBox
-    Friend WithEvents Button1 As System.Windows.Forms.Button
+    Friend WithEvents storeButton As System.Windows.Forms.Button
     Friend WithEvents ToolStripStatusLabel1 As System.Windows.Forms.ToolStripStatusLabel
+    Friend WithEvents filtersAreCoupled As System.Windows.Forms.CheckBox
 End Class

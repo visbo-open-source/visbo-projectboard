@@ -11917,8 +11917,8 @@ Public Module Projekte
                     .TextFrame2.WordWrap = MsoTriState.msoFalse
                     .TextFrame2.TextRange.Text = hproj.getShapeText
                     .TextFrame2.TextRange.Font.Size = hproj.Schrift
-                    .TextFrame2.MarginLeft = 0
-                    .TextFrame2.MarginRight = 0
+                    .TextFrame2.MarginLeft = 4
+                    .TextFrame2.MarginRight = 4
                     .TextFrame2.MarginTop = 0
                     .TextFrame2.MarginBottom = 0
                     .TextFrame2.VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle
@@ -12806,8 +12806,8 @@ Public Module Projekte
                 If number > 0 And Not roentgenBlick.isOn Then
 
                     With .TextFrame2
-                        .MarginLeft = 0
-                        .MarginRight = 0
+                        .MarginLeft = 3
+                        .MarginRight = 3
                         .MarginBottom = 0
                         .MarginTop = 0
                         .WordWrap = Microsoft.Office.Core.MsoTriState.msoFalse
@@ -13104,6 +13104,8 @@ Public Module Projekte
                         ' Änderung 13.10.14 in den Namen soll jetzt der Varianten-Name aufgenommen werden, sofern es einen gibt 
 
                         .TextFrame2.TextRange.Text = myproject.getShapeText
+                        .TextFrame2.MarginLeft = 4
+                        .TextFrame2.MarginRight = 4
 
                         ' Ende Änderung 13.10.14
                     End If
@@ -16907,8 +16909,8 @@ Public Module Projekte
                             .TextFrame2.WordWrap = MsoTriState.msoFalse
                             .TextFrame2.TextRange.Text = description
                             .TextFrame2.TextRange.Font.Size = hproj.Schrift - 2
-                            .TextFrame2.MarginLeft = 0.1
-                            .TextFrame2.MarginRight = 0.1
+                            .TextFrame2.MarginLeft = 2
+                            .TextFrame2.MarginRight = 2
                             .TextFrame2.MarginTop = 0
                             .TextFrame2.MarginBottom = 0
                             .TextFrame2.VerticalAnchor = MsoVerticalAnchor.msoAnchorMiddle

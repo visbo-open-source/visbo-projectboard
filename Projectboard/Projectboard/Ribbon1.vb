@@ -7,6 +7,7 @@ Imports WPFPieChart
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
+Imports MSProject = Microsoft.Office.Interop.MSProject
 Imports System.Security.Principal
 Imports System.Diagnostics
 Imports System.Drawing
@@ -3526,6 +3527,112 @@ Imports System.Drawing
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
+
+
+    End Sub
+
+    Public Sub Tom2G4M2ImportMSProject(control As IRibbonControl)
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim hproj As New clsProjekt
+        Dim cproj As New clsProjekt
+        Dim vglName As String = " "
+        Dim outputString As String = ""
+        Dim dirName As String
+        Dim dateiName As String
+
+        Dim importDate As Date = Date.Now
+        'Dim importDate As Date = "31.10.2013"
+        Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+        Dim projektInventurFile As String = "ProjektInventur.xlsm"
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        Dim myCollection As New Collection
+
+
+
+        'dirName = awinPath & msprojectFilesOrdner
+        dirName = importOrdnerNames(PTImpExp.msproject)
+        listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
+
+        ' alle Import Projekte erstmal löschen
+        ImportProjekte.Clear()
+
+
+        ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+        Dim i As Integer
+        For i = 1 To listOfVorlagen.Count
+            dateiName = listOfVorlagen.Item(i - 1)
+
+            If dateiName = projektInventurFile Then
+
+                ' nichts machen 
+
+            Else
+                ' '' ''Dim skip As Boolean = False
+
+
+                ' '' ''Try
+                ' '' ''    appInstance.Workbooks.Open(dateiName)
+                ' '' ''Catch ex1 As Exception
+                ' '' ''    'Call MsgBox("Fehler bei Öffnen der Datei " & dateiName)
+                ' '' ''    skip = True
+                ' '' ''End Try
+
+                ' '' ''If Not skip Then
+                ' '' ''    pname = ""
+                hproj = New clsProjekt
+                Try
+                    Call awinImportMSProject(dateiName, hproj, importDate)
+
+                    Try
+                        Dim keyStr As String = calcProjektKey(hproj)
+                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                        myCollection.Add(calcProjektKey(hproj))
+                    Catch ex2 As Exception
+                        Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
+                    End Try
+
+                    ' ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+
+                Catch ex1 As Exception
+                    ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                    Call MsgBox(ex1.Message)
+                    Call MsgBox("Fehler bei Import von Projekt " & hproj.name)
+                End Try
+
+
+
+                ' '' ''End If
+
+
+
+            End If
+
+
+        Next i
+
+
+
+        Try
+            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
+        End Try
+
+
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
 
 
     End Sub
@@ -8699,6 +8806,7 @@ Imports System.Drawing
 
     End Sub
 
+
     Public Sub PTTestFunktion4(control As IRibbonControl)
 
         Call projektTafelInit()
@@ -8713,6 +8821,7 @@ Imports System.Drawing
 
 
     End Sub
+
 
 
 #End Region
