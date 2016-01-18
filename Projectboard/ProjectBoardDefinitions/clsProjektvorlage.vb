@@ -149,16 +149,31 @@
 
         If deleteAllChilds Then
 
-            ' jetzt alle Kinder löschen  
-            For i As Integer = 1 To elemNode.childCount
-                childNodeID = elemNode.getChild(i)
+            Dim k As Integer = 1
+
+
+            ' jetzt alle Kinder löschen
+            While elemNode.childCount > 0
+
+                childNodeID = elemNode.getChild(k)
                 If elemIDIstMeilenstein(childNodeID) Then
                     ' lösche Meilenstein 
                     Me.removeMeilenstein(childNodeID)
                 Else
                     Me.removePhase(childNodeID, True)
+
                 End If
-            Next
+            End While
+
+            '' '' ''For i As Integer = 1 To elemNode.childCount
+            '' '' ''    childNodeID = elemNode.getChild(i)
+            '' '' ''    If elemIDIstMeilenstein(childNodeID) Then
+            '' '' ''         lösche Meilenstein 
+            '' '' ''        Me.removeMeilenstein(childNodeID)
+            '' '' ''    Else
+            '' '' ''        Me.removePhase(childNodeID, True)
+            '' '' ''    End If
+            '' '' ''Next
         Else
             ' hier alle Kinder umhängen: die bekommen die ParentID statt nameID als ihren neuen Vater 
             For i As Integer = 1 To elemNode.childCount
@@ -223,7 +238,7 @@
         ' in der Hierarchie-Liste löschen 
         Me.hierarchy.removeAt(indexInHierarchy - 1)
 
-        Dim cPhase As clsPhase = Me.getPhase(parentID)
+        Dim cPhase As clsPhase = Me.getPhaseByID(parentID)
 
         ' in der Meilenstein-Liste der Phase löschen 
         cPhase.removeMilestoneAt(indexInMilestoneList - 1)
@@ -2122,88 +2137,7 @@
 
     End Property
 
-    'Public Property Start() As Integer
-
-    '    Get
-    '        Start = _Start
-    '    End Get
-
-    '    Set(value As Integer)
-    '        If _Status = ProjektStatus(1) Or _Status = ProjektStatus(2) Or _
-    '                                         _Status = ProjektStatus(2) Then
-    '            Call MsgBox("der Startzeitpunkt kann nicht mehr verändert werden ... ")
-
-    '        ElseIf value < _Start + _earliestStart Then
-    '            Call MsgBox("der neue Startzeitpunkt liegt vor dem bisher zugelassenen frühestmöglichen Startzeitpunkt ...")
-
-    '        ElseIf value > _Start + _latestStart Then
-    '            Call MsgBox("der neue Startzeitpunkt liegt nach dem bisher zugelassenen spätestmöglichen Startzeitpunkt ...")
-
-    '        Else
-    '            Dim absEarliest As Integer
-    '            Dim absLatest As Integer
-    '            Dim earliestDate As Date
-    '            Dim newDate As Date = StartofCalendar.AddMonths(value - 1)
-    '            Dim Heute As Date = Now
-
-    '            If DateDiff(DateInterval.Month, newDate, Heute) < 0 Then
-    '                Call MsgBox("der neue Startzeitpunkt liegt in der Vergangenheit ...")
-    '            Else
-    '                absEarliest = _Start + _earliestStart
-    '                absLatest = _Start + _latestStart
-
-    '                earliestDate = StartofCalendar.AddMonths(absEarliest - 1)
-    '                Dim DifferenceInMonths As Long = DateDiff(DateInterval.Month, earliestDate, Heute)
-
-    '                If DifferenceInMonths < 0 Then
-    '                    ' frühestmöglicher Startzeitpunkt ist der aktuelle Monat
-    '                    absEarliest = DateDiff(DateInterval.Month, Heute, StartofCalendar) + 1
-    '                End If
-
-    '                _Start = value
-    '                _earliestStart = absEarliest - _Start
-    '                _latestStart = absLatest - _Start
-    '            End If
-
-
-    '        End If
-    '    End Set
-    'End Property
-
-    'Public Property Status() As String
-    '    Get
-    '        Status = _Status
-    '    End Get
-    '    Set(value As String)
-    '        If value = ProjektStatus(0) Then
-    '            _Status = value
-    '        ElseIf value = ProjektStatus(1) Or value = ProjektStatus(2) Or _
-    '                                           value = ProjektStatus(3) Then
-    '            _Status = value
-    '            _earliestStart = 0
-    '            _latestStart = 0
-    '        Else
-    '            Call MsgBox("unzulässiger Wert für Status")
-    '        End If
-    '    End Set
-    'End Property
-
-    'Public Property StartOffset As Integer
-    '    Get
-    '        StartOffset = _StartOffset
-    '    End Get
-
-    '    Set(value As Integer)
-    '        If value >= _earliestStart And value <= _latestStart Then
-    '            _StartOffset = value
-    '        Else
-    '            Call MsgBox("unzulässiger Wert für StartOffset ...")
-    '        End If
-    '    End Set
-
-    'End Property
-
-
+  
 
     Public Sub New()
 
@@ -2218,20 +2152,10 @@
         _earliestStart = 0
         _latestStart = 0
         '_Status = ProjektStatus(0)
-
+        Schrift = 12
+        Schriftfarbe = RGB(0, 0, 0)
     End Sub
 
-    'Public Sub New(ByVal projektStart As Integer, ByVal earliestValue As Integer, ByVal latestValue As Integer)
-
-    '    AllPhases = New List(Of clsPhase)
-    '    relStart = 1
-    '    iDauer = 0
-    '    _StartOffset = 0
-    '    _Start = projektStart
-    '    _earliestStart = earliestValue
-    '    _latestStart = latestValue
-    '    _Status = ProjektStatus(0)
-
-    'End Sub
+ 
 
 End Class

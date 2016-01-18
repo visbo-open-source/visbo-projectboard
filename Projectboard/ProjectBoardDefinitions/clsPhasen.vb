@@ -155,9 +155,11 @@ Public Class clsPhasen
 
     End Sub
 
+
     Public Sub New()
 
         AllPhasen = New SortedList(Of String, clsPhasenDefinition)
+
 
     End Sub
 End Class

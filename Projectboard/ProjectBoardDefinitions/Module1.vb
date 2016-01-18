@@ -91,9 +91,11 @@ Public Module Module1
     ' Welche Business-Units gibt es ? 
     Public businessUnitDefinitions As SortedList(Of Integer, clsBusinessUnit)
 
-    ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
+    ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen, Rollen, Kostenarten  im CustomizationFile noch nicht enthalten sind. 
     Public missingPhaseDefinitions As New clsPhasen
     Public missingMilestoneDefinitions As New clsMeilensteine
+    Public missingRoleDefinitions As New clsRollen
+    Public missingCostDefinitions As New clsKostenarten
 
 
     ' diese Collection nimmt alle Filter Definitionen auf 
@@ -415,6 +417,13 @@ Public Module Module1
     Public logFileName As String = requirementsOrdner & "logFile.xlsx"                               ' für Fehlermeldung aus Import und Export
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
+
+    Public projektFilesOrdner As String = "ProjectFiles"
+    Public msprojectFilesOrdner As String = "MSProject-Files"
+    Public rplanimportFilesOrdner As String = "RPLANImport"
+    Public exportFilesOrdner As String = "Export Dateien"
+
+
     Public projektVorlagenOrdner As String = requirementsOrdner & "ProjectTemplates"
     Public modulVorlagenOrdner As String = requirementsOrdner & "ModuleTemplates"
     Public projektAustausch As String = requirementsOrdner & "Projekt-Steckbrief.xlsx"
