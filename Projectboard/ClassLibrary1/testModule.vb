@@ -8874,6 +8874,777 @@ Public Module testModule
 
     End Sub
 
+
+
+    ''' <summary>
+    ''' zeichnet einen Kalender mit drei Reihen: Jahre, Quartale oder Monate, Monate oder Kalenderwochen; 
+    ''' es wird also entweder y/q/m gezeichnet oder y/m/w Monate oder 
+    ''' </summary>
+    ''' <param name="pptslide">die Powerpoint SLide, auf der gezeichnet wird</param>
+    ''' <param name="calendargroup">die Kalendergruppe, die zurückgegeben wird</param>
+    ''' <param name="StartofPPTCalendar">das Start-Datum des Kalenders</param>
+    ''' <param name="endOFPPTCalendar">das Ende-Datum des Kalenders</param>
+    ''' <param name="calendarLineShape">die Kalender-Linie: sie bestimmt Top und Width der DrawingArea</param>
+    ''' <param name="calendarHeightShape">calenderHeightShape: bestimmt die Höhe des Kalenders, wird im Falle yqm auch als Separator-Linie verwendet</param>
+    ''' <param name="calendarStepShape">bestimmt die Zwischenlinien </param>
+    ''' <param name="calendarMark">markiert den Zeitraum im Kalender</param>
+    ''' <param name="yearShape">wird für das Beschriften der JAhreszahlen verwendet </param>
+    ''' <param name="qmShape">wird für das Beschriften der Quartale-, Monate- bzw. KWs benutzt</param>
+    ''' <param name="yearSeparatorLine">wird im Falle yqm komplett durchgezogen, sonst nur in der Row </param>
+    ''' <param name="quartalSeparatorLine"></param>
+    ''' <param name="drawingAreaBottom"></param>
+    ''' <remarks></remarks>
+    Sub zeichne3RowsCalendar(ByRef pptslide As pptNS.Slide, ByRef calendargroup As pptNS.Shape, _
+                               ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
+                                   ByVal calendarLineShape As pptNS.Shape, ByVal calendarHeightShape As pptNS.Shape, _
+                                   ByVal calendarStepShape As pptNS.Shape, ByVal calendarMark As pptNS.Shape, _
+                                   ByVal yearShape As pptNS.Shape, ByVal qmShape As pptNS.Shape, _
+                                   ByVal yearSeparatorLine As pptNS.Shape, ByVal quartalSeparatorLine As pptNS.Shape, ByVal drawingAreaBottom As Double)
+
+        Dim monthName(11) As String
+        monthName(0) = "Jan"
+        monthName(1) = "Feb"
+        monthName(2) = "Mar"
+        monthName(3) = "Apr"
+        monthName(4) = "May"
+        monthName(5) = "Jun"
+        monthName(6) = "Jul"
+
+        monthName(7) = "Aug"
+        monthName(8) = "Sep"
+        monthName(9) = "Oct"
+        monthName(10) = "Nov"
+        monthName(11) = "Dec"
+
+        Dim QuartalsName() As String = {"I", "II", "III", "IV"}
+
+
+        Dim newShapes As pptNS.ShapeRange
+
+        ' nimmt die Namen aller erzeugten Shapes auf: daraus wird später die Gruppe erzeugt 
+        Dim nameCollection As New Collection
+
+        ' wieviele Tage auf dem Kalender?
+        Dim anzahlTage As Integer = DateDiff(DateInterval.Day, StartofPPTCalendar, endOFPPTCalendar) + 1
+
+        ' wie breit ist ein Tg auf dem Kalender? 
+        Dim rasterDayWidth As Double = calendarLineShape.Width / anzahlTage
+
+        ' bestimmt ein proportionales Aussehen der Kalenderleiste 
+        ' es sollte sichergestellt sein, dass die Shapes für Year und Q/M/W jeweils genügend Margin nach oben und unten haben 
+        Dim KalenderHoehe As Double = (2 * qmShape.Height + yearShape.Height) * 1.05
+        Dim yyHeightfaktor As Double = yearShape.Height / KalenderHoehe
+        Dim qmHeightfaktor As Double = qmShape.Height / KalenderHoehe
+
+        Dim drawKWs As Boolean
+        Dim drawQuartale As Boolean
+        If calendarLineShape.Width >= (1 + anzahlTage / 7) * qmShape.Width Then
+            drawKWs = True
+            drawQuartale = False
+        Else
+            drawKWs = False
+            drawQuartale = True
+        End If
+
+        ' ####---------------------------------------
+        ' jetzt wird der Aussen-Rand gezeichnet
+        ' ... die unterste horizontale Line zeichnen
+        calendarLineShape.Copy()
+        newShapes = pptslide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = calendarLineShape.Left
+            .Top = calendarLineShape.Top
+            .Name = .Name & .Id
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        ' ... die oberste horizontale Line zeichnen
+        calendarLineShape.Copy()
+        newShapes = pptslide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = calendarLineShape.Left
+            .Top = calendarLineShape.Top - (KalenderHoehe + calendarLineShape.Height / 2)
+            .Name = .Name & .Id
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        ' ... die Trennlinie1 (Jahre) zeichnen
+        calendarLineShape.Copy()
+        newShapes = pptslide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = calendarLineShape.Left
+            .Top = calendarLineShape.Top - (KalenderHoehe + calendarLineShape.Height / 2) + _
+                    yyHeightfaktor * KalenderHoehe
+            .Name = .Name & .Id
+
+            ' das Format von StepShape übernehmen
+            calendarStepShape.PickUp()
+            .Apply()
+
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        ' ... die Trennlinie2 (Q/M) zeichnen
+        calendarLineShape.Copy()
+        newShapes = pptslide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = calendarLineShape.Left
+            .Top = calendarLineShape.Top - (KalenderHoehe + calendarLineShape.Height / 2) + _
+                    yyHeightfaktor * KalenderHoehe + qmHeightfaktor * KalenderHoehe
+            .Name = .Name & .Id
+
+            ' das Format von StepShape übernehmen
+            calendarStepShape.PickUp()
+            .Apply()
+
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        ' den linken und den rechten Rand zeichnen 
+        calendarHeightShape.Copy()
+        newShapes = pptslide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = calendarLineShape.Left
+            .Top = calendarLineShape.Top - (KalenderHoehe + calendarLineShape.Height / 2)
+            .Height = KalenderHoehe
+            .Name = .Name & .Id
+
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        calendarHeightShape.Copy()
+        newShapes = pptslide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = calendarLineShape.Left + calendarLineShape.Width
+            .Top = calendarLineShape.Top - (KalenderHoehe + calendarLineShape.Height / 2)
+            .Height = KalenderHoehe
+            .Name = .Name & .Id
+
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        ' Ende Aussen-Box für KAlender schreiben 
+        ' ##########################################
+
+        Dim curDatePtr As Date = StartofPPTCalendar
+        Dim curLeft As Double, curTop As Double, curRight As Double
+        Dim rowHeight As Double
+
+
+        Dim nextSeparator As Double
+        Dim atleastOne As Boolean = False
+        Dim beschriftung As String = ""
+
+        ' ###########################################
+        ' zeichne die Jahres-Trennlinien, schreibe die Jahreszahlen
+        rowHeight = yyHeightfaktor * KalenderHoehe
+
+        curTop = calendarLineShape.Top - (KalenderHoehe + calendarLineShape.Height / 2)
+        curLeft = calendarLineShape.Left
+        curRight = calendarLineShape.Left + calendarLineShape.Width
+
+        curDatePtr = StartofPPTCalendar.AddDays(-1 * StartofPPTCalendar.DayOfYear + 1).AddYears(1)
+
+        Do While curDatePtr < endOFPPTCalendar
+            curRight = DateDiff(DateInterval.Day, StartofPPTCalendar, curDatePtr) * rasterDayWidth
+
+            calendarStepShape.Copy()
+            newShapes = pptslide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = curRight
+                .Top = curTop
+                .Height = rowHeight
+                .Name = .Name & .Id
+
+                nameCollection.Add(.Name, .Name)
+            End With
+
+            ' jetzt die Jahreszahl schreiben 
+            If curRight - curLeft > 2 * yearShape.Width Then
+
+                beschriftung = curDatePtr.AddMonths(-1).Year.ToString
+                yearShape.Copy()
+                newShapes = pptslide.Shapes.Paste
+                With newShapes.Item(1)
+                    .Left = curLeft + (curRight - curLeft - yearShape.Width) / 2
+                    .Top = curTop + (rowHeight - yearShape.Height) / 2
+                    .Name = .Name & .Id
+                    .TextFrame2.TextRange.Text = beschriftung
+                    nameCollection.Add(.Name, .Name)
+                End With
+
+            End If
+
+            curLeft = curRight
+            curDatePtr = curDatePtr.AddYears(1)
+
+        Loop
+        
+        ' jetzt muss noch die Behandlung kommen, ob das Teil-Jahr beschriftet werden muss
+        If curRight - curLeft > 2 * yearShape.Width Then
+
+            beschriftung = curDatePtr.AddMonths(-1).Year.ToString
+            yearShape.Copy()
+            newShapes = pptslide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = curLeft + (curRight - curLeft - yearShape.Width) / 2
+                .Top = curTop + (yyHeightfaktor * KalenderHoehe - yearShape.Height) / 2
+                .Name = .Name & .Id
+                .TextFrame2.TextRange.Text = beschriftung
+                nameCollection.Add(.Name, .Name)
+            End With
+
+        End If
+
+        ' Ende Jahres-Zeile zeichnen 
+        ' ###########################################
+
+        ' ###########################################
+        ' zeichne die Quartals bzw. Monats-Reihe 
+        rowHeight = qmHeightfaktor * KalenderHoehe
+
+        curTop = curTop + qmHeightfaktor * KalenderHoehe
+        curLeft = calendarLineShape.Left
+        curRight = calendarLineShape.Left + calendarLineShape.Width
+
+        Dim curMonth As Integer = StartofPPTCalendar.AddMonths(3).Month
+        Dim curQuartal As Integer = (curMonth - 1) / 3 + 1
+        If drawQuartale Then
+            ' das erste Quartal berechnen  
+
+            Select Case curMonth Mod 3
+                Case curMonth Mod 3 = 1
+                    curDatePtr = StartofPPTCalendar.AddMonths(3).AddDays(-1 * StartofPPTCalendar.AddMonths(3).Day + 1)
+                Case curMonth Mod 3 = 2
+                    curDatePtr = StartofPPTCalendar.AddMonths(2).AddDays(-1 * StartofPPTCalendar.AddMonths(3).Day + 1)
+                Case curMonth Mod 3 = 0
+                    curDatePtr = StartofPPTCalendar.AddMonths(1).AddDays(-1 * StartofPPTCalendar.AddMonths(3).Day + 1)
+            End Select
+
+        Else
+            ' den ersten Monat berechnen
+            curDatePtr = StartofPPTCalendar.AddDays(-1 * StartofPPTCalendar.Day + 1).AddMonths(1)
+        End If
+
+        Do While curDatePtr < endOFPPTCalendar
+
+            curRight = DateDiff(DateInterval.Day, StartofPPTCalendar, curDatePtr) * rasterDayWidth
+
+            calendarStepShape.Copy()
+            newShapes = pptslide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = curRight
+                .Top = curTop
+                .Height = rowHeight
+                .Name = .Name & .Id
+
+                nameCollection.Add(.Name, .Name)
+            End With
+
+
+            Do Until curRight - curLeft >= qmShape.Width Or qmShape.TextFrame2.TextRange.Font.Size <= 6
+                qmShape.TextFrame2.TextRange.Font.Size = qmShape.TextFrame2.TextRange.Font.Size - 2
+            Loop
+
+            ' jetzt die Quartals- bzw. Monatszahl  schreiben 
+            If curRight - curLeft >= qmShape.Width Then
+
+                If drawQuartale Then
+                    If CInt(curDatePtr.DayOfYear / 7) - 1 <= 0 Then
+                        beschriftung = ""
+                    Else
+                        beschriftung = CInt(curDatePtr.DayOfYear / 7 - 1).ToString("0#")
+                    End If
+                Else
+
+                    beschriftung = monthName(curDatePtr.Month - 1)
+
+                End If
+            Else
+                'beschriftung = curQuartal.toString
+            End If
+
+            qmShape.Copy()
+            newShapes = pptslide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = curLeft + (curRight - curLeft - yearShape.Width) / 2
+                .Top = curTop + (rowHeight - yearShape.Height) / 2
+                .Name = .Name & .Id
+                .TextFrame2.TextRange.Text = beschriftung
+                nameCollection.Add(.Name, .Name)
+            End With
+
+
+            curLeft = curRight
+            curDatePtr = curDatePtr.AddYears(1)
+
+        Loop
+
+        ' jetzt muss noch die Behandlung kommen, ob das Teil-Quartal / Monat beschriftet werden muss
+        If curRight - curLeft > 2 * qmShape.Width Then
+
+            beschriftung = curDatePtr.AddMonths(-1).Year.ToString
+            yearShape.Copy()
+            newShapes = pptslide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = curLeft + (curRight - curLeft - yearShape.Width) / 2
+                .Top = curTop + (yyHeightfaktor * KalenderHoehe - yearShape.Height) / 2
+                .Name = .Name & .Id
+                .TextFrame2.TextRange.Text = beschriftung
+                nameCollection.Add(.Name, .Name)
+            End With
+
+        End If
+
+        ' Ende Quartals bzw. Monats-Zeile zeichnen 
+        ' ###########################################
+
+
+        ' zeichne die Monats- bzw. Kalenderwochen Reihe
+        rowHeight = qmHeightfaktor * KalenderHoehe
+
+        curTop = curTop + qmHeightfaktor * KalenderHoehe
+        curLeft = calendarLineShape.Left
+        curRight = calendarLineShape.Left + calendarLineShape.Width
+
+        If drawKWs Then
+            ' die erste KW berechnen 
+            curDatePtr = StartofPPTCalendar.AddDays(-1 * StartofPPTCalendar.DayOfWeek + 1).AddDays(7)
+        Else
+            curDatePtr = StartofPPTCalendar.AddDays(-1 * StartofPPTCalendar.Day + 1).AddMonths(1)
+        End If
+
+        Do While curDatePtr < endOFPPTCalendar
+            curRight = DateDiff(DateInterval.Day, StartofPPTCalendar, curDatePtr) * rasterDayWidth
+
+            calendarStepShape.Copy()
+            newShapes = pptslide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = curRight
+                .Top = curTop
+                .Height = rowHeight
+                .Name = .Name & .Id
+
+                nameCollection.Add(.Name, .Name)
+            End With
+
+            ' jetzt die Quartals- bzw. Monatszahl  schreiben 
+            If curRight - curLeft >= qmShape.Width Then
+
+                If drawKWs Then
+                    If CInt(curDatePtr.DayOfYear / 7) - 1 <= 0 Then
+                        beschriftung = ""
+                    Else
+                        beschriftung = CInt(curDatePtr.DayOfYear / 7 - 1).ToString("0#")
+                    End If
+                Else
+
+                    beschriftung = monthName(curDatePtr.Month - 1)
+
+                End If
+
+
+                qmShape.Copy()
+                newShapes = pptslide.Shapes.Paste
+                With newShapes.Item(1)
+                    .Left = curLeft + (curRight - curLeft - yearShape.Width) / 2
+                    .Top = curTop + (rowHeight - yearShape.Height) / 2
+                    .Name = .Name & .Id
+                    .TextFrame2.TextRange.Text = beschriftung
+                    nameCollection.Add(.Name, .Name)
+                End With
+
+            End If
+
+            curLeft = curRight
+            curDatePtr = curDatePtr.AddYears(1)
+
+        Loop
+
+        ' jetzt muss noch die Behandlung kommen, ob das Teil-Jahr beschriftet werden muss
+        If curRight - curLeft > 2 * yearShape.Width Then
+
+            beschriftung = curDatePtr.AddMonths(-1).Year.ToString
+            yearShape.Copy()
+            newShapes = pptslide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = curLeft + (curRight - curLeft - yearShape.Width) / 2
+                .Top = curTop + (yyHeightfaktor * KalenderHoehe - yearShape.Height) / 2
+                .Name = .Name & .Id
+                .TextFrame2.TextRange.Text = beschriftung
+                nameCollection.Add(.Name, .Name)
+            End With
+
+        End If
+
+
+        ' zeichne die vertikalen Linien, wenn gewünscht ... 
+
+
+        '''''''''''''''''''''' old stuff
+        Dim drawItem As Integer  ' 0: Monat, 1: Quartal, 2: Jahr
+        'Dim anzQMs As Integer = DateDiff(DateInterval.Month, StartofPPTCalendar, endOFPPTCalendar) + 1
+
+        Dim anzQMs As Integer
+        Dim qmWidth As Double = qmShape.Width
+        Dim yearWidth As Double
+        Dim monthWidth As Double
+        Dim textXPosition As Double, yPosition As Double
+
+        Dim startOfZeitraum As Integer = showRangeLeft - getColumnOfDate(StartofPPTCalendar)
+        Dim zeitraumDauer As Integer = showRangeRight - showRangeLeft + 1
+        Dim shapeGruppe As pptNS.ShapeRange
+        Dim slideShapes As pptNS.Shapes = pptslide.Shapes
+
+        Dim arrayOFNames() As String
+
+
+        Call calculateYMAeinheiten(StartofPPTCalendar, endOFPPTCalendar, calendarLineShape.Width, _
+                                  yearWidth, monthWidth, anzQMs)
+
+
+        If calendarLineShape.Width >= anzQMs * qmWidth Then
+            qmWidth = calendarLineShape.Width / anzQMs
+            drawItem = 0
+        ElseIf calendarLineShape.Width >= anzQMs / 3 * qmWidth Then
+            qmWidth = 3 * calendarLineShape.Width / anzQMs
+            drawItem = 1
+        ElseIf calendarLineShape.Width >= anzQMs / 12 * yearShape.Width Then
+            qmWidth = 12 * calendarLineShape.Width / anzQMs
+            drawItem = 2
+        Else
+            ' jetzt werden die YearShapes solange in der Schriftgröße verkleinert, bis es passt ...
+            Dim fitting As Boolean = False
+            Dim currentFontSize As Double = yearShape.TextFrame2.TextRange.Font.Size - 2
+
+            While Not fitting And currentFontSize > 6
+
+                yearShape.TextFrame2.TextRange.Font.Size = currentFontSize
+                If calendarLineShape.Width >= anzQMs / 12 * yearShape.Width Then
+                    fitting = True
+                Else
+                    currentFontSize = currentFontSize - 2
+                End If
+
+            End While
+
+            If fitting Then
+                drawItem = 2
+            Else
+                Throw New ArgumentException("Zeitraum ist zu groß ...")
+            End If
+        End If
+
+
+        If Not IsNothing(calendarMark) Then
+            With calendarMark
+                .Left = calendarLineShape.Left + startOfZeitraum * monthWidth
+                .Top = calendarLineShape.Top - calendarHeightShape.Height
+                .Width = zeitraumDauer * monthWidth
+                .Height = calendarHeightShape.Height
+            End With
+        End If
+
+
+        nameCollection.Add(calendarLineShape.Name, calendarLineShape.Name)
+        nameCollection.Add(calendarHeightShape.Name, calendarHeightShape.Name)
+        nameCollection.Add(calendarMark.Name, calendarMark.Name)
+
+
+        Dim lfdNr As Integer = 1
+        Dim qmHeightfaktor As Double = qmShape.Height / (qmShape.Height + yearShape.Height)
+
+        If drawItem = 0 Or drawItem = 1 Then
+            ' Quartale oder Monate zeichnen 
+
+            ' jetzt die Zwischenlinien zeichnen , wenn gewünscht 
+            If Not IsNothing(calendarStepShape) Then
+                textXPosition = calendarLineShape.Left
+                yPosition = calendarLineShape.Top - calendarStepShape.Height
+
+                ' Änderung tk:zeichnen der M oder Q-Linien, die auch mitten im Jahr beginnen können
+                'For i As Integer = 1 To anzQMs - 1
+                For i As Integer = 1 + (StartofPPTCalendar.Month - 1) To anzQMs - 1 + (StartofPPTCalendar.Month - 1)
+
+                    If i Mod 12 <> 0 Then
+
+                        calendarStepShape.Copy()
+                        newShapes = pptslide.Shapes.Paste
+                        With newShapes.Item(1)
+                            .Left = textXPosition + monthWidth - 0.5 * .Width
+                            If i Mod 3 = 0 Then
+                                .Top = yPosition
+                            Else
+                                .Top = yPosition + calendarStepShape.Height * 0.5
+                                .Height = calendarStepShape.Height * 0.5
+                            End If
+                            ' den Namen für PPT 2013 eindeutig machen 
+                            .Name = .Name & .Id
+                            nameCollection.Add(.Name, .Name)
+                        End With
+                    Else
+                        ' hier ggf die Year Separator Linien zeichnen 
+                    End If
+
+                    textXPosition = textXPosition + monthWidth
+
+
+                Next
+
+            End If
+
+
+
+
+
+            textXPosition = calendarLineShape.Left
+            yPosition = calendarLineShape.Top - calendarHeightShape.Height * qmHeightfaktor _
+                        + (calendarHeightShape.Height * qmHeightfaktor - qmShape.Height) * 0.5
+
+
+
+            ' Änderung tk: Kalender soll auch im Jahr beginnen können ..
+
+
+
+            If drawItem = 0 Then
+
+                ' Monate zeichnen 
+                lfdNr = StartofPPTCalendar.Month
+
+                For i As Integer = 1 To anzQMs
+                    qmShape.Copy()
+                    newShapes = pptslide.Shapes.Paste
+                    With newShapes.Item(1)
+                        .TextFrame2.TextRange.Text = lfdNr.ToString
+                        .Left = textXPosition + (qmWidth - .Width) * 0.5
+                        .Top = yPosition
+                        ' den Namen für PPT 2013 eindeutig machen 
+                        .Name = .Name & .Id
+                        nameCollection.Add(.Name, .Name)
+                    End With
+
+                    lfdNr = lfdNr + 1
+                    If lfdNr > 12 Then
+                        lfdNr = 1
+                    End If
+                    textXPosition = textXPosition + qmWidth
+                Next
+
+            Else
+                ' Quartale zeichnen 
+                lfdNr = (StartofPPTCalendar.Month - 1) \ 3 + 1
+                For i As Integer = 1 To anzQMs / 3
+                    qmShape.Copy()
+                    newShapes = pptslide.Shapes.Paste
+                    With newShapes.Item(1)
+                        .TextFrame2.TextRange.Text = "Q" & lfdNr.ToString
+                        .Left = textXPosition + (qmWidth - .Width) * 0.5
+                        .Top = yPosition
+                        ' den Namen für PPT 2013 eindeutig machen 
+                        .Name = .Name & .Id
+                        nameCollection.Add(.Name, .Name)
+                    End With
+
+                    lfdNr = lfdNr + 1
+                    If lfdNr > 4 Then
+                        lfdNr = 1
+                    End If
+                    textXPosition = textXPosition + qmWidth
+                Next
+
+            End If
+
+            ' Jetzt die horizontale Line zeichnen , die die M bzw Q von den Jahren trennt
+            calendarLineShape.Copy()
+            newShapes = pptslide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = calendarLineShape.Left
+                .Top = calendarLineShape.Top - qmHeightfaktor * calendarHeightShape.Height
+                ' den Namen für PPT 2013 eindeutig machen 
+                .Name = .Name & .Id
+                nameCollection.Add(.Name, .Name)
+            End With
+
+        End If
+
+        ' jetzt die Jahre zeichnen 
+        textXPosition = calendarLineShape.Left
+
+        If drawItem = 0 Or drawItem = 1 Then
+
+            yPosition = calendarLineShape.Top - calendarHeightShape.Height _
+                        + (calendarHeightShape.Height * (1 - qmHeightfaktor) - yearShape.Height) * 0.5
+        Else
+
+            yPosition = calendarLineShape.Top - calendarHeightShape.Height _
+                        + (calendarHeightShape.Height - yearShape.Height) * 0.5
+        End If
+
+        lfdNr = StartofPPTCalendar.Year
+
+        ' den linken Rand des Kalenders zeichnen 
+        calendarHeightShape.Left = calendarLineShape.Left
+
+        ' Änderung tk Zeichnen der 
+        Dim ix As Integer = StartofPPTCalendar.Month
+        Dim index As Integer = 1
+        Dim partYear As Boolean = (ix > 1)
+        Dim lineXPosition As Double = calendarLineShape.Left
+
+        While index <= anzQMs
+
+            ' den Jahrestext schreiben 
+            If ix < 7 Then
+
+                yearShape.Copy()
+                newShapes = pptslide.Shapes.Paste
+
+                ' hier wird nur ein ganzes Jahr dargestellt
+                With newShapes.Item(1)
+                    .TextFrame2.TextRange.Text = lfdNr.ToString
+                    If partYear Then
+                        .Left = textXPosition + (qmWidth * (12 - ix + 1) - .Width) * 0.5
+                    Else
+                        .Left = textXPosition + (yearWidth - .Width) * 0.5
+                    End If
+
+                    .Top = yPosition
+                    ' den Namen für PPT 2013 eindeutig machen 
+                    .Name = .Name & .Id
+                    nameCollection.Add(.Name, .Name)
+                End With
+
+            End If
+
+            lfdNr = lfdNr + 1
+            If partYear Then
+                textXPosition = textXPosition + qmWidth * (12 - ix + 1)
+            Else
+                textXPosition = textXPosition + yearWidth
+            End If
+
+
+            calendarHeightShape.Copy()
+            newShapes = pptslide.Shapes.Paste
+            With newShapes.Item(1)
+
+                If partYear Then
+                    .Left = lineXPosition + qmWidth * (12 - ix + 1)
+                    lineXPosition = lineXPosition + qmWidth * (12 - ix + 1)
+                Else
+                    '.Left = calendarHeightShape.Left + yearWidth
+                    .Left = lineXPosition + yearWidth
+                    lineXPosition = lineXPosition + yearWidth
+                End If
+
+                '.Top = calendarHeightShape.
+                .Top = calendarLineShape.Top - calendarHeightShape.Height
+                ' den Namen für PPT 2013 eindeutig machen 
+                .Name = .Name & .Id
+                nameCollection.Add(.Name, .Name)
+
+            End With
+
+
+            ' jetzt index verändern 
+            If partYear Then
+                index = index + 12 - ix + 1
+            Else
+                index = index + 12
+            End If
+
+            ' ist das nächste Jahr ein volles Jahr ? 
+            If anzQMs - index >= 12 Then
+                partYear = False
+                ix = 1
+            Else
+                partYear = True
+                ix = 12 - (anzQMs - index)
+            End If
+
+        End While
+
+
+        ' und jetzt noch die oberste Linie zeichnen  
+        calendarLineShape.Copy()
+        newShapes = pptslide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = calendarLineShape.Left
+            .Top = calendarLineShape.Top - calendarHeightShape.Height
+            ' den Namen für PPT 2013 eindeutig machen 
+            .Name = .Name & .Id
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        ' jetzt ggf die vertikalen Raster in der Zeichenfläche zeichnen 
+        If awinSettings.mppVertikalesRaster And _
+            Not IsNothing(yearSeparatorLine) And Not IsNothing(quartalSeparatorLine) Then
+
+            textXPosition = calendarLineShape.Left
+
+            ' zeichnen der Q- oder M  Separators
+            Dim divisor As Integer = 12
+
+
+            If drawItem = 0 Then
+                divisor = 1
+            ElseIf drawItem = 1 Then
+                divisor = 3
+            End If
+
+            For i = 0 + (StartofPPTCalendar.Month - 1) To (anzQMs + StartofPPTCalendar.Month - 1) / divisor
+
+                If i Mod CInt(12 / divisor) = 0 Then
+                    ' es handelt sich um eine JAhreslinie
+                    yearSeparatorLine.Copy()
+                Else
+                    quartalSeparatorLine.Copy()
+                End If
+
+                newShapes = pptslide.Shapes.Paste
+                With newShapes.Item(1)
+                    .Left = textXPosition
+                    .Top = calendarLineShape.Top
+                    .Height = drawingAreaBottom - calendarLineShape.Top
+                    ' den Namen für PPT 2013 eindeutig machen 
+                    .Name = .Name & .Id
+                    nameCollection.Add(.Name, .Name)
+                End With
+
+                textXPosition = textXPosition + qmWidth
+
+            Next
+
+        End If
+
+        ' jetzt sollen alle gezeichneten Shapes gruppiert werden 
+        Dim anzElements As Integer = nameCollection.Count
+        If anzElements = 0 Then
+
+            calendargroup = Nothing
+
+        ElseIf anzElements = 1 Then
+
+            calendargroup = pptslide.Shapes.Item(nameCollection.Item(1))
+
+        Else
+
+            ReDim arrayOFNames(anzElements - 1)
+
+            For i = 1 To anzElements
+                arrayOFNames(i - 1) = CStr(nameCollection.Item(i))
+            Next
+
+            shapeGruppe = pptslide.Shapes.Range(arrayOFNames)
+            calendargroup = shapeGruppe.Group
+
+
+        End If
+
+
+    End Sub
+
     ''' <summary>
     ''' zeichnet die Projekte der Multiprojekt Sicht ( auch für extended Mode )
     ''' </summary>
