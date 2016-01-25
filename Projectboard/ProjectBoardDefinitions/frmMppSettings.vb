@@ -1,5 +1,5 @@
 ﻿Public Class frmMppSettings
-    ' ur: 20.04.2015: ???? hier gehts weiter
+
     Public calledfrom As String
 
     Private Sub frmMppSettings_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -60,6 +60,74 @@
                 'ur: 21.04.2015: noch zu tun: zuvor alten Wert sichern
                 shwExtendedMode.Checked = True
             End With
+
+        ElseIf calledfrom = "MSProjectADDIn" Then
+
+            With awinSettings
+
+                ' die folgenden werden im MS Project AddIn gar nicht gezeigt 
+                ' sie müssen auch entsprechend auf die für den Project AddIn sinnvllen werte gesetzt werden 
+                '
+                shwProjectLine.Visible = False
+                shwProjectLine.Checked = False
+                .mppShowProjectLine = False
+
+                shwAmpeln.Visible = False
+                shwAmpeln.Checked = False
+                .mppShowAmpel = False
+
+                notStrictly.Visible = False
+                notStrictly.Checked = False
+                .mppShowAllIfOne = False
+
+                sortiertNachDauer.Visible = False
+                sortiertNachDauer.Checked = False
+                .mppSortiertDauer = False
+                '
+
+                shwExtendedMode.Visible = False
+                shwExtendedMode.Checked = True
+                .eppExtendedMode = True
+                .mppExtendedMode = True
+
+                ' jetzt kommen die im MS Project sichtbaren Checkboxes
+                shwPhaseText.Checked = .mppShowPhName
+                shwPhaseDate.Checked = .mppShowPhDate
+
+                ShwMilestoneText.Checked = .mppShowMsName
+                ShwMilestoneDate.Checked = .mppShowMsDate
+
+                shwVerticals.Checked = .mppVertikalesRaster
+                shwHorizontals.Checked = .mppShowHorzizontals
+
+                shwLegend.Checked = .mppShowLegend
+                allOnOnePage.Checked = .mppOnePage
+
+                ' jetzt müssen die Checkboxes und der OK-Button noch hochgeschoben werden 
+                ' ausserdem die Höhe des Formulars verändert werden 
+                Dim offset As Integer = shwPhaseText.Top - shwProjectLine.Top
+                shwPhaseText.Top = shwPhaseText.Top - offset
+                shwPhaseDate.Top = shwPhaseDate.Top - offset
+
+                ShwMilestoneText.Top = ShwMilestoneText.Top - offset
+                ShwMilestoneDate.Top = ShwMilestoneDate.Top - offset
+
+                useAbbrev.Top = useAbbrev.Top - offset
+
+                shwVerticals.Top = shwVerticals.Top - offset
+                shwHorizontals.Top = shwHorizontals.Top - offset
+
+                shwLegend.Top = shwLegend.Top - offset
+                allOnOnePage.Top = allOnOnePage.Top - offset
+
+                okButton.Top = okButton.Top - offset
+
+                Me.Height = Me.Height - offset
+
+
+            End With
+
+
         End If
 
     End Sub
@@ -71,22 +139,26 @@
         awinSettings.mppShowProjectLine = shwProjectLine.Checked
         awinSettings.mppShowAllIfOne = notStrictly.Checked
         awinSettings.mppShowAmpel = shwAmpeln.Checked
+
         awinSettings.mppShowPhName = shwPhaseText.Checked
         awinSettings.mppShowPhDate = shwPhaseDate.Checked
         awinSettings.mppShowMsName = ShwMilestoneText.Checked
         awinSettings.mppShowMsDate = ShwMilestoneDate.Checked
+        awinSettings.mppUseAbbreviation = useAbbrev.Checked
+
+
         awinSettings.mppVertikalesRaster = shwVerticals.Checked
+        awinSettings.mppShowHorzizontals = shwHorizontals.Checked
         awinSettings.mppShowLegend = shwLegend.Checked
         awinSettings.mppOnePage = allOnOnePage.Checked
+
         awinSettings.mppSortiertDauer = sortiertNachDauer.Checked
         awinSettings.mppExtendedMode = shwExtendedMode.Checked
 
         If awinSettings.mppSortiertDauer Then
             awinSettings.mppShowAllIfOne = True
         End If
-
-        ' Änderung tk: geändert, weil sonst die Phasen nicht mehr ganz angezeigt werden ... 
-        'awinSettings.mppFullyContained = awinSettings.mppSortiertDauer
+        
 
         MyBase.Close()
 

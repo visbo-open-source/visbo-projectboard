@@ -2869,6 +2869,63 @@ Imports System.Drawing
 
     End Sub
 
+    ''' <summary>
+    ''' EinzelProjekt Report mit selektierter Vorlage erstellen
+    ''' </summary>
+    ''' <param name="control"></param>
+    ''' <remarks></remarks>
+    Sub awinBHTCReport(control As IRibbonControl)
+
+        Dim awinSelection As Excel.ShapeRange
+        Dim returnValue As DialogResult
+        Dim getReportVorlage As New frmSelectPPTTempl
+
+        Call projektTafelInit()
+
+        Try
+            'awinSelection = appInstance.ActiveWindow.Selection.ShapeRange
+            awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
+        Catch ex As Exception
+            awinSelection = Nothing
+        End Try
+
+        If awinSelection Is Nothing Then
+            Call MsgBox("vorher Projekt/e selektieren ...")
+        Else
+            enableOnUpdate = False
+            appInstance.ScreenUpdating = False
+            appInstance.EnableEvents = False
+
+            getReportVorlage.calledfrom = "MSProjectADDIn"
+
+
+            ' sichern der awinSettings.mpp... Einstellungen
+
+            Dim sav_mppShowAllIfOne As Boolean = awinSettings.mppShowAllIfOne
+            Dim sav_mppExtendedMode As Boolean = awinSettings.mppExtendedMode
+            Dim sav_mppShowProjectLine As Boolean = awinSettings.mppShowProjectLine
+
+
+
+            ' Formular zum Auswählen der Report-Vorlage wird aufgerufen
+
+            returnValue = getReportVorlage.ShowDialog
+
+            awinSettings.eppExtendedMode = False
+
+            ' Zurücksetzen der gesicherten und veränderten Einstellungen
+
+            awinSettings.mppExtendedMode = sav_mppExtendedMode
+            awinSettings.mppShowAllIfOne = sav_mppShowAllIfOne
+            awinSettings.mppShowProjectLine = sav_mppShowProjectLine
+
+            appInstance.EnableEvents = True
+            appInstance.ScreenUpdating = True
+            enableOnUpdate = True
+        End If
+
+    End Sub
+
 
 
     ''' <summary>

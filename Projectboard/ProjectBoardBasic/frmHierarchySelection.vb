@@ -523,15 +523,6 @@ Public Class frmHierarchySelection
 
     End Sub
 
-    Private Sub hryStufen_ValueChanged(sender As Object, e As EventArgs) Handles hryStufen.ValueChanged
-
-    End Sub
-
-    Private Sub hryTreeView_DoubleClick(sender As Object, e As EventArgs) Handles hryTreeView.DoubleClick
-
-
-
-    End Sub
 
 
     Private Sub hryTreeView_KeyPress(sender As Object, e As KeyPressEventArgs) Handles hryTreeView.KeyPress

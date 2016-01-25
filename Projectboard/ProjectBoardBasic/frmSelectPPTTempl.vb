@@ -35,6 +35,9 @@ Public Class frmSelectPPTTempl
         ElseIf calledfrom = "Projekt" Then
             dirname = awinPath & RepProjectVorOrdner
             Me.einstellungen.Visible = True
+        Else
+            dirname = awinPath & RepProjectVorOrdner
+            Me.einstellungen.Visible = True
         End If
 
         ' jetzt werden die ProjektReport- bzw. PortfolioReport-Vorlagen ausgelesen 
@@ -258,7 +261,12 @@ Public Class frmSelectPPTTempl
         Dim mppFrm As New frmMppSettings
         Dim dialogreturn As DialogResult
 
-        mppFrm.calledfrom = "frmSelectPPTTempl"
+        If calledfrom = "MSProjectADDIn" Then
+            mppFrm.calledfrom = calledfrom
+        Else
+            mppFrm.calledfrom = "frmSelectPPTTempl"
+        End If
+
         dialogreturn = mppFrm.ShowDialog
 
 

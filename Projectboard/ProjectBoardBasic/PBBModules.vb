@@ -370,11 +370,8 @@ Public Module PBBModules
 
             ElseIf control.Id = "PT1G1M2B1" Then
 
-                If showRangeRight - showRangeLeft <= 6 Then
-                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
-                Else
 
-
+                If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                     ' Namen Auswahl, Multiprojekt Report
                     appInstance.ScreenUpdating = False
 
@@ -417,14 +414,15 @@ Public Module PBBModules
 
                     appInstance.ScreenUpdating = True
 
+                Else
+
+                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+
                 End If
 
             ElseIf control.Id = "PT1G1M2B2" Then
 
-                If showRangeRight - showRangeLeft <= 6 Then
-                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
-                Else
-
+                If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
 
                     ' Hierarchie Auswahl, Multiprojekt Report
                     appInstance.ScreenUpdating = False
@@ -460,6 +458,10 @@ Public Module PBBModules
                     End With
 
                     appInstance.ScreenUpdating = True
+                Else
+
+                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+
 
                 End If
 

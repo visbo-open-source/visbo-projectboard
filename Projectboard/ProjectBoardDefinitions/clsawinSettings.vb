@@ -127,6 +127,10 @@ Public Class clsawinSettings
     Public Property mppSortiertDauer As Boolean
     Public Property mppOnePage As Boolean
     Public Property mppExtendedMode As Boolean
+    Public Property mppShowHorzizontals As Boolean
+    Public Property mppUseAbbreviation As Boolean
+    Public Property mppUseOrginalNames As Boolean
+
 
     ' Settings für Einzelprojekt-Reports
     Public Property eppExtendedMode As Boolean
@@ -221,6 +225,10 @@ Public Class clsawinSettings
         _mppSortiertDauer = False
         _mppOnePage = False
         _mppExtendedMode = False
+        _mppShowHorzizontals = False
+        _mppUseAbbreviation = True
+        _mppUseOrginalNames = True
+
 
         ' Settings für Einzelprojekt-Reports
         _eppExtendedMode = True
