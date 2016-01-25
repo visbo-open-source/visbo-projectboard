@@ -218,7 +218,7 @@ Public Class clsPPTShapes
     ''' yOffsetPhToText, yOffsetPhToDate
     ''' </summary>
     ''' <remarks></remarks>
-    Public Sub calcRelativeDistances()
+    Public Sub calcRelDisTxtToElm()
 
         _yOffsetMsToText = _MsDescVorlagenShape.Top - _milestoneVorlagenShape.Top
         _yOffsetMsToDate = _MsDateVorlagenShape.Top - _milestoneVorlagenShape.Top
@@ -229,8 +229,8 @@ Public Class clsPPTShapes
     End Sub
 
     ''' <summary>
-    ''' gibt eine Liste zurück, die die fehlenden Elemente enthält 
-    ''' wenn alles ok, dann ist die Liste ok
+    ''' gibt eine Liste zurück, die die fehlenden Hilfs-Shape Elemente für Epp bzw Mpp enthält 
+    ''' wenn alles ok, dann ist die Liste leer
     ''' </summary>
     ''' <param name="kennzeichnung"></param>
     ''' <remarks></remarks>
@@ -241,7 +241,9 @@ Public Class clsPPTShapes
             Dim tmpName As String = ""
             Dim firstTime As Boolean = True
             Dim ok As Boolean = True
-            If kennzeichnung = "" Then
+            If kennzeichnung = "AllePlanElemente" Or _
+                kennzeichnung = "Multivariantensicht" Or _
+                kennzeichnung = "Multiprojektsicht" Then
 
                 If IsNothing(_MsDescVorlagenShape) Then
                     ok = False
