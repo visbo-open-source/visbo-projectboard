@@ -4673,7 +4673,8 @@ Public Module awinGeneralModules
 
                                         cphase = New clsPhase(parent:=hproj)
 
-                                        If PhaseDefinitions.Contains(objectName) Then
+                                        If PhaseDefinitions.Contains(objectName) Or awinSettings.alwaysAcceptTemplateNames _
+                                            Or awinSettings.addMissingPhaseMilestoneDef Then
 
                                             With cphase
                                                 .nameID = hproj.hierarchy.findUniqueElemKey(objectName, False)
@@ -4729,7 +4730,8 @@ Public Module awinGeneralModules
                                         End If
 
                                     ElseIf isMeilenstein Then
-                                        If MilestoneDefinitions.Contains(objectName) Then
+                                        If MilestoneDefinitions.Contains(objectName) Or awinSettings.alwaysAcceptTemplateNames _
+                                            Or awinSettings.addMissingPhaseMilestoneDef Then
 
                                             Dim hrchynode As New clsHierarchyNode
                                             hrchynode.elemName = cphase.name

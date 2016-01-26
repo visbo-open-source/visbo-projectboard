@@ -39,7 +39,34 @@ Public Class clsPPTShapes
     Private _yOffsetPhToDate As Double = 0.0
 
     Private _containerShape As pptNS.Shape = Nothing
+    Private _calendarLineShape As pptNS.Shape = Nothing
+    Private _legendLineShape As pptNS.Shape = Nothing
 
+
+    ' enthält das PPTStartofCalendar and PPTEndOfCalendar
+    Private _PPTStartOFCalendar As Date = StartofCalendar
+    Private _PPTEndOFCalendar As Date = StartofCalendar
+
+    Private _anzahlTageImKalender As Integer = 0
+    Private _tagesbreite As Double = 0
+
+    ' was ist die Zeilenhöhe in der Zeichenarea
+    Private _zeilenHoehe As Double = 0.0
+
+    ' wo beginnen die Shapes relativ gesehen innerhalb einer Zeile, aufgeführt für Duration, ProjekctLine, Phase, Milestone
+    Private _YDurationText As Double = 0.0
+    Private _YDurationArrow As Double = 0.0
+
+    Private _YProjectLine As Double = 0.0
+    Private _YprojectName As Double = 0.0
+
+    Private _YPhase As Double = 0.0
+    Private _YPhasenText As Double = 0.0
+    Private _YPhasenDatum As Double = 0.0
+
+    Private _YMilestone As Double = 0.0
+    Private _YMilestoneText As Double = 0.0
+    Private _YMilestoneDate As Double = 0.0
 
     ''' <summary>
     ''' löscht das Shape inkl Try..catch Behandlung
@@ -225,6 +252,196 @@ Public Class clsPPTShapes
 
         _yOffsetPhToText = _PhDescVorlagenShape.Top - _phaseVorlagenShape.Top
         _yOffsetPhToDate = _PhDateVorlagenShape.Top - _phaseVorlagenShape.Top
+
+    End Sub
+
+    Public Sub bestimmeZeilenHoehe(ByVal anzphasen As Integer, ByVal anzMeilensteine As Integer)
+
+
+        Dim minY As Double = _containerBottom, maxY As Double = _containerTop
+
+        ' bestimme als erstes die maximale/minimale Y-Koordinate, die sich ergibt wenn man alle -relevanten- Shapes berücksichtigt 
+        '
+        '
+        If Not IsNothing(projectNameVorlagenShape) Then
+
+            With projectNameVorlagenShape
+                minY = System.Math.Min(minY, .Top)
+                maxY = System.Math.Max(maxY, .Top + .Height)
+            End With
+
+        End If
+
+        ' soll überhaupt eine Dauer angezeigt werden ? 
+        If awinSettings.mppSortiertDauer Then
+
+            If IsNothing(durationTextShape) Then
+                With durationTextShape
+                    minY = System.Math.Min(minY, .Top)
+                    maxY = System.Math.Max(maxY, .Top + .Height)
+                End With
+            End If
+
+            If IsNothing(durationArrowShape) Then
+                With durationArrowShape
+                    minY = System.Math.Min(minY, .Top)
+                    maxY = System.Math.Max(maxY, .Top + .Height)
+                End With
+            End If
+        End If
+
+
+        If awinSettings.mppShowProjectLine And Not IsNothing(projectVorlagenShape) Then
+            With projectVorlagenShape
+                minY = System.Math.Min(minY, .Top)
+                maxY = System.Math.Max(maxY, .Top + .Height)
+            End With
+        End If
+
+        ' Müssen Phasen überhaupt gezeichnet werden ? 
+        If anzphasen > 0 Then
+            If Not IsNothing(phaseVorlagenShape) Then
+                With phaseVorlagenShape
+                    minY = System.Math.Min(minY, .Top)
+                    maxY = System.Math.Max(maxY, .Top + .Height)
+                End With
+            End If
+
+            If Not IsNothing(PhDescVorlagenShape) And awinSettings.mppShowPhName Then
+                With PhDescVorlagenShape
+                    minY = System.Math.Min(minY, .Top)
+                    maxY = System.Math.Max(maxY, .Top + .Height)
+                End With
+            End If
+
+            If Not IsNothing(PhDateVorlagenShape) And awinSettings.mppShowPhDate Then
+                With PhDateVorlagenShape
+                    minY = System.Math.Min(minY, .Top)
+                    maxY = System.Math.Max(maxY, .Top + .Height)
+                End With
+            End If
+
+        End If
+
+        ' Müssen Meilensteine überhaupt gezeichnet werden ? 
+        If anzMeilensteine > 0 Then
+            If Not IsNothing(milestoneVorlagenShape) Then
+                With milestoneVorlagenShape
+                    minY = System.Math.Min(minY, .Top)
+                    maxY = System.Math.Max(maxY, .Top + .Height)
+                End With
+            End If
+
+            If Not IsNothing(MsDescVorlagenShape) And awinSettings.mppShowMsName Then
+                With MsDescVorlagenShape
+                    minY = System.Math.Min(minY, .Top)
+                    maxY = System.Math.Max(maxY, .Top + .Height)
+                End With
+            End If
+
+            If Not IsNothing(MsDateVorlagenShape) And awinSettings.mppShowMsDate Then
+                With MsDateVorlagenShape
+                    minY = System.Math.Min(minY, .Top)
+                    maxY = System.Math.Max(maxY, .Top + .Height)
+                End With
+            End If
+
+        End If
+
+        '
+        '
+        ' jetzt ist die minimale/maximale Ausdehnung bestimmt 
+
+        If minY <= maxY Then
+            _zeilenHoehe = (maxY - minY) * 1.03
+        End If
+
+
+        ' und jetzt werden die relativen Offsets bestimmt 
+        '
+        '
+        If Not IsNothing(projectNameVorlagenShape) Then
+
+            With projectNameVorlagenShape
+                _YprojectName = .Top - minY
+            End With
+
+        End If
+
+        ' soll überhaupt eine Dauer angezeigt werden ? 
+        If awinSettings.mppSortiertDauer Then
+
+            If IsNothing(durationTextShape) Then
+                With durationTextShape
+                    _YDurationText = .Top - minY
+                End With
+            End If
+
+            If IsNothing(durationArrowShape) Then
+                With durationArrowShape
+                    _YDurationArrow = .Top - minY
+                End With
+            End If
+        End If
+
+
+        If awinSettings.mppShowProjectLine And Not IsNothing(projectVorlagenShape) Then
+            With projectVorlagenShape
+                _YProjectLine = .Top - minY
+            End With
+        End If
+
+        ' Müssen Phasen überhaupt gezeichnet werden ? 
+        If anzphasen > 0 Then
+            If Not IsNothing(phaseVorlagenShape) Then
+                With phaseVorlagenShape
+                    _YPhase = .Top - minY
+                End With
+            End If
+
+            If Not IsNothing(PhDescVorlagenShape) And awinSettings.mppShowPhName Then
+                With PhDescVorlagenShape
+                    _YPhasenText = .Top - minY
+                End With
+            End If
+
+            If Not IsNothing(PhDateVorlagenShape) And awinSettings.mppShowPhDate Then
+                With PhDateVorlagenShape
+                    _YPhasenDatum = .Top - minY
+                End With
+            End If
+
+        End If
+
+        ' Müssen Meilensteine überhaupt gezeichnet werden ? 
+        If anzMeilensteine > 0 Then
+            If Not IsNothing(milestoneVorlagenShape) Then
+                With milestoneVorlagenShape
+                    _YMilestone = .Top - minY
+                End With
+            End If
+
+            If Not IsNothing(MsDescVorlagenShape) And awinSettings.mppShowMsName Then
+                With MsDescVorlagenShape
+                    _YMilestoneText = .Top - minY
+                End With
+            End If
+
+            If Not IsNothing(MsDateVorlagenShape) And awinSettings.mppShowMsDate Then
+                With MsDateVorlagenShape
+                    _YMilestoneDate = .Top - minY
+                End With
+            End If
+
+        End If
+
+
+        '
+        '
+        ' jetzt sind die relativen Offsets alle bestimmt; zumindest die, die aufgrund settings überhaupt relevant sind 
+
+
+
 
     End Sub
 
@@ -979,12 +1196,24 @@ Public Class clsPPTShapes
         End Get
     End Property
 
+    ''' <summary>
+    ''' Readonly, wird gesetzt in Methode calcRelDisTxtToElem
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property yOffsetMsToText As Double
         Get
             yOffsetMsToText = _yOffsetMsToText
         End Get
     End Property
 
+    ''' <summary>
+    ''' Readonly, wird gesetzt in Methode calcRelDisTxtToElem
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property yOffsetMsToDate As Double
         Get
             yOffsetMsToDate = _yOffsetMsToDate
@@ -992,17 +1221,239 @@ Public Class clsPPTShapes
     End Property
 
 
+    ''' <summary>
+    ''' Readonly, wird gesetzt in Methode calcRelDisTxtToElem
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property yOffsetPhToText As Double
         Get
             yOffsetPhToText = _yOffsetPhToText
         End Get
     End Property
 
+    ''' <summary>
+    ''' Readonly, wird gesetzt in Methode calcRelDisTxtToElem
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property yOffsetPhToDate As Double
         Get
             yOffsetPhToDate = _yOffsetPhToDate
         End Get
     End Property
+
+    Public ReadOnly Property PPTStartOFCalendar As Date
+        Get
+            PPTStartOFCalendar = _PPTStartOFCalendar
+        End Get
+    End Property
+
+
+    Public ReadOnly Property PPTEndOFCalendar As Date
+        Get
+            PPTEndOFCalendar = _PPTEndOFCalendar
+        End Get
+    End Property
+
+    Public Sub setCalendarDates(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date)
+
+        If pptEndOfCalendar > pptStartOfCalendar Then
+            If pptStartOfCalendar >= StartofCalendar Then
+                _PPTStartOFCalendar = pptStartOfCalendar
+                _PPTEndOFCalendar = pptEndOfCalendar
+                _anzahlTageImKalender = CInt(DateDiff(DateInterval.Day, _PPTStartOFCalendar, _PPTEndOFCalendar))
+
+                ' falls die CalendarlineShape existiert 
+                If Not IsNothing(calendarLineShape) Then
+                    If _anzahlTageImKalender > 0 Then
+                        _tagesbreite = calendarLineShape.Width / _anzahlTageImKalender
+                    End If
+                End If
+            Else
+                Throw New ArgumentException("Das Startdatum in der Konfigurations-Datei muss vor dem gewählten Start-Datum liegen" & vbLf _
+                                            & "bitte ändern Sie das Datum ggf. in der Konfigurations-Datei")
+            End If
+        Else
+            Throw New ArgumentException("Ende Datum kann nicht vor Start-Datum liegen!")
+        End If
+
+    End Sub
+
+    ''' <summary>
+    ''' Readonly, gibt die Anzahl tage im Kalender zuürkc 
+    ''' wird gesetzt in setCalendarDates
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property anzahlTageImKalender As Integer
+        Get
+            anzahlTageImKalender = _anzahlTageImKalender
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Readonly, gibt die Tagesbreite im Kalender zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property tagesbreite As Double
+        Get
+            tagesbreite = _tagesbreite
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Readonly, gibt die Zeilenhöhe zurück 
+    ''' wird gesetzt in Methode bestimmeZeilenhoehe 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property zeilenHoehe As Double
+        Get
+            zeilenHoehe = _zeilenHoehe
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' Readonly: relativer Top von DurationText
+    ''' wird gesetzt in Methode bestimmeZeilenhoehe
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property YDurationText As Double
+        Get
+            YDurationText = _YDurationText
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Readonly: relativer Top von DurationArrow
+    ''' wird gesetzt in Methode bestimmeZeilenhoehe
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property YDurationArrow As Double
+        Get
+            YDurationArrow = _YDurationArrow
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Readonly: relativer Top von projectLine
+    ''' wird gesetzt in Methode bestimmeZeilenhoehe
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property YProjectLine As Double
+        Get
+            YProjectLine = _YProjectLine
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' Readonly: relativer Top von projectLine
+    ''' wird gesetzt in Methode bestimmeZeilenhoehe
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property YprojectName As Double
+        Get
+            YprojectName = _YprojectName
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Readonly: relativer Top des Phasen-Balkens
+    ''' wird gesetzt in Methode bestimmeZeilenhoehe
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property YPhase As Double
+        Get
+            YPhase = _YPhase
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Readonly: relativer Top der Phasen-Beschriftung 
+    ''' wird gesetzt in Methode bestimmeZeilenhoehe
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property YPhasenText As Double
+        Get
+            YPhasenText = _YPhasenText
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' Readonly: relativer Top des Phasen-Datums  
+    ''' wird gesetzt in Methode bestimmeZeilenhoehe
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property YPhasenDatum As Double
+        Get
+            YPhasenDatum = _YPhasenDatum
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' Readonly: relativer Top des Meilenstein-Symbols  
+    ''' wird gesetzt in Methode bestimmeZeilenhoehe
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property YMilestone As Double
+        Get
+            YMilestone = _YMilestone
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Readonly: relativer Top der Meilenstein-Beschriftung  
+    ''' wird gesetzt in Methode bestimmeZeilenhoehe
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property YMilestoneText As Double
+        Get
+            YMilestoneText = _YMilestoneText
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Readonly: relativer Top des Meilenstein-Datums  
+    ''' wird gesetzt in Methode bestimmeZeilenhoehe
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property YMilestoneDate As Double
+        Get
+            YMilestoneDate = _YMilestoneDate
+        End Get
+    End Property
+
 
     ''' <summary>
     ''' ermittelt die Koordinaten für Kalender, linker Rand Projektbeschriftung, Projekt-Fläche, Legenden-Fläche
@@ -1010,20 +1461,40 @@ Public Class clsPPTShapes
     ''' <remarks></remarks>
     Public Sub bestimmeZeichenKoordinaten()
 
-        ' bestimme Container Area ud linker Rand der Projektliste
-        With _containerShape
-            _containerLeft = .Left
-            _containerRight = .Left + .Width
-            _containerTop = .Top
-            _containerBottom = .Top + .Height
-            _projectListLeft = .Left + 10
-        End With
+        ' bestimme Container Area und linker Rand der Projektliste
+        If Not IsNothing(_containerShape) Then
+            With _containerShape
+                _containerLeft = .Left
+                _containerRight = .Left + .Width
+                _containerTop = .Top
+                _containerBottom = .Top + .Height
+                _projectListLeft = .Left + 10
+            End With
+        End If
+       
 
         ' bestimme KalenderArea
-        _calendarLeft = _calendarLineShape.Left
-        _calendarRight = _calendarLineShape.Left + _calendarLineShape.Width
+        If Not IsNothing(_calendarLineShape) Then
+            _calendarLeft = _calendarLineShape.Left
+            _calendarRight = _calendarLineShape.Left + _calendarLineShape.Width
+
+            If _PPTEndOFCalendar > _PPTStartOFCalendar Then
+                _anzahlTageImKalender = CInt(DateDiff(DateInterval.Day, _PPTStartOFCalendar, _PPTEndOFCalendar))
+                If _anzahlTageImKalender > 0 Then
+                    _tagesbreite = calendarLineShape.Width / _anzahlTageImKalender
+                End If
+            End If
+
+        Else
+
+        End If
+
         _calendarTop = _containerTop + 5
-        _calendarBottom = _calendarTop + _calendarHeightShape.Height
+
+        If Not IsNothing(_calendarHeightShape) Then
+            _calendarBottom = _calendarTop + _calendarHeightShape.Height
+        End If
+
 
         ' bestimme Drawing Area
         _drawingAreaLeft = _calendarLeft
@@ -1031,7 +1502,7 @@ Public Class clsPPTShapes
         _drawingAreaTop = _calendarBottom + 15
 
 
-        If awinSettings.mppShowLegend Then
+        If awinSettings.mppShowLegend And Not IsNothing(_legendLineShape) Then
             _drawingAreaBottom = _legendLineShape.Top - 5
         Else
             _drawingAreaBottom = _containerBottom - 10
@@ -1040,18 +1511,18 @@ Public Class clsPPTShapes
 
 
         ' bestimme Legend Drawing Area 
-        If awinSettings.mppShowLegend Then
+        If awinSettings.mppShowLegend And Not IsNothing(_legendLineShape) Then
             _legendAreaTop = _legendLineShape.Top + (_containerBottom - _legendLineShape.Top) * 0.05
             _legendAreaBottom = _containerBottom - (_containerBottom - _legendLineShape.Top) * 0.1
+            _legendAreaRight = System.Math.Min(_legendLineShape.Left + _legendLineShape.Width, _containerRight - 5)
         Else
-            _legendLineShape.Top = CSng(_containerBottom - 5)
             _legendAreaTop = _containerBottom - 5
             _legendAreaBottom = _containerBottom
         End If
 
 
         _legendAreaLeft = _drawingAreaLeft
-        _legendAreaRight = System.Math.Min(_legendLineShape.Left + _legendLineShape.Width, _containerRight - 5)
+
 
 
 
@@ -1064,6 +1535,22 @@ Public Class clsPPTShapes
     ' Kalenderlinie; bestimmt Dicke, Farbe und Strichtyp der Kalenderbegrenzung; 
     ' bestimmt ausserdem den oberen sowie linken und rechten Rand der Zeichenfläche 
     Public Property calendarLineShape As pptNS.Shape
+        Get
+            calendarLineShape = _calendarLineShape
+        End Get
+        Set(value As pptNS.Shape)
+
+            If Not IsNothing(value) Then
+                _calendarLineShape = value
+
+                ' dadurch werden die Koordinaten der Zeichenarea bestimmt 
+                ' wenn die Daten für den Kalender bereits bekannt sind, wird dort auch die Tagesbreite gesetzt 
+                Call bestimmeZeichenKoordinaten()
+               
+
+            End If
+        End Set
+    End Property
 
     ' bestimmt Schriftart, Farbe, Größe der Quartals/Monats-Beschriftung im Kalender  
     Public Property quarterMonthVorlagenShape As pptNS.Shape
@@ -1095,6 +1582,34 @@ Public Class clsPPTShapes
     ' bestimmt  Dicke, Farbe und Strichtyp der Legendenlinie
     ' markiert ausserdem das untere Ende der Zeichenfläche  
     Public Property legendLineShape As pptNS.Shape
+        Get
+            legendLineShape = _legendLineShape
+        End Get
+        Set(value As pptNS.Shape)
+            If Not IsNothing(value) Then
+
+                _legendLineShape = value
+
+                If awinSettings.mppShowLegend Then
+                    _drawingAreaBottom = _legendLineShape.Top - 5
+
+                    _legendAreaTop = _legendLineShape.Top + (_containerBottom - _legendLineShape.Top) * 0.05
+                    _legendAreaBottom = _containerBottom - (_containerBottom - _legendLineShape.Top) * 0.1
+                    _legendAreaRight = System.Math.Min(_legendLineShape.Left + _legendLineShape.Width, _containerRight - 5)
+                Else
+                    _drawingAreaBottom = _containerBottom - 10
+
+                    _legendAreaTop = _containerBottom - 5
+                    _legendAreaBottom = _containerBottom
+                    _legendAreaRight = _containerRight - 5
+                End If
+
+                _legendAreaLeft = _drawingAreaLeft
+
+
+            End If
+        End Set
+    End Property
 
     ' bestimmt Schriftart, Farbe, Größe des Legenden-Titels 
     Public Property legendStartShape As pptNS.Shape
@@ -1271,7 +1786,7 @@ Public Class clsPPTShapes
             '    _legendMilestoneVorlagenShape.Delete()
             'End If
 
-           
+
 
             'If Not IsNothing(_calendarHeightShape) Then
             '    _calendarHeightShape.Delete()

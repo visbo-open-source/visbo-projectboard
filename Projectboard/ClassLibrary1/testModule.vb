@@ -2365,8 +2365,10 @@ Public Module testModule
         Dim anzShapes As Integer
         Dim tatsErstellt As Integer = 0
         Dim folieIX As Integer = 1
-        Dim projToDo As Integer = 0
-        Dim projDone As Integer = 0
+
+        ' bei den objectsToDo kann es sich um Swimlanes oder Projekte handeln 
+        Dim objectsToDo As Integer = 0
+        Dim objectsDone As Integer = 0
 
         While folieIX <= anzSlidesToAdd
 
@@ -2566,7 +2568,7 @@ Public Module testModule
                             Try
                                 Dim tmpProjekt As New clsProjekt
                                 Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                              projToDo, projDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                              objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
                                                               selectedPhases, selectedMilestones, _
                                                               selectedRoles, selectedCosts, _
                                                               selectedBUs, selectedTyps, _
@@ -2575,7 +2577,7 @@ Public Module testModule
                                 .ZOrder(MsoZOrderCmd.msoSendToBack)
                             Catch ex As Exception
                                 .TextFrame2.TextRange.Text = ex.Message
-                                projDone = projToDo
+                                objectsDone = objectsToDo
                             End Try
 
                         Case "Szenario-Projekt-Tabelle"
@@ -3911,11 +3913,11 @@ Public Module testModule
             Next
 
             listofShapes.Clear()
-            If projDone >= projToDo Or awinSettings.mppOnePage Then
+            If objectsDone >= objectsToDo Or awinSettings.mppOnePage Then
                 folieIX = folieIX + 1
                 pptFirstTime = True         ' für die LegendenVorlage
-                projToDo = 0
-                projDone = 0
+                objectsToDo = 0
+                objectsDone = 0
 
             End If
             ' Next 
@@ -9603,7 +9605,7 @@ Public Module testModule
     ''' <param name="worker"></param>
     ''' <param name="e"></param>
     ''' <remarks></remarks>
-    Sub zeichneSwimlanesOfProjects(ByRef rds As clsPPTShapes, ByVal hproj As clsProjekt, _
+    Sub zeichneSwimlanesOfProject(ByRef rds As clsPPTShapes, ByVal hproj As clsProjekt, _
                                     ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
                                     ByVal zeilenhoehe As Double, _
                                     ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
@@ -12036,8 +12038,8 @@ Public Module testModule
     ''' <param name="pptApp">ist die Powerpoint Applikation</param>
     ''' <param name="pptCurrentPresentation">ist die aktuelle PPT Präsentation; das Format wird hier noch bestimmt</param>
     ''' <param name="pptslide"></param>
-    ''' <param name="projToDo"></param>
-    ''' <param name="projDone"></param>
+    ''' <param name="objectsToDo"></param>
+    ''' <param name="objectsDone"></param>
     ''' <param name="pptFirstTime"></param>
     ''' <param name="zeilenhoehe"></param>
     ''' <param name="selectedPhases"></param>
@@ -12053,7 +12055,7 @@ Public Module testModule
     ''' <param name="projMitVariants">das Projekt, dessen Varianten alle dargestellt werden sollen; nur besetzt wenn isMultiprojektSicht = false</param>
     ''' <remarks></remarks>
     Private Sub zeichneMultiprojektSicht(ByRef pptApp As pptNS.Application, ByRef pptCurrentPresentation As pptNS.Presentation, ByRef pptslide As pptNS.Slide, _
-                                             ByRef projToDo As Integer, ByRef projDone As Integer, ByRef pptFirstTime As Boolean, _
+                                             ByRef objectsToDo As Integer, ByRef objectsDone As Integer, ByRef pptFirstTime As Boolean, _
                                              ByRef zeilenhoehe As Double, ByRef legendFontSize As Double, _
                                              ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                              ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
@@ -12201,19 +12203,31 @@ Public Module testModule
                                                 projCollection, minDate, maxDate, _
                                                 isMultiprojektSicht, projMitVariants)
 
-            If projToDo <> projCollection.Count Then
-                projToDo = projCollection.Count
+
+            If kennzeichnung.StartsWith("Swimlane") Then
+
+            Else
+                If objectsToDo <> projCollection.Count Then
+                    objectsToDo = projCollection.Count
+                End If
             End If
+            
 
             '
             ' bestimme das Start und Ende Datum des PPT Kalenders
             Call calcStartEndePPTKalender(minDate, maxDate, _
                                           pptStartofCalendar, pptEndOfCalendar)
 
+            ' jetzt für Swimlanes Behandlung Kalender in der Klasse setzen 
+            If kennzeichnung.StartsWith("Swimlanes") Then
+                Call rds.setCalendarDates(pptStartofCalendar, pptEndOfCalendar)
+            End If
+
 
             ' bestimme die benötigte Höhe einer Zeile im Report ( nur wenn nicht schon bestimmt also zeilenhoehe <> 0
             If pptFirstTime And zeilenhoehe = 0.0 Then
                 With rds
+
                     zeilenhoehe = bestimmeMppZeilenHoehe(.pptSlide, .phaseVorlagenShape, .milestoneVorlagenShape,
                                                         selectedPhases.Count, selectedMilestones.Count, _
                                                         .MsDescVorlagenShape, .MsDateVorlagenShape, _
@@ -12222,6 +12236,13 @@ Public Module testModule
                                                         .durationArrowShape, .durationTextShape)
                 End With
 
+            End If
+
+            ' die neue Art Zeilenhöhe und die Offset Werte zu bestimmen 
+            If pptFirstTime And kennzeichnung.StartsWith("Swimlanes") Then
+                If rds.zeilenHoehe = 0.0 Then
+                    Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count)
+                End If
             End If
 
             Dim hproj As New clsProjekt
@@ -12458,17 +12479,17 @@ Public Module testModule
             Try
 
                 With rds
-                    If kennzeichnung.StartsWith("Swimlanes") Then
+                    If kennzeichnung.StartsWith("Swimlane") Then
 
                         hproj = AlleProjekte.getProject(projCollection.ElementAt(0).Value)
-                        Call zeichneSwimlanesOfProjects(rds, hproj, _
+                        Call zeichneSwimlanesOfProject(rds, hproj, _
                                                         pptStartofCalendar, pptEndOfCalendar, _
                                                         zeilenhoehe, _
                                                         selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
                                                         worker, e)
 
                     Else
-                        Call zeichnePPTprojects(pptslide, projCollection, projDone, _
+                        Call zeichnePPTprojects(pptslide, projCollection, objectsDone, _
                                         pptStartofCalendar, pptEndOfCalendar, _
                                         .drawingAreaLeft, .drawingAreaRight, .drawingAreaTop, .drawingAreaBottom, _
                                         zeilenhoehe, .projectListLeft, _

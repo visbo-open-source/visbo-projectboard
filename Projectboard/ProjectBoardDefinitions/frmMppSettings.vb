@@ -27,6 +27,7 @@
                 sortiertNachDauer.Checked = .mppSortiertDauer
                 allOnOnePage.Checked = .mppOnePage
                 shwExtendedMode.Checked = .mppExtendedMode
+                KwInMilestone.Checked = .mppKwInMilestone
 
             End With
         ElseIf calledfrom = "frmSelectPPTTempl" Then
@@ -48,6 +49,8 @@
                 'phaseFullyContained.Checked = .mppFullyContained
                 ShwMilestoneText.Checked = .mppShowMsName
                 ShwMilestoneDate.Checked = .mppShowMsDate
+                KwInMilestone.Checked = .mppKwInMilestone
+
                 shwVerticals.Checked = .mppVertikalesRaster
                 shwLegend.Checked = .mppShowLegend
                 sortiertNachDauer.Visible = False
@@ -96,6 +99,8 @@
 
                 ShwMilestoneText.Checked = .mppShowMsName
                 ShwMilestoneDate.Checked = .mppShowMsDate
+                KwInMilestone.Visible = True
+                KwInMilestone.Checked = .mppKwInMilestone
 
                 shwVerticals.Checked = .mppVertikalesRaster
                 shwHorizontals.Checked = .mppShowHorzizontals
@@ -111,6 +116,7 @@
 
                 ShwMilestoneText.Top = ShwMilestoneText.Top - offset
                 ShwMilestoneDate.Top = ShwMilestoneDate.Top - offset
+                KwInMilestone.Top = KwInMilestone.Top - offset
 
                 useAbbrev.Top = useAbbrev.Top - offset
 

@@ -37,6 +37,7 @@ Partial Class frmMppSettings
         Me.shwExtendedMode = New System.Windows.Forms.CheckBox()
         Me.useAbbrev = New System.Windows.Forms.CheckBox()
         Me.shwHorizontals = New System.Windows.Forms.CheckBox()
+        Me.KwInMilestone = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'shwPhaseText
@@ -189,12 +190,23 @@ Partial Class frmMppSettings
         Me.shwHorizontals.Text = "Horizontale Linien"
         Me.shwHorizontals.UseVisualStyleBackColor = True
         '
+        'KwInMilestone
+        '
+        Me.KwInMilestone.AutoSize = True
+        Me.KwInMilestone.Location = New System.Drawing.Point(181, 131)
+        Me.KwInMilestone.Name = "KwInMilestone"
+        Me.KwInMilestone.Size = New System.Drawing.Size(113, 17)
+        Me.KwInMilestone.TabIndex = 16
+        Me.KwInMilestone.Text = "KW im Meilenstein"
+        Me.KwInMilestone.UseVisualStyleBackColor = True
+        '
         'frmMppSettings
         '
         Me.AcceptButton = Me.okButton
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(328, 301)
+        Me.Controls.Add(Me.KwInMilestone)
         Me.Controls.Add(Me.shwHorizontals)
         Me.Controls.Add(Me.useAbbrev)
         Me.Controls.Add(Me.shwExtendedMode)
@@ -232,4 +244,5 @@ Partial Class frmMppSettings
     Friend WithEvents shwExtendedMode As System.Windows.Forms.CheckBox
     Friend WithEvents useAbbrev As System.Windows.Forms.CheckBox
     Friend WithEvents shwHorizontals As System.Windows.Forms.CheckBox
+    Friend WithEvents KwInMilestone As System.Windows.Forms.CheckBox
 End Class

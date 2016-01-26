@@ -130,6 +130,7 @@ Public Class clsawinSettings
     Public Property mppShowHorzizontals As Boolean
     Public Property mppUseAbbreviation As Boolean
     Public Property mppUseOrginalNames As Boolean
+    Public Property mppKwInMilestone As Boolean
 
 
     ' Settings für Einzelprojekt-Reports
@@ -228,6 +229,7 @@ Public Class clsawinSettings
         _mppShowHorzizontals = False
         _mppUseAbbreviation = True
         _mppUseOrginalNames = True
+        _mppKwInMilestone = False
 
 
         ' Settings für Einzelprojekt-Reports
