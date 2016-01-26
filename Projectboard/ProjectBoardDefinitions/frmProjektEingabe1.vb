@@ -88,10 +88,7 @@ Public Class frmProjektEingabe1
             randomValue = appInstance.WorksheetFunction.RandBetween(1, 100) / 10
             ' immer als Vorgabe 5 
             .risiko.Text = "5"
-            '.risiko.Text = randomValue.ToString("0.0")
-            randomValue = appInstance.WorksheetFunction.RandBetween(1, 100) / 10
             .sFit.Text = "5"
-            '.sFit.Text = randomValue.ToString("0.0")
 
             .volume.Text = ""
 
@@ -476,7 +473,7 @@ Public Class frmProjektEingabe1
     End Sub
 
 
-    Private Sub Label6_Click(sender As Object, e As EventArgs) Handles Lbl_Beschreibung.Click
+    Private Sub Label6_Click(sender As Object, e As EventArgs)
 
     End Sub
 
