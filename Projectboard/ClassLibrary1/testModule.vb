@@ -827,7 +827,7 @@ Public Module testModule
                             Case "Swimlanes2"
                                 Try
 
-                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
+                                    Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide, _
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
                                                                       selectedPhases, selectedMilestones, _
                                                                       selectedRoles, selectedCosts, _
@@ -12250,7 +12250,7 @@ Public Module testModule
             Dim maxZeilen As Integer = 0
             Dim anzZeilen As Integer = 0
             Dim gesamtAnzZeilen As Integer = 0
-            Dim projekthoehe As Double
+            Dim projekthoehe As Double = zeilenhoehe
 
             If awinSettings.mppExtendedMode Then
 
@@ -12265,6 +12265,550 @@ Public Module testModule
 
                     If kennzeichnung.StartsWith("Swimlanes") Then
                         ' hier muss BHTC Kalkulation rein ... 
+                    Else
+                        anzZeilen = hproj.calcNeededLines(selectedPhases, selectedMilestones, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
+                    End If
+
+                    maxZeilen = System.Math.Max(maxZeilen, anzZeilen)
+                    gesamtAnzZeilen = gesamtAnzZeilen + anzZeilen
+
+                Next
+
+
+            Else
+                projekthoehe = zeilenhoehe
+            End If
+
+            '
+            ' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
+            '
+            Call rds.calcRelDisTxtToElm()
+
+
+            '
+            ' bestimme das Format  
+
+            Dim neededSpace As Double
+
+
+            If awinSettings.mppExtendedMode Then                    ' für Berichte im extendedMode
+                If awinSettings.mppOnePage Then
+                    neededSpace = gesamtAnzZeilen * zeilenhoehe
+                Else
+                    neededSpace = maxZeilen * zeilenhoehe
+                End If
+            Else
+                neededSpace = (projCollection.Count + 1) * zeilenhoehe ' für normale Berichte hier: projekthoehe = zeilenhoehe
+            End If
+
+
+
+
+            Dim availableSpace As Double
+            availableSpace = rds.drawingAreaBottom - rds.drawingAreaTop
+
+            Dim oldHeight As Double
+            Dim oldwidth As Double
+
+            oldHeight = pptCurrentPresentation.PageSetup.SlideHeight
+            oldwidth = pptCurrentPresentation.PageSetup.SlideWidth
+
+
+            Dim curHeight As Double = oldHeight
+            Dim curWidth As Double = oldwidth
+
+
+
+            If (availableSpace < neededSpace And awinSettings.mppOnePage) Or _
+               (availableSpace < neededSpace And awinSettings.mppExtendedMode) Then
+
+                Dim ix As Integer = format
+                Dim ok As Boolean = True
+                ' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
+
+                Dim sizeMemory() As Single
+                Dim relativeSizeMemory As New SortedList(Of String, Double())
+
+                With rds
+                    sizeMemory = saveSizesOfElements(.projectNameVorlagenShape, _
+                                                 .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                                 .PhDescVorlagenShape, .PhDateVorlagenShape, _
+                                                 .phaseVorlagenShape, .milestoneVorlagenShape, _
+                                                 .projectVorlagenShape, .ampelVorlagenShape)
+                End With
+
+
+                If pptApp.Version = "14.0" Then
+                    ' muss nichts machen
+
+                Else
+
+                    relativeSizeMemory = saveRelSizesOfElements(pptslide, oldHeight, oldwidth)
+
+                End If
+
+
+                Do While availableSpace < neededSpace And ix > 0
+
+                    With pptCurrentPresentation
+
+                        .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+
+                        If querFormat Then
+                            .PageSetup.SlideWidth = dinFormatA(ix - 1, 0)
+                            .PageSetup.SlideHeight = dinFormatA(ix - 1, 1)
+                        Else
+                            .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
+                            .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
+                        End If
+
+
+                    End With
+
+                    curHeight = pptCurrentPresentation.PageSetup.SlideHeight
+                    curWidth = pptCurrentPresentation.PageSetup.SlideWidth
+
+                    ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
+                    ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
+
+                    If pptApp.Version = "14.0" Then
+                        ' muss nichts machen
+                    Else
+
+                        Call restoreRelSizesDuePPT2013(relativeSizeMemory, curHeight, curWidth, pptslide)
+                    End If
+
+                    ' jetzt wieder die Koordinaten neu berechnen 
+                    Call rds.bestimmeZeichenKoordinaten()
+
+                    'Call bestimmeZeichenKoordinaten(containerShape, _
+                    '                                calendarLineShape, calenderHeightShape, legendLineShape, _
+                    '                                containerLeft, containerRight, containerTop, containerBottom, _
+                    '                                calendarLeft, calendarRight, calendarTop, calendarBottom, _
+                    '                                drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
+                    '                                projectListLeft, _
+                    '                                legendAreaLeft, legendAreaRight, legendAreaTop, legendAreaBottom)
+
+                    availableSpace = rds.drawingAreaBottom - rds.drawingAreaTop
+
+                    If availableSpace < neededSpace Then
+                        ix = ix - 1
+                    End If
+
+                Loop
+
+                ix = ix - 1
+                If ix < 0 Then
+                    ix = 0
+                End If
+
+                ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
+                If pptApp.Version = "14.0" Then
+                    With rds
+                        Call restoreSizesOfElements(sizeMemory, .projectNameVorlagenShape, _
+                                            .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                            .PhDescVorlagenShape, .PhDateVorlagenShape, _
+                                            .phaseVorlagenShape, .milestoneVorlagenShape, _
+                                            .projectVorlagenShape, .ampelVorlagenShape)
+                    End With
+
+
+                End If
+
+
+                ' jetzt alle Text Shapes, die auf der Folie ihre relative Größe behalten sollen 
+                ' entsprechend um den errechneten Faktor anpassen
+
+                Dim enlargeTxtFaktor As Double = curHeight / oldHeight
+                Call enlargeTxtShapes(enlargeTxtFaktor, pptslide)
+
+                ' ur: 30.03.2015:jetzt alle Beschriftungen der Phasen und Meilensteine wieder im richtigen Abstand positionieren 
+                ' 
+                With rds
+                    .PhDescVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToText
+                    .PhDateVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToDate
+
+                    .MsDescVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToText
+                    .MsDateVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToDate
+                End With
+
+            End If
+
+
+            If pptFirstTime Then
+
+                'ur: 25.03.2015: sichern der im Format veränderten Folie
+                pptslide.Copy()
+                pptCurrentPresentation.Slides.Paste(1).Name = "tmpSav"
+                pptFirstTime = False
+                legendFontSize = rds.projectNameVorlagenShape.TextFrame2.TextRange.Font.Size
+
+            End If
+
+            ' zeichne den Kalender
+            Dim calendargroup As pptNS.Shape = Nothing
+
+            Try
+
+                With rds
+                    If kennzeichnung.StartsWith("Swimlanes") Then
+                        Call zeichne3RowsCalendar(pptslide, calendargroup, _
+                                        pptStartofCalendar, pptEndOfCalendar, _
+                                        .calendarLineShape, .calendarHeightShape, .calendarStepShape, .calendarMarkShape, _
+                                        .yearVorlagenShape, .quarterMonthVorlagenShape, .calendarYearSeparator, .calendarQuartalSeparator, _
+                                        .drawingAreaBottom)
+                    Else
+                        Call zeichnePPTCalendar(pptslide, calendargroup, _
+                                            pptStartofCalendar, pptEndOfCalendar, _
+                                            .calendarLineShape, .calendarHeightShape, .calendarStepShape, .calendarMarkShape, _
+                                            .yearVorlagenShape, .quarterMonthVorlagenShape, .calendarYearSeparator, .calendarQuartalSeparator, _
+                                            .drawingAreaBottom)
+                    End If
+                End With
+
+
+
+            Catch ex As Exception
+
+            End Try
+
+
+            ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
+
+            ' zeichne die Projekte 
+
+            Try
+
+                With rds
+                    If kennzeichnung.StartsWith("Swimlane") Then
+
+                        hproj = AlleProjekte.getProject(projCollection.ElementAt(0).Value)
+                        Call zeichneSwimlanesOfProject(rds, hproj, _
+                                                        pptStartofCalendar, pptEndOfCalendar, _
+                                                        zeilenhoehe, _
+                                                        selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                                        worker, e)
+
+                    Else
+                        Call zeichnePPTprojects(pptslide, projCollection, objectsDone, _
+                                        pptStartofCalendar, pptEndOfCalendar, _
+                                        .drawingAreaLeft, .drawingAreaRight, .drawingAreaTop, .drawingAreaBottom, _
+                                        zeilenhoehe, .projectListLeft, _
+                                        selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                        .projectNameVorlagenShape, .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                        .PhDescVorlagenShape, .PhDateVorlagenShape, _
+                                        .phaseVorlagenShape, .milestoneVorlagenShape, .projectVorlagenShape, .ampelVorlagenShape,
+                                        .rowDifferentiatorShape, .buColorShape, .phaseDelimiterShape, _
+                                        .durationArrowShape, .durationTextShape, _
+                                        .yOffsetMsToText, .yOffsetMsToDate, .yOffsetPhToText, .yOffsetPhToDate, _
+                                        worker, e)
+                    End If
+                End With
+
+
+
+
+
+            Catch ex As Exception
+
+                If Not IsNothing(rds.errorVorlagenShape) Then
+                    rds.errorVorlagenShape.Copy()
+                    errorShape = pptslide.Shapes.Paste
+                    With errorShape.Item(1)
+                        .TextFrame2.TextRange.Text = ex.Message
+                    End With
+                Else
+                    ' erstmal sonst nichts 
+                End If
+
+
+            End Try
+
+
+            ' zeichne die Legende 
+            If awinSettings.mppShowLegend Then
+                Try
+
+                    With rds
+                        Call zeichnePPTlegende(pptslide, _
+                                        selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                        .legendAreaTop, .legendAreaLeft, .legendAreaRight, .legendAreaBottom, _
+                                        .legendLineShape, .legendStartShape, _
+                                        .legendTextVorlagenShape, .legendPhaseVorlagenShape, .legendMilestoneVorlagenShape, _
+                                        .projectVorlagenShape, .ampelVorlagenShape, .legendBuColorShape)
+
+                    End With
+
+
+                Catch ex As Exception
+
+                    If Not IsNothing(rds.errorVorlagenShape) Then
+                        rds.errorVorlagenShape.Copy()
+                        errorShape = pptslide.Shapes.Paste
+                        With errorShape.Item(1)
+                            .TextFrame2.TextRange.Text = ex.Message
+                        End With
+                    End If
+
+                End Try
+
+            End If
+
+
+
+
+        ElseIf Not IsNothing(rds.errorVorlagenShape) Then
+            rds.errorVorlagenShape.Copy()
+            errorShape = pptslide.Shapes.Paste
+            With errorShape.Item(1)
+                .TextFrame2.TextRange.Text = missingShapes
+            End With
+        End If
+
+        ' jetzt werden alle Shapes gelöscht ... 
+        Call rds.deleteShapes()
+
+
+    End Sub
+
+    ''' <summary>
+    ''' BHTC Report - nur solange das nicht komplett zusammengeführt ist 
+    ''' es wird immer nur ein Projekt betrachtet 
+    ''' es können x Swimlanes sein - es muss unterschieden werden, ob alles auf eine Seite geht oder mehrere Seiten gemacht werden 
+    ''' Rahmenbedingung bei dieser Routine: es wird nur ein Project aufgerufen, ohne Varianten 
+    ''' es geht also nur darum , alle Swimlanes eines Projektes zu zeichnen bzw. die ausgewählten Swimlanes eines PRojektes zu zeichnen  
+    ''' </summary>
+    ''' <param name="pptApp"></param>
+    ''' <param name="pptCurrentPresentation"></param>
+    ''' <param name="pptslide"></param>
+    ''' <param name="swimLanesToDo"></param>
+    ''' <param name="swimLanesDone"></param>
+    ''' <param name="pptFirstTime"></param>
+    ''' <param name="zeilenhoehe"></param>
+    ''' <param name="legendFontSize"></param>
+    ''' <param name="selectedPhases"></param>
+    ''' <param name="selectedMilestones"></param>
+    ''' <param name="selectedRoles"></param>
+    ''' <param name="selectedCosts"></param>
+    ''' <param name="selectedBUs"></param>
+    ''' <param name="selectedTyps"></param>
+    ''' <param name="worker"></param>
+    ''' <param name="e"></param>
+    ''' <param name="isMultiprojektSicht"></param>
+    ''' <param name="curProj"></param>
+    ''' <param name="kennzeichnung"></param>
+    ''' <remarks></remarks>
+    Private Sub zeichneSwimlane2Sicht(ByRef pptApp As pptNS.Application, ByRef pptCurrentPresentation As pptNS.Presentation, ByRef pptslide As pptNS.Slide, _
+                                                 ByRef swimLanesToDo As Integer, ByRef swimLanesDone As Integer, ByRef pptFirstTime As Boolean, _
+                                                 ByRef zeilenhoehe As Double, ByRef legendFontSize As Double, _
+                                                 ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+                                                 ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                                                 ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+                                                 ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs, _
+                                                 ByVal isMultiprojektSicht As Boolean, ByVal curProj As clsProjekt, _
+                                                 ByVal kennzeichnung As String)
+
+        ' ur:5.10.2015: ExtendedMode macht nur Sinn, wenn mindestens 1 Phase selektiert wurde. deshalb diese Code-Zeile
+        awinSettings.mppExtendedMode = awinSettings.mppExtendedMode And (selectedPhases.Count > 0)
+
+
+        ' Wichtig für Kalendar 
+        Dim pptStartofCalendar As Date = Nothing, pptEndOfCalendar As Date = Nothing
+        Dim errorShape As pptNS.ShapeRange = Nothing
+
+
+        Dim dinFormatA(4, 1) As Double
+        Dim querFormat As Boolean
+        Dim curFormatSize(1) As Double
+
+
+        dinFormatA(0, 0) = 3120.0
+        dinFormatA(0, 1) = 2206.15
+
+        dinFormatA(1, 0) = 2206.15
+        dinFormatA(1, 1) = 1560.0
+
+        dinFormatA(2, 0) = 1560.0
+        dinFormatA(2, 1) = 1103.0
+
+        dinFormatA(3, 0) = 1103.0
+        dinFormatA(3, 1) = 780.0
+
+        dinFormatA(4, 0) = 780.0
+        dinFormatA(4, 1) = 540.0
+
+        ' Ende Übernahme
+
+        Dim format As Integer = 4
+        'Dim tmpslideID As Integer
+
+        Dim isBHTCSchema As Boolean = (kennzeichnung = "Swimlanes2")
+
+        Dim rds As New clsPPTShapes
+
+        ' mit disem Befehl werden auch die ganzen Hilfsshapes in der Klasse gesetzt 
+        rds.pptSlide = pptslide
+
+
+        ' jetzt muss geprüft werden, ob überhaupt alle Angaben gemacht wurden ... 
+        'If completeMppDefinition.Sum = completeMppDefinition.Length Then
+        Dim missingShapes As String = rds.getMissingShpNames(kennzeichnung)
+        If missingShapes.Length = 0 Then
+            ' es fehlt nichts ... andernfalls stehen hier die Namen mit den Shapes, die fehlen ...
+
+            If pptCurrentPresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+                querFormat = True
+            Else
+                querFormat = False
+            End If
+
+
+            curFormatSize(0) = pptCurrentPresentation.PageSetup.SlideWidth
+            curFormatSize(1) = pptCurrentPresentation.PageSetup.SlideHeight
+
+            ' jetzt werden die DinA Formate gesetzt 
+            ' Voraussetzung ist allerdings, dass es sich bei der Vorlage um DIN A4 handelt 
+            Dim paperSizeRatio As Double
+            If pptFirstTime Then
+
+
+                If pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA4Paper Then
+
+                    If querFormat Then
+                        paperSizeRatio = curFormatSize(0) / curFormatSize(1)
+                        dinFormatA(4, 0) = curFormatSize(0)
+                        dinFormatA(4, 1) = curFormatSize(1)
+                    Else
+                        paperSizeRatio = curFormatSize(1) / curFormatSize(0)
+                        dinFormatA(4, 1) = curFormatSize(0)
+                        dinFormatA(4, 0) = curFormatSize(1)
+                    End If
+
+                    dinFormatA(3, 0) = dinFormatA(4, 0) * paperSizeRatio
+                    dinFormatA(3, 1) = dinFormatA(4, 1) * paperSizeRatio
+
+                ElseIf pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA3Paper Then
+                    If querFormat Then
+                        paperSizeRatio = curFormatSize(0) / curFormatSize(1)
+                        dinFormatA(3, 0) = curFormatSize(0)
+                        dinFormatA(3, 1) = curFormatSize(1)
+
+                    Else
+                        paperSizeRatio = curFormatSize(1) / curFormatSize(0)
+                        dinFormatA(3, 1) = curFormatSize(0)
+                        dinFormatA(3, 0) = curFormatSize(1)
+                    End If
+
+                    dinFormatA(4, 0) = dinFormatA(3, 0) / paperSizeRatio
+                    dinFormatA(4, 1) = dinFormatA(3, 1) / paperSizeRatio
+
+                Else
+                    Call MsgBox("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+                    'Throw New ArgumentException("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+                End If
+
+
+                For i = 2 To 0 Step -1
+                    dinFormatA(i, 0) = dinFormatA(i + 1, 0) * paperSizeRatio
+                    dinFormatA(i, 1) = dinFormatA(i + 1, 1) * paperSizeRatio
+                Next
+            Else
+                ' pptFirstTime war False, d.h. das Format wurde bereits angepasst
+            End If
+
+
+            Call rds.plausibilityAdjustments()
+
+
+            Call rds.bestimmeZeichenKoordinaten()
+
+            Dim projCollection As New SortedList(Of Double, String)
+            Dim minDate As Date, maxDate As Date
+
+            ' bestimme die Projekte, die gezeichnet werden sollen
+            ' und bestimme das kleinste / resp größte auftretende Datum 
+            Call bestimmeProjekteAndMinMaxDates(selectedPhases, selectedMilestones, _
+                                                selectedRoles, selectedCosts, _
+                                                selectedBUs, selectedTyps, _
+                                                showRangeLeft, showRangeRight, awinSettings.mppSortiertDauer, _
+                                                projCollection, minDate, maxDate, _
+                                                isMultiprojektSicht, curProj)
+
+
+
+            ' aktuell wird davon ausgegangen , dass in projMitVariants nur eine Variante ist
+            ' Swimlane wird aktuell nur für BHTC erstellt , da gibt es noch keine Varianten 
+
+
+            Dim considerAll As Boolean = (selectedPhases.Count + selectedMilestones.Count = 0)
+            Dim selectedPhaseIDs As New Collection
+            Dim selectedMilestoneIDs As New Collection
+            Dim breadcrumbArray As String() = Nothing
+
+            If Not considerAll Then
+                selectedPhaseIDs = curProj.getElemIdsOf(selectedPhases, False)
+                selectedMilestoneIDs = curProj.getElemIdsOf(selectedMilestones, True)
+                breadcrumbArray = curProj.getBreadCrumbArray(selectedPhaseIDs, selectedMilestoneIDs)
+            End If
+
+
+            swimLanesToDo = curProj.getSwimLanesCount(considerAll, breadcrumbArray, isBHTCSchema)
+
+
+
+            '
+            ' bestimme das Start und Ende Datum des PPT Kalenders
+            Call calcStartEndePPTKalender(minDate, maxDate, _
+                                          pptStartofCalendar, pptEndOfCalendar)
+
+            ' jetzt für Swimlanes Behandlung Kalender in der Klasse setzen 
+
+            Call rds.setCalendarDates(pptStartofCalendar, pptEndOfCalendar)
+
+            ' die neue Art Zeilenhöhe und die Offset Werte zu bestimmen 
+            If pptFirstTime Then
+                If rds.zeilenHoehe = 0.0 Then
+                    Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count)
+                End If
+            End If
+
+            Dim hproj As New clsProjekt
+            Dim hhproj As New clsProjekt
+            Dim maxZeilen As Integer = 0
+            Dim anzZeilen As Integer = 0
+            Dim gesamtAnzZeilen As Integer = 0
+            Dim projekthoehe As Double
+
+            If awinSettings.mppExtendedMode Then
+
+                ' jetzt muss die Gesamt-Zahl an Zeilen ermittelt werden , die die einzelnen Swimlanes bentötigen 
+
+                For i = 1 To swimLanesToDo
+
+                    Dim cphase As clsPhase = hproj.getSwimlane(i, considerAll, breadcrumbArray, isBHTCSchema)
+                    Dim swimLaneZeilen As Integer = hproj.calcNeededLines
+
+                Next
+
+
+                ' über alle ausgewählte Projekte sehen und maximale Anzahl Zeilen je Projekt bestimmen
+                For Each kvp As KeyValuePair(Of Double, String) In projCollection
+                    Try
+
+                        hproj = AlleProjekte.getProject(kvp.Value)
+                    Catch ex As Exception
+
+                    End Try
+
+                    If kennzeichnung.StartsWith("Swimlanes") Then
+                        ' hier muss BHTC Kalkulation rein ... 
+
+                        For i = 1 To swimLanesToDo
+                            anzZeilen = anzZeilen + hproj.
+
+                        Next
+
+
                     Else
                         anzZeilen = hproj.calcNeededLines(selectedPhases, selectedMilestones, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
                     End If
@@ -12489,7 +13033,7 @@ Public Module testModule
                                                         worker, e)
 
                     Else
-                        Call zeichnePPTprojects(pptslide, projCollection, objectsDone, _
+                        Call zeichnePPTprojects(pptslide, projCollection, swimLanesDone, _
                                         pptStartofCalendar, pptEndOfCalendar, _
                                         .drawingAreaLeft, .drawingAreaRight, .drawingAreaTop, .drawingAreaBottom, _
                                         zeilenhoehe, .projectListLeft, _

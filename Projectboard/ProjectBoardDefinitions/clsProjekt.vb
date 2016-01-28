@@ -2496,7 +2496,6 @@ Public Class clsProjekt
     Public Sub calculateShapeCoord(ByVal phaseNr As Integer, ByRef zeilenOffset As Integer,
                                        ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
         Dim cphase As clsPhase
-        'Dim phasenNameID As String
         Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
 
 
@@ -2543,17 +2542,9 @@ Public Class clsProjekt
                 ' Änderung 18.3.14 Zeilenoffset gibt an, in die wievielte Zeile das geschrieben werden soll 
                 If phaseNr = 1 Then
                     Me.CalculateShapeCoord(top, left, width, height)
-                    'top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.1 * boxHeight
-                    'left = (phasenStart / 365) * boxWidth * 12
-                    'width = ((phasenDauer) / 365) * boxWidth * 12
-                    'height = 0.8 * boxHeight
                 Else
                     cphase.calculatePhaseShapeCoord(top, left, width, height)
                     top = top + (zeilenOffset) * boxHeight
-                    'top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.5 * (1 - 0.33) * boxHeight + (zeilenOffset) * boxHeight
-                    'left = (phasenStart / 365) * boxWidth * 12
-                    'width = ((phasenDauer) / 365) * boxWidth * 12
-                    'height = 0.33 * boxHeight
                 End If
 
 
@@ -3104,9 +3095,9 @@ Public Class clsProjekt
             Next i      ' nächste Phase im Projekt betrachten
 
             If anzPhases > 1 Then
-                tmpValue = zeilenOffset + 1     'ur: 17.04.2015:  +1 für die übrigen Meilensteine
+                tmpValue = zeilenOffset    
             Else
-                tmpValue = 1 + 1                ' ur: 17.04.2015: +1 für die übrigen Meilensteine
+                tmpValue = 1
             End If
 
 
