@@ -3104,9 +3104,9 @@ Public Class clsProjekt
             Next i      ' nächste Phase im Projekt betrachten
 
             If anzPhases > 1 Then
-                tmpValue = zeilenOffset + 1     'ur: 17.04.2015:  +1 für die übrigen Meilensteine
+                tmpValue = zeilenOffset ' kein +1, weil ja eh alle gezeichnet werden ...
             Else
-                tmpValue = 1 + 1                ' ur: 17.04.2015: +1 für die übrigen Meilensteine
+                tmpValue = 1 ' kein +1, weil ja eh alle gezeichnet werden 
             End If
 
 
