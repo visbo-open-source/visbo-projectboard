@@ -210,7 +210,7 @@ Partial Class frmProjektEingabe1
         Me.DateTimeStart.Location = New System.Drawing.Point(672, 194)
         Me.DateTimeStart.Margin = New System.Windows.Forms.Padding(2)
         Me.DateTimeStart.Name = "DateTimeStart"
-        Me.DateTimeStart.Size = New System.Drawing.Size(119, 21)
+        Me.DateTimeStart.Size = New System.Drawing.Size(119, 22)
         Me.DateTimeStart.TabIndex = 26
         '
         'dauerUnverändert
@@ -221,7 +221,7 @@ Partial Class frmProjektEingabe1
         Me.dauerUnverändert.Location = New System.Drawing.Point(114, 162)
         Me.dauerUnverändert.Margin = New System.Windows.Forms.Padding(2)
         Me.dauerUnverändert.Name = "dauerUnverändert"
-        Me.dauerUnverändert.Size = New System.Drawing.Size(127, 19)
+        Me.dauerUnverändert.Size = New System.Drawing.Size(138, 20)
         Me.dauerUnverändert.TabIndex = 27
         Me.dauerUnverändert.Text = "Dauer wie Vorlage"
         Me.dauerUnverändert.UseVisualStyleBackColor = True
@@ -232,7 +232,7 @@ Partial Class frmProjektEingabe1
         Me.DateTimeEnde.Location = New System.Drawing.Point(672, 225)
         Me.DateTimeEnde.Margin = New System.Windows.Forms.Padding(2)
         Me.DateTimeEnde.Name = "DateTimeEnde"
-        Me.DateTimeEnde.Size = New System.Drawing.Size(119, 21)
+        Me.DateTimeEnde.Size = New System.Drawing.Size(119, 22)
         Me.DateTimeEnde.TabIndex = 29
         '
         'lbl_BusinessUnit
@@ -321,7 +321,7 @@ Partial Class frmProjektEingabe1
         Me.propRessourcenAnpassung.Location = New System.Drawing.Point(400, 254)
         Me.propRessourcenAnpassung.Margin = New System.Windows.Forms.Padding(2)
         Me.propRessourcenAnpassung.Name = "propRessourcenAnpassung"
-        Me.propRessourcenAnpassung.Size = New System.Drawing.Size(391, 19)
+        Me.propRessourcenAnpassung.Size = New System.Drawing.Size(428, 20)
         Me.propRessourcenAnpassung.TabIndex = 40
         Me.propRessourcenAnpassung.Text = "Ressourcen und Kostenbedarfe der Vorlage proportional anpassen"
         Me.propRessourcenAnpassung.UseVisualStyleBackColor = True
@@ -357,7 +357,7 @@ Partial Class frmProjektEingabe1
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.AbbrButton)
         Me.Controls.Add(Me.OKButton)
-        Me.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Margin = New System.Windows.Forms.Padding(2, 3, 2, 3)
         Me.Name = "frmProjektEingabe1"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.Manual
