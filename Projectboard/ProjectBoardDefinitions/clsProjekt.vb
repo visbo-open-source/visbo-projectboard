@@ -2944,6 +2944,175 @@ Public Class clsProjekt
         End Get
 
     End Property
+
+    ''' <summary>
+    ''' gibt die Anzahl Zeilen zurück, die die Swimlane phaseID im aktuellen Projekt im "Extended Drawing Mode" benötigt 
+    ''' Aktuell ist es so, dass nur Phasen Zeilenvorschub triggern, Meilensteine werden in der obersten Phase oder in der Phase gezeichnet, 
+    ''' die ihr Großvater, Ur-Großvater, etc ist 
+    ''' </summary>
+    ''' <param name="selectedPhaseIDs">die Liste mit den PhaseIDs, die gezeichnet werden sollen</param>
+    ''' <param name="selectedMilestoneIDs">die Liste mit den MilestoneIDs, die gezeichnet werden sollen</param>
+    ''' <param name="extended">wenn </param>
+    ''' <param name="considerTimespace">ist ein Zeitraum zu berücksichtigen? dann triggern Phasen nur dann einen Zeilenvorschub, wenn sie im Zeitraum liegen </param>
+    ''' <param name="zeitraumGrenzeL" >der linke Rand des Zeitraums; kann showRangeL sein, muss aber nicht wenn showallIfOne gesetzt ist</param>
+    ''' <param name="zeitraumGrenzeR" >der rechte Rand des Zeitraums; kann showRangeR sein, muss aber nicht wenn showallIfOne gesetzt ist</param>
+    ''' <param name="considerAll"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property calcNeededLinesSwl(ByVal swimlaneID As String, _
+                                                ByVal selectedPhaseIDs As Collection, ByVal selectedMilestoneIDs As Collection, _
+                                                ByVal extended As Boolean, ByVal considerTimespace As Boolean,
+                                                ByVal zeitraumGrenzeL As Integer, ByVal zeitraumGrenzeR As Integer, _
+                                                ByVal considerAll As Boolean) As Integer
+        Get
+
+            Dim zeilenOffset As Integer = 1
+            Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
+            Dim tmpValue As Integer
+
+            Dim selPhaseName As String = ""
+            Dim breadcrumb As String = ""
+
+            ' jetzt wird erst mal bestimmt, von welcher Phase bis zu welcher Phase die Kind-Phasen der swimlaneID liegen
+            ' dabei wird der Umstand ausgenutzt, dass in der PhasenListe 1..PhasesCount alle Kind-Phasen 
+            ' unmittelbar nach der Eltern-Phase kommen ;
+            ' generell können Kind-Elemente, egal ob Meilensteine oder Phasen nur in den PhasenNummern start .. ende vorkommen
+
+            Dim startNr As Integer = Me.hierarchy.getPMIndexOfID(swimlaneID)
+            Dim endNr As Integer = startNr
+            Dim stillChild As Boolean = True
+
+            Dim SwlBreadCrumb As String = Me.hierarchy.getBreadCrumb(swimlaneID)
+
+            Do While endNr + 1 <= Me.CountPhases And stillChild
+                Dim cPhase As clsPhase = Me.getPhase(endNr + 1)
+                If Not IsNothing(cPhase) Then
+                    Dim curBreadCrumb As String = Me.hierarchy.getBreadCrumb(cPhase.nameID)
+                    If curBreadCrumb.StartsWith(SwlBreadCrumb) Then
+                        ' is still Child
+                        endNr = endNr + 1
+                    Else
+                        stillChild = False
+                    End If
+                Else
+                    stillChild = False
+                End If
+            Loop
+
+            ' in endNr ist jetzt die Phasen-Nummer des letzten Kindes 
+
+            ' jetzt wird bestimmt, wieviele der selectedPhaseIDs denn überhaupt Kinder der betrachteten Swimlane sind 
+            ' es ist nicht notwendig , das in Abhängigkeit von considerAll zu machen; bei considerAll=true sidn die selectedCollections = 0 
+
+            Dim childPhaseIDs As New Collection
+            Dim childMilestoneIDs As New Collection
+
+
+
+            For Each item In selectedPhaseIDs
+                If CStr(item) <> swimlaneID Then
+                    ' sich selber ausschließen ...
+                    Dim cPhase As clsPhase = Me.getPhaseByID(CStr(item))
+                    If Not IsNothing(cPhase) Then
+                        Dim curBreadCrumb As String = Me.hierarchy.getBreadCrumb(cPhase.nameID)
+                        If curBreadCrumb.StartsWith(SwlBreadCrumb) Then
+                            ' ist Kind Element, daher aufnehmen 
+                            childPhaseIDs.Add(CStr(item), CStr(item))
+                        End If
+                    End If
+
+                End If
+            Next
+
+            ' jetzt wird bestimmt, wieviele der selectedMilestoneIDs denn überhaupt Kinder der betrachteten Swimlane sind 
+
+            For Each item In selectedMilestoneIDs
+                If CStr(item) <> swimlaneID Then
+                    ' sich selber ausschließen ...
+                    Dim cMeilenstein As clsMeilenstein = Me.getMilestoneByID(CStr(item))
+                    If Not IsNothing(cMeilenstein) Then
+                        Dim curBreadCrumb As String = Me.hierarchy.getBreadCrumb(cMeilenstein.nameID)
+                        If curBreadCrumb.StartsWith(SwlBreadCrumb) Then
+                            ' ist Kind Element, daher aufnehmen 
+                            childMilestoneIDs.Add(CStr(item), CStr(item))
+                        End If
+                    End If
+
+                End If
+            Next
+
+
+            If Not extended Then
+                ' es wird grundsätzlich nur eine Zeile benötigt 
+                tmpValue = 1
+
+            ElseIf childPhaseIDs.Count = 0 And Not considerAll Then
+                ' es wird nur eine Zeile benötigt 
+                tmpValue = 1
+
+            Else
+                ' Schleife über Swimlane(=Startnr) und alle Kind Phasen der Swimlane (bis zu endNr)
+                For i = startNr To endNr
+                    Try
+                        Dim cPhase As clsPhase = Me.getPhase(i)
+                        Dim relevant As Boolean = False
+                        If Not IsNothing(cphase) Then
+                            If considerAll Then
+                                relevant = True
+                            Else
+                                If childPhaseIDs.Contains(cPhase.nameID) Then
+                                    relevant = True
+                                Else
+                                    relevant = False
+                                End If
+                            End If
+
+                            If relevant Then           ' cphase ist eine der selektierten Phasen
+
+                                If Not considerTimespace _
+                                    Or _
+                                    (considerTimespace And phaseWithinTimeFrame(Me.Start, cPhase.relStart, cPhase.relEnde, _
+                                                                                zeitraumGrenzeL, zeitraumGrenzeR)) Then
+
+                                    With cPhase
+
+                                        'phasenName = .name
+                                        If DateDiff(DateInterval.Day, lastEndDate, .getStartDate) < 0 Then
+                                            zeilenOffset = zeilenOffset + 1
+                                            lastEndDate = StartofCalendar.AddDays(-1)
+                                        End If
+
+                                        If DateDiff(DateInterval.Day, lastEndDate, .getEndDate) > 0 Then
+                                            lastEndDate = .getEndDate
+                                        End If
+
+                                    End With
+
+                                Else
+                                    ' Phase ist nicht im Zeitraum, also kein Zeilenoffset notwendig, kein lastEndDate notwendig 
+                                End If
+                            End If
+
+
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+                Next
+
+                tmpValue = zeilenOffset
+
+            End If
+
+            calcNeededLinesSwl = tmpValue
+
+        End Get
+
+    End Property
+
+
     ''' <summary>
     ''' findet für das aktuelle Projekt heraus, wieviele zusätzliche Zeilen für die selektierten Meilensteine
     '''  (gezeichnet zur nächst höheren aber auch selektierten Phase) beim Report benötigt werden

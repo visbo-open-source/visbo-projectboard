@@ -281,6 +281,7 @@ Public Module Module1
         rplan = 7
         meilensteinTrendanalyse = 8
         filterAuswahl = 9
+        reportBHTC = 10
     End Enum
 
 

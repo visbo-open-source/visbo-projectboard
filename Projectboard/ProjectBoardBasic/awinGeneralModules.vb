@@ -8889,7 +8889,8 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub frmHryNameReadPPTVorlagen(ByVal menuOption As Integer, ByRef repVorlagenDropbox As System.Windows.Forms.ComboBox)
 
-        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport Then
+        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport _
+            Or menuOption = PTmenue.reportBHTC Then
 
             Dim dirname As String
             Dim dateiName As String = ""

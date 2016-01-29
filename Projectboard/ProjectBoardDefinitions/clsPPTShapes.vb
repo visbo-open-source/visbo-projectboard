@@ -255,7 +255,8 @@ Public Class clsPPTShapes
 
     End Sub
 
-    Public Sub bestimmeZeilenHoehe(ByVal anzphasen As Integer, ByVal anzMeilensteine As Integer)
+    Public Sub bestimmeZeilenHoehe(ByVal anzphasen As Integer, ByVal anzMeilensteine As Integer, _
+                                   ByVal considerAll As Boolean)
 
 
         Dim minY As Double = _containerBottom, maxY As Double = _containerTop
@@ -299,7 +300,7 @@ Public Class clsPPTShapes
         End If
 
         ' Müssen Phasen überhaupt gezeichnet werden ? 
-        If anzphasen > 0 Then
+        If anzphasen > 0 Or considerAll Then
             If Not IsNothing(phaseVorlagenShape) Then
                 With phaseVorlagenShape
                     minY = System.Math.Min(minY, .Top)
@@ -324,7 +325,7 @@ Public Class clsPPTShapes
         End If
 
         ' Müssen Meilensteine überhaupt gezeichnet werden ? 
-        If anzMeilensteine > 0 Then
+        If anzMeilensteine > 0 Or considerAll Then
             If Not IsNothing(milestoneVorlagenShape) Then
                 With milestoneVorlagenShape
                     minY = System.Math.Min(minY, .Top)
@@ -392,7 +393,7 @@ Public Class clsPPTShapes
         End If
 
         ' Müssen Phasen überhaupt gezeichnet werden ? 
-        If anzphasen > 0 Then
+        If anzphasen > 0 Or considerAll Then
             If Not IsNothing(phaseVorlagenShape) Then
                 With phaseVorlagenShape
                     _YPhase = .Top - minY
@@ -414,7 +415,7 @@ Public Class clsPPTShapes
         End If
 
         ' Müssen Meilensteine überhaupt gezeichnet werden ? 
-        If anzMeilensteine > 0 Then
+        If anzMeilensteine > 0 Or considerAll Then
             If Not IsNothing(milestoneVorlagenShape) Then
                 With milestoneVorlagenShape
                     _YMilestone = .Top - minY
@@ -860,16 +861,17 @@ Public Class clsPPTShapes
                     End If
                 End If
 
-                If IsNothing(_ampelVorlagenShape) Then
-                    ok = False
-                    tmpName = "Ampel-Form"
-                    If firstTime Then
-                        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
-                        firstTime = False
-                    Else
-                        tmpErg = tmpErg & vbLf & tmpName
-                    End If
-                End If
+                ' muss hier nicht da sein 
+                'If IsNothing(_ampelVorlagenShape) Then
+                '    ok = False
+                '    tmpName = "Ampel-Form"
+                '    If firstTime Then
+                '        tmpErg = "fehlende PPT-Shapes: " & vbLf & tmpName
+                '        firstTime = False
+                '    Else
+                '        tmpErg = tmpErg & vbLf & tmpName
+                '    End If
+                'End If
 
                 If IsNothing(_calendarYearSeparator) Then
                     ok = False
@@ -1304,6 +1306,22 @@ Public Class clsPPTShapes
     Public ReadOnly Property tagesbreite As Double
         Get
             tagesbreite = _tagesbreite
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' Readonly, gibt die 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property segmentHoehe As Double
+        Get
+            If IsNothing(segmentVorlagenShape) Then
+                segmentHoehe = 0.0
+            Else
+                segmentHoehe = segmentVorlagenShape.Height
+            End If
         End Get
     End Property
 

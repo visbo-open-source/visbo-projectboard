@@ -68,7 +68,10 @@ Public Class frmHierarchySelection
             Next
         End If
 
-        Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+        If Not Me.menuOption = PTmenue.reportBHTC Then
+            Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+        End If
+
 
         Call buildHryTreeView()
 
@@ -83,22 +86,29 @@ Public Class frmHierarchySelection
         Call frmHryNameReadPPTVorlagen(Me.menuOption, repVorlagenDropbox)
 
         ' die Filter einlesen
-        Call frmHryNameReadFilterVorlagen(Me.menuOption, filterDropbox)
 
-        ' alle definierten Filter in ComboBox anzeigen
-        If Me.menuOption = PTmenue.filterdefinieren Then
+        If Not Me.menuOption = PTmenue.reportBHTC Then
+            Call frmHryNameReadFilterVorlagen(Me.menuOption, filterDropbox)
 
-            For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
-                filterDropbox.Items.Add(kvp.Key)
-            Next
+            ' alle definierten Filter in ComboBox anzeigen
+            If Me.menuOption = PTmenue.filterdefinieren Then
 
-        Else
+                For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
+                    filterDropbox.Items.Add(kvp.Key)
+                Next
 
-            For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
-                filterDropbox.Items.Add(kvp.Key)
-            Next
+            Else
+
+                For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
+                    filterDropbox.Items.Add(kvp.Key)
+                Next
+
+            End If
 
         End If
+
+
+        
 
 
     End Sub
@@ -199,9 +209,13 @@ Public Class frmHierarchySelection
 
         ' jetzt wird der letzte Filter gespeichert ..
         Dim lastfilter As String = "Last"
-        Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps, _
+        If Not Me.menuOption = PTmenue.reportBHTC Then
+            Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts, True)
+        End If
+
+        
 
 
         ''''
@@ -215,7 +229,8 @@ Public Class frmHierarchySelection
         Dim validOption As Boolean
         If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
             Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Or _
-            Me.menuOption = PTmenue.vorlageErstellen Then
+            Me.menuOption = PTmenue.vorlageErstellen Or _
+            Me.menuOption = PTmenue.reportBHTC Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft > 5 Then
             validOption = True
@@ -223,7 +238,8 @@ Public Class frmHierarchySelection
             validOption = False
         End If
 
-        If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Then
+        If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Or _
+            Me.menuOption = PTmenue.reportBHTC Then
 
             If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
                     Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
@@ -267,8 +283,13 @@ Public Class frmHierarchySelection
                         AbbrButton.Text = "Abbrechen"
 
                         ' Alternativ ohne Background Worker
+                        If Me.menuOption = PTmenue.reportBHTC Then
+                            ' Ute auf ..3 ändern 
+                            BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
+                        Else
+                            BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
+                        End If
 
-                        BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
 
                     Catch ex As Exception
                         Call MsgBox(ex.Message)

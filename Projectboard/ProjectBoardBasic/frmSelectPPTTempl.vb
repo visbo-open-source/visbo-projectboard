@@ -52,7 +52,7 @@ Public Class frmSelectPPTTempl
                         RepVorlagenDropbox.Items.Add(dateiName)
                     End If
                     'RepVorlagenDropbox.Items.Add(dateiName)
-                ElseIf calledfrom = "Portfolio1" Then
+                ElseIf calledfrom = "Portfolio1" Or calledfrom = "Portfolio2" Then
                     If Not dateiName.Contains("Typ II") Then
                         RepVorlagenDropbox.Items.Add(dateiName)
                     End If
@@ -88,7 +88,7 @@ Public Class frmSelectPPTTempl
         enableOnUpdate = False
 
         ' hier muss unterschieden werden, ob Projekt oder Portfolio-Report soll erzeugt werden
-        If calledfrom = "Portfolio1" Then
+        If calledfrom = "Portfolio1" Or calledfrom = "Portfolio2" Then
             dirName = awinPath & RepPortfolioVorOrdner
             vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
             Try
@@ -102,7 +102,7 @@ Public Class frmSelectPPTTempl
                 Call MsgBox(ex.Message)
             End Try
 
-        ElseIf calledfrom = "Projekt" Then
+        Else
             dirName = awinPath & RepProjectVorOrdner
             vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
 
@@ -156,7 +156,7 @@ Public Class frmSelectPPTTempl
         End With
 
 
-        Call MsgBox("Berichterstellung wurde beendet")
+        'Call MsgBox("Berichterstellung wurde beendet")
         MyBase.Close()
 
     End Sub
