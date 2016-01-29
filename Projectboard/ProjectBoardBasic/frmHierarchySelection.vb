@@ -16,6 +16,10 @@ Public Class frmHierarchySelection
 
     Friend menuOption As Integer
 
+    ' an der aufrufenden Stelle muss hier entweder "Multiprojekt-Tafel" oder
+    ' "MS Project" stehen. 
+    Friend calledFrom As String
+
 
 
     Private Sub frmHierarchySelection_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
@@ -62,13 +66,17 @@ Public Class frmHierarchySelection
                 kvp.Value.copyTo(hproj)
                 Call addToSuperHierarchy(hry, hproj)
             Next
+        ElseIf selectedProjekte.Count > 0 Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                Call addToSuperHierarchy(hry, kvp.Value)
+            Next
         Else
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
                 Call addToSuperHierarchy(hry, kvp.Value)
             Next
         End If
 
-        If Not Me.menuOption = PTmenue.reportBHTC Then
+        If Not Me.calledFrom = "MS-Project" Then
             Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
         End If
 
@@ -241,9 +249,10 @@ Public Class frmHierarchySelection
         If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Or _
             Me.menuOption = PTmenue.reportBHTC Then
 
-            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
+            If ((selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
                     Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
-                    And validOption Then
+                    And validOption) Or _
+                    (Me.menuOption = PTmenue.reportBHTC And validOption) Then
 
                 Dim vorlagenDateiName As String
 
@@ -341,7 +350,12 @@ Public Class frmHierarchySelection
         Dim mppFrm As New frmMppSettings
         Dim dialogreturn As DialogResult
 
-        mppFrm.calledfrom = "frmShowPlanElements"
+        If Me.menuOption = PTmenue.reportBHTC Then
+            mppFrm.calledfrom = "frmBHTC"
+        Else
+            mppFrm.calledfrom = "frmShowPlanElements"
+        End If
+
         dialogreturn = mppFrm.ShowDialog
 
     End Sub
@@ -942,4 +956,15 @@ Public Class frmHierarchySelection
     End Sub
 
 
+    Public Sub New()
+
+        ' This call is required by the designer.
+        InitializeComponent()
+        calledFrom = "Multiprojekt-Tafel"
+
+        ' Add any initialization after the InitializeComponent() call.
+
+    End Sub
+
+    
 End Class

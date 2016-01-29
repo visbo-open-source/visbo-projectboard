@@ -261,7 +261,7 @@ Public Class frmSelectPPTTempl
         Dim mppFrm As New frmMppSettings
         Dim dialogreturn As DialogResult
 
-        If calledfrom = "MSProjectADDIn" Then
+        If calledfrom = "MS-Project" Then
             mppFrm.calledfrom = calledfrom
         Else
             mppFrm.calledfrom = "frmSelectPPTTempl"

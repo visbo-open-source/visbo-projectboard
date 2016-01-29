@@ -64,7 +64,7 @@
                 shwExtendedMode.Checked = True
             End With
 
-        ElseIf calledfrom = "MSProjectADDIn" Then
+        ElseIf calledfrom = "frmBHTC" Then
 
             With awinSettings
 

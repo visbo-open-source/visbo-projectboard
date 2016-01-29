@@ -1061,7 +1061,8 @@
 
 
             Dim sptr As Integer
-            Dim breadCrumb As String
+            ' ein fullBreadCrumb enthält auch den ElemName am Schluss ...
+            Dim fullSwlBreadCrumb As String
 
             If IsNothing(breadCrumbArray) Then
                 sptr = -1
@@ -1089,7 +1090,7 @@
 
                         For Each childObj As Object In ChildCollection
                             Dim swimlaneID As String = CStr(childObj)
-                            breadCrumb = Me.hierarchy.getBreadCrumb(swimlaneID)
+                            fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
 
                             If considerAll Then
                                 anzSwimlanes = anzSwimlanes + 1
@@ -1098,7 +1099,7 @@
                                 Dim found As Boolean = False
                                 Dim index = 0
                                 Do While Not found And index <= sptr
-                                    If breadCrumbArray(index).StartsWith(breadCrumb) Then
+                                    If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
                                         found = True
                                     Else
                                         index = index + 1
@@ -1116,7 +1117,7 @@
 
                 End If
 
-                
+
 
             End If
 
@@ -1201,7 +1202,7 @@
     
 
     ''' <summary>
-    ''' gibt die Swimlane mit der Reihenfolge-Nr "index" zurück
+    ''' gibt die Swimlane mit der Reihenfolge-Nr "index" zurück; index läuft von 1..Anzahl 
     ''' Nothing, wenn es die entsprechende Swimlane gar nicht gibt  
     ''' </summary>
     ''' <param name="index"></param>
@@ -1222,7 +1223,8 @@
             Dim anzSwimlanes As Integer = 0
             Dim sptr As Integer = breadCrumbArray.Length - 1
 
-            Dim breadCrumb As String = ""
+            ' ein fullBreadCrumb enthält auch den ElemName am Schluss ...
+            Dim fullSwlBreadCrumb As String
 
             If Not isBhtcSchema Then
                 ' noch nicht implementiert 
@@ -1244,7 +1246,7 @@
 
                         For Each childObj As Object In ChildCollection
                             Dim swimlaneID As String = CStr(childObj)
-                            breadCrumb = Me.hierarchy.getBreadCrumb(swimlaneID)
+                            fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
 
                             If considerAll Then
                                 anzSwimlanes = anzSwimlanes + 1
@@ -1258,7 +1260,7 @@
                                 Dim found As Boolean = False
                                 Dim ix = 0
                                 Do While Not found And ix <= sptr
-                                    If breadCrumbArray(ix).StartsWith(breadCrumb) Then
+                                    If breadCrumbArray(ix).StartsWith(fullSwlBreadCrumb) Then
                                         found = True
                                     Else
                                         ix = ix + 1
@@ -1296,7 +1298,33 @@
     End Property
 
     ''' <summary>
-    ''' liefert einen Array zurück, der die Breadcrumbs der in selectedPhaseIDs und selectedMilestoneIDs übergebenen 
+    ''' gibt für eine übergebene ID den vollen BreadCrum+ElemName zurück 
+    ''' ?, wenn PhaseID nicht existiert 
+    ''' </summary>
+    ''' <param name="nameID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBcElemName(ByVal nameID As String) As String
+        Get
+
+            Dim elemName As String = ""
+            Dim fullName As String = "?"
+
+            If istElemID(nameID) Then
+                elemName = elemNameOfElemID(nameID)
+                fullName = calcHryFullname(elemName, _
+                                              Me.hierarchy.getBreadCrumb(nameID))
+            End If
+
+            getBcElemName = fullName
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' liefert einen Array zurück, der die Breadcrumbs inkl. der Namen der in selectedPhaseIDs und selectedMilestoneIDs übergebenen 
     ''' Elemente enthält 
     ''' </summary>
     ''' <param name="selectedPhaseIDs">Liste der PhaseIDs</param>
@@ -1312,16 +1340,19 @@
 
             If suchDimension >= 0 Then
                 Dim suchFeld(suchDimension) As String
+                Dim elemID As String = ""
                 Dim sptr As Integer = 0
 
                 ' suchfeld aufbauen 
                 For i As Integer = 1 To selectedPhaseIDs.Count
-                    suchFeld(sptr) = Me.hierarchy.getBreadCrumb(CStr(selectedPhaseIDs.Item(i)))
+                    elemID = CStr(selectedPhaseIDs.Item(i))
+                    suchFeld(sptr) = Me.getBcElemName(elemID)
                     sptr = sptr + 1
                 Next
 
                 For i As Integer = 1 To selectedMilestoneIDs.Count
-                    suchFeld(sptr) = Me.hierarchy.getBreadCrumb(CStr(selectedMilestoneIDs.Item(i)))
+                    elemID = CStr(selectedMilestoneIDs.Item(i))
+                    suchFeld(sptr) = Me.getBcElemName(elemID)
                     sptr = sptr + 1
                 Next
 
