@@ -11779,14 +11779,14 @@ Public Module testModule
             End Try
 
 
-            yearVorlagenShape.Delete()
-            quarterMonthVorlagenShape.Delete()
-            calendarStepShape.Delete()
-            calendarYearSeparator.Delete()
-            calendarQuartalSeparator.Delete()
+            '' '' ''yearVorlagenShape.Delete()
+            '' '' ''quarterMonthVorlagenShape.Delete()
+            '' '' ''calendarStepShape.Delete()
+            '' '' ''calendarYearSeparator.Delete()
+            '' '' ''calendarQuartalSeparator.Delete()
 
-            calendargroup.Top = containerTop + 5
-            ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
+            '' '' ''calendargroup.Top = containerTop + 5
+            ' '' '' '' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
 
             ' zeichne die Projekte 
 
@@ -11822,33 +11822,33 @@ Public Module testModule
 
             End Try
 
-            If Not IsNothing(rowDifferentiatorShape) Then
-                rowDifferentiatorShape.Delete()
-            End If
+            '' '' ''If Not IsNothing(rowDifferentiatorShape) Then
+            '' '' ''    rowDifferentiatorShape.Delete()
+            '' '' ''End If
 
-            If Not IsNothing(buColorShape) Then
-                buColorShape.Delete()
-            End If
+            '' '' ''If Not IsNothing(buColorShape) Then
+            '' '' ''    buColorShape.Delete()
+            '' '' ''End If
 
-            If Not IsNothing(phaseDelimiterShape) Then
-                phaseDelimiterShape.Delete()
-            End If
+            '' '' ''If Not IsNothing(phaseDelimiterShape) Then
+            '' '' ''    phaseDelimiterShape.Delete()
+            '' '' ''End If
 
-            If Not IsNothing(durationArrowShape) Then
-                durationArrowShape.Delete()
-            End If
+            '' '' ''If Not IsNothing(durationArrowShape) Then
+            '' '' ''    durationArrowShape.Delete()
+            '' '' ''End If
 
-            If Not IsNothing(durationTextShape) Then
-                durationTextShape.Delete()
-            End If
+            '' '' ''If Not IsNothing(durationTextShape) Then
+            '' '' ''    durationTextShape.Delete()
+            '' '' ''End If
 
-            projectNameVorlagenShape.Delete()
-            phaseVorlagenShape.Delete()
-            milestoneVorlagenShape.Delete()
-            MsDescVorlagenShape.Delete()
-            MsDateVorlagenShape.Delete()
-            PhDescVorlagenShape.Delete()
-            PhDateVorlagenShape.Delete()
+            ' '' ''projectNameVorlagenShape.Delete()
+            ' '' ''phaseVorlagenShape.Delete()
+            ' '' ''milestoneVorlagenShape.Delete()
+            ' '' ''MsDescVorlagenShape.Delete()
+            '' '' ''MsDateVorlagenShape.Delete()
+            ' '' ''PhDescVorlagenShape.Delete()
+            ' '' ''PhDateVorlagenShape.Delete()
 
             ' zeichne die Legende 
             If awinSettings.mppShowLegend Then

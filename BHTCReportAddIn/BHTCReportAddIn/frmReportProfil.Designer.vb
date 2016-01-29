@@ -28,6 +28,8 @@ Partial Class frmReportProfil
         Me.bisDate = New System.Windows.Forms.DateTimePicker()
         Me.ReportErstellen = New System.Windows.Forms.Button()
         Me.changeProfil = New System.Windows.Forms.Button()
+        Me.statusLabel = New System.Windows.Forms.Label()
+        Me.BackgroundWorker3 = New System.ComponentModel.BackgroundWorker()
         Me.SuspendLayout()
         '
         'RepProfilListbox
@@ -41,6 +43,7 @@ Partial Class frmReportProfil
         Me.RepProfilListbox.Name = "RepProfilListbox"
         Me.RepProfilListbox.ScrollAlwaysVisible = True
         Me.RepProfilListbox.Size = New System.Drawing.Size(579, 372)
+        Me.RepProfilListbox.Sorted = True
         Me.RepProfilListbox.TabIndex = 0
         '
         'zeitLabel
@@ -93,11 +96,28 @@ Partial Class frmReportProfil
         Me.changeProfil.Text = "Profil bearbeiten"
         Me.changeProfil.UseVisualStyleBackColor = True
         '
+        'statusLabel
+        '
+        Me.statusLabel.AutoSize = True
+        Me.statusLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.statusLabel.Location = New System.Drawing.Point(35, 548)
+        Me.statusLabel.Name = "statusLabel"
+        Me.statusLabel.Size = New System.Drawing.Size(51, 17)
+        Me.statusLabel.TabIndex = 42
+        Me.statusLabel.Text = "Label1"
+        Me.statusLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft
+        '
+        'BackgroundWorker3
+        '
+        Me.BackgroundWorker3.WorkerReportsProgress = True
+        Me.BackgroundWorker3.WorkerSupportsCancellation = True
+        '
         'frmReportProfil
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(662, 546)
+        Me.ClientSize = New System.Drawing.Size(662, 580)
+        Me.Controls.Add(Me.statusLabel)
         Me.Controls.Add(Me.changeProfil)
         Me.Controls.Add(Me.ReportErstellen)
         Me.Controls.Add(Me.bisDate)
@@ -116,4 +136,6 @@ Partial Class frmReportProfil
     Friend WithEvents bisDate As System.Windows.Forms.DateTimePicker
     Friend WithEvents ReportErstellen As System.Windows.Forms.Button
     Friend WithEvents changeProfil As System.Windows.Forms.Button
+    Friend WithEvents statusLabel As System.Windows.Forms.Label
+    Friend WithEvents BackgroundWorker3 As System.ComponentModel.BackgroundWorker
 End Class

@@ -430,6 +430,7 @@ Public Module Module1
     Public projektRessOrdner As String = requirementsOrdner & "Ressource Manager"
     Public RepProjectVorOrdner As String = requirementsOrdner & "ReportTemplatesProject"
     Public RepPortfolioVorOrdner As String = requirementsOrdner & "ReportTemplatesPortfolio"
+    Public ReportProfileOrdner As String = requirementsOrdner & "ReportProfile"
     Public demoModusHistory As Boolean = False
     Public historicDate As Date
 

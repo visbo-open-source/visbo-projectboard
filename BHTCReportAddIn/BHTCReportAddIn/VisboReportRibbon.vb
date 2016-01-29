@@ -9,33 +9,40 @@ Public Class VisboReportRibbon
 
 
     Private Sub VisboReportRibbon_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
-        Call MsgBox("VisboReportLoad")
+        ' ''Call MsgBox("VisboReportLoad")
 
-        Try
+        ' ''Try
 
-          
 
-            awinSettings.awinPath = My.Settings.awinPath
 
-            Call awinsetTypenNEW("BHTC")
+        ' ''    awinSettings.awinPath = My.Settings.awinPath
 
-        Catch ex As Exception
+        ' ''    Call awinsetTypenNEW("BHTC")
 
-            Call MsgBox(ex.Message)
+        ' ''Catch ex As Exception
 
-        Finally
+        ' ''    Call MsgBox(ex.Message)
 
-        End Try
+        ' ''Finally
+
+        ' ''End Try
 
 
     End Sub
 
     Private Sub EPReport_Click(sender As Object, e As RibbonControlEventArgs) Handles EPReport.Click
+
+
+
+        Dim hproj As New clsProjekt
+        Dim aktuellesDatum As Date = Date.Now
+        Dim filename As String = ""
         Call MsgBox("EPReport_Click")
         ' Laden des aktuell geladenen Projektes
-        Call awinImport()
+        Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
         Dim reportAuswahl As New frmReportProfil
         Dim returnvalue As DialogResult
+        reportAuswahl.hproj = hproj
         returnvalue = reportAuswahl.ShowDialog
     End Sub
 End Class

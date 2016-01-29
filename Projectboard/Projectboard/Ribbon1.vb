@@ -3588,7 +3588,7 @@ Imports System.Drawing
                 ' '' ''    pname = ""
                 hproj = New clsProjekt
                 Try
-                    Call awinImportMSProject(dateiName, hproj, importDate)
+                    Call awinImportMSProject("", dateiName, hproj, importDate)
 
                     Try
                         Dim keyStr As String = calcProjektKey(hproj)
