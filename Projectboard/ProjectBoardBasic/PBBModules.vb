@@ -34,14 +34,13 @@ Public Module PBBModules
             hryFormular.calledFrom = "Multiprojekt-Tafel"
         Else
             hryFormular.calledFrom = "MS-Project"
+
+            hryFormular.repProfil = New clsReport
+
+            reportprofil.CopyTo(hryFormular.repProfil)
+
+            'hryFormular.repProfil = reportprofil
         End If
-
-
-        hryFormular.repProfil = New clsReport
-
-        reportprofil.CopyTo(hryFormular.repProfil)
-
-        'hryFormular.repProfil = reportprofil
 
         Dim formerSettings(3) As Boolean
         With awinSettings
@@ -99,12 +98,12 @@ Public Module PBBModules
         End With
 
 
-            With awinSettings
-                .mppExtendedMode = formerSettings(0)
-                .mppShowAllIfOne = formerSettings(1)
-                .mppShowAmpel = formerSettings(2)
-                .mppFullyContained = formerSettings(3)
-            End With
+        With awinSettings
+            .mppExtendedMode = formerSettings(0)
+            .mppShowAllIfOne = formerSettings(1)
+            .mppShowAmpel = formerSettings(2)
+            .mppFullyContained = formerSettings(3)
+        End With
 
 
     End Sub

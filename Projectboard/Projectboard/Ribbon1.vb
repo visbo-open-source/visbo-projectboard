@@ -2122,7 +2122,7 @@ Imports System.Drawing
         ' Hierarchie auswählen, Einzelprojekt Berichte 
         appInstance.ScreenUpdating = False
 
-        Call PBBBHTCHierarchySelAction(control.Id)
+        Call PBBBHTCHierarchySelAction(control.Id, Nothing)
 
         appInstance.ScreenUpdating = True
         
