@@ -79,6 +79,7 @@
     <Compile Include="clsAddElementRuleItem.vb" />
     <Compile Include="clsAddElements.vb" />
     <Compile Include="clsFilterDB.vb" />
+    <Compile Include="clsReport.vb" />
     <Compile Include="clsVisboZustaende.vb" />
     <Compile Include="clsHierarchy.vb" />
     <Compile Include="clsHierarchyNode.vb" />

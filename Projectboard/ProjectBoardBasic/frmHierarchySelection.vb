@@ -1,11 +1,12 @@
 ﻿Imports ProjectBoardDefinitions
 Imports ClassLibrary1
-Imports System.ComponentModel
 Imports System.Windows.Forms
+Imports System.ComponentModel
 
 Public Class frmHierarchySelection
 
     Private hry As clsHierarchy
+    Public repProfil As clsReport
 
     Private selectedMilestones As New Collection
     Private selectedPhases As New Collection
@@ -40,7 +41,6 @@ Public Class frmHierarchySelection
 
     Private Sub frmHierarchySelection_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-
         If frmCoord(PTfrm.listselP, PTpinfo.top) > 0 Then
             Me.Top = CInt(frmCoord(PTfrm.listselP, PTpinfo.top))
             Me.Left = CInt(frmCoord(PTfrm.listselP, PTpinfo.left))
@@ -68,7 +68,16 @@ Public Class frmHierarchySelection
             Next
         End If
 
-        Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+        If Not Me.menuOption = PTmenue.reportBHTC Then
+            Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
+        Else
+
+            Call retrieveProfilSelection(filterDropbox.Text, PTmenue.reportBHTC, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts, repProfil)
+            If IsNothing(repProfil) Then
+                Throw New ArgumentException("Fehler beim Lesen des áusgewählten ReportProfils")
+            End If
+        End If
+
 
         Call buildHryTreeView()
 
@@ -83,22 +92,37 @@ Public Class frmHierarchySelection
         Call frmHryNameReadPPTVorlagen(Me.menuOption, repVorlagenDropbox)
 
         ' die Filter einlesen
-        Call frmHryNameReadFilterVorlagen(Me.menuOption, filterDropbox)
 
-        ' alle definierten Filter in ComboBox anzeigen
-        If Me.menuOption = PTmenue.filterdefinieren Then
+        If Not Me.menuOption = PTmenue.reportBHTC Then
+            Call frmHryNameReadFilterVorlagen(Me.menuOption, filterDropbox)
 
-            For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
-                filterDropbox.Items.Add(kvp.Key)
-            Next
+            ' alle definierten Filter in ComboBox anzeigen
+            If Me.menuOption = PTmenue.filterdefinieren Then
 
+                For Each kvp As KeyValuePair(Of String, clsFilter) In filterDefinitions.Liste
+                    filterDropbox.Items.Add(kvp.Key)
+                Next
+
+            Else
+
+                For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
+                    filterDropbox.Items.Add(kvp.Key)
+                Next
+
+            End If
         Else
-
-            For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
-                filterDropbox.Items.Add(kvp.Key)
-            Next
+            '       Me.menuOption = PTmenue.reportBHTC
+            '
+            If Not IsNothing(repProfil.PPTTemplate) Then
+                If My.Computer.FileSystem.FileExists(awinPath & RepProjectVorOrdner & "\" & repProfil.PPTTemplate) Then
+                    repVorlagenDropbox.Text = repProfil.PPTTemplate
+                Else
+                    repVorlagenDropbox.Text = ""
+                End If
+            End If
 
         End If
+
 
 
     End Sub
@@ -199,9 +223,13 @@ Public Class frmHierarchySelection
 
         ' jetzt wird der letzte Filter gespeichert ..
         Dim lastfilter As String = "Last"
-        Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps, _
+        If Not Me.menuOption = PTmenue.reportBHTC Then
+            Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps, _
                                                    selectedPhases, selectedMilestones, _
                                                    selectedRoles, selectedCosts, True)
+        End If
+
+
 
 
         ''''
@@ -215,7 +243,8 @@ Public Class frmHierarchySelection
         Dim validOption As Boolean
         If Me.menuOption = PTmenue.visualisieren Or Me.menuOption = PTmenue.einzelprojektReport Or _
             Me.menuOption = PTmenue.excelExport Or Me.menuOption = PTmenue.multiprojektReport Or _
-            Me.menuOption = PTmenue.vorlageErstellen Then
+            Me.menuOption = PTmenue.vorlageErstellen Or _
+            Me.menuOption = PTmenue.reportBHTC Then
             validOption = True
         ElseIf showRangeRight - showRangeLeft > 5 Then
             validOption = True
@@ -223,7 +252,8 @@ Public Class frmHierarchySelection
             validOption = False
         End If
 
-        If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Then
+        If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Or _
+            Me.menuOption = PTmenue.reportBHTC Then
 
             If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
                     Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
@@ -267,8 +297,21 @@ Public Class frmHierarchySelection
                         AbbrButton.Text = "Abbrechen"
 
                         ' Alternativ ohne Background Worker
+                        If Me.menuOption = PTmenue.reportBHTC Then
 
-                        BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
+
+                            Call MsgBox("Report erstellen mit Projekt " & repProfil.VonDate.ToString & " bis " & repProfil.BisDate.ToString & " Reportprofil " & repProfil.name)
+                            Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
+
+                            repProfil.PPTTemplate = repVorlagenDropbox.Text
+
+                            BackgroundWorker3.RunWorkerAsync(repProfil)
+
+
+                        Else
+                            BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
+                        End If
+
 
                     Catch ex As Exception
                         Call MsgBox(ex.Message)
@@ -300,7 +343,7 @@ Public Class frmHierarchySelection
         enableOnUpdate = True
 
         ' bei bestimmten Menu-Optionen das Formuzlar dann schliessen 
-        If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Then
+        If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Or Me.menuOption = PTmenue.reportBHTC Then
             MyBase.Close()
         Else
             ' geänderte Auswahl/Filterliste neu anzeigen
@@ -321,7 +364,59 @@ Public Class frmHierarchySelection
         Dim dialogreturn As DialogResult
 
         mppFrm.calledfrom = "frmShowPlanElements"
+
+        If Me.menuOption = PTmenue.reportBHTC Then
+            With awinSettings
+
+                .drawProjectLine = True
+                .eppExtendedMode = repProfil.ExtendedMode
+                .mppExtendedMode = repProfil.ExtendedMode
+                .mppOnePage = repProfil.OnePage
+                .mppShowAllIfOne = repProfil.AllIfOne
+                .mppShowAmpel = repProfil.Ampeln
+                .mppShowLegend = repProfil.Legend
+                .mppShowMsDate = repProfil.MSDate
+                .mppShowMsName = repProfil.MSName
+                .mppShowPhDate = repProfil.PhDate
+                .mppShowPhName = repProfil.PhName
+                .mppShowProjectLine = repProfil.ProjectLine
+                .mppSortiertDauer = repProfil.SortedDauer
+                .mppVertikalesRaster = repProfil.VLinien
+                .mppFullyContained = repProfil.FullyContained
+                ' .mppShowHorizontals = repProfil.ShowHorizontals
+                ' .mppUseAbbreviation = repProfil.UseAbbreviation
+                ' .mppUseOriginalNames = repProfil.UseOriginalNames
+            End With
+        End If
+
+
         dialogreturn = mppFrm.ShowDialog
+
+
+        If Me.menuOption = PTmenue.reportBHTC Then
+
+            With awinSettings
+
+                .drawProjectLine = True
+                repProfil.ExtendedMode = .eppExtendedMode
+                repProfil.ExtendedMode = .mppExtendedMode
+                repProfil.OnePage = .mppOnePage
+                repProfil.AllIfOne = .mppShowAllIfOne
+                repProfil.Ampeln = .mppShowAmpel
+                repProfil.Legend = .mppShowLegend
+                repProfil.MSDate = .mppShowMsDate
+                repProfil.MSName = .mppShowMsName
+                repProfil.PhDate = .mppShowPhDate
+                repProfil.PhName = .mppShowPhName
+                repProfil.ProjectLine = .mppShowProjectLine
+                repProfil.SortedDauer = .mppSortiertDauer
+                repProfil.VLinien = .mppVertikalesRaster
+                repProfil.FullyContained = .mppFullyContained
+                'repProfil.ShowHorizontals = .mppShowHorizontals
+                'repProfil.UseAbbreviation = .mppUseAbbreviation
+                'repProfil.UseOriginalNames = .mppUseOriginalNames
+            End With
+        End If
 
     End Sub
 
@@ -523,15 +618,6 @@ Public Class frmHierarchySelection
 
     End Sub
 
-    Private Sub hryStufen_ValueChanged(sender As Object, e As EventArgs) Handles hryStufen.ValueChanged
-
-    End Sub
-
-    Private Sub hryTreeView_DoubleClick(sender As Object, e As EventArgs) Handles hryTreeView.DoubleClick
-
-
-
-    End Sub
 
 
     Private Sub hryTreeView_KeyPress(sender As Object, e As KeyPressEventArgs) Handles hryTreeView.KeyPress
@@ -804,7 +890,15 @@ Public Class frmHierarchySelection
 
             Cursor = Cursors.Default
 
+        ElseIf Me.menuOption = PTmenue.reportBHTC Then
+
+            'neuer Profil-Name in Klasse repProfil speichern
+            repProfil.name = filterDropbox.SelectedItem.ToString
+
+
+
         Else
+
 
             Dim fName As String = filterDropbox.SelectedItem.ToString
             ' wird nicht benötigt: ur: 29.07.2015 Dim filter As clsFilter = filterDefinitions.retrieveFilter(fName)
@@ -835,67 +929,78 @@ Public Class frmHierarchySelection
         Dim filterName As String = ""
         Dim element As String
 
-
-        appInstance.EnableEvents = False
-        enableOnUpdate = False
-
-        statusLabel.Text = ""
+        If Not Me.menuOption = PTmenue.reportBHTC Then
 
 
-        anzahlKnoten = hryTreeView.Nodes.Count
-        selectedNode = hryTreeView.SelectedNode
+            appInstance.EnableEvents = False
+            enableOnUpdate = False
 
-        selectedPhases.Clear()
-        selectedMilestones.Clear()
+            statusLabel.Text = ""
 
-        With hryTreeView
 
-            For px As Integer = 1 To anzahlKnoten
+            anzahlKnoten = hryTreeView.Nodes.Count
+            selectedNode = hryTreeView.SelectedNode
 
-                tmpNode = .Nodes.Item(px - 1)
+            selectedPhases.Clear()
+            selectedMilestones.Clear()
 
-                If tmpNode.Checked Then
-                    ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
+            With hryTreeView
 
-                    Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
-                    Dim elemName As String = elemNameOfElemID(tmpNode.Name)
-                    element = calcHryFullname(elemName, tmpBreadcrumb)
+                For px As Integer = 1 To anzahlKnoten
 
-                    If elemIDIstMeilenstein(tmpNode.Name) Then
-                        If Not selectedMilestones.Contains(element) Then
-                            selectedMilestones.Add(element, element)
-                        End If
-                    Else
-                        If Not selectedPhases.Contains(element) Then
-                            selectedPhases.Add(element, element)
+                    tmpNode = .Nodes.Item(px - 1)
+
+                    If tmpNode.Checked Then
+                        ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
+
+                        Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
+                        Dim elemName As String = elemNameOfElemID(tmpNode.Name)
+                        element = calcHryFullname(elemName, tmpBreadcrumb)
+
+                        If elemIDIstMeilenstein(tmpNode.Name) Then
+                            If Not selectedMilestones.Contains(element) Then
+                                selectedMilestones.Add(element, element)
+                            End If
+                        Else
+                            If Not selectedPhases.Contains(element) Then
+                                selectedPhases.Add(element, element)
+                            End If
+
                         End If
 
                     End If
 
+
+                    If tmpNode.Nodes.Count > 0 Then
+                        Call pickupCheckedItems(tmpNode)
+                    End If
+
+                Next
+
+            End With
+
+            If Me.menuOption = PTmenue.filterdefinieren Then
+
+                filterName = filterDropbox.Text
+                ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+                Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                       selectedPhases, selectedMilestones, _
+                                                       selectedRoles, selectedCosts, False)
+            ElseIf Me.menuOption = PTmenue.visualisieren Then
+
+                If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
+                    (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
+                    Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
+                Else
+                    filterName = filterDropbox.Text
+                    ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
+                    Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
+                                                           selectedPhases, selectedMilestones, _
+                                                           selectedRoles, selectedCosts, False)
                 End If
 
+            Else    ' alle anderen PTmenues
 
-                If tmpNode.Nodes.Count > 0 Then
-                    Call pickupCheckedItems(tmpNode)
-                End If
-
-            Next
-
-        End With
-
-        If Me.menuOption = PTmenue.filterdefinieren Then
-
-            filterName = filterDropbox.Text
-            ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-                                                   selectedPhases, selectedMilestones, _
-                                                   selectedRoles, selectedCosts, False)
-        ElseIf Me.menuOption = PTmenue.visualisieren Then
-
-            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0) And _
-                (selectedRoles.Count > 0 Or selectedCosts.Count > 0) Then
-                Call MsgBox("es können nur entweder Phasen / Meilensteine oder Rollen oder Kosten angezeigt werden")
-            Else
                 filterName = filterDropbox.Text
                 ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
                 Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
@@ -903,31 +1008,235 @@ Public Class frmHierarchySelection
                                                        selectedRoles, selectedCosts, False)
             End If
 
-        Else    ' alle anderen PTmenues
+            ' jetzt wird der letzte Filter gespeichert ..
+            Dim lastfilter As String = "Last"
+            Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps, _
+                                                       selectedPhases, selectedMilestones, _
+                                                       selectedRoles, selectedCosts, True)
 
-            filterName = filterDropbox.Text
-            ' jetzt wird der Filter unter dem Namen filterName gespeichert ..
-            Call storeFilter(filterName, menuOption, selectedBUs, selectedTyps, _
-                                                   selectedPhases, selectedMilestones, _
-                                                   selectedRoles, selectedCosts, False)
+            ' geänderte Auswahl/Filterliste neu anzeigen
+            If Not (Me.menuOption = PTmenue.filterdefinieren) Then
+                filterDropbox.Items.Clear()
+                For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
+                    filterDropbox.Items.Add(kvp.Key)
+                Next
+
+            End If
+
+
+        ElseIf Me.menuOption = PTmenue.reportBHTC Then
+
+
+            statusLabel.Text = ""
+
+
+            anzahlKnoten = hryTreeView.Nodes.Count
+            selectedNode = hryTreeView.SelectedNode
+
+            selectedPhases.Clear()
+            selectedMilestones.Clear()
+
+            With hryTreeView
+
+                For px As Integer = 1 To anzahlKnoten
+
+                    tmpNode = .Nodes.Item(px - 1)
+
+                    If tmpNode.Checked Then
+                        ' nur dann muss ja geprüft werden, ob das Element aufgenommen werden soll 
+
+                        Dim tmpBreadcrumb As String = hry.getBreadCrumb(tmpNode.Name, CInt(hryStufen.Value))
+                        Dim elemName As String = elemNameOfElemID(tmpNode.Name)
+                        element = calcHryFullname(elemName, tmpBreadcrumb)
+
+                        If elemIDIstMeilenstein(tmpNode.Name) Then
+                            If Not selectedMilestones.Contains(element) Then
+                                selectedMilestones.Add(element, element)
+                            End If
+                        Else
+                            If Not selectedPhases.Contains(element) Then
+                                selectedPhases.Add(element, element)
+                            End If
+
+                        End If
+
+                    End If
+
+
+                    If tmpNode.Nodes.Count > 0 Then
+                        Call pickupCheckedItems(tmpNode)
+                    End If
+
+                Next
+
+            End With
+
+
+            Dim vorlagenDateiName As String
+
+            vorlagenDateiName = awinPath & RepProjectVorOrdner & _
+                                "\" & repVorlagenDropbox.Text
+
+            ' Prüfen, ob die Datei überhaupt existirt 
+            If repVorlagenDropbox.Text.Length = 0 Then
+                Call MsgBox("bitte PPT Vorlage auswählen !")
+            ElseIf My.Computer.FileSystem.FileExists(vorlagenDateiName) Then
+
+                ' pptTemplatename speichern
+                repProfil.PPTTemplate = repVorlagenDropbox.Text
+
+                If filterDropbox.Text.Length <> 0 Then
+
+                    ' Name der ReportProfils speichern
+                    repProfil.name = filterDropbox.Text
+
+                    Call storeReportProfil(menuOption, selectedBUs, selectedTyps, _
+                                                               selectedPhases, selectedMilestones, _
+                                                               selectedRoles, selectedCosts, repProfil)
+
+
+                Else
+                    Call MsgBox("Bitte geben Sie einen Namen für diese Report-Profil an")
+                End If
+
+
+
+            Else
+
+                Call MsgBox("bitte PPT Vorlage auswählen !")
+
+            End If
+
+
+        Else
+            Call MsgBox("nicht reportBHTC aber auch reportBHTC: also eigentlich nicht möglich")
         End If
 
-        ' jetzt wird der letzte Filter gespeichert ..
-        Dim lastfilter As String = "Last"
-        Call storeFilter(lastfilter, menuOption, selectedBUs, selectedTyps, _
-                                                   selectedPhases, selectedMilestones, _
-                                                   selectedRoles, selectedCosts, True)
 
-        ' geänderte Auswahl/Filterliste neu anzeigen
-        If Not (Me.menuOption = PTmenue.filterdefinieren) Then
-            filterDropbox.Items.Clear()
-            For Each kvp As KeyValuePair(Of String, clsFilter) In selFilterDefinitions.Liste
-                filterDropbox.Items.Add(kvp.Key)
-            Next
-
-        End If
 
     End Sub
 
 
+    Private Sub BackgroundWorker3_DoWork(sender As Object, e As System.ComponentModel.DoWorkEventArgs) Handles BackgroundWorker3.DoWork
+
+        Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
+        ' ''Dim vorlagenDateiName As String = CType(e.Argument, String)
+
+        ' ReportProfil ist nun in reportProfil komplett enthalten
+        Dim reportProfil As clsReport = CType(e.Argument, clsReport)
+
+        Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
+        Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
+
+        Dim selectedPhases As New Collection
+        Dim selectedMilestones As New Collection
+        Dim selectedRoles As New Collection
+        Dim selectedCosts As New Collection
+        Dim selectedBUs As New Collection
+        Dim selectedTypes As New Collection
+
+        Call msgbox("Backgroundworker3_DoWork")
+
+        selectedPhases = copySortedListtoColl(reportProfil.Phases)
+        selectedMilestones = copySortedListtoColl(reportProfil.Milestones)
+        selectedRoles = copySortedListtoColl(reportProfil.Roles)
+        selectedCosts = copySortedListtoColl(reportProfil.Costs)
+        selectedBUs = copySortedListtoColl(reportProfil.BUs)
+        selectedTypes = copySortedListtoColl(reportProfil.Typs)
+
+        With awinSettings
+
+            .drawProjectLine = True
+            .eppExtendedMode = reportProfil.ExtendedMode
+            .mppExtendedMode = reportProfil.ExtendedMode
+            .mppOnePage = reportProfil.OnePage
+            .mppShowAllIfOne = reportProfil.AllIfOne
+            .mppShowAmpel = reportProfil.Ampeln
+            .mppShowLegend = reportProfil.Legend
+            .mppShowMsDate = reportProfil.MSDate
+            .mppShowMsName = reportProfil.MSName
+            .mppShowPhDate = reportProfil.PhDate
+            .mppShowPhName = reportProfil.PhName
+            .mppShowProjectLine = reportProfil.ProjectLine
+            .mppSortiertDauer = reportProfil.SortedDauer
+            .mppVertikalesRaster = reportProfil.VLinien
+            .mppFullyContained = reportProfil.FullyContained
+            ' .mppShowHorizontals = reportProfil.ShowHorizontals
+            ' .mppUseAbbreviation = reportProfil.UseAbbreviation
+            ' .mppUseOriginalNames = reportProfil.UseOriginalNames
+        End With
+
+
+        ' Report wird von Projekt hproj, das vor Aufruf des Formulars in hproj gespeichert wurde erzeugt
+
+        showRangeLeft = CInt(DateDiff(DateInterval.Month, StartofCalendar, reportProfil.VonDate))
+        showRangeRight = CInt(DateDiff(DateInterval.Month, StartofCalendar, reportProfil.BisDate))
+
+        Try
+            Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate
+
+            If My.Computer.FileSystem.FileExists(vorlagendateiname) Then
+
+                Dim projname As String = reportProfil.Projects.ElementAt(0).Value
+
+                Dim hproj As clsProjekt = ShowProjekte.getProject(projname)
+
+                Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
+                                                selectedPhases, selectedMilestones, _
+                                                selectedRoles, selectedCosts, _
+                                                selectedBUs, selectedTypes, True, _
+                                                True, zeilenhoehe, _
+                                                legendFontSize, _
+                                                worker, e)
+
+
+                ' ''Call createPPTReportFromProjects(vorlagenDateiName, _
+                ' ''                                   selectedPhases, selectedMilestones, _
+                ' ''                                   selectedRoles, selectedCosts, _
+                ' ''                                   selectedBUs, selectedTyps, _
+                ' ''                                   worker, e)
+            Else
+
+                ''Call createPPTSlidesFromConstellation(reportProfil.PPTTemplate, _
+                ''                                reportProfil.Phases, reportProfil.Milestones, _
+                ''                                reportProfil.Roles, reportProfil.Costs, _
+                ''                                reportProfil.BUs, reportProfil.Typs, True, _
+                ''                                worker, e)
+            End If
+
+
+        Catch ex As Exception
+            Call MsgBox("Fehler " & ex.Message)
+        End Try
+
+    End Sub
+
+    Private Sub BackgroundWorker3_ProgressChanged(sender As Object, e As System.ComponentModel.ProgressChangedEventArgs) Handles BackgroundWorker3.ProgressChanged
+
+
+        Dim re As System.ComponentModel.DoWorkEventArgs = CType(e.UserState, System.ComponentModel.DoWorkEventArgs)
+        Me.statusLabel.Text = CType(re.Result, String)
+
+    End Sub
+
+    Private Sub BackgroundWorker3_RunWorkerCompleted(sender As Object, e As System.ComponentModel.RunWorkerCompletedEventArgs) Handles BackgroundWorker3.RunWorkerCompleted
+
+        '' ''With Me.AbbrButton
+        '' ''    .Text = ""
+        '' ''    .Visible = False
+        '' ''    .Enabled = False
+        '' ''    .Left = .Left + 40
+        '' ''End With
+
+
+        Me.statusLabel.Text = "...done"
+        Me.statusLabel.Visible = True
+        Me.OKButton.Visible = True
+        Me.OKButton.Enabled = True
+        Me.OKButton.Enabled = True
+        Me.Cursor = System.Windows.Forms.Cursors.Arrow
+
+        ' hier evt. noch schließen und Abspeichern des Reports von PPT
+
+    End Sub
 End Class

@@ -33,15 +33,18 @@ Public Class VisboReportRibbon
     Private Sub EPReport_Click(sender As Object, e As RibbonControlEventArgs) Handles EPReport.Click
 
 
-
+        Dim reportAuswahl As New frmReportProfil
+        Dim hierarchiefenster As New frmHierarchySelection
+        Dim returnvalue As DialogResult
         Dim hproj As New clsProjekt
         Dim aktuellesDatum As Date = Date.Now
         Dim filename As String = ""
-        Call MsgBox("EPReport_Click")
+
+        'Call MsgBox("EPReport_Click")
+
         ' Laden des aktuell geladenen Projektes
         Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
-        Dim reportAuswahl As New frmReportProfil
-        Dim returnvalue As DialogResult
+     
         reportAuswahl.hproj = hproj
         returnvalue = reportAuswahl.ShowDialog
     End Sub

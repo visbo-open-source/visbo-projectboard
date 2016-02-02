@@ -29,7 +29,7 @@ Partial Class frmReportProfil
         Me.ReportErstellen = New System.Windows.Forms.Button()
         Me.changeProfil = New System.Windows.Forms.Button()
         Me.statusLabel = New System.Windows.Forms.Label()
-        Me.BackgroundWorker3 = New System.ComponentModel.BackgroundWorker()
+        Me.BGworkerReportBHTC = New System.ComponentModel.BackgroundWorker()
         Me.SuspendLayout()
         '
         'RepProfilListbox
@@ -38,22 +38,22 @@ Partial Class frmReportProfil
         Me.RepProfilListbox.FormattingEnabled = True
         Me.RepProfilListbox.HorizontalScrollbar = True
         Me.RepProfilListbox.ItemHeight = 16
-        Me.RepProfilListbox.Location = New System.Drawing.Point(34, 31)
+        Me.RepProfilListbox.Location = New System.Drawing.Point(39, 33)
         Me.RepProfilListbox.Margin = New System.Windows.Forms.Padding(5)
         Me.RepProfilListbox.Name = "RepProfilListbox"
         Me.RepProfilListbox.ScrollAlwaysVisible = True
         Me.RepProfilListbox.Size = New System.Drawing.Size(579, 372)
         Me.RepProfilListbox.Sorted = True
-        Me.RepProfilListbox.TabIndex = 0
+        Me.RepProfilListbox.TabIndex = 1
         '
         'zeitLabel
         '
         Me.zeitLabel.AutoSize = True
         Me.zeitLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte), True)
-        Me.zeitLabel.Location = New System.Drawing.Point(34, 454)
+        Me.zeitLabel.Location = New System.Drawing.Point(35, 445)
         Me.zeitLabel.Name = "zeitLabel"
         Me.zeitLabel.Size = New System.Drawing.Size(76, 20)
-        Me.zeitLabel.TabIndex = 1
+        Me.zeitLabel.TabIndex = 2
         Me.zeitLabel.Text = "Zeitraum:"
         Me.zeitLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft
         '
@@ -62,37 +62,37 @@ Partial Class frmReportProfil
         Me.vonDate.CalendarFont = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.vonDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.vonDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.vonDate.Location = New System.Drawing.Point(218, 451)
+        Me.vonDate.Location = New System.Drawing.Point(190, 439)
         Me.vonDate.Name = "vonDate"
         Me.vonDate.Size = New System.Drawing.Size(137, 26)
-        Me.vonDate.TabIndex = 4
+        Me.vonDate.TabIndex = 5
         '
         'bisDate
         '
         Me.bisDate.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.bisDate.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.bisDate.Location = New System.Drawing.Point(483, 448)
+        Me.bisDate.Location = New System.Drawing.Point(488, 439)
         Me.bisDate.Name = "bisDate"
         Me.bisDate.Size = New System.Drawing.Size(130, 26)
-        Me.bisDate.TabIndex = 5
+        Me.bisDate.TabIndex = 6
         '
         'ReportErstellen
         '
         Me.ReportErstellen.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.ReportErstellen.Location = New System.Drawing.Point(38, 496)
+        Me.ReportErstellen.Location = New System.Drawing.Point(39, 491)
         Me.ReportErstellen.Name = "ReportErstellen"
         Me.ReportErstellen.Size = New System.Drawing.Size(225, 27)
-        Me.ReportErstellen.TabIndex = 6
+        Me.ReportErstellen.TabIndex = 7
         Me.ReportErstellen.Text = "Bericht erstellen"
         Me.ReportErstellen.UseVisualStyleBackColor = True
         '
         'changeProfil
         '
         Me.changeProfil.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.changeProfil.Location = New System.Drawing.Point(388, 496)
+        Me.changeProfil.Location = New System.Drawing.Point(393, 491)
         Me.changeProfil.Name = "changeProfil"
         Me.changeProfil.Size = New System.Drawing.Size(225, 27)
-        Me.changeProfil.TabIndex = 7
+        Me.changeProfil.TabIndex = 8
         Me.changeProfil.Text = "Profil bearbeiten"
         Me.changeProfil.UseVisualStyleBackColor = True
         '
@@ -100,17 +100,15 @@ Partial Class frmReportProfil
         '
         Me.statusLabel.AutoSize = True
         Me.statusLabel.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.statusLabel.Location = New System.Drawing.Point(35, 548)
+        Me.statusLabel.Location = New System.Drawing.Point(36, 542)
         Me.statusLabel.Name = "statusLabel"
         Me.statusLabel.Size = New System.Drawing.Size(51, 17)
-        Me.statusLabel.TabIndex = 42
+        Me.statusLabel.TabIndex = 43
         Me.statusLabel.Text = "Label1"
         Me.statusLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft
         '
-        'BackgroundWorker3
+        'BGworkerReportBHTC
         '
-        Me.BackgroundWorker3.WorkerReportsProgress = True
-        Me.BackgroundWorker3.WorkerSupportsCancellation = True
         '
         'frmReportProfil
         '
@@ -137,5 +135,5 @@ Partial Class frmReportProfil
     Friend WithEvents ReportErstellen As System.Windows.Forms.Button
     Friend WithEvents changeProfil As System.Windows.Forms.Button
     Friend WithEvents statusLabel As System.Windows.Forms.Label
-    Friend WithEvents BackgroundWorker3 As System.ComponentModel.BackgroundWorker
+    Friend WithEvents BGworkerReportBHTC As System.ComponentModel.BackgroundWorker
 End Class

@@ -63,7 +63,7 @@ Imports System.Drawing
 
         Call projektTafelInit()
 
-        
+
         '
         If AlleProjekte.Count > 0 Then
             returnValue = storeConstellationFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Portfolios
@@ -1790,7 +1790,7 @@ Imports System.Drawing
     Sub NameHierarchySelAction(control As IRibbonControl)
 
 
-        Call PBBNameHierarchySelAction(control)
+        Call PBBNameHierarchySelAction(control.Id)
 
         '' ''Dim nameFormular As New frmNameSelection
         '' ''Dim hryFormular As New frmHierarchySelection
@@ -2467,7 +2467,7 @@ Imports System.Drawing
     Sub AnalyseLeistbarkeit001(ByVal control As IRibbonControl)
 
 
-        Call PBBAnalyseLeistbarkeit001(control)
+        Call PBBAnalyseLeistbarkeit001(control.Id)
 
         ' ''Dim namensFormular As New frmNameSelection
         ' ''Dim hierarchieFormular As New frmHierarchySelection

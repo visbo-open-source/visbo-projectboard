@@ -83,7 +83,9 @@ Public Class clsReport
                 .CalendarVonDate = Me.reportCalendarVon
                 .CalendarBisDate = Me.reportCalendarBis
                 .isMpp = Me.reportIsMpp
-                .PPTTemplate = Me.reportPPTTemplate
+                If Not isnothing(Me.reportppttemplate) Then
+                    .PPTTemplate = Me.reportPPTTemplate
+                End If
                 .Phases = copyList(Me.reportPhase)
                 .Milestones = copyList(Me.reportMilestone)
                 .Roles = copyList(Me.reportRolle)
@@ -129,7 +131,8 @@ Public Class clsReport
             If value >= StartofCalendar Then
                 reportCalendarVon = value
             Else
-                Throw New ArgumentException("Datum muss nach StartofCalendar liegen")
+                reportCalendarVon = StartofCalendar
+                'Throw New ArgumentException("Datum muss nach StartofCalendar liegen")
             End If
 
         End Set
@@ -148,7 +151,8 @@ Public Class clsReport
             If value >= StartofCalendar And value > Me.CalendarVonDate Then
                 reportCalendarBis = value
             Else
-                Throw New ArgumentException("Datum muss nach StartofCalendar und vor CalendarBisDate liegen")
+                reportCalendarBis = Date.Now
+                'Throw New ArgumentException("Datum muss nach StartofCalendar und vor heute liegen")
             End If
 
         End Set
@@ -654,6 +658,10 @@ Public Class clsReport
 
 
     Sub New()
+        reportCalendarVon = StartofCalendar
+        reportCalendarBis = Date.Now
+        reportVon = StartofCalendar
+        reportBis = Date.Now
         reportBU = New SortedList(Of String, String)
         reportPhase = New SortedList(Of String, String)
         reportMilestone = New SortedList(Of String, String)
@@ -661,6 +669,7 @@ Public Class clsReport
         reportRolle = New SortedList(Of String, String)
         reportCost = New SortedList(Of String, String)
         reportProjects = New SortedList(Of Double, String)
+        reportPPTTemplate = ""
         _name = "XXX"
     End Sub
 
@@ -699,9 +708,13 @@ Public Class clsReport
         reportTyp = New SortedList(Of String, String)
         reportTyp = copyList(rTyp)
 
+        reportCalendarVon = StartofCalendar
+        reportCalendarBis = Date.Now
+        reportVon = StartofCalendar
+        reportBis = Date.Now
+        reportPPTTemplate = ""
 
         name = kennung
 
     End Sub
-
 End Class

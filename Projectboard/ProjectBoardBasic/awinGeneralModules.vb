@@ -12,6 +12,7 @@ Imports System.Windows
 Imports System.Windows.Forms
 
 Imports System
+Imports System.Runtime.Serialization
 Imports System.Xml
 Imports System.Xml.Serialization
 Imports System.IO
@@ -2341,7 +2342,6 @@ Public Module awinGeneralModules
 
 
     End Sub
-
     Sub awinImportMSProject(ByVal modus As String, ByVal filename As String, ByRef hproj As clsProjekt, ByRef importdate As Date)
 
         Dim prj As MSProject.Application
@@ -2375,7 +2375,7 @@ Public Module awinGeneralModules
                     Exit Sub
                 End If
             End Try
-            
+
 
             If modus <> "BHTC" Then
 
@@ -2388,7 +2388,7 @@ Public Module awinGeneralModules
 
 
             End If
-           
+
             Dim anzProj As Integer = prj.Projects.Count
 
 
@@ -2942,7 +2942,7 @@ Public Module awinGeneralModules
 
 
     End Sub
-    
+
     ''' <summary>
     ''' Prüft, ob eine Phase (elemID) aus dem Projekt hproj gelöscht werden kann, 
     ''' da weder sie selbst betrachtet werden soll, noch all ihre Kinder
@@ -5017,10 +5017,8 @@ Public Module awinGeneralModules
                         hproj.ampelStatus = hwert
                     End If
 
-
                     ' Ampel-Bewertung 
                     hproj.ampelErlaeuterung = CType(.Range("BewertgErläuterung").Value, String)
-
 
 
                 End With
@@ -5095,14 +5093,12 @@ Public Module awinGeneralModules
                         'End Try
 
 
-
                     End With
                 End If
             Catch ex As Exception
                 Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Attribute", hproj.name, anzFehler)
                 Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Attribute")
             End Try
-
 
 
             ' ------------------------------------------------------------------------------------------------------
@@ -5119,7 +5115,6 @@ Public Module awinGeneralModules
                     wsTermine = Nothing
                 End Try
 
-
                 If Not IsNothing(wsTermine) Then
                     Try
                         With wsTermine
@@ -5135,7 +5130,6 @@ Public Module awinGeneralModules
                             Dim tbl As Excel.Range
                             Dim rowOffset As Integer
                             Dim columnOffset As Integer
-
 
 
                             .Unprotect(Password:="x")       ' Blattschutz aufheben
@@ -5319,7 +5313,8 @@ Public Module awinGeneralModules
 
                                         cphase = New clsPhase(parent:=hproj)
 
-                                        If PhaseDefinitions.Contains(objectName) Then
+                                        If PhaseDefinitions.Contains(objectName) Or awinSettings.alwaysAcceptTemplateNames _
+                                            Or awinSettings.addMissingPhaseMilestoneDef Then
 
                                             With cphase
                                                 .nameID = hproj.hierarchy.findUniqueElemKey(objectName, False)
@@ -5375,7 +5370,8 @@ Public Module awinGeneralModules
                                         End If
 
                                     ElseIf isMeilenstein Then
-                                        If MilestoneDefinitions.Contains(objectName) Then
+                                        If MilestoneDefinitions.Contains(objectName) Or awinSettings.alwaysAcceptTemplateNames _
+                                            Or awinSettings.addMissingPhaseMilestoneDef Then
 
                                             Dim hrchynode As New clsHierarchyNode
                                             hrchynode.elemName = cphase.name
@@ -5493,531 +5489,529 @@ Public Module awinGeneralModules
                         End With
 
                     Catch ex As Exception
-                Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Termine: '" & ex.Message, hproj.name, anzFehler)
-                'Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Termine von '" & hproj.name & "' " & vbLf & ex.Message)
-                Throw New ArgumentException(ex.Message)
+                        Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Termine: '" & ex.Message, hproj.name, anzFehler)
+                        'Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Termine von '" & hproj.name & "' " & vbLf & ex.Message)
+                        Throw New ArgumentException(ex.Message)
 
-            End Try
+                    End Try
 
 
                 Else
 
-            Call MsgBox("keine Termine definiert")
-            Throw New ArgumentException("Es wurden keine Termine definiert! Projekt " & hproj.name & " kann nicht eingelesen werden")
+                    Call MsgBox("keine Termine definiert")
+                    Throw New ArgumentException("Es wurden keine Termine definiert! Projekt " & hproj.name & " kann nicht eingelesen werden")
                 End If
-        Catch ex As Exception
-            Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Termine: '" & ex.Message, hproj.name, anzFehler)
-            Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Termine von '" & hproj.name & "' " & vbLf & ex.Message)
-
-        End Try
-
-
-        ' ------------------------------------------------------------------------------------------------------
-        ' Einlesen der Ressourcen
-        ' ------------------------------------------------------------------------------------------------------
-        Dim wsRessourcen As Excel.Worksheet
-        Try
-            wsRessourcen = CType(appInstance.ActiveWorkbook.Worksheets("Ressourcen"), _
-                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
-        Catch ex As Exception
-
-                wsRessourcen = Nothing
-            ' '' '' '' ------------------------------------------------------------------------------------------------------
-            ' '' '' '' Erzeugen und eintragen der Projekt-Phase (= erste Phase mit Dauer des Projekts)
-            ' '' '' '' ------------------------------------------------------------------------------------------------------
-            '' '' ''Try
-            '' '' ''    Dim cphase As New clsPhase(hproj)
-
-            '' '' ''    ' ProjektPhase wird erzeugt
-            '' '' ''    cphase = New clsPhase(parent:=hproj)
-            '' '' ''    cphase.nameID = rootPhaseName
-
-            '' '' ''    ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
-            '' '' ''    With cphase
-            '' '' ''        .nameID = rootPhaseName
-            '' '' ''        Dim startOffset As Integer = 0
-            '' '' ''        .changeStartandDauer(startOffset, ProjektdauerIndays)
-            '' '' ''    End With
-            '' '' ''    ' ProjektPhase wird hinzugefügt
-            '' '' ''    hproj.AddPhase(cphase)
-
-            '' '' ''Catch ex1 As Exception
-            '' '' ''    Throw New ArgumentException("Fehler in awinImportProject, Erzeugen ProjektPhase")
-            '' '' ''End Try
-
-
-        End Try
-
-        If Not IsNothing(wsRessourcen) Then
-
-            Try
-                With wsRessourcen
-                    Dim rng As Excel.Range
-                    Dim zelle As Excel.Range
-                    Dim ressSumOffset As Integer = 1
-                    Dim ressOff As Integer = 2
-                    Dim chkPhase As Boolean = True
-                    Dim chkRolle As Boolean = True
-                    Dim firsttime As Boolean = False
-                    Dim fertig As Boolean = True
-                    Dim summe As Double = -1        ' summe = -1: bedeutet, Summe wird nicht verwendet, oder hat einen unsinnigen Wert
-                    Dim Xwerte As Double() = Nothing
-                    Dim oldXwerte As Double()
-                    Dim crole As clsRolle
-                    Dim cphase As clsPhase = Nothing
-                    Dim lastphase As clsPhase = Nothing
-                    Dim lastelemID As String = ""
-                    Dim ccost As clsKostenart
-                    Dim phaseName As String = ""
-                    Dim aktLevel As Integer = 0   'speichert den Level direkt nach dem Lesen der Phase
-                    Dim cphaseLevel As Integer = 0 'speichert den Level der momentan in cphase gespeicherten Phase
-                    Dim lastlevel As Integer = 0  'speichert den Level des vorausgehenden elements
-                    Dim breadcrumb As String = ""
-                    Dim anfang As Integer, ende As Integer  ', projDauer As Integer
-
-                    Dim farbeAktuell As Object
-                    Dim r As Integer, k As Integer
-
-
-                    .Unprotect(Password:="x")       ' Blattschutz aufheben
-
-
-                    Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
-
-                    rng = .Range("Phasen_des_Projekts")
-
-                    Dim testrange As Excel.Range = CType(.Cells(1, 2000), Excel.Range)
-
-                    Dim gefundenRange As Excel.Range = testrange.Find(What:="Summe")
-                    If IsNothing(gefundenRange) Then
-                        ressOff = 1
-                        ressSumOffset = -1              ' keine Summe vorhanden
-                        Call logfileSchreiben("alte Version des ProjektSteckbriefes: ohne 'Summe'", hproj.name, anzFehler)
-                    Else
-                        ressOff = gefundenRange.Column - rng.Column - 1
-                        ressSumOffset = gefundenRange.Column - rng.Column - 2
-                        Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
-
-                    End If
-
-                    Dim hstr As String = CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value)
-                    hstr = elemNameOfElemID(rootPhaseName)
-
-                    If CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value) <> elemNameOfElemID(rootPhaseName) Then
-
-
-                        ' ProjektPhase wird hinzugefügt, sofern sie nich
-                        cphase = New clsPhase(parent:=hproj)
-                        fertig = False
-
-
-                        ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
-                        With cphase
-                            .nameID = rootPhaseName
-                            Dim startOffset As Integer = 0
-                            .changeStartandDauer(startOffset, ProjektdauerIndays)
-                            Dim phaseStartdate As Date = .getStartDate
-                            Dim phaseEnddate As Date = .getEndDate
-                            firsttime = True
-                        End With
-                        'Call MsgBox("Projektnamen/Phasen Konflikt in awinImportProjekt" & vbLf & "Problem wurde behoben")
-
-                    End If
-
-                    zeile = 0
-
-                    For Each zelle In rng
-
-                        zeile = zeile + 1
-
-                        ' nachsehen, ob Phase angegeben oder Rolle/Kosten
-                        hstr = CStr(zelle.Value)
-                        Dim x As Integer = CInt(zelle.IndentLevel)
-                        If x Mod einrückTiefe <> 0 Then
-                            Call logfileSchreiben("Fehler beim Lesen Ressourcen: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl", hproj.name, anzFehler)
-                            Throw New ArgumentException("Fehler beim Lesen Ressourcen: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl")
-                        End If
-                        aktLevel = CInt(x / einrückTiefe)
-
-                        If Len(CType(zelle.Value, String)) > 0 Then
-                            phaseName = CType(zelle.Value, String).Trim
-                        Else
-                            phaseName = ""
-                        End If
-
-                        ' hier wird die Rollen bzw Kosten Information ausgelesen
-                        Dim hname As String
-                        Try
-                            hname = CType(zelle.Offset(0, 1).Value, String).Trim
-                        Catch ex1 As Exception
-                            hname = ""
-                        End Try
-
-                        If Len(phaseName) > 0 And Len(hname) <= 0 Then
-                            chkPhase = True
-                            chkRolle = False
-                            If Not firsttime Then
-                                firsttime = True
-                            End If
-                        End If
-
-                        If Len(phaseName) <= 0 And Len(hname) > 0 Then
-                            If zeile = 1 Then
-                                Call MsgBox(" es fehlt die ProjektPhase")
-                            Else
-                                chkPhase = False
-                                chkRolle = True
-                            End If
-                        Else
-                        End If
-
-                        If Len(phaseName) > 0 And Len(hname) > 0 Then
-                            chkPhase = True
-                            chkRolle = True
-                        End If
-
-                        If Len(phaseName) <= 0 And Len(hname) <= 0 Then
-                            chkPhase = False
-                            chkRolle = False
-                            ' beim 1.mal: abspeichern der letzten Phase mit Ihren Rollen
-                            ' beim 2.mal: for - Schleife abbrechen
-                        End If
-
-                        Select Case chkPhase
-                            Case True
-
-                                If Not fertig Then
-
-                                    lastelemID = cphase.nameID
-                                    lastphase = cphase
-                                    lastlevel = cphaseLevel
-                                End If
-
-                                ' in cphase wird die Phase mit Namen phaseName, bereits über Termine in der Hierarchie des Projekts eingetragen
-                                ' gespeichert
-                                If phaseName = hproj.name Or phaseName = elemNameOfElemID(rootPhaseName) Then
-
-                                    cphase = hproj.getPhaseByID(rootPhaseName)
-
-
-                                Else
-
-                                    ' erzeugen des breadcrumb, um nachsehen zu können, ob diese Phase in der gleichen Hierarchiestufe
-                                    ' bereits über Termine eingelesen wurde
-                                    If aktLevel > lastlevel Then
-
-                                        If breadcrumb = "" Then
-                                            breadcrumb = "."
-                                        Else
-                                            breadcrumb = breadcrumb & "#" & lastphase.name
-                                        End If
-
-                                    ElseIf aktLevel = lastlevel Then
-                                        ' aktlevel = lastlevel: also nicht tun
-                                    Else
-
-                                        While aktLevel < lastlevel
-                                            Dim hhstr As String = ""
-                                            Call splitHryFullnameTo2(breadcrumb, hhstr, breadcrumb)
-                                            lastlevel = lastlevel - 1
-                                        End While
-
-                                    End If
-
-                                    ' Prüfung, ob die Phase phaseName in der bereits aus Termine bestehenden Hierarchie mit dem gleiche breadcrumb existiert, sonst Fehler
-
-                                    If Not hproj.hierarchy.containsPhase(phaseName, breadcrumb) Then
-
-                                        Call logfileSchreiben("Fehler beim Lesen Ressourcen: bei Phase '" & phaseName & "#" & breadcrumb & "'", hproj.name, anzFehler)
-                                        Throw New ArgumentException("Fehler beim Lesen Ressourcen: bei Phase '" & phaseName & "#" & breadcrumb & "'")
-                                    Else
-
-                                        Dim phaseIndex() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
-
-                                        cphase = hproj.getPhase(phaseIndex(0))
-                                        cphaseLevel = hproj.hierarchy.getIndentLevel(cphase.nameID)
-
-                                    End If
-
-                                End If
-
-                                fertig = False
-
-                                ' ur: 12.10.2015: neu:  Bedarfe nur als Summe angegeben
-
-                                ' Auslesen der Phasen Dauer und anschließend vergleichen, ob die in Termine mit der in Ressource übereinstimmt
-                                ' d.h. rel.Anfang und rel.Ende müssen übereinstimmen, wenn relStart und relEnde nicht übereinstimmen, so werden Sie einfach so gesetzt.
-
-                                Dim maxcol As Integer = hproj.anzahlRasterElemente
-                                Dim col As Integer
-
-
-                                col = 1
-                                While CInt(zelle.Offset(0, ressOff + col).Interior.ColorIndex) = -4142 And
-                                         Not (CType(zelle.Offset(0, ressOff + col).Value, String) = "x") And
-                                         col <= maxcol
-
-                                    col = col + 1
-
-                                End While
-
-
-                                If col >= maxcol Then
-
-                                    ' Phase und deren Länge wird nicht dargestellt in Tabellenblatt Ressourcen
-                                    anfang = cphase.relStart
-                                    ende = cphase.relEnde
-
-                                Else
-                                    ' Phasenlänge wird dargestellt in Tabellenblatt Ressourcen, also überprüfen
-
-                                    anfang = col
-
-                                    Try
-                                        ende = anfang + 1
-
-                                        If CInt(zelle.Offset(0, ressOff + anfang).Interior.ColorIndex) = -4142 Then
-                                            While CType(zelle.Offset(0, ressOff + ende).Value, String) = "x"
-                                                ende = ende + 1
-                                            End While
-                                            ende = ende - 1
-                                        Else
-                                            farbeAktuell = zelle.Offset(0, ressOff + anfang).Interior.Color
-                                            While CInt(zelle.Offset(0, ressOff + ende).Interior.Color) = CInt(farbeAktuell)
-
-                                                ende = ende + 1
-                                            End While
-                                            ende = ende - 1
-                                        End If
-
-                                    Catch ex As Exception
-                                        Call logfileSchreiben("Fehler beim Lesen Ressourcen: Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
-                                                                   "Bitte überprüfen Sie dies.", hproj.name, anzFehler)
-                                        Throw New ArgumentException("Fehler beim Lesen Ressourcen: Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
-                                                                   "Bitte überprüfen Sie dies.")
-                                    End Try
-
-                                End If
-
-
-                                ' Prüfung, ob die Phase cphase in Termine und Ressourcen übereinstimmt in relStart und relEnde
-
-
-                                If Not (anfang = cphase.relStart And ende = cphase.relEnde) Then
-
-                                    'Call MsgBox("Fehler beim Lesen der Ressourcen: die Dauer der Phase " & cphase.name & "' ist fehlerhaft")
-                                    Throw New ArgumentException("Fehler beim Lesen der Ressourcen: die Dauer der Phase '" & cphase.name & "' ist fehlerhaft")
-
-                                End If
-
-
-                                Select Case chkRolle
-                                    Case True
-                                        Throw New ArgumentException("Rollen/Kosten-Bedarfe zur Phase '" & phaseName & "' bitte in die darauffolgenden Zeilen eintragen")
-                                    Case False  ' es wurde nur eine Phase angegeben: korrekt
-
-                                End Select
-
-
-                            Case False ' auslesen Rollen- bzw. Kosten-Information
-
-
-                                Select Case chkRolle
-                                    Case True
-
-                                        ' hier wird die Rollen bzw Kosten Information ausgelesen
-                                        '
-                                        ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
-                                        '
-                                        If RoleDefinitions.Contains(hname) Then
-                                            Try
-                                                r = CInt(RoleDefinitions.getRoledef(hname).UID)
-
-
-                                                ''ur:12.10.2015: Eingabe einer Summe in Ressourcen nun möglich, 
-                                                Try
-                                                    summe = CDbl(zelle.Offset(0, 1 + ressSumOffset).Value)
-                                                Catch ex As Exception
-                                                    summe = -1
-                                                End Try
-
-                                                If summe > 0.0 Then    ' Verteilung der Summe auf die Monate über Dauer der Phase
-
-                                                    ReDim oldXwerte(0)
-                                                    oldXwerte(0) = summe
-
-                                                    With cphase
-
-                                                        anfang = .relStart
-                                                        ende = .relEnde
-                                                        ReDim Xwerte(ende - anfang)
-
-                                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
-                                                    End With
-
-                                                    ''ur:12.10.2015:  eingefügt
-
-                                                Else
-
-                                                    '  Anfang Check , ob richtige Kästchen Werte enthalten
-                                                    Dim msgstr As String = " Fehler bei der Verteilung benötigter Kapazitäten" & vbCrLf & "für Rolle " & hname & " in Spalte "
-                                                    Dim checkok As Boolean = True
-
-                                                    Dim i As Integer
-                                                    For i = 1 To hproj.anzahlRasterElemente
-
-                                                        Dim wertvorhanden As Boolean = (CDbl(zelle.Offset(0, i + ressOff).Value) <> 0.0)
-                                                        If (i < anfang Or i > ende) And wertvorhanden Then
-                                                            msgstr = msgstr & " ," & i
-                                                            checkok = False
-                                                        End If
-
-                                                    Next
-                                                    If Not checkok Then
-                                                        Call logfileSchreiben(msgstr, hproj.name, anzFehler)
-                                                        'Call MsgBox(msgstr)
-                                                        'Throw New ArgumentException(msgstr)
-                                                    End If
-                                                    ' Ende Check
-
-                                                    ReDim Xwerte(ende - anfang)
-
-                                                    Dim m As Integer
-                                                    For m = anfang To ende
-
-                                                        Try
-                                                            Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + ressOff).Value)
-                                                        Catch ex As Exception
-                                                            Xwerte(m - anfang) = 0.0
-                                                        End Try
-
-                                                    Next m
-
-
-                                                End If
-
-                                                crole = New clsRolle(ende - anfang + 1)
-                                                With crole
-                                                    .RollenTyp = r
-                                                    .Xwerte = Xwerte
-                                                End With
-
-                                                With cphase
-                                                    .addRole(crole)
-                                                End With
-
-                                            Catch ex As Exception
-                                                Throw New Exception(ex.Message)
-                                            End Try
-
-                                        ElseIf CostDefinitions.Contains(hname) Then
-
-                                            Try
-
-                                                k = CInt(CostDefinitions.getCostdef(hname).UID)
-
-                                                ''ur:12.10.2015: Eingabe einer Summe in Ressourcen nun möglich, 
-                                                Try
-                                                    summe = CDbl(zelle.Offset(0, 1 + ressSumOffset).Value)
-                                                Catch ex As Exception
-                                                    summe = -1
-                                                End Try
-
-                                                If summe > 0.0 Then        'Summe wird verteilt auf Dauer der Phase
-
-                                                    ReDim oldXwerte(0)
-                                                    oldXwerte(0) = summe
-
-                                                    With cphase
-
-                                                        anfang = .relStart
-                                                        ende = .relEnde
-                                                        ReDim Xwerte(ende - anfang)
-
-                                                        .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
-                                                    End With
-
-                                                Else
-
-
-                                                    ''ur:12.10.2015: 
-                                                    '  Anfang Check , ob richtige Kästchen Werte enthalten
-                                                    Dim msgstr As String = " Fehler bei der Verteilung benötigter Kapazitäten:" & vbCrLf & "für Kostenart " & hname & " in Spalte "
-                                                    Dim checkok As Boolean = True
-
-                                                    Dim i As Integer
-                                                    For i = 1 To hproj.anzahlRasterElemente
-
-                                                        Dim wertvorhanden As Boolean = (CDbl(zelle.Offset(0, i + ressOff).Value) <> 0.0)
-                                                        If (i < anfang Or i > ende) And wertvorhanden Then
-                                                            msgstr = msgstr & " ," & i
-                                                            checkok = False
-                                                        End If
-
-                                                    Next
-                                                    If Not checkok Then
-                                                        Call logfileSchreiben(msgstr, hproj.name, anzFehler)
-                                                        'Call MsgBox(msgstr)
-                                                        'Throw New ArgumentException(msgstr)
-                                                    End If
-                                                    ' Ende Check
-
-                                                    ReDim Xwerte(ende - anfang)
-                                                    Dim m As Integer
-                                                    For m = anfang To ende
-                                                        Try
-                                                            Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + ressOff).Value)
-                                                        Catch ex As Exception
-                                                            Xwerte(m - anfang) = 0.0
-                                                        End Try
-
-                                                    Next m
-
-                                                End If
-
-                                                ccost = New clsKostenart(ende - anfang + 1)
-                                                With ccost
-                                                    .KostenTyp = k
-                                                    .Xwerte = Xwerte
-                                                End With
-
-
-                                                With cphase
-                                                    .AddCost(ccost)
-                                                End With
-
-                                            Catch ex As Exception
-                                                Throw New Exception(ex.Message)
-                                            End Try
-
-                                        End If
-
-                                    Case False  ' es wurde weder Phase noch Rolle angegeben. 
-                                        If firsttime Then
-                                            firsttime = False
-                                        Else 'beim 2. mal:  ENDE von For-Schleife for each Zelle
-
-                                            Exit For
-                                        End If
-
-                                End Select
-
-                        End Select
-
-                    Next zelle
-
-
-                End With
             Catch ex As Exception
-                Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Ressourcen: " & ex.Message, hproj.name, anzFehler)
-                Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Ressourcen von '" & hproj.name & "' " & vbLf & ex.Message)
+                Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Termine: '" & ex.Message, hproj.name, anzFehler)
+                Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Termine von '" & hproj.name & "' " & vbLf & ex.Message)
+
             End Try
 
-        End If
 
-        ' ------------------------------------------------------------------
-        '   Ende Einlesen Ressourcen
-        ' -------------------------------------------------------------------
+            ' ------------------------------------------------------------------------------------------------------
+            ' Einlesen der Ressourcen
+            ' ------------------------------------------------------------------------------------------------------
+            Dim wsRessourcen As Excel.Worksheet
+            Try
+                wsRessourcen = CType(appInstance.ActiveWorkbook.Worksheets("Ressourcen"), _
+                                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Catch ex As Exception
+                wsRessourcen = Nothing
+                ' '' '' '' ------------------------------------------------------------------------------------------------------
+                ' '' '' '' Erzeugen und eintragen der Projekt-Phase (= erste Phase mit Dauer des Projekts)
+                ' '' '' '' ------------------------------------------------------------------------------------------------------
+                '' '' ''Try
+                '' '' ''    Dim cphase As New clsPhase(hproj)
+
+                '' '' ''    ' ProjektPhase wird erzeugt
+                '' '' ''    cphase = New clsPhase(parent:=hproj)
+                '' '' ''    cphase.nameID = rootPhaseName
+
+                '' '' ''    ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
+                '' '' ''    With cphase
+                '' '' ''        .nameID = rootPhaseName
+                '' '' ''        Dim startOffset As Integer = 0
+                '' '' ''        .changeStartandDauer(startOffset, ProjektdauerIndays)
+                '' '' ''    End With
+                '' '' ''    ' ProjektPhase wird hinzugefügt
+                '' '' ''    hproj.AddPhase(cphase)
+
+                '' '' ''Catch ex1 As Exception
+                '' '' ''    Throw New ArgumentException("Fehler in awinImportProject, Erzeugen ProjektPhase")
+                '' '' ''End Try
+
+            End Try
+
+            If Not IsNothing(wsRessourcen) Then
+
+                Try
+                    With wsRessourcen
+                        Dim rng As Excel.Range
+                        Dim zelle As Excel.Range
+                        Dim ressSumOffset As Integer = 1
+                        Dim ressOff As Integer = 2
+                        Dim chkPhase As Boolean = True
+                        Dim chkRolle As Boolean = True
+                        Dim firsttime As Boolean = False
+                        Dim fertig As Boolean = True
+                        Dim summe As Double = -1        ' summe = -1: bedeutet, Summe wird nicht verwendet, oder hat einen unsinnigen Wert
+                        Dim Xwerte As Double() = Nothing
+                        Dim oldXwerte As Double()
+                        Dim crole As clsRolle
+                        Dim cphase As clsPhase = Nothing
+                        Dim lastphase As clsPhase = Nothing
+                        Dim lastelemID As String = ""
+                        Dim ccost As clsKostenart
+                        Dim phaseName As String = ""
+                        Dim aktLevel As Integer = 0   'speichert den Level direkt nach dem Lesen der Phase
+                        Dim cphaseLevel As Integer = 0 'speichert den Level der momentan in cphase gespeicherten Phase
+                        Dim lastlevel As Integer = 0  'speichert den Level des vorausgehenden elements
+                        Dim breadcrumb As String = ""
+                        Dim anfang As Integer, ende As Integer  ', projDauer As Integer
+
+                        Dim farbeAktuell As Object
+                        Dim r As Integer, k As Integer
+
+
+                        .Unprotect(Password:="x")       ' Blattschutz aufheben
+
+
+                        Dim tmpws As Excel.Range = CType(wsRessourcen.Range("Phasen_des_Projekts"), Excel.Range)
+
+                        rng = .Range("Phasen_des_Projekts")
+
+                        Dim testrange As Excel.Range = CType(.Cells(1, 2000), Excel.Range)
+
+                        Dim gefundenRange As Excel.Range = testrange.Find(What:="Summe")
+                        If IsNothing(gefundenRange) Then
+                            ressOff = 1
+                            ressSumOffset = -1              ' keine Summe vorhanden
+                            Call logfileSchreiben("alte Version des ProjektSteckbriefes: ohne 'Summe'", hproj.name, anzFehler)
+                        Else
+                            ressOff = gefundenRange.Column - rng.Column - 1
+                            ressSumOffset = gefundenRange.Column - rng.Column - 2
+                            Call logfileSchreiben("neue Version des ProjektSteckbriefes: mit 'Summe'", hproj.name, anzFehler)
+
+                        End If
+
+                        Dim hstr As String = CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value)
+                        hstr = elemNameOfElemID(rootPhaseName)
+
+                        If CStr(CType(.Range("Phasen_des_Projekts").Cells(1), Excel.Range).Value) <> elemNameOfElemID(rootPhaseName) Then
+
+
+                            ' ProjektPhase wird hinzugefügt, sofern sie nich
+                            cphase = New clsPhase(parent:=hproj)
+                            fertig = False
+
+
+                            ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
+                            With cphase
+                                .nameID = rootPhaseName
+                                Dim startOffset As Integer = 0
+                                .changeStartandDauer(startOffset, ProjektdauerIndays)
+                                Dim phaseStartdate As Date = .getStartDate
+                                Dim phaseEnddate As Date = .getEndDate
+                                firsttime = True
+                            End With
+                            'Call MsgBox("Projektnamen/Phasen Konflikt in awinImportProjekt" & vbLf & "Problem wurde behoben")
+
+                        End If
+
+                        zeile = 0
+
+                        For Each zelle In rng
+
+                            zeile = zeile + 1
+
+                            ' nachsehen, ob Phase angegeben oder Rolle/Kosten
+                            hstr = CStr(zelle.Value)
+                            Dim x As Integer = CInt(zelle.IndentLevel)
+                            If x Mod einrückTiefe <> 0 Then
+                                Call logfileSchreiben("Fehler beim Lesen Ressourcen: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl", hproj.name, anzFehler)
+                                Throw New ArgumentException("Fehler beim Lesen Ressourcen: die Einrückung ist keine durch '" & CStr(einrückTiefe) & "' teilbare Zahl")
+                            End If
+                            aktLevel = CInt(x / einrückTiefe)
+
+                            If Len(CType(zelle.Value, String)) > 0 Then
+                                phaseName = CType(zelle.Value, String).Trim
+                            Else
+                                phaseName = ""
+                            End If
+
+                            ' hier wird die Rollen bzw Kosten Information ausgelesen
+                            Dim hname As String
+                            Try
+                                hname = CType(zelle.Offset(0, 1).Value, String).Trim
+                            Catch ex1 As Exception
+                                hname = ""
+                            End Try
+
+                            If Len(phaseName) > 0 And Len(hname) <= 0 Then
+                                chkPhase = True
+                                chkRolle = False
+                                If Not firsttime Then
+                                    firsttime = True
+                                End If
+                            End If
+
+                            If Len(phaseName) <= 0 And Len(hname) > 0 Then
+                                If zeile = 1 Then
+                                    Call MsgBox(" es fehlt die ProjektPhase")
+                                Else
+                                    chkPhase = False
+                                    chkRolle = True
+                                End If
+                            Else
+                            End If
+
+                            If Len(phaseName) > 0 And Len(hname) > 0 Then
+                                chkPhase = True
+                                chkRolle = True
+                            End If
+
+                            If Len(phaseName) <= 0 And Len(hname) <= 0 Then
+                                chkPhase = False
+                                chkRolle = False
+                                ' beim 1.mal: abspeichern der letzten Phase mit Ihren Rollen
+                                ' beim 2.mal: for - Schleife abbrechen
+                            End If
+
+                            Select Case chkPhase
+                                Case True
+
+                                    If Not fertig Then
+
+                                        lastelemID = cphase.nameID
+                                        lastphase = cphase
+                                        lastlevel = cphaseLevel
+                                    End If
+
+                                    ' in cphase wird die Phase mit Namen phaseName, bereits über Termine in der Hierarchie des Projekts eingetragen
+                                    ' gespeichert
+                                    If phaseName = hproj.name Or phaseName = elemNameOfElemID(rootPhaseName) Then
+
+                                        cphase = hproj.getPhaseByID(rootPhaseName)
+
+
+                                    Else
+
+                                        ' erzeugen des breadcrumb, um nachsehen zu können, ob diese Phase in der gleichen Hierarchiestufe
+                                        ' bereits über Termine eingelesen wurde
+                                        If aktLevel > lastlevel Then
+
+                                            If breadcrumb = "" Then
+                                                breadcrumb = "."
+                                            Else
+                                                breadcrumb = breadcrumb & "#" & lastphase.name
+                                            End If
+
+                                        ElseIf aktLevel = lastlevel Then
+                                            ' aktlevel = lastlevel: also nicht tun
+                                        Else
+
+                                            While aktLevel < lastlevel
+                                                Dim hhstr As String = ""
+                                                Call splitHryFullnameTo2(breadcrumb, hhstr, breadcrumb)
+                                                lastlevel = lastlevel - 1
+                                            End While
+
+                                        End If
+
+                                        ' Prüfung, ob die Phase phaseName in der bereits aus Termine bestehenden Hierarchie mit dem gleiche breadcrumb existiert, sonst Fehler
+
+                                        If Not hproj.hierarchy.containsPhase(phaseName, breadcrumb) Then
+
+                                            Call logfileSchreiben("Fehler beim Lesen Ressourcen: bei Phase '" & phaseName & "#" & breadcrumb & "'", hproj.name, anzFehler)
+                                            Throw New ArgumentException("Fehler beim Lesen Ressourcen: bei Phase '" & phaseName & "#" & breadcrumb & "'")
+                                        Else
+
+                                            Dim phaseIndex() As Integer = hproj.hierarchy.getPhaseIndices(phaseName, breadcrumb)
+
+                                            cphase = hproj.getPhase(phaseIndex(0))
+                                            cphaseLevel = hproj.hierarchy.getIndentLevel(cphase.nameID)
+
+                                        End If
+
+                                    End If
+
+                                    fertig = False
+
+                                    ' ur: 12.10.2015: neu:  Bedarfe nur als Summe angegeben
+
+                                    ' Auslesen der Phasen Dauer und anschließend vergleichen, ob die in Termine mit der in Ressource übereinstimmt
+                                    ' d.h. rel.Anfang und rel.Ende müssen übereinstimmen, wenn relStart und relEnde nicht übereinstimmen, so werden Sie einfach so gesetzt.
+
+                                    Dim maxcol As Integer = hproj.anzahlRasterElemente
+                                    Dim col As Integer
+
+
+                                    col = 1
+                                    While CInt(zelle.Offset(0, ressOff + col).Interior.ColorIndex) = -4142 And
+                                             Not (CType(zelle.Offset(0, ressOff + col).Value, String) = "x") And
+                                             col <= maxcol
+
+                                        col = col + 1
+
+                                    End While
+
+
+                                    If col >= maxcol Then
+
+                                        ' Phase und deren Länge wird nicht dargestellt in Tabellenblatt Ressourcen
+                                        anfang = cphase.relStart
+                                        ende = cphase.relEnde
+
+                                    Else
+                                        ' Phasenlänge wird dargestellt in Tabellenblatt Ressourcen, also überprüfen
+
+                                        anfang = col
+
+                                        Try
+                                            ende = anfang + 1
+
+                                            If CInt(zelle.Offset(0, ressOff + anfang).Interior.ColorIndex) = -4142 Then
+                                                While CType(zelle.Offset(0, ressOff + ende).Value, String) = "x"
+                                                    ende = ende + 1
+                                                End While
+                                                ende = ende - 1
+                                            Else
+                                                farbeAktuell = zelle.Offset(0, ressOff + anfang).Interior.Color
+                                                While CInt(zelle.Offset(0, ressOff + ende).Interior.Color) = CInt(farbeAktuell)
+
+                                                    ende = ende + 1
+                                                End While
+                                                ende = ende - 1
+                                            End If
+
+                                        Catch ex As Exception
+                                            Call logfileSchreiben("Fehler beim Lesen Ressourcen: Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
+                                                                       "Bitte überprüfen Sie dies.", hproj.name, anzFehler)
+                                            Throw New ArgumentException("Fehler beim Lesen Ressourcen: Es wurden keine oder falsche Angaben zur Phasendauer der Phase '" & phaseName & "' gemacht." & vbLf &
+                                                                       "Bitte überprüfen Sie dies.")
+                                        End Try
+
+                                    End If
+
+
+                                    ' Prüfung, ob die Phase cphase in Termine und Ressourcen übereinstimmt in relStart und relEnde
+
+
+                                    If Not (anfang = cphase.relStart And ende = cphase.relEnde) Then
+
+                                        'Call MsgBox("Fehler beim Lesen der Ressourcen: die Dauer der Phase " & cphase.name & "' ist fehlerhaft")
+                                        Throw New ArgumentException("Fehler beim Lesen der Ressourcen: die Dauer der Phase '" & cphase.name & "' ist fehlerhaft")
+
+                                    End If
+
+
+                                    Select Case chkRolle
+                                        Case True
+                                            Throw New ArgumentException("Rollen/Kosten-Bedarfe zur Phase '" & phaseName & "' bitte in die darauffolgenden Zeilen eintragen")
+                                        Case False  ' es wurde nur eine Phase angegeben: korrekt
+
+                                    End Select
+
+
+                                Case False ' auslesen Rollen- bzw. Kosten-Information
+
+
+                                    Select Case chkRolle
+                                        Case True
+
+                                            ' hier wird die Rollen bzw Kosten Information ausgelesen
+                                            '
+                                            ' entweder nun Rollen/Kostendefinition oder Ende der Phasen
+                                            '
+                                            If RoleDefinitions.Contains(hname) Then
+                                                Try
+                                                    r = CInt(RoleDefinitions.getRoledef(hname).UID)
+
+
+                                                    ''ur:12.10.2015: Eingabe einer Summe in Ressourcen nun möglich, 
+                                                    Try
+                                                        summe = CDbl(zelle.Offset(0, 1 + ressSumOffset).Value)
+                                                    Catch ex As Exception
+                                                        summe = -1
+                                                    End Try
+
+                                                    If summe > 0.0 Then    ' Verteilung der Summe auf die Monate über Dauer der Phase
+
+                                                        ReDim oldXwerte(0)
+                                                        oldXwerte(0) = summe
+
+                                                        With cphase
+
+                                                            anfang = .relStart
+                                                            ende = .relEnde
+                                                            ReDim Xwerte(ende - anfang)
+
+                                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                                        End With
+
+                                                        ''ur:12.10.2015:  eingefügt
+
+                                                    Else
+
+                                                        '  Anfang Check , ob richtige Kästchen Werte enthalten
+                                                        Dim msgstr As String = " Fehler bei der Verteilung benötigter Kapazitäten" & vbCrLf & "für Rolle " & hname & " in Spalte "
+                                                        Dim checkok As Boolean = True
+
+                                                        Dim i As Integer
+                                                        For i = 1 To hproj.anzahlRasterElemente
+
+                                                            Dim wertvorhanden As Boolean = (CDbl(zelle.Offset(0, i + ressOff).Value) <> 0.0)
+                                                            If (i < anfang Or i > ende) And wertvorhanden Then
+                                                                msgstr = msgstr & " ," & i
+                                                                checkok = False
+                                                            End If
+
+                                                        Next
+                                                        If Not checkok Then
+                                                            Call logfileSchreiben(msgstr, hproj.name, anzFehler)
+                                                            'Call MsgBox(msgstr)
+                                                            'Throw New ArgumentException(msgstr)
+                                                        End If
+                                                        ' Ende Check
+
+                                                        ReDim Xwerte(ende - anfang)
+
+                                                        Dim m As Integer
+                                                        For m = anfang To ende
+
+                                                            Try
+                                                                Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + ressOff).Value)
+                                                            Catch ex As Exception
+                                                                Xwerte(m - anfang) = 0.0
+                                                            End Try
+
+                                                        Next m
+
+
+                                                    End If
+
+                                                    crole = New clsRolle(ende - anfang + 1)
+                                                    With crole
+                                                        .RollenTyp = r
+                                                        .Xwerte = Xwerte
+                                                    End With
+
+                                                    With cphase
+                                                        .addRole(crole)
+                                                    End With
+
+                                                Catch ex As Exception
+                                                    Throw New Exception(ex.Message)
+                                                End Try
+
+                                            ElseIf CostDefinitions.Contains(hname) Then
+
+                                                Try
+
+                                                    k = CInt(CostDefinitions.getCostdef(hname).UID)
+
+                                                    ''ur:12.10.2015: Eingabe einer Summe in Ressourcen nun möglich, 
+                                                    Try
+                                                        summe = CDbl(zelle.Offset(0, 1 + ressSumOffset).Value)
+                                                    Catch ex As Exception
+                                                        summe = -1
+                                                    End Try
+
+                                                    If summe > 0.0 Then        'Summe wird verteilt auf Dauer der Phase
+
+                                                        ReDim oldXwerte(0)
+                                                        oldXwerte(0) = summe
+
+                                                        With cphase
+
+                                                            anfang = .relStart
+                                                            ende = .relEnde
+                                                            ReDim Xwerte(ende - anfang)
+
+                                                            .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+                                                        End With
+
+                                                    Else
+
+
+                                                        ''ur:12.10.2015: 
+                                                        '  Anfang Check , ob richtige Kästchen Werte enthalten
+                                                        Dim msgstr As String = " Fehler bei der Verteilung benötigter Kapazitäten:" & vbCrLf & "für Kostenart " & hname & " in Spalte "
+                                                        Dim checkok As Boolean = True
+
+                                                        Dim i As Integer
+                                                        For i = 1 To hproj.anzahlRasterElemente
+
+                                                            Dim wertvorhanden As Boolean = (CDbl(zelle.Offset(0, i + ressOff).Value) <> 0.0)
+                                                            If (i < anfang Or i > ende) And wertvorhanden Then
+                                                                msgstr = msgstr & " ," & i
+                                                                checkok = False
+                                                            End If
+
+                                                        Next
+                                                        If Not checkok Then
+                                                            Call logfileSchreiben(msgstr, hproj.name, anzFehler)
+                                                            'Call MsgBox(msgstr)
+                                                            'Throw New ArgumentException(msgstr)
+                                                        End If
+                                                        ' Ende Check
+
+                                                        ReDim Xwerte(ende - anfang)
+                                                        Dim m As Integer
+                                                        For m = anfang To ende
+                                                            Try
+                                                                Xwerte(m - anfang) = CDbl(zelle.Offset(0, m + ressOff).Value)
+                                                            Catch ex As Exception
+                                                                Xwerte(m - anfang) = 0.0
+                                                            End Try
+
+                                                        Next m
+
+                                                    End If
+
+                                                    ccost = New clsKostenart(ende - anfang + 1)
+                                                    With ccost
+                                                        .KostenTyp = k
+                                                        .Xwerte = Xwerte
+                                                    End With
+
+
+                                                    With cphase
+                                                        .AddCost(ccost)
+                                                    End With
+
+                                                Catch ex As Exception
+                                                    Throw New Exception(ex.Message)
+                                                End Try
+
+                                            End If
+
+                                        Case False  ' es wurde weder Phase noch Rolle angegeben. 
+                                            If firsttime Then
+                                                firsttime = False
+                                            Else 'beim 2. mal:  ENDE von For-Schleife for each Zelle
+
+                                                Exit For
+                                            End If
+
+                                    End Select
+
+                            End Select
+
+                        Next zelle
+
+
+                    End With
+                Catch ex As Exception
+                    Call logfileSchreiben("Fehler in awinImportProjectmitHrchy, Lesen Ressourcen: " & ex.Message, hproj.name, anzFehler)
+                    Throw New ArgumentException("Fehler in awinImportProjectmitHrchy, Lesen Ressourcen von '" & hproj.name & "' " & vbLf & ex.Message)
+                End Try
+
+            End If
+
+            ' ------------------------------------------------------------------
+            '   Ende Einlesen Ressourcen
+            ' -------------------------------------------------------------------
 
         Catch ex As Exception
             Call logfileSchreiben("Fehler in awinImportProjectmitHrchy " & ex.Message, hproj.name, anzFehler)
@@ -9535,10 +9529,10 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub frmHryNameReadPPTVorlagen(ByVal menuOption As Integer, ByRef repVorlagenDropbox As System.Windows.Forms.ComboBox)
 
-        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport Then
+        Dim dirname As String
+        Dim dateiName As String = ""
 
-            Dim dirname As String
-            Dim dateiName As String = ""
+        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport Then
 
             If menuOption = PTmenue.multiprojektReport Then
                 dirname = awinPath & RepPortfolioVorOrdner
@@ -9560,8 +9554,23 @@ Public Module awinGeneralModules
             Catch ex As Exception
 
             End Try
-        Else
+        ElseIf menuOption = PTmenue.reportBHTC Then
 
+            dirname = awinPath & RepProjectVorOrdner
+
+            Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
+            Try
+
+                Dim i As Integer
+                For i = 1 To listOfVorlagen.Count
+
+                    dateiName = Dir(listOfVorlagen.Item(i - 1))
+                    repVorlagenDropbox.Items.Add(dateiName)
+
+                Next i
+            Catch ex As Exception
+
+            End Try
 
         End If
 
@@ -10189,7 +10198,6 @@ Public Module awinGeneralModules
         ' XML-Datei Öffnen
         ' A FileStream is needed to read the XML document.
         Dim fs As New FileStream(newXMLfilename, FileMode.Open)
-
 
         ' Declare an object variable of the type to be deserialized.
         Dim Rplan As New rxf            ' Class rxf wird in clsRplanRXF.vb definiert
@@ -11274,4 +11282,155 @@ Public Module awinGeneralModules
         End If
 
     End Sub
+
+
+    Public Sub XMLExportReportProfil(ByVal profil As clsReport)
+
+
+
+        Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profil.name & ".xml"
+
+        Try
+
+            Dim serializer = New DataContractSerializer(GetType(clsReport))
+
+            ' ''Dim xmlstring As String
+            ' ''Dim sw As New StringWriter()
+            ' ''Dim writer As New XmlTextWriter(sw)
+            ' ''writer.Formatting = Formatting.Indented
+            ' ''serializer.WriteObject(writer, profil)
+            ' ''writer.Flush()
+            ' ''xmlstring = sw.ToString()
+
+            ' XML-Datei Öffnen
+            ' A FileStream is needed to write the XML document.
+
+            Dim file As New FileStream(xmlfilename, FileMode.Create)
+            serializer.WriteObject(file, profil)
+            file.Close()
+        Catch ex As Exception
+
+            Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+
+        End Try
+
+    End Sub
+
+    Public Function XMLImportReportProfil(ByVal profilName As String) As clsReport
+
+        Dim profil As New clsReport
+
+        Dim serializer = New DataContractSerializer(GetType(clsReport))
+        Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profilName & ".xml"
+        Try
+
+            ' XML-Datei Öffnen
+            ' A FileStream is needed to read the XML document.
+            Dim file As New FileStream(xmlfilename, FileMode.Open)
+            profil = serializer.ReadObject(file)
+            file.Close()
+
+            XMLImportReportProfil = profil
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+            XMLImportReportProfil = Nothing
+        End Try
+
+    End Function
+
+    Public Sub retrieveProfilSelection(ByVal profilName As String, ByVal menuOption As Integer, _
+                                     ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
+                                     ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
+                                     ByRef selectedRoles As Collection, ByRef selectedCosts As Collection, ByRef reportProfil As clsReport)
+        Try
+
+            ' Datumsangaben sichern
+            Dim vondate_sav As Date = reportProfil.VonDate
+            Dim bisdate_sav As Date = reportProfil.BisDate
+            Dim PPTvondate_sav As Date = reportProfil.CalendarVonDate
+            Dim PPTbisdate_sav As Date = reportProfil.CalendarBisDate
+
+            ' Projekte sichern
+            Dim projects_sav As New SortedList(Of Double, String)
+            For Each kvp As KeyValuePair(Of Double, String) In reportProfil.Projects
+                projects_sav.Add(kvp.Key, kvp.Value)
+            Next
+
+
+            ' Einlesen des ausgewählten ReportProfils
+            reportProfil = XMLImportReportProfil(profilName)
+
+            ' Datumsangaben zurücksichern
+            reportProfil.CalendarVonDate = PPTvondate_sav
+            reportProfil.CalendarBisDate = PPTbisdate_sav
+            reportProfil.VonDate = vondate_sav
+            reportProfil.BisDate = bisdate_sav
+
+            ' Projekte zurücksichern
+            reportProfil.Projects.Clear()
+            For Each kvp As KeyValuePair(Of Double, String) In projects_sav
+                reportProfil.Projects.Add(kvp.Key, kvp.Value)
+            Next
+
+            '  und bereitstellen der Auswahl für Hierarchieselection
+            selectedPhases = copySortedListtoColl(reportProfil.Phases)
+            selectedMilestones = copySortedListtoColl(reportProfil.Milestones)
+            selectedRoles = copySortedListtoColl(reportProfil.Roles)
+            selectedCosts = copySortedListtoColl(reportProfil.Costs)
+            selectedBUs = copySortedListtoColl(reportProfil.BUs)
+            selectedTyps = copySortedListtoColl(reportProfil.Typs)
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler beim Lesen des ReportProfils: retrieveProfilSelection")
+        End Try
+
+    End Sub
+
+
+    Public Sub storeReportProfil(ByVal menuOption As Integer, _
+                                     ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+                                     ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+                                     ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, ByVal reportProfil As clsReport)
+
+
+
+        '  und bereitstellen der Auswahl für Hierarchieselection
+        reportProfil.Phases = copyColltoSortedList(selectedPhases)
+        reportProfil.Milestones = copyColltoSortedList(selectedMilestones)
+        reportProfil.Roles = copyColltoSortedList(selectedRoles)
+        reportProfil.Costs = copyColltoSortedList(selectedCosts)
+        reportProfil.BUs = copyColltoSortedList(selectedBUs)
+        reportProfil.Typs = copyColltoSortedList(selectedTyps)
+
+
+        With awinSettings
+
+            .drawProjectLine = True
+            reportProfil.ExtendedMode = .eppExtendedMode
+            reportProfil.ExtendedMode = .mppExtendedMode
+            reportProfil.OnePage = .mppOnePage
+            reportProfil.AllIfOne = .mppShowAllIfOne
+            reportProfil.Ampeln = .mppShowAmpel
+            reportProfil.Legend = .mppShowLegend
+            reportProfil.MSDate = .mppShowMsDate
+            reportProfil.MSName = .mppShowMsName
+            reportProfil.PhDate = .mppShowPhDate
+            reportProfil.PhName = .mppShowPhName
+            reportProfil.ProjectLine = .mppShowProjectLine
+            reportProfil.SortedDauer = .mppSortiertDauer
+            reportProfil.VLinien = .mppVertikalesRaster
+            reportProfil.FullyContained = .mppFullyContained
+            'reportProfil.ShowHorizontals = .mppShowHorizontals
+            'reportProfil.UseAbbreviation = .mppUseAbbreviation
+            'reportProfil.UseOriginalNames = .mppUseOriginalNames
+        End With
+
+
+        ' Schreiben des ausgewählten ReportProfils
+        Call XMLExportReportProfil(reportProfil)
+
+    End Sub
+
 End Module

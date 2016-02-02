@@ -222,7 +222,7 @@ Public Module testModule
     ''' </summary>
     ''' <param name="hproj"></param>
     ''' <remarks></remarks>
-    Public Sub createPPTSlidesFromProject(ByRef hproj As clsProjekt, pptTemplateName As String, _
+    Public Sub createPPTSlidesFromProject(ByRef hproj As clsProjekt, ByVal pptTemplateName As String, _
                                           ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                           ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                           ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
@@ -783,7 +783,7 @@ Public Module testModule
                                     objectsDone = objectsToDo
 
                                 End Try
-                                
+
 
                             Case "Multivariantensicht"
 
@@ -883,7 +883,7 @@ Public Module testModule
                                             .TextFrame2.TextRange.Text = "zum Projekt" & hproj.name & vbLf & "gibt es noch keine Trend-Analyse," & vbLf & _
                                                                         "da es noch nicht begonnen hat"
                                         End Try
-                                        
+
                                     Else
                                         .TextFrame2.TextRange.Text = "es gibt keine Meilensteine im Projekt" & vbLf & hproj.name
                                     End If
@@ -1440,8 +1440,8 @@ Public Module testModule
                                     End If
 
 
-                                        reportObj = obj
-                                        notYetDone = True
+                                    reportObj = obj
+                                    notYetDone = True
 
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Personal-Kosten sind Null"
