@@ -1150,7 +1150,7 @@
                 sptr = -1
             End If
 
-            Dim breadCrumb As String
+            Dim fullSwlBreadCrumb As String
 
 
             If Not isBhtcSchema Then
@@ -1168,8 +1168,8 @@
                     Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
 
                     For Each obj As Object In segmentCollection
-                        Dim sgementNameID As String = CStr(obj)
-                        breadCrumb = Me.hierarchy.getBreadCrumb(sgementNameID)
+                        Dim segmentNameID As String = CStr(obj)
+                        fullSwlBreadCrumb = Me.getBcElemName(segmentNameID)
 
                         If considerAll Then
                             anzSegments = anzSegments + 1
@@ -1178,7 +1178,7 @@
                             Dim found As Boolean = False
                             Dim index = 0
                             Do While Not found And index <= sptr
-                                If breadCrumbArray(index).StartsWith(breadCrumb) Then
+                                If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
                                     found = True
                                 Else
                                     index = index + 1
@@ -1221,78 +1221,86 @@
             Dim ankerName As String = "BHTC milestones"
 
             Dim anzSwimlanes As Integer = 0
-            Dim sptr As Integer = breadCrumbArray.Length - 1
+            Dim sptr As Integer = -1
+
+            If Not IsNothing(breadCrumbArray) Then
+                sptr = breadCrumbArray.Length - 1
+            End If
+
+
 
             ' ein fullBreadCrumb enthält auch den ElemName am Schluss ...
             Dim fullSwlBreadCrumb As String
 
-            If Not isBhtcSchema Then
-                ' noch nicht implementiert 
-            Else
-                Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
-                Dim parentNameID As String = ""
+            If index > 0 Then
 
-                If Not IsNothing(ankerPhase) Then
-                    parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
-                End If
+                If Not isBhtcSchema Then
+                    ' noch nicht implementiert 
+                Else
+                    Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
+                    Dim parentNameID As String = ""
 
-                If parentNameID.Length > 1 Then
+                    If Not IsNothing(ankerPhase) Then
+                        parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
+                    End If
 
-                    Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(parentNameID, False)
+                    If parentNameID.Length > 1 Then
 
-                    For Each obj As Object In segmentCollection
-                        Dim sgementNameID As String = CStr(obj)
-                        Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(sgementNameID, False)
+                        Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(parentNameID, False)
 
-                        For Each childObj As Object In ChildCollection
-                            Dim swimlaneID As String = CStr(childObj)
-                            fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+                        For Each obj As Object In segmentCollection
+                            Dim sgementNameID As String = CStr(obj)
+                            Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(sgementNameID, False)
 
-                            If considerAll Then
-                                anzSwimlanes = anzSwimlanes + 1
-                                If index = anzSwimlanes Then
-                                    ' das ist jetzt die Phase 
-                                    tmpPhase = Me.getPhaseByID(swimlaneID)
-                                    Exit For
-                                End If
-                            Else
-                                ' ist eines der Elemente in der Swimlane enthalten ? 
-                                Dim found As Boolean = False
-                                Dim ix = 0
-                                Do While Not found And ix <= sptr
-                                    If breadCrumbArray(ix).StartsWith(fullSwlBreadCrumb) Then
-                                        found = True
-                                    Else
-                                        ix = ix + 1
-                                    End If
-                                Loop
-                                If found Then
+                            For Each childObj As Object In ChildCollection
+                                Dim swimlaneID As String = CStr(childObj)
+                                fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                                If considerAll Then
                                     anzSwimlanes = anzSwimlanes + 1
                                     If index = anzSwimlanes Then
                                         ' das ist jetzt die Phase 
                                         tmpPhase = Me.getPhaseByID(swimlaneID)
                                         Exit For
                                     End If
+                                Else
+                                    ' ist eines der Elemente in der Swimlane enthalten ? 
+                                    Dim found As Boolean = False
+                                    Dim ix = 0
+                                    Do While Not found And ix <= sptr
+                                        If breadCrumbArray(ix).StartsWith(fullSwlBreadCrumb) Then
+                                            found = True
+                                        Else
+                                            ix = ix + 1
+                                        End If
+                                    Loop
+                                    If found Then
+                                        anzSwimlanes = anzSwimlanes + 1
+                                        If index = anzSwimlanes Then
+                                            ' das ist jetzt die Phase 
+                                            tmpPhase = Me.getPhaseByID(swimlaneID)
+                                            Exit For
+                                        End If
+                                    End If
                                 End If
+                                ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                            Next
+
+                            If index = anzSwimlanes Then
+                                Exit For
                             End If
-                            ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
 
                         Next
 
-                        If index = anzSwimlanes Then
-                            Exit For
-                        End If
+                    End If
 
-                    Next
 
                 End If
-
 
             End If
 
             getSwimlane = tmpPhase
-
-
 
         End Get
     End Property

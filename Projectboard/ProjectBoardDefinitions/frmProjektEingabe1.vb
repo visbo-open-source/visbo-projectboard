@@ -476,7 +476,7 @@ Public Class frmProjektEingabe1
     End Sub
 
 
-    Private Sub Label6_Click(sender As Object, e As EventArgs) Handles Lbl_Beschreibung.Click
+    Private Sub Label6_Click(sender As Object, e As EventArgs)
 
     End Sub
 
