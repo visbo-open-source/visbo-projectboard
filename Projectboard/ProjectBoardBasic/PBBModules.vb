@@ -23,12 +23,25 @@ Public Module PBBModules
     ''' </summary>
     ''' <param name="controlID"></param>
     ''' <remarks></remarks>
-    Sub PBBBHTCHierarchySelAction(controlID As String)
+
+    Sub PBBBHTCHierarchySelAction(controlID As String, ByVal reportprofil As clsReport)
 
         Dim hryFormular As New frmHierarchySelection
         Dim returnValue As DialogResult
 
-        hryFormular.calledFrom = "MS-Project"
+
+        If controlID = "PT1G1B3" Then
+            hryFormular.calledFrom = "Multiprojekt-Tafel"
+        Else
+            hryFormular.calledFrom = "MS-Project"
+        End If
+
+
+        hryFormular.repProfil = New clsReport
+
+        reportprofil.CopyTo(hryFormular.repProfil)
+
+        'hryFormular.repProfil = reportprofil
 
         Dim formerSettings(3) As Boolean
         With awinSettings
@@ -44,15 +57,9 @@ Public Module PBBModules
             .mppShowAmpel = False
             .mppFullyContained = False
         End With
-        
+
         awinSettings.useHierarchy = True
         With hryFormular
-
-            If controlID = "PT1G1B3" Then
-                .calledFrom = "Multiprojekt-Tafel"
-            Else
-                .calledFrom = "MS-Project"
-            End If
 
             .Text = "Projekt-Report erzeugen"
             .OKButton.Text = "Bericht erstellen"
@@ -66,9 +73,12 @@ Public Module PBBModules
             .chkbxOneChart.Checked = False
             .chkbxOneChart.Visible = False
 
+
             .hryStufenLabel.Visible = False
             .hryStufen.Value = 50
             .hryStufen.Visible = False
+
+
 
             ' Reports
             .repVorlagenDropbox.Visible = True
@@ -77,20 +87,24 @@ Public Module PBBModules
 
             ' Filter
             .filterDropbox.Visible = True
+
+            .filterDropbox.Text = reportprofil.name
             .filterLabel.Visible = True
-            .filterLabel.Text = "Name des Report-Profils"
+            .filterLabel.Text = "Name Report-Profil"
+
 
 
             ' bei Verwendung Background Worker muss Aufruf so erfolgen: 
             returnValue = .ShowDialog
         End With
 
-        With awinSettings
-            .mppExtendedMode = formerSettings(0)
-            .mppShowAllIfOne = formerSettings(1)
-            .mppShowAmpel = formerSettings(2)
-            .mppFullyContained = formerSettings(3)
-        End With
+
+            With awinSettings
+                .mppExtendedMode = formerSettings(0)
+                .mppShowAllIfOne = formerSettings(1)
+                .mppShowAmpel = formerSettings(2)
+                .mppFullyContained = formerSettings(3)
+            End With
 
 
     End Sub

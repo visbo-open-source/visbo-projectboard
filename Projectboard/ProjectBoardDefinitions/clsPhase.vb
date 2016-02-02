@@ -857,7 +857,7 @@
         Else
             ok = False
         End If
-        
+
 
         If ok Then
             AllMilestones.RemoveAt(index)

@@ -46,6 +46,9 @@
     <Reference Include="Microsoft.Office.Interop.Excel, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.Office.Interop.MSProject, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.Office.Tools, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -66,6 +69,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
@@ -86,6 +90,12 @@
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
+    <Compile Include="frmReportProfil.Designer.vb">
+      <DependentUpon>frmReportProfil.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmReportProfil.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmWbListInfo.Designer.vb">
       <DependentUpon>frmWbListInfo.vb</DependentUpon>
     </Compile>
@@ -273,6 +283,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmProjPortfolioAdmin.resx">
       <DependentUpon>frmProjPortfolioAdmin.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmReportProfil.resx">
+      <DependentUpon>frmReportProfil.vb</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="frmSelectPPTTempl.resx">
       <DependentUpon>frmSelectPPTTempl.vb</DependentUpon>

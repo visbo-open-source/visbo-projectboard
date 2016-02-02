@@ -12,6 +12,7 @@ Imports System.Windows
 Imports System.Windows.Forms
 
 Imports System
+Imports System.Runtime.Serialization
 Imports System.Xml
 Imports System.Xml.Serialization
 Imports System.IO
@@ -2341,7 +2342,646 @@ Public Module awinGeneralModules
 
 
     End Sub
+    Sub awinImportMSProject(ByVal modus As String, ByVal filename As String, ByRef hproj As clsProjekt, ByRef importdate As Date)
 
+        Dim prj As MSProject.Application
+        Dim msproj As MSProject.Project
+        Dim i As Integer = 1
+        Dim lastphase As clsPhase
+        Dim lasthrchyNode As clsHierarchyNode
+        Dim lastelemID As String = ""
+        Dim lastlevel As Integer = 0
+        Dim Xwerte() As Double
+        Dim active_proj As String = ""      ' Name des aktuell aktiven Projektes
+
+        ' hier wird eingetragen, welches vordefinierte Flag das customized Field VISBO repräsentiert
+        Dim visboflag As MSProject.PjField = Nothing
+
+        ' Liste, die aufgebaut wird beim Einlesen der Tasks. Hier wird vermerkt, welche Task das Visbo-Flag mit YES und welche mit NO
+        ' gesetzt hat d.h. berücksichtigt werden soll
+        ' Diese Liste enthält keine Elemente, wenn das VISBO-Flag nicht definiert ist
+        Dim visboFlagListe As New SortedList(Of String, Boolean)
+
+        Try
+
+            'On Error Resume Next
+            Try
+                prj = CType(GetObject(, "msproject.application"), MSProject.Application)
+            Catch ex As Exception
+                prj = CType(CreateObject("msproject.application"), MSProject.Application)
+
+                If IsNothing(prj) Then
+                    Call MsgBox("MSproject ist nicht installiert")
+                    Exit Sub
+                End If
+            End Try
+
+
+            If modus <> "BHTC" Then
+
+                ' ''prj.FileOpen(Name:="\\KOYTEK-NAS\backup\Ute\VISBO\MS Project Beispiele\ute.mpp", _
+                ' ''             ReadOnly:=True, FormatID:="MSProject.MPP")
+
+                prj.FileOpen(Name:=filename, _
+                            ReadOnly:=True, FormatID:="MSProject.MPP")
+
+
+
+            End If
+
+            Dim anzProj As Integer = prj.Projects.Count
+
+
+
+            ' VISBO-Flag dient dazu, Tasks, die nicht benötigt werden in der MultiprojektPlanung nicht mit einzulesen
+            ' in die Projekt-Tafel
+
+            ' Ist dieses VISBO-Flag definiert?
+
+            Try
+                visboflag = CType(prj.FieldNameToFieldConstant("VISBO", MSProject.PjFieldType.pjTask), MSProject.PjField)
+            Catch ex As Exception
+                visboflag = 0
+            End Try
+
+            Dim beginnProjekt As Integer
+            Dim endeProjekt As Integer = anzProj
+            If modus = "BHTC" Then
+                beginnProjekt = 1
+            Else
+                beginnProjekt = endeProjekt
+            End If
+
+            ' Einlesen der diversen Projekte, die geladen wurden (gilt nur für BHTC), sonst immer nur das zuletzt geladene
+            For proj_i = beginnProjekt To endeProjekt
+
+                msproj = prj.Projects.Item(proj_i)
+
+                hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.ProjectStart), CDate(msproj.ProjectStart))
+
+                Dim ProjektdauerIndays As Integer = calcDauerIndays(hproj.startDate, CDate(msproj.Finish))
+                Dim startOffset As Long = DateDiff(DateInterval.Day, hproj.startDate, hproj.startDate.AddMonths(0))
+
+                ' Projektname ohne "."
+                Dim hhstr() As String
+                hhstr = Split(msproj.Name, ".", -1)
+                hproj.name = hhstr(0)
+                'hproj.idauer = DateDiff(DateInterval.Month, CType(msproj.DefaultFinishTime, Date), CType(msproj.DefaultStartTime, Date))
+
+                ' merken für BHTC, da hier der Report für das aktive Projekt gemacht werden soll 
+                If prj.ActiveProject.Name = msproj.Name Then
+                    active_proj = hproj.name
+                End If
+
+                Dim anzSubprojects As Integer = msproj.Subprojects.Count
+
+                hproj.description = msproj.ProjectNotes
+                hproj.UID = msproj.UniqueID
+                Dim hrsPerDay As Double = msproj.HoursPerDay
+
+                Dim projUID As Object = msproj.DatabaseProjectUniqueID
+
+                ' ------------------------------------------------------------------------------------------------------
+                ' Erzeugen und eintragen der Projekt-Phase (= erste Phase mit Dauer des Projekts)
+                ' ------------------------------------------------------------------------------------------------------
+                Try
+                    Dim cphase As New clsPhase(hproj)
+
+                    ' ProjektPhase wird erzeugt
+                    cphase = New clsPhase(parent:=hproj)
+                    cphase.nameID = rootPhaseName
+
+                    ' Phasen Dauer wird gleich der Dauer des Projekts gesetzt
+                    With cphase
+                        .nameID = rootPhaseName
+                        Dim cphaseStartOffset As Integer = 0
+                        .changeStartandDauer(cphaseStartOffset, ProjektdauerIndays)
+                    End With
+                    ' rootPhaseName - Phase wird hinzugefügt
+                    hproj.AddPhase(cphase)
+
+                Catch ex1 As Exception
+                    Throw New ArgumentException("Fehler in awinImportMSProject, Erzeugen ProjektPhase")
+                End Try
+
+
+                Dim anzTasks As Integer = msproj.Tasks.Count
+                anzTasks = msproj.NumberOfTasks
+                Dim resPool As MSProject.Resources = msproj.Resources
+
+                Dim res(resPool.Count) As Object
+                For i = 1 To resPool.Count
+                    res(i) = resPool.Item(i)
+                Next
+
+
+                For i = 1 To anzTasks
+
+                    Dim msTask As MSProject.Task
+
+                    Dim cphase As New clsPhase(parent:=hproj)
+
+
+                    msTask = msproj.Tasks.Item(i)
+
+                    ' hier: evt. Prüfung ob eine VISBO Projekt-Tafel relevante Task
+                    ' oder: ob eine Task auf dem kritischen Pfad liegt
+
+                    ' Wenn sumTask = true, dann ist die aktuelle Task eine Summary-Task
+                    Dim sumTask As Boolean = CType(msTask.Summary, Boolean)
+
+                    ' Herausfinden der Hierarchiestufe
+                    Dim hstr() As String = Split(msTask.WBS, ".", -1)
+                    Dim tasklevel As Integer = hstr.Count
+
+
+                    ' hier muss der Uniquename(ID) erzeugt werden evt. aus PhaseDefinitions
+
+                    If Not CType(msTask.Milestone, Boolean) _
+                        Or _
+                        (CType(msTask.Milestone, Boolean) And CType(msTask.Summary, Boolean)) Then
+
+                        ' nachsehen, ob msTask.Name in PhaseDefinitions definiert ist
+                        If Not PhaseDefinitions.Contains(msTask.Name) Then
+                            Dim newPhaseDef As New clsPhasenDefinition
+                            newPhaseDef.name = msTask.Name
+                            newPhaseDef.shortName = msTask.Name
+                            newPhaseDef.UID = PhaseDefinitions.Count + 1
+                            'PhaseDefinitions.Add(newPhaseDef)
+                            If Not missingPhaseDefinitions.Contains(newPhaseDef.name) Then
+                                missingPhaseDefinitions.Add(newPhaseDef)
+                            End If
+
+                        End If
+
+                        With cphase
+
+                            If Not istElemID(msTask.Name) Then
+                                .nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, False)
+                            End If
+
+                            If visboflag <> 0 Then          ' VISBO-Flag ist definiert
+
+                                ' Liste, ob Task in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
+                                visboFlagListe.Add(.nameID, msTask.GetField(visboflag) = "Yes")
+
+                            End If
+
+                            ' Änderung 28.11.13: jetzt wird die Phasen Länge exakt bestimmt , über startoffset in Tagen und dauerinDays als Länge
+                            Dim cphaseStartOffset As Long
+                            Dim dauerIndays As Long
+                            cphaseStartOffset = DateDiff(DateInterval.Day, hproj.startDate, CDate(msTask.Start))
+                            dauerIndays = calcDauerIndays(CDate(msTask.Start), CDate(msTask.Finish))
+                            .changeStartandDauer(cphaseStartOffset, dauerIndays)
+                            .Offset = 0
+
+                            ' hier muss eine Routine aufgerufen werden, die die Dauer in Tagen berechnet !!!!!!
+                            Dim phaseStartdate As Date = .getStartDate
+                            Dim phaseEnddate As Date = .getEndDate
+
+
+                            Dim anzRessources As Integer = msTask.Resources.Count
+
+                            ' Resourcen je MSTask durchgehen
+                            Dim j As Integer = 0
+                            Dim ccost As clsKostenart = Nothing
+                            Dim crole As clsRolle = Nothing
+
+
+
+                            Dim ass As MSProject.Assignment
+
+                            For Each ass In msTask.Assignments
+
+
+                                Dim msRess As MSProject.Resource = ass.Resource
+
+                                Select Case ass.Resource.Type
+                                    Case MSProject.PjResourceTypes.pjResourceTypeMaterial To _
+                                       MSProject.PjResourceTypes.pjResourceTypeCost
+                                        Try
+
+                                            Dim k As Integer = 0
+
+                                            Try
+                                                k = CInt(CostDefinitions.getCostdef(ass.ResourceName).UID)
+                                            Catch ex As Exception
+                                                ' Kostenart existiert noch nicht
+                                                ' wird hier neu aufgenommen
+                                                Dim newCostDef As New clsKostenartDefinition
+                                                newCostDef.name = ass.ResourceName
+                                                newCostDef.farbe = RGB(120, 120, 120)   ' Farbe: grau
+                                                newCostDef.UID = CostDefinitions.Count + 1
+                                                If Not missingCostDefinitions.Contains(newCostDef.name) Then
+                                                    missingCostDefinitions.Add(newCostDef)
+                                                End If
+
+                                                CostDefinitions.Add(newCostDef)
+
+                                                k = CInt(missingCostDefinitions.getCostdef(ass.ResourceName).UID)
+                                            End Try
+
+                                            Dim work As Double = CType(ass.Work, Double)
+                                            Dim cost As Double = CType(ass.Cost, Double)
+
+                                            Dim startdate As Date = CDate(msTask.Start)
+                                            Dim endedate As Date = CDate(msTask.Finish)
+
+                                            Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
+                                            Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
+                                            Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
+
+                                            If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                                anzdays = 1
+                                                anzmonth = 1
+                                            End If
+                                            If anzdays > 0 And anzmonth = 0 Then
+                                                anzmonth = 1
+                                            End If
+
+
+                                            ReDim Xwerte(anzmonth - 1)
+
+                                            Dim m As Integer
+                                            For m = 1 To anzmonth
+
+                                                Try
+                                                    Xwerte(m - 1) = CType(cost / anzmonth, Double)
+                                                Catch ex As Exception
+                                                    Xwerte(m - 1) = 0.0
+                                                End Try
+
+                                            Next m
+
+                                            ccost = New clsKostenart(anzmonth - 1)
+
+                                            With ccost
+                                                .KostenTyp = k
+                                                .Xwerte = Xwerte
+                                            End With
+
+
+                                            With cphase
+                                                .AddCost(ccost)
+                                            End With
+                                        Catch ex As Exception
+                                            '
+                                            ' handelt es sich um die Kostenart Definition?
+                                            '
+                                        End Try
+                                        'Call MsgBox("Kosten = " & ass.ResourceName)
+
+                                    Case MSProject.PjResourceTypes.pjResourceTypeWork
+
+                                        Try
+                                            Dim r As Integer = 0
+
+                                            Try
+                                                r = CInt(RoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                            Catch ex As Exception
+                                                ' Rolle existiert noch nicht
+                                                ' wird hier neu aufgenommen
+
+                                                Dim newRoleDef As New clsRollenDefinition
+                                                newRoleDef.name = ass.ResourceName
+                                                newRoleDef.farbe = RGB(120, 120, 120)
+                                                newRoleDef.Startkapa = 200000
+
+                                                ' OvertimeRate in Tagessatz umrechnen
+                                                Dim hoverstr() As String = Split(CStr(ass.Resource.OvertimeRate), "/", -1)
+                                                hoverstr = Split(hoverstr(0), "$", -1)
+                                                newRoleDef.tagessatzExtern = CType(hoverstr(1), Double) * msproj.HoursPerDay
+
+                                                ' StandardRate in Tagessatz umrechnen
+                                                Dim hstdstr() As String = Split(CStr(ass.Resource.StandardRate), "/", -1)
+                                                hstdstr = Split(hstdstr(0), "$", -1)
+                                                newRoleDef.tagessatzIntern = CType(hstdstr(1), Double) * msproj.HoursPerDay
+
+                                                newRoleDef.UID = RoleDefinitions.Count + 1
+                                                If Not missingRoleDefinitions.Contains(newRoleDef.name) Then
+                                                    missingRoleDefinitions.Add(newRoleDef)
+                                                End If
+
+                                                RoleDefinitions.Add(newRoleDef)
+
+                                                r = CInt(missingRoleDefinitions.getRoledef(ass.ResourceName).UID)
+                                            End Try
+
+                                            Dim work As Double = CType(ass.Work, Double)
+                                            'Dim duration As Double = CType(ass.Duration, Double)
+                                            Dim unit As Double = CType(ass.Units, Double)
+
+                                            Dim startdate As Date = CDate(msTask.Start)
+                                            Dim endedate As Date = CDate(msTask.Finish)
+
+                                            Dim anzmonth As Integer = CInt(DateDiff(DateInterval.Month, startdate, endedate))
+                                            Dim anzdays As Integer = CInt(DateDiff(DateInterval.Day, startdate, endedate))
+                                            Dim anzhours As Integer = CInt(DateDiff(DateInterval.Hour, startdate, endedate))
+
+                                            If anzhours > 0 And anzdays = 0 And anzmonth = 0 Then
+                                                anzdays = 1
+                                                anzmonth = 1
+                                            End If
+                                            If anzdays > 0 And anzmonth = 0 Then
+                                                anzmonth = 1
+                                            End If
+
+
+                                            ReDim Xwerte(anzmonth - 1)
+
+
+                                            Dim m As Integer
+                                            For m = 1 To anzmonth
+
+                                                Try
+                                                    ' Xwerte in Anzahl Tage; in MSProject alle Werte in anz. Minuten
+                                                    Xwerte(m - 1) = CType(work / anzmonth / 60 / 8, Double)
+
+                                                Catch ex As Exception
+                                                    Xwerte(m - 1) = 0.0
+                                                End Try
+
+                                            Next m
+
+                                            crole = New clsRolle(anzmonth - 1)
+                                            With crole
+                                                .RollenTyp = r
+                                                .Xwerte = Xwerte
+                                            End With
+
+                                            With cphase
+                                                .addRole(crole)
+                                            End With
+                                        Catch ex As Exception
+                                            '
+                                            ' handelt es sich um die Kostenart Definition?
+                                            '
+                                        End Try
+
+                                        'Call MsgBox("Work = " & ass.ResourceName & " mit " & CStr(ass.Work) & "Arbeit")
+                                End Select
+                            Next ass
+
+
+                            ' Hierarchie-Aufbau
+                            Dim cphaseParent As Object = msTask.Parent
+
+                            Dim hrchynode As New clsHierarchyNode
+                            hrchynode.elemName = cphase.name
+
+                            If tasklevel = 0 Then
+                                hrchynode.parentNodeKey = ""
+
+                            ElseIf tasklevel = 1 Then
+                                hrchynode.parentNodeKey = rootPhaseName
+
+                            ElseIf tasklevel - lastlevel = 1 Then
+                                hrchynode.parentNodeKey = lastelemID
+
+                            ElseIf tasklevel - lastlevel = 0 Then
+                                hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(lastelemID)
+
+                            ElseIf lastlevel - tasklevel >= 1 Then
+                                Dim hilfselemID As String = lastelemID
+                                For l As Integer = 1 To lastlevel - tasklevel
+                                    hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                                Next l
+                                hrchynode.parentNodeKey = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                            Else
+                                Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
+                            End If
+
+                            hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
+
+                            ' '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
+                            hrchynode.indexOfElem = hproj.AllPhases.Count
+                            ' merken von letzem Element (Knoten,Phase,Meilenstein)
+                            lasthrchyNode = hrchynode
+                            lastelemID = cphase.nameID
+                            lastphase = cphase
+                            lastlevel = tasklevel
+                        End With
+
+
+                        Dim oBreadCrumb As String = hproj.hierarchy.getBreadCrumb(lastelemID)
+
+                    Else
+
+                        ' mstask ist ein Meilenstein und kein Summary-Meilenstein
+                        Dim hierarchy As String = msTask.WBS
+                        'Dim oBreadCrumb As String = hproj.hierarchy.getBreadCrumb(lastelemID)
+                        Dim msPhase As clsPhase = Nothing
+                        Dim parentID As String = rootPhaseName
+
+                        lastlevel = hproj.hierarchy.getIndentLevel(lastelemID)
+
+                        If lastlevel = -1 Then          ' lastelemID existiert in der hierarchy nicht, also wird Meilenstein der Rootphase zugeordnet
+                            parentID = rootPhaseName
+
+                        ElseIf tasklevel = lastlevel Then
+                            parentID = hproj.hierarchy.getParentIDOfID(lastelemID)
+
+                        ElseIf tasklevel > lastlevel Then
+                            parentID = lastelemID
+
+                        ElseIf tasklevel = 1 And tasklevel < lastlevel Then
+                            parentID = rootPhaseName
+
+                        End If
+
+                        msPhase = hproj.getPhaseByID(parentID)
+
+                        Dim cmilestone As New clsMeilenstein(msPhase)
+
+                        ' prüfen, ob MeilensteinDefinition bereits vorhanden
+                        If Not MilestoneDefinitions.Contains(msTask.Name) Then
+                            Dim msDef As New clsMeilensteinDefinition
+                            msDef.belongsTo = msPhase.name
+                            msDef.name = msTask.Name
+                            msDef.schwellWert = 0
+                            msDef.shortName = ""
+                            msDef.UID = MilestoneDefinitions.Count + 1
+                            'MilestoneDefinitions.Add(msDef)
+                            Try
+                                missingMilestoneDefinitions.Add(msDef)
+                            Catch ex As Exception
+                            End Try
+
+
+                        End If
+
+                        ' MeilensteinDefinition vorhanden?
+                        If MilestoneDefinitions.Contains(msTask.Name) _
+                            Or missingMilestoneDefinitions.Contains(msTask.Name) Then
+                            Dim msBewertung As New clsBewertung
+                            cmilestone.setDate = CType(msTask.Start, Date)
+                            cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, True)
+                            msBewertung.description = msTask.Notes
+                            cmilestone.addBewertung(msBewertung)
+
+
+                            If visboflag <> 0 Then        ' Ist VISBO-flag definiert?
+
+                                ' Liste, ob Meilenstein in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
+                                visboFlagListe.Add(cmilestone.nameID, msTask.GetField(visboflag) = "Yes")
+
+                            End If
+
+                            Try
+                                With msPhase
+                                    .addMilestone(cmilestone)
+                                End With
+                            Catch ex1 As Exception
+                                Throw New Exception(ex1.Message)
+                            End Try
+                        Else
+                            Throw New ArgumentException("Fehler: Meilenstein konnte nicht gefunden werden")
+                        End If
+                    End If
+
+                    '' Testweise hier eingetragen
+
+                    Dim anzVorgaenger As Integer = msTask.PredecessorTasks.Count
+                    Dim anzNachfolger As Integer = msTask.SuccessorTasks.Count
+                    Dim dependencies As MSProject.TaskDependencies = msTask.TaskDependencies
+
+                    Dim startTask As Date = CType(msTask.Start, Date)
+                    Dim endeTask As Date = CType(msTask.Finish, Date)
+
+
+
+
+                Next i          ' Ende Schleife über alle Tasks/Phasen eines Projektes
+
+                Dim ele_i As Integer = 0
+                Dim msStart As Integer = hproj.hierarchy.getIndexOf1stMilestone
+
+                ' Liste der Phasen/Meilensteine durchgehen und die Phasen/Meilensteine die den visbo-Flag nicht gesetzt haben aus der Hierarchie löschen
+                For ele_i = 0 To visboFlagListe.Count - 1
+
+                    Dim elemID As String = visboFlagListe.ElementAt(ele_i).Key
+                    If hproj.hierarchy.containsKey(elemID) Then
+
+                        If Not visboFlagListe.ElementAt(ele_i).Value Then
+
+                            If elemIDIstMeilenstein(elemID) Then
+
+                                ' Meilenstein muss entfernt werden
+
+                                Dim hrchynode As clsHierarchyNode = hproj.hierarchy.nodeItem(elemID)
+                                If hrchynode.childCount > 0 Then
+                                    Call MsgBox("Knoten " & elemNameOfElemID(elemID) & " kann nicht aus der Hierarchie entfernt werden")
+                                Else
+                                    hproj.removeMeilenstein(elemID)
+                                End If
+
+                            Else        ' Element elemID ist eine Phase
+
+
+                                If isRemovable(elemID, hproj, visboFlagListe) Then
+
+                                    ' es wird die Phase elemID mit allen seinen Kindern gelöscht
+                                    hproj.removePhase(elemID, True)
+
+                                    ' ''Call MsgBox("isRemovable = true" & vbLf & _
+                                    ' ''            elemID & " kann entfernt werden")
+                                Else
+
+                                    '' ''Call MsgBox("isRemovable = false" & vbLf & _
+                                    '' ''            elemID & " kann nicht entfernt werden ")
+
+                                End If
+                            End If
+
+                        Else
+                            ' Phase/Meilenstein bleibt erhalten
+                        End If
+
+                    Else
+                        ' Element elemID wurde bereits entfernt '
+                        ' Call MsgBox("das Element elemID= " & elemID & " wurde bereits entfernt")
+                    End If
+
+                Next  ' Schleife über alle Phasen/Meilensteine zum entfernern derer, die VISBO-Flag nicht gesetzt haben
+
+                Dim key As String = calcProjektKey(hproj.name, hproj.variantName)
+
+                ' prüfen, ob AlleProjekte das Projekt bereits enthält 
+                ' danach ist sichergestellt, daß AlleProjekte das Projekt bereit enthält 
+                If AlleProjekte.Containskey(key) Then
+                    AlleProjekte.Remove(key)
+                End If
+
+                AlleProjekte.Add(key, hproj)
+
+                If Not showProjekte.contains(hproj.name) Then
+                    ShowProjekte.Add(hproj)
+                Else
+                    Call msgbox("Projekt " & hproj.name & " ist bereits in der Projekt-Liste enthalten")
+                End If
+
+
+            Next proj_i    ' Schleife über alle geladenen Projekte
+
+            If modus <> "BHTC" Then
+
+                prj.FileExit(MSProject.PjSaveType.pjDoNotSave)
+            Else
+                ' aktives Projekt durch hproj zurück an anrufende Routine übergeben
+
+                If ShowProjekte.contains(active_proj) Then
+                    hproj = ShowProjekte.getProject(active_proj)
+                End If
+
+            End If
+        Catch ex As Exception
+            Call MsgBox(ex)
+        End Try
+
+        enableOnUpdate = True
+
+
+    End Sub
+
+    ''' <summary>
+    ''' Prüft, ob eine Phase (elemID) aus dem Projekt hproj gelöscht werden kann, 
+    ''' da weder sie selbst betrachtet werden soll, noch all ihre Kinder
+    ''' </summary>
+    ''' <param name="elemID"></param>
+    ''' <param name="hproj"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isRemovable(ByVal elemID As String, ByVal hproj As clsProjekt, ByVal liste As SortedList(Of String, Boolean)) As Boolean
+        Get
+            Dim ind As Integer = 1
+            Dim hrchynode As clsHierarchyNode = Nothing
+
+            isRemovable = True
+
+            Try
+
+                hrchynode = hproj.hierarchy.nodeItem(elemID)
+                If hrchynode.childCount = 0 Then
+                    isRemovable = isRemovable And True
+                End If
+                If hrchynode.childCount > 0 Then
+                    For ind = 1 To hrchynode.childCount
+                        Dim nodeID As String = hrchynode.getChild(ind)
+                        isRemovable = isRemovable And liste.ContainsKey(nodeID)
+                        isRemovable = isRemovable And isRemovable(hrchynode.getChild(ind), hproj, liste)
+                    Next
+
+                End If
+
+            Catch ex As Exception
+                Call MsgBox("Fehler bei der Prüfung, ob das Element elemID= " & elemID & " entfernt werden kann")
+                Throw New ArgumentException("Fehler bei der Prüfung, ob das Element elemID entfernt werden kann")
+            End Try
+
+        End Get
+
+    End Property
 
     ''' <summary>
     ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
@@ -8889,11 +9529,12 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub frmHryNameReadPPTVorlagen(ByVal menuOption As Integer, ByRef repVorlagenDropbox As System.Windows.Forms.ComboBox)
 
-        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport _
-            Or menuOption = PTmenue.reportBHTC Then
 
-            Dim dirname As String
-            Dim dateiName As String = ""
+        Dim dirname As String
+        Dim dateiName As String = ""
+
+
+        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport Then
 
             If menuOption = PTmenue.multiprojektReport Then
                 dirname = awinPath & RepPortfolioVorOrdner
@@ -8915,8 +9556,23 @@ Public Module awinGeneralModules
             Catch ex As Exception
 
             End Try
-        Else
+        ElseIf menuOption = PTmenue.reportBHTC Then
 
+            dirname = awinPath & RepProjectVorOrdner
+
+            Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
+            Try
+
+                Dim i As Integer
+                For i = 1 To listOfVorlagen.Count
+
+                    dateiName = Dir(listOfVorlagen.Item(i - 1))
+                    repVorlagenDropbox.Items.Add(dateiName)
+
+                Next i
+            Catch ex As Exception
+
+            End Try
 
         End If
 
@@ -10628,4 +11284,155 @@ Public Module awinGeneralModules
         End If
 
     End Sub
+
+
+    Public Sub XMLExportReportProfil(ByVal profil As clsReport)
+
+
+
+        Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profil.name & ".xml"
+
+        Try
+
+            Dim serializer = New DataContractSerializer(GetType(clsReport))
+
+            ' ''Dim xmlstring As String
+            ' ''Dim sw As New StringWriter()
+            ' ''Dim writer As New XmlTextWriter(sw)
+            ' ''writer.Formatting = Formatting.Indented
+            ' ''serializer.WriteObject(writer, profil)
+            ' ''writer.Flush()
+            ' ''xmlstring = sw.ToString()
+
+            ' XML-Datei Öffnen
+            ' A FileStream is needed to write the XML document.
+
+            Dim file As New FileStream(xmlfilename, FileMode.Create)
+            serializer.WriteObject(file, profil)
+            file.Close()
+        Catch ex As Exception
+
+            Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+
+        End Try
+
+    End Sub
+
+    Public Function XMLImportReportProfil(ByVal profilName As String) As clsReport
+
+        Dim profil As New clsReport
+
+        Dim serializer = New DataContractSerializer(GetType(clsReport))
+        Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profilName & ".xml"
+        Try
+
+            ' XML-Datei Öffnen
+            ' A FileStream is needed to read the XML document.
+            Dim file As New FileStream(xmlfilename, FileMode.Open)
+            profil = serializer.ReadObject(file)
+            file.Close()
+
+            XMLImportReportProfil = profil
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+            XMLImportReportProfil = Nothing
+        End Try
+
+    End Function
+
+    Public Sub retrieveProfilSelection(ByVal profilName As String, ByVal menuOption As Integer, _
+                                     ByRef selectedBUs As Collection, ByRef selectedTyps As Collection, _
+                                     ByRef selectedPhases As Collection, ByRef selectedMilestones As Collection, _
+                                     ByRef selectedRoles As Collection, ByRef selectedCosts As Collection, ByRef reportProfil As clsReport)
+        Try
+
+            ' Datumsangaben sichern
+            Dim vondate_sav As Date = reportProfil.VonDate
+            Dim bisdate_sav As Date = reportProfil.BisDate
+            Dim PPTvondate_sav As Date = reportProfil.CalendarVonDate
+            Dim PPTbisdate_sav As Date = reportProfil.CalendarBisDate
+
+            ' Projekte sichern
+            Dim projects_sav As New SortedList(Of Double, String)
+            For Each kvp As KeyValuePair(Of Double, String) In reportProfil.Projects
+                projects_sav.Add(kvp.Key, kvp.Value)
+            Next
+
+
+            ' Einlesen des ausgewählten ReportProfils
+            reportProfil = XMLImportReportProfil(profilName)
+
+            ' Datumsangaben zurücksichern
+            reportProfil.CalendarVonDate = PPTvondate_sav
+            reportProfil.CalendarBisDate = PPTbisdate_sav
+            reportProfil.VonDate = vondate_sav
+            reportProfil.BisDate = bisdate_sav
+
+            ' Projekte zurücksichern
+            reportProfil.Projects.Clear()
+            For Each kvp As KeyValuePair(Of Double, String) In projects_sav
+                reportProfil.Projects.Add(kvp.Key, kvp.Value)
+            Next
+
+            '  und bereitstellen der Auswahl für Hierarchieselection
+            selectedPhases = copySortedListtoColl(reportProfil.Phases)
+            selectedMilestones = copySortedListtoColl(reportProfil.Milestones)
+            selectedRoles = copySortedListtoColl(reportProfil.Roles)
+            selectedCosts = copySortedListtoColl(reportProfil.Costs)
+            selectedBUs = copySortedListtoColl(reportProfil.BUs)
+            selectedTyps = copySortedListtoColl(reportProfil.Typs)
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler beim Lesen des ReportProfils: retrieveProfilSelection")
+        End Try
+
+    End Sub
+
+
+    Public Sub storeReportProfil(ByVal menuOption As Integer, _
+                                     ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+                                     ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+                                     ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, ByVal reportProfil As clsReport)
+
+
+
+        '  und bereitstellen der Auswahl für Hierarchieselection
+        reportProfil.Phases = copyColltoSortedList(selectedPhases)
+        reportProfil.Milestones = copyColltoSortedList(selectedMilestones)
+        reportProfil.Roles = copyColltoSortedList(selectedRoles)
+        reportProfil.Costs = copyColltoSortedList(selectedCosts)
+        reportProfil.BUs = copyColltoSortedList(selectedBUs)
+        reportProfil.Typs = copyColltoSortedList(selectedTyps)
+
+
+        With awinSettings
+
+            .drawProjectLine = True
+            reportProfil.ExtendedMode = .eppExtendedMode
+            reportProfil.ExtendedMode = .mppExtendedMode
+            reportProfil.OnePage = .mppOnePage
+            reportProfil.AllIfOne = .mppShowAllIfOne
+            reportProfil.Ampeln = .mppShowAmpel
+            reportProfil.Legend = .mppShowLegend
+            reportProfil.MSDate = .mppShowMsDate
+            reportProfil.MSName = .mppShowMsName
+            reportProfil.PhDate = .mppShowPhDate
+            reportProfil.PhName = .mppShowPhName
+            reportProfil.ProjectLine = .mppShowProjectLine
+            reportProfil.SortedDauer = .mppSortiertDauer
+            reportProfil.VLinien = .mppVertikalesRaster
+            reportProfil.FullyContained = .mppFullyContained
+            'reportProfil.ShowHorizontals = .mppShowHorizontals
+            'reportProfil.UseAbbreviation = .mppUseAbbreviation
+            'reportProfil.UseOriginalNames = .mppUseOriginalNames
+        End With
+
+
+        ' Schreiben des ausgewählten ReportProfils
+        Call XMLExportReportProfil(reportProfil)
+
+    End Sub
+
 End Module

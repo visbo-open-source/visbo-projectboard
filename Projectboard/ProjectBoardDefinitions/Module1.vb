@@ -94,7 +94,8 @@ Public Module Module1
     ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
     Public missingPhaseDefinitions As New clsPhasen
     Public missingMilestoneDefinitions As New clsMeilensteine
-
+    Public missingRoleDefinitions As New clsRollen
+    Public missingCostDefinitions As New clsKostenarten
 
     ' diese Collection nimmt alle Filter Definitionen auf 
     Public filterDefinitions As New clsFilterDefinitions
@@ -422,6 +423,7 @@ Public Module Module1
     Public projektRessOrdner As String = requirementsOrdner & "Ressource Manager"
     Public RepProjectVorOrdner As String = requirementsOrdner & "ReportTemplatesProject"
     Public RepPortfolioVorOrdner As String = requirementsOrdner & "ReportTemplatesPortfolio"
+    Public ReportProfileOrdner As String = requirementsOrdner & "ReportProfile"
     Public demoModusHistory As Boolean = False
     Public historicDate As Date
 
@@ -2767,6 +2769,5 @@ Public Module Module1
 
     End Sub
    
-
 
 End Module

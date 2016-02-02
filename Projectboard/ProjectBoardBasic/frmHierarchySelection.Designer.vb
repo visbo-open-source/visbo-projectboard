@@ -41,6 +41,7 @@ Partial Class frmHierarchySelection
         Me.collapseCompletely = New System.Windows.Forms.PictureBox()
         Me.expandCompletely = New System.Windows.Forms.PictureBox()
         Me.SelectionReset = New System.Windows.Forms.PictureBox()
+        Me.BackgroundWorker3 = New System.ComponentModel.BackgroundWorker()
         CType(Me.hryStufen, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.SelectionSet, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.collapseCompletely, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -222,6 +223,9 @@ Partial Class frmHierarchySelection
         Me.SelectionReset.TabIndex = 45
         Me.SelectionReset.TabStop = False
         '
+        'BackgroundWorker3
+        '
+        '
         'frmHierarchySelection
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -274,4 +278,5 @@ Partial Class frmHierarchySelection
     Friend WithEvents filterLabel As System.Windows.Forms.Label
     Friend WithEvents auswSpeichern As System.Windows.Forms.Button
     Friend WithEvents SelectionSet As System.Windows.Forms.PictureBox
+    Friend WithEvents BackgroundWorker3 As System.ComponentModel.BackgroundWorker
 End Class
