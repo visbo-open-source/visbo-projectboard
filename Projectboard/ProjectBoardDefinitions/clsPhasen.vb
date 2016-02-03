@@ -77,7 +77,7 @@ Public Class clsPhasen
 
     ''' <summary>
     ''' gibt die Abkürzung, den Shortname für den Meilenstein zurück
-    ''' wenn er nicht gefunden wird: "-"
+    ''' wenn er nicht gefunden wird: 
     ''' </summary>
     ''' <param name="name">Langname Phase</param>
     ''' <value></value>

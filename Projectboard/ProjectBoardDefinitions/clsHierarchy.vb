@@ -34,12 +34,17 @@
                         If lookingForMilestones Then
                             If isMilestone Then
                                 tmpName = elemNameOfElemID(currentNode.getChild(i))
-                                tmpCollection.Add(tmpName, tmpName)
+                                If Not tmpCollection.Contains(tmpName) Then
+                                    tmpCollection.Add(tmpName, tmpName)
+                                End If
+
                             End If
                         Else
                             If Not isMilestone Then
                                 tmpName = elemNameOfElemID(currentNode.getChild(i))
-                                tmpCollection.Add(tmpName, tmpName)
+                                If Not tmpCollection.Contains(tmpName) Then
+                                    tmpCollection.Add(tmpName, tmpName)
+                                End If
                             End If
                         End If
                     Next
@@ -50,6 +55,55 @@
             End If
 
             getChildNamesOf = tmpCollection
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt eine Liste der IDs der Kinder des Elements zurück , die Phasen bzw. Meilensteine sind
+    ''' je nachdem, wie lookingforMilestones gesetzt ist ; Liste ist in der Reihenfolge des Auftretens der Kinder 
+    ''' </summary>
+    ''' <param name="elemID">ID des aktuellen Elements, dessen Kinder gesucht werden sollen </param>
+    ''' <param name="lookingForMilestones">0: Phasen gesucht ; 1: Meilensteine gesucht </param>
+    ''' <value></value>
+    ''' <returns>nach ID sortierte Collection</returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getChildIDsOf(ByVal elemID As String, ByVal lookingForMilestones As Boolean) As Collection
+        Get
+            Dim tmpCollection As New Collection
+            Dim currentNode As clsHierarchyNode = _allNodes.Item(elemID)
+            Dim currentChildID As String
+
+            If _allNodes.ContainsKey(elemID) Then
+                currentNode = _allNodes.Item(elemID)
+
+                If Not IsNothing(currentNode) Then
+
+                    For i As Integer = 1 To currentNode.childCount
+
+                        currentChildID = currentNode.getChild(i)
+
+                        If lookingForMilestones Then
+                            If elemIDIstMeilenstein(currentChildID) Then
+
+                                tmpCollection.Add(currentChildID)
+
+                            End If
+                        Else
+                            If Not elemIDIstMeilenstein(currentChildID) Then
+
+                                tmpCollection.Add(currentChildID)
+
+                            End If
+                        End If
+                    Next
+
+                End If
+            Else
+                ' nichts tun, leere Collection zurück geben 
+            End If
+
+            getChildIDsOf = tmpCollection
 
         End Get
     End Property

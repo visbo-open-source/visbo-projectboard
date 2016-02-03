@@ -73,7 +73,6 @@ Partial Class frmHierarchySelection
         Me.hryStufen.Name = "hryStufen"
         Me.hryStufen.Size = New System.Drawing.Size(57, 20)
         Me.hryStufen.TabIndex = 34
-        Me.hryStufen.Value = New Decimal(New Integer() {1, 0, 0, 0})
         '
         'einstellungen
         '

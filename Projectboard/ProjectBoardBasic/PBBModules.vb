@@ -23,15 +23,39 @@ Public Module PBBModules
     ''' </summary>
     ''' <param name="controlID"></param>
     ''' <remarks></remarks>
+
     Sub PBBBHTCHierarchySelAction(controlID As String, ByVal reportprofil As clsReport)
 
         Dim hryFormular As New frmHierarchySelection
         Dim returnValue As DialogResult
-        hryFormular.repProfil = New clsReport
 
-        reportprofil.CopyTo(hryFormular.repProfil)
 
-        'hryFormular.repProfil = reportprofil
+        If controlID = "PT1G1B3" Then
+            hryFormular.calledFrom = "Multiprojekt-Tafel"
+        Else
+            hryFormular.calledFrom = "MS-Project"
+
+            hryFormular.repProfil = New clsReport
+
+            reportprofil.CopyTo(hryFormular.repProfil)
+
+            'hryFormular.repProfil = reportprofil
+        End If
+
+        Dim formerSettings(3) As Boolean
+        With awinSettings
+            formerSettings(0) = .mppExtendedMode
+            formerSettings(1) = .mppShowAllIfOne
+            formerSettings(2) = .mppShowAmpel
+            formerSettings(3) = .mppFullyContained
+        End With
+
+        With awinSettings
+            .mppExtendedMode = True
+            .mppShowAllIfOne = False
+            .mppShowAmpel = False
+            .mppFullyContained = False
+        End With
 
         awinSettings.useHierarchy = True
         With hryFormular
@@ -49,6 +73,12 @@ Public Module PBBModules
             .chkbxOneChart.Visible = False
 
 
+            .hryStufenLabel.Visible = False
+            .hryStufen.Value = 50
+            .hryStufen.Visible = False
+
+
+
             ' Reports
             .repVorlagenDropbox.Visible = True
             .labelPPTVorlage.Visible = True
@@ -56,13 +86,23 @@ Public Module PBBModules
 
             ' Filter
             .filterDropbox.Visible = True
+
             .filterDropbox.Text = reportprofil.name
             .filterLabel.Visible = True
             .filterLabel.Text = "Name Report-Profil"
 
 
+
             ' bei Verwendung Background Worker muss Aufruf so erfolgen: 
             returnValue = .ShowDialog
+        End With
+
+
+        With awinSettings
+            .mppExtendedMode = formerSettings(0)
+            .mppShowAllIfOne = formerSettings(1)
+            .mppShowAmpel = formerSettings(2)
+            .mppFullyContained = formerSettings(3)
         End With
 
 
@@ -83,8 +123,7 @@ Public Module PBBModules
 
         Call projektTafelInit()
 
-        'enableOnUpdate = False
-        'appInstance.EnableEvents = False
+        hryFormular.calledFrom = "Multiprojekt-Tafel"
 
 
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 

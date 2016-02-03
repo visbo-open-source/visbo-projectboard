@@ -9529,8 +9529,10 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub frmHryNameReadPPTVorlagen(ByVal menuOption As Integer, ByRef repVorlagenDropbox As System.Windows.Forms.ComboBox)
 
+
         Dim dirname As String
         Dim dateiName As String = ""
+
 
         If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport Then
 
@@ -11368,6 +11370,16 @@ Public Module awinGeneralModules
             reportProfil.VonDate = vondate_sav
             reportProfil.BisDate = bisdate_sav
 
+            ' für BHTC immer true
+            reportProfil.ExtendedMode = True
+            ' für BHTC immer false
+            reportProfil.Ampeln = False
+            reportProfil.AllIfOne = False
+            reportProfil.FullyContained = False
+            reportProfil.SortedDauer = False
+            reportProfil.ProjectLine = False
+            reportProfil.UseOriginalNames = False
+
             ' Projekte zurücksichern
             reportProfil.Projects.Clear()
             For Each kvp As KeyValuePair(Of Double, String) In projects_sav
@@ -11422,9 +11434,9 @@ Public Module awinGeneralModules
             reportProfil.SortedDauer = .mppSortiertDauer
             reportProfil.VLinien = .mppVertikalesRaster
             reportProfil.FullyContained = .mppFullyContained
-            'reportProfil.ShowHorizontals = .mppShowHorizontals
-            'reportProfil.UseAbbreviation = .mppUseAbbreviation
-            'reportProfil.UseOriginalNames = .mppUseOriginalNames
+            reportProfil.ShowHorizontals = .mppShowHorizontals
+            reportProfil.UseAbbreviation = .mppUseAbbreviation
+            reportProfil.UseOriginalNames = .mppUseOriginalNames
         End With
 
 

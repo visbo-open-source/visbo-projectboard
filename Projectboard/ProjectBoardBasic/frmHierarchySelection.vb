@@ -17,6 +17,10 @@ Public Class frmHierarchySelection
 
     Friend menuOption As Integer
 
+    ' an der aufrufenden Stelle muss hier entweder "Multiprojekt-Tafel" oder
+    ' "MS Project" stehen. 
+    Friend calledFrom As String
+
 
 
     Private Sub frmHierarchySelection_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
@@ -62,13 +66,19 @@ Public Class frmHierarchySelection
                 kvp.Value.copyTo(hproj)
                 Call addToSuperHierarchy(hry, hproj)
             Next
+        ElseIf selectedProjekte.Count > 0 Then
+            For Each kvp As KeyValuePair(Of String, clsProjekt) In selectedProjekte.Liste
+                Call addToSuperHierarchy(hry, kvp.Value)
+            Next
         Else
             For Each kvp As KeyValuePair(Of String, clsProjekt) In ShowProjekte.Liste
                 Call addToSuperHierarchy(hry, kvp.Value)
             Next
         End If
 
-        If Not Me.menuOption = PTmenue.reportBHTC Then
+
+        If Not Me.menuOption = PTmenue.reportBHTC And Not Me.calledFrom = "MS-Project" Then
+
             Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
         Else
 
@@ -76,6 +86,7 @@ Public Class frmHierarchySelection
             If IsNothing(repProfil) Then
                 Throw New ArgumentException("Fehler beim Lesen des áusgewählten ReportProfils")
             End If
+
         End If
 
 
@@ -110,6 +121,7 @@ Public Class frmHierarchySelection
                 Next
 
             End If
+
         Else
             '       Me.menuOption = PTmenue.reportBHTC
             '
@@ -120,6 +132,7 @@ Public Class frmHierarchySelection
                     repVorlagenDropbox.Text = ""
                 End If
             End If
+
 
         End If
 
@@ -230,8 +243,6 @@ Public Class frmHierarchySelection
         End If
 
 
-
-
         ''''
         ''
         ''
@@ -255,9 +266,10 @@ Public Class frmHierarchySelection
         If Me.menuOption = PTmenue.multiprojektReport Or Me.menuOption = PTmenue.einzelprojektReport Or _
             Me.menuOption = PTmenue.reportBHTC Then
 
-            If (selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
+            If ((selectedPhases.Count > 0 Or selectedMilestones.Count > 0 _
                     Or selectedRoles.Count > 0 Or selectedCosts.Count > 0) _
-                    And validOption Then
+                    And validOption) Or _
+                    (Me.menuOption = PTmenue.reportBHTC And validOption) Then
 
                 Dim vorlagenDateiName As String
 
@@ -300,12 +312,15 @@ Public Class frmHierarchySelection
                         If Me.menuOption = PTmenue.reportBHTC Then
 
 
+
+
                             Call MsgBox("Report erstellen mit Projekt " & repProfil.VonDate.ToString & " bis " & repProfil.BisDate.ToString & " Reportprofil " & repProfil.name)
                             Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
 
                             repProfil.PPTTemplate = repVorlagenDropbox.Text
 
                             BackgroundWorker3.RunWorkerAsync(repProfil)
+
 
 
                         Else
@@ -363,31 +378,39 @@ Public Class frmHierarchySelection
         Dim mppFrm As New frmMppSettings
         Dim dialogreturn As DialogResult
 
-        mppFrm.calledfrom = "frmShowPlanElements"
 
         If Me.menuOption = PTmenue.reportBHTC Then
+            mppFrm.calledfrom = "frmBHTC"
+
             With awinSettings
 
                 .drawProjectLine = True
-                .eppExtendedMode = repProfil.ExtendedMode
-                .mppExtendedMode = repProfil.ExtendedMode
                 .mppOnePage = repProfil.OnePage
-                .mppShowAllIfOne = repProfil.AllIfOne
-                .mppShowAmpel = repProfil.Ampeln
                 .mppShowLegend = repProfil.Legend
                 .mppShowMsDate = repProfil.MSDate
                 .mppShowMsName = repProfil.MSName
                 .mppShowPhDate = repProfil.PhDate
                 .mppShowPhName = repProfil.PhName
-                .mppShowProjectLine = repProfil.ProjectLine
-                .mppSortiertDauer = repProfil.SortedDauer
                 .mppVertikalesRaster = repProfil.VLinien
+                .mppShowHorizontals = repProfil.ShowHorizontals
+                .mppUseAbbreviation = repProfil.UseAbbreviation
+
+                ' für BHTC immer true
+                .eppExtendedMode = repProfil.ExtendedMode
+                .mppExtendedMode = repProfil.ExtendedMode
+                ' für BHTC immer false
+                .mppShowAmpel = repProfil.Ampeln
+                .mppShowAllIfOne = repProfil.AllIfOne
                 .mppFullyContained = repProfil.FullyContained
-                ' .mppShowHorizontals = repProfil.ShowHorizontals
-                ' .mppUseAbbreviation = repProfil.UseAbbreviation
-                ' .mppUseOriginalNames = repProfil.UseOriginalNames
+                .mppSortiertDauer = repProfil.SortedDauer
+                .mppShowProjectLine = repProfil.ProjectLine
+                .mppUseOriginalNames = repProfil.UseOriginalNames
+
             End With
+        Else
+            mppFrm.calledfrom = "frmShowPlanElements"
         End If
+
 
 
         dialogreturn = mppFrm.ShowDialog
@@ -412,9 +435,9 @@ Public Class frmHierarchySelection
                 repProfil.SortedDauer = .mppSortiertDauer
                 repProfil.VLinien = .mppVertikalesRaster
                 repProfil.FullyContained = .mppFullyContained
-                'repProfil.ShowHorizontals = .mppShowHorizontals
-                'repProfil.UseAbbreviation = .mppUseAbbreviation
-                'repProfil.UseOriginalNames = .mppUseOriginalNames
+                repProfil.ShowHorizontals = .mppShowHorizontals
+                repProfil.UseAbbreviation = .mppUseAbbreviation
+                repProfil.UseOriginalNames = .mppUseOriginalNames
             End With
         End If
 
@@ -1117,6 +1140,19 @@ Public Class frmHierarchySelection
     End Sub
 
 
+
+    Public Sub New()
+
+        ' This call is required by the designer.
+        InitializeComponent()
+        calledFrom = "Multiprojekt-Tafel"
+
+        ' Add any initialization after the InitializeComponent() call.
+
+    End Sub
+
+    
+
     Private Sub BackgroundWorker3_DoWork(sender As Object, e As System.ComponentModel.DoWorkEventArgs) Handles BackgroundWorker3.DoWork
 
         Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
@@ -1144,6 +1180,16 @@ Public Class frmHierarchySelection
         selectedBUs = copySortedListtoColl(reportProfil.BUs)
         selectedTypes = copySortedListtoColl(reportProfil.Typs)
 
+        ' für BHTC immer true
+        reportProfil.ExtendedMode = True
+        ' für BHTC immer false
+        reportProfil.Ampeln = False
+        reportProfil.AllIfOne = False
+        reportProfil.FullyContained = False
+        reportProfil.SortedDauer = False
+        reportProfil.ProjectLine = False
+        reportProfil.UseOriginalNames = False
+
         With awinSettings
 
             .drawProjectLine = True
@@ -1161,9 +1207,10 @@ Public Class frmHierarchySelection
             .mppSortiertDauer = reportProfil.SortedDauer
             .mppVertikalesRaster = reportProfil.VLinien
             .mppFullyContained = reportProfil.FullyContained
-            ' .mppShowHorizontals = reportProfil.ShowHorizontals
-            ' .mppUseAbbreviation = reportProfil.UseAbbreviation
-            ' .mppUseOriginalNames = reportProfil.UseOriginalNames
+            .mppShowHorizontals = reportProfil.ShowHorizontals
+            .mppUseAbbreviation = reportProfil.UseAbbreviation
+            .mppUseOriginalNames = reportProfil.UseOriginalNames
+          
         End With
 
 
@@ -1239,4 +1286,5 @@ Public Class frmHierarchySelection
         ' hier evt. noch schließen und Abspeichern des Reports von PPT
 
     End Sub
+
 End Class
