@@ -171,14 +171,14 @@ Public Class frmReportProfil
 
             Dim reportProfilName As String = RepProfilListbox.Text
 
-            Call MsgBox("Lesen des XML-Files " & reportProfilName & ".xml")
+            'Call MsgBox("Lesen des XML-Files " & reportProfilName & ".xml")
 
             ' Einlesen des ausgewählten ReportProfils
             reportProfil = XMLImportReportProfil(reportProfilName)
 
             If Not IsNothing(reportProfil) Then
 
-                Call MsgBox("ReportErstellen")
+                'Call MsgBox("ReportErstellen")
 
                 reportProfil.VonDate = vonDate.Value
                 reportProfil.BisDate = bisDate.Value
@@ -192,8 +192,8 @@ Public Class frmReportProfil
 
                 ' ''Next
 
-                Call MsgBox("Es wurden " & CStr(anzproj) & " Projekte in  ShowProjekte eingelesen." & vbLf _
-                             & "Report wird für das aktuell geladene Projekt erstellt: " & hproj.name)
+                'Call MsgBox("Es wurden " & CStr(anzproj) & " Projekte in  ShowProjekte eingelesen." & vbLf _
+                '        & "Report wird für das aktuell geladene Projekt erstellt: " & hproj.name)
 
                 reportProfil.Projects.Clear()
                 reportProfil.Projects.Add(1, hproj.name)
@@ -210,7 +210,7 @@ Public Class frmReportProfil
 
 
 
-                Call MsgBox("Report erstellen mit Projekt " & hproj.name & "von " & vonDate.Value.ToString & " bis " & bisDate.Value.ToString & " Reportprofil " & reportProfilName)
+                'Call MsgBox("Report erstellen mit Projekt " & hproj.name & "von " & vonDate.Value.ToString & " bis " & bisDate.Value.ToString & " Reportprofil " & reportProfilName)
                 Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
 
                 ' Alternativ ohne Background Worker
