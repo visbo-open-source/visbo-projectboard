@@ -1141,6 +1141,12 @@ Public Class clsPPTShapes
         End Get
     End Property
 
+    Public ReadOnly Property drawingAreaWidth As Double
+        Get
+            drawingAreaWidth = _drawingAreaRight - _drawingAreaLeft
+        End Get
+    End Property
+
     Public ReadOnly Property drawingAreaLeft As Double
         Get
             drawingAreaLeft = _drawingAreaLeft
@@ -1160,6 +1166,11 @@ Public Class clsPPTShapes
         End Get
     End Property
 
+    Public ReadOnly Property availableSpace As Double
+        Get
+            availableSpace = _drawingAreaBottom - _drawingAreaTop
+        End Get
+    End Property
 
     Public ReadOnly Property drawingAreaBottom As Double
         Get
@@ -1517,7 +1528,7 @@ Public Class clsPPTShapes
         ' bestimme Drawing Area
         _drawingAreaLeft = _calendarLeft
         _drawingAreaRight = _calendarRight
-        _drawingAreaTop = _calendarBottom + 15
+        _drawingAreaTop = _calendarBottom + 5
 
 
         If awinSettings.mppShowLegend And Not IsNothing(_legendLineShape) Then
