@@ -2967,7 +2967,7 @@ Public Class clsProjekt
                                                 ByVal considerAll As Boolean) As Integer
         Get
 
-            Dim zeilenOffset As Integer = 1
+
             Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
             Dim tmpValue As Integer
 
@@ -2983,13 +2983,14 @@ Public Class clsProjekt
             Dim endNr As Integer = startNr
             Dim stillChild As Boolean = True
 
-            Dim SwlBreadCrumb As String = Me.hierarchy.getBreadCrumb(swimlaneID)
+            Dim fullSwlBreadCrumb As String = Me.getBcElemName(swimlaneID)
 
             Do While endNr + 1 <= Me.CountPhases And stillChild
                 Dim cPhase As clsPhase = Me.getPhase(endNr + 1)
+
                 If Not IsNothing(cPhase) Then
-                    Dim curBreadCrumb As String = Me.hierarchy.getBreadCrumb(cPhase.nameID)
-                    If curBreadCrumb.StartsWith(SwlBreadCrumb) Then
+                    Dim curFullBreadCrumb As String = Me.getBcElemName(cPhase.nameID)
+                    If curFullBreadCrumb.StartsWith(fullSwlBreadCrumb) Then
                         ' is still Child
                         endNr = endNr + 1
                     Else
@@ -3015,8 +3016,8 @@ Public Class clsProjekt
                     ' sich selber ausschließen ...
                     Dim cPhase As clsPhase = Me.getPhaseByID(CStr(item))
                     If Not IsNothing(cPhase) Then
-                        Dim curBreadCrumb As String = Me.hierarchy.getBreadCrumb(cPhase.nameID)
-                        If curBreadCrumb.StartsWith(SwlBreadCrumb) Then
+                        Dim curFullBreadCrumb As String = Me.getBcElemName(cPhase.nameID)
+                        If curFullBreadCrumb.StartsWith(fullSwlBreadCrumb) Then
                             ' ist Kind Element, daher aufnehmen 
                             childPhaseIDs.Add(CStr(item), CStr(item))
                         End If
@@ -3032,8 +3033,8 @@ Public Class clsProjekt
                     ' sich selber ausschließen ...
                     Dim cMeilenstein As clsMeilenstein = Me.getMilestoneByID(CStr(item))
                     If Not IsNothing(cMeilenstein) Then
-                        Dim curBreadCrumb As String = Me.hierarchy.getBreadCrumb(cMeilenstein.nameID)
-                        If curBreadCrumb.StartsWith(SwlBreadCrumb) Then
+                        Dim curFullBreadCrumb As String = Me.getBcElemName(cMeilenstein.nameID)
+                        If curFullBreadCrumb.StartsWith(fullSwlBreadCrumb) Then
                             ' ist Kind Element, daher aufnehmen 
                             childMilestoneIDs.Add(CStr(item), CStr(item))
                         End If
@@ -3042,6 +3043,7 @@ Public Class clsProjekt
                 End If
             Next
 
+            Dim zeilenOffset As Integer = 1
 
             If Not extended Then
                 ' es wird grundsätzlich nur eine Zeile benötigt 
@@ -3053,11 +3055,12 @@ Public Class clsProjekt
 
             Else
                 ' Schleife über Swimlane(=Startnr) und alle Kind Phasen der Swimlane (bis zu endNr)
-                For i = startNr To endNr
+                ' muss erst ab startnr + 1 beginnen, da phase(startNr) ja die swimlane selber ist ... 
+                For i = startNr + 1 To endNr
                     Try
                         Dim cPhase As clsPhase = Me.getPhase(i)
                         Dim relevant As Boolean = False
-                        If Not IsNothing(cphase) Then
+                        If Not IsNothing(cPhase) Then
                             If considerAll Then
                                 relevant = True
                             Else
