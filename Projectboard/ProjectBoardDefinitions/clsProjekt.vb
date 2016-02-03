@@ -3014,15 +3014,12 @@ Public Class clsProjekt
             For Each item In selectedPhaseIDs
                 If CStr(item) <> swimlaneID Then
                     ' sich selber ausschließen ...
-                    Dim cPhase As clsPhase = Me.getPhaseByID(CStr(item))
-                    If Not IsNothing(cPhase) Then
-                        Dim curFullBreadCrumb As String = Me.getBcElemName(cPhase.nameID)
-                        If curFullBreadCrumb.StartsWith(fullSwlBreadCrumb) Then
-                            ' ist Kind Element, daher aufnehmen 
-                            childPhaseIDs.Add(CStr(item), CStr(item))
-                        End If
-                    End If
+                    Dim curFullBreadCrumb As String = Me.getBcElemName(CStr(item))
 
+                    If curFullBreadCrumb.StartsWith(fullSwlBreadCrumb) Then
+                        ' ist Kind Element, daher aufnehmen 
+                        childPhaseIDs.Add(CStr(item), CStr(item))
+                    End If
                 End If
             Next
 
@@ -3031,14 +3028,13 @@ Public Class clsProjekt
             For Each item In selectedMilestoneIDs
                 If CStr(item) <> swimlaneID Then
                     ' sich selber ausschließen ...
-                    Dim cMeilenstein As clsMeilenstein = Me.getMilestoneByID(CStr(item))
-                    If Not IsNothing(cMeilenstein) Then
-                        Dim curFullBreadCrumb As String = Me.getBcElemName(cMeilenstein.nameID)
-                        If curFullBreadCrumb.StartsWith(fullSwlBreadCrumb) Then
-                            ' ist Kind Element, daher aufnehmen 
-                            childMilestoneIDs.Add(CStr(item), CStr(item))
-                        End If
+                    Dim curFullBreadCrumb As String = Me.getBcElemName(CStr(item))
+
+                    If curFullBreadCrumb.StartsWith(fullSwlBreadCrumb) Then
+                        ' ist Kind Element, daher aufnehmen 
+                        childMilestoneIDs.Add(CStr(item), CStr(item))
                     End If
+
 
                 End If
             Next
@@ -3049,12 +3045,12 @@ Public Class clsProjekt
                 ' es wird grundsätzlich nur eine Zeile benötigt 
                 tmpValue = 1
 
-            ElseIf childPhaseIDs.Count = 0 And Not considerAll Then
+            ElseIf childPhaseIDs.Count <= 1 And Not considerAll Then
                 ' es wird nur eine Zeile benötigt 
                 tmpValue = 1
 
             Else
-                ' Schleife über Swimlane(=Startnr) und alle Kind Phasen der Swimlane (bis zu endNr)
+                ' Schleife über alle Kind Phasen der Swimlane (startnr+1 bis zu endNr)
                 ' muss erst ab startnr + 1 beginnen, da phase(startNr) ja die swimlane selber ist ... 
                 For i = startNr + 1 To endNr
                     Try

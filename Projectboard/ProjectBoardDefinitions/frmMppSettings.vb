@@ -103,7 +103,7 @@
                 KwInMilestone.Checked = .mppKwInMilestone
 
                 shwVerticals.Checked = .mppVertikalesRaster
-                shwHorizontals.Checked = .mppShowHorzizontals
+                shwHorizontals.Checked = .mppShowHorizontals
 
                 shwLegend.Checked = .mppShowLegend
                 allOnOnePage.Checked = .mppOnePage
@@ -154,7 +154,7 @@
 
 
         awinSettings.mppVertikalesRaster = shwVerticals.Checked
-        awinSettings.mppShowHorzizontals = shwHorizontals.Checked
+        awinSettings.mppShowHorizontals = shwHorizontals.Checked
         awinSettings.mppShowLegend = shwLegend.Checked
         awinSettings.mppOnePage = allOnOnePage.Checked
 
@@ -164,7 +164,7 @@
         If awinSettings.mppSortiertDauer Then
             awinSettings.mppShowAllIfOne = True
         End If
-        
+
 
         MyBase.Close()
 
