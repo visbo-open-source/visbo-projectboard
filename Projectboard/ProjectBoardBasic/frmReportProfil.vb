@@ -110,6 +110,18 @@ Public Class frmReportProfil
 
         reportProfil.Projects.Clear()
         reportProfil.Projects.Add(1, hproj.name)
+        
+
+        ' für BHTC immer true
+        reportProfil.ExtendedMode = True
+        ' für BHTC immer false
+        reportProfil.Ampeln = False
+        reportProfil.AllIfOne = False
+        reportProfil.FullyContained = False
+        reportProfil.SortedDauer = False
+        reportProfil.ProjectLine = False
+        reportProfil.UseOriginalNames = False
+
 
 
         ' nachsehen, ob hproj.name bereits im Profil eingetragen ist
@@ -128,7 +140,7 @@ Public Class frmReportProfil
         ' ''If Not found Then
         ' ''    reportProfil.Projects.Add(lastkey + 1, hproj.name)
         ' ''End If
-        
+
     End Sub
 
     Private Sub vonDate_ValueChanged(sender As Object, e As EventArgs) Handles vonDate.ValueChanged
@@ -185,6 +197,16 @@ Public Class frmReportProfil
 
                 reportProfil.Projects.Clear()
                 reportProfil.Projects.Add(1, hproj.name)
+
+                ' für BHTC immer true
+                reportProfil.ExtendedMode = True
+                ' für BHTC immer false
+                reportProfil.Ampeln = False
+                reportProfil.AllIfOne = False
+                reportProfil.FullyContained = False
+                reportProfil.SortedDauer = False
+                reportProfil.ProjectLine = False
+                reportProfil.UseOriginalNames = False
 
 
 
@@ -276,6 +298,16 @@ Public Class frmReportProfil
         selectedBUs = copySortedListtoColl(reportProfil.BUs)
         selectedTypes = copySortedListtoColl(reportProfil.Typs)
 
+        ' für BHTC immer true
+        reportProfil.ExtendedMode = True
+        ' für BHTC immer false
+        reportProfil.Ampeln = False
+        reportProfil.AllIfOne = False
+        reportProfil.FullyContained = False
+        reportProfil.SortedDauer = False
+        reportProfil.ProjectLine = False
+        reportProfil.UseOriginalNames = False
+
         With awinSettings
 
             .drawProjectLine = True
@@ -293,9 +325,9 @@ Public Class frmReportProfil
             .mppSortiertDauer = reportProfil.SortedDauer
             .mppVertikalesRaster = reportProfil.VLinien
             .mppFullyContained = reportProfil.FullyContained
-            ' .mppShowHorizontals = reportProfil.ShowHorizontals
-            ' .mppUseAbbreviation = reportProfil.UseAbbreviation
-            ' .mppUseOriginalNames = reportProfil.UseOriginalNames
+            .mppShowHorizontals = reportProfil.ShowHorizontals
+            .mppUseAbbreviation = reportProfil.UseAbbreviation
+            .mppUseOriginalNames = reportProfil.UseOriginalNames
         End With
 
 

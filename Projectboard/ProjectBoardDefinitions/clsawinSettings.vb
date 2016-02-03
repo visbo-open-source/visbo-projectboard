@@ -127,9 +127,9 @@ Public Class clsawinSettings
     Public Property mppSortiertDauer As Boolean
     Public Property mppOnePage As Boolean
     Public Property mppExtendedMode As Boolean
-    Public Property mppShowHorzizontals As Boolean
+    Public Property mppShowHorizontals As Boolean
     Public Property mppUseAbbreviation As Boolean
-    Public Property mppUseOrginalNames As Boolean
+    Public Property mppUseOriginalNames As Boolean
     Public Property mppKwInMilestone As Boolean
 
 
@@ -142,7 +142,7 @@ Public Class clsawinSettings
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
 
-   
+
 
     Sub New()
 
@@ -226,9 +226,9 @@ Public Class clsawinSettings
         _mppSortiertDauer = False
         _mppOnePage = False
         _mppExtendedMode = False
-        _mppShowHorzizontals = False
+        _mppShowHorizontals = False
         _mppUseAbbreviation = True
-        _mppUseOrginalNames = True
+        _mppUseOriginalNames = True
         _mppKwInMilestone = False
 
 
@@ -243,7 +243,7 @@ Public Class clsawinSettings
         _useHierarchy = True
         _isHryNameFrmActive = False
 
-       
+
 
     End Sub
 End Class
