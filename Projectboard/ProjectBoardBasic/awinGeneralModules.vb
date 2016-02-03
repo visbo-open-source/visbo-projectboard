@@ -2917,7 +2917,9 @@ Public Module awinGeneralModules
                 If Not showProjekte.contains(hproj.name) Then
                     ShowProjekte.Add(hproj)
                 Else
-                    Call msgbox("Projekt " & hproj.name & " ist bereits in der Projekt-Liste enthalten")
+                    ShowProjekte.Remove(hproj.name)
+                    ShowProjekte.Add(hproj)
+                    'Call MsgBox("Projekt " & hproj.name & " ist bereits in der Projekt-Liste enthalten")
                 End If
 
 
