@@ -8325,7 +8325,7 @@ Public Module testModule
         currentFilter = New clsFilter("temp", selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
                                       selectedRoles, selectedCosts)
 
-        If showRangeRight - showRangeLeft = 0 Then
+        If Not ((showRangeLeft > 0) And (showRangeRight > showRangeLeft)) Then
             noTimespanDefined = True
         Else
             noTimespanDefined = False
@@ -8495,6 +8495,7 @@ Public Module testModule
     ''' <summary>
     ''' bestimmt für die angegebenen Phasen und Meilensteine den Kalender-Start und das Kalender-Ende für 
     ''' für den Kalender der PPT Multiprojekt sicht  
+    ''' dabei wird berücksichtigt, ob der Kalender mehr anzeigen soll als das ausgewählte Zeitfenster: ist dann der Fall, wenn fullyContained oder ShowAllIfOne gewählt wurde
     ''' </summary>
     ''' <param name="minDate">erstes, linkes Datum</param>
     ''' <param name="maxDate">zweites, rechtes Datum</param>
@@ -8509,7 +8510,7 @@ Public Module testModule
         Dim linksDatum As Date
         Dim rechtsDatum As Date
 
-        If showRangeRight - showRangeLeft > 5 Then
+        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
             linksDatum = StartofCalendar.AddMonths(showRangeLeft - 1)
             rechtsDatum = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
         Else
@@ -8518,38 +8519,31 @@ Public Module testModule
         End If
 
         ' Änderung tk: es soll nicht mehr links und rechts ein zusätzlicher Bereich aufgespannt werden 
-        'If Not awinSettings.mppFullyContained And Not awinSettings.mppShowAllIfOne Then
-        '    firstDate = StartofCalendar.AddMonths(showRangeLeft - 1 - 3)
-        '    lastdate = StartofCalendar.AddMonths(showRangeRight - 1 + 3)
-        'Else
-        '    firstDate = minDate
-        '    lastdate = maxDate
-        'End If
+        If Not awinSettings.mppFullyContained And Not awinSettings.mppShowAllIfOne Then
+            firstDate = linksDatum
+            lastdate = rechtsDatum
+        Else
+            firstDate = minDate
+            lastdate = maxDate
+        End If
 
         If DateDiff(DateInterval.Day, linksDatum, firstDate) < 0 Then
-            ' \ 
-            ' Änderung tk am 20.1. der Kalender soll immer am ersten eines Monats anfangen 
-            'pptKalenderStart = firstDate.AddDays(-1 * firstDate.DayOfYear + 1).AddMonths(((firstDate.Month - 1) \ 3) * 3)
             pptKalenderStart = firstDate.AddDays(-1 * firstDate.Day + 1)
         Else
-            'pptKalenderStart = linksDatum.AddDays(-1 * linksDatum.DayOfYear + 1).AddMonths(((linksDatum.Month - 1) \ 3) * 3)
             pptKalenderStart = linksDatum.AddDays(-1 * linksDatum.Day + 1)
         End If
 
 
         If DateDiff(DateInterval.Day, rechtsDatum, lastdate) > 0 Then
-            ' Änderung tk am 20.1. der Kalender soll immer am letzten des Monats aufhören 
-            'pptKalenderEnde = lastdate.AddDays(-1 * lastdate.DayOfYear + 1).AddMonths(((lastdate.Month - 1) \ 3 + 1) * 3).AddDays(-1)
             pptKalenderEnde = lastdate.AddDays(-1 * lastdate.Day + 1).AddMonths(1).AddDays(-1)
         Else
-            ' Änderung tk am 20.1. der Kalender soll immer am letzten des Monats aufhören 
-            'pptKalenderEnde = rechtsDatum.AddDays(-1 * rechtsDatum.DayOfYear + 1).AddMonths(((rechtsDatum.Month - 1) \ 3 + 1) * 3).AddDays(-1)
             pptKalenderEnde = rechtsDatum.AddDays(-1 * rechtsDatum.Day + 1).AddMonths(1).AddDays(-1)
         End If
 
 
 
     End Sub
+
 
 
     ''' <summary>
@@ -9398,7 +9392,7 @@ Public Module testModule
 
             ' Merken, an dieser Stelle werden ggf nachher die vertikalen Linien gezeichnet , aber nur, wenn nicht eine Dezember Linie
             ' und nur wenn nicht = endofPPTCalendar
-            If curDatePtr.Month <> 12 And curDatePtr < rds.PPTEndOFCalendar Then
+            If (drawKWs Or curDatePtr.Month) <> 12 And curDatePtr < rds.PPTEndOFCalendar Then
                 position(positionPtr) = curRight
                 positionPtr = positionPtr + 1
             End If
@@ -9464,6 +9458,11 @@ Public Module testModule
         Loop
 
         ' jetzt muss noch die Behandlung kommen, ob der Rest noch beschriftet werden soll 
+
+        If curDatePtr > rds.PPTEndOFCalendar Then
+            curDatePtr = rds.PPTEndOFCalendar
+        End If
+
         curRight = rds.calendarLineShape.Left + rds.calendarLineShape.Width
         If curRight - curLeft > rds.quarterMonthVorlagenShape.Width Then
             If beschrifteLevel3 Then
