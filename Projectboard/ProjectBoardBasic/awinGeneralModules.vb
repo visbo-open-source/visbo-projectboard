@@ -20,6 +20,7 @@ Imports ProjectBoardBasic
 
 
 
+
 Public Module awinGeneralModules
 
     Private Enum ptInventurSpalten
@@ -10628,4 +10629,7 @@ Public Module awinGeneralModules
         End If
 
     End Sub
+
+    
+    
 End Module

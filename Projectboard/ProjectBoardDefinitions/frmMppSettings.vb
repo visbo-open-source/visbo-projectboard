@@ -151,6 +151,7 @@
         awinSettings.mppShowMsName = ShwMilestoneText.Checked
         awinSettings.mppShowMsDate = ShwMilestoneDate.Checked
         awinSettings.mppUseAbbreviation = useAbbrev.Checked
+        awinSettings.mppKwInMilestone = KwInMilestone.Checked
 
 
         awinSettings.mppVertikalesRaster = shwVerticals.Checked
