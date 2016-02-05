@@ -21,6 +21,7 @@ Imports ProjectBoardBasic
 
 
 
+
 Public Module awinGeneralModules
 
     Private Enum ptInventurSpalten
@@ -11297,6 +11298,7 @@ Public Module awinGeneralModules
     End Sub
 
 
+
     Public Sub XMLExportReportProfil(ByVal profil As clsReport)
 
 
@@ -11444,5 +11446,6 @@ Public Module awinGeneralModules
         Call XMLExportReportProfil(reportProfil)
 
     End Sub
+
 
 End Module
