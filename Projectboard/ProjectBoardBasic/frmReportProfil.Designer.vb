@@ -106,6 +106,7 @@ Partial Class frmReportProfil
         Me.statusLabel.TabIndex = 43
         Me.statusLabel.Text = "Label1"
         Me.statusLabel.TextAlign = System.Drawing.ContentAlignment.BottomLeft
+        Me.statusLabel.Visible = False
         '
         'BGworkerReportBHTC
         '
