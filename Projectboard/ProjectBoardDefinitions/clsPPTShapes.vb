@@ -255,6 +255,37 @@ Public Class clsPPTShapes
 
     End Sub
 
+    ''' <summary>
+    ''' berechnet anhand der Daten des Startdatums, Ende-Datums die korrespondierenden x1, x2 Koordinaten
+    ''' </summary>
+    ''' <param name="startdate"></param>
+    ''' <param name="enddate"></param>
+    ''' <param name="x1Pos"></param>
+    ''' <param name="x2Pos"></param>
+    ''' <remarks></remarks>
+    Public Sub calculatePPTx1x2(ByVal startdate As Date, ByVal enddate As Date, _
+                                    ByRef x1Pos As Double, ByRef x2Pos As Double)
+
+
+        Dim offset1 As Integer = CInt(DateDiff(DateInterval.Day, Me.PPTStartOFCalendar, startdate))
+
+        If offset1 <= 0 Then
+            x1Pos = Me.drawingAreaLeft
+        Else
+            x1Pos = Me.drawingAreaLeft + offset1 * Me.tagesbreite
+        End If
+
+
+        Dim offset2 As Integer = CInt(DateDiff(DateInterval.Day, Me.PPTStartOFCalendar, enddate))
+
+        If offset2 >= Me.anzahlTageImKalender Then
+            x2Pos = Me.drawingAreaRight
+        Else
+            x2Pos = Me.drawingAreaLeft + offset2 * Me.tagesbreite
+        End If
+
+    End Sub
+
     Public Sub bestimmeZeilenHoehe(ByVal anzphasen As Integer, ByVal anzMeilensteine As Integer, _
                                    ByVal considerAll As Boolean)
 
