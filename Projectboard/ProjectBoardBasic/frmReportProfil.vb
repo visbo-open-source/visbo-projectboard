@@ -123,24 +123,6 @@ Public Class frmReportProfil
         reportProfil.UseOriginalNames = False
 
 
-
-        ' nachsehen, ob hproj.name bereits im Profil eingetragen ist
-
-        ' ''Dim lastkey As Double
-        ' ''Dim found As Boolean = False
-        ' ''For Each kvp As KeyValuePair(Of Double, String) In reportProfil.Projects
-
-        ' ''    If kvp.Value = hproj.name Then
-        ' ''        found = True
-        ' ''    Else
-        ' ''        found = found Or False
-        ' ''    End If
-        ' ''    lastkey = kvp.Key
-        ' ''Next
-        ' ''If Not found Then
-        ' ''    reportProfil.Projects.Add(lastkey + 1, hproj.name)
-        ' ''End If
-
     End Sub
 
     Private Sub vonDate_ValueChanged(sender As Object, e As EventArgs) Handles vonDate.ValueChanged
@@ -171,14 +153,14 @@ Public Class frmReportProfil
 
             Dim reportProfilName As String = RepProfilListbox.Text
 
-            Call MsgBox("Lesen des XML-Files " & reportProfilName & ".xml")
+            'Call MsgBox("Lesen des XML-Files " & reportProfilName & ".xml")
 
             ' Einlesen des ausgewählten ReportProfils
             reportProfil = XMLImportReportProfil(reportProfilName)
 
             If Not IsNothing(reportProfil) Then
 
-                Call MsgBox("ReportErstellen")
+                'Call MsgBox("ReportErstellen")
 
                 reportProfil.VonDate = vonDate.Value
                 reportProfil.BisDate = bisDate.Value
@@ -192,8 +174,8 @@ Public Class frmReportProfil
 
                 ' ''Next
 
-                Call MsgBox("Es wurden " & CStr(anzproj) & " Projekte in  ShowProjekte eingelesen." & vbLf _
-                             & "Report wird für das aktuell geladene Projekt erstellt: " & hproj.name)
+                'Call MsgBox("Es wurden " & CStr(anzproj) & " Projekte in  ShowProjekte eingelesen." & vbLf _
+                '        & "Report wird für das aktuell geladene Projekt erstellt: " & hproj.name)
 
                 reportProfil.Projects.Clear()
                 reportProfil.Projects.Add(1, hproj.name)
@@ -210,10 +192,12 @@ Public Class frmReportProfil
 
 
 
-                Call MsgBox("Report erstellen mit Projekt " & hproj.name & "von " & vonDate.Value.ToString & " bis " & bisDate.Value.ToString & " Reportprofil " & reportProfilName)
+                'Call MsgBox("Report erstellen mit Projekt " & hproj.name & "von " & vonDate.Value.ToString & " bis " & bisDate.Value.ToString & " Reportprofil " & reportProfilName)
                 Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
 
-                ' Alternativ ohne Background Worker
+                Me.statusLabel.Visible = True
+                Me.statusLabel.Text = "...started"
+
 
                 BGworkerReportBHTC.RunWorkerAsync(reportProfil)
 
@@ -237,11 +221,59 @@ Public Class frmReportProfil
         reportProfil.Projects.Clear()
         reportProfil.Projects.Add(1, hproj.name)
 
+        Me.statusLabel.Visible = False
 
-
+        ' frmHierarchySelection aufrufen für BHTC
         Call PBBBHTCHierarchySelAction("BHTC", reportProfil)
 
 
+        'RepVorlagenListBox neu aufbauen, falls ein oder mehrere ReportProfile gespeichert wurden.
+        ' hier müssen die ReportProfile erneut aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
+
+        Dim selectedItem As Object = RepProfilListbox.SelectedItem
+
+        RepProfilListbox.Items.Clear()  ' entfernt alle elemente aus Listbox um sie dann neu aufzubauen
+
+        Dim dirName As String
+        Dim dateiName As String
+        Dim profilName As String = ""
+
+        dirName = awinPath & ReportProfileOrdner
+
+
+        If My.Computer.FileSystem.DirectoryExists(dirName) Then
+
+
+            Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
+
+            For k As Integer = 1 To listOfFiles.Count
+
+                dateiName = listOfFiles.Item(k - 1)
+                If dateiName.Contains(".xml") Then
+
+                    Try
+
+                        Dim hstr() As String
+                        hstr = Split(dateiName, ".xml", 2)
+                        Dim hhstr() As String
+                        hhstr = Split(hstr(0), "\")
+                        profilName = hhstr(hhstr.Length - 1)
+                        RepProfilListbox.Items.Add(profilName)
+
+                    Catch ex As Exception
+
+                    End Try
+
+                End If
+
+            Next k
+            RepProfilListbox.SelectedItem = selectedItem
+
+        Else
+            Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
+
+        End If
+        'RepVorlagenListBox ist nun  neu aufgebaut
 
     End Sub
 
@@ -278,11 +310,14 @@ Public Class frmReportProfil
 
     Private Sub BGworkerReportBHTC_DoWork(sender As Object, e As DoWorkEventArgs) Handles BGworkerReportBHTC.DoWork
 
+       
+
         Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
         ' ''Dim vorlagenDateiName As String = CType(e.Argument, String)
         Dim reportProfil As clsReport = CType(e.Argument, clsReport)
         Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
         Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
+
 
         Dim selectedPhases As New Collection
         Dim selectedMilestones As New Collection

@@ -311,10 +311,7 @@ Public Class frmHierarchySelection
                         ' Alternativ ohne Background Worker
                         If Me.menuOption = PTmenue.reportBHTC Then
 
-
-
-
-                            Call MsgBox("Report erstellen mit Projekt " & repProfil.VonDate.ToString & " bis " & repProfil.BisDate.ToString & " Reportprofil " & repProfil.name)
+                            'Call MsgBox("Report erstellen mit Projekt " & repProfil.VonDate.ToString & " bis " & repProfil.BisDate.ToString & " Reportprofil " & repProfil.name)
                             Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
 
                             repProfil.PPTTemplate = repVorlagenDropbox.Text
@@ -357,7 +354,7 @@ Public Class frmHierarchySelection
         appInstance.EnableEvents = True
         enableOnUpdate = True
 
-        ' bei bestimmten Menu-Optionen das Formuzlar dann schliessen 
+        ' bei bestimmten Menu-Optionen das Formular dann schliessen 
         If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Or Me.menuOption = PTmenue.reportBHTC Then
             MyBase.Close()
         Else
@@ -1171,7 +1168,7 @@ Public Class frmHierarchySelection
         Dim selectedBUs As New Collection
         Dim selectedTypes As New Collection
 
-        Call msgbox("Backgroundworker3_DoWork")
+        'Call msgbox("Backgroundworker3_DoWork")
 
         selectedPhases = copySortedListtoColl(reportProfil.Phases)
         selectedMilestones = copySortedListtoColl(reportProfil.Milestones)

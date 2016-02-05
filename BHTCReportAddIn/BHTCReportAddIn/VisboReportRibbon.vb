@@ -44,8 +44,11 @@ Public Class VisboReportRibbon
 
         ' Laden des aktuell geladenen Projektes
         Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
+
+        If hproj.name <> "" And Not IsNothing(hproj.name) Then
+            reportAuswahl.hproj = hproj
+            returnvalue = reportAuswahl.ShowDialog
+        End If
      
-        reportAuswahl.hproj = hproj
-        returnvalue = reportAuswahl.ShowDialog
     End Sub
 End Class
