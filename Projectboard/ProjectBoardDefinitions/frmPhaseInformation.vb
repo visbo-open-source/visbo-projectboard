@@ -59,6 +59,8 @@
             tmpNode = curProject.hierarchy.nodeItem(phaseNameID)
             If Not IsNothing(tmpNode) Then
                 phaseName.Text = tmpNode.origName
+            Else
+                phaseName.Text = elemNameOfElemID(phaseNameID)
             End If
         Else
             phaseName.Text = elemNameOfElemID(phaseNameID)

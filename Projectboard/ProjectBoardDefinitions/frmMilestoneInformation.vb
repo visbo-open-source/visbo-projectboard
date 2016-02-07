@@ -157,6 +157,8 @@
             tmpNode = curProject.hierarchy.nodeItem(milestoneNameID)
             If Not IsNothing(tmpNode) Then
                 resultName.Text = tmpNode.origName
+            Else
+                resultName.Text = elemNameOfElemID(milestoneNameID)
             End If
         Else
             resultName.Text = elemNameOfElemID(milestoneNameID)

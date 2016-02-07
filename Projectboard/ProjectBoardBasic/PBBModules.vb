@@ -57,6 +57,17 @@ Public Module PBBModules
             .Text = "Projekt-Report erzeugen"
             .OKButton.Text = "Bericht erstellen"
             .menuOption = PTmenue.reportBHTC
+
+            ' hier müssen die für BHTC nicht wählbaren Optionen gesetzt werden 
+            With awinSettings
+                .mppShowProjectLine = False
+                .mppShowAmpel = False
+                .mppShowAllIfOne = False
+                .mppSortiertDauer = False
+                .mppExtendedMode = True
+                '.eppExtendedMode = True
+            End With
+
             .statusLabel.Text = ""
             .statusLabel.Visible = True
 

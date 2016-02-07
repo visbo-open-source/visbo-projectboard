@@ -639,8 +639,8 @@
     End Property
 
     ''' <summary>
-    ''' gibt den eindeutigsten Namen für das element zurück, der sich finden lässt
-    ''' entweder den das Element eindeutig machenden Breadcrumb Namen oder den Breadcrumb Namen, mit dem am wenigsten Mehrdeutigkeiten existieren
+    ''' gibt den kürzesten eindeutigen Namen für das Element zurück, der sich finden lässt
+    ''' optional kann die SwimlaneID mitgegeben werden - dann wird nur nach eindeutigen Namen innerhalb der swimlanes gesucht 
     ''' wenn das Element eh eindeutig ist im Projekt, dann wird nur der Elem-Name zurückgegeben 
     ''' </summary>
     ''' <param name="nameID"></param>
@@ -648,7 +648,8 @@
     ''' <returns></returns>
     ''' <remarks></remarks>
     Public ReadOnly Property getBestNameOfID(ByVal nameID As String, _
-                                             ByVal ShowStdNames As Boolean, ByVal showAbbrev As Boolean) As String
+                                             ByVal ShowStdNames As Boolean, ByVal showAbbrev As Boolean, _
+                                             Optional ByVal swimlaneID As String = rootPhaseName) As String
         Get
             Dim elemName As String = elemNameOfElemID(nameID)
             Dim isMilestone As Boolean
@@ -661,13 +662,27 @@
             Dim rootreached As Boolean = False
             Dim description1 As String = "", description2 As String = elemName
             Dim phDef As clsPhasenDefinition
+            Dim swlBC As String = ""
+
+
 
             isMilestone = elemIDIstMeilenstein(nameID)
+
+            If swimlaneID = rootPhaseName Then
+                swlBC = ""
+            Else
+                If istElemID(swimlaneID) Then
+                    swlBC = calcHryFullname(elemNameOfElemID(swimlaneID), _
+                                                  Me.getBreadCrumb(swimlaneID))
+                End If
+            End If
 
             Try
                 If isMilestone Then
 
-                    Dim milestoneIndices(,) As Integer = Me.getMilestoneIndices(elemName, "")
+                    ' Änderung tk: es wird der eindeutige Namen unterhalb der swimlaneID gesucht  
+                    'Dim milestoneIndices(,) As Integer = Me.getMilestoneIndices(elemName, "")
+                    Dim milestoneIndices(,) As Integer = Me.getMilestoneIndices(elemName, swlBC)
                     anzElements = CInt(milestoneIndices.Length / 2)
 
                     If anzElements > 1 Then
@@ -702,7 +717,9 @@
 
                 Else
                     ' es handelt sich um eine Phase
-                    Dim phaseIndices() As Integer = Me.getPhaseIndices(elemName, "")
+                    'Dim phaseIndices() As Integer = Me.getPhaseIndices(elemName, "")
+                    ' Änderung tk: es wird der eindeutige Namen unterhalb der swimlaneID gesucht  
+                    Dim phaseIndices() As Integer = Me.getPhaseIndices(elemName, swlBC)
                     anzElements = phaseIndices.Length
 
                     If anzElements > 1 Then
@@ -757,22 +774,23 @@
 
                             If IsNothing(phDef) Then
                                 If i = 1 And tmpPhName <> elemNameOfElemID(rootPhaseName) And tmpPhName <> "" Then
-                                    newDesc1 = "?"
+                                    ' den tmpPhName eintragen 
+                                    newDesc1 = tmpPhName
                                 ElseIf i > 1 Then
-                                    newDesc1 = newDesc1 & "-?"
+                                    newDesc1 = newDesc1 & tmpPhName
                                 End If
 
                             Else
                                 If i = 1 Then
                                     If phDef.shortName = "" Then
-                                        newDesc1 = "?"
+                                        newDesc1 = tmpPhName
                                     Else
                                         newDesc1 = phDef.shortName
                                     End If
 
                                 Else
                                     If phDef.shortName = "" Then
-                                        newDesc1 = newDesc1 & "-?"
+                                        newDesc1 = newDesc1 & tmpPhName
                                     Else
                                         newDesc1 = newDesc1 & "-" & phDef.shortName
                                     End If
@@ -788,14 +806,15 @@
                             Dim msDef As clsMeilensteinDefinition
                             msDef = MilestoneDefinitions.getMilestoneDef(description2)
                             If IsNothing(msDef) Then
-                                description2 = "-"
+                                'description2 = "-"
                             Else
-                                description2 = msDef.shortName
-                                If IsNothing(description2) Then
-                                    description2 = "-"
+                                If IsNothing(msDef.shortName) Then
+                                    'description2 = "-"
                                 Else
-                                    If description2 = "" Then
-                                        description2 = "-"
+                                    If msDef.shortName = "" Then
+                                        'description2 = "-"
+                                    Else
+                                        description2 = msDef.shortName
                                     End If
 
                                 End If
@@ -805,14 +824,16 @@
 
                             phDef = PhaseDefinitions.getPhaseDef(description2)
                             If IsNothing(phDef) Then
-                                description2 = "-"
+                                'description2 = "-"
                             Else
-                                description2 = phDef.shortName
-                                If IsNothing(description2) Then
-                                    description2 = "-"
+
+                                If IsNothing(phDef.shortName) Then
+                                    'description2 = "-"
                                 Else
-                                    If description2 = "" Then
-                                        description2 = "-"
+                                    If phDef.shortName = "" Then
+                                        'description2 = "-"
+                                    Else
+                                        description2 = phDef.shortName
                                     End If
 
                                 End If
@@ -827,14 +848,16 @@
                             Dim msDef As clsMeilensteinDefinition
                             msDef = MilestoneDefinitions.getMilestoneDef(description2)
                             If IsNothing(msDef) Then
-                                description2 = "-"
+                                'description2 = "-"
                             Else
-                                description2 = msDef.shortName
-                                If IsNothing(description2) Then
-                                    description2 = "-"
+
+                                If IsNothing(msDef.shortName) Then
+                                    'description2 = "-"
                                 Else
-                                    If description2 = "" Then
-                                        description2 = "-"
+                                    If msDef.shortName = "" Then
+                                        'description2 = msDef.name
+                                    Else
+                                        description2 = msDef.shortName
                                     End If
 
                                 End If
@@ -843,14 +866,16 @@
                         Else
                             phDef = PhaseDefinitions.getPhaseDef(description2)
                             If IsNothing(phDef) Then
-                                description2 = "-"
+                                'description2 = "-"
                             Else
-                                description2 = phDef.shortName
-                                If IsNothing(description2) Then
-                                    description2 = "-"
+
+                                If IsNothing(phDef.shortName) Then
+                                    'description2 = "-"
                                 Else
-                                    If description2 = "" Then
-                                        description2 = "-"
+                                    If phDef.shortName = "" Then
+                                        'description2 = phDef.name
+                                    Else
+                                        description2 = phDef.shortName
                                     End If
 
                                 End If

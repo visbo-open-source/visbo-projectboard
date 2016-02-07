@@ -134,7 +134,8 @@ Public Class clsawinSettings
 
 
     ' Settings für Einzelprojekt-Reports
-    Public Property eppExtendedMode As Boolean
+    ' tk 7.2.16 ist überflüssig
+    'Public Property eppExtendedMode As Boolean
 
     ' Settings für Überprüfung, ob Formulare offen / aktiv sind 
     Public Property isHryNameFrmActive As Boolean
@@ -228,12 +229,12 @@ Public Class clsawinSettings
         _mppExtendedMode = False
         _mppShowHorizontals = False
         _mppUseAbbreviation = True
-        _mppUseOriginalNames = True
+        _mppUseOriginalNames = False
         _mppKwInMilestone = False
 
 
         ' Settings für Einzelprojekt-Reports
-        _eppExtendedMode = True
+        '_eppExtendedMode = True
 
 
         If _mppSortiertDauer Then

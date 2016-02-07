@@ -85,7 +85,7 @@ Public Class clsPhasen
     ''' <remarks></remarks>
     Public ReadOnly Property getAbbrev(ByVal name As String) As String
         Get
-            Dim msAbbrev As String = "-"
+            Dim msAbbrev As String = name
 
             'Dim key As String = calcKey(name, belongsTo)
 
