@@ -267,7 +267,7 @@ Public Class clsPPTShapes
                                     ByRef x1Pos As Double, ByRef x2Pos As Double)
 
 
-        Dim offset1 As Integer = CInt(DateDiff(DateInterval.Day, Me.PPTStartOFCalendar, startdate))
+        Dim offset1 As Integer = CInt(DateDiff(DateInterval.Day, Me.PPTStartOFCalendar.Date, startdate.Date))
 
         If offset1 <= 0 Then
             x1Pos = Me.drawingAreaLeft
@@ -276,7 +276,7 @@ Public Class clsPPTShapes
         End If
 
 
-        Dim offset2 As Integer = CInt(DateDiff(DateInterval.Day, Me.PPTStartOFCalendar, enddate))
+        Dim offset2 As Integer = CInt(DateDiff(DateInterval.Day, Me.PPTStartOFCalendar.Date, enddate.Date))
 
         If offset2 >= Me.anzahlTageImKalender Then
             x2Pos = Me.drawingAreaRight
@@ -1559,7 +1559,7 @@ Public Class clsPPTShapes
         ' bestimme Drawing Area
         _drawingAreaLeft = _calendarLeft
         _drawingAreaRight = _calendarRight
-        _drawingAreaTop = _calendarBottom + 5
+        _drawingAreaTop = _calendarBottom + 2
 
 
         If awinSettings.mppShowLegend And Not IsNothing(_legendLineShape) Then

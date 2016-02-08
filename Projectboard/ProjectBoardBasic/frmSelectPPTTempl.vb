@@ -106,7 +106,7 @@ Public Class frmSelectPPTTempl
             dirName = awinPath & RepProjectVorOrdner
             vorlagenDateiName = dirName & "\" & RepVorlagenDropbox.Text
 
-            awinSettings.eppExtendedMode = True
+            'awinSettings.eppExtendedMode = True
 
             Try
 

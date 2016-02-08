@@ -4,64 +4,54 @@
 
     Private Sub frmMppSettings_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        With awinSettings
+            shwProjectLine.Checked = .mppShowProjectLine
+            notStrictly.Checked = .mppShowAllIfOne
+            shwAmpeln.Checked = .mppShowAmpel
+            useOriginalNames.Checked = .mppUseOriginalNames
+
+            shwPhaseText.Checked = .mppShowPhName
+            shwPhaseDate.Checked = .mppShowPhDate
+            useAbbrev.Checked = .mppUseAbbreviation
+            ShwMilestoneText.Checked = .mppShowMsName
+            ShwMilestoneDate.Checked = .mppShowMsDate
+            KwInMilestone.Checked = .mppKwInMilestone
+
+            shwVerticals.Checked = .mppVertikalesRaster
+            shwLegend.Checked = .mppShowLegend
+            sortiertNachDauer.Checked = .mppSortiertDauer
+            shwHorizontals.Checked = .mppShowHorizontals
+            allOnOnePage.Checked = .mppOnePage
+            shwExtendedMode.Checked = .mppExtendedMode
+
+            If .mppSortiertDauer Then
+                .mppShowAllIfOne = True
+            End If
+
+            '.eppExtendedMode = False
+        End With
+
+
         If calledfrom = "frmShowPlanElements" Then
 
-            With awinSettings
+            ' alle Elemente anzeigen 
 
-                .eppExtendedMode = False
-
-                If .mppSortiertDauer Then
-                    .mppShowAllIfOne = True
-                End If
-
-                shwProjectLine.Checked = .mppShowProjectLine
-                notStrictly.Checked = .mppShowAllIfOne
-                shwAmpeln.Checked = .mppShowAmpel
-                shwPhaseText.Checked = .mppShowPhName
-                shwPhaseDate.Checked = .mppShowPhDate
-                'phaseFullyContained.Checked = .mppFullyContained
-                ShwMilestoneText.Checked = .mppShowMsName
-                ShwMilestoneDate.Checked = .mppShowMsDate
-                shwVerticals.Checked = .mppVertikalesRaster
-                shwLegend.Checked = .mppShowLegend
-                sortiertNachDauer.Checked = .mppSortiertDauer
-                allOnOnePage.Checked = .mppOnePage
-                shwExtendedMode.Checked = .mppExtendedMode
-                KwInMilestone.Checked = .mppKwInMilestone
-
-            End With
         ElseIf calledfrom = "frmSelectPPTTempl" Then
 
             With awinSettings
 
-                .eppExtendedMode = True
+                '.eppExtendedMode = True
 
-                If .mppSortiertDauer Then
-                    .mppShowAllIfOne = True
-                End If
-
-                shwProjectLine.Checked = .mppShowProjectLine
+                ' was soll nicht visible sein 
                 notStrictly.Visible = False
-                notStrictly.Checked = .mppShowAllIfOne
-                shwAmpeln.Checked = .mppShowAmpel
-                shwPhaseText.Checked = .mppShowPhName
-                shwPhaseDate.Checked = .mppShowPhDate
-                'phaseFullyContained.Checked = .mppFullyContained
-                ShwMilestoneText.Checked = .mppShowMsName
-                ShwMilestoneDate.Checked = .mppShowMsDate
-                KwInMilestone.Checked = .mppKwInMilestone
-
-                shwVerticals.Checked = .mppVertikalesRaster
-                shwLegend.Checked = .mppShowLegend
                 sortiertNachDauer.Visible = False
-                'sortiertNachDauer.Checked = .mppSortiertDauer
                 allOnOnePage.Visible = False
-                'allOnOnePage.Checked = .mppOnePage
                 shwExtendedMode.Visible = False
-                'shwExtendedMode.Checked = .mppExtendedMode
-
                 'ur: 21.04.2015: noch zu tun: zuvor alten Wert sichern
                 shwExtendedMode.Checked = True
+
+                ' den UseOriginal NAmes Button hochschieben 
+                useOriginalNames.Top = notStrictly.Top
             End With
 
         ElseIf calledfrom = "frmBHTC" Then
@@ -72,41 +62,12 @@
                 ' sie müssen auch entsprechend auf die für den Project AddIn sinnvllen werte gesetzt werden 
                 '
                 shwProjectLine.Visible = False
-                shwProjectLine.Checked = False
-                .mppShowProjectLine = False
-
                 shwAmpeln.Visible = False
-                shwAmpeln.Checked = False
-                .mppShowAmpel = False
-
                 notStrictly.Visible = False
-                notStrictly.Checked = False
-                .mppShowAllIfOne = False
-
+                useOriginalNames.Visible = False
                 sortiertNachDauer.Visible = False
-                sortiertNachDauer.Checked = False
-                .mppSortiertDauer = False
-                '
-
                 shwExtendedMode.Visible = False
-                shwExtendedMode.Checked = True
-                .eppExtendedMode = True
-                .mppExtendedMode = True
-
-                ' jetzt kommen die im MS Project sichtbaren Checkboxes
-                shwPhaseText.Checked = .mppShowPhName
-                shwPhaseDate.Checked = .mppShowPhDate
-
-                ShwMilestoneText.Checked = .mppShowMsName
-                ShwMilestoneDate.Checked = .mppShowMsDate
-                KwInMilestone.Visible = True
-                KwInMilestone.Checked = .mppKwInMilestone
-
-                shwVerticals.Checked = .mppVertikalesRaster
-                shwHorizontals.Checked = .mppShowHorizontals
-
-                shwLegend.Checked = .mppShowLegend
-                allOnOnePage.Checked = .mppOnePage
+                
 
                 ' jetzt müssen die Checkboxes und der OK-Button noch hochgeschoben werden 
                 ' ausserdem die Höhe des Formulars verändert werden 
@@ -142,9 +103,11 @@
 
     Private Sub okButton_Click(sender As Object, e As EventArgs) Handles okButton.Click
 
+
         awinSettings.mppShowProjectLine = shwProjectLine.Checked
         awinSettings.mppShowAllIfOne = notStrictly.Checked
         awinSettings.mppShowAmpel = shwAmpeln.Checked
+        awinSettings.mppUseAbbreviation = useOriginalNames.Checked
 
         awinSettings.mppShowPhName = shwPhaseText.Checked
         awinSettings.mppShowPhDate = shwPhaseDate.Checked
