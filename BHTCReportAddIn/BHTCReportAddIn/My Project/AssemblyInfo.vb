@@ -19,7 +19,7 @@ Imports System.Security
 ' Durch Festlegen von ComVisible auf "false" werden die Typen in dieser Assembly unsichtbar 
 ' für COM-Komponenten.  Wenn Sie auf einen Zugriffstyp in dieser Assembly aus 
 ' COM zugreifen müssen, legen Sie das ComVisible-Attribut für diesen Typ auf "true" fest.
-<Assembly: ComVisible(False)>
+<Assembly: ComVisible(True)> 
 
 'Die folgende GUID ist für die ID der typelib, wenn dieses Projekt für COM verfügbar gemacht wird
 <Assembly: Guid("44958265-8415-4883-93b1-328c50bfe110")> 
