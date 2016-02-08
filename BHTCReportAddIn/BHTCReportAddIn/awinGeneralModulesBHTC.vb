@@ -1726,215 +1726,215 @@ Module awinGeneralModulesBHTC
     End Sub
 
 
-    '' '' ''' <summary>
-    '' '' ''' kopiert eine sortierte Liste , die Strings enthält
-    '' '' ''' </summary>
-    '' '' ''' <param name="original"></param>
-    '' '' ''' <returns></returns>
-    '' '' ''' <remarks></remarks>
-    '' ''Public Function copyList(ByVal original As SortedList(Of String, String)) As SortedList(Of String, String)
-    '' ''    Dim i As Integer
-    '' ''    Dim element As String
-    '' ''    Dim kopie As New SortedList(Of String, String)
+    ' '' '' '' '' ''' <summary>
+    ' '' '' '' '' ''' kopiert eine sortierte Liste , die Strings enthält
+    ' '' '' '' '' ''' </summary>
+    ' '' '' '' '' ''' <param name="original"></param>
+    ' '' '' '' '' ''' <returns></returns>
+    ' '' '' '' '' ''' <remarks></remarks>
+    ' '' '' '' ''Public Function copyList(ByVal original As SortedList(Of String, String)) As SortedList(Of String, String)
+    ' '' '' '' ''    Dim i As Integer
+    ' '' '' '' ''    Dim element As String
+    ' '' '' '' ''    Dim kopie As New SortedList(Of String, String)
 
-    '' ''    If Not IsNothing(original) Then
-    '' ''        For i = 1 To original.Count
-    '' ''            element = CStr(original.Item(i))
-    '' ''            If Not kopie.ContainsKey(element) Then
-    '' ''                kopie.Add(element, element)
-    '' ''            End If
+    ' '' '' '' ''    If Not IsNothing(original) Then
+    ' '' '' '' ''        For i = 1 To original.Count
+    ' '' '' '' ''            element = CStr(original.Item(i))
+    ' '' '' '' ''            If Not kopie.ContainsKey(element) Then
+    ' '' '' '' ''                kopie.Add(element, element)
+    ' '' '' '' ''            End If
 
-    '' ''        Next
-    '' ''    End If
-    '' ''    copyList = kopie
+    ' '' '' '' ''        Next
+    ' '' '' '' ''    End If
+    ' '' '' '' ''    copyList = kopie
 
-    '' ''End Function
-
-
-    '' '' ''' <summary>
-    '' '' ''' kopiert eine sortierte Liste , die Strings enthält
-    '' '' ''' </summary>
-    '' '' ''' <param name="original"></param>
-    '' '' ''' <returns></returns>
-    '' '' ''' <remarks></remarks>
-    '' ''Public Function copyColltoSortedList(ByVal original As Collection) As SortedList(Of String, String)
-    '' ''    Dim i As Integer
-    '' ''    Dim element As String
-    '' ''    Dim kopie As New SortedList(Of String, String)
-
-    '' ''    If Not IsNothing(original) Then
-    '' ''        For i = 1 To original.Count
-    '' ''            element = CStr(original.Item(i))
-    '' ''            If Not kopie.ContainsKey(element) Then
-    '' ''                kopie.Add(element, element)
-    '' ''            End If
-
-    '' ''        Next
-    '' ''    End If
-    '' ''    copyColltoSortedList = kopie
-
-    '' ''End Function
-
-    '' '' ''' <summary>
-    '' '' ''' kopiert eine sortierte Liste , die Strings enthält in eine Collection mit Strings
-    '' '' ''' </summary>
-    '' '' ''' <param name="original"></param>
-    '' '' ''' <returns></returns>
-    '' '' ''' <remarks></remarks>
-    '' ''Public Function copySortedListtoColl(ByVal original As SortedList(Of String, String)) As Collection
-    '' ''    Dim i As Integer
-    '' ''    Dim element As String
-    '' ''    Dim kopie As New Collection
-
-    '' ''    If Not IsNothing(original) Then
-    '' ''        For Each kvp As KeyValuePair(Of String, String) In original
-    '' ''            element = kvp.Value
-    '' ''            If Not kopie.Contains(element) Then
-    '' ''                kopie.Add(element, element)
-    '' ''            End If
-
-    '' ''        Next
-    '' ''    End If
-    '' ''    copySortedListtoColl = kopie
-
-    '' ''End Function
+    ' '' '' '' ''End Function
 
 
-    '' ''Public Sub XMLExportReportProfil(ByVal profil As clsReport)
+    ' '' '' '' '' ''' <summary>
+    ' '' '' '' '' ''' kopiert eine sortierte Liste , die Strings enthält
+    ' '' '' '' '' ''' </summary>
+    ' '' '' '' '' ''' <param name="original"></param>
+    ' '' '' '' '' ''' <returns></returns>
+    ' '' '' '' '' ''' <remarks></remarks>
+    ' '' '' '' ''Public Function copyColltoSortedList(ByVal original As Collection) As SortedList(Of String, String)
+    ' '' '' '' ''    Dim i As Integer
+    ' '' '' '' ''    Dim element As String
+    ' '' '' '' ''    Dim kopie As New SortedList(Of String, String)
+
+    ' '' '' '' ''    If Not IsNothing(original) Then
+    ' '' '' '' ''        For i = 1 To original.Count
+    ' '' '' '' ''            element = CStr(original.Item(i))
+    ' '' '' '' ''            If Not kopie.ContainsKey(element) Then
+    ' '' '' '' ''                kopie.Add(element, element)
+    ' '' '' '' ''            End If
+
+    ' '' '' '' ''        Next
+    ' '' '' '' ''    End If
+    ' '' '' '' ''    copyColltoSortedList = kopie
+
+    ' '' '' '' ''End Function
+
+    ' '' '' '' '' ''' <summary>
+    ' '' '' '' '' ''' kopiert eine sortierte Liste , die Strings enthält in eine Collection mit Strings
+    ' '' '' '' '' ''' </summary>
+    ' '' '' '' '' ''' <param name="original"></param>
+    ' '' '' '' '' ''' <returns></returns>
+    ' '' '' '' '' ''' <remarks></remarks>
+    ' '' '' '' ''Public Function copySortedListtoColl(ByVal original As SortedList(Of String, String)) As Collection
+    ' '' '' '' ''    Dim i As Integer
+    ' '' '' '' ''    Dim element As String
+    ' '' '' '' ''    Dim kopie As New Collection
+
+    ' '' '' '' ''    If Not IsNothing(original) Then
+    ' '' '' '' ''        For Each kvp As KeyValuePair(Of String, String) In original
+    ' '' '' '' ''            element = kvp.Value
+    ' '' '' '' ''            If Not kopie.Contains(element) Then
+    ' '' '' '' ''                kopie.Add(element, element)
+    ' '' '' '' ''            End If
+
+    ' '' '' '' ''        Next
+    ' '' '' '' ''    End If
+    ' '' '' '' ''    copySortedListtoColl = kopie
+
+    ' '' '' '' ''End Function
+
+
+    ' '' '' '' ''Public Sub XMLExportReportProfil(ByVal profil As clsReport)
 
 
 
-    '' ''    Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profil.name & ".xml"
+    ' '' '' '' ''    Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profil.name & ".xml"
 
-    '' ''    Try
+    ' '' '' '' ''    Try
 
-    '' ''        Dim serializer = New DataContractSerializer(GetType(clsReport))
+    ' '' '' '' ''        Dim serializer = New DataContractSerializer(GetType(clsReport))
 
-    '' ''        ' ''Dim xmlstring As String
-    '' ''        ' ''Dim sw As New StringWriter()
-    '' ''        ' ''Dim writer As New XmlTextWriter(sw)
-    '' ''        ' ''writer.Formatting = Formatting.Indented
-    '' ''        ' ''serializer.WriteObject(writer, profil)
-    '' ''        ' ''writer.Flush()
-    '' ''        ' ''xmlstring = sw.ToString()
+    ' '' '' '' ''        ' ''Dim xmlstring As String
+    ' '' '' '' ''        ' ''Dim sw As New StringWriter()
+    ' '' '' '' ''        ' ''Dim writer As New XmlTextWriter(sw)
+    ' '' '' '' ''        ' ''writer.Formatting = Formatting.Indented
+    ' '' '' '' ''        ' ''serializer.WriteObject(writer, profil)
+    ' '' '' '' ''        ' ''writer.Flush()
+    ' '' '' '' ''        ' ''xmlstring = sw.ToString()
 
-    '' ''        ' XML-Datei Öffnen
-    '' ''        ' A FileStream is needed to write the XML document.
+    ' '' '' '' ''        ' XML-Datei Öffnen
+    ' '' '' '' ''        ' A FileStream is needed to write the XML document.
 
-    '' ''        Dim file As New FileStream(xmlfilename, FileMode.Create)
-    '' ''        serializer.WriteObject(file, profil)
-    '' ''        file.Close()
-    '' ''    Catch ex As Exception
+    ' '' '' '' ''        Dim file As New FileStream(xmlfilename, FileMode.Create)
+    ' '' '' '' ''        serializer.WriteObject(file, profil)
+    ' '' '' '' ''        file.Close()
+    ' '' '' '' ''    Catch ex As Exception
 
-    '' ''        Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+    ' '' '' '' ''        Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
 
-    '' ''    End Try
+    ' '' '' '' ''    End Try
 
-    '' ''End Sub
+    ' '' '' '' ''End Sub
 
-    '' ''Public Function XMLImportReportProfil(ByVal profilName As String) As clsReport
+    ' '' '' '' ''Public Function XMLImportReportProfil(ByVal profilName As String) As clsReport
 
-    '' ''    Dim profil As New clsReport
+    ' '' '' '' ''    Dim profil As New clsReport
 
-    '' ''    Dim serializer = New DataContractSerializer(GetType(clsReport))
-    '' ''    Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profilName & ".xml"
-    '' ''    Try
+    ' '' '' '' ''    Dim serializer = New DataContractSerializer(GetType(clsReport))
+    ' '' '' '' ''    Dim xmlfilename As String = awinPath & ReportProfileOrdner & "\" & profilName & ".xml"
+    ' '' '' '' ''    Try
 
-    '' ''        ' XML-Datei Öffnen
-    '' ''        ' A FileStream is needed to read the XML document.
-    '' ''        Dim file As New FileStream(xmlfilename, FileMode.Open)
-    '' ''        profil = serializer.ReadObject(file)
-    '' ''        file.Close()
+    ' '' '' '' ''        ' XML-Datei Öffnen
+    ' '' '' '' ''        ' A FileStream is needed to read the XML document.
+    ' '' '' '' ''        Dim file As New FileStream(xmlfilename, FileMode.Open)
+    ' '' '' '' ''        profil = serializer.ReadObject(file)
+    ' '' '' '' ''        file.Close()
 
-    '' ''        XMLImportReportProfil = profil
+    ' '' '' '' ''        XMLImportReportProfil = profil
 
-    '' ''    Catch ex As Exception
+    ' '' '' '' ''    Catch ex As Exception
 
-    '' ''        Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
-    '' ''        XMLImportReportProfil = Nothing
-    '' ''    End Try
+    ' '' '' '' ''        Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+    ' '' '' '' ''        XMLImportReportProfil = Nothing
+    ' '' '' '' ''    End Try
 
-    '' ''End Function
+    ' '' '' '' ''End Function
 
-    Public Sub xmltestwrite1()
+    ' '' ''Public Sub xmltestwrite1()
 
 
-        Dim overview As New clsXMLtest
-        overview.title = "Neues vom XMLTest"
-        overview.reportCalendarVon = Date.Now
-        overview.reportCalendarBis = Date.Now.AddMonths(12)
-        overview.reportIsMpp = True
-        overview.reportPPTTemplate = "templateName"
-        overview.reportVon = Date.Now.AddYears(-2)
-        Dim hstr As String = ""
-        For i = 1 To 5
-            If i = 1 Then
-                hstr = hstr & "name" & i.ToString
-            End If
-            hstr = hstr & ";" & "name" & i.ToString
-        Next
-        'overview.reportPhase = hstr
-        Dim writer As New System.Xml.Serialization.XmlSerializer(GetType(clsXMLtest))
-        Dim file As New System.IO.StreamWriter("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BHTC\requirements\ReportProfile\xmltest1.xml")
-        writer.Serialize(file, overview)
-        file.Close()
+    ' '' ''    Dim overview As New clsXMLtest
+    ' '' ''    overview.title = "Neues vom XMLTest"
+    ' '' ''    overview.reportCalendarVon = Date.Now
+    ' '' ''    overview.reportCalendarBis = Date.Now.AddMonths(12)
+    ' '' ''    overview.reportIsMpp = True
+    ' '' ''    overview.reportPPTTemplate = "templateName"
+    ' '' ''    overview.reportVon = Date.Now.AddYears(-2)
+    ' '' ''    Dim hstr As String = ""
+    ' '' ''    For i = 1 To 5
+    ' '' ''        If i = 1 Then
+    ' '' ''            hstr = hstr & "name" & i.ToString
+    ' '' ''        End If
+    ' '' ''        hstr = hstr & ";" & "name" & i.ToString
+    ' '' ''    Next
+    ' '' ''    'overview.reportPhase = hstr
+    ' '' ''    Dim writer As New System.Xml.Serialization.XmlSerializer(GetType(clsXMLtest))
+    ' '' ''    Dim file As New System.IO.StreamWriter("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BHTC\requirements\ReportProfile\xmltest1.xml")
+    ' '' ''    writer.Serialize(file, overview)
+    ' '' ''    file.Close()
 
-    End Sub
+    ' '' ''End Sub
 
-    Public Sub xmltestwrite2()
+    ' '' ''Public Sub xmltestwrite2()
 
-        Dim overview As New clsXMLtest
-        overview.title = "Neues vom XMLTest"
-        overview.reportCalendarVon = Date.Now
-        overview.reportCalendarBis = Date.Now.AddMonths(12)
-        overview.reportIsMpp = True
-        overview.reportPPTTemplate = "templateName"
-        overview.reportVon = Date.Now.AddYears(-2)
+    ' '' ''    Dim overview As New clsXMLtest
+    ' '' ''    overview.title = "Neues vom XMLTest"
+    ' '' ''    overview.reportCalendarVon = Date.Now
+    ' '' ''    overview.reportCalendarBis = Date.Now.AddMonths(12)
+    ' '' ''    overview.reportIsMpp = True
+    ' '' ''    overview.reportPPTTemplate = "templateName"
+    ' '' ''    overview.reportVon = Date.Now.AddYears(-2)
 
-        ' ''Dim hstr As String = ""
-        ' ''For i = 1 To 5
-        ' ''    If i = 1 Then
-        ' ''        hstr = hstr & "name" & i.ToString
-        ' ''    End If
-        ' ''    hstr = hstr & ";" & "name" & i.ToString
-        ' ''Next
-        ' ''overview.reportPhase = hstr
+    ' '' ''    ' ''Dim hstr As String = ""
+    ' '' ''    ' ''For i = 1 To 5
+    ' '' ''    ' ''    If i = 1 Then
+    ' '' ''    ' ''        hstr = hstr & "name" & i.ToString
+    ' '' ''    ' ''    End If
+    ' '' ''    ' ''    hstr = hstr & ";" & "name" & i.ToString
+    ' '' ''    ' ''Next
+    ' '' ''    ' ''overview.reportPhase = hstr
 
-        overview.reportPhasen = New SortedList(Of String, String)
-        For i = 5 To 1 Step -1
-            overview.reportPhasen.Add("name" & i.ToString, "name" & i.ToString)
-        Next
+    ' '' ''    overview.reportPhasen = New SortedList(Of String, String)
+    ' '' ''    For i = 5 To 1 Step -1
+    ' '' ''        overview.reportPhasen.Add("name" & i.ToString, "name" & i.ToString)
+    ' '' ''    Next
 
-        Dim serializer = New DataContractSerializer(GetType(clsXMLtest))
-        Dim xmlstring As String
-        Dim sw As New StringWriter()
-        Dim writer As New XmlTextWriter(sw)
-        writer.Formatting = Formatting.Indented
-        serializer.WriteObject(writer, overview)
-        writer.Flush()
-        xmlstring = sw.ToString()
-        ' XML-Datei Öffnen
-        ' A FileStream is needed to read the XML document.
+    ' '' ''    Dim serializer = New DataContractSerializer(GetType(clsXMLtest))
+    ' '' ''    Dim xmlstring As String
+    ' '' ''    Dim sw As New StringWriter()
+    ' '' ''    Dim writer As New XmlTextWriter(sw)
+    ' '' ''    writer.Formatting = Formatting.Indented
+    ' '' ''    serializer.WriteObject(writer, overview)
+    ' '' ''    writer.Flush()
+    ' '' ''    xmlstring = sw.ToString()
+    ' '' ''    ' XML-Datei Öffnen
+    ' '' ''    ' A FileStream is needed to read the XML document.
 
-        Dim file As New FileStream("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BHTC\requirements\ReportProfile\xmltest2.xml", FileMode.Create)
-        serializer.WriteObject(file, overview)
-        file.Close()
+    ' '' ''    Dim file As New FileStream("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BHTC\requirements\ReportProfile\xmltest2.xml", FileMode.Create)
+    ' '' ''    serializer.WriteObject(file, overview)
+    ' '' ''    file.Close()
 
-    End Sub
+    ' '' ''End Sub
 
-    Public Sub xmltestread2()
+    ' '' ''Public Sub xmltestread2()
 
-        Dim overview As New clsXMLtest
+    ' '' ''    Dim overview As New clsXMLtest
 
-        Dim serializer = New DataContractSerializer(GetType(clsXMLtest))
-      
-        ' XML-Datei Öffnen
-        ' A FileStream is needed to read the XML document.
-        Dim file As New FileStream("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BHTC\requirements\ReportProfile\xmltest2.xml", FileMode.Open)
+    ' '' ''    Dim serializer = New DataContractSerializer(GetType(clsXMLtest))
 
-        overview = serializer.ReadObject(file)
-        file.Close()
+    ' '' ''    ' XML-Datei Öffnen
+    ' '' ''    ' A FileStream is needed to read the XML document.
+    ' '' ''    Dim file As New FileStream("\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BHTC\requirements\ReportProfile\xmltest2.xml", FileMode.Open)
 
-    End Sub
+    ' '' ''    overview = serializer.ReadObject(file)
+    ' '' ''    file.Close()
+
+    ' '' ''End Sub
 
 End Module

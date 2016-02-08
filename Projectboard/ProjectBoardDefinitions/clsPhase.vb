@@ -354,6 +354,36 @@
     End Property
 
     ''' <summary>
+    ''' gibt den Original Namen einer Phase zurück 
+    ''' wenn der leer ist, dann wird der Phasen Name zurück gegeben 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property originalName As String
+        Get
+
+            Dim tmpNode As clsHierarchyNode
+            Dim beschriftung As String = Me.name
+            tmpNode = _Parent.hierarchy.nodeItem(Me.nameID)
+
+            If Not IsNothing(tmpNode) Then
+                beschriftung = tmpNode.origName
+                If beschriftung = "" Then
+                    beschriftung = Me.name
+                End If
+            Else
+                beschriftung = Me.name
+            End If
+
+            originalName = beschriftung
+
+        End Get
+    End Property
+
+
+
+    ''' <summary>
     ''' liefert das StartDatum der Phase
     ''' </summary>
     ''' <value></value>

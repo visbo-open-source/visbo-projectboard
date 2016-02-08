@@ -368,8 +368,8 @@ Public Class frmReportProfil
 
         ' Report wird von Projekt hproj, das vor Aufruf des Formulars in hproj gespeichert wurde erzeugt
 
-        showRangeLeft = CInt(DateDiff(DateInterval.Month, StartofCalendar, vonDate.Value))
-        showRangeRight = CInt(DateDiff(DateInterval.Month, StartofCalendar, bisDate.Value))
+        showRangeLeft = getColumnOfDate(vonDate.Value)
+        showRangeRight = getColumnOfDate(bisDate.Value)
 
         Try
             Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate

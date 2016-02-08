@@ -17176,13 +17176,16 @@ Public Module Projekte
                 ok = True
 
                 If awinSettings.showOrigName Then
-                    Dim tmpNode As clsHierarchyNode
-                    tmpNode = hproj.hierarchy.nodeItem(milestoneNameID)
-                    If Not IsNothing(tmpNode) Then
-                        milestoneName = tmpNode.origName
-                    Else
-                        milestoneName = elemNameOfElemID(milestoneNameID)
-                    End If
+                    ' es gibt jetzt dazu eine Methode - siehe weiter unten 
+                    'Dim tmpNode As clsHierarchyNode
+                    'tmpNode = hproj.hierarchy.nodeItem(milestoneNameID)
+                    'If Not IsNothing(tmpNode) Then
+                    '    milestoneName = tmpNode.origName
+                    'Else
+                    '    milestoneName = elemNameOfElemID(milestoneNameID)
+                    'End If
+
+                    milestoneName = cMilestone.originalName
                 Else
                     milestoneName = elemNameOfElemID(milestoneNameID)
                 End If
@@ -17684,13 +17687,16 @@ Public Module Projekte
             If Not IsNothing(cPhase) Then
                 ok = True
                 If awinSettings.showOrigName Then
-                    Dim tmpNode As clsHierarchyNode
-                    tmpNode = hproj.hierarchy.nodeItem(cPhase.nameID)
-                    If Not IsNothing(tmpNode) Then
-                        phaseName = tmpNode.origName
-                    Else
-                        phaseName = elemNameOfElemID(phaseNameID)
-                    End If
+                    ' Änderung tk 6.2.16 es gibt dazu jetzt eine Methode - siehe weiter unten 
+                    'Dim tmpNode As clsHierarchyNode
+                    'tmpNode = hproj.hierarchy.nodeItem(cPhase.nameID)
+                    'If Not IsNothing(tmpNode) Then
+                    '    phaseName = tmpNode.origName
+                    'Else
+                    '    phaseName = elemNameOfElemID(phaseNameID)
+                    'End If
+                    phaseName = cPhase.originalName
+
                 Else
                     phaseName = elemNameOfElemID(phaseNameID)
                 End If

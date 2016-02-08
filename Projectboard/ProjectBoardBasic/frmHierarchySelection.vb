@@ -1213,8 +1213,8 @@ Public Class frmHierarchySelection
 
         ' Report wird von Projekt hproj, das vor Aufruf des Formulars in hproj gespeichert wurde erzeugt
 
-        showRangeLeft = CInt(DateDiff(DateInterval.Month, StartofCalendar, reportProfil.VonDate))
-        showRangeRight = CInt(DateDiff(DateInterval.Month, StartofCalendar, reportProfil.BisDate))
+        showRangeLeft = getColumnOfDate(reportProfil.VonDate)
+        showRangeRight = getColumnOfDate(reportProfil.BisDate)
 
         Try
             Dim vorlagendateiname As String = awinPath & RepProjectVorOrdner & "\" & reportProfil.PPTTemplate

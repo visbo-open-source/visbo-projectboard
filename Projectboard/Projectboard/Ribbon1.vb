@@ -2168,14 +2168,14 @@ Imports System.Windows
             Dim sav_mppExtendedMode As Boolean = awinSettings.mppExtendedMode
             awinSettings.mppExtendedMode = True
             ' Settings für Einzelprojekt-Reports
-            awinSettings.eppExtendedMode = True
+            'awinSettings.eppExtendedMode = True
 
 
             ' Formular zum Auswählen der Report-Vorlage wird aufgerufen
 
             returnValue = getReportVorlage.ShowDialog
 
-            awinSettings.eppExtendedMode = False
+            'awinSettings.eppExtendedMode = False
 
             ' Zurücksetzen der gesicherten und veränderten Einstellungen
 

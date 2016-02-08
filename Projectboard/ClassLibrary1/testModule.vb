@@ -695,7 +695,7 @@ Public Module testModule
                                         And selectedRoles.Count = 0 _
                                         And selectedCosts.Count = 0 _
                                         And selectedBUs.Count = 0 _
-                                        And awinSettings.eppExtendedMode Then
+                                        Then
                                         Dim i As Integer = 0
                                         Dim tmpphases As New Collection
                                         Dim tmpMilestones As New Collection
@@ -9380,21 +9380,29 @@ Public Module testModule
 
         If drawKWs Then
             ' die erste KW berechnen 
-            curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.DayOfWeek + 1).AddDays(7)
+            curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.DayOfWeek + 1)
+            If DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, curDatePtr) < 0 Then
+                curDatePtr = curDatePtr.AddDays(7)
+            End If
         Else
             curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.Day + 1).AddMonths(1).AddDays(-1)
         End If
 
-        Dim beschrifteLevel3 As Boolean = True
+        Dim beschrifteLevel3 As Boolean = False
 
         Do While curDatePtr <= rds.PPTEndOFCalendar
             curRight = rds.calendarLineShape.Left + DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, curDatePtr) * rasterDayWidth
 
-            beschrifteLevel3 = beschrifteLevel3 And (curRight - curLeft >= rds.quarterMonthVorlagenShape.Width)
+            If curDatePtr < rds.PPTEndOFCalendar Then
+                beschrifteLevel3 = beschrifteLevel3 Or (curRight - curLeft >= rds.quarterMonthVorlagenShape.Width)
+            Else
+                beschrifteLevel3 = (curRight - curLeft >= rds.quarterMonthVorlagenShape.Width)
+            End If
+
 
             ' Merken, an dieser Stelle werden ggf nachher die vertikalen Linien gezeichnet , aber nur, wenn nicht eine Dezember Linie
             ' und nur wenn nicht = endofPPTCalendar
-            If (drawKWs Or curDatePtr.Month) <> 12 And curDatePtr < rds.PPTEndOFCalendar Then
+            If (drawKWs Or (curDatePtr.Month <> 12)) And curDatePtr < rds.PPTEndOFCalendar Then
                 position(positionPtr) = curRight
                 positionPtr = positionPtr + 1
             End If
@@ -9420,12 +9428,12 @@ Public Module testModule
             If beschrifteLevel3 Then
 
                 If drawKWs Then
-                    If CInt(curDatePtr.DayOfYear / 7) - 1 <= 0 Then
-                        beschriftung = ""
+                    If curDatePtr.DayOfWeek = 1 Then
+                        beschriftung = calcKW(curDatePtr.AddDays(-7)).ToString("0#")
                     Else
-                        'beschriftung = CInt(curDatePtr.DayOfYear / 7 - 1).ToString("0#")
                         beschriftung = calcKW(curDatePtr).ToString("0#")
                     End If
+
                 Else
 
                     beschriftung = monthName(curDatePtr.Month - 1)
@@ -9471,10 +9479,9 @@ Public Module testModule
             If beschrifteLevel3 Then
 
                 If drawKWs Then
-                    If CInt(curDatePtr.DayOfYear / 7) - 1 <= 0 Then
-                        beschriftung = ""
+                    If curDatePtr.DayOfWeek = 1 Then
+                        beschriftung = calcKW(curDatePtr.AddDays(-7)).ToString("0#")
                     Else
-                        'beschriftung = CInt(curDatePtr.DayOfYear / 7 - 1).ToString("0#")
                         beschriftung = calcKW(curDatePtr).ToString("0#")
                     End If
                 Else
@@ -9906,7 +9913,8 @@ Public Module testModule
                                                                                 zeitraumGrenzeL, zeitraumGrenzeR)) Then
                             ' zeichne den Meilenstein 
                             Dim tmpCollection As New Collection
-                            Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, curMs.nameID, curYPosition)
+                            Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, _
+                                                              swimlaneNameID, curMs.nameID, curYPosition)
 
                             ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
                             For Each tmpName As String In tmpCollection
@@ -9957,7 +9965,8 @@ Public Module testModule
 
                         aktuelleYPosition = curYPosition + (zeilenoffset - 1) * rds.zeilenHoehe
 
-                        Call zeichnePhaseinSwimlane(rds, shapeNameCollection, hproj, curPhase.nameID, aktuelleYPosition)
+                        Call zeichnePhaseinSwimlane(rds, shapeNameCollection, hproj, swimlaneNameID, _
+                                                    curPhase.nameID, aktuelleYPosition)
                         'lastEndDate = curPhase.getEndDate
                     End If
 
@@ -9978,7 +9987,8 @@ Public Module testModule
 
                                 ' zeichne den Meilenstein 
                                 Dim tmpCollection As New Collection
-                                Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, curMs.nameID, aktuelleYPosition)
+                                Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, _
+                                                                  swimlaneNameID, curMs.nameID, aktuelleYPosition)
 
                                 ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
                                 For Each tmpName As String In tmpCollection
@@ -10028,7 +10038,7 @@ Public Module testModule
             ReDim arrayOFNames(anzElements - 1)
 
             For i = 1 To anzElements
-                arrayOFNames(i - 1) = CStr(shapeNameCollection.Item(i))
+                arrayOFNames(i - 1) = CStr(swlMilestoneCollection.Item(i))
             Next
 
             shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
@@ -10521,7 +10531,8 @@ Public Module testModule
                                 'Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName).Trim
                                 ' erhänzt tk
                                 Dim phShortname As String = ""
-                                phShortname = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+                                phShortname = hproj.hierarchy.getBestNameOfID(cphase.nameID, Not awinSettings.mppUseOriginalNames, _
+                                                                              awinSettings.mppUseAbbreviation)
 
                                 Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, phaseStart, phaseEnd, _
                                                     drawingAreaLeft, drawingAreaWidth, x1, x2)
@@ -11218,14 +11229,15 @@ Public Module testModule
         ' überdeckt werden soll 
         If awinSettings.mppShowMsName Then
 
-            Dim msShortname As String = MilestoneDefinitions.getAbbrev(MS.name)
-            msShortname = hproj.hierarchy.getBestNameOfID(MS.nameID, True, True)
+            Dim msBeschriftung As String
+            msBeschriftung = hproj.hierarchy.getBestNameOfID(MS.nameID, Not awinSettings.mppUseOriginalNames, _
+                                                             awinSettings.mppUseAbbreviation)
 
             MsDescVorlagenShape.Copy()
             copiedShape = pptslide.Shapes.Paste()
             With copiedShape(1)
 
-                .TextFrame2.TextRange.Text = msShortname
+                .TextFrame2.TextRange.Text = msBeschriftung
                 .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
                 '.Left = CSng(x1) - .Width / 2
                 .Left = CSng(x1) - .Width / 2
@@ -11327,6 +11339,7 @@ Public Module testModule
     ''' <remarks></remarks>
     Private Sub zeichnePhaseinSwimlane(ByRef rds As clsPPTShapes, ByRef shapeNames As Collection, _
                                            ByVal hproj As clsProjekt, _
+                                           ByVal swimlaneID As String, _
                                            ByVal phaseID As String, _
                                            ByVal yPosition As Double)
 
@@ -11344,14 +11357,12 @@ Public Module testModule
         Dim x2 As Double
 
 
-        Dim phShortname As String
+        Dim phDescription As String = phaseName
 
         If PhaseDefinitions.Contains(phaseName) Then
             phaseTypShape = PhaseDefinitions.getShape(phaseName)
-            phShortname = PhaseDefinitions.getAbbrev(phaseName)
         Else
             phaseTypShape = missingPhaseDefinitions.getShape(phaseName)
-            phShortname = missingPhaseDefinitions.getAbbrev(phaseName)
         End If
 
 
@@ -11370,17 +11381,17 @@ Public Module testModule
             ' überdeckt werden soll 
             If awinSettings.mppShowPhName Then
 
-                If Not awinSettings.mppExtendedMode Then
-                    ' im Einzeile Mode fehlt der Kontext, deswegen die etwas aufwändigere Beschriftung
-                    phShortname = hproj.hierarchy.getBestNameOfID(phaseID, True, awinSettings.mppUseAbbreviation)
-                End If
+                
+                phDescription = hproj.hierarchy.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames, _
+                                                                awinSettings.mppUseAbbreviation, swimlaneID)
+
 
 
                 rds.PhDescVorlagenShape.Copy()
                 copiedShape = rds.pptSlide.Shapes.Paste()
                 With copiedShape(1)
 
-                    .TextFrame2.TextRange.Text = phShortname
+                    .TextFrame2.TextRange.Text = phDescription
                     .Top = CSng(yPosition + rds.YPhasenText)
                     .Left = CSng(x1)
                     .Name = .Name & .Id
@@ -11432,7 +11443,7 @@ Public Module testModule
 
         End If
 
-        
+
 
 
     End Sub
@@ -11449,6 +11460,7 @@ Public Module testModule
     ''' <remarks></remarks>
     Private Sub zeichneMeilensteinInSwimlane(ByRef rds As clsPPTShapes, ByRef shapeNames As Collection, _
                                                ByVal hproj As clsProjekt, _
+                                               ByVal swimlaneID As String, _
                                                ByVal milestoneID As String, _
                                                ByVal yPosition As Double)
 
@@ -11466,14 +11478,12 @@ Public Module testModule
         Dim x2 As Double
 
 
-        Dim msShortname As String
+        Dim msBeschriftung As String
 
         If MilestoneDefinitions.Contains(milestoneName) Then
             milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
-            msShortname = MilestoneDefinitions.getAbbrev(milestoneName)
         Else
             milestoneTypShape = missingMilestoneDefinitions.getShape(milestoneName)
-            msShortname = missingMilestoneDefinitions.getAbbrev(milestoneName)
         End If
 
         Dim sizeFaktor As Double
@@ -11490,16 +11500,6 @@ Public Module testModule
         End With
 
 
-        ' falls es einen Unterschied machen sollte , ob das Shape in ppt eingefügt wird ...
-        '
-        'With milestoneTypShape
-        '    If .Height <= 0.0 Then
-        '        sizeFaktor = 1.0
-        '    Else
-        '        sizeFaktor = rds.milestoneVorlagenShape.Height / .Height
-        '    End If
-
-        'End With
 
         Dim msDate As Date = cMilestone.getDate
 
@@ -11515,17 +11515,19 @@ Public Module testModule
             ' überdeckt werden soll 
             If awinSettings.mppShowMsName Then
 
-                If Not awinSettings.mppExtendedMode Then
-                    ' im Einzeile Modus fehlt der Kontext, deswegen die etwas aufwändigere Beschriftung  
-                    msShortname = hproj.hierarchy.getBestNameOfID(milestoneID, True, awinSettings.mppUseAbbreviation)
-                End If
+
+                ' im Einzeile Modus fehlt der Kontext, deswegen die etwas aufwändigere Beschriftung  
+                msBeschriftung = hproj.hierarchy.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
+                                                                 awinSettings.mppUseAbbreviation, _
+                                                                 swimlaneID)
+
 
 
                 rds.MsDescVorlagenShape.Copy()
                 copiedShape = rds.pptSlide.Shapes.Paste()
                 With copiedShape(1)
 
-                    .TextFrame2.TextRange.Text = msShortname
+                    .TextFrame2.TextRange.Text = msBeschriftung
                     .Top = CSng(yPosition + rds.YMilestoneText)
                     .Left = CSng(x1) - .Width / 2
                     .Name = .Name & .Id
