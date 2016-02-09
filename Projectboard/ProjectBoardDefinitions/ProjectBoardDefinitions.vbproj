@@ -73,6 +73,7 @@
   <ItemGroup>
     <Compile Include="awinDiagrams.vb" />
     <Compile Include="awinGUI.vb" />
+    <Compile Include="clsLicences.vb" />
     <Compile Include="clsPPTShapes.vb" />
     <Compile Include="clsAddElementRules.vb" />
     <Compile Include="clsAddElementRuleItem.vb" />
