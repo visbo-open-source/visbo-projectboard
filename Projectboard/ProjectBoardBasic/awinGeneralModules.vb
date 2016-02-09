@@ -20,6 +20,7 @@ Imports ProjectBoardBasic
 
 
 
+
 Public Module awinGeneralModules
 
     Private Enum ptInventurSpalten
@@ -4673,7 +4674,8 @@ Public Module awinGeneralModules
 
                                         cphase = New clsPhase(parent:=hproj)
 
-                                        If PhaseDefinitions.Contains(objectName) Then
+                                        If PhaseDefinitions.Contains(objectName) Or awinSettings.alwaysAcceptTemplateNames _
+                                            Or awinSettings.addMissingPhaseMilestoneDef Then
 
                                             With cphase
                                                 .nameID = hproj.hierarchy.findUniqueElemKey(objectName, False)
@@ -4729,7 +4731,8 @@ Public Module awinGeneralModules
                                         End If
 
                                     ElseIf isMeilenstein Then
-                                        If MilestoneDefinitions.Contains(objectName) Then
+                                        If MilestoneDefinitions.Contains(objectName) Or awinSettings.alwaysAcceptTemplateNames _
+                                            Or awinSettings.addMissingPhaseMilestoneDef Then
 
                                             Dim hrchynode As New clsHierarchyNode
                                             hrchynode.elemName = cphase.name
@@ -8887,7 +8890,8 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub frmHryNameReadPPTVorlagen(ByVal menuOption As Integer, ByRef repVorlagenDropbox As System.Windows.Forms.ComboBox)
 
-        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport Then
+        If menuOption = PTmenue.multiprojektReport Or menuOption = PTmenue.einzelprojektReport _
+            Or menuOption = PTmenue.reportBHTC Then
 
             Dim dirname As String
             Dim dateiName As String = ""
@@ -10625,4 +10629,7 @@ Public Module awinGeneralModules
         End If
 
     End Sub
+
+    
+    
 End Module

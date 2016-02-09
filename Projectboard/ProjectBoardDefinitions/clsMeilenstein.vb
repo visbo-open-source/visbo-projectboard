@@ -11,6 +11,34 @@
     End Property
 
     ''' <summary>
+    ''' gibt den Original Namen eines Meilensteins zurück 
+    ''' wenn der leer ist, dann wird der Meilenstein Name zurück gegeben 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property originalName As String
+        Get
+
+            Dim tmpNode As clsHierarchyNode
+            Dim beschriftung As String = Me.name
+            tmpNode = _Parent.Parent.hierarchy.nodeItem(Me.nameID)
+
+            If Not IsNothing(tmpNode) Then
+                beschriftung = tmpNode.origName
+                If beschriftung = "" Then
+                    beschriftung = Me.name
+                End If
+            Else
+                beschriftung = Me.name
+            End If
+
+            originalName = beschriftung
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' liest den Namensteil der NamensID 
     ''' </summary>
     ''' <value></value>

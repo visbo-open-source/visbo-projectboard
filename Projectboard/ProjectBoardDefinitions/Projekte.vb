@@ -6,6 +6,8 @@ Imports xlNS = Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
 Imports Microsoft.VisualBasic.Constants
 
+Imports System.Globalization
+
 
 Public Module Projekte
 
@@ -17174,13 +17176,16 @@ Public Module Projekte
                 ok = True
 
                 If awinSettings.showOrigName Then
-                    Dim tmpNode As clsHierarchyNode
-                    tmpNode = hproj.hierarchy.nodeItem(milestoneNameID)
-                    If Not IsNothing(tmpNode) Then
-                        milestoneName = tmpNode.origName
-                    Else
-                        milestoneName = elemNameOfElemID(milestoneNameID)
-                    End If
+                    ' es gibt jetzt dazu eine Methode - siehe weiter unten 
+                    'Dim tmpNode As clsHierarchyNode
+                    'tmpNode = hproj.hierarchy.nodeItem(milestoneNameID)
+                    'If Not IsNothing(tmpNode) Then
+                    '    milestoneName = tmpNode.origName
+                    'Else
+                    '    milestoneName = elemNameOfElemID(milestoneNameID)
+                    'End If
+
+                    milestoneName = cMilestone.originalName
                 Else
                     milestoneName = elemNameOfElemID(milestoneNameID)
                 End If
@@ -17682,13 +17687,16 @@ Public Module Projekte
             If Not IsNothing(cPhase) Then
                 ok = True
                 If awinSettings.showOrigName Then
-                    Dim tmpNode As clsHierarchyNode
-                    tmpNode = hproj.hierarchy.nodeItem(cPhase.nameID)
-                    If Not IsNothing(tmpNode) Then
-                        phaseName = tmpNode.origName
-                    Else
-                        phaseName = elemNameOfElemID(phaseNameID)
-                    End If
+                    ' Änderung tk 6.2.16 es gibt dazu jetzt eine Methode - siehe weiter unten 
+                    'Dim tmpNode As clsHierarchyNode
+                    'tmpNode = hproj.hierarchy.nodeItem(cPhase.nameID)
+                    'If Not IsNothing(tmpNode) Then
+                    '    phaseName = tmpNode.origName
+                    'Else
+                    '    phaseName = elemNameOfElemID(phaseNameID)
+                    'End If
+                    phaseName = cPhase.originalName
+
                 Else
                     phaseName = elemNameOfElemID(phaseNameID)
                 End If
@@ -19294,4 +19302,77 @@ Public Module Projekte
         awinSettings.propAnpassRess = previousSetting
 
     End Sub
+
+    ''' <summary>
+    ''' Funktion, um die Kalenderwoche in aktuellen Länderset zu bestimmen 
+    ''' </summary>
+    ''' <param name="Datum"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getKW(ByVal Datum As Date) As Integer
+        Dim CUI As New CultureInfo(CultureInfo.CurrentCulture.Name)
+        Return CUI.Calendar.GetWeekOfYear(Datum, _
+                CUI.DateTimeFormat.CalendarWeekRule, _
+                CUI.DateTimeFormat.FirstDayOfWeek)
+    End Function
+
+    ''' <summary>
+    ''' Funktion, um die Kalenderwoche zu bestimmen 
+    ''' </summary>
+    ''' <param name="datum"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcKW(ByVal datum As Date) As Integer
+
+        Dim kw As Integer
+
+        kw = DatePart(DateInterval.WeekOfYear, datum, FirstDayOfWeek.Monday, _
+          FirstWeekOfYear.FirstFourDays)
+
+        calcKW = kw
+
+    End Function
+
+    ''' <summary>
+    ''' wird benutzt, um die Anzahl Zeilen, die für die Darstellung einer Swimlane benötigt werden, zu minimieren
+    ''' </summary>
+    ''' <param name="matrix">ist so dimensioniert, dass es die maximale Anzahl Zeilen, die in einer Swimlane überhaupt vorkommen können, darstellen kann; 
+    ''' matrix(i) enthält das letzte Datum, das in Zeile i vorkam; i läuft von 0 an</param>
+    ''' <param name="maxZeile">das ist die bisher maximal aufgetretene Anzahl Zeilen, die notwendig war</param>
+    ''' <param name="startdate">das Startdatum der neuen Phase</param>
+    ''' <param name="requiredZeilen">die Anzahl Zeilen, die die Phase inkl ihrer Kinder benötigt</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function findeBesteZeile(ByVal matrix() As Date, ByVal maxZeile As Integer, _
+                                        ByVal startdate As Date, _
+                                        ByVal requiredZeilen As Integer) As Integer
+
+        Dim bestStart As Integer = 0
+        Dim dimension As Integer = matrix.Length - 1
+        Dim found As Boolean
+
+        Do While bestStart <= dimension And Not found
+
+            found = True
+            For i As Integer = 1 To requiredZeilen
+                If bestStart + i - 1 <= dimension Then
+                    found = found And (matrix(bestStart + i - 1) <= startdate)
+                End If
+            Next
+
+            If Not found Then
+                bestStart = bestStart + 1
+            End If
+
+        Loop
+
+        If found Then
+            findeBesteZeile = bestStart + 1
+        Else
+            findeBesteZeile = maxZeile + 1
+        End If
+
+    End Function
+
+
 End Module

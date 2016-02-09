@@ -17,7 +17,101 @@ Imports System.Windows.Forms
 Public Module PBBModules
 
 
-    Sub PBBNameHierarchySelAction(control As IRibbonControl)
+    ''' <summary>
+    ''' wird aus der Multiprojekt-Tafel zum Testen der Report Erstellungs-Routinen 
+    ''' und aus dem MS Project AddIn aufgerufen 
+    ''' </summary>
+    ''' <param name="controlID"></param>
+    ''' <remarks></remarks>
+    Sub PBBBHTCHierarchySelAction(controlID As String)
+
+        Dim hryFormular As New frmHierarchySelection
+        Dim returnValue As DialogResult
+
+        hryFormular.calledFrom = "MS-Project"
+
+        Dim formerSettings(3) As Boolean
+        With awinSettings
+            formerSettings(0) = .mppExtendedMode
+            formerSettings(1) = .mppShowAllIfOne
+            formerSettings(2) = .mppShowAmpel
+            formerSettings(3) = .mppFullyContained
+        End With
+
+        With awinSettings
+            .mppExtendedMode = True
+            .mppShowAllIfOne = False
+            .mppShowAmpel = False
+            .mppFullyContained = False
+        End With
+        
+        awinSettings.useHierarchy = True
+        With hryFormular
+
+            If controlID = "PT1G1B3" Then
+                .calledFrom = "Multiprojekt-Tafel"
+            Else
+                .calledFrom = "MS-Project"
+            End If
+
+            .Text = "Projekt-Report erzeugen"
+            .OKButton.Text = "Bericht erstellen"
+            .menuOption = PTmenue.reportBHTC
+
+            ' hier müssen die für BHTC nicht wählbaren Optionen gesetzt werden 
+            With awinSettings
+                .mppShowProjectLine = False
+                .mppShowAmpel = False
+                .mppShowAllIfOne = False
+                .mppSortiertDauer = False
+                .mppExtendedMode = True
+                '.eppExtendedMode = True
+            End With
+
+            .statusLabel.Text = ""
+            .statusLabel.Visible = True
+
+            .AbbrButton.Visible = False
+            .AbbrButton.Enabled = False
+
+            .chkbxOneChart.Checked = False
+            .chkbxOneChart.Visible = False
+
+            .hryStufenLabel.Visible = False
+            .hryStufen.Value = 50
+            .hryStufen.Visible = False
+
+            ' Reports
+            .repVorlagenDropbox.Visible = True
+            .labelPPTVorlage.Visible = True
+            .einstellungen.Visible = True
+
+            ' Filter
+            .filterDropbox.Visible = True
+            .filterLabel.Visible = True
+            .filterLabel.Text = "Name des Report-Profils"
+
+
+            ' bei Verwendung Background Worker muss Aufruf so erfolgen: 
+            returnValue = .ShowDialog
+        End With
+
+        With awinSettings
+            .mppExtendedMode = formerSettings(0)
+            .mppShowAllIfOne = formerSettings(1)
+            .mppShowAmpel = formerSettings(2)
+            .mppFullyContained = formerSettings(3)
+        End With
+
+
+    End Sub
+
+    ''' <summary>
+    ''' wird aus der Multiprojekt-Tafel aufgerufen 
+    ''' </summary>
+    ''' <param name="controlID"></param>
+    ''' <remarks></remarks>
+    Sub PBBNameHierarchySelAction(controlID As String)
 
 
         Dim nameFormular As New frmNameSelection
@@ -27,14 +121,13 @@ Public Module PBBModules
 
         Call projektTafelInit()
 
-        'enableOnUpdate = False
-        'appInstance.EnableEvents = False
+        hryFormular.calledFrom = "Multiprojekt-Tafel"
 
 
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
         'If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
 
-        If control.Id = "Pt6G3M1B1" Then
+        If controlID = "Pt6G3M1B1" Then
             ' normale, volle Auswahl des filters ; Namens-Definition
 
             With nameFormular
@@ -77,8 +170,7 @@ Public Module PBBModules
 
             End With
 
-        ElseIf control.Id = "Pt6G3M1B2" Then
-            ' DB Filter definieren, Definition über Hierarchie
+        ElseIf controlID = "Pt6G3M1B2" Then
 
             awinSettings.useHierarchy = True
 
@@ -120,9 +212,8 @@ Public Module PBBModules
 
             If awinSettings.isHryNameFrmActive Then
                 Call MsgBox("es kann nur ein Fenster zur Hierarchie- bzw. Namenauswahl geöffnet sein ...")
-            ElseIf control.Id = "PTXG1B4" Or control.Id = "PT0G1B8" Then
-                ' Multiprojekt-Info: Plan-Elemente visualisieren, Auswahl über Namen
-                ' Einzelprojekt-Info: Plan-Elemente visualisieren, Auswahl über Namen
+            ElseIf controlID = "PTXG1B4" Or controlID = "PT0G1B8" Then
+                ' Namen auswählen, Visualisieren
                 awinSettings.useHierarchy = False
                 With nameFormular
                     .Text = "Plan-Elemente visualisieren"
@@ -161,9 +252,8 @@ Public Module PBBModules
                     'returnValue = .ShowDialog
                 End With
 
-            ElseIf control.Id = "PTXG1B5" Or control.Id = "PT0G1B9" Then
-                ' Multiprojekt-Info: Plan-Elemente visualisieren, Auswahl über Hierarchie
-                ' Einzelprojekt-Info: Plan-Elemente visualisieren, Auswahl über Hierarchie
+            ElseIf controlID = "PTXG1B5" Or controlID = "PT0G1B9" Then
+                ' Hierarchie auswählen, visualisieren
                 awinSettings.useHierarchy = True
                 With hryFormular
                     .Text = "Plan-Elemente visualisieren"
@@ -192,9 +282,8 @@ Public Module PBBModules
                     .Show()
                     'returnValue = .ShowDialog
                 End With
-            ElseIf control.Id = "PTXG1B6" Then
-                ' Multiprojekt-Info, Leistbarkeit, Auswahl über Namen 
-                ' 
+            ElseIf controlID = "PTXG1B6" Then
+                ' Namen auswählen, Leistbarkeit
                 awinSettings.useHierarchy = False
                 With nameFormular
                     .Text = "Leistbarkeits-Charts erstellen"
@@ -231,9 +320,8 @@ Public Module PBBModules
                     .Show()
                     'returnValue = .ShowDialog
                 End With
-            ElseIf control.Id = "PTXG1B7" Then
-                ' Multiprojekt-Info, Leistbarkeit, Auswahl über Hierarchie 
-                ' 
+            ElseIf controlID = "PTXG1B7" Then
+                ' Hierarchie auswählen, Leistbarkeit
                 awinSettings.useHierarchy = True
                 With hryFormular
                     .Text = "Leistbarkeits-Charts erstellen"
@@ -264,9 +352,8 @@ Public Module PBBModules
                 End With
 
 
-            ElseIf control.Id = "PT1G1M1B1" Then
-                ' Reports - Einzelprojekt Typ II, Auswahl über Namen 
-                '
+            ElseIf controlID = "PT1G1M1B1" Then
+                ' Namen auswählen, Einzelprojekt Berichte 
 
                 Try
                     awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
@@ -323,9 +410,8 @@ Public Module PBBModules
 
                 End If
 
-            ElseIf control.Id = "PT1G1M1B2" Then
-                ' Reports - Einzelprojekt Typ II, Auswahl über Hierarchie 
-                '
+            ElseIf controlID = "PT1G1M1B2" Then
+
                 Try
                     awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
                 Catch ex As Exception
@@ -375,16 +461,10 @@ Public Module PBBModules
 
                 End If
 
-            ElseIf control.Id = "PT1G1M2B1" Then
-
-                ' Reports - Multiprojektbericht Typ II, Auswahl über Namen 
-                '
-
-                If showRangeRight - showRangeLeft <= 6 Then
-                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
-                Else
+            ElseIf controlID = "PT1G1M2B1" Then
 
 
+                If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
                     ' Namen Auswahl, Multiprojekt Report
                     appInstance.ScreenUpdating = False
 
@@ -427,16 +507,15 @@ Public Module PBBModules
 
                     appInstance.ScreenUpdating = True
 
-                End If
-
-            ElseIf control.Id = "PT1G1M2B2" Then
-                ' Reports - Multiprojektbericht Typ II, Auswahl über Hierarchie 
-                '
-
-                If showRangeRight - showRangeLeft <= 6 Then
-                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
                 Else
 
+                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+
+                End If
+
+            ElseIf controlID = "PT1G1M2B2" Then
+
+                If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
 
                     ' Hierarchie Auswahl, Multiprojekt Report
                     appInstance.ScreenUpdating = False
@@ -472,11 +551,15 @@ Public Module PBBModules
                     End With
 
                     appInstance.ScreenUpdating = True
+                Else
+
+                    Call MsgBox("Bitte wählen Sie den Zeitraum aus, für den der Report erstellt werden soll!")
+
 
                 End If
 
-            ElseIf control.Id = "PT4G1M0B1" Then
-                ' Export, Elemente auswählen und exportieren , Auswaqhl über Namen
+            ElseIf controlID = "PT4G1M0B1" Then
+                ' Auswahl über Namen, Typ II Export
                 appInstance.ScreenUpdating = False
 
                 With nameFormular
@@ -514,9 +597,9 @@ Public Module PBBModules
 
                 appInstance.ScreenUpdating = True
 
-            ElseIf control.Id = "PT4G1M0B2" Then
-                ' Export, Elemente auswählen und exportieren , Auswaqhl über Hierarchie
-                ' 
+            ElseIf controlID = "PT4G1M0B2" Then
+
+                ' Auswahl über Hierarchie, Typ II Export
                 appInstance.ScreenUpdating = False
 
                 awinSettings.useHierarchy = True
@@ -549,9 +632,8 @@ Public Module PBBModules
                     .Show()
                     'returnValue = .ShowDialog
                 End With
-            ElseIf control.Id = "PT4G1M2B1" Then
-                ' Batch-Vorlage für modulare Projekterzeugung, 
-                ' Auswahl über Namen
+            ElseIf controlID = "PT4G1M2B1" Then
+                ' Auswahl über Namen, Vorlagen erzeugen
                 appInstance.ScreenUpdating = False
 
                 With nameFormular
@@ -589,9 +671,8 @@ Public Module PBBModules
                 appInstance.ScreenUpdating = True
 
 
-            ElseIf control.Id = "PT4G1M2B2" Then
-                ' Batch-Vorlage für modulare Projekterzeugung, 
-                ' Auswahl über Hierarchie
+            ElseIf controlID = "PT4G1M2B2" Then
+                ' Auswahl über Hierarchie, Vorlagen Export
                 appInstance.ScreenUpdating = False
 
                 awinSettings.useHierarchy = True
@@ -623,8 +704,7 @@ Public Module PBBModules
                     returnValue = .ShowDialog
                 End With
 
-            ElseIf control.Id = "PT0G1M2B7" Then
-                ' Charts - Meilenstein Trendanalyse
+            ElseIf controlID = "PT0G1M2B7" Then
                 ' Auswahl über Namen, Meilensteine für Meilenstein Trendanalyse
                 Try
                     awinSelection = CType(appInstance.ActiveWindow.Selection.ShapeRange, Excel.ShapeRange)
@@ -705,11 +785,12 @@ Public Module PBBModules
 
     End Sub
 
-    Sub PBBAnalyseLeistbarkeit001(ByVal control As IRibbonControl)
+    Sub PBBAnalyseLeistbarkeit001(ByVal ControlID As String)
 
         Dim namensFormular As New frmNameSelection
         Dim hierarchieFormular As New frmHierarchySelection
         Dim returnValue As DialogResult
+
 
         Call projektTafelInit()
 
@@ -719,7 +800,7 @@ Public Module PBBModules
         ' gibt es überhaupt Objekte, zu denen man was anzeigen kann ? 
         If ShowProjekte.Count > 0 And showRangeRight - showRangeLeft > 5 Then
 
-            If control.Id = "PTXG1B6" Then
+            If ControlID = "PTXG1B6" Then
                 ' Auswahl über Namen
 
                 With namensFormular

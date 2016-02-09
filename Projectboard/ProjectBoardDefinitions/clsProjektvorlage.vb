@@ -746,7 +746,7 @@
 
     ''' <summary>
     ''' in der namenListe können Elem-Namen oder Elem-IDs sein; wenn ein Elem-NAme gefunden wird, 
-    ''' so wird er ersetzt durch alle Elem-IDs, diesen Namen tragen 
+    ''' so wird er ersetzt durch alle Elem-IDs, die diesen Namen tragen 
     ''' es wird sichergestellt, dass jede ID tatsächlich nur einmal aufgeführt ist 
     ''' </summary>
     ''' <param name="namenListe"></param>
@@ -778,7 +778,9 @@
 
                 If istElemID(itemName) Then
 
+                    Dim ok As Boolean = True
                     If namesAreMilestones Then
+<<<<<<< HEAD
                         tmpMS = Me.getMilestoneByID(itemName)
                         If Not IsNothing(tmpMS) Then
                             found = True
@@ -795,6 +797,26 @@
 
                     If found Then
                         If Not tmpSortList.ContainsValue(itemName) Then
+=======
+                        Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(itemName)
+                        If Not IsNothing(cMilestone) Then
+                            sortDate = cMilestone.getDate
+                        Else
+                            ok = False
+                        End If
+
+                    Else
+                        Dim cphase As clsPhase = Me.getPhaseByID(itemName)
+                        If Not IsNothing(cphase) Then
+                            sortDate = cphase.getStartDate
+                        Else
+                            ok = False
+                        End If
+
+                    End If
+
+                    If ok And Not tmpSortList.ContainsValue(itemName) Then
+>>>>>>> feature/BHTC
 
                             Do While tmpSortList.ContainsKey(sortDate)
                                 sortDate = sortDate.AddMilliseconds(1)
@@ -805,6 +827,10 @@
                         End If
                     End If
                     
+<<<<<<< HEAD
+=======
+
+>>>>>>> feature/BHTC
                 Else
                     Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb)
 
@@ -831,9 +857,6 @@
 
                                     End If
 
-                                    'If Not iDCollection.Contains(iDItem) Then
-                                    '    iDCollection.Add(iDItem, iDItem)
-                                    'End If
 
                                 Catch ex As Exception
 
@@ -1047,6 +1070,407 @@
 
 
     End Function
+
+    ''' <summary>
+    ''' gibt die Anzahl der Swimlanes zurück, die für das Projekt bei der gegebenen Menge von Phasen und Meilensteinen gezeichnet werden müssen; 
+    ''' dabei wird unterschieden, ob es sich um das BHTC Schema handelt oder um eine freie Swimlane Definition handelt  
+    ''' </summary>
+    ''' <param name="considerAll">sollen alle Swimlanes betrachtet werden</param>
+    ''' <param name="breadCrumbArray">enthält eine Liste der vollständigen Breadcrumbs aller gewählten Elemente </param>
+    ''' <param name="isBhtcSchema">gibt an, ob die Swimlanes dadurch bestimmt sind, dass sie auf der 2. Ebene sind oder ob alles als Swimlane behandelt wird, was erst bei der 2.Stufe (wie bei BHTC) 
+    ''' in einer ersten Implementierung wird Level2 betrachtet</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSwimLanesCount(ByVal considerAll As Boolean, _
+                                               ByVal breadCrumbArray() As String, _
+                                               ByVal isBhtcSchema As Boolean) As Integer
+        Get
+            Dim anzSwimlanes As Integer = 0
+            Dim parentNameID As String = rootPhaseName
+
+            Dim sptr As Integer
+            ' ein fullBreadCrumb enthält auch den ElemName am Schluss ...
+            Dim fullSwlBreadCrumb As String
+
+            If IsNothing(breadCrumbArray) Then
+                sptr = -1
+            Else
+                sptr = breadCrumbArray.Length - 1
+            End If
+
+            If Not isBhtcSchema Then
+                ' ist jetzt implementiert ...  
+                Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+
+                For Each childObj As Object In ChildCollection
+                    Dim swimlaneID As String = CStr(childObj)
+                    fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                    If considerAll Then
+                        anzSwimlanes = anzSwimlanes + 1
+                    Else
+                        ' ist eines der Elemente in der aktuellen Swimlane enthalten ? 
+                        Dim found As Boolean = False
+                        Dim index = 0
+                        Do While Not found And index <= sptr
+                            If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
+                                found = True
+                            Else
+                                index = index + 1
+                            End If
+                        Loop
+                        If found Then
+                            anzSwimlanes = anzSwimlanes + 1
+                        End If
+                    End If
+                    ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                Next
+
+            Else
+                Dim ankerName As String = "BHTC milestones"
+                Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
+
+
+                If Not IsNothing(ankerPhase) Then
+                    parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
+                End If
+
+                If parentNameID.Length > 1 Then
+
+                    Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(parentNameID, False)
+
+                    For Each obj As Object In segmentCollection
+                        Dim sgementNameID As String = CStr(obj)
+                        Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(sgementNameID, False)
+
+                        For Each childObj As Object In ChildCollection
+                            Dim swimlaneID As String = CStr(childObj)
+                            fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                            If considerAll Then
+                                anzSwimlanes = anzSwimlanes + 1
+                            Else
+                                ' ist eines der Elemente in der aktuellen Swimlane enthalten ? 
+                                Dim found As Boolean = False
+                                Dim index = 0
+                                Do While Not found And index <= sptr
+                                    If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
+                                        found = True
+                                    Else
+                                        index = index + 1
+                                    End If
+                                Loop
+                                If found Then
+                                    anzSwimlanes = anzSwimlanes + 1
+                                End If
+                            End If
+                            ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                        Next
+
+                    Next
+
+                End If
+
+
+
+            End If
+
+            getSwimLanesCount = anzSwimlanes
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Anzahl der Segmente, das heisst die Anzahl Phasen auf Hierarchie-Stufe 1 zurück 
+    ''' </summary>
+    ''' <param name="considerAll">sollen alle Elemente betrachtet werden </param>
+    ''' <param name="breadCrumbArray">es sollen nur die Elemente betrachtet werden, die </param>
+    ''' <param name="isBhtcSchema"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSegmentsCount(ByVal considerAll As Boolean, _
+                                                   ByVal breadCrumbArray() As String, _
+                                                   ByVal isBhtcSchema As Boolean) As Integer
+        Get
+
+            Dim ankerName As String = "BHTC milestones"
+            Dim anzSegments = 0
+            Dim sptr As Integer
+
+            If Not IsNothing(breadCrumbArray) Then
+                sptr = breadCrumbArray.Length - 1
+            Else
+                sptr = -1
+            End If
+
+            Dim fullSwlBreadCrumb As String
+
+
+            If Not isBhtcSchema Then
+                anzSegments = 0
+            Else
+                Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
+                Dim parentNameID As String = ""
+
+                If Not IsNothing(ankerPhase) Then
+                    parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
+                End If
+
+                If parentNameID.Length > 1 Then
+
+                    Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+
+                    For Each obj As Object In segmentCollection
+                        Dim segmentNameID As String = CStr(obj)
+                        fullSwlBreadCrumb = Me.getBcElemName(segmentNameID)
+
+                        If considerAll Then
+                            anzSegments = anzSegments + 1
+                        Else
+                            ' ist eines der Elemente im aktuellen Segment enthalten ? 
+                            Dim found As Boolean = False
+                            Dim index = 0
+                            Do While Not found And index <= sptr
+                                If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
+                                    found = True
+                                Else
+                                    index = index + 1
+                                End If
+                            Loop
+                            If found Then
+                                anzSegments = anzSegments + 1
+                            End If
+                        End If
+
+                    Next
+
+                End If
+
+            End If
+
+            getSegmentsCount = anzSegments
+
+        End Get
+    End Property
+    
+
+    ''' <summary>
+    ''' gibt die Swimlane mit der Reihenfolge-Nr "index" zurück; index läuft von 1..Anzahl 
+    ''' Nothing, wenn es die entsprechende Swimlane gar nicht gibt  
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <param name="considerAll">sollen alle betrachtet werden</param>
+    ''' <param name="breadCrumbArray">enthält die Breadcrumbs der zu betrachtenden Swimlanes</param>
+    ''' <param name="isBhtcSchema"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSwimlane(ByVal index As Integer, ByVal considerAll As Boolean, _
+                                               ByVal breadCrumbArray() As String, _
+                                               ByVal isBhtcSchema As Boolean) As clsPhase
+        Get
+
+            Dim tmpPhase As clsPhase = Nothing
+            Dim ankerName As String = "BHTC milestones"
+            Dim parentNameID As String = rootPhaseName
+
+            Dim anzSwimlanes As Integer = 0
+            Dim sptr As Integer = -1
+
+            If Not IsNothing(breadCrumbArray) Then
+                sptr = breadCrumbArray.Length - 1
+            End If
+
+
+
+            ' ein fullBreadCrumb enthält auch den ElemName am Schluss ...
+            Dim fullSwlBreadCrumb As String
+
+            If index > 0 Then
+
+                If Not isBhtcSchema Then
+
+                    Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+
+                    For Each childObj As Object In ChildCollection
+                        Dim swimlaneID As String = CStr(childObj)
+                        fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                        If considerAll Then
+                            anzSwimlanes = anzSwimlanes + 1
+                            If index = anzSwimlanes Then
+                                ' das ist jetzt die Phase 
+                                tmpPhase = Me.getPhaseByID(swimlaneID)
+                                Exit For
+                            End If
+                        Else
+                            ' ist eines der Elemente in der Swimlane enthalten ? 
+                            Dim found As Boolean = False
+                            Dim ix = 0
+                            Do While Not found And ix <= sptr
+                                If breadCrumbArray(ix).StartsWith(fullSwlBreadCrumb) Then
+                                    found = True
+                                Else
+                                    ix = ix + 1
+                                End If
+                            Loop
+                            If found Then
+                                anzSwimlanes = anzSwimlanes + 1
+                                If index = anzSwimlanes Then
+                                    ' das ist jetzt die Phase 
+                                    tmpPhase = Me.getPhaseByID(swimlaneID)
+                                    Exit For
+                                End If
+                            End If
+                        End If
+                        ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                    Next
+
+                Else
+                    Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
+
+                    If Not IsNothing(ankerPhase) Then
+                        parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
+                    End If
+
+                    If parentNameID.Length > 1 Then
+
+                        Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(parentNameID, False)
+
+                        For Each obj As Object In segmentCollection
+                            Dim segmentNameID As String = CStr(obj)
+                            Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(segmentNameID, False)
+
+                            For Each childObj As Object In ChildCollection
+                                Dim swimlaneID As String = CStr(childObj)
+                                fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                                If considerAll Then
+                                    anzSwimlanes = anzSwimlanes + 1
+                                    If index = anzSwimlanes Then
+                                        ' das ist jetzt die Phase 
+                                        tmpPhase = Me.getPhaseByID(swimlaneID)
+                                        Exit For
+                                    End If
+                                Else
+                                    ' ist eines der Elemente in der Swimlane enthalten ? 
+                                    Dim found As Boolean = False
+                                    Dim ix = 0
+                                    Do While Not found And ix <= sptr
+                                        If breadCrumbArray(ix).StartsWith(fullSwlBreadCrumb) Then
+                                            found = True
+                                        Else
+                                            ix = ix + 1
+                                        End If
+                                    Loop
+                                    If found Then
+                                        anzSwimlanes = anzSwimlanes + 1
+                                        If index = anzSwimlanes Then
+                                            ' das ist jetzt die Phase 
+                                            tmpPhase = Me.getPhaseByID(swimlaneID)
+                                            Exit For
+                                        End If
+                                    End If
+                                End If
+                                ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                            Next
+
+                            If index = anzSwimlanes Then
+                                Exit For
+                            End If
+
+                        Next
+
+                    End If
+
+
+                End If
+
+            End If
+
+            getSwimlane = tmpPhase
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt für eine übergebene ID den vollen BreadCrum+ElemName zurück
+    ''' den Abschluss bildet stets ein #, damit über ..startwith festgestellt werden kann, ob ein Element Kind eines anderen ist 
+    ''' ?, wenn PhaseID nicht existiert 
+    ''' </summary>
+    ''' <param name="nameID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBcElemName(ByVal nameID As String) As String
+        Get
+
+            Dim elemName As String = ""
+            Dim fullName As String = "?"
+
+            If istElemID(nameID) Then
+                elemName = elemNameOfElemID(nameID)
+                fullName = calcHryFullname(elemName, _
+                                              Me.hierarchy.getBreadCrumb(nameID)) & "#"
+            End If
+
+            getBcElemName = fullName
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' liefert einen Array zurück, der die Breadcrumbs inkl. der Namen der in selectedPhaseIDs und selectedMilestoneIDs übergebenen 
+    ''' Elemente enthält 
+    ''' </summary>
+    ''' <param name="selectedPhaseIDs">Liste der PhaseIDs</param>
+    ''' <param name="selectedMilestoneIDs">Liste der MilestoneIDs</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBreadCrumbArray(ByVal selectedPhaseIDs As Collection, ByVal selectedMilestoneIDs As Collection) As String()
+        Get
+            ' im Array suchfeld sind die 
+            Dim suchDimension As Integer = selectedPhaseIDs.Count + selectedMilestoneIDs.Count - 1
+
+
+            If suchDimension >= 0 Then
+                Dim suchFeld(suchDimension) As String
+                Dim elemID As String = ""
+                Dim sptr As Integer = 0
+
+                ' suchfeld aufbauen 
+                For i As Integer = 1 To selectedPhaseIDs.Count
+                    elemID = CStr(selectedPhaseIDs.Item(i))
+                    suchFeld(sptr) = Me.getBcElemName(elemID)
+                    sptr = sptr + 1
+                Next
+
+                For i As Integer = 1 To selectedMilestoneIDs.Count
+                    elemID = CStr(selectedMilestoneIDs.Item(i))
+                    suchFeld(sptr) = Me.getBcElemName(elemID)
+                    sptr = sptr + 1
+                Next
+
+                sptr = sptr - 1
+                getBreadCrumbArray = suchFeld
+
+            Else
+                getBreadCrumbArray = Nothing
+            End If
+
+
+        End Get
+    End Property
+
+
     ''' <summary>
     ''' gibt alle Phasen bzw. Milestone ElemIDs in einer Collection zurück 
     ''' die Milestones gehen alle mit 1§ los, die Phasen alle mit 0§; 
