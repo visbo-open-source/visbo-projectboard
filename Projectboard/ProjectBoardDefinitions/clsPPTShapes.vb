@@ -170,7 +170,7 @@ Public Class clsPPTShapes
                             containerShape = pptShape
 
                             ' alle Hierarchie-Stufe 1 Objekte sind Swimlanes
-                        Case "Swimlanes1"
+                        Case "Swimlanes"
                             containerShape = pptShape
 
                         Case "Swimlanes2"

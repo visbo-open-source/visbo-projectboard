@@ -512,7 +512,7 @@ Public Module testModule
                         kennzeichnung = "Soll-Ist & Prognose" Or _
                         kennzeichnung = "Multivariantensicht" Or _
                         kennzeichnung = "AllePlanElemente" Or _
-                        kennzeichnung = "Swimlanes1" Or _
+                        kennzeichnung = "Swimlanes" Or _
                         kennzeichnung = "Swimlanes2" Or _
                         kennzeichnung = "Legenden-Tabelle" Or _
                         kennzeichnung = "Projekt-Grafik" Or _
@@ -816,23 +816,29 @@ Public Module testModule
                                 End Try
 
 
-                            Case "Swimlanes1"
+                            Case "Swimlanes"
+
                                 Try
 
-                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
+
+                                    Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide, _
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
                                                                       selectedPhases, selectedMilestones, _
                                                                       selectedRoles, selectedCosts, _
                                                                       selectedBUs, selectedTyps, _
                                                                       worker, e, False, hproj, kennzeichnung)
+
                                     .TextFrame2.TextRange.Text = ""
                                     .ZOrder(MsoZOrderCmd.msoSendToBack)
-                                    swimlaneMode = True
 
+                                    ' sonst wird pptLasttime benötigt, um bei mehreren PRojekten 
+                                    ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
+                                    swimlaneMode = True
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
                                 End Try
+
 
                             Case "Swimlanes2"
                                 Dim formerSetting As Boolean = awinSettings.mppExtendedMode
@@ -9718,7 +9724,7 @@ Public Module testModule
         ' in endNr ist die Phasen-Nummer des letzten Kindes 
         Call hproj.calcStartEndChildNrs(swimlaneNameID, startNr, endNr)
 
-        Dim fullSwlBreadCrumb As String = hproj.getBcElemName(swimlaneNameID)
+        'Dim fullSwlBreadCrumb As String = hproj.getBcElemName(swimlaneNameID)
 
         Dim copiedShape As pptNS.ShapeRange
 
@@ -12178,8 +12184,8 @@ Public Module testModule
     End Sub
 
     ''' <summary>
-    ''' Änderung tk: das war die Routine bis 14.1
-    ''' das war unnötig kompliziert 
+    ''' Änderung tk: das wird in zeichnepptProjects verwendet 
+    ''' sollte im 1. HJ 2016 ersetzt werden durch die Art und Weise, wie bei zeichneSwimlanes gearbeitet wird ...  
     ''' </summary>
     ''' <param name="pptStartOfCalendar"></param>
     ''' <param name="pptEndOfCalendar"></param>
@@ -13171,7 +13177,9 @@ Public Module testModule
     End Sub
 
     ''' <summary>
-    ''' BHTC Report - nur solange das nicht komplett zusammengeführt ist 
+    ''' zeichnet sowohl Swimlanes im BHTC Modus als auch im Normal -Modus
+    ''' BHTC: Segmente customer Milestones, BHTC Milestones  
+    ''' normal: Swimlane ist alles auf Hierarchie-Ebene 1 (also die Kinder der rootphase Ebene) 
     ''' es wird immer nur ein Projekt betrachtet 
     ''' es können x Swimlanes sein - es muss unterschieden werden, ob alles auf eine Seite geht oder mehrere Seiten gemacht werden 
     ''' Rahmenbedingung bei dieser Routine: es wird nur ein Project aufgerufen, ohne Varianten 
@@ -13244,6 +13252,8 @@ Public Module testModule
         Dim format As Integer = 4
         'Dim tmpslideID As Integer
 
+        ' an der Variablen lässt sich in der Folge erkennen, ob die Segmente BHTC Milestones gezeichnet werden müssen oder 
+        ' ob ganz allgemein nach Swimlanes gesucht wird ... 
         Dim isBHTCSchema As Boolean = (kennzeichnung = "Swimlanes2")
 
         Dim rds As New clsPPTShapes
@@ -13430,7 +13440,7 @@ Public Module testModule
                 Dim neededSpace As Double
 
 
-                If kennzeichnung = "Swimlanes2" Then
+                If isBHTCSchema Then
                     ' jetzt müssen noch die Segment Höhen  berechnet werden 
 
                     neededSpace = anzZeilen * rds.zeilenHoehe + _
@@ -13649,19 +13659,23 @@ Public Module testModule
 
             If Not IsNothing(curSwl) Then
 
-                'Dim curSwimlaneID As String = curSwl.nameID
+
                 Dim segmentChanged As Boolean = False
                 Dim curSegmentID As String = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
 
-                If Not IsNothing(prevSwl) Then
-                    segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <> _
-                                        hproj.hierarchy.getParentIDOfID(curSwl.nameID)
-                End If
+                If isBHTCSchema Then
+                    If Not IsNothing(prevSwl) Then
+                        segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <> _
+                                            hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                    End If
 
-                If swimLanesDone = 0 Or segmentChanged Then
-                    Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
-                    segmentChanged = False
+                    If swimLanesDone = 0 Or segmentChanged Then
+                        Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
+                        segmentChanged = False
+                    End If
                 End If
+                
+                
 
 
                 ' jetzt werden soviele wie möglich Swimlanes gezeichnet ... 
@@ -13708,21 +13722,28 @@ Public Module testModule
                     curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isBHTCSchema)
 
                     If Not IsNothing(curSwl) Then
-                        segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <> _
+
+                        If isBHTCSchema Then
+                            segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <> _
                                         hproj.hierarchy.getParentIDOfID(curSwl.nameID)
 
+                        End If
+                        
                         swimLaneZeilen = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs, _
                                                                                  awinSettings.mppExtendedMode, _
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
                                                                                  considerAll)
 
-                        If segmentChanged And _
+                        If isBHTCSchema Then
+                            If segmentChanged And _
                                 (swimLaneZeilen * rds.zeilenHoehe + curYPosition + rds.segmentVorlagenShape.Height <= rds.drawingAreaBottom) Then
 
-                            curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
-                            Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
-                            segmentChanged = False
+                                curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                                Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
+                                segmentChanged = False
+                            End If
                         End If
+                        
                     Else
                         segmentChanged = False
                     End If

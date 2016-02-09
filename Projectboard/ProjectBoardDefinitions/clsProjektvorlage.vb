@@ -1057,8 +1057,7 @@
                                                ByVal isBhtcSchema As Boolean) As Integer
         Get
             Dim anzSwimlanes As Integer = 0
-            Dim ankerName As String = "BHTC milestones"
-
+            Dim parentNameID As String = rootPhaseName
 
             Dim sptr As Integer
             ' ein fullBreadCrumb enthält auch den ElemName am Schluss ...
@@ -1071,10 +1070,38 @@
             End If
 
             If Not isBhtcSchema Then
-                ' noch nicht implementiert 
+                ' ist jetzt implementiert ...  
+                Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+
+                For Each childObj As Object In ChildCollection
+                    Dim swimlaneID As String = CStr(childObj)
+                    fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                    If considerAll Then
+                        anzSwimlanes = anzSwimlanes + 1
+                    Else
+                        ' ist eines der Elemente in der aktuellen Swimlane enthalten ? 
+                        Dim found As Boolean = False
+                        Dim index = 0
+                        Do While Not found And index <= sptr
+                            If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
+                                found = True
+                            Else
+                                index = index + 1
+                            End If
+                        Loop
+                        If found Then
+                            anzSwimlanes = anzSwimlanes + 1
+                        End If
+                    End If
+                    ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                Next
+
             Else
+                Dim ankerName As String = "BHTC milestones"
                 Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
-                Dim parentNameID As String = ""
+
 
                 If Not IsNothing(ankerPhase) Then
                     parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
@@ -1219,6 +1246,7 @@
 
             Dim tmpPhase As clsPhase = Nothing
             Dim ankerName As String = "BHTC milestones"
+            Dim parentNameID As String = rootPhaseName
 
             Dim anzSwimlanes As Integer = 0
             Dim sptr As Integer = -1
@@ -1235,10 +1263,46 @@
             If index > 0 Then
 
                 If Not isBhtcSchema Then
-                    ' noch nicht implementiert 
+
+                    Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+
+                    For Each childObj As Object In ChildCollection
+                        Dim swimlaneID As String = CStr(childObj)
+                        fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                        If considerAll Then
+                            anzSwimlanes = anzSwimlanes + 1
+                            If index = anzSwimlanes Then
+                                ' das ist jetzt die Phase 
+                                tmpPhase = Me.getPhaseByID(swimlaneID)
+                                Exit For
+                            End If
+                        Else
+                            ' ist eines der Elemente in der Swimlane enthalten ? 
+                            Dim found As Boolean = False
+                            Dim ix = 0
+                            Do While Not found And ix <= sptr
+                                If breadCrumbArray(ix).StartsWith(fullSwlBreadCrumb) Then
+                                    found = True
+                                Else
+                                    ix = ix + 1
+                                End If
+                            Loop
+                            If found Then
+                                anzSwimlanes = anzSwimlanes + 1
+                                If index = anzSwimlanes Then
+                                    ' das ist jetzt die Phase 
+                                    tmpPhase = Me.getPhaseByID(swimlaneID)
+                                    Exit For
+                                End If
+                            End If
+                        End If
+                        ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                    Next
+
                 Else
                     Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
-                    Dim parentNameID As String = ""
 
                     If Not IsNothing(ankerPhase) Then
                         parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
@@ -1249,8 +1313,8 @@
                         Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(parentNameID, False)
 
                         For Each obj As Object In segmentCollection
-                            Dim sgementNameID As String = CStr(obj)
-                            Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(sgementNameID, False)
+                            Dim segmentNameID As String = CStr(obj)
+                            Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(segmentNameID, False)
 
                             For Each childObj As Object In ChildCollection
                                 Dim swimlaneID As String = CStr(childObj)
@@ -1306,7 +1370,8 @@
     End Property
 
     ''' <summary>
-    ''' gibt für eine übergebene ID den vollen BreadCrum+ElemName zurück 
+    ''' gibt für eine übergebene ID den vollen BreadCrum+ElemName zurück
+    ''' den Abschluss bildet stets ein #, damit über ..startwith festgestellt werden kann, ob ein Element Kind eines anderen ist 
     ''' ?, wenn PhaseID nicht existiert 
     ''' </summary>
     ''' <param name="nameID"></param>
@@ -1322,7 +1387,7 @@
             If istElemID(nameID) Then
                 elemName = elemNameOfElemID(nameID)
                 fullName = calcHryFullname(elemName, _
-                                              Me.hierarchy.getBreadCrumb(nameID))
+                                              Me.hierarchy.getBreadCrumb(nameID)) & "#"
             End If
 
             getBcElemName = fullName
