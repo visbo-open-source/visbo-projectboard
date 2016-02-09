@@ -225,6 +225,8 @@ Partial Class frmHierarchySelection
         '
         'BackgroundWorker3
         '
+        Me.BackgroundWorker3.WorkerReportsProgress = True
+        Me.BackgroundWorker3.WorkerSupportsCancellation = True
         '
         'frmHierarchySelection
         '
@@ -248,6 +250,7 @@ Partial Class frmHierarchySelection
         Me.Controls.Add(Me.hryStufenLabel)
         Me.Controls.Add(Me.hryStufen)
         Me.Controls.Add(Me.hryTreeView)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmHierarchySelection"
         Me.Text = "Auswahl über Hierarchie"
         Me.TopMost = True

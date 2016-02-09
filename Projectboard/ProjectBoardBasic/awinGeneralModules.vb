@@ -11422,7 +11422,6 @@ Public Module awinGeneralModules
         With awinSettings
 
             .drawProjectLine = True
-            reportProfil.ExtendedMode = .eppExtendedMode
             reportProfil.ExtendedMode = .mppExtendedMode
             reportProfil.OnePage = .mppOnePage
             reportProfil.AllIfOne = .mppShowAllIfOne
