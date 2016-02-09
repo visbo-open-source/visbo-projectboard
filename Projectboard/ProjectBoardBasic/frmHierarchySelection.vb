@@ -336,8 +336,6 @@ Public Class frmHierarchySelection
                 End If
 
 
-
-
             Else
                 Call MsgBox("bitte mindestens ein Element selektieren bzw. " & vbLf & _
                              "einen Zeitraum angeben ...")
@@ -355,7 +353,8 @@ Public Class frmHierarchySelection
         enableOnUpdate = True
 
         ' bei bestimmten Menu-Optionen das Formular dann schliessen 
-        If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Or Me.menuOption = PTmenue.reportBHTC Then
+        'If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Or Me.menuOption = PTmenue.reportBHTC Then
+        If Me.menuOption = PTmenue.excelExport Or menuOption = PTmenue.filterdefinieren Then
             MyBase.Close()
         Else
             ' geänderte Auswahl/Filterliste neu anzeigen
@@ -393,7 +392,6 @@ Public Class frmHierarchySelection
                 .mppUseAbbreviation = repProfil.UseAbbreviation
 
                 ' für BHTC immer true
-                .eppExtendedMode = repProfil.ExtendedMode
                 .mppExtendedMode = repProfil.ExtendedMode
                 ' für BHTC immer false
                 .mppShowAmpel = repProfil.Ampeln
@@ -418,7 +416,6 @@ Public Class frmHierarchySelection
             With awinSettings
 
                 .drawProjectLine = True
-                repProfil.ExtendedMode = .eppExtendedMode
                 repProfil.ExtendedMode = .mppExtendedMode
                 repProfil.OnePage = .mppOnePage
                 repProfil.AllIfOne = .mppShowAllIfOne
@@ -1190,7 +1187,6 @@ Public Class frmHierarchySelection
         With awinSettings
 
             .drawProjectLine = True
-            .eppExtendedMode = reportProfil.ExtendedMode
             .mppExtendedMode = reportProfil.ExtendedMode
             .mppOnePage = reportProfil.OnePage
             .mppShowAllIfOne = reportProfil.AllIfOne
@@ -1265,12 +1261,12 @@ Public Class frmHierarchySelection
 
     Private Sub BackgroundWorker3_RunWorkerCompleted(sender As Object, e As System.ComponentModel.RunWorkerCompletedEventArgs) Handles BackgroundWorker3.RunWorkerCompleted
 
-        '' ''With Me.AbbrButton
-        '' ''    .Text = ""
-        '' ''    .Visible = False
-        '' ''    .Enabled = False
-        '' ''    .Left = .Left + 40
-        '' ''End With
+        With Me.AbbrButton
+            .Text = ""
+            .Visible = False
+            .Enabled = False
+            .Left = .Left + 40
+        End With
 
 
         Me.statusLabel.Text = "...done"
@@ -1284,4 +1280,18 @@ Public Class frmHierarchySelection
 
     End Sub
 
+    Private Sub AbbrButton_Click(sender As Object, e As EventArgs) Handles AbbrButton.Click
+
+        If menuOption = PTmenue.reportBHTC Then
+
+            statusLabel.Text = "Berichterstellung wurde beendet"
+            Try
+                Me.BackgroundWorker3.CancelAsync()
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
+    End Sub
 End Class

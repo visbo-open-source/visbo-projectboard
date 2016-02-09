@@ -9,6 +9,23 @@ Public Class frmReportProfil
     Public hproj As clsProjekt
     Public profileBearbeiten As New frmHierarchySelection
 
+    Private Sub frmReportProfil_FormClosing(sender As Object, e As Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
+
+        If Not BGworkerReportBHTC.IsBusy Then
+            MyBase.Close()
+        Else
+            Select Case MsgBox("Wollen Sie das Fenster wirklich schließen?", vbQuestion Or vbYesNo Or vbDefaultButton2, "beenden ?")
+                Case vbYes
+                    Me.Dispose() 'Fenster wird geschlossen
+
+                Case vbNo
+                    e.Cancel = True 'Fenster wird nicht geschlossen
+            End Select
+        End If
+
+    End Sub
+     
+
     Private Sub RepProfilListbox_load(sender As Object, e As EventArgs) Handles MyBase.Load
         Dim i As Integer
 
@@ -110,7 +127,7 @@ Public Class frmReportProfil
 
         reportProfil.Projects.Clear()
         reportProfil.Projects.Add(1, hproj.name)
-        
+
 
         ' für BHTC immer true
         reportProfil.ExtendedMode = True
@@ -310,7 +327,7 @@ Public Class frmReportProfil
 
     Private Sub BGworkerReportBHTC_DoWork(sender As Object, e As DoWorkEventArgs) Handles BGworkerReportBHTC.DoWork
 
-       
+
 
         Dim worker As BackgroundWorker = CType(sender, BackgroundWorker)
         ' ''Dim vorlagenDateiName As String = CType(e.Argument, String)
@@ -346,7 +363,6 @@ Public Class frmReportProfil
         With awinSettings
 
             .drawProjectLine = True
-            .eppExtendedMode = reportProfil.ExtendedMode
             .mppExtendedMode = reportProfil.ExtendedMode
             .mppOnePage = reportProfil.OnePage
             .mppShowAllIfOne = reportProfil.AllIfOne
