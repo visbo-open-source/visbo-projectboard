@@ -69,6 +69,30 @@ Public Class frmReportProfil
 
             Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
 
+
+            ' Existiert kein ReportProfil.XML, so wird ein Dummy.xml erzeugt und anschließend eingelesen
+
+            If listofFiles.count < 1 Then
+
+                ' erzeuge ein Dummy-ReportPRofil
+
+                Dim dmyRepProfil As New clsreport
+                '' 'Call createDummyReportProfil(dmyRepProfil)
+
+                dmyRepProfil.Projects.Clear()
+                dmyRepProfil.Projects.Add(1, hproj.name)
+
+                dmyRepProfil.VonDate = vonDate.Value
+                dmyRepProfil.BisDate = bisDate.Value
+
+                ' Schreiben des Dummy ReportProfils
+                Call XMLExportReportProfil(dmyRepProfil)
+
+                'erneut Files auf Directory lesen
+                listOfFiles = My.Computer.FileSystem.GetFiles(dirName)
+
+            End If
+
             For k As Integer = 1 To listOfFiles.Count
 
                 dateiName = listOfFiles.Item(k - 1)
@@ -90,7 +114,11 @@ Public Class frmReportProfil
                 End If
 
             Next k
-            RepProfilListbox.SelectedIndex = 0
+
+            If listofFiles.count > 0 Then
+                RepProfilListbox.SelectedIndex = 0
+            End If
+
 
         Else
             Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
@@ -379,6 +407,7 @@ Public Class frmReportProfil
             .mppShowHorizontals = reportProfil.ShowHorizontals
             .mppUseAbbreviation = reportProfil.UseAbbreviation
             .mppUseOriginalNames = reportProfil.UseOriginalNames
+            .mppKwInMilestone = reportProfil.KwInMilestone
         End With
 
 

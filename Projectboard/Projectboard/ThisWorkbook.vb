@@ -79,6 +79,7 @@ Public Class ThisWorkbook
 
             awinSettings.databaseURL = My.Settings.mongoDBURL
             awinSettings.databaseName = My.Settings.mongoDBname
+            awinSettings.globalPath = My.Settings.globalPath
             awinSettings.awinPath = My.Settings.awinPath
 
 

@@ -25,8 +25,8 @@ Public Class ThisAddIn
 
 
 
-
         Try
+            awinSettings.globalPath = My.Settings.globalPath
             awinSettings.awinPath = My.Settings.awinPath
 
             Call awinsetTypenNEW("BHTC")
