@@ -11473,6 +11473,10 @@ Public Module awinGeneralModules
         Call XMLExportReportProfil(reportProfil)
 
     End Sub
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <remarks></remarks>
     Public Sub synchronizeGlobalToLocalFolder()
         Try
 
@@ -11514,19 +11518,19 @@ Public Module awinGeneralModules
                     '' ''exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
                     '' ''exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
 
-                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.visbo))
-                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.rplan))
-                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.msproject))
-                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.simpleScen))
-                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.modulScen))
-                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.addElements))
-                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.rplanrxf))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.visbo))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.rplan))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.msproject))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.simpleScen))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.modulScen))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.addElements))
+                    '' ''My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.rplanrxf))
 
-                    My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.visbo))
-                    My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.rplan))
-                    My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.msproject))
-                    My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.simpleScen))
-                    My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.modulScen))
+                    '' ''My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.visbo))
+                    '' ''My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.rplan))
+                    '' ''My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.msproject))
+                    '' ''My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.simpleScen))
+                    '' ''My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.modulScen))
 
                 Catch ex As Exception
 
