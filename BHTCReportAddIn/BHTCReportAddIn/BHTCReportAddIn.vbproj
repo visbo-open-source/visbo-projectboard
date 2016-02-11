@@ -35,13 +35,13 @@
     <PublishUrl>C:\Users\tom\Documents\Kundenprojekte\BHTC\BHTCAddIn Installation\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>1.0.0.7</ApplicationVersion>
+    <ApplicationVersion>1.0.0.10</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
     <UpdateIntervalUnits>days</UpdateIntervalUnits>
     <ProductName>BHTCReportAddIn</ProductName>
-    <PublisherName />
+    <PublisherName>VISBO</PublisherName>
     <SupportUrl />
     <FriendlyName>BHTCReportAddIn</FriendlyName>
     <OfficeApplicationDescription />

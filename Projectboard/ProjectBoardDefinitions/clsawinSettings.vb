@@ -41,6 +41,7 @@ Public Class clsawinSettings
     Public Property kapaEinheit As String
     Public Property databaseName As String
     Public Property databaseURL As String
+    Public Property globalPath As String
     Public Property awinPath As String
     Public Property zeilenhoehe1 As Double
     Public Property zeilenhoehe2 As Double

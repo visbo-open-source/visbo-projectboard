@@ -68,15 +68,20 @@ Module awinGeneralModulesBHTC
         ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
         'awinPath = appInstance.ActiveWorkbook.Path & "\"
 
-        If (Dir(awinSettings.awinPath, vbDirectory) <> "") Then
-            awinPath = awinSettings.awinPath
-        Else
+        globalPath = awinSettings.globalPath
+        awinPath = awinSettings.awinPath
 
-            Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
-
+        If awinPath = "" And globalPath <> "" Then
+            awinPath = globalPath
+        ElseIf globalPath = "" And awinPath <> "" Then
+            globalPath = awinPath
+        ElseIf globalPath = "" And awinPath = "" Then
+            Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " existieren nicht")
         End If
 
-
+        If (Dir(globalPath, vbDirectory) = "") Then
+            Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
+        End If
 
         importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
         importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
@@ -91,6 +96,11 @@ Module awinGeneralModulesBHTC
         exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
         exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
         exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
+
+        If awinPath <> globalPath Then
+            Call synchronizeGlobalToLocalFolder()
+        End If
+
 
 
         StartofCalendar = StartofCalendar.Date

@@ -404,6 +404,7 @@ Public Module Module1
     Public appInstance As _Application
 
     ' nimmt den Pfad Namen auf - also wo liegen Customization File und Projekt-Details
+    Public globalPath As String
     Public awinPath As String
     Public importOrdnerNames() As String
     Public exportOrdnerNames() As String

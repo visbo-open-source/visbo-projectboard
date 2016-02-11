@@ -42,6 +42,7 @@ Public Class clsReport
     Private reportShowHorizontals As Boolean
     Private reportUseAbbreviation As Boolean
     Private reportUseOriginalNames As Boolean
+    Private reportKwInMilestone As Boolean
 
 
 
@@ -106,7 +107,7 @@ Public Class clsReport
                 .SortedDauer = Me.reportSortedDauer
                 .OnePage = Me.reportOnePage
                 .ExtendedMode = Me.reportExtendedMode
-
+                .KwInMilestone = Me.reportKwInMilestone
             End With
 
         Catch ex As Exception
@@ -556,6 +557,20 @@ Public Class clsReport
             reportUseOriginalNames = value
         End Set
     End Property
+    ''' <summary>
+    ''' schreibt/liest ob die Original Namen verwendet werden sollen
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Property KwInMilestone As Boolean
+        Get
+            KwInMilestone = reportKwInMilestone
+        End Get
+        Set(value As Boolean)
+            reportKwInMilestone = value
+        End Set
+    End Property
 
 
     ''' <summary>
@@ -658,19 +673,46 @@ Public Class clsReport
 
 
     Sub New()
+        _name = "Dummy"
+
+        ' Definitionen, die beim BerechneFormat bestimmt werden und für den Report-Ablauf benötigt werden,
+        ' müssen nicht beim Reportprofil in DB abgespeichert werden
+        reportProjects = New SortedList(Of Double, String)
         reportCalendarVon = StartofCalendar
         reportCalendarBis = Date.Now
-        reportVon = StartofCalendar
-        reportBis = Date.Now
+
+        ' Definitionen, die in DB für das ReportProfil gespeichert werden müssen
+        reportIsMpp = False
+        reportPPTTemplate = ""
         reportBU = New SortedList(Of String, String)
         reportPhase = New SortedList(Of String, String)
         reportMilestone = New SortedList(Of String, String)
         reportTyp = New SortedList(Of String, String)
         reportRolle = New SortedList(Of String, String)
         reportCost = New SortedList(Of String, String)
-        reportProjects = New SortedList(Of Double, String)
-        reportPPTTemplate = ""
-        _name = "XXX"
+        reportVon = StartofCalendar
+        reportBis = Date.Now
+
+        reportPhName = True
+        reportPhDate = True
+        reportMSName = True
+        reportMSDate = True
+        reportVLinien = False
+        reportLegend = False
+        reportOnePage = True
+
+        ' für BHTC immer true
+        reportExtendedMode = True
+        reportShowHorizontals = False
+        ' für BHTC immer false
+        reportAmpeln = False
+        reportAllIfOne = False
+        reportFullyContained = False
+        reportSortedDauer = False
+        reportProjectline = False
+        reportUseOriginalNames = False
+        reportKwInMilestone = False
+
     End Sub
 
     ''' <summary>

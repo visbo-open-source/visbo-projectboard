@@ -628,16 +628,38 @@ Public Module awinGeneralModules
         ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
         'awinPath = appInstance.ActiveWorkbook.Path & "\"
 
-        If (Dir(awinSettings.awinPath, vbDirectory) <> "") Then
-            awinPath = awinSettings.awinPath
-        Else
+        '' ''If (Dir(awinSettings.globalPath, vbDirectory) <> "") Then
+        '' ''    globalPath = awinSettings.globalPath
+        '' ''Else
 
-            Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
+        '' ''    Throw New ArgumentException("Globaler Requirementsordner " & awinSettings.globalPath & " existiert nicht")
 
+        '' ''End If
+
+        '' ''If (Dir(awinSettings.awinPath, vbDirectory) <> "") Then
+        '' ''    awinPath = awinSettings.awinPath
+        '' ''Else
+
+        '' ''    Throw New ArgumentException("Lokaler Requirementsordner " & awinSettings.awinPath & " existiert nicht")
+
+        '' ''End If
+
+        globalPath = awinSettings.globalPath
+        awinPath = awinSettings.awinPath
+
+        If awinPath = "" And globalPath <> "" Then
+            awinPath = globalPath
+        ElseIf globalPath = "" And awinPath <> "" Then
+            globalPath = awinPath
+        ElseIf globalPath = "" And awinPath = "" Then
+            Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " existieren nicht")
         End If
 
+        If (Dir(globalPath, vbDirectory) = "") Then
+            Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
+        End If
 
-
+    
         importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
         importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
         importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
@@ -651,6 +673,11 @@ Public Module awinGeneralModules
         exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
         exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
         exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
+
+
+        If globalPath <> awinPath Then
+            Call synchronizeGlobalToLocalFolder()
+        End If
 
 
         StartofCalendar = StartofCalendar.Date
@@ -822,7 +849,7 @@ Public Module awinGeneralModules
         ' ur: 23.01.2015: Abfragen der Login-Informationen
         loginErfolgreich = loginProzedur()
 
-        
+
         If Not loginErfolgreich Then
             ' Customization-File wird geschlossen
             xlsCustomization.Close(SaveChanges:=False)
@@ -832,7 +859,7 @@ Public Module awinGeneralModules
             Exit Sub
         Else
 
-       
+
 
 
             Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
@@ -11438,6 +11465,7 @@ Public Module awinGeneralModules
             reportProfil.ShowHorizontals = .mppShowHorizontals
             reportProfil.UseAbbreviation = .mppUseAbbreviation
             reportProfil.UseOriginalNames = .mppUseOriginalNames
+            reportProfil.KwInMilestone = .mppKwInMilestone
         End With
 
 
@@ -11445,6 +11473,144 @@ Public Module awinGeneralModules
         Call XMLExportReportProfil(reportProfil)
 
     End Sub
+    Public Sub synchronizeGlobalToLocalFolder()
+        Try
 
+
+            'Prüfen, ob der Globale Folder existiert
+            If Not My.Computer.FileSystem.DirectoryExists(globalPath) Then
+
+                Throw New ArgumentException("Globaler Requirementsordner " & globalPath & " existiert nicht!")
+
+            Else
+                ' '' ''Prüfen, ob der Lokale Folder existiert
+                '' ''If Not My.Computer.FileSystem.DirectoryExists(awinPath) Then
+
+                '' ''    Call MsgBox("lokaler Requirementsordner " & awinPath & " existiert nicht!")
+
+                ' Lokaler Requirementsordner wird erzeugt, mit allen Unterdirectories
+                Try
+                    My.Computer.FileSystem.CreateDirectory(awinPath)
+                    My.Computer.FileSystem.CreateDirectory(awinPath & requirementsOrdner)
+                    My.Computer.FileSystem.CreateDirectory(awinPath & projektVorlagenOrdner)
+                    My.Computer.FileSystem.CreateDirectory(awinPath & modulVorlagenOrdner)
+                    My.Computer.FileSystem.CreateDirectory(awinPath & projektRessOrdner)
+                    My.Computer.FileSystem.CreateDirectory(awinPath & RepProjectVorOrdner)
+                    My.Computer.FileSystem.CreateDirectory(awinPath & RepPortfolioVorOrdner)
+                    My.Computer.FileSystem.CreateDirectory(awinPath & ReportProfileOrdner)
+
+
+                    '' ''importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
+                    '' ''importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
+                    '' ''importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
+                    '' ''importOrdnerNames(PTImpExp.simpleScen) = awinPath & "Import\einfache Szenarien"
+                    '' ''importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\modulare Szenarien"
+                    '' ''importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
+                    '' ''importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
+
+                    '' ''exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
+                    '' ''exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
+                    '' ''exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
+                    '' ''exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
+                    '' ''exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
+
+                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.visbo))
+                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.rplan))
+                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.msproject))
+                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.simpleScen))
+                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.modulScen))
+                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.addElements))
+                    My.Computer.FileSystem.CreateDirectory(importOrdnerNames(PTImpExp.rplanrxf))
+
+                    My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.visbo))
+                    My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.rplan))
+                    My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.msproject))
+                    My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.simpleScen))
+                    My.Computer.FileSystem.CreateDirectory(exportOrdnerNames(PTImpExp.modulScen))
+
+                Catch ex As Exception
+
+                End Try
+                '' ''Else
+
+                Dim srcFile As String
+                Dim destFile As String
+                Dim destdir As String
+                Dim dirItem As String = globalPath & requirementsOrdner
+
+                ' lokaler RequirementsOrdner existiert
+
+                ' RequirementsOrdner:   alle Dateien , sofern sie im globalPath neuer als im awinPath sind kopieren
+
+                For Each srcFile In My.Computer.FileSystem.GetFiles(dirItem)
+
+                    ' Name des lokalen Files zusammensetzen
+                    Dim hstr() As String
+                    hstr = srcFile.Split(New Char() {CChar("\")})
+
+                    ' Name des destinationDirectories zusammen setzen
+                    destdir = awinPath & requirementsOrdner
+
+                    destFile = destdir & "\" & hstr(hstr.Length - 1)
+
+                    ' Test ob globales File neuer als lokales
+                    Dim srcDate As Date = My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime.Date
+                    Dim destDate As Date = My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime.Date
+                    Dim ddiff As Long = DateDiff(DateInterval.Second, _
+                                                 My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime.Date, _
+                                                 My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime.Date)
+
+                    ' Wenn globales neuer als lokales, dann von globalPath nach awinPath kopieren
+                    If ddiff < 0 Then
+                        ' Kopieren der Datei, mit Overwrite erzwingen
+                        My.Computer.FileSystem.CopyFile(srcFile, destFile, True)
+                    End If
+
+                Next srcFile
+
+
+                ' Unterdirectories von requirementsOrdner:      alle Dateien dieser  werden von globalPath nACH awinPath kopiert, sofern neueres Änderungsdatum
+
+                For Each dirItem In My.Computer.FileSystem.GetDirectories(globalPath & requirementsOrdner)
+
+                    For Each srcFile In My.Computer.FileSystem.GetFiles(dirItem)
+
+                        ' Name des lokalen Files zusammensetzen
+                        Dim hstr() As String
+                        hstr = srcFile.Split(New Char() {CChar("\")})
+                        ' Name des destinationDirectories zusammen setzen
+                        Dim dirstr() As String
+                        dirstr = dirItem.Split(New Char() {CChar("\")})
+                        destdir = awinPath & requirementsOrdner & dirstr(dirstr.Length - 1)
+
+                        destFile = destdir & "\" & hstr(hstr.Length - 1)
+
+                        ' Test ob globales File neuer als lokales
+                        Dim srcDate As Date = My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime.Date
+                        Dim destDate As Date = My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime.Date
+                        Dim ddiff As Long = DateDiff(DateInterval.Second, _
+                                                     My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime.Date, _
+                                                     My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime.Date)
+
+                        ' Wenn globales neuer als lokales, dann von globalPath nach awinPath kopieren
+                        If ddiff < 0 Then
+                            ' Kopieren der Datei, mit Overwrite erzwingen
+                            My.Computer.FileSystem.CopyFile(srcFile, destFile, True)
+                        End If
+
+                    Next srcFile
+
+                Next dirItem
+
+            End If
+
+
+            ' ''End If
+
+
+        Catch ex As Exception
+
+        End Try
+    End Sub
 
 End Module

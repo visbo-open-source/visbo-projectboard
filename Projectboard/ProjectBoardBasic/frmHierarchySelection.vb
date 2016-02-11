@@ -1203,7 +1203,7 @@ Public Class frmHierarchySelection
             .mppShowHorizontals = reportProfil.ShowHorizontals
             .mppUseAbbreviation = reportProfil.UseAbbreviation
             .mppUseOriginalNames = reportProfil.UseOriginalNames
-          
+            .mppKwInMilestone = reportProfil.KwInMilestone
         End With
 
 
