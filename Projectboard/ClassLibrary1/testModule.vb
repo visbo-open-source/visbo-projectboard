@@ -9718,7 +9718,7 @@ Public Module testModule
         Dim endNr As Integer = 0
 
         ' wird benutzt, um mal oben und mal unten in der Swimlane zeichnen zu können 
-        Dim aktuelleYPosition As Double
+        Dim aktuelleYPosition As Double = curYPosition
 
         ' in startNr ist nachher die Phasen-Nummer der swimlane, in startNr +1 die Phasen-Nummer des ersten Kindes 
         ' in endNr ist die Phasen-Nummer des letzten Kindes 
@@ -9991,7 +9991,10 @@ Public Module testModule
                                         (considerZeitraum And milestoneWithinTimeFrame(curMs.getDate, _
                                                                                     zeitraumGrenzeL, zeitraumGrenzeR)) Then
 
+
                                 ' zeichne den Meilenstein 
+                                ' die aktuelle Y-Position muss nicht bestimmt werden, weil das ja bereits mit der Phase geschehen ist 
+                                ' es muss nur sichergestellt sein, dass aktuelleYPosition initial auf CurYPosition gesetzt wird
                                 Dim tmpCollection As New Collection
                                 Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, _
                                                                   swimlaneNameID, curMs.nameID, aktuelleYPosition)

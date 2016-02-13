@@ -9633,7 +9633,12 @@ Public Module awinGeneralModules
                     lastelemID = cphase.nameID
 
                     ' Alle Tasks zu diesem Projekt mit deren Kinder und KindesKinder in hproj eintragen
-                    Call findAllTasksandInsert(aktTask_i, parentelemID, hproj, Rplan, protokollLine, zeile, protokollliste)
+                    Try
+                        Call findAllTasksandInsert(aktTask_i, parentelemID, hproj, Rplan, protokollLine, zeile, protokollliste)
+                    Catch ex As Exception
+                        Dim a As Integer = 0
+                    End Try
+
 
                     '
                     '' '' Bestimmung der BMW-Vorlage des jeweiligen Projektes
@@ -9753,173 +9758,231 @@ Public Module awinGeneralModules
 
             If RPLAN.task(j).parent = task.id Then
 
-                Dim aktTask_j As rxfTask = RPLAN.task(j)
+                ' Änderung tk am 10.2.16 - wenn ein Fehler bei einem einzelnen Element auftritt, soll das nicht dazu führen, 
+                ' dass der Import aller anderen abgebrochen wird ... eine entsprechende Fehlermeldung soll ins Protokoll kommen 
+                ' alle anderen Elemente sollen importiert werden 
+                Try
 
-                Dim taskdauerinDays As Long = calcDauerIndays(aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value)
-                ' Herausfinden, ob aktTask_j Phase oder Meilenstein ist
-                If taskdauerinDays > 0 And aktTask_j.taskType.type <> "MILESTONE" Then
+                    Dim aktTask_j As rxfTask = RPLAN.task(j)
+                    Dim isMilestone As Boolean
 
-                    ''''''  ist PHASE
+                    Dim isKnownMsName As Boolean = MilestoneDefinitions.Contains(aktTask_j.name) Or _
+                                                missingMilestoneDefinitions.Contains(aktTask_j.name)
 
-                    If aktTask_j.name = "Projektphasen" Then
+                    Dim isKnownPhName As Boolean = PhaseDefinitions.Contains(aktTask_j.name) Or _
+                                                missingPhaseDefinitions.Contains(aktTask_j.name)
 
-                        For i = 0 To aktTask_j.customvalue.Length - 1
-                            If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_A" Then
-                                hproj.businessUnit = aktTask_j.customvalue(i).Value
-                            End If
+                    Dim taskdauerinDays As Long = calcDauerIndays(aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value)
+                    ' Herausfinden, ob aktTask_j Phase oder Meilenstein ist 
 
-                            If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_B" Then
-                                hproj.VorlagenName = aktTask_j.customvalue(i).Value
-                            End If
-                        Next i
+                    If taskdauerinDays > 1 Then
+                        isMilestone = False
 
-                    End If
-
-                    ' überprüfen, ob die Phase evt. ignoriert werden soll (wird im  CustomizationFile in Tabelle Phase-Mappings definiert)
-                    If Not phaseMappings.tobeIgnored(aktTask_j.name) Then
-                        Dim mappedPhasename As String = ""
-
-                        prtLine.planelement = aktTask_j.name
-                        prtLine.hgColor = awinSettings.AmpelNichtBewertet
-
-                        If PhaseDefinitions.Contains(aktTask_j.name) Then
-
-                            mappedPhasename = aktTask_j.name
-                            prtLine.hgColor = awinSettings.AmpelGruen
-
-                        Else
-                            ' aktTask_j.name existiert nicht in den PhaseDefinitions
-
-                            'wenn der PhasenName gemappt werden kann und dieser dann in phasedefinitions enthalten ist, so wird phasename ersetzt
-                            mappedPhasename = phaseMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
-
-                            If PhaseDefinitions.Contains(mappedPhasename) Then
-                                ' neuer aktueller Name der Task
-                                prtLine.hgColor = awinSettings.AmpelGelb
-
-                            Else
-                                ' PhasenName ist nicht bekannt
-                                isUnkownName = True
-
-                                Dim newPhaseDef As New clsPhasenDefinition
-
-                                ' Änderung tk 6.12.15: das muss auf den mappedPhasename gesetzt werdne, da sonst Eltern-Ersetzungen, die noch nicht 
-                                ' in der phasedefinitions sind , nicht in der Liste der unbekannten aufgenommen werden ... 
-                                'newPhaseDef.name = aktTask_j.name
-                                'mappedPhasename = aktTask_j.name
-
-                                newPhaseDef.name = mappedPhasename
-                                newPhaseDef.shortName = aktTask_j.remark
-
-                                newPhaseDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, False)
-                                newPhaseDef.UID = PhaseDefinitions.Count + 1
-                                ' muss in missingPhaseDefinitions noch eingetragen werden
-                                If Not missingPhaseDefinitions.Contains(newPhaseDef.name) Then
-                                    missingPhaseDefinitions.Add(newPhaseDef)
-                                End If
-
-                                ' Änderung tk: wird auskommentiert, das steht ja im Protokoll
-                                'Call logfileSchreiben(("Achtung, RXFImport: Phase '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
-
-                            End If
+                        If aktTask_j.taskType.type = "MILESTONE" Then
+                            Call logfileSchreiben("Korrektur, RXFImport: Phasen-Element mit verschiedenen Start- und Ende-Daten war als Meilenstein deklariert:", _
+                                                        aktTask_j.name & ": " & aktTask_j.actualDate.start.Value.ToShortDateString & " versus " & _
+                                                        aktTask_j.actualDate.finish.Value.ToShortDateString & vbLf & _
+                                                        "Projekt: " & hproj.name, _
+                                                        anzFehler)
                         End If
 
-                        ' Phase nur aufnehmen in das aktuelle Projekt, wenn 
-                        ' awinSettings.importUnkownNames=true ist oder auch isUnkownName = false
+                    ElseIf aktTask_j.taskType.type = "MILESTONE" Then
+                        isMilestone = True
 
-                        If Not isUnkownName Or awinSettings.importUnknownNames Then
+                    ElseIf isKnownMsName And Not isKnownPhName Then
+                        isMilestone = True
+                        If aktTask_j.taskType.type <> "MILESTONE" Then
+                            Call logfileSchreiben("Korrektur, RXFImport: bekanntes Meilenstein-Element  mit falscher Typ-Zuordnung:", _
+                                                        aktTask_j.name & " mit Typ " & aktTask_j.taskType.type & vbLf & _
+                                                        "Projekt: " & hproj.name, _
+                                                        anzFehler)
+                        End If
 
-                            Dim phaseStartdate As Date
-                            Dim phaseEnddate As Date
-                            cphase = New clsPhase(hproj)
+                    ElseIf isKnownPhName And Not isKnownMsName Then
+                        isMilestone = False
 
-                            With cphase
+                    
+                    Else
+                        isMilestone = True
+                    End If
 
-                                Dim Duration As Integer = calcDauerIndays(aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value)
-                                Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, aktTask_j.actualDate.start.Value)
+                    If Not isMilestone Then
 
-                                .changeStartandDauer(offset, Duration)
-                                phaseStartdate = .getStartDate
-                                phaseEnddate = .getEndDate
+                        ''''''  ist PHASE
 
-                                isNotDuplikate = True
-                                ' sollen Duplikate eliminiert werden ?
-                                If awinSettings.eliminateDuplicates And hproj.hierarchy.containsKey(calcHryElemKey(mappedPhasename, False)) Then
-                                    ' nur dann kann es Duplikate geben 
-                                    If hproj.isCloneToParent(mappedPhasename, parentphase.nameID, phaseStartdate, phaseEnddate, 0.97) Then
-                                        isNotDuplikate = False
-                                        prtLine.planelement = aktTask_j.name
-                                        prtLine.hgColor = awinSettings.AmpelRot
-                                        prtLine.grund = "Phase wurde eliminiert: Duplikat zur Parent-Phase"
-                                        'Call logfileSchreiben("Fehler in RXFImport: " & mappedPhasename & " ist Duplikat zu Parent " & parentphase.name & " und wird ignoriert ", hproj.name, anzFehler)
+                        If aktTask_j.name = "Projektphasen" Then
 
-                                    Else
-                                        Dim duplicateSiblingID As String = hproj.getDuplicatePhaseSiblingID(mappedPhasename, parentphase.nameID, _
-                                                                                                            phaseStartdate, phaseEnddate, 0.97)
+                            For i = 0 To aktTask_j.customvalue.Length - 1
+                                If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_A" Then
+                                    hproj.businessUnit = aktTask_j.customvalue(i).Value
+                                End If
 
-                                        If duplicateSiblingID = "" Then
-                                            isNotDuplikate = True
-                                        Else
+                                If aktTask_j.customvalue(i).name = "UsA_SERVICE_SPALTE_B" Then
+                                    hproj.VorlagenName = aktTask_j.customvalue(i).Value
+                                End If
+                            Next i
+
+                        End If
+
+                        ' überprüfen, ob die Phase evt. ignoriert werden soll (wird im  CustomizationFile in Tabelle Phase-Mappings definiert)
+                        If Not phaseMappings.tobeIgnored(aktTask_j.name) Then
+                            Dim mappedPhasename As String = ""
+
+                            prtLine.planelement = aktTask_j.name
+                            prtLine.hgColor = awinSettings.AmpelNichtBewertet
+
+                            If PhaseDefinitions.Contains(aktTask_j.name) Then
+
+                                mappedPhasename = aktTask_j.name
+                                prtLine.hgColor = awinSettings.AmpelGruen
+
+                            Else
+                                ' aktTask_j.name existiert nicht in den PhaseDefinitions
+
+                                'wenn der PhasenName gemappt werden kann und dieser dann in phasedefinitions enthalten ist, so wird phasename ersetzt
+                                mappedPhasename = phaseMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
+
+                                If PhaseDefinitions.Contains(mappedPhasename) Then
+                                    ' neuer aktueller Name der Task
+                                    prtLine.hgColor = awinSettings.AmpelGelb
+
+                                Else
+                                    ' PhasenName ist nicht bekannt
+                                    isUnkownName = True
+
+                                    Dim newPhaseDef As New clsPhasenDefinition
+
+                                    ' Änderung tk 6.12.15: das muss auf den mappedPhasename gesetzt werdne, da sonst Eltern-Ersetzungen, die noch nicht 
+                                    ' in der phasedefinitions sind , nicht in der Liste der unbekannten aufgenommen werden ... 
+                                    'newPhaseDef.name = aktTask_j.name
+                                    'mappedPhasename = aktTask_j.name
+
+                                    newPhaseDef.name = mappedPhasename
+                                    newPhaseDef.shortName = aktTask_j.remark
+
+                                    newPhaseDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, False)
+                                    newPhaseDef.UID = PhaseDefinitions.Count + 1
+                                    ' muss in missingPhaseDefinitions noch eingetragen werden
+                                    If Not missingPhaseDefinitions.Contains(newPhaseDef.name) Then
+                                        missingPhaseDefinitions.Add(newPhaseDef)
+                                    End If
+
+                                    ' Änderung tk: wird auskommentiert, das steht ja im Protokoll
+                                    'Call logfileSchreiben(("Achtung, RXFImport: Phase '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
+
+                                End If
+                            End If
+
+                            ' Phase nur aufnehmen in das aktuelle Projekt, wenn 
+                            ' awinSettings.importUnkownNames=true ist oder auch isUnkownName = false
+
+                            If Not isUnkownName Or awinSettings.importUnknownNames Then
+
+                                Dim phaseStartdate As Date
+                                Dim phaseEnddate As Date
+                                cphase = New clsPhase(hproj)
+
+                                With cphase
+
+                                    Dim Duration As Integer = calcDauerIndays(aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value)
+                                    Dim offset As Integer = DateDiff(DateInterval.Day, hproj.startDate, aktTask_j.actualDate.start.Value)
+
+                                    .changeStartandDauer(offset, Duration)
+                                    phaseStartdate = .getStartDate
+                                    phaseEnddate = .getEndDate
+
+                                    isNotDuplikate = True
+                                    ' sollen Duplikate eliminiert werden ?
+                                    If awinSettings.eliminateDuplicates And hproj.hierarchy.containsKey(calcHryElemKey(mappedPhasename, False)) Then
+                                        ' nur dann kann es Duplikate geben 
+                                        If hproj.isCloneToParent(mappedPhasename, parentphase.nameID, phaseStartdate, phaseEnddate, 0.97) Then
                                             isNotDuplikate = False
                                             prtLine.planelement = aktTask_j.name
                                             prtLine.hgColor = awinSettings.AmpelRot
-                                            prtLine.grund = "Phase wurde eliminiert: Duplikat zur Geschwister-Phase"
-                                            'Call logfileSchreiben(" Fehler in RXFImport: " & mappedPhasename & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
-                                            '" und wird ignoriert ", hproj.name, anzFehler)
+                                            prtLine.grund = "Phase wurde eliminiert: Duplikat zur Parent-Phase"
+                                            'Call logfileSchreiben("Fehler in RXFImport: " & mappedPhasename & " ist Duplikat zu Parent " & parentphase.name & " und wird ignoriert ", hproj.name, anzFehler)
+
+                                        Else
+                                            Dim duplicateSiblingID As String = hproj.getDuplicatePhaseSiblingID(mappedPhasename, parentphase.nameID, _
+                                                                                                                phaseStartdate, phaseEnddate, 0.97)
+
+                                            If duplicateSiblingID = "" Then
+                                                isNotDuplikate = True
+                                            Else
+                                                isNotDuplikate = False
+                                                prtLine.planelement = aktTask_j.name
+                                                prtLine.hgColor = awinSettings.AmpelRot
+                                                prtLine.grund = "Phase wurde eliminiert: Duplikat zur Geschwister-Phase"
+                                                'Call logfileSchreiben(" Fehler in RXFImport: " & mappedPhasename & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
+                                                '" und wird ignoriert ", hproj.name, anzFehler)
+                                            End If
                                         End If
+
                                     End If
 
+                                End With
+
+                                If isNotDuplikate Then
+
+                                    ' hier muss für gleiche PhasenNamen als Geschwister noch eine lfdNummer angehängt werden
+                                    ' es muss überprüft werden, ob es Geschwister mit gleichem Namen gibt:
+                                    ' wenn ja, wird an den mappedPhaseName eine LFdNr. ergänzt,bis der Name innerhalb der Geschwistergruppe eindeutig ist.
+
+                                    If awinSettings.createUniqueSiblingNames Then
+                                        mappedPhasename = hproj.hierarchy.findUniqueGeschwisterName(parentelemID, mappedPhasename, False)
+                                    End If
+
+                                    cphase.nameID = hproj.hierarchy.findUniqueElemKey(mappedPhasename, False)
+
+                                    ' Phase wird ins Projekt mitaufgenommen
+
+                                    Dim phrchynode As New clsHierarchyNode
+                                    phrchynode.elemName = cphase.name
+                                    phrchynode.parentNodeKey = parentelemID
+
+                                    hproj.AddPhase(cphase, origName:=aktTask_j.name, parentID:=phrchynode.parentNodeKey)
+                                    phrchynode.indexOfElem = hproj.AllPhases.Count
+
+                                    ' merken von letzem Element (Knoten,Phase,Meilenstein)
+                                    'lasthrchynode = phrchynode
+                                    lastelemID = cphase.nameID
+                                    lastphase = cphase
+
+                                    prtLine.hierarchie = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                    prtLine.PThierarchie = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                    prtLine.planelement = aktTask_j.name
+                                    prtLine.abkürzung = PhaseDefinitions.getAbbrev(cphase.name)
+                                    prtLine.planeleÜbern = cphase.name
+
+                                    prtLine.klasse = aktTask_j.taskType.Value
+                                    prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, False)
+
+                                    prtliste.Add(zeile, prtLine)
+                                    zeile = zeile + 1
+                                    'prtLine.writeLog(zeile)
+
+                                    Dim quelle As String = prtLine.quelle
+
+                                    prtLine = New clsProtokoll(hproj.name, quelle)
+                                    prtLine.actDate = ""
+
+
+                                    Call findAllTasksandInsert(aktTask_j, lastelemID, hproj, RPLAN, prtLine, zeile, prtliste)
+
+                                Else
+                                    prtliste.Add(zeile, prtLine)
+                                    zeile = zeile + 1
+
+                                    Dim quelle As String = prtLine.quelle
+                                    prtLine = New clsProtokoll(hproj.name, quelle)
+                                    prtLine.actDate = ""
                                 End If
-
-                            End With
-
-                            If isNotDuplikate Then
-
-                                ' hier muss für gleiche PhasenNamen als Geschwister noch eine lfdNummer angehängt werden
-                                ' es muss überprüft werden, ob es Geschwister mit gleichem Namen gibt:
-                                ' wenn ja, wird an den mappedPhaseName eine LFdNr. ergänzt,bis der Name innerhalb der Geschwistergruppe eindeutig ist.
-
-                                If awinSettings.createUniqueSiblingNames Then
-                                    mappedPhasename = hproj.hierarchy.findUniqueGeschwisterName(parentelemID, mappedPhasename, False)
-                                End If
-
-                                cphase.nameID = hproj.hierarchy.findUniqueElemKey(mappedPhasename, False)
-
-                                ' Phase wird ins Projekt mitaufgenommen
-
-                                Dim phrchynode As New clsHierarchyNode
-                                phrchynode.elemName = cphase.name
-                                phrchynode.parentNodeKey = parentelemID
-
-                                hproj.AddPhase(cphase, origName:=aktTask_j.name, parentID:=phrchynode.parentNodeKey)
-                                phrchynode.indexOfElem = hproj.AllPhases.Count
-
-                                ' merken von letzem Element (Knoten,Phase,Meilenstein)
-                                'lasthrchynode = phrchynode
-                                lastelemID = cphase.nameID
-                                lastphase = cphase
-
-                                prtLine.hierarchie = hproj.hierarchy.getBreadCrumb(cphase.nameID)
-                                prtLine.PThierarchie = hproj.hierarchy.getBreadCrumb(cphase.nameID)
-                                prtLine.planelement = aktTask_j.name
-                                prtLine.abkürzung = PhaseDefinitions.getAbbrev(cphase.name)
-                                prtLine.planeleÜbern = cphase.name
-
-                                prtLine.klasse = aktTask_j.taskType.Value
-                                prtLine.PTklasse = mapToAppearance(aktTask_j.taskType.Value, False)
-
-                                prtliste.Add(zeile, prtLine)
-                                zeile = zeile + 1
-                                'prtLine.writeLog(zeile)
-
-                                Dim quelle As String = prtLine.quelle
-
-                                prtLine = New clsProtokoll(hproj.name, quelle)
-                                prtLine.actDate = ""
-
-                                Call findAllTasksandInsert(aktTask_j, lastelemID, hproj, RPLAN, prtLine, zeile, prtliste)
 
                             Else
+                                prtLine.planelement = aktTask_j.name
+                                prtLine.hgColor = awinSettings.AmpelRot
+                                prtLine.grund = "Phase wurde ignoriert: unbekannter Bezeichner"
+
                                 prtliste.Add(zeile, prtLine)
                                 zeile = zeile + 1
 
@@ -9931,175 +9994,162 @@ Public Module awinGeneralModules
                         Else
                             prtLine.planelement = aktTask_j.name
                             prtLine.hgColor = awinSettings.AmpelRot
-                            prtLine.grund = "Phase wurde ignoriert: unbekannter Bezeichner"
+                            prtLine.grund = "Phase wurde ignoriert: gemäß Eintrag TOBEIGNORED im Wörterbuch"
 
-                            prtliste.Add(zeile, prtLine)
+                            prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
                             zeile = zeile + 1
 
                             Dim quelle As String = prtLine.quelle
-                            prtLine = New clsProtokoll(hproj.name, quelle)
+                            prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
                             prtLine.actDate = ""
-                        End If
 
+                        End If       'Ende of tobeignored phase
+
+                    
                     Else
-                        prtLine.planelement = aktTask_j.name
-                        prtLine.hgColor = awinSettings.AmpelRot
-                        prtLine.grund = "Phase wurde ignoriert: gemäß Eintrag TOBEIGNORED im Wörterbuch"
+                        ' ist MEILENSTEIN
 
-                        prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
-                        zeile = zeile + 1
+                        Dim mappedMSname As String = ""
 
-                        Dim quelle As String = prtLine.quelle
-                        prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
-                        prtLine.actDate = ""
+                        If Not milestoneMappings.tobeIgnored(aktTask_j.name) Then
 
-                    End If       'Ende of tobeignored phase
+                            If MilestoneDefinitions.Contains(aktTask_j.name) Then
 
-                ElseIf taskdauerinDays = 0 And aktTask_j.taskType.type = "SUMMARY" Then
+                                mappedMSname = aktTask_j.name
+                                prtLine.hgColor = awinSettings.AmpelGruen
 
-                    Call logfileSchreiben("Achtung, RXFImport: Die aktuelle Task '" & aktTask_j.name & "' ist eine Summary-Task mit der Duration = 0 ", hproj.name, anzFehler)
-
-                ElseIf taskdauerinDays > 0 And aktTask_j.taskType.type = "MILESTONE" Then
-
-                    ' ist MEILENSTEIN
-
-                    Dim mappedMSname As String = ""
-
-                    If Not milestoneMappings.tobeIgnored(aktTask_j.name) Then
-
-                        If MilestoneDefinitions.Contains(aktTask_j.name) Then
-
-                            mappedMSname = aktTask_j.name
-                            prtLine.hgColor = awinSettings.AmpelGruen
-
-                        Else
-                            'wenn der MeilensteinName gemappt werden kann und dieser dann in milestonedefinitions enthalten ist, so wird Meilensteinname ersetzt
-                            mappedMSname = milestoneMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
-                            If MilestoneDefinitions.Contains(mappedMSname) Then
-
-                                prtLine.hgColor = awinSettings.AmpelGelb
                             Else
+                                'wenn der MeilensteinName gemappt werden kann und dieser dann in milestonedefinitions enthalten ist, so wird Meilensteinname ersetzt
+                                mappedMSname = milestoneMappings.mapToStdName(elemNameOfElemID(parentelemID), aktTask_j.name)
+                                If MilestoneDefinitions.Contains(mappedMSname) Then
 
-                                isUnkownName = True
-
-                                Dim msDef As New clsMeilensteinDefinition
-
-
-                                ' Änderung tk 6.12.15: das muss auf den mappedMSNamen gesetzt werdne, da sonst Eltern-Ersetzungen, die noch nicht 
-                                ' in der milestonedefinitions sind , nicht in der Liste der unbekannten aufgenommen werden ... 
-                                'msDef.name = aktTask_j.name
-                                'mappedMSname = aktTask_j.name
-
-                                msDef.name = mappedMSname
-                                msDef.schwellWert = 0
-                                msDef.belongsTo = parentphase.name
-                                msDef.shortName = aktTask_j.remark
-
-                                msDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, True)
-                                msDef.UID = MilestoneDefinitions.Count + 1
-
-                                Try
-                                    missingMilestoneDefinitions.Add(msDef)
-
-                                    'Call logfileSchreiben(("Achtung, RXFImport: Meilenstein '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
-
-                                Catch ex As Exception
-                                End Try
-
-                            End If
-                        End If
-
-                        ' Meilenstein wir nur in das aktuelle Projekt aufgenommen, wenn awinSettings.importUnkownNames = true 
-                        ' und der Name bekannt ist (isUnkownName = false)
-
-                        If Not isUnkownName Or awinSettings.importUnknownNames Then
-
-                            cmilestone = New clsMeilenstein(parent:=parentphase)
-                            cBewertung = New clsBewertung
-
-                            origMSname = aktTask_j.name
-                            If DateDiff(DateInterval.Month, aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value) = 0 Then
-
-                                milestonedate = aktTask_j.actualDate.start.Value
-                            End If
-
-
-                            ' wenn der freefloat nicht zugelassen ist und der Meilenstein ausserhalb der Phasen-Grenzen liegt 
-                            ' muss abgebrochen werden 
-
-                            If Not awinSettings.milestoneFreeFloat And _
-                                (DateDiff(DateInterval.Day, parentphase.getStartDate, milestonedate) < 0 Or _
-                                 DateDiff(DateInterval.Day, parentphase.getEndDate, milestonedate) > 0) Then
-
-                                Call logfileSchreiben(("Fehler, RXFImport: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
-                                                    origMSname & " nicht innerhalb " & parentphase.name & vbLf & _
-                                                         "Korrigieren Sie bitte diese Inkonsistenz in der Datei '"), hproj.name, anzFehler)
-                                Throw New Exception("Fehler, RXFImport: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
-                                                    origMSname & " nicht innerhalb " & parentphase.name & vbLf & _
-                                                         "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
-                            End If
-
-                            Dim resultVerantwortlich As String = aktTask_j.owner
-                            Dim bewertungsAmpel As Integer = 0
-                            Dim explanation As String = aktTask_j.note
-
-                            ' Ergänzung tk 2.11 deliverables ergänzt 
-                            Dim deliverables As String = ""
-
-                            If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
-                                ' es gibt keine Bewertung
-                                bewertungsAmpel = 0
-                            End If
-                            ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
-                            With cBewertung
-                                '.bewerterName = resultVerantwortlich
-                                .colorIndex = bewertungsAmpel
-                                .datum = Date.Now
-                                .description = explanation
-                                .deliverables = deliverables
-                            End With
-
-                            isNotDuplikate = True
-                            If awinSettings.eliminateDuplicates And hproj.hierarchy.containsKey(calcHryElemKey(mappedMSname, True)) Then
-                                ' nur dann kann es Duplikate geben 
-                                Dim duplicateSiblingID As String = hproj.getDuplicateMsSiblingID(mappedMSname, parentphase.nameID, _
-                                                                                                     milestonedate, 0)
-
-                                If duplicateSiblingID = "" Then
-                                    isNotDuplikate = True
+                                    prtLine.hgColor = awinSettings.AmpelGelb
                                 Else
-                                    isNotDuplikate = False
-                                    prtLine.planelement = aktTask_j.name
-                                    prtLine.hgColor = awinSettings.AmpelRot
-                                    prtLine.grund = "Meilenstein wurde eliminiert: Duplikat zur Geschwister-Phase"
-                                    'Call logfileSchreiben("Fehler, RXFImport:" & mappedMSname & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
-                                    '" und wird ignoriert ", hproj.name, anzFehler)
+
+                                    isUnkownName = True
+
+                                    Dim msDef As New clsMeilensteinDefinition
+
+
+                                    ' Änderung tk 6.12.15: das muss auf den mappedMSNamen gesetzt werdne, da sonst Eltern-Ersetzungen, die noch nicht 
+                                    ' in der milestonedefinitions sind , nicht in der Liste der unbekannten aufgenommen werden ... 
+                                    'msDef.name = aktTask_j.name
+                                    'mappedMSname = aktTask_j.name
+
+                                    msDef.name = mappedMSname
+                                    msDef.schwellWert = 0
+                                    msDef.belongsTo = parentphase.name
+                                    msDef.shortName = aktTask_j.remark
+
+                                    msDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, True)
+                                    msDef.UID = MilestoneDefinitions.Count + 1
+
+                                    Try
+                                        missingMilestoneDefinitions.Add(msDef)
+
+                                        'Call logfileSchreiben(("Achtung, RXFImport: Meilenstein '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)
+
+                                    Catch ex As Exception
+                                    End Try
+
+                                End If
+                            End If
+
+                            ' Meilenstein wird nur in das aktuelle Projekt aufgenommen, wenn awinSettings.importUnkownNames = true 
+                            ' und der Name bekannt ist (isUnkownName = false)
+
+                            If Not isUnkownName Or awinSettings.importUnknownNames Then
+
+                                cmilestone = New clsMeilenstein(parent:=parentphase)
+                                cBewertung = New clsBewertung
+
+                                origMSname = aktTask_j.name
+
+                                If DateDiff(DateInterval.Day, aktTask_j.actualDate.start.Value, aktTask_j.actualDate.finish.Value) = 0 Then
+                                    milestonedate = aktTask_j.actualDate.start.Value
+                                Else
+                                    Throw New Exception("Fehler, RXFImport: Der Meilenstein hat verschiedene Start- und End-Daten:" & vbLf & _
+                                                        aktTask_j.actualDate.start.Value.ToShortDateString & " versus " & _
+                                                        aktTask_j.actualDate.finish.Value.ToShortDateString & vbLf & _
+                                                        "Projekt: " & hproj.name)
                                 End If
 
-                            End If
 
-                            If isNotDuplikate Then
 
-                                With cmilestone
-                                    .setDate = milestonedate
-                                    '.verantwortlich = resultVerantwortlich
+                                ' wenn der freefloat nicht zugelassen ist und der Meilenstein ausserhalb der Phasen-Grenzen liegt 
+                                ' muss abgebrochen werden 
 
-                                    ' hier muss für gleiche PhasenNamen als Geschwister noch eine lfdNummer angehängt werden
-                                    ' es muss überprüft werden, ob es Geschwister mit gleichem Namen gibt:
-                                    ' wenn ja, wird an den mappedPhaseName eine LFdNr. ergänzt,bis der Name innerhalb der Geschwistergruppe eindeutig ist.
+                                If Not awinSettings.milestoneFreeFloat And _
+                                    (DateDiff(DateInterval.Day, parentphase.getStartDate, milestonedate) < 0 Or _
+                                     DateDiff(DateInterval.Day, parentphase.getEndDate, milestonedate) > 0) Then
 
-                                    If awinSettings.createUniqueSiblingNames Then
-                                        mappedMSname = hproj.hierarchy.findUniqueGeschwisterName(parentelemID, mappedMSname, True)
-                                    End If
+                                    'Call logfileSchreiben(("Fehler, RXFImport: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
+                                    '                    origMSname & " nicht innerhalb " & parentphase.name & vbLf & _
+                                    '                         "Korrigieren Sie bitte diese Inkonsistenz in der Datei '"), hproj.name, anzFehler)
+                                    Throw New Exception("Fehler, RXFImport: Der Meilenstein liegt ausserhalb seiner Phase" & vbLf & _
+                                                        origMSname & " nicht innerhalb " & parentphase.name & vbLf & _
+                                                             "Korrigieren Sie bitte diese Inkonsistenz in der Datei '" & vbLf & hproj.name & ".xlsx'")
+                                End If
 
-                                    .nameID = hproj.hierarchy.findUniqueElemKey(mappedMSname, True)
-                                    If Not cBewertung Is Nothing Then
-                                        .addBewertung(cBewertung)
-                                    End If
+                                Dim resultVerantwortlich As String = aktTask_j.owner
+                                Dim bewertungsAmpel As Integer = 0
+                                Dim explanation As String = aktTask_j.note
+
+                                ' Ergänzung tk 2.11 deliverables ergänzt 
+                                Dim deliverables As String = ""
+
+                                If bewertungsAmpel < 0 Or bewertungsAmpel > 3 Then
+                                    ' es gibt keine Bewertung
+                                    bewertungsAmpel = 0
+                                End If
+                                ' damit Kriterien auch eingelesen werden, wenn noch keine Bewertung existiert ...
+                                With cBewertung
+                                    '.bewerterName = resultVerantwortlich
+                                    .colorIndex = bewertungsAmpel
+                                    .datum = Date.Now
+                                    .description = explanation
+                                    .deliverables = deliverables
                                 End With
 
+                                isNotDuplikate = True
+                                If awinSettings.eliminateDuplicates And hproj.hierarchy.containsKey(calcHryElemKey(mappedMSname, True)) Then
+                                    ' nur dann kann es Duplikate geben 
+                                    Dim duplicateSiblingID As String = hproj.getDuplicateMsSiblingID(mappedMSname, parentphase.nameID, _
+                                                                                                         milestonedate, 0)
 
-                                Try
+                                    If duplicateSiblingID = "" Then
+                                        isNotDuplikate = True
+                                    Else
+                                        isNotDuplikate = False
+                                        prtLine.planelement = aktTask_j.name
+                                        prtLine.hgColor = awinSettings.AmpelRot
+                                        prtLine.grund = "Meilenstein wurde eliminiert: Duplikat zur Geschwister-Phase"
+                                        'Call logfileSchreiben("Fehler, RXFImport:" & mappedMSname & " ist Duplikat zu Geschwister " & elemNameOfElemID(duplicateSiblingID) & _
+                                        '" und wird ignoriert ", hproj.name, anzFehler)
+                                    End If
+
+                                End If
+
+                                If isNotDuplikate Then
+
+                                    With cmilestone
+                                        .setDate = milestonedate
+                                        '.verantwortlich = resultVerantwortlich
+
+                                        ' hier muss für gleiche PhasenNamen als Geschwister noch eine lfdNummer angehängt werden
+                                        ' es muss überprüft werden, ob es Geschwister mit gleichem Namen gibt:
+                                        ' wenn ja, wird an den mappedPhaseName eine LFdNr. ergänzt,bis der Name innerhalb der Geschwistergruppe eindeutig ist.
+
+                                        If awinSettings.createUniqueSiblingNames Then
+                                            mappedMSname = hproj.hierarchy.findUniqueGeschwisterName(parentelemID, mappedMSname, True)
+                                        End If
+
+                                        .nameID = hproj.hierarchy.findUniqueElemKey(mappedMSname, True)
+                                        If Not cBewertung Is Nothing Then
+                                            .addBewertung(cBewertung)
+                                        End If
+                                    End With
+
                                     With parentphase
                                         .addMilestone(cmilestone, origName:=origMSname)
                                     End With
@@ -10119,23 +10169,34 @@ Public Module awinGeneralModules
                                     Dim quelle As String = prtLine.quelle
                                     prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
                                     prtLine.actDate = ""
-                                Catch ex1 As Exception
-                                    Throw New Exception(ex1.Message)
-                                End Try
+
+                                Else
+                                    prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
+                                    zeile = zeile + 1
+
+                                    Dim quelle As String = prtLine.quelle
+                                    prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
+                                    prtLine.actDate = ""
+
+                                End If
+
                             Else
+                                prtLine.planelement = aktTask_j.name
+                                prtLine.hgColor = awinSettings.AmpelRot
+                                prtLine.grund = "Meilenstein wurde ignoriert: unbekannter Bezeichner"
+
                                 prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
                                 zeile = zeile + 1
 
                                 Dim quelle As String = prtLine.quelle
                                 prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
                                 prtLine.actDate = ""
-
                             End If
 
                         Else
                             prtLine.planelement = aktTask_j.name
                             prtLine.hgColor = awinSettings.AmpelRot
-                            prtLine.grund = "Meilenstein wurde ignoriert: unbekannter Bezeichner"
+                            prtLine.grund = "Meilenstein wurde ignoriert gemäß Eintrag im Wörterbuch"
 
                             prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
                             zeile = zeile + 1
@@ -10143,28 +10204,20 @@ Public Module awinGeneralModules
                             Dim quelle As String = prtLine.quelle
                             prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
                             prtLine.actDate = ""
-                        End If
 
-                    Else
-                        prtLine.planelement = aktTask_j.name
-                        prtLine.hgColor = awinSettings.AmpelRot
-                        prtLine.grund = "Meilenstein wurde ignoriert gemäß Eintrag im Wörterbuch"
-
-                        prtliste.Add(zeile, prtLine) ' Protokollzeile in Liste eintragen
-                        zeile = zeile + 1
-
-                        Dim quelle As String = prtLine.quelle
-                        prtLine = New clsProtokoll(hproj.name, quelle) ' neue Protokollzeile
-                        prtLine.actDate = ""
-
-                    End If     ' Ende: Meilenstein soll ignoriert werden
+                        End If     ' Ende: Meilenstein soll ignoriert werden
 
 
-                Else
 
-                    Call logfileSchreiben("Achtung, RXFImport: Die Task '" & aktTask_j.name & "' kann nicht als Meilenstein oder Phase identifiziert werden ", hproj.name, anzFehler)
+                    End If      '  Ende: ist MEILENSTEIN
 
-                End If      '  Ende: ist MEILENSTEIN
+                Catch ex As Exception
+
+                    Call logfileSchreiben(ex.Message, hproj.name, anzFehler)
+
+
+                End Try
+
 
             End If
 
