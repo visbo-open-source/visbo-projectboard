@@ -9718,7 +9718,7 @@ Public Module testModule
         Dim endNr As Integer = 0
 
         ' wird benutzt, um mal oben und mal unten in der Swimlane zeichnen zu können 
-        Dim aktuelleYPosition As Double
+        Dim aktuelleYPosition As Double = curYPosition
 
         ' in startNr ist nachher die Phasen-Nummer der swimlane, in startNr +1 die Phasen-Nummer des ersten Kindes 
         ' in endNr ist die Phasen-Nummer des letzten Kindes 
