@@ -19,6 +19,8 @@ Public Module Module1
     Public dbPasswort As String = ""
     Public loginErfolgreich As Boolean = False
 
+    Public myWindowsName As String
+
     Public awinSettings As New clsawinSettings
     Public visboZustaende As New clsVisboZustaende
     Public magicBoardCmdBar As New clsCommandBarEvents

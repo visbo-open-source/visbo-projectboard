@@ -2979,7 +2979,6 @@ Public Class clsProjekt
             Dim startNr As Integer = 0
             Dim endNr As Integer = 0
 
-            Dim fullSwlBreadCrumb As String = Me.getBcElemName(swimlaneID)
 
             ' in startNr ist nachher die Phasen-Nummer der swimlane, in startNr +1 die Phasen-Nummer des ersten Kindes 
             ' in endNr ist die Phasen-Nummer des letzten Kindes 

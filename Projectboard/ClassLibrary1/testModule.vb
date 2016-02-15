@@ -512,7 +512,7 @@ Public Module testModule
                         kennzeichnung = "Soll-Ist & Prognose" Or _
                         kennzeichnung = "Multivariantensicht" Or _
                         kennzeichnung = "AllePlanElemente" Or _
-                        kennzeichnung = "Swimlanes1" Or _
+                        kennzeichnung = "Swimlanes" Or _
                         kennzeichnung = "Swimlanes2" Or _
                         kennzeichnung = "Legenden-Tabelle" Or _
                         kennzeichnung = "Projekt-Grafik" Or _
@@ -816,23 +816,29 @@ Public Module testModule
                                 End Try
 
 
-                            Case "Swimlanes1"
+                            Case "Swimlanes"
+
                                 Try
 
-                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
+
+                                    Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide, _
                                                                       objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
                                                                       selectedPhases, selectedMilestones, _
                                                                       selectedRoles, selectedCosts, _
                                                                       selectedBUs, selectedTyps, _
                                                                       worker, e, False, hproj, kennzeichnung)
+
                                     .TextFrame2.TextRange.Text = ""
                                     .ZOrder(MsoZOrderCmd.msoSendToBack)
-                                    swimlaneMode = True
 
+                                    ' sonst wird pptLasttime benötigt, um bei mehreren PRojekten 
+                                    ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
+                                    swimlaneMode = True
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
                                 End Try
+
 
                             Case "Swimlanes2"
                                 Dim formerSetting As Boolean = awinSettings.mppExtendedMode
@@ -9712,13 +9718,13 @@ Public Module testModule
         Dim endNr As Integer = 0
 
         ' wird benutzt, um mal oben und mal unten in der Swimlane zeichnen zu können 
-        Dim aktuelleYPosition As Double
+        Dim aktuelleYPosition As Double = curYPosition
 
         ' in startNr ist nachher die Phasen-Nummer der swimlane, in startNr +1 die Phasen-Nummer des ersten Kindes 
         ' in endNr ist die Phasen-Nummer des letzten Kindes 
         Call hproj.calcStartEndChildNrs(swimlaneNameID, startNr, endNr)
 
-        Dim fullSwlBreadCrumb As String = hproj.getBcElemName(swimlaneNameID)
+        'Dim fullSwlBreadCrumb As String = hproj.getBcElemName(swimlaneNameID)
 
         Dim copiedShape As pptNS.ShapeRange
 
@@ -11353,11 +11359,13 @@ Public Module testModule
         End If
 
 
+
         Dim x1 As Double
         Dim x2 As Double
 
 
-        Dim phDescription As String = phaseName
+        Dim phDescription As String = hproj.hierarchy.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames, _
+                                                                awinSettings.mppUseAbbreviation, swimlaneID)
 
         If PhaseDefinitions.Contains(phaseName) Then
             phaseTypShape = PhaseDefinitions.getShape(phaseName)
@@ -11366,8 +11374,30 @@ Public Module testModule
         End If
 
 
+        ' jetzt wegen evtl innerer Beschriftung den Size-Faktor bestimmen 
+        Dim sizeFaktor As Double = 1.0
+
+        If awinSettings.mppUseInnerText Then
+
+            phaseTypShape.Copy()
+            copiedShape = rds.pptSlide.Shapes.Paste()
+
+            With copiedShape
+                If .Height > 0.0 Then
+                    sizeFaktor = rds.phaseVorlagenShape.Height / .Height
+                End If
+                .Delete()
+            End With
+
+        End If
+        
+
+
+
         Dim phStartDate As Date = cphase.getStartDate
         Dim phEndDate As Date = cphase.getEndDate
+        Dim phDateText As String = phStartDate.Day.ToString & "." & phStartDate.Month.ToString & " - " & _
+                                phEndDate.Day.ToString & "." & phEndDate.Month.ToString
 
 
         Call rds.calculatePPTx1x2(phStartDate, phEndDate, x1, x2)
@@ -11379,13 +11409,7 @@ Public Module testModule
             ' jetzt muss ggf die Beschriftung angebracht werden 
             ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
             ' überdeckt werden soll 
-            If awinSettings.mppShowPhName Then
-
-                
-                phDescription = hproj.hierarchy.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames, _
-                                                                awinSettings.mppUseAbbreviation, swimlaneID)
-
-
+            If awinSettings.mppShowPhName And (Not awinSettings.mppUseInnerText) Then
 
                 rds.PhDescVorlagenShape.Copy()
                 copiedShape = rds.pptSlide.Shapes.Paste()
@@ -11394,6 +11418,9 @@ Public Module testModule
                     .TextFrame2.TextRange.Text = phDescription
                     .Top = CSng(yPosition + rds.YPhasenText)
                     .Left = CSng(x1)
+                    If .Left + .Width > rds.drawingAreaRight + 2 Then
+                        .Left = rds.drawingAreaRight - .Width + 2
+                    End If
                     .Name = .Name & .Id
 
                     shapeNames.Add(.Name, .Name)
@@ -11403,11 +11430,7 @@ Public Module testModule
             End If
 
             ' jetzt muss ggf das Datum angebracht werden 
-            If awinSettings.mppShowPhDate Then
-
-                Dim phDateText As String
-                phDateText = phStartDate.Day.ToString & "." & phStartDate.Month.ToString & " - " & _
-                                phEndDate.Day.ToString & "." & phEndDate.Month.ToString
+            If awinSettings.mppShowPhDate And (Not awinSettings.mppUseInnerText) Then
 
                 rds.PhDateVorlagenShape.Copy()
                 copiedShape = rds.pptSlide.Shapes.Paste()
@@ -11416,6 +11439,10 @@ Public Module testModule
                     .TextFrame2.TextRange.Text = phDateText
                     .Top = CSng(yPosition + rds.YPhasenDatum)
                     .Left = CSng(x1)
+                    If .Left + .Width > rds.drawingAreaRight + 2 Then
+                        .Left = rds.drawingAreaRight - .Width + 2
+                    End If
+
                     .Name = .Name & .Id
 
                     shapeNames.Add(.Name, .Name)
@@ -11436,6 +11463,19 @@ Public Module testModule
                 .Name = .Name & .Id
                 .Title = phaseName
                 .AlternativeText = phStartDate.ToShortDateString & " - " & phEndDate.ToShortDateString
+
+                ' jetzt wird die Option gezogen, wenn keine Phasen-Beschriftung stattfinden sollte ... 
+                If awinSettings.mppUseInnerText Then
+
+                    If awinSettings.mppShowPhDate Then
+                        phDescription = phDescription & " " & phDateText
+                    End If
+
+                    If sizeFaktor * .TextFrame2.TextRange.Font.Size * sizeFaktor > 3.0 Then
+                        .TextFrame2.TextRange.Text = phDescription
+                        .TextFrame2.TextRange.Font.Size = CInt(.TextFrame2.TextRange.Font.Size * sizeFaktor)
+                    End If
+                End If
 
                 shapeNames.Add(.Name, .Name)
             End With
@@ -11521,8 +11561,6 @@ Public Module testModule
                                                                  awinSettings.mppUseAbbreviation, _
                                                                  swimlaneID)
 
-
-
                 rds.MsDescVorlagenShape.Copy()
                 copiedShape = rds.pptSlide.Shapes.Paste()
                 With copiedShape(1)
@@ -11581,11 +11619,6 @@ Public Module testModule
 
                 Dim msKwText As String = ""
                 If awinSettings.mppKwInMilestone Then
-                    If calcKW(msDate) <> getKW(msDate) Then
-                        Call MsgBox("unterschiedliche Berechnung: " & _
-                                     "Variante 1: KW " & calcKW(msDate) & _
-                                     "Variante 2: KW " & getKW(msDate))
-                    End If
 
                     msKwText = calcKW(msDate).ToString("0#")
                     If CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size) >= 3 Then
@@ -12178,8 +12211,8 @@ Public Module testModule
     End Sub
 
     ''' <summary>
-    ''' Änderung tk: das war die Routine bis 14.1
-    ''' das war unnötig kompliziert 
+    ''' Änderung tk: das wird in zeichnepptProjects verwendet 
+    ''' sollte im 1. HJ 2016 ersetzt werden durch die Art und Weise, wie bei zeichneSwimlanes gearbeitet wird ...  
     ''' </summary>
     ''' <param name="pptStartOfCalendar"></param>
     ''' <param name="pptEndOfCalendar"></param>
@@ -12803,24 +12836,16 @@ Public Module testModule
                                                 isMultiprojektSicht, projMitVariants)
 
 
-            If kennzeichnung.StartsWith("Swimlane") Then
-
-            Else
-                If objectsToDo <> projCollection.Count Then
-                    objectsToDo = projCollection.Count
-                End If
+            
+            If objectsToDo <> projCollection.Count Then
+                objectsToDo = projCollection.Count
             End If
-
+            
 
             '
             ' bestimme das Start und Ende Datum des PPT Kalenders
             Call calcStartEndePPTKalender(minDate, maxDate, _
                                           pptStartofCalendar, pptEndOfCalendar)
-
-            ' jetzt für Swimlanes Behandlung Kalender in der Klasse setzen 
-            If kennzeichnung.StartsWith("Swimlanes") Then
-                Call rds.setCalendarDates(pptStartofCalendar, pptEndOfCalendar)
-            End If
 
 
             ' bestimme die benötigte Höhe einer Zeile im Report ( nur wenn nicht schon bestimmt also zeilenhoehe <> 0
@@ -12837,12 +12862,6 @@ Public Module testModule
 
             End If
 
-            ' die neue Art Zeilenhöhe und die Offset Werte zu bestimmen 
-            If pptFirstTime And kennzeichnung.StartsWith("Swimlanes") Then
-                If rds.zeilenHoehe = 0.0 Then
-                    Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
-                End If
-            End If
 
             Dim hproj As New clsProjekt
             Dim hhproj As New clsProjekt
@@ -12862,11 +12881,7 @@ Public Module testModule
 
                     End Try
 
-                    If kennzeichnung.StartsWith("Swimlanes") Then
-                        ' hier muss BHTC Kalkulation rein ... 
-                    Else
-                        anzZeilen = hproj.calcNeededLines(selectedPhases, selectedMilestones, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
-                    End If
+                    anzZeilen = hproj.calcNeededLines(selectedPhases, selectedMilestones, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
 
                     maxZeilen = System.Math.Max(maxZeilen, anzZeilen)
                     gesamtAnzZeilen = gesamtAnzZeilen + anzZeilen
@@ -13050,19 +13065,13 @@ Public Module testModule
             Try
 
                 With rds
-                    If kennzeichnung.StartsWith("Swimlanes") Then
-                        'Call zeichne3RowsCalendar(pptslide, calendargroup, _
-                        '                pptStartofCalendar, pptEndOfCalendar, _
-                        '                .calendarLineShape, .calendarHeightShape, .calendarStepShape, .calendarMarkShape, _
-                        '                .yearVorlagenShape, .quarterMonthVorlagenShape, .calendarYearSeparator, .calendarQuartalSeparator, _
-                        '                .drawingAreaBottom)
-                    Else
+                    
                         Call zeichnePPTCalendar(pptslide, calendargroup, _
                                             pptStartofCalendar, pptEndOfCalendar, _
                                             .calendarLineShape, .calendarHeightShape, .calendarStepShape, .calendarMarkShape, _
                                             .yearVorlagenShape, .quarterMonthVorlagenShape, .calendarYearSeparator, .calendarQuartalSeparator, _
                                             .drawingAreaBottom)
-                    End If
+
                 End With
 
 
@@ -13079,16 +13088,7 @@ Public Module testModule
             Try
 
                 With rds
-                    If kennzeichnung.StartsWith("Swimlane") Then
-
-                        hproj = AlleProjekte.getProject(projCollection.ElementAt(0).Value)
-                        'Call zeichneSwimlaneOfProject(rds, hproj, _
-                        '                                pptStartofCalendar, pptEndOfCalendar, _
-                        '                                zeilenhoehe, _
-                        '                                selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
-                        '                                worker, e)
-
-                    Else
+                    
                         Call zeichnePPTprojects(pptslide, projCollection, objectsDone, _
                                         pptStartofCalendar, pptEndOfCalendar, _
                                         .drawingAreaLeft, .drawingAreaRight, .drawingAreaTop, .drawingAreaBottom, _
@@ -13101,7 +13101,7 @@ Public Module testModule
                                         .durationArrowShape, .durationTextShape, _
                                         .yOffsetMsToText, .yOffsetMsToDate, .yOffsetPhToText, .yOffsetPhToDate, _
                                         worker, e)
-                    End If
+
                 End With
 
 
@@ -13162,6 +13162,8 @@ Public Module testModule
             With errorShape.Item(1)
                 .TextFrame2.TextRange.Text = missingShapes
             End With
+        Else
+            Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
         End If
 
         ' jetzt werden alle Shapes gelöscht ... 
@@ -13171,7 +13173,9 @@ Public Module testModule
     End Sub
 
     ''' <summary>
-    ''' BHTC Report - nur solange das nicht komplett zusammengeführt ist 
+    ''' zeichnet sowohl Swimlanes im BHTC Modus als auch im Normal -Modus
+    ''' BHTC: Segmente customer Milestones, BHTC Milestones  
+    ''' normal: Swimlane ist alles auf Hierarchie-Ebene 1 (also die Kinder der rootphase Ebene) 
     ''' es wird immer nur ein Projekt betrachtet 
     ''' es können x Swimlanes sein - es muss unterschieden werden, ob alles auf eine Seite geht oder mehrere Seiten gemacht werden 
     ''' Rahmenbedingung bei dieser Routine: es wird nur ein Project aufgerufen, ohne Varianten 
@@ -13244,6 +13248,8 @@ Public Module testModule
         Dim format As Integer = 4
         'Dim tmpslideID As Integer
 
+        ' an der Variablen lässt sich in der Folge erkennen, ob die Segmente BHTC Milestones gezeichnet werden müssen oder 
+        ' ob ganz allgemein nach Swimlanes gesucht wird ... 
         Dim isBHTCSchema As Boolean = (kennzeichnung = "Swimlanes2")
 
         Dim rds As New clsPPTShapes
@@ -13430,7 +13436,7 @@ Public Module testModule
                 Dim neededSpace As Double
 
 
-                If kennzeichnung = "Swimlanes2" Then
+                If isBHTCSchema Then
                     ' jetzt müssen noch die Segment Höhen  berechnet werden 
 
                     neededSpace = anzZeilen * rds.zeilenHoehe + _
@@ -13649,19 +13655,23 @@ Public Module testModule
 
             If Not IsNothing(curSwl) Then
 
-                'Dim curSwimlaneID As String = curSwl.nameID
+
                 Dim segmentChanged As Boolean = False
                 Dim curSegmentID As String = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
 
-                If Not IsNothing(prevSwl) Then
-                    segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <> _
-                                        hproj.hierarchy.getParentIDOfID(curSwl.nameID)
-                End If
+                If isBHTCSchema Then
+                    If Not IsNothing(prevSwl) Then
+                        segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <> _
+                                            hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                    End If
 
-                If swimLanesDone = 0 Or segmentChanged Then
-                    Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
-                    segmentChanged = False
+                    If swimLanesDone = 0 Or segmentChanged Then
+                        Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
+                        segmentChanged = False
+                    End If
                 End If
+                
+                
 
 
                 ' jetzt werden soviele wie möglich Swimlanes gezeichnet ... 
@@ -13708,21 +13718,28 @@ Public Module testModule
                     curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isBHTCSchema)
 
                     If Not IsNothing(curSwl) Then
-                        segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <> _
+
+                        If isBHTCSchema Then
+                            segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <> _
                                         hproj.hierarchy.getParentIDOfID(curSwl.nameID)
 
+                        End If
+                        
                         swimLaneZeilen = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs, _
                                                                                  awinSettings.mppExtendedMode, _
                                                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
                                                                                  considerAll)
 
-                        If segmentChanged And _
+                        If isBHTCSchema Then
+                            If segmentChanged And _
                                 (swimLaneZeilen * rds.zeilenHoehe + curYPosition + rds.segmentVorlagenShape.Height <= rds.drawingAreaBottom) Then
 
-                            curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
-                            Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
-                            segmentChanged = False
+                                curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                                Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
+                                segmentChanged = False
+                            End If
                         End If
+                        
                     Else
                         segmentChanged = False
                     End If
