@@ -170,7 +170,7 @@ Public Class clsPPTShapes
                             containerShape = pptShape
 
                             ' alle Hierarchie-Stufe 1 Objekte sind Swimlanes
-                        Case "Swimlanes1"
+                        Case "Swimlanes"
                             containerShape = pptShape
 
                         Case "Swimlanes2"
@@ -339,19 +339,22 @@ Public Class clsPPTShapes
                 End With
             End If
 
-            If Not IsNothing(PhDescVorlagenShape) And awinSettings.mppShowPhName Then
-                With PhDescVorlagenShape
-                    minY = System.Math.Min(minY, .Top)
-                    maxY = System.Math.Max(maxY, .Top + .Height)
-                End With
-            End If
+            If Not awinSettings.mppUseInnerText Then
+                If Not IsNothing(PhDescVorlagenShape) And awinSettings.mppShowPhName Then
+                    With PhDescVorlagenShape
+                        minY = System.Math.Min(minY, .Top)
+                        maxY = System.Math.Max(maxY, .Top + .Height)
+                    End With
+                End If
 
-            If Not IsNothing(PhDateVorlagenShape) And awinSettings.mppShowPhDate Then
-                With PhDateVorlagenShape
-                    minY = System.Math.Min(minY, .Top)
-                    maxY = System.Math.Max(maxY, .Top + .Height)
-                End With
+                If Not IsNothing(PhDateVorlagenShape) And awinSettings.mppShowPhDate Then
+                    With PhDateVorlagenShape
+                        minY = System.Math.Min(minY, .Top)
+                        maxY = System.Math.Max(maxY, .Top + .Height)
+                    End With
+                End If
             End If
+            
 
         End If
 
@@ -431,17 +434,20 @@ Public Class clsPPTShapes
                 End With
             End If
 
-            If Not IsNothing(PhDescVorlagenShape) And awinSettings.mppShowPhName Then
-                With PhDescVorlagenShape
-                    _YPhasenText = .Top - minY
-                End With
-            End If
+            If Not awinSettings.mppUseInnerText Then
+                If Not IsNothing(PhDescVorlagenShape) And awinSettings.mppShowPhName Then
+                    With PhDescVorlagenShape
+                        _YPhasenText = .Top - minY
+                    End With
+                End If
 
-            If Not IsNothing(PhDateVorlagenShape) And awinSettings.mppShowPhDate Then
-                With PhDateVorlagenShape
-                    _YPhasenDatum = .Top - minY
-                End With
+                If Not IsNothing(PhDateVorlagenShape) And awinSettings.mppShowPhDate Then
+                    With PhDateVorlagenShape
+                        _YPhasenDatum = .Top - minY
+                    End With
+                End If
             End If
+            
 
         End If
 

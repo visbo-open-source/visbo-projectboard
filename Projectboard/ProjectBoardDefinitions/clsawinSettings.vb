@@ -132,6 +132,7 @@ Public Class clsawinSettings
     Public Property mppUseAbbreviation As Boolean
     Public Property mppUseOriginalNames As Boolean
     Public Property mppKwInMilestone As Boolean
+    Public Property mppUseInnerText As Boolean ' steuert, ob der Beschriftungstext im Balken stattfinden soll 
 
 
     ' Settings für Einzelprojekt-Reports
@@ -232,7 +233,7 @@ Public Class clsawinSettings
         _mppUseAbbreviation = True
         _mppUseOriginalNames = False
         _mppKwInMilestone = False
-
+        _mppUseInnerText = False
 
         ' Settings für Einzelprojekt-Reports
         '_eppExtendedMode = True
