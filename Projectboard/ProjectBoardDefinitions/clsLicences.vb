@@ -13,13 +13,29 @@
     ''' <remarks></remarks>
     Public ReadOnly Property berechneKey(ByVal untilDate As Date, ByVal User As String, ByVal komponente As String) As String
         Get
-            Dim licKey As 
+            berechneKey = ""
         End Get
     End Property
 
-    Public Sub protokolliere(ByVal curDate As Date, ByVal user As String, ByVal komponente As String)
+    ''' <summary>
+    ''' checkt, ob ein gültiger Lizez-KEy vorhanden ist
+    ''' dazu werden alle ausgelesenen Lizenzkeys mit den Eingabe Werten user, komponente verglichen 
+    ''' Es sollten folgende Meldungen kommen: 
+    '''  
+    ''' </summary>
+    ''' <param name="user"></param>
+    ''' <param name="komponente"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property validLicence(ByVal user As String, ByVal komponente As String) As Boolean
+        Get
+            Dim heute As Date = Date.Now
+            validLicence = True
 
-    End Sub
+        End Get
+    End Property
+
 
     Public Sub New()
         _allLicenceKeys = New SortedList(Of String, String)

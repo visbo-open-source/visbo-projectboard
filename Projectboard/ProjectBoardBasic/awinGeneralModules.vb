@@ -17,6 +17,7 @@ Imports System.Xml.Serialization
 Imports System.IO
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
+Imports System.Security.Principal
 
 
 
@@ -622,6 +623,13 @@ Public Module awinGeneralModules
 
         ReDim importOrdnerNames(6)
         ReDim exportOrdnerNames(4)
+
+
+        ' Auslesen des Window Namens 
+        Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
+        Dim myUser As New WindowsIdentity(accountToken)
+        myWindowsName = myUser.Name
+        Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
 
         ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
