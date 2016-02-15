@@ -29,31 +29,31 @@ Public Class frmReportProfil
     Private Sub RepProfilListbox_load(sender As Object, e As EventArgs) Handles MyBase.Load
         Dim i As Integer
 
-        Dim minDate As Date = Date.MaxValue
-        Dim maxDate As Date = Date.MinValue
+        '' ''Dim minDate As Date = Date.MaxValue
+        '' ''Dim maxDate As Date = Date.MinValue
 
-        Dim anzproj As Integer = ShowProjekte.Count
-        ' alle geladenen Projekte in ReportProfil aufnehmen
-        For i = 1 To anzproj
+        '' ''Dim anzproj As Integer = ShowProjekte.Count
+        ' '' '' alle geladenen Projekte in ReportProfil aufnehmen
+        '' ''For i = 1 To anzproj
 
-            Dim hhproj As clsProjekt = ShowProjekte.getProject(i)
+        '' ''    Dim hhproj As clsProjekt = ShowProjekte.getProject(i)
 
-            If DateDiff(DateInterval.Day, minDate, hhproj.startDate) < 0 Then
-                minDate = hhproj.startDate
+        '' ''    If DateDiff(DateInterval.Day, minDate, hhproj.startDate) < 0 Then
+        '' ''        minDate = hhproj.startDate
 
-                If minDate < StartofCalendar Then
-                    minDate = StartofCalendar
-                End If
-            End If
+        '' ''        If minDate < StartofCalendar Then
+        '' ''            minDate = StartofCalendar
+        '' ''        End If
+        '' ''    End If
 
-            If DateDiff(DateInterval.Day, maxDate, hhproj.endeDate) > 0 Then
-                maxDate = hhproj.endeDate
-            End If
+        '' ''    If DateDiff(DateInterval.Day, maxDate, hhproj.endeDate) > 0 Then
+        '' ''        maxDate = hhproj.endeDate
+        '' ''    End If
 
-        Next
+        '' ''Next
 
-        vonDate.Value = minDate
-        bisDate.Value = maxDate
+        vonDate.Value = hproj.startDate
+        bisDate.Value = hproj.endeDate
 
         ' hier müssen die ReportProfile aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
 
@@ -147,10 +147,10 @@ Public Class frmReportProfil
 
         ' '' Einlesen des ausgewählten ReportProfils
         reportProfil = XMLImportReportProfil(reportProfilName)
-        If Not IsNothing(reportProfil) Then
-            vonDate.Value = reportProfil.VonDate
-            bisDate.Value = reportProfil.BisDate
-        End If
+        '' ''If Not IsNothing(reportProfil) Then
+        '' ''    vonDate.Value = reportProfil.VonDate
+        '' ''    bisDate.Value = reportProfil.BisDate
+        '' ''End If
 
 
         reportProfil.Projects.Clear()

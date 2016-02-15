@@ -390,6 +390,7 @@ Public Class frmHierarchySelection
                 .mppVertikalesRaster = repProfil.VLinien
                 .mppShowHorizontals = repProfil.ShowHorizontals
                 .mppUseAbbreviation = repProfil.UseAbbreviation
+                .mppKwInMilestone = repProfil.KwInMilestone
 
                 ' für BHTC immer true
                 .mppExtendedMode = repProfil.ExtendedMode
@@ -432,6 +433,8 @@ Public Class frmHierarchySelection
                 repProfil.ShowHorizontals = .mppShowHorizontals
                 repProfil.UseAbbreviation = .mppUseAbbreviation
                 repProfil.UseOriginalNames = .mppUseOriginalNames
+                repProfil.KwInMilestone = .mppKwInMilestone
+
             End With
         End If
 
