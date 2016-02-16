@@ -626,13 +626,6 @@ Public Module awinGeneralModules
         ReDim exportOrdnerNames(4)
 
 
-        ' Auslesen des Window Namens 
-        Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
-        Dim myUser As New WindowsIdentity(accountToken)
-        myWindowsName = myUser.Name
-        Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
-
-
         ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
         'awinPath = appInstance.ActiveWorkbook.Path & "\"
 
@@ -826,6 +819,12 @@ Public Module awinGeneralModules
         ' Logfile öffnen und ggf. initialisieren
         Call logfileOpen()
 
+
+        ' Auslesen des Window Namens 
+        Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
+        Dim myUser As New WindowsIdentity(accountToken)
+        myWindowsName = myUser.Name
+        Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
         ' hier muss jetzt das Customization File aufgemacht werden ...
         Try
@@ -11625,4 +11624,47 @@ Public Module awinGeneralModules
         End Try
     End Sub
 
+    Public Sub XMLExportLicences(ByVal lic As clsLicences, ByVal nameLicfile As String)
+
+
+        Dim xmlfilename As String = awinPath & nameLicfile
+
+        Try
+
+            Dim serializer = New DataContractSerializer(GetType(clsLicences))
+
+            Dim file As New FileStream(xmlfilename, FileMode.Create)
+            serializer.WriteObject(file, lic)
+            file.Close()
+        Catch ex As Exception
+
+            Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+
+        End Try
+
+    End Sub
+
+    Public Function XMLImportLicences(ByVal licfile As String) As clsLicences
+
+        Dim lic As New clsLicences
+
+        Dim serializer = New DataContractSerializer(GetType(clsLicences))
+        Dim xmlfilename As String = licfile
+        Try
+
+            ' XML-Datei Öffnen
+            ' A FileStream is needed to read the XML document.
+            Dim file As New FileStream(xmlfilename, FileMode.Open)
+            lic = serializer.ReadObject(file)
+            file.Close()
+
+            XMLImportLicences = lic
+
+        Catch ex As Exception
+
+            Call MsgBox("Beim Lesen der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
+            XMLImportLicences = Nothing
+        End Try
+
+    End Function
 End Module

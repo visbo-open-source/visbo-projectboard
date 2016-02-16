@@ -21,7 +21,7 @@ Public Class ThisAddIn
         ' ''End Try
 
 
-        Call MsgBox("Load BHTCAddIn")
+        Call MsgBox("Load VISBO Report Testversion")
 
 
 

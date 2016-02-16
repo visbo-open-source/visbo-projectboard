@@ -16,6 +16,7 @@ Imports System.Xml.Serialization
 Imports System.IO
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
+Imports System.Security.Principal
 
 
 
@@ -64,6 +65,12 @@ Module awinGeneralModulesBHTC
         ReDim importOrdnerNames(6)
         ReDim exportOrdnerNames(4)
 
+
+        ' Auslesen des Window Namens 
+        Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
+        Dim myUser As New WindowsIdentity(accountToken)
+        myWindowsName = myUser.Name
+        Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
         ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
         'awinPath = appInstance.ActiveWorkbook.Path & "\"
@@ -238,8 +245,8 @@ Module awinGeneralModulesBHTC
 
         ' '' '' With listOfWorkSheets(arrWsNames(4))
 
-        '' '' '' Logfile öffnen und ggf. initialisieren
-        ' '' ''Call logfileOpen()
+        ' '' '' Logfile öffnen und ggf. initialisieren
+        '' ''Call logfileOpen()
 
 
         Try
@@ -484,8 +491,8 @@ Module awinGeneralModulesBHTC
             '' ''        Throw New ArgumentException(ex.Message)
             '' ''    End Try
 
-            '' ''    ' Logfile wird geschlossen
-            '' ''    Call logfileSchliessen()
+            ' '' '' Logfile wird geschlossen
+            '' ''Call logfileSchliessen()
 
 
             '' ''End If  ' von "if Login erfolgt"
