@@ -286,6 +286,10 @@ Public Module Module1
         filterAuswahl = 9
         reportBHTC = 10
     End Enum
+    Public Enum PTlicense
+        swimlanes = 0
+       
+    End Enum
 
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
@@ -361,6 +365,10 @@ Public Module Module1
 
     '
     '
+    ' Lizenzkomponente kann sein:
+    ' Swimlanes2
+    Public LizenzKomponenten(4) As String '
+    '
     ' Projektstatus kann sein:
     ' beendet
     ' geplant
@@ -410,6 +418,7 @@ Public Module Module1
     Public awinPath As String
     Public importOrdnerNames() As String
     Public exportOrdnerNames() As String
+    Public reportOrdnerName As String
 
     'Public projektFilesOrdner As String = "ProjectFiles"
     'Public rplanimportFilesOrdner As String = "RPLANImport"

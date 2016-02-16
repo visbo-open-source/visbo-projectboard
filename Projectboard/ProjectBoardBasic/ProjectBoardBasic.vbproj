@@ -87,6 +87,12 @@
   <ItemGroup>
     <Compile Include="awinGeneralModules.vb" />
     <Compile Include="BMWItOModul.vb" />
+    <Compile Include="frmCreateLicences.Designer.vb">
+      <DependentUpon>frmCreateLicences.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmCreateLicences.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmReportProfil.Designer.vb">
       <DependentUpon>frmReportProfil.vb</DependentUpon>
     </Compile>
@@ -245,6 +251,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmBetterWorseSettings.resx">
       <DependentUpon>frmBetterWorseSettings.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmCreateLicences.resx">
+      <DependentUpon>frmCreateLicences.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmCreateNewVariant.resx">
       <DependentUpon>frmCreateNewVariant.vb</DependentUpon>

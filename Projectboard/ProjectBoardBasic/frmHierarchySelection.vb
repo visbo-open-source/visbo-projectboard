@@ -1161,21 +1161,21 @@ Public Class frmHierarchySelection
         Dim zeilenhoehe As Double = 0.0     ' zeilenhöhe muss für alle Projekte gleich sein, daher mit übergeben
         Dim legendFontSize As Single = 0.0  ' FontSize der Legenden der Schriftgröße des Projektnamens angepasst
 
-        Dim selectedPhases As New Collection
-        Dim selectedMilestones As New Collection
-        Dim selectedRoles As New Collection
-        Dim selectedCosts As New Collection
-        Dim selectedBUs As New Collection
-        Dim selectedTypes As New Collection
+        ' ''Dim selectedPhases As New Collection
+        ' ''Dim selectedMilestones As New Collection
+        ' ''Dim selectedRoles As New Collection
+        ' ''Dim selectedCosts As New Collection
+        ' ''Dim selectedBUs As New Collection
+        ' ''Dim selectedTyps As New Collection
 
-        'Call msgbox("Backgroundworker3_DoWork")
+        '' ''Call msgbox("Backgroundworker3_DoWork")
 
-        selectedPhases = copySortedListtoColl(reportProfil.Phases)
-        selectedMilestones = copySortedListtoColl(reportProfil.Milestones)
-        selectedRoles = copySortedListtoColl(reportProfil.Roles)
-        selectedCosts = copySortedListtoColl(reportProfil.Costs)
-        selectedBUs = copySortedListtoColl(reportProfil.BUs)
-        selectedTypes = copySortedListtoColl(reportProfil.Typs)
+        ' ''selectedPhases = copySortedListtoColl(reportProfil.Phases)
+        ' ''selectedMilestones = copySortedListtoColl(reportProfil.Milestones)
+        ' ''selectedRoles = copySortedListtoColl(reportProfil.Roles)
+        ' ''selectedCosts = copySortedListtoColl(reportProfil.Costs)
+        ' ''selectedBUs = copySortedListtoColl(reportProfil.BUs)
+        ' ''selectedTyps = copySortedListtoColl(reportProfil.Typs)
 
         ' für BHTC immer true
         reportProfil.ExtendedMode = True
@@ -1227,7 +1227,7 @@ Public Class frmHierarchySelection
                 Call createPPTSlidesFromProject(hproj, vorlagendateiname, _
                                                 selectedPhases, selectedMilestones, _
                                                 selectedRoles, selectedCosts, _
-                                                selectedBUs, selectedTypes, True, _
+                                                selectedBUs, selectedTyps, True, _
                                                 True, zeilenhoehe, _
                                                 legendFontSize, _
                                                 worker, e)
