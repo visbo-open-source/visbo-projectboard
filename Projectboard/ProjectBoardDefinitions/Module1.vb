@@ -19,6 +19,8 @@ Public Module Module1
     Public dbPasswort As String = ""
     Public loginErfolgreich As Boolean = False
 
+    Public myWindowsName As String
+
     Public awinSettings As New clsawinSettings
     Public visboZustaende As New clsVisboZustaende
     Public magicBoardCmdBar As New clsCommandBarEvents
@@ -406,6 +408,7 @@ Public Module Module1
     Public awinPath As String
     Public importOrdnerNames() As String
     Public exportOrdnerNames() As String
+    Public reportOrdnerName As String
 
     'Public projektFilesOrdner As String = "ProjectFiles"
     'Public rplanimportFilesOrdner As String = "RPLANImport"

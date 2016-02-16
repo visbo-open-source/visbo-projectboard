@@ -17,6 +17,7 @@ Imports System.Xml.Serialization
 Imports System.IO
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
+Imports System.Security.Principal
 
 
 
@@ -624,6 +625,7 @@ Public Module awinGeneralModules
         ReDim exportOrdnerNames(4)
 
 
+
         ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
         'awinPath = appInstance.ActiveWorkbook.Path & "\"
 
@@ -635,6 +637,13 @@ Public Module awinGeneralModules
 
         End If
 
+        ' Erzeugen des Report Ordners, wenn der nicht schon existiert .. 
+        reportOrdnerName = awinPath & "Reports\"
+        Try
+            My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
+        Catch ex As Exception
+
+        End Try
 
 
         importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
@@ -790,6 +799,13 @@ Public Module awinGeneralModules
         ' Logfile öffnen und ggf. initialisieren
         Call logfileOpen()
 
+
+        Dim myWindowsName As String
+        Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
+        Dim myUser As New WindowsIdentity(accountToken)
+        myWindowsName = myUser.Name
+
+        Call logfileSchreiben(myWindowsName, "", anzFehler)
 
         ' hier muss jetzt das Customization File aufgemacht werden ...
         Try
