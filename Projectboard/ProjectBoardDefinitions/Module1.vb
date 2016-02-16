@@ -286,6 +286,10 @@ Public Module Module1
         filterAuswahl = 9
         reportBHTC = 10
     End Enum
+    Public Enum PTlicense
+        swimlanes = 0
+       
+    End Enum
 
 
     ' wird in awinSetTypen dimensioniert und gesetzt 
@@ -360,6 +364,10 @@ Public Module Module1
     Public weightStrategicFit As Double
 
     '
+    '
+    ' Lizenzkomponente kann sein:
+    ' Swimlanes2
+    Public LizenzKomponenten(4) As String '
     '
     ' Projektstatus kann sein:
     ' beendet

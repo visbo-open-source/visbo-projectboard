@@ -683,6 +683,13 @@ Public Module awinGeneralModules
 
         StartofCalendar = StartofCalendar.Date
 
+        LizenzKomponenten(0) = "Swimlanes2"
+        LizenzKomponenten(1) = "SWkomp1"
+        LizenzKomponenten(2) = "SWkomp2"
+        LizenzKomponenten(3) = "SWkomp3"
+        LizenzKomponenten(4) = "SWkomp4"
+
+      
         ProjektStatus(0) = "geplant"
         ProjektStatus(1) = "beauftragt"
         ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
@@ -2411,24 +2418,21 @@ Public Module awinGeneralModules
                 End If
             End Try
 
+            If modus <> "BHTC" Then
+
+                ' ''prj.FileOpen(Name:="\\KOYTEK-NAS\backup\Ute\VISBO\MS Project Beispiele\ute.mpp", _
+                ' ''             ReadOnly:=True, FormatID:="MSProject.MPP")
+
+                prj.FileOpen(Name:=filename, _
+                            ReadOnly:=True, FormatID:="MSProject.MPP")
+
+
+            End If
+
+
             Dim anzProj As Integer = prj.Projects.Count
 
             If anzProj > 0 Then
-
-                If modus <> "BHTC" Then
-
-                    ' ''prj.FileOpen(Name:="\\KOYTEK-NAS\backup\Ute\VISBO\MS Project Beispiele\ute.mpp", _
-                    ' ''             ReadOnly:=True, FormatID:="MSProject.MPP")
-
-                    prj.FileOpen(Name:=filename, _
-                                ReadOnly:=True, FormatID:="MSProject.MPP")
-
-
-
-                End If
-
-
-
 
 
                 ' VISBO-Flag dient dazu, Tasks, die nicht benötigt werden in der MultiprojektPlanung nicht mit einzulesen

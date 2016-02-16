@@ -41,19 +41,38 @@ Public Class VisboReportRibbon
             Dim aktuellesDatum As Date = Date.Now
             Dim filename As String = ""
 
-            ' Testen, ob der User die passende Lizenz besitzt
-            Dim user As String = myWindowsName
-            Dim komponente As String = "Swimlanes2"
-
-            ' Lesen des Lizenzen-Files
-
-            Dim lizenzen As clsLicences = XMLImportLicences(awinPath & licFileName)
-
-            ' Prüfen der Lizenzen
-            If lizenzen.validLicence(user, komponente) Then
+            If MsgBox("Lizenz prüfen?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
 
 
-                'Call MsgBox("EPReport_Click")
+                ' Testen, ob der User die passende Lizenz besitzt
+                Dim user As String = myWindowsName
+                Dim komponente As String = LizenzKomponenten(0)     ' Swimlanes2
+
+                ' Lesen des Lizenzen-Files
+
+                Dim lizenzen As clsLicences = XMLImportLicences(awinPath & licFileName)
+
+                ' Prüfen der Lizenzen
+                If lizenzen.validLicence(user, komponente) Then
+
+
+                    'Call MsgBox("EPReport_Click")
+
+                    ' Laden des aktuell geladenen Projektes
+                    Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
+
+                    If hproj.name <> "" And Not IsNothing(hproj.name) Then
+                        reportAuswahl.hproj = hproj
+                        returnvalue = reportAuswahl.ShowDialog
+                    End If
+                Else
+                    Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                                & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
+
+                End If
+
+
+            Else    ' ohne Lizenzprüfung
 
                 ' Laden des aktuell geladenen Projektes
                 Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
@@ -62,11 +81,8 @@ Public Class VisboReportRibbon
                     reportAuswahl.hproj = hproj
                     returnvalue = reportAuswahl.ShowDialog
                 End If
-            Else
-                Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
-                            & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
 
-            End If
+            End If ' Ende if Lizenzprüfung
 
         Catch ex As Exception
 

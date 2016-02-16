@@ -70,7 +70,7 @@ Module awinGeneralModulesBHTC
         Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
         Dim myUser As New WindowsIdentity(accountToken)
         myWindowsName = myUser.Name
-        Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+        ''Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
         ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
         'awinPath = appInstance.ActiveWorkbook.Path & "\"
@@ -111,6 +111,8 @@ Module awinGeneralModulesBHTC
 
 
         StartofCalendar = StartofCalendar.Date
+
+        LizenzKomponenten(0) = "Swimlanes2"
 
         ProjektStatus(0) = "geplant"
         ProjektStatus(1) = "beauftragt"
