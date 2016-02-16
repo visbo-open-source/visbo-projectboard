@@ -237,6 +237,7 @@ Public Module testModule
         Dim shapeRange As pptNS.ShapeRange = Nothing
         Dim presentationFile As String = awinPath & requirementsOrdner & "projektdossier.pptx"
         Dim presentationFileH As String = awinPath & requirementsOrdner & "projektdossier_Hochformat.pptx"
+        Dim newFileName As String = reportOrdnerName & "Report.pptx"
         Dim pptShape As pptNS.Shape
         Dim pname As String = hproj.name
         Dim fullName As String = hproj.getShapeText
@@ -339,6 +340,7 @@ Public Module testModule
             If pptApp.Presentations.Count = 0 Then
 
                 pptTemplatePresentation = pptApp.Presentations.Open(pptTemplateName)
+
                 If pptTemplatePresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
                     pptCurrentPresentation = pptApp.Presentations.Open(presentationFile)
                 Else
@@ -399,7 +401,25 @@ Public Module testModule
         Dim anzahlCurrentSlides As Integer
         Dim currentInsert As Integer = 1
 
+        ' jetzt wird das CurrentPresentation File unter einem Dummy Namen gespeichert ..
+
+
         Try
+
+            ' löschen, wenn der Name bereits existiert ...
+            If My.Computer.FileSystem.FileExists(newFileName) And _
+                pptCurrentPresentation.Name <> "Report.pptx" Then
+
+                Try
+                    My.Computer.FileSystem.DeleteFile(newFileName)
+                Catch ex1 As Exception
+
+                End Try
+
+            End If
+            ' speichern unter .. , damit Projektdossier nicht überschrieben werden kann 
+            pptCurrentPresentation.SaveAs(newFileName)
+
             anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
             anzSlidesToAdd = pptTemplatePresentation.Slides.Count
             pptTemplatePresentation.Saved = True
@@ -2271,6 +2291,8 @@ Public Module testModule
         Dim shapeRange As pptNS.ShapeRange = Nothing
         Dim presentationFile As String = awinPath & requirementsOrdner & "boarddossier.pptx"
         Dim presentationFileH As String = awinPath & requirementsOrdner & "boarddossier_Hochformat.pptx"
+        Dim newFileName As String = reportOrdnerName & "MP Report.pptx"
+
         Dim pptShape As pptNS.Shape
         Dim portfolioName As String = currentConstellation
         Dim top As Double, left As Double, width As Double, height As Double
@@ -2373,6 +2395,21 @@ Public Module testModule
         Dim currentInsert As Integer = 1
 
         Try
+
+            ' löschen, wenn der Name bereits existiert ...
+            If My.Computer.FileSystem.FileExists(newFileName) And _
+                pptCurrentPresentation.Name <> "MP Report.pptx" Then
+
+                Try
+                    My.Computer.FileSystem.DeleteFile(newFileName)
+                Catch ex1 As Exception
+
+                End Try
+
+            End If
+            ' speichern unter .. , damit Projektdossier nicht überschrieben werden kann 
+            pptCurrentPresentation.SaveAs(newFileName)
+
             anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
             anzSlidesToAdd = pptTemplatePresentation.Slides.Count
             pptTemplatePresentation.Saved = True

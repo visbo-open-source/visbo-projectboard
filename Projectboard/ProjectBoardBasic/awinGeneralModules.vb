@@ -645,8 +645,10 @@ Public Module awinGeneralModules
 
         '' ''End If
 
+
         globalPath = awinSettings.globalPath
         awinPath = awinSettings.awinPath
+
 
         If awinPath = "" And globalPath <> "" Then
             awinPath = globalPath
@@ -660,7 +662,14 @@ Public Module awinGeneralModules
             Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
         End If
 
-    
+        ' Erzeugen des Report Ordners, wenn er nicht schon existiert .. 
+        reportOrdnerName = awinPath & "Reports\"
+        Try
+            My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
+        Catch ex As Exception
+
+        End Try
+
         importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
         importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
         importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
@@ -689,7 +698,7 @@ Public Module awinGeneralModules
         LizenzKomponenten(3) = "SWkomp3"
         LizenzKomponenten(4) = "SWkomp4"
 
-      
+
         ProjektStatus(0) = "geplant"
         ProjektStatus(1) = "beauftragt"
         ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
@@ -832,6 +841,7 @@ Public Module awinGeneralModules
         Dim myUser As New WindowsIdentity(accountToken)
         myWindowsName = myUser.Name
         Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
+
 
         ' hier muss jetzt das Customization File aufgemacht werden ...
         Try
@@ -1019,10 +1029,10 @@ Public Module awinGeneralModules
         Catch ex As Exception
             Throw New ArgumentException("Fehler im Customization-File: BU Definition")
         End Try
-        
+
 
     End Sub
-    
+
     ''' <summary>
     ''' liest die Phasen Definitionen aus 
     ''' baut die globale Variable PhaseDefinitions auf 
@@ -1245,7 +1255,7 @@ Public Module awinGeneralModules
             Throw New ArgumentException("Fehler in Customization File: Meilensteine")
 
         End Try
-        
+
 
     End Sub
 
@@ -1329,7 +1339,7 @@ Public Module awinGeneralModules
             Throw New ArgumentException("Fehler im Customization-File: Rolle")
         End Try
 
-        
+
 
     End Sub
 
@@ -1385,7 +1395,7 @@ Public Module awinGeneralModules
         Catch ex As Exception
             Throw New ArgumentException("Fehler in Customization File: Kosten")
         End Try
-        
+
 
     End Sub
 
@@ -1527,7 +1537,7 @@ Public Module awinGeneralModules
             '
             ' ende Auslesen Einstellungen in Sheet "Einstellungen"
         End With
-        
+
 
     End Sub
 
@@ -1702,7 +1712,7 @@ Public Module awinGeneralModules
                 Throw New ArgumentException("der Vorlagen Ordner fehlt:" & vbLf & dirName)
             End If
         End If
-        
+
 
     End Sub
 

@@ -418,6 +418,7 @@ Public Module Module1
     Public awinPath As String
     Public importOrdnerNames() As String
     Public exportOrdnerNames() As String
+    Public reportOrdnerName As String
 
     'Public projektFilesOrdner As String = "ProjectFiles"
     'Public rplanimportFilesOrdner As String = "RPLANImport"
