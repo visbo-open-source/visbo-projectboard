@@ -800,6 +800,13 @@ Public Module awinGeneralModules
         Call logfileOpen()
 
 
+        Dim myWindowsName As String
+        Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
+        Dim myUser As New WindowsIdentity(accountToken)
+        myWindowsName = myUser.Name
+
+        Call logfileSchreiben(myWindowsName, "", anzFehler)
+
         ' hier muss jetzt das Customization File aufgemacht werden ...
         Try
             xlsCustomization = appInstance.Workbooks.Open(awinPath & customizationFile)
