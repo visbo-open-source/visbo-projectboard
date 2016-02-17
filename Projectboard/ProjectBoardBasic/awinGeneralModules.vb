@@ -655,12 +655,16 @@ Public Module awinGeneralModules
         ElseIf globalPath = "" And awinPath <> "" Then
             globalPath = awinPath
         ElseIf globalPath = "" And awinPath = "" Then
-            Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " existieren nicht")
+            Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " wurden nicht angegeben")
         End If
 
         If (Dir(globalPath, vbDirectory) = "") Then
-            Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
+            If (Dir(awinPath, vbDirectory) = "") Then
+                Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
+            Else
+            End If
         End If
+
 
         ' Erzeugen des Report Ordners, wenn er nicht schon existiert .. 
         reportOrdnerName = awinPath & "Reports\"
