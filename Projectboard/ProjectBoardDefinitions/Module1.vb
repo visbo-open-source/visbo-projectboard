@@ -358,6 +358,15 @@ Public Module Module1
         rplanrxf = 6
     End Enum
 
+    ' SoftwareKomponenten für die Lizensierung
+    Public Enum PTSWKomp
+        ProjectAdmin = 0
+        Swimlanes2 = 1
+        SWkomp2 = 2
+        SWkomp3 = 3
+        SWkomp4 = 4
+    End Enum
+
 
     Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
 
@@ -366,6 +375,7 @@ Public Module Module1
     '
     '
     ' Lizenzkomponente kann sein:
+    ' ProjectAdmin
     ' Swimlanes2
     Public LizenzKomponenten(4) As String '
     '

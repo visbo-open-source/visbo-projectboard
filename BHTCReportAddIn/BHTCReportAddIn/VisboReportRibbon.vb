@@ -38,15 +38,16 @@ Public Class VisboReportRibbon
             Dim hierarchiefenster As New frmHierarchySelection
             Dim returnvalue As DialogResult
             Dim hproj As New clsProjekt
-            Dim aktuellesDatum As Date = Date.Now
+            Dim aktuellesDatum = Date.Now
+            Dim validDatum As Date = "29.Feb.2016"
             Dim filename As String = ""
 
-            If MsgBox("Lizenz prüfen?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
-
+            ''If MsgBox("Lizenz prüfen?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
+            If aktuellesDatum > validDatum Then
 
                 ' Testen, ob der User die passende Lizenz besitzt
                 Dim user As String = myWindowsName
-                Dim komponente As String = LizenzKomponenten(0)     ' Swimlanes2
+                Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
 
                 ' Lesen des Lizenzen-Files
 

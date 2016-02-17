@@ -90,6 +90,14 @@ Module awinGeneralModulesBHTC
             Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
         End If
 
+        ' Erzeugen des Report Ordners, wenn er nicht schon existiert .. 
+        reportOrdnerName = awinPath & "Reports\"
+        Try
+            My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
+        Catch ex As Exception
+
+        End Try
+
         importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
         importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
         importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
@@ -109,10 +117,13 @@ Module awinGeneralModulesBHTC
         End If
 
 
-
         StartofCalendar = StartofCalendar.Date
 
-        LizenzKomponenten(0) = "Swimlanes2"
+        LizenzKomponenten(PTSWKomp.ProjectAdmin) = "ProjectAdmin"
+        LizenzKomponenten(PTSWKomp.Swimlanes2) = "Swimlanes2"
+        LizenzKomponenten(PTSWKomp.SWkomp2) = "SWkomp2"
+        LizenzKomponenten(PTSWKomp.SWkomp3) = "SWkomp3"
+        LizenzKomponenten(PTSWKomp.SWkomp4) = "SWkomp4"
 
         ProjektStatus(0) = "geplant"
         ProjektStatus(1) = "beauftragt"
