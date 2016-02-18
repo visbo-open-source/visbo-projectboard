@@ -47,8 +47,14 @@ Public Class ThisAddIn
     Private Sub ThisAddIn_Shutdown() Handles Me.Shutdown
         'Call MsgBox("byebye BHTCAddIn")
         Try
-            ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
-            appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False)    ' CustomizationFile wird ohne Abspeichern von Änderungen geschlossen
+            If Not fehlerBeimLoad Then
+
+                If Not IsNothing(appInstance.Workbooks(myCustomizationFile)) Then
+                    ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
+                    appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False)    ' CustomizationFile wird ohne Abspeichern von Änderungen geschlossen
+                End If
+
+            End If
         Catch ex As Exception
             Throw New ArgumentException("Fehler beim Schließen des Customization-Files")
         End Try

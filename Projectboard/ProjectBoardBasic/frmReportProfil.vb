@@ -262,9 +262,16 @@ Public Class frmReportProfil
         '' '' Einlesen des ausgewählten ReportProfils 
         '' '' ''reportProfil = XMLImportReportProfil(RepProfilListbox.Text)
 
+        If Not IsNothing(reportProfil) Then
 
-        reportProfil.Projects.Clear()
-        reportProfil.Projects.Add(1, hproj.name)
+            reportProfil.Projects.Clear()
+            reportProfil.Projects.Add(1, hproj.name)
+
+            reportProfil.VonDate = vonDate.Value
+            reportProfil.BisDate = bisDate.Value
+
+        End If
+
 
         Me.statusLabel.Visible = False
 

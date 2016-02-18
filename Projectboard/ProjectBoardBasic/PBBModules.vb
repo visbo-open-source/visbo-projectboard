@@ -30,17 +30,18 @@ Public Module PBBModules
         Dim returnValue As DialogResult
         Dim lic As New clsLicences
 
+
+
         If controlID = "PT1G1B3" Then
             hryFormular.calledFrom = "Multiprojekt-Tafel"
+
         Else
             hryFormular.calledFrom = "MS-Project"
 
             hryFormular.repProfil = New clsReport
-
             reportprofil.CopyTo(hryFormular.repProfil)
-
-
         End If
+
 
         Dim formerSettings(3) As Boolean
         With awinSettings

@@ -76,7 +76,14 @@ Module awinGeneralModulesBHTC
             'awinPath = appInstance.ActiveWorkbook.Path & "\"
 
             globalPath = awinSettings.globalPath
-            awinPath = awinSettings.awinPath
+
+            ' awinpath kann relativ oder absolut angegeben sein, beides möglich
+            Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+            If Not awinPath.EndsWith("\") Then
+                awinPath = awinPath & "\"
+            End If
+
 
             If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
                 awinPath = globalPath
@@ -522,6 +529,8 @@ Module awinGeneralModulesBHTC
 
         Catch ex As Exception
             Call MsgBox("Fehler beim Laden des VISBO AddIn")
+            fehlerBeimLoad = True
+
         End Try
     End Sub
 
