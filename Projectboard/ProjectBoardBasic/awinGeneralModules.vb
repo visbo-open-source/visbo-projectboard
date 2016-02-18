@@ -624,18 +624,21 @@ Public Module awinGeneralModules
         ReDim importOrdnerNames(6)
         ReDim exportOrdnerNames(4)
 
-
-
+        
         ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
         'awinPath = appInstance.ActiveWorkbook.Path & "\"
 
-        If (Dir(awinSettings.awinPath, vbDirectory) <> "") Then
-            awinPath = awinSettings.awinPath
-        Else
+        Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+        awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath) & "\"
 
-            Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
 
-        End If
+        'If (Dir(awinSettings.awinPath, vbDirectory) <> "") Then
+        '    awinPath = awinSettings.awinPath
+        'Else
+
+        '    Throw New ArgumentException("Ordner " & awinSettings.awinPath & " existiert nicht")
+
+        'End If
 
         ' Erzeugen des Report Ordners, wenn der nicht schon existiert .. 
         reportOrdnerName = awinPath & "Reports\"

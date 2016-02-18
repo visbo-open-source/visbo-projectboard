@@ -4,9 +4,15 @@
     Private _Parent As clsPhase
     Private _name As String
 
+    ''' <summary>
+    ''' gibt die Eltern-Phase zurück
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property Parent() As clsPhase
         Get
-            Parent = _parent
+            Parent = _Parent
         End Get
     End Property
 
@@ -111,6 +117,11 @@
 
     End Property
 
+    ''' <summary>
+    ''' setzt das Datum des Meilensteins, d.h intern wird die Variable _offset gesetzt 
+    ''' </summary>
+    ''' <value></value>
+    ''' <remarks></remarks>
     Public WriteOnly Property setDate As Date
 
         Set(value As Date)
@@ -135,17 +146,11 @@
 
     End Property
 
-    'Public Sub setDate(ByVal parentStartDate As Date, ByVal resultDate As Date)
 
-    '    Try
-    '        _offset = DateDiff(DateInterval.Day, parentStartDate, resultDate)
-    '    Catch ex As Exception
-    '        _offset = 0
-    '    End Try
-
-
-    'End Sub
-
+    ''' <summary>
+    ''' löscht die Bewertungen des Meilensteins
+    ''' </summary>
+    ''' <remarks></remarks>
     Public Sub clearBewertungen()
 
         Try
@@ -157,10 +162,21 @@
     End Sub
 
 
+    ''' <summary>
+    ''' setzt / liest den Offset, das heisst den Abstand in Tagen vom Phasen-Start bis zum Meilenstein 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property offset As Long
 
-    'Friend Property fileLink As Uri
 
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property bewertungsCount As Integer
         Get
             bewertungsCount = bewertungen.Count
