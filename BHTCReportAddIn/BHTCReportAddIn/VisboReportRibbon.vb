@@ -34,7 +34,7 @@ Public Class VisboReportRibbon
 
         Try
             If fehlerBeimLoad Then
-                Call MsgBox("Einzelprojekt Report kann nicht ausgeführt werden. Der AddIn wurde nicht korrekt geladen")
+                Call MsgBox("Einzelprojekt Report kann nicht ausgeführt werden,  " & vbLf & "da der 'MS Project VISBO AddIn' nicht korrekt geladen wurde!")
             Else
 
                 Dim reportAuswahl As New frmReportProfil
@@ -45,38 +45,22 @@ Public Class VisboReportRibbon
                 Dim validDatum As Date = "29.Feb.2016"
                 Dim filename As String = ""
 
-                ''If MsgBox("Lizenz prüfen?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
-                If aktuellesDatum > validDatum Then
+                ' ''If MsgBox("Lizenz prüfen?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
+                ' ''    ''If aktuellesDatum > validDatum Then
 
-                    ' Testen, ob der User die passende Lizenz besitzt
-                    Dim user As String = myWindowsName
-                    Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
+                ' Testen, ob der User die passende Lizenz besitzt
+                Dim user As String = myWindowsName
+                Dim komponente As String = LizenzKomponenten(PTSWKomp.Swimlanes2)     ' Swimlanes2
 
-                    ' Lesen des Lizenzen-Files
+                ' Lesen des Lizenzen-Files
 
-                    Dim lizenzen As clsLicences = XMLImportLicences(awinPath & licFileName)
+                Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
 
-                    ' Prüfen der Lizenzen
-                    If lizenzen.validLicence(user, komponente) Then
-
-
-                        'Call MsgBox("EPReport_Click")
-
-                        ' Laden des aktuell geladenen Projektes
-                        Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
-
-                        If hproj.name <> "" And Not IsNothing(hproj.name) Then
-                            reportAuswahl.hproj = hproj
-                            returnvalue = reportAuswahl.ShowDialog
-                        End If
-                    Else
-                        Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
-                                    & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
-
-                    End If
+                ' Prüfen der Lizenzen
+                If lizenzen.validLicence(user, komponente) Then
 
 
-                Else    ' ohne Lizenzprüfung
+                    'Call MsgBox("EPReport_Click")
 
                     ' Laden des aktuell geladenen Projektes
                     Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
@@ -85,8 +69,24 @@ Public Class VisboReportRibbon
                         reportAuswahl.hproj = hproj
                         returnvalue = reportAuswahl.ShowDialog
                     End If
+                Else
+                    Call MsgBox("Aktueller User " & myWindowsName & " hat keine passende Lizenz!" _
+                                & vbLf & " Bitte kontaktieren Sie ihren Systemadministrator")
 
-                End If ' Ende if Lizenzprüfung
+                End If
+
+
+                ' ''Else    ' ohne Lizenzprüfung
+
+                ' ''    ' Laden des aktuell geladenen Projektes
+                ' ''    Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
+
+                ' ''    If hproj.name <> "" And Not IsNothing(hproj.name) Then
+                ' ''        reportAuswahl.hproj = hproj
+                ' ''        returnvalue = reportAuswahl.ShowDialog
+                ' ''    End If
+
+                ' ''End If ' Ende if Lizenzprüfung
 
 
             End If

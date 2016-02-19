@@ -11694,7 +11694,7 @@ Public Module awinGeneralModules
         Dim lic As New clsLicences
 
         Dim serializer = New DataContractSerializer(GetType(clsLicences))
-        Dim xmlfilename As String = licfile
+        Dim xmlfilename As String = awinPath & licfile
         Try
 
             ' XML-Datei Öffnen

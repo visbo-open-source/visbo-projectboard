@@ -8147,7 +8147,7 @@ Imports System.Windows
 
         Dim Lic As New clsLicences
 
-        Lic = XMLImportLicences(awinPath & licFileName)
+        Lic = XMLImportLicences(licFileName)
 
         Dim user As String = myWindowsName
         Dim komponente As String = "Swimlanes2"

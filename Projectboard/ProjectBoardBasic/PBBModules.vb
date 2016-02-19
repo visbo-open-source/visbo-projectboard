@@ -28,8 +28,7 @@ Public Module PBBModules
 
         Dim hryFormular As New frmHierarchySelection
         Dim returnValue As DialogResult
-        Dim lic As New clsLicences
-
+        Dim lic As clsLicences = XMLImportLicences(licfilename)
 
 
         If controlID = "PT1G1B3" Then
@@ -103,20 +102,20 @@ Public Module PBBModules
             .filterLabel.Visible = True
             .filterLabel.Text = "Name Report-Profil"
 
-            ' ''Try
-            ' ''    ' nur mit dem Recht für ProjectAdmin können ReportProfile gespeichert werden
-            ' ''    If lic.validLicence(myWindowsName, LizenzKomponenten(PTSWKomp.ProjectAdmin)) Then
-            ' ''        .auswSpeichern.Visible = True
-            ' ''        .filterDropbox.Enabled = True
-            ' ''    Else
-            ' ''        .auswSpeichern.Visible = False
-            ' ''        .filterDropbox.Enabled = False
-            ' ''    End If
+            Try
+                ' nur mit dem Recht für ProjectAdmin können ReportProfile gespeichert werden
+                If lic.validLicence(myWindowsName, LizenzKomponenten(PTSWKomp.ProjectAdmin)) Then
+                    .auswSpeichern.Visible = True
+                    .filterDropbox.Enabled = True
+                Else
+                    .auswSpeichern.Visible = False
+                    .filterDropbox.Enabled = False
+                End If
 
-            ' ''Catch ex As Exception
-            ' ''    .auswSpeichern.Visible = False
-            ' ''    .filterDropbox.Enabled = False
-            ' ''End Try
+            Catch ex As Exception
+                .auswSpeichern.Visible = False
+                .filterDropbox.Enabled = False
+            End Try
 
             ' bei Verwendung Background Worker muss Aufruf so erfolgen: 
             returnValue = .ShowDialog
