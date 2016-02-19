@@ -33,17 +33,20 @@ Public Class VisboReportRibbon
     Private Sub EPReport_Click(sender As Object, e As RibbonControlEventArgs) Handles EPReport.Click
 
         Try
+            If fehlerBeimLoad Then
+                Call MsgBox("Einzelprojekt Report kann nicht ausgeführt werden,  " & vbLf & "da der 'MS Project VISBO AddIn' nicht korrekt geladen wurde!")
+            Else
 
-            Dim reportAuswahl As New frmReportProfil
-            Dim hierarchiefenster As New frmHierarchySelection
-            Dim returnvalue As DialogResult
-            Dim hproj As New clsProjekt
-            Dim aktuellesDatum = Date.Now
-            Dim validDatum As Date = "29.Feb.2016"
-            Dim filename As String = ""
+                Dim reportAuswahl As New frmReportProfil
+                Dim hierarchiefenster As New frmHierarchySelection
+                Dim returnvalue As DialogResult
+                Dim hproj As New clsProjekt
+                Dim aktuellesDatum = Date.Now
+                Dim validDatum As Date = "29.Feb.2016"
+                Dim filename As String = ""
 
-            ''If MsgBox("Lizenz prüfen?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
-            If aktuellesDatum > validDatum Then
+                ' ''If MsgBox("Lizenz prüfen?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
+                ' ''    ''If aktuellesDatum > validDatum Then
 
                 ' Testen, ob der User die passende Lizenz besitzt
                 Dim user As String = myWindowsName
@@ -51,7 +54,7 @@ Public Class VisboReportRibbon
 
                 ' Lesen des Lizenzen-Files
 
-                Dim lizenzen As clsLicences = XMLImportLicences(awinPath & licFileName)
+                Dim lizenzen As clsLicences = XMLImportLicences(licFileName)
 
                 ' Prüfen der Lizenzen
                 If lizenzen.validLicence(user, komponente) Then
@@ -73,17 +76,21 @@ Public Class VisboReportRibbon
                 End If
 
 
-            Else    ' ohne Lizenzprüfung
+                ' ''Else    ' ohne Lizenzprüfung
 
-                ' Laden des aktuell geladenen Projektes
-                Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
+                ' ''    ' Laden des aktuell geladenen Projektes
+                ' ''    Call awinImportMSProject("BHTC", filename, hproj, aktuellesDatum)
 
-                If hproj.name <> "" And Not IsNothing(hproj.name) Then
-                    reportAuswahl.hproj = hproj
-                    returnvalue = reportAuswahl.ShowDialog
-                End If
+                ' ''    If hproj.name <> "" And Not IsNothing(hproj.name) Then
+                ' ''        reportAuswahl.hproj = hproj
+                ' ''        returnvalue = reportAuswahl.ShowDialog
+                ' ''    End If
 
-            End If ' Ende if Lizenzprüfung
+                ' ''End If ' Ende if Lizenzprüfung
+
+
+            End If
+
 
         Catch ex As Exception
 

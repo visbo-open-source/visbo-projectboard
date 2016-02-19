@@ -456,6 +456,8 @@ Public Module Module1
     Public LastY As Double = -1.0
     Public firstPress As Boolean = True
 
+    Public fehlerBeimLoad As Boolean = False
+
 
 
 

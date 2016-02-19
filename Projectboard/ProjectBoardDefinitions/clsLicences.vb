@@ -61,7 +61,7 @@ Public Class clsLicences
             ' Codierung validDate
             Dim validLicCode As Long = 0
             validLicCode = DateDiff(DateInterval.Day, Date.MinValue, untilDate)
-            validLicCode = validLicCode * userlicCode
+            validLicCode = validLicCode * compLicCode
 
             Dim hexvalidLicCode As String = Hex(validLicCode)
 
@@ -88,8 +88,8 @@ Public Class clsLicences
 
         Get
             Dim heute As Date = Date.Now
-            Dim usercode As Long = 211
-            Dim compcode As Long = 103
+            Dim userPrim As Long = 211
+            Dim compPrim As Long = 103
 
             Dim userfound = False
             Dim komponentefound = False
@@ -113,7 +113,7 @@ Public Class clsLicences
                 For i As Integer = 0 To user.Length - 1
                     zahl(i) = Convert.ToInt64(user(i))
 
-                    hilfsUserlicCode = hilfsUserlicCode + zahl(i) * usercode
+                    hilfsUserlicCode = hilfsUserlicCode + zahl(i) * userPrim
                 Next
 
                 ' User überprüfen
@@ -132,7 +132,7 @@ Public Class clsLicences
                     For i As Integer = 0 To komponente.Length - 1
                         compzahl(i) = Convert.ToInt64(komponente(i))
 
-                        hilfscompLicCode = hilfscompLicCode + compzahl(i) * compcode
+                        hilfscompLicCode = hilfscompLicCode + compzahl(i) * compPrim
                     Next i
 
                     hilfscompLicCode = hilfscompLicCode * userlicCode
@@ -148,7 +148,7 @@ Public Class clsLicences
                         ' Codierung validDate
                         Dim hilfsvalidLicCode As Long = 0
                         hilfsvalidLicCode = DateDiff(DateInterval.Day, Date.MinValue, heute)
-                        hilfsvalidLicCode = hilfsvalidLicCode * userlicCode
+                        hilfsvalidLicCode = hilfsvalidLicCode * complicCode
 
                         If hilfsvalidLicCode < datelicCode Then
 

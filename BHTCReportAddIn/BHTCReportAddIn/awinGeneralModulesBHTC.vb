@@ -58,461 +58,480 @@ Module awinGeneralModulesBHTC
     ''' <remarks></remarks>
     Public Sub awinsetTypenNEW(ByVal special As String)
 
-     
-
-        Dim xlsCustomization As Excel.Workbook = Nothing
-
-        ReDim importOrdnerNames(6)
-        ReDim exportOrdnerNames(4)
-
-
-        ' Auslesen des Window Namens 
-        Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
-        Dim myUser As New WindowsIdentity(accountToken)
-        myWindowsName = myUser.Name
-        ''Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
-
-        ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
-        'awinPath = appInstance.ActiveWorkbook.Path & "\"
-
-        globalPath = awinSettings.globalPath
-        awinPath = awinSettings.awinPath
-
-        If awinPath = "" And globalPath <> "" Then
-            awinPath = globalPath
-        ElseIf globalPath = "" And awinPath <> "" Then
-            globalPath = awinPath
-        ElseIf globalPath = "" And awinPath = "" Then
-            Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " existieren nicht")
-        End If
-
-        If (Dir(globalPath, vbDirectory) = "") Then
-            Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
-        End If
-
-        ' Erzeugen des Report Ordners, wenn er nicht schon existiert .. 
-        reportOrdnerName = awinPath & "Reports\"
         Try
-            My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
-        Catch ex As Exception
 
-        End Try
+            Dim xlsCustomization As Excel.Workbook = Nothing
 
-        importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
-        importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
-        importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
-        importOrdnerNames(PTImpExp.simpleScen) = awinPath & "Import\einfache Szenarien"
-        importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\modulare Szenarien"
-        importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
-        importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
-
-        exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
-        exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
-        exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
-        exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
-        exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
-
-        If awinPath <> globalPath Then
-            Call synchronizeGlobalToLocalFolder()
-        End If
+            ReDim importOrdnerNames(6)
+            ReDim exportOrdnerNames(4)
 
 
-        StartofCalendar = StartofCalendar.Date
+            ' Auslesen des Window Namens 
+            Dim accountToken As IntPtr = WindowsIdentity.GetCurrent().Token
+            Dim myUser As New WindowsIdentity(accountToken)
+            myWindowsName = myUser.Name
+            ''Call logfileSchreiben("Windows-User: ", myWindowsName, anzFehler)
 
-        LizenzKomponenten(PTSWKomp.ProjectAdmin) = "ProjectAdmin"
-        LizenzKomponenten(PTSWKomp.Swimlanes2) = "Swimlanes2"
-        LizenzKomponenten(PTSWKomp.SWkomp2) = "SWkomp2"
-        LizenzKomponenten(PTSWKomp.SWkomp3) = "SWkomp3"
-        LizenzKomponenten(PTSWKomp.SWkomp4) = "SWkomp4"
+            ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
+            'awinPath = appInstance.ActiveWorkbook.Path & "\"
 
-        ProjektStatus(0) = "geplant"
-        ProjektStatus(1) = "beauftragt"
-        ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
-        ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
-        ProjektStatus(4) = "abgeschlossen"
+            globalPath = awinSettings.globalPath
 
-
-        DiagrammTypen(0) = "Phase"
-        DiagrammTypen(1) = "Rolle"
-        DiagrammTypen(2) = "Kostenart"
-        DiagrammTypen(3) = "Portfolio"
-        DiagrammTypen(4) = "Ergebnis"
-        DiagrammTypen(5) = "Meilenstein"
-        DiagrammTypen(6) = "Meilenstein Trendanalyse"
-
-        ergebnisChartName(0) = "Earned Value"
-        ergebnisChartName(1) = "Earned Value - gewichtet"
-        ergebnisChartName(2) = "Verbesserungs-Potential"
-        ergebnisChartName(3) = "Risiko-Abschlag"
-
-        ReDim portfolioDiagrammtitel(21)
-        portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
-        portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
-        portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
-        portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
-        portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
-        portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
-        portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
-        portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
-        portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
-        portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
-        portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
-        portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
-        portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
-        portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
-        portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
-        portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
-        portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
-        portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = "strategischer Fit, Risiko & Ausstrahlung"
+            ' awinpath kann relativ oder absolut angegeben sein, beides möglich
+            Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+            awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+            If Not awinPath.EndsWith("\") Then
+                awinPath = awinPath & "\"
+            End If
 
 
-        autoSzenarioNamen(0) = "vor Optimierung"
-        autoSzenarioNamen(1) = "1. Optimum"
-        autoSzenarioNamen(2) = "2. Optimum"
-        autoSzenarioNamen(3) = "3. Optimum"
+            If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
+                awinPath = globalPath
+            ElseIf globalPath = "" And (awinPath <> "" And My.Computer.FileSystem.DirectoryExists(awinPath)) Then
+                globalPath = awinPath
+            ElseIf globalPath = "" Or awinPath = "" Then
+                Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " existieren nicht")
+            End If
 
-        windowNames(0) = "Cockpit Phasen"
-        windowNames(1) = "Cockpit Rollen"
-        windowNames(2) = "Cockpit Kosten"
-        windowNames(3) = "Cockpit Wertigkeit"
-        windowNames(4) = "Cockpit Ergebnisse"
-        windowNames(5) = "Projekt Tafel"
+            If My.Computer.FileSystem.DirectoryExists(globalPath) And (Dir(globalPath, vbDirectory) = "") Then
+                Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
+            End If
 
-        '
-        ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
-        '
-        arrWsNames(1) = "Portfolio"
-        arrWsNames(2) = "Vorlage"                          ' dient als Hilfs-Sheet für Anzeige in Plantafel 
-        arrWsNames(3) = "Tabelle1"
-        arrWsNames(4) = "Einstellungen"
-        arrWsNames(5) = "Tabelle2"
-        arrWsNames(6) = "Edit Allgemein"
-        arrWsNames(7) = "Darstellungsklassen"                          ' war Kosten ; ist nicht mehr notwendig
-        arrWsNames(8) = "Phasen-Mappings"
-        arrWsNames(9) = "Tabelle3"
-        arrWsNames(10) = "Meilenstein-Mappings"
-        arrWsNames(11) = "Projekt editieren"
-        arrWsNames(12) = "Projektdefinition Erloese"
-        arrWsNames(13) = "Projekt iErloese"
-        arrWsNames(14) = "Objekte"
-        arrWsNames(15) = "Portfolio Vorlage"
+            If awinPath <> globalPath And My.Computer.FileSystem.DirectoryExists(globalPath) Then
+                Call synchronizeGlobalToLocalFolder()
+            Else
+                If My.Computer.FileSystem.DirectoryExists(awinPath) And (Dir(awinPath, vbDirectory) = "") Then
+                    Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
+                End If
 
+            End If
 
-        awinSettings.applyFilter = False
+            ' Benutzer arbeitet auf dem awinPath-Directories ohne Synchronisation
 
-        showRangeLeft = 0
-        showRangeRight = 0
-
-        'selectedRoleNeeds = 0
-        'selectedCostNeeds = 0
-
-        ' '' '' bestimmen der maximalen Breite und Höhe 
-        '' ''Dim formerSU As Boolean = appInstance.ScreenUpdating
-        '' ''appInstance.ScreenUpdating = False
-
-
-        ' '' '' um dahinter temporär die Darstellungsklassen kopieren zu können  
-        '' ''Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
-        '' ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-
-
-        '' ''With appInstance.ActiveWindow
-
-
-        '' ''    If .WindowState = Excel.XlWindowState.xlMaximized Then
-        '' ''        maxScreenHeight = .Height
-        '' ''        maxScreenWidth = .Width
-        '' ''    Else
-        '' ''        Dim formerState As Excel.XlWindowState = .WindowState
-        '' ''        .WindowState = Excel.XlWindowState.xlMaximized
-        '' ''        maxScreenHeight = .Height
-        '' ''        maxScreenWidth = .Width
-        '' ''        .WindowState = formerState
-        '' ''    End If
-
-
-        '' ''End With
-
-        '' ''miniHeight = maxScreenHeight / 6
-        '' ''miniWidth = maxScreenWidth / 10
-
-
-
-        '' ''Dim oGrenze As Integer = UBound(frmCoord, 1)
-        ' '' '' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
-        '' ''For i = 0 To oGrenze
-        '' ''    frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
-        '' ''    frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
-        '' ''Next
-
-        ' '' '' jetzt setzen der Werte für Status-Information und Milestone-Information
-        '' ''frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
-        '' ''frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
-
-        '' ''frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
-        '' ''frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
-
-        ' '' '' With listOfWorkSheets(arrWsNames(4))
-
-        ' '' '' Logfile öffnen und ggf. initialisieren
-        '' ''Call logfileOpen()
-
-
-        Try
-            ' prüft, ob bereits Excel geöffnet ist 
-            'excelObj = GetObject(, "Excel.Application")
-            appInstance = CType(GetObject(, "Excel.Application"), Microsoft.Office.Interop.Excel.Application)
-        Catch ex As Exception
+            ' Erzeugen des Report Ordners, wenn er nicht schon existiert .. 
+            reportOrdnerName = awinPath & "Reports\"
             Try
-                'excelObj = GetObject(, "Excel.Application")
-                appInstance = CType(CreateObject("Excel.Application"), Microsoft.Office.Interop.Excel.Application)
-            Catch ex1 As Exception
-                Call MsgBox("Excel konnte nicht gestartet werden ..." & ex1.Message)
-                Exit Sub
+                My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
+            Catch ex As Exception
+
             End Try
 
-        End Try
+            importOrdnerNames(PTImpExp.visbo) = awinPath & "Import\VISBO Steckbriefe"
+            importOrdnerNames(PTImpExp.rplan) = awinPath & "Import\RPLAN-Excel"
+            importOrdnerNames(PTImpExp.msproject) = awinPath & "Import\MSProject"
+            importOrdnerNames(PTImpExp.simpleScen) = awinPath & "Import\einfache Szenarien"
+            importOrdnerNames(PTImpExp.modulScen) = awinPath & "Import\modulare Szenarien"
+            importOrdnerNames(PTImpExp.addElements) = awinPath & "Import\addOn Regeln"
+            importOrdnerNames(PTImpExp.rplanrxf) = awinPath & "Import\RXF Files"
 
-        Dim customizationFile As String = "requirements\Project Board Customization.xlsx"
-        ' hier muss jetzt das Customization File aufgemacht werden ...
-        Try
-            xlsCustomization = appInstance.Workbooks.Open(awinPath & customizationFile)
-            myCustomizationFile = appInstance.ActiveWorkbook.Name
-        Catch ex As Exception
-            'appInstance.ScreenUpdating = formerSU
-            Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
-        End Try
-
-        Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
-                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-        ' '' '' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
-        '' ''Try
-        '' ''    awinSettings.databaseName = CStr(wsName4.Range("Datenbank").Value).Trim
-        '' ''    If awinSettings.databaseName = "" Then
-        '' ''        awinSettings.databaseName = "VisboTest"
-        '' ''    End If
-        '' ''Catch ex As Exception
-
-        '' ''    awinSettings.databaseName = "VisboTest"
-        '' ''    'appInstance.ScreenUpdating = formerSU
-        '' ''    'Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
-        '' ''End Try
-
-        If special = "BHTC" Then
-            ' keine Datenbank angeschlossen
-            ' kein LOGIN erforderlich
+            exportOrdnerNames(PTImpExp.visbo) = awinPath & "Export\VISBO Steckbriefe"
+            exportOrdnerNames(PTImpExp.rplan) = awinPath & "Export\RPLAN-Excel"
+            exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
+            exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
+            exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
 
 
-            Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
-                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+            StartofCalendar = StartofCalendar.Date
+
+            LizenzKomponenten(PTSWKomp.ProjectAdmin) = "ProjectAdmin"
+            LizenzKomponenten(PTSWKomp.Swimlanes2) = "Swimlanes2"
+            LizenzKomponenten(PTSWKomp.SWkomp2) = "SWkomp2"
+            LizenzKomponenten(PTSWKomp.SWkomp3) = "SWkomp3"
+            LizenzKomponenten(PTSWKomp.SWkomp4) = "SWkomp4"
+
+            ProjektStatus(0) = "geplant"
+            ProjektStatus(1) = "beauftragt"
+            ProjektStatus(2) = "beauftragt, Änderung noch nicht freigegeben"
+            ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
+            ProjektStatus(4) = "abgeschlossen"
+
+
+            DiagrammTypen(0) = "Phase"
+            DiagrammTypen(1) = "Rolle"
+            DiagrammTypen(2) = "Kostenart"
+            DiagrammTypen(3) = "Portfolio"
+            DiagrammTypen(4) = "Ergebnis"
+            DiagrammTypen(5) = "Meilenstein"
+            DiagrammTypen(6) = "Meilenstein Trendanalyse"
+
+            ergebnisChartName(0) = "Earned Value"
+            ergebnisChartName(1) = "Earned Value - gewichtet"
+            ergebnisChartName(2) = "Verbesserungs-Potential"
+            ergebnisChartName(3) = "Risiko-Abschlag"
+
+            ReDim portfolioDiagrammtitel(21)
+            portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
+            portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
+            portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
+            portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
+            portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
+            portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
+            portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
+            portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
+            portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
+            portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
+            portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
+            portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
+            portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
+            portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
+            portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
+            portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
+            portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
+            portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
+            portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
+            portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
+            portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = "strategischer Fit, Risiko & Ausstrahlung"
+
+
+            autoSzenarioNamen(0) = "vor Optimierung"
+            autoSzenarioNamen(1) = "1. Optimum"
+            autoSzenarioNamen(2) = "2. Optimum"
+            autoSzenarioNamen(3) = "3. Optimum"
+
+            windowNames(0) = "Cockpit Phasen"
+            windowNames(1) = "Cockpit Rollen"
+            windowNames(2) = "Cockpit Kosten"
+            windowNames(3) = "Cockpit Wertigkeit"
+            windowNames(4) = "Cockpit Ergebnisse"
+            windowNames(5) = "Projekt Tafel"
+
+            '
+            ' die Namen der Worksheets Ressourcen und Portfolio verfügbar machen
+            '
+            arrWsNames(1) = "Portfolio"
+            arrWsNames(2) = "Vorlage"                          ' dient als Hilfs-Sheet für Anzeige in Plantafel 
+            arrWsNames(3) = "Tabelle1"
+            arrWsNames(4) = "Einstellungen"
+            arrWsNames(5) = "Tabelle2"
+            arrWsNames(6) = "Edit Allgemein"
+            arrWsNames(7) = "Darstellungsklassen"                          ' war Kosten ; ist nicht mehr notwendig
+            arrWsNames(8) = "Phasen-Mappings"
+            arrWsNames(9) = "Tabelle3"
+            arrWsNames(10) = "Meilenstein-Mappings"
+            arrWsNames(11) = "Projekt editieren"
+            arrWsNames(12) = "Projektdefinition Erloese"
+            arrWsNames(13) = "Projekt iErloese"
+            arrWsNames(14) = "Objekte"
+            arrWsNames(15) = "Portfolio Vorlage"
+
+
+            awinSettings.applyFilter = False
+
+            showRangeLeft = 0
+            showRangeRight = 0
+
+            'selectedRoleNeeds = 0
+            'selectedCostNeeds = 0
+
+            ' '' '' bestimmen der maximalen Breite und Höhe 
+            '' ''Dim formerSU As Boolean = appInstance.ScreenUpdating
+            '' ''appInstance.ScreenUpdating = False
+
+
+            ' '' '' um dahinter temporär die Darstellungsklassen kopieren zu können  
+            '' ''Dim projectBoardSheet As Excel.Worksheet = CType(appInstance.ActiveSheet, _
+            '' ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+
+
+            '' ''With appInstance.ActiveWindow
+
+
+            '' ''    If .WindowState = Excel.XlWindowState.xlMaximized Then
+            '' ''        maxScreenHeight = .Height
+            '' ''        maxScreenWidth = .Width
+            '' ''    Else
+            '' ''        Dim formerState As Excel.XlWindowState = .WindowState
+            '' ''        .WindowState = Excel.XlWindowState.xlMaximized
+            '' ''        maxScreenHeight = .Height
+            '' ''        maxScreenWidth = .Width
+            '' ''        .WindowState = formerState
+            '' ''    End If
+
+
+            '' ''End With
+
+            '' ''miniHeight = maxScreenHeight / 6
+            '' ''miniWidth = maxScreenWidth / 10
+
+
+
+            '' ''Dim oGrenze As Integer = UBound(frmCoord, 1)
+            ' '' '' hier werden die Top- & Left- Default Positionen der Formulare gesetzt 
+            '' ''For i = 0 To oGrenze
+            '' ''    frmCoord(i, PTpinfo.top) = maxScreenHeight * 0.3
+            '' ''    frmCoord(i, PTpinfo.left) = maxScreenWidth * 0.4
+            '' ''Next
+
+            ' '' '' jetzt setzen der Werte für Status-Information und Milestone-Information
+            '' ''frmCoord(PTfrm.projInfo, PTpinfo.top) = 125
+            '' ''frmCoord(PTfrm.projInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+
+            '' ''frmCoord(PTfrm.msInfo, PTpinfo.top) = 125 + 280
+            '' ''frmCoord(PTfrm.msInfo, PTpinfo.left) = My.Computer.Screen.WorkingArea.Width - 500
+
+            ' '' '' With listOfWorkSheets(arrWsNames(4))
+
+            ' '' '' Logfile öffnen und ggf. initialisieren
+            '' ''Call logfileOpen()
+
 
             Try
-                ' Aufbauen der Darstellungsklassen  
-                Call aufbauenAppearanceDefinitions(wsName7810)
+                ' prüft, ob bereits Excel geöffnet ist 
+                'excelObj = GetObject(, "Excel.Application")
+                appInstance = CType(GetObject(, "Excel.Application"), Microsoft.Office.Interop.Excel.Application)
+            Catch ex As Exception
+                Try
+                    'excelObj = GetObject(, "Excel.Application")
+                    appInstance = CType(CreateObject("Excel.Application"), Microsoft.Office.Interop.Excel.Application)
+                Catch ex1 As Exception
+                    Call MsgBox("Excel konnte nicht gestartet werden ..." & ex1.Message)
+                    Exit Sub
+                End Try
 
-                ' Auslesen der BusinessUnit Definitionen
-                Call readBusinessUnitDefinitions(wsName4)
+            End Try
 
-                ' Auslesen der Phasen Definitionen 
-                Call readPhaseDefinitions(wsName4)
-
-                ' Auslesen der Meilenstein Definitionen 
-                Call readMilestoneDefinitions(wsName4)
-
-                ' Auslesen der Rollen Definitionen 
-                Call readRoleDefinitions(wsName4)
-
-                ' Auslesen der Kosten Definitionen 
-                Call readCostDefinitions(wsName4)
-
-                ' auslesen der anderen Informationen 
-                Call readOtherDefinitions(wsName4)
-
-                ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
-                wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-                Call readNameMappings(wsName7810, phaseMappings)
-
-
-                ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
-                wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
-                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-                Call readNameMappings(wsName7810, milestoneMappings)
-
-                ' '' '' '' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
-                '' '' ''appInstance.EnableEvents = False
-                '' '' ''CType(appInstance.Worksheets(arrWsNames(7)), _
-                '' '' ''Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
-
-                ' '' '' '' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
-                '' '' ''appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False) ' ur: 6.5.2014 savechanges hinzugefügt
-                '' '' ''appInstance.EnableEvents = True
-
-
-                ' '' '' '' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
-                '' '' ''appearanceDefinitions.Clear()
-                '' '' ''wsName7810 = CType(appInstance.Worksheets(arrWsNames(7)), _
-                '' '' ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
-                '' '' ''Call aufbauenAppearanceDefinitions(wsName7810)
-
-
-                ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
-                Call readRessourcenDetails()
-
-
-                ' '' '' '' jetzt werden die Modul-Vorlagen ausgelesen 
-                '' '' ''Call readVorlagen(True)
-
-                ' '' '' '' jetzt werden die Projekt-Vorlagen ausgelesen 
-                '' '' ''Call readVorlagen(False)
-
-                '' '' ''Dim a As Integer = Projektvorlagen.Count
-                '' '' ''Dim b As Integer = ModulVorlagen.Count
-
-                ' jetzt wird die Projekt-Tafel präpariert - Spaltenbreite und -Höhe
-                ' Beschriftung des Kalenders
-                '' '' ''appInstance.EnableEvents = False
-                '' '' ''Call prepareProjektTafel()
-
-
-                '' '' ''projectBoardSheet.Activate()
-                '' '' ''appInstance.EnableEvents = True
-
-                ' '' '' '' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
-                '' '' ''Call readInitConstellations()
-
+            Dim customizationFile As String = "requirements\Project Board Customization.xlsx"
+            ' hier muss jetzt das Customization File aufgemacht werden ...
+            Try
+                xlsCustomization = appInstance.Workbooks.Open(awinPath & customizationFile)
+                myCustomizationFile = appInstance.ActiveWorkbook.Name
             Catch ex As Exception
                 'appInstance.ScreenUpdating = formerSU
-                appInstance.EnableEvents = True
-                Throw New ArgumentException(ex.Message)
+                Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
             End Try
 
-            '' '' Logfile wird geschlossen
-            ' ''Call logfileSchliessen()
+            Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
+                                                    Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+            ' '' '' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
+            '' ''Try
+            '' ''    awinSettings.databaseName = CStr(wsName4.Range("Datenbank").Value).Trim
+            '' ''    If awinSettings.databaseName = "" Then
+            '' ''        awinSettings.databaseName = "VisboTest"
+            '' ''    End If
+            '' ''Catch ex As Exception
+
+            '' ''    awinSettings.databaseName = "VisboTest"
+            '' ''    'appInstance.ScreenUpdating = formerSU
+            '' ''    'Throw New ArgumentException("fehlende Einstellung im Customization-File; DB Name fehlt ... Abbruch " & vbLf & ex.Message)
+            '' ''End Try
+
+            If special = "BHTC" Then
+                ' keine Datenbank angeschlossen
+                ' kein LOGIN erforderlich
 
 
-        Else ' es gilt : special <> "BHTC"
+                Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
+                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                Try
+                    ' Aufbauen der Darstellungsklassen  
+                    Call aufbauenAppearanceDefinitions(wsName7810)
+
+                    ' Auslesen der BusinessUnit Definitionen
+                    Call readBusinessUnitDefinitions(wsName4)
+
+                    ' Auslesen der Phasen Definitionen 
+                    Call readPhaseDefinitions(wsName4)
+
+                    ' Auslesen der Meilenstein Definitionen 
+                    Call readMilestoneDefinitions(wsName4)
+
+                    ' Auslesen der Rollen Definitionen 
+                    Call readRoleDefinitions(wsName4)
+
+                    ' Auslesen der Kosten Definitionen 
+                    Call readCostDefinitions(wsName4)
+
+                    ' auslesen der anderen Informationen 
+                    Call readOtherDefinitions(wsName4)
+
+                    ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
+                    wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                    Call readNameMappings(wsName7810, phaseMappings)
 
 
-            ' '' '' ur: 23.01.2015: Abfragen der Login-Informationen
-            '' ''loginErfolgreich = loginProzedur()
+                    ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
+                    wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
+                                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                    Call readNameMappings(wsName7810, milestoneMappings)
+
+                    ' '' '' '' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
+                    '' '' ''appInstance.EnableEvents = False
+                    '' '' ''CType(appInstance.Worksheets(arrWsNames(7)), _
+                    '' '' ''Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
+
+                    ' '' '' '' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
+                    '' '' ''appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False) ' ur: 6.5.2014 savechanges hinzugefügt
+                    '' '' ''appInstance.EnableEvents = True
+
+
+                    ' '' '' '' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
+                    '' '' ''appearanceDefinitions.Clear()
+                    '' '' ''wsName7810 = CType(appInstance.Worksheets(arrWsNames(7)), _
+                    '' '' ''                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+                    '' '' ''Call aufbauenAppearanceDefinitions(wsName7810)
+
+
+                    ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
+                    Call readRessourcenDetails()
+
+
+                    ' '' '' '' jetzt werden die Modul-Vorlagen ausgelesen 
+                    '' '' ''Call readVorlagen(True)
+
+                    ' '' '' '' jetzt werden die Projekt-Vorlagen ausgelesen 
+                    '' '' ''Call readVorlagen(False)
+
+                    '' '' ''Dim a As Integer = Projektvorlagen.Count
+                    '' '' ''Dim b As Integer = ModulVorlagen.Count
+
+                    ' jetzt wird die Projekt-Tafel präpariert - Spaltenbreite und -Höhe
+                    ' Beschriftung des Kalenders
+                    '' '' ''appInstance.EnableEvents = False
+                    '' '' ''Call prepareProjektTafel()
+
+
+                    '' '' ''projectBoardSheet.Activate()
+                    '' '' ''appInstance.EnableEvents = True
+
+                    ' '' '' '' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
+                    '' '' ''Call readInitConstellations()
+
+                Catch ex As Exception
+                    'appInstance.ScreenUpdating = formerSU
+                    appInstance.EnableEvents = True
+                    Throw New ArgumentException(ex.Message)
+                End Try
+
+                '' '' Logfile wird geschlossen
+                ' ''Call logfileSchliessen()
+
+
+            Else ' es gilt : special <> "BHTC"
+
+
+                ' '' '' ur: 23.01.2015: Abfragen der Login-Informationen
+                '' ''loginErfolgreich = loginProzedur()
 
 
 
-            '' ''If Not loginErfolgreich Then
-            '' ''    ' Customization-File wird geschlossen
-            '' ''    xlsCustomization.Close(SaveChanges:=False)
-            '' ''    Call logfileSchreiben("LOGIN fehlerhaft", "", -1)
-            '' ''    Call logfileSchliessen()
-            '' ''    appInstance.Quit()
-            '' ''    Exit Sub
-            '' ''Else
+                '' ''If Not loginErfolgreich Then
+                '' ''    ' Customization-File wird geschlossen
+                '' ''    xlsCustomization.Close(SaveChanges:=False)
+                '' ''    Call logfileSchreiben("LOGIN fehlerhaft", "", -1)
+                '' ''    Call logfileSchliessen()
+                '' ''    appInstance.Quit()
+                '' ''    Exit Sub
+                '' ''Else
 
 
 
 
-            '' ''    Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
-            '' ''                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
+                '' ''    Dim wsName7810 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(7)), _
+                '' ''                                            Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-            '' ''    Try
-            '' ''        ' Aufbauen der Darstellungsklassen  
-            '' ''        Call aufbauenAppearanceDefinitions(wsName7810)
+                '' ''    Try
+                '' ''        ' Aufbauen der Darstellungsklassen  
+                '' ''        Call aufbauenAppearanceDefinitions(wsName7810)
 
-            '' ''        ' Auslesen der BusinessUnit Definitionen
-            '' ''        Call readBusinessUnitDefinitions(wsName4)
+                '' ''        ' Auslesen der BusinessUnit Definitionen
+                '' ''        Call readBusinessUnitDefinitions(wsName4)
 
-            '' ''        ' Auslesen der Phasen Definitionen 
-            '' ''        Call readPhaseDefinitions(wsName4)
+                '' ''        ' Auslesen der Phasen Definitionen 
+                '' ''        Call readPhaseDefinitions(wsName4)
 
-            '' ''        ' Auslesen der Meilenstein Definitionen 
-            '' ''        Call readMilestoneDefinitions(wsName4)
+                '' ''        ' Auslesen der Meilenstein Definitionen 
+                '' ''        Call readMilestoneDefinitions(wsName4)
 
-            '' ''        ' Auslesen der Rollen Definitionen 
-            '' ''        Call readRoleDefinitions(wsName4)
+                '' ''        ' Auslesen der Rollen Definitionen 
+                '' ''        Call readRoleDefinitions(wsName4)
 
-            '' ''        ' Auslesen der Kosten Definitionen 
-            '' ''        Call readCostDefinitions(wsName4)
+                '' ''        ' Auslesen der Kosten Definitionen 
+                '' ''        Call readCostDefinitions(wsName4)
 
-            '' ''        ' auslesen der anderen Informationen 
-            '' ''        Call readOtherDefinitions(wsName4)
+                '' ''        ' auslesen der anderen Informationen 
+                '' ''        Call readOtherDefinitions(wsName4)
 
-            '' ''        ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
-            '' ''        wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
-            '' ''                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+                '' ''        ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
+                '' ''        wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
+                '' ''                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-            '' ''        Call readNameMappings(wsName7810, phaseMappings)
-
-
-            '' ''        ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
-            '' ''        wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
-            '' ''                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
-
-            '' ''        Call readNameMappings(wsName7810, milestoneMappings)
-
-            '' ''        ' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
-            '' ''        appInstance.EnableEvents = False
-            '' ''        CType(appInstance.Worksheets(arrWsNames(7)), _
-            '' ''        Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
-
-            '' ''        ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
-            '' ''        appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False) ' ur: 6.5.2014 savechanges hinzugefügt
-            '' ''        appInstance.EnableEvents = True
+                '' ''        Call readNameMappings(wsName7810, phaseMappings)
 
 
-            '' ''        ' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
-            '' ''        appearanceDefinitions.Clear()
-            '' ''        wsName7810 = CType(appInstance.Worksheets(arrWsNames(7)), _
-            '' ''                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
-            '' ''        Call aufbauenAppearanceDefinitions(wsName7810)
+                '' ''        ' hier muss jetzt das Worksheet Milestone-Mappings aufgemacht werden, das ist in arrwsnames(10) abgelegt 
+                '' ''        wsName7810 = CType(appInstance.Worksheets(arrWsNames(10)), _
+                '' ''                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                '' ''        Call readNameMappings(wsName7810, milestoneMappings)
+
+                '' ''        ' jetzt muss die Seite mit den Appearance-Shapes kopiert werden 
+                '' ''        appInstance.EnableEvents = False
+                '' ''        CType(appInstance.Worksheets(arrWsNames(7)), _
+                '' ''        Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
+
+                '' ''        ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
+                '' ''        appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False) ' ur: 6.5.2014 savechanges hinzugefügt
+                '' ''        appInstance.EnableEvents = True
 
 
-            '' ''        ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
-            '' ''        Call readRessourcenDetails()
+                '' ''        ' jetzt muss die apperanceDefinitions wieder neu aufgebaut werden 
+                '' ''        appearanceDefinitions.Clear()
+                '' ''        wsName7810 = CType(appInstance.Worksheets(arrWsNames(7)), _
+                '' ''                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+                '' ''        Call aufbauenAppearanceDefinitions(wsName7810)
 
 
-            '' ''        ' jetzt werden die Modul-Vorlagen ausgelesen 
-            '' ''        Call readVorlagen(True)
-
-            '' ''        ' jetzt werden die Projekt-Vorlagen ausgelesen 
-            '' ''        Call readVorlagen(False)
-
-            '' ''        Dim a As Integer = Projektvorlagen.Count
-            '' ''        Dim b As Integer = ModulVorlagen.Count
-
-            '' ''        ' jetzt wird die Projekt-Tafel präpariert - Spaltenbreite und -Höhe
-            '' ''        ' Beschriftung des Kalenders
-            '' ''        appInstance.EnableEvents = False
-            '' ''        Call prepareProjektTafel()
+                '' ''        ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
+                '' ''        Call readRessourcenDetails()
 
 
-            '' ''        projectBoardSheet.Activate()
-            '' ''        appInstance.EnableEvents = True
+                '' ''        ' jetzt werden die Modul-Vorlagen ausgelesen 
+                '' ''        Call readVorlagen(True)
 
-            '' ''        ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
-            '' ''        Call readInitConstellations()
+                '' ''        ' jetzt werden die Projekt-Vorlagen ausgelesen 
+                '' ''        Call readVorlagen(False)
 
-            '' ''    Catch ex As Exception
-            '' ''        appInstance.ScreenUpdating = formerSU
-            '' ''        appInstance.EnableEvents = True
-            '' ''        Throw New ArgumentException(ex.Message)
-            '' ''    End Try
+                '' ''        Dim a As Integer = Projektvorlagen.Count
+                '' ''        Dim b As Integer = ModulVorlagen.Count
 
-            ' '' '' Logfile wird geschlossen
-            '' ''Call logfileSchliessen()
-
-
-            '' ''End If  ' von "if Login erfolgt"
-
-        End If ' von "if special="BHTC"
+                '' ''        ' jetzt wird die Projekt-Tafel präpariert - Spaltenbreite und -Höhe
+                '' ''        ' Beschriftung des Kalenders
+                '' ''        appInstance.EnableEvents = False
+                '' ''        Call prepareProjektTafel()
 
 
+                '' ''        projectBoardSheet.Activate()
+                '' ''        appInstance.EnableEvents = True
+
+                '' ''        ' jetzt werden aus der Datenbank die Konstellationen und Dependencies gelesen 
+                '' ''        Call readInitConstellations()
+
+                '' ''    Catch ex As Exception
+                '' ''        appInstance.ScreenUpdating = formerSU
+                '' ''        appInstance.EnableEvents = True
+                '' ''        Throw New ArgumentException(ex.Message)
+                '' ''    End Try
+
+                ' '' '' Logfile wird geschlossen
+                '' ''Call logfileSchliessen()
+
+
+                '' ''End If  ' von "if Login erfolgt"
+
+            End If ' von "if special="BHTC"
+
+        Catch ex As Exception
+            Call MsgBox("Fehler beim Laden des VISBO AddIn")
+            fehlerBeimLoad = True
+
+        End Try
     End Sub
 
     ''' <summary>
