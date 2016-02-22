@@ -77,7 +77,7 @@ Public Class frmHierarchySelection
         End If
 
 
-        If Not Me.menuOption = PTmenue.reportBHTC And Not Me.calledFrom = "MS-Project" Then
+        If Not Me.calledFrom = "MS-Project" Then
 
             Call retrieveSelections("Last", PTmenue.visualisieren, selectedBUs, selectedTyps, selectedPhases, selectedMilestones, selectedRoles, selectedCosts)
         Else
@@ -125,16 +125,20 @@ Public Class frmHierarchySelection
         Else
             '       Me.menuOption = PTmenue.reportBHTC
             '
-            If Not IsNothing(repProfil.PPTTemplate) Then
-                If My.Computer.FileSystem.FileExists(awinPath & RepProjectVorOrdner & "\" & repProfil.PPTTemplate) Then
-                    repVorlagenDropbox.Text = repProfil.PPTTemplate
-                Else
-                    repVorlagenDropbox.Text = ""
+            If Me.calledFrom = "MS-Project" Then
+
+                If Not IsNothing(repProfil) Then
+                    If My.Computer.FileSystem.FileExists(awinPath & RepProjectVorOrdner & "\" & repProfil.PPTTemplate) Then
+                        repVorlagenDropbox.Text = repProfil.PPTTemplate
+                    Else
+                        repVorlagenDropbox.Text = ""
+                    End If
                 End If
+
             End If
 
 
-        End If
+            End If
 
 
 
@@ -311,14 +315,19 @@ Public Class frmHierarchySelection
                         ' Alternativ ohne Background Worker
                         If Me.menuOption = PTmenue.reportBHTC Then
 
-                            'Call MsgBox("Report erstellen mit Projekt " & repProfil.VonDate.ToString & " bis " & repProfil.BisDate.ToString & " Reportprofil " & repProfil.name)
-                            Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
+                            If Me.calledFrom = "MS Project" Then
 
-                            repProfil.PPTTemplate = repVorlagenDropbox.Text
+                                'Call MsgBox("Report erstellen mit Projekt " & repProfil.VonDate.ToString & " bis " & repProfil.BisDate.ToString & " Reportprofil " & repProfil.name)
+                                Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
 
-                            BackgroundWorker3.RunWorkerAsync(repProfil)
+                                repProfil.PPTTemplate = repVorlagenDropbox.Text
 
+                                BackgroundWorker3.RunWorkerAsync(repProfil)
 
+                            Else
+                                BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
+
+                            End If
 
                         Else
                             BackgroundWorker1.RunWorkerAsync(vorlagenDateiName)
@@ -380,27 +389,32 @@ Public Class frmHierarchySelection
 
             With awinSettings
 
-                .drawProjectLine = True
-                .mppOnePage = repProfil.OnePage
-                .mppShowLegend = repProfil.Legend
-                .mppShowMsDate = repProfil.MSDate
-                .mppShowMsName = repProfil.MSName
-                .mppShowPhDate = repProfil.PhDate
-                .mppShowPhName = repProfil.PhName
-                .mppVertikalesRaster = repProfil.VLinien
-                .mppShowHorizontals = repProfil.ShowHorizontals
-                .mppUseAbbreviation = repProfil.UseAbbreviation
-                .mppKwInMilestone = repProfil.KwInMilestone
+                If Not IsNothing(repProfil) Then
 
-                ' für BHTC immer true
-                .mppExtendedMode = repProfil.ExtendedMode
-                ' für BHTC immer false
-                .mppShowAmpel = repProfil.Ampeln
-                .mppShowAllIfOne = repProfil.AllIfOne
-                .mppFullyContained = repProfil.FullyContained
-                .mppSortiertDauer = repProfil.SortedDauer
-                .mppShowProjectLine = repProfil.ProjectLine
-                .mppUseOriginalNames = repProfil.UseOriginalNames
+                    .drawProjectLine = True
+                    .mppOnePage = repProfil.OnePage
+                    .mppShowLegend = repProfil.Legend
+                    .mppShowMsDate = repProfil.MSDate
+                    .mppShowMsName = repProfil.MSName
+                    .mppShowPhDate = repProfil.PhDate
+                    .mppShowPhName = repProfil.PhName
+                    .mppVertikalesRaster = repProfil.VLinien
+                    .mppShowHorizontals = repProfil.ShowHorizontals
+                    .mppUseAbbreviation = repProfil.UseAbbreviation
+                    .mppKwInMilestone = repProfil.KwInMilestone
+
+                    ' für BHTC immer true
+                    .mppExtendedMode = repProfil.ExtendedMode
+                    ' für BHTC immer false
+                    .mppShowAmpel = repProfil.Ampeln
+                    .mppShowAllIfOne = repProfil.AllIfOne
+                    .mppFullyContained = repProfil.FullyContained
+                    .mppSortiertDauer = repProfil.SortedDauer
+                    .mppShowProjectLine = repProfil.ProjectLine
+                    .mppUseOriginalNames = repProfil.UseOriginalNames
+
+                End If
+
 
             End With
         Else
@@ -417,23 +431,28 @@ Public Class frmHierarchySelection
             With awinSettings
 
                 .drawProjectLine = True
-                repProfil.ExtendedMode = .mppExtendedMode
-                repProfil.OnePage = .mppOnePage
-                repProfil.AllIfOne = .mppShowAllIfOne
-                repProfil.Ampeln = .mppShowAmpel
-                repProfil.Legend = .mppShowLegend
-                repProfil.MSDate = .mppShowMsDate
-                repProfil.MSName = .mppShowMsName
-                repProfil.PhDate = .mppShowPhDate
-                repProfil.PhName = .mppShowPhName
-                repProfil.ProjectLine = .mppShowProjectLine
-                repProfil.SortedDauer = .mppSortiertDauer
-                repProfil.VLinien = .mppVertikalesRaster
-                repProfil.FullyContained = .mppFullyContained
-                repProfil.ShowHorizontals = .mppShowHorizontals
-                repProfil.UseAbbreviation = .mppUseAbbreviation
-                repProfil.UseOriginalNames = .mppUseOriginalNames
-                repProfil.KwInMilestone = .mppKwInMilestone
+
+                If Not IsNothing(repProfil) Then
+
+                    repProfil.ExtendedMode = .mppExtendedMode
+                    repProfil.OnePage = .mppOnePage
+                    repProfil.AllIfOne = .mppShowAllIfOne
+                    repProfil.Ampeln = .mppShowAmpel
+                    repProfil.Legend = .mppShowLegend
+                    repProfil.MSDate = .mppShowMsDate
+                    repProfil.MSName = .mppShowMsName
+                    repProfil.PhDate = .mppShowPhDate
+                    repProfil.PhName = .mppShowPhName
+                    repProfil.ProjectLine = .mppShowProjectLine
+                    repProfil.SortedDauer = .mppSortiertDauer
+                    repProfil.VLinien = .mppVertikalesRaster
+                    repProfil.FullyContained = .mppFullyContained
+                    repProfil.ShowHorizontals = .mppShowHorizontals
+                    repProfil.UseAbbreviation = .mppUseAbbreviation
+                    repProfil.UseOriginalNames = .mppUseOriginalNames
+                    repProfil.KwInMilestone = .mppKwInMilestone
+
+                End If
 
             End With
         End If

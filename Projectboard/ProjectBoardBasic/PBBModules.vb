@@ -28,11 +28,24 @@ Public Module PBBModules
 
         Dim hryFormular As New frmHierarchySelection
         Dim returnValue As DialogResult
-        Dim lic As clsLicences = XMLImportLicences(licfilename)
-
+        Dim formerSettings(3) As Boolean
 
         If controlID = "PT1G1B3" Then
             hryFormular.calledFrom = "Multiprojekt-Tafel"
+
+            With awinSettings
+                formerSettings(0) = .mppExtendedMode
+                formerSettings(1) = .mppShowAllIfOne
+                formerSettings(2) = .mppShowAmpel
+                formerSettings(3) = .mppFullyContained
+            End With
+
+            With awinSettings
+                .mppExtendedMode = True
+                .mppShowAllIfOne = False
+                .mppShowAmpel = False
+                .mppFullyContained = False
+            End With
 
         Else
             hryFormular.calledFrom = "MS-Project"
@@ -42,7 +55,7 @@ Public Module PBBModules
         End If
 
 
-        Dim formerSettings(3) As Boolean
+        ' Dim formerSettings(3) As Boolean
         With awinSettings
             formerSettings(0) = .mppExtendedMode
             formerSettings(1) = .mppShowAllIfOne
@@ -97,17 +110,31 @@ Public Module PBBModules
 
             ' Filter
             .filterDropbox.Visible = True
-
-            .filterDropbox.Text = reportprofil.name
             .filterLabel.Visible = True
             .filterLabel.Text = "Name Report-Profil"
 
+            If Not IsNothing(reportprofil) Then
+                .filterDropbox.Text = reportprofil.name
+            Else
+                .filterDropbox.Text = ""
+            End If
+
+
+
             Try
-                ' nur mit dem Recht für ProjectAdmin können ReportProfile gespeichert werden
-                If lic.validLicence(myWindowsName, LizenzKomponenten(PTSWKomp.ProjectAdmin)) Then
-                    .auswSpeichern.Visible = True
-                    .filterDropbox.Enabled = True
+                If .calledFrom = "MS-Project" Then
+
+                    Dim lic As clsLicences = XMLImportLicences(licFileName)
+                    ' nur mit dem Recht für ProjectAdmin können ReportProfile gespeichert werden
+                    If lic.validLicence(myWindowsName, LizenzKomponenten(PTSWKomp.ProjectAdmin)) Then
+                        .auswSpeichern.Visible = True
+                        .filterDropbox.Enabled = True
+                    Else
+                        .auswSpeichern.Visible = False
+                        .filterDropbox.Enabled = False
+                    End If
                 Else
+
                     .auswSpeichern.Visible = False
                     .filterDropbox.Enabled = False
                 End If
@@ -116,6 +143,7 @@ Public Module PBBModules
                 .auswSpeichern.Visible = False
                 .filterDropbox.Enabled = False
             End Try
+
 
             ' bei Verwendung Background Worker muss Aufruf so erfolgen: 
             returnValue = .ShowDialog
