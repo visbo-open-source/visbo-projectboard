@@ -4,6 +4,47 @@
     Private _Parent As clsPhase
     Private _name As String
 
+    ' Erweiterung tk 18.2.16
+    ' das wird verwendet . um eine Farbe Meilensteins, der nicht zur Liste der bekannten gehört 
+    ' aufzunehmen 
+    Private _alternativeColor As Long
+
+    ''' <summary>
+    ''' gibt die Farbe eines Meilensteins zurück; wenn er in der Liste der bekannten Meilensteine ist, 
+    ''' dann die Farbe der Darstellungsklasse, sonst die AlternativeFare, die ggf beim auslesen aus MS Project ermittelt wird
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property farbe As Long
+        Get
+            Dim msName As String = elemNameOfElemID(_name)
+            If MilestoneDefinitions.Contains(msName) Then
+                farbe = CLng(MilestoneDefinitions.getShape(msName).Fill.ForeColor.RGB)
+            Else
+                farbe = _alternativeColor
+            End If
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' setzt die Farbe eines Meilensteins; macht  dann Sinn, wenn der Meilenstein nicht zur 
+    ''' Liste der bekannten Meilensteine gehört 
+    ''' </summary>
+    ''' <value></value>
+    ''' <remarks></remarks>
+    Public WriteOnly Property setFarbe As Long
+        Set(value As Long)
+
+            If value >= RGB(0, 0, 0) And value <= RGB(255, 255, 255) Then
+                _alternativeColor = value
+            Else
+                ' unverändert lassen - wird ja auch im New initial gesetzt 
+            End If
+
+        End Set
+    End Property
+
     ''' <summary>
     ''' gibt die Eltern-Phase zurück
     ''' </summary>
@@ -85,8 +126,20 @@
         End Set
     End Property
 
+    ''' <summary>
+    ''' liest/schreibt wer verantwortlich ist 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public Property verantwortlich As String
 
+    ''' <summary>
+    ''' gibt die Bewertungsliste zurück
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property bewertungsListe() As SortedList(Of String, clsBewertung)
 
         Get
@@ -96,6 +149,12 @@
 
 
 
+    ''' <summary>
+    ''' liest das Datum des Meilensteins
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
     Public ReadOnly Property getDate As Date
 
         Get
@@ -192,6 +251,7 @@
             .nameID = Me.nameID
             .verantwortlich = Me.verantwortlich
             .offset = Me.offset
+            .setFarbe = Me.farbe
 
         End With
 
@@ -211,6 +271,7 @@
             End If
             .verantwortlich = Me.verantwortlich
             .offset = Me.offset
+            .setFarbe = Me.farbe
 
             For i = 1 To Me.bewertungen.Count
                 Me.getBewertung(i).copyto(newb)
@@ -280,7 +341,6 @@
 
         Get
 
-
             Try
                 getBewertung = bewertungen.Item(key)
             Catch ex As Exception
@@ -301,10 +361,12 @@
 
     Sub New(ByRef parent As clsPhase)
 
+        Dim defaultName As String = "Meilenstein Default"
         bewertungen = New SortedList(Of String, clsBewertung)
         _offset = 0
         _Parent = parent
-
+        _alternativeColor = awinSettings.AmpelNichtBewertet
+        
     End Sub
 
 End Class
