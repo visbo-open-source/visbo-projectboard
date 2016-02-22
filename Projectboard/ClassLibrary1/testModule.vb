@@ -12223,7 +12223,7 @@ Public Module testModule
     ''' <param name="x1Pos">Rückgabe Wert Start</param>
     ''' <param name="x2Pos">Rückgabe Wert Ende</param>
     ''' <remarks></remarks>
-    Private Sub calculatePPTx1x2New(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date, _
+    Private Sub calculatePPTx1x2(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date, _
                                      ByVal startdate As Date, ByVal enddate As Date, _
                                      ByVal linkerRand As Double, ByVal breite As Double, _
                                      ByRef x1Pos As Double, ByRef x2Pos As Double)
@@ -12263,7 +12263,7 @@ Public Module testModule
     ''' <param name="x1Pos"></param>
     ''' <param name="x2Pos"></param>
     ''' <remarks></remarks>
-    Private Sub calculatePPTx1x2(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date, _
+    Private Sub calculatePPTx1x2OLD(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date, _
                                          ByVal startdate As Date, ByVal enddate As Date, _
                                          ByVal linkerRand As Double, ByVal breite As Double, _
                                          ByRef x1Pos As Double, ByRef x2Pos As Double)
@@ -13105,12 +13105,17 @@ Public Module testModule
             Try
 
                 With rds
-                    
-                        Call zeichnePPTCalendar(pptslide, calendargroup, _
-                                            pptStartofCalendar, pptEndOfCalendar, _
-                                            .calendarLineShape, .calendarHeightShape, .calendarStepShape, .calendarMarkShape, _
-                                            .yearVorlagenShape, .quarterMonthVorlagenShape, .calendarYearSeparator, .calendarQuartalSeparator, _
-                                            .drawingAreaBottom)
+
+
+                    ' das demnächst abändern auf 
+                    Call zeichne3RowsCalendar(rds, calendargroup)
+
+
+                    'Call zeichnePPTCalendar(pptslide, calendargroup, _
+                    '                    pptStartofCalendar, pptEndOfCalendar, _
+                    '                    .calendarLineShape, .calendarHeightShape, .calendarStepShape, .calendarMarkShape, _
+                    '                    .yearVorlagenShape, .quarterMonthVorlagenShape, .calendarYearSeparator, .calendarQuartalSeparator, _
+                    '                    .drawingAreaBottom)
 
                 End With
 
