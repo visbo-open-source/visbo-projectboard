@@ -12887,6 +12887,10 @@ Public Module testModule
             Call calcStartEndePPTKalender(minDate, maxDate, _
                                           pptStartofCalendar, pptEndOfCalendar)
 
+            ' jetzt für Swimlanes Behandlung Kalender in der Klasse setzen 
+
+            Call rds.setCalendarDates(pptStartofCalendar, pptEndOfCalendar)
+
 
             ' bestimme die benötigte Höhe einer Zeile im Report ( nur wenn nicht schon bestimmt also zeilenhoehe <> 0
             If pptFirstTime And zeilenhoehe = 0.0 Then
