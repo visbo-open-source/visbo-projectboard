@@ -2159,11 +2159,13 @@ Imports System.Drawing
 
 
             ' sichern der awinSettings.mpp... Einstellungen
-          
-            Dim sav_mppShowAllIfOne As Boolean = awinSettings.mppShowAllIfOne
-            awinSettings.mppShowAllIfOne = True
-            Dim sav_mppExtendedMode As Boolean = awinSettings.mppExtendedMode
-            awinSettings.mppExtendedMode = True
+
+            ' Änderung tk 23.2.2016: das sollte nicht mehr explizit gesetzt werden - andernfalls kann man in Einzelprojekt-Reports 
+            ' keine Zeiraumbetrachtungen mehr machen , ausserdem würde es sich anbieten, in den Swimlane Reports Einzel-Zeilen zu zeichnen 
+            'Dim sav_mppShowAllIfOne As Boolean = awinSettings.mppShowAllIfOne
+            'awinSettings.mppShowAllIfOne = True
+            'Dim sav_mppExtendedMode As Boolean = awinSettings.mppExtendedMode
+            'awinSettings.mppExtendedMode = True
             ' Settings für Einzelprojekt-Reports
             'awinSettings.eppExtendedMode = True
 
@@ -2176,8 +2178,9 @@ Imports System.Drawing
 
             ' Zurücksetzen der gesicherten und veränderten Einstellungen
 
-            awinSettings.mppExtendedMode = sav_mppExtendedMode
-            awinSettings.mppShowAllIfOne = sav_mppShowAllIfOne
+            ' Änderung tk 23.2.2016 
+            'awinSettings.mppExtendedMode = sav_mppExtendedMode
+            'awinSettings.mppShowAllIfOne = sav_mppShowAllIfOne
 
             appInstance.EnableEvents = True
             appInstance.ScreenUpdating = True
