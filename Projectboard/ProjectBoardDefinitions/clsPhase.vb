@@ -19,6 +19,11 @@
     Private _Parent As clsProjekt
     Private _vorlagenParent As clsProjektvorlage
 
+    ' Erweiterung tk 18.2.16
+    ' das wird verwendet . um eine Farbe Meilensteins, der nicht zur Liste der bekannten gehört 
+    ' aufzunehmen 
+    Private _alternativeColor As Long
+
 
     ''' <summary>
     ''' prüft ob die Phase in ihren Werten Dauer in Monaten konsistent zu den Xwert-Dimensionen der Rollen und Kosten ist 
@@ -381,8 +386,6 @@
         End Get
     End Property
 
-
-
     ''' <summary>
     ''' liefert das StartDatum der Phase
     ''' </summary>
@@ -415,33 +418,54 @@
 
     End Property
 
-    Public ReadOnly Property Farbe As Object
+    ''' <summary>
+    ''' gibt die Farbe einer Phase zurück; das ist die Farbe der Darstellungsklasse, wenn die Phase zur Liste der
+    ''' bekannten Elemente gehört, sonst die AlternativeFare, die ggf beim auslesen z.b. aus MS Project ermittelt wird
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property farbe As Object
         Get
             Try
                 Dim itemName As String = elemNameOfElemID(_name)
                 If _name = rootPhaseName Then
-                    Farbe = Me.Parent.farbe             ' Farbe der Projektes, da Projekt der Parent der RootPhase ist
+                    farbe = Me.Parent.farbe             ' Farbe der Projektes, da Projekt der Parent der RootPhase ist
                 Else
                     Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(elemNameOfElemID(_name))
                     If IsNothing(tmpPhaseDef) Then
-                        If appearanceDefinitions.ContainsKey("Phasen Default") Then
-                            Farbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
-                        Else
-                            Farbe = awinSettings.AmpelNichtBewertet
-                        End If
-
+                        farbe = _alternativeColor
                     Else
-                        Farbe = tmpPhaseDef.farbe
+                        farbe = tmpPhaseDef.farbe
                     End If
 
                 End If
 
             Catch ex As Exception
                 ' in diesem Fall wird ein Standard Farbe genommen 
-                Farbe = awinSettings.AmpelNichtBewertet
+                farbe = awinSettings.AmpelNichtBewertet
             End Try
 
         End Get
+    End Property
+
+
+    ''' <summary>
+    ''' setzt die Farbe eines Meilensteins; macht  dann Sinn, wenn der Meilenstein nicht zur 
+    ''' Liste der bekannten Meilensteine gehört 
+    ''' </summary>
+    ''' <value></value>
+    ''' <remarks></remarks>
+    Public WriteOnly Property setFarbe As Long
+        Set(value As Long)
+
+            If value >= RGB(0, 0, 0) And value <= RGB(255, 255, 255) Then
+                _alternativeColor = value
+            Else
+                ' unverändert lassen - wird ja auch im New initial gesetzt 
+            End If
+
+        End Set
     End Property
 
 
@@ -1325,6 +1349,8 @@
         _Parent = parent
         _vorlagenParent = Nothing
 
+        _alternativeColor = awinSettings.AmpelNichtBewertet
+
 
     End Sub
 
@@ -1332,7 +1358,7 @@
         ' Variable isVorlage dient lediglich dazu, eine weitere Signatur für einen Konstruktor zu bekommen 
         ' dieser Konstruktor wird für parent = Vorlage benutzt 
 
-
+        Dim defaultName As String = "Phasen Default"
         AllRoles = New List(Of clsRolle)
         AllCosts = New List(Of clsKostenart)
         AllMilestones = New List(Of clsMeilenstein)
@@ -1343,6 +1369,9 @@
         _latestStart = -999
         _Parent = Nothing
         _vorlagenParent = parent
+
+        _alternativeColor = awinSettings.AmpelNichtBewertet
+        
 
 
 

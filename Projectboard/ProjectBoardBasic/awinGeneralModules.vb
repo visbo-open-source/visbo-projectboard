@@ -627,28 +627,6 @@ Public Module awinGeneralModules
         ReDim exportOrdnerNames(4)
 
 
-        ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
-        'awinPath = appInstance.ActiveWorkbook.Path & "\"
-
-        '' ''If (Dir(awinSettings.globalPath, vbDirectory) <> "") Then
-        '' ''    globalPath = awinSettings.globalPath
-        '' ''Else
-
-        '' ''    Throw New ArgumentException("Globaler Requirementsordner " & awinSettings.globalPath & " existiert nicht")
-
-        '' ''End If
-
-        '' ''If (Dir(awinSettings.awinPath, vbDirectory) <> "") Then
-        '' ''    awinPath = awinSettings.awinPath
-        '' ''Else
-
-        '' ''    Throw New ArgumentException("Lokaler Requirementsordner " & awinSettings.awinPath & " existiert nicht")
-
-        '' ''End If
-
-
-        ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
-        'awinPath = appInstance.ActiveWorkbook.Path & "\"
 
         globalPath = awinSettings.globalPath
 
