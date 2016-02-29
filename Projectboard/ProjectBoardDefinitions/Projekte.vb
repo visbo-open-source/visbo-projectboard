@@ -892,7 +892,7 @@ Public Module Projekte
                         'valueColor(i - 1) = iProjektFarbe()
                     Else
                         Try
-                            valueColor(i - 1) = .Farbe
+                            valueColor(i - 1) = .farbe
                         Catch ex As Exception
                             ' dann ist es die Farbe des Projektes
                             valueColor(i - 1) = hproj.farbe
@@ -901,7 +901,7 @@ Public Module Projekte
                     End If
                 Else
                     Try
-                        valueColor(i - 1) = .Farbe
+                        valueColor(i - 1) = .farbe
                     Catch ex As Exception
                         ' dann ist es die Farbe des Projektes
                         valueColor(i - 1) = hproj.farbe
@@ -1226,7 +1226,7 @@ Public Module Projekte
                 tdatenreihe2(i - 1) = .dauerInDays
                 tdatenreihe3(i - 1) = 0
                 Try
-                    valueColor(i - 1) = .Farbe
+                    valueColor(i - 1) = .farbe
                 Catch ex As Exception
                     ' dann ist es die Farbe des Projektes
                     valueColor(i - 1) = hproj.farbe
@@ -10741,7 +10741,8 @@ Public Module Projekte
         Dim heute As Date = Date.Now
         Dim tmpShapeRange As Excel.ShapeRange
         Dim vorlagenShape As xlNS.Shape
-        Dim isMissingDefinition As Boolean = False
+        Dim isMissingPhaseDefinition As Boolean = False
+        Dim isMissingMilestoneDefinition As Boolean = False
 
         Dim shpExists As Boolean
         Dim oldAlternativeText As String = ""
@@ -10823,6 +10824,8 @@ Public Module Projekte
                     cphase = hproj.getPhase(i)
                     phasenNameID = cphase.nameID
 
+                    isMissingPhaseDefinition = Not PhaseDefinitions.Contains(cphase.name)
+
                     '''' tk/ur: 28.9.15 
                     '''' damit die Phase (1) gefunden werden kann.  muss bei Phase(1) der Name anders zusammengesetzt sein als bei den anderen 
                     If phasenNameID = rootPhaseName Then
@@ -10835,7 +10838,7 @@ Public Module Projekte
 
                     Try
                         phaseShape = worksheetShapes.Item(phaseShapeName)
-                        Call definePhaseAppearance(hproj, cphase, 0, phaseShape, False)
+                        Call definePhaseAppearance(hproj, cphase, 0, phaseShape, isMissingPhaseDefinition)
                     Catch ex As Exception
 
                     End Try
@@ -10848,12 +10851,14 @@ Public Module Projekte
                         cMilestone = cphase.getMilestone(r)
                         cBewertung = cMilestone.getBewertung(1)
 
+                        isMissingMilestoneDefinition = Not MilestoneDefinitions.Contains(cMilestone.name)
+
                         msShapeName = projectboardShapes.calcMilestoneShapeName(hproj.name, cMilestone.nameID)
 
                         ' existiert das schon ? 
                         Try
                             milestoneShape = worksheetShapes.Item(msShapeName)
-                            Call defineResultAppearance(hproj, 0, milestoneShape, cBewertung)
+                            Call defineResultAppearance(hproj, 0, milestoneShape, cBewertung, isMissingMilestoneDefinition, cMilestone.farbe)
                         Catch ex As Exception
 
                         End Try
@@ -10912,7 +10917,7 @@ Public Module Projekte
 
                     End With
 
-
+                    isMissingPhaseDefinition = Not PhaseDefinitions.Contains(cphase.name)
 
                     Try
                         zeilenOffset = 0
@@ -10935,10 +10940,8 @@ Public Module Projekte
                             Dim tmpName As String = elemNameOfElemID(phasenNameID)
                             If PhaseDefinitions.Contains(tmpName) Then
                                 vorlagenShape = PhaseDefinitions.getShape(tmpName)
-                                isMissingDefinition = False
                             Else
                                 vorlagenShape = missingPhaseDefinitions.getShape(tmpName)
-                                isMissingDefinition = True
                             End If
 
 
@@ -10965,7 +10968,7 @@ Public Module Projekte
                     If i = 1 Then
                         Call defineShapeAppearance(hproj, phaseShape)
                     Else
-                        Call definePhaseAppearance(hproj, cphase, 0, phaseShape, isMissingDefinition)
+                        Call definePhaseAppearance(hproj, cphase, 0, phaseShape, isMissingPhaseDefinition)
                     End If
 
 
@@ -10993,13 +10996,13 @@ Public Module Projekte
                             cMilestone = .getMilestone(r)
                             cBewertung = cMilestone.getBewertung(1)
 
+                            isMissingMilestoneDefinition = Not MilestoneDefinitions.Contains(cMilestone.name)
+
                             ' Änderung tk 26.11.15
                             If MilestoneDefinitions.Contains(cMilestone.name) Then
                                 vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
-                                isMissingDefinition = False
                             Else
                                 vorlagenShape = missingMilestoneDefinitions.getShape(cMilestone.name)
-                                isMissingDefinition = True
                             End If
 
 
@@ -11040,7 +11043,7 @@ Public Module Projekte
 
                                 msShape.Rotation = vorlagenShape.Rotation
 
-                                Call defineResultAppearance(hproj, 0, msShape, cBewertung, isMissingDefinition)
+                                Call defineResultAppearance(hproj, 0, msShape, cBewertung, isMissingMilestoneDefinition, cMilestone.farbe)
 
                                 ' jetzt der Liste der ProjectboardShapes hinzufügen
                                 projectboardShapes.add(msShape)
@@ -11667,7 +11670,7 @@ Public Module Projekte
                 For m As Integer = 1 To realNameList.Count
 
                     Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(CStr(realNameList.Item(m)))
-                    Dim isMissingDefinition As Boolean = False
+                    Dim isMissingDefinition As Boolean = Not MilestoneDefinitions.Contains(cMilestone.name)
 
                     If Not IsNothing(cMilestone) Then
                         Dim cBewertung As clsBewertung
@@ -11687,10 +11690,10 @@ Public Module Projekte
                                 ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
                                 If MilestoneDefinitions.Contains(cMilestone.name) Then
                                     vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
-                                    isMissingDefinition = False
+
                                 Else
                                     vorlagenShape = missingMilestoneDefinitions.getShape(cMilestone.name)
-                                    isMissingDefinition = True
+
                                 End If
 
 
@@ -11733,10 +11736,10 @@ Public Module Projekte
 
                                     msNumber = msNumber + 1
                                     If numberIt Then
-                                        Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung, isMissingDefinition)
+                                        Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung, isMissingDefinition, cMilestone.farbe)
 
                                     Else
-                                        Call defineResultAppearance(hproj, 0, resultShape, cBewertung, isMissingDefinition)
+                                        Call defineResultAppearance(hproj, 0, resultShape, cBewertung, isMissingDefinition, cMilestone.farbe)
                                     End If
 
                                     ' jetzt der Liste der ProjectboardShapes hinzufügen
@@ -12655,19 +12658,20 @@ Public Module Projekte
                 For p = 1 To todoListe.Count
 
                     Dim phaseNameID As String = CStr(todoListe(p))
-                    Dim isMissingDefinition As Boolean = False
+
 
                     If realNameList.Contains(phaseNameID) Then
 
                         cphase = hproj.getPhaseByID(phaseNameID)
+                        Dim isMissingDefinition As Boolean = Not PhaseDefinitions.Contains(cphase.name)
 
                         ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
                         If PhaseDefinitions.Contains(cphase.name) Then
                             vorlagenshape = PhaseDefinitions.getShape(cphase.name)
-                            isMissingDefinition = False
+
                         Else
                             vorlagenshape = missingPhaseDefinitions.getShape(cphase.name)
-                            isMissingDefinition = True
+
                         End If
 
 
@@ -12842,18 +12846,20 @@ Public Module Projekte
     ''' <param name="myShape"></param>
     ''' <remarks></remarks>
     Public Sub definePhaseAppearance(ByVal myproject As clsProjekt, ByVal myphase As clsPhase, ByVal lnumber As Integer, ByRef myShape As Excel.Shape, _
-                                     Optional ByVal isMissingDefinition As Boolean = False)
+                                      ByVal isMissingDefinition As Boolean)
 
 
         With myShape
 
             If isMissingDefinition Then
-                With .Line
-                    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                    .ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
-                    .Transparency = 0
-                    .Weight = 2
-                End With
+
+                .Line.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
+                .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+                .Line.Transparency = 0
+                .Line.Weight = 2
+
+                .Fill.ForeColor.RGB = CInt(myphase.farbe)
+
             End If
 
         End With
@@ -12873,16 +12879,8 @@ Public Module Projekte
     ''' <param name="isMissingDefinition"></param>
     ''' <remarks></remarks>
     Public Sub defineResultAppearance(ByVal myproject As clsProjekt, ByVal number As Integer, ByRef resultShape As Excel.Shape, ByVal bewertung As clsBewertung, _
-                                          Optional ByVal isMissingDefinition As Boolean = False)
-        'Dim pcolor As Object
-        'Dim status As String
-
-        'With myproject
-        '    pcolor = .farbe
-        '    status = .Status
-        'End With
-
-
+                                          ByVal isMissingDefinition As Boolean, ByVal farbe As Long)
+       
 
 
         With resultShape
@@ -12893,33 +12891,14 @@ Public Module Projekte
             End If
 
             If isMissingDefinition Then
-                With .Line
-                    .Visible = MsoTriState.msoTrue
-                    .ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
-                    .Weight = 2
-                End With
+
+                .Line.Visible = MsoTriState.msoTrue
+                .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+                .Line.Weight = 2
+
+                .Fill.ForeColor.RGB = CInt(farbe)
+
             End If
-
-
-            'With .Fill
-            '    .ForeColor.RGB = CInt(bewertung.color)
-            '    .ForeColor.TintAndShade = 0
-            '    '.ForeColor.Brightness = 0.25
-            '    .Transparency = 0.0
-
-            '    'If roentgenBlick.isOn Then
-            '    '    .Transparency = 0.8
-            '    'Else
-            '    '    If status = ProjektStatus(0) Then
-            '    '        .Transparency = 0.35
-            '    '    Else
-            '    '        .Transparency = 0.0
-            '    '    End If
-            '    'End If
-
-            '    .Solid()
-
-            'End With
 
 
             Try
@@ -13978,7 +13957,7 @@ Public Module Projekte
                     itemNameID = cphase.nameID
 
                     Try
-                        phasenFarbe = cphase.Farbe
+                        phasenFarbe = cphase.farbe
                     Catch ex As Exception
                         phasenFarbe = hproj.farbe
                     End Try
@@ -14712,7 +14691,7 @@ Public Module Projekte
                     itemNameID = cphase.nameID
 
                     Try
-                        phasenFarbe = cphase.Farbe
+                        phasenFarbe = cphase.farbe
                     Catch ex As Exception
                         phasenFarbe = hproj.farbe
                     End Try
@@ -15574,7 +15553,7 @@ Public Module Projekte
                 itemName = cphase.name
 
                 Try
-                    phasenFarbe = cphase.Farbe
+                    phasenFarbe = cphase.farbe
                 Catch ex As Exception
                     phasenFarbe = hproj.farbe
                 End Try
