@@ -288,7 +288,9 @@ Public Class frmHierarchySelection
 
                 ' Prüfen, ob die Datei überhaupt existirt 
                 If repVorlagenDropbox.Text.Length = 0 Then
-                    Call MsgBox("bitte PPT Vorlage auswählen !")
+                    ' Call MsgBox("bitte PPT Vorlage auswählen !")
+                    Me.statusLabel.Text = "bitte PPT Vorlage auswählen !"
+                    Me.statusLabel.Visible = True
                 ElseIf My.Computer.FileSystem.FileExists(vorlagenDateiName) Then
 
                     Try
@@ -315,7 +317,7 @@ Public Class frmHierarchySelection
                         ' Alternativ ohne Background Worker
                         If Me.menuOption = PTmenue.reportBHTC Then
 
-                            If Me.calledFrom = "MS Project" Then
+                            If Me.calledFrom = "MS-Project" Then
 
                                 'Call MsgBox("Report erstellen mit Projekt " & repProfil.VonDate.ToString & " bis " & repProfil.BisDate.ToString & " Reportprofil " & repProfil.name)
                                 Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
@@ -340,14 +342,17 @@ Public Class frmHierarchySelection
 
                 Else
 
-                    Call MsgBox("bitte PPT Vorlage auswählen !")
-
+                    'Call MsgBox("bitte PPT Vorlage auswählen !")
+                    Me.statusLabel.Text = "bitte PPT Vorlage auswählen !"
+                    Me.statusLabel.Visible = True
                 End If
 
 
             Else
-                Call MsgBox("bitte mindestens ein Element selektieren bzw. " & vbLf & _
-                             "einen Zeitraum angeben ...")
+                'Call MsgBox("bitte mindestens ein Element selektieren bzw. " & vbLf & "einen Zeitraum angeben ...")
+                Me.statusLabel.Text = "bitte mindestens ein Element selektieren bzw. " & vbLf & _
+                             "einen Zeitraum angeben ..."
+                Me.statusLabel.Visible = True
             End If
 
         Else
@@ -1118,7 +1123,11 @@ Public Class frmHierarchySelection
 
             ' Prüfen, ob die Datei überhaupt existirt 
             If repVorlagenDropbox.Text.Length = 0 Then
-                Call MsgBox("bitte PPT Vorlage auswählen !")
+
+                ' Call MsgBox("bitte PPT Vorlage auswählen !")
+                Me.statusLabel.Text = "bitte PPT Vorlage auswählen !"
+                Me.statusLabel.Visible = True
+
             ElseIf My.Computer.FileSystem.FileExists(vorlagenDateiName) Then
 
                 ' pptTemplatename speichern
@@ -1136,16 +1145,22 @@ Public Class frmHierarchySelection
 
                 Else
                     Call MsgBox("Bitte geben Sie einen Namen für diese Report-Profil an")
+                    Me.statusLabel.Text = "Bitte geben Sie einen Namen für diese Report-Profil an"
+                    Me.statusLabel.Visible = True
                 End If
 
 
 
             Else
 
-                Call MsgBox("bitte PPT Vorlage auswählen !")
+                'Call MsgBox("bitte PPT Vorlage auswählen !")
+                Me.statusLabel.Text = "bitte PPT Vorlage auswählen !"
+                Me.statusLabel.Visible = True
 
             End If
 
+            Me.statusLabel.Text = "ReportProfile '" & repProfil.name & "' gespeichert"
+            Me.statusLabel.Visible = True
 
         Else
             Call MsgBox("nicht reportBHTC aber auch reportBHTC: also eigentlich nicht möglich")

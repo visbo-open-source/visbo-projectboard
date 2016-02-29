@@ -16,6 +16,7 @@ Imports System.Runtime.Serialization
 Imports System.Xml
 Imports System.Xml.Serialization
 Imports System.IO
+Imports System.Drawing
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
 Imports System.Security.Principal
@@ -2540,25 +2541,53 @@ Public Module awinGeneralModules
                     Throw New ArgumentException("Fehler in awinImportMSProject, Erzeugen ProjektPhase")
                 End Try
 
+                '' '' neu ur
+
+                ' Call MsgBox(prj.ActiveProject.GetObjectMatchingID(MSProject.PjOrganizer.pjViews, "BHTC Gantt Chart"))
+
+                ' '' ''Dim alltables As MSProject.Tables = prj.ActiveProject.TaskTables
+                ' '' ''Dim allviews As MSProject.Views = prj.ActiveProject.Views
+                ' '' ''Dim alllist As MSProject.List = prj.ActiveProject.TaskViewList
+
+
+                '' '' '' 
+                ' '' ''Dim t As MSProject.Table
+                ' '' ''Dim f As MSProject.TableField
+
+
+                ' '' ''For Each t In alltables
+                ' '' ''    If Not t Is Nothing Then
+                ' '' ''        Call MsgBox(t.Name, t.Index, t.RowHeight.ToString)
+
+                ' '' ''      
+                ' '' ''        If t.TableType = MSProject.PjItemType.pjResourceItem Then
+                ' '' ''            Call MsgBox("resource")
+                ' '' ''        ElseIf t.TableType = MSProject.PjItemType.pjTaskItem Then
+                ' '' ''            Call MsgBox("task")
+                ' '' ''        End If
+
+                ' '' ''    End If
+                ' '' ''Next t
+
+                ' '' ''Dim v As MSProject.View
+
+                ' '' ''For Each v In allviews
+                ' '' ''    If Not v Is Nothing Then
+                ' '' ''        Call MsgBox(v.Name)
+
+                ' '' ''    End If
+                ' '' ''Next v
+
+
+                ' '' '' '' '' neu ur
+
+
+
 
                 Dim anzTasks As Integer = msproj.Tasks.Count
                 anzTasks = msproj.NumberOfTasks
 
-                '' ' neu UR
-                Dim anztables As Integer = msproj.TaskTables.Count
-                For i = 1 To anztables
-                    Dim mstable As MSProject.Table
-                    mstable = CType(msproj.TaskTables.Item(i), MSProject.Table)
-
-                    Dim xxx As MSProject.TableFields = mstable.TableFields
-                    Dim anztab As Integer = xxx.Count
-                    For k = 0 To anztab
-                        Dim tabfield As MSProject.TableField = xxx(k)
-                    Next
-                Next
-
-                '' ' neu UR
-
+           
                 Dim resPool As MSProject.Resources = msproj.Resources
 
                 Dim res(resPool.Count) As Object
@@ -2575,6 +2604,9 @@ Public Module awinGeneralModules
 
 
                     msTask = msproj.Tasks.Item(i)
+
+                  
+
 
                     ' hier: evt. Prüfung ob eine VISBO Projekt-Tafel relevante Task
                     ' oder: ob eine Task auf dem kritischen Pfad liegt
@@ -11400,9 +11432,20 @@ Public Module awinGeneralModules
 
             Dim serializer = New DataContractSerializer(GetType(clsReport))
 
-            Dim file As New FileStream(xmlfilename, FileMode.Create)
-            serializer.WriteObject(file, profil)
-            file.Close()
+            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
+            ' ''serializer.WriteObject(file, profil)
+            ' ''file.Close()
+
+            Dim settings As New XmlWriterSettings()
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, profil)
+            writer.Flush()
+            writer.Close()
+
         Catch ex As Exception
 
             Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
@@ -11460,8 +11503,7 @@ Public Module awinGeneralModules
             ' Datumsangaben zurücksichern
             reportProfil.CalendarVonDate = PPTvondate_sav
             reportProfil.CalendarBisDate = PPTbisdate_sav
-            reportProfil.VonDate = vondate_sav
-            reportProfil.BisDate = bisdate_sav
+            reportProfil.calcRepVonBis(vondate_sav, bisdate_sav)
 
             ' für BHTC immer true
             reportProfil.ExtendedMode = True
@@ -11712,9 +11754,19 @@ Public Module awinGeneralModules
 
             Dim serializer = New DataContractSerializer(GetType(clsLicences))
 
-            Dim file As New FileStream(xmlfilename, FileMode.Create)
-            serializer.WriteObject(file, lic)
-            file.Close()
+            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
+            ' ''serializer.WriteObject(file, lic)
+            ' ''file.Close()
+
+            Dim settings As New XmlWriterSettings()
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, lic)
+            writer.Flush()
+            writer.Close()
         Catch ex As Exception
 
             Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")

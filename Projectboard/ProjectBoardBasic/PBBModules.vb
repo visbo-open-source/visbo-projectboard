@@ -127,6 +127,7 @@ Public Module PBBModules
                     Dim lic As clsLicences = XMLImportLicences(licFileName)
                     ' nur mit dem Recht für ProjectAdmin können ReportProfile gespeichert werden
                     If lic.validLicence(myWindowsName, LizenzKomponenten(PTSWKomp.ProjectAdmin)) Then
+
                         .auswSpeichern.Visible = True
                         .filterDropbox.Enabled = True
                     Else
