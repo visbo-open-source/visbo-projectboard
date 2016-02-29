@@ -93,8 +93,7 @@ Public Class clsReport
                 .Costs = copyList(Me.reportCost)
                 .Typs = copyList(Me.reportTyp)
                 .BUs = copyList(Me.reportBU)
-                .VonDate = Me.reportVon
-                .BisDate = Me.reportBis
+                .calcRepVonBis(Me.reportVon, Me.reportBis)
                 .ProjectLine = Me.reportProjectline
                 .Ampeln = Me.reportAmpeln
                 .AllIfOne = Me.reportAllIfOne
@@ -589,43 +588,52 @@ Public Class clsReport
     End Property
 
     ''' <summary>
-    ''' schreibt/liest das Datum des Beginn des ausgewählten zeitl Bereiches
+    ''' liest das Datum des Beginn des ausgewählten zeitl Bereiches
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Property VonDate As Date
+    Public ReadOnly Property VonDate As Date
         Get
             VonDate = reportVon
         End Get
-        Set(value As Date)
-            If value >= StartofCalendar Then
-                reportVon = value
-            Else
-                Throw New ArgumentException("Datum muss nach StartofCalendar liegen")
-            End If
 
-        End Set
     End Property
     ''' <summary>
-    ''' schreibt/liest das Datum des Endes des ausgewählten zeitl Bereiches
+    ''' liest das Datum des Endes des ausgewählten zeitl Bereiches
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Property BisDate As Date
+    Public ReadOnly Property BisDate As Date
         Get
             BisDate = reportBis
         End Get
-        Set(value As Date)
-            If value >= StartofCalendar And value > Me.VonDate Then
-                reportBis = value
+
+    End Property
+
+    Public Sub calcRepVonBis(ByVal von As Date, ByVal bis As Date)
+
+        Try
+            If von > StartofCalendar And bis > StartofCalendar Then
+
+                If DateDiff(DateInterval.Day, von, bis) > 0 Then
+                    reportVon = von
+                    reportBis = bis
+
+                Else
+                    Throw New ArgumentException("Datum 'von' muss vor Datum 'bis' liegen")
+                End If
+
             Else
-                Throw New ArgumentException("Datum muss nach StartofCalendar und vor BisDate liegen")
+                Throw New ArgumentException("Datum 'von' und 'bis' müssen nach dem ' " & StartofCalendar.ToString & " ' liegen")
             End If
 
-        End Set
-    End Property
+
+        Catch ex As Exception
+            Throw New ArgumentException(ex.Message)
+        End Try
+    End Sub
 
 
 

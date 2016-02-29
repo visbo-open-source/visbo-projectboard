@@ -16,6 +16,7 @@ Imports System.Runtime.Serialization
 Imports System.Xml
 Imports System.Xml.Serialization
 Imports System.IO
+Imports System.Drawing
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
 Imports System.Security.Principal
@@ -646,27 +647,50 @@ Public Module awinGeneralModules
         '' ''End If
 
 
+        ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
+        'awinPath = appInstance.ActiveWorkbook.Path & "\"
+
         globalPath = awinSettings.globalPath
-        awinPath = awinSettings.awinPath
+
+        ' awinPath kann relativ oder absolut angegeben sein, beides möglich
+
+        Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+
+        awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+
+        If Not awinPath.EndsWith("\") Then
+            awinPath = awinPath & "\"
+        End If
 
 
-        If awinPath = "" And globalPath <> "" Then
+        If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
             awinPath = globalPath
-        ElseIf globalPath = "" And awinPath <> "" Then
+        ElseIf globalPath = "" And (awinPath <> "" And My.Computer.FileSystem.DirectoryExists(awinPath)) Then
             globalPath = awinPath
-        ElseIf globalPath = "" And awinPath = "" Then
-            Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " wurden nicht angegeben")
+        ElseIf globalPath = "" Or awinPath = "" Then
+            Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " existieren nicht")
         End If
 
-        If (Dir(globalPath, vbDirectory) = "") Then
-            If (Dir(awinPath, vbDirectory) = "") Then
-                Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
-            Else
+        If My.Computer.FileSystem.DirectoryExists(globalPath) And (Dir(globalPath, vbDirectory) = "") Then
+            Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
+        End If
+
+        ' Synchronization von Globalen und Lokalen Pfad
+
+        If awinPath <> globalPath And My.Computer.FileSystem.DirectoryExists(globalPath) Then
+
+            Call synchronizeGlobalToLocalFolder()
+
+        Else
+            If My.Computer.FileSystem.DirectoryExists(awinPath) And (Dir(awinPath, vbDirectory) = "") Then
+                Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
             End If
+
         End If
 
 
-        ' Erzeugen des Report Ordners, wenn er nicht schon existiert .. 
+        ' Erzeugen des Report Ordners, wenn er nicht schon existiert ..
+
         reportOrdnerName = awinPath & "Reports\"
         Try
             My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
@@ -687,11 +711,6 @@ Public Module awinGeneralModules
         exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
         exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
         exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
-
-
-        If globalPath <> awinPath Then
-            Call synchronizeGlobalToLocalFolder()
-        End If
 
 
         StartofCalendar = StartofCalendar.Date
@@ -2473,7 +2492,7 @@ Public Module awinGeneralModules
                 ' '' '' Einlesen der diversen Projekte, die geladen wurden (gilt nur für BHTC), sonst immer nur das zuletzt geladene
                 '' ''For proj_i = beginnProjekt To endeProjekt
 
-          
+            
 
                 hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.ProjectStart), CDate(msproj.ProjectStart))
 
@@ -2522,9 +2541,53 @@ Public Module awinGeneralModules
                     Throw New ArgumentException("Fehler in awinImportMSProject, Erzeugen ProjektPhase")
                 End Try
 
+                '' '' neu ur
+
+                ' Call MsgBox(prj.ActiveProject.GetObjectMatchingID(MSProject.PjOrganizer.pjViews, "BHTC Gantt Chart"))
+
+                ' '' ''Dim alltables As MSProject.Tables = prj.ActiveProject.TaskTables
+                ' '' ''Dim allviews As MSProject.Views = prj.ActiveProject.Views
+                ' '' ''Dim alllist As MSProject.List = prj.ActiveProject.TaskViewList
+
+
+                '' '' '' 
+                ' '' ''Dim t As MSProject.Table
+                ' '' ''Dim f As MSProject.TableField
+
+
+                ' '' ''For Each t In alltables
+                ' '' ''    If Not t Is Nothing Then
+                ' '' ''        Call MsgBox(t.Name, t.Index, t.RowHeight.ToString)
+
+                ' '' ''      
+                ' '' ''        If t.TableType = MSProject.PjItemType.pjResourceItem Then
+                ' '' ''            Call MsgBox("resource")
+                ' '' ''        ElseIf t.TableType = MSProject.PjItemType.pjTaskItem Then
+                ' '' ''            Call MsgBox("task")
+                ' '' ''        End If
+
+                ' '' ''    End If
+                ' '' ''Next t
+
+                ' '' ''Dim v As MSProject.View
+
+                ' '' ''For Each v In allviews
+                ' '' ''    If Not v Is Nothing Then
+                ' '' ''        Call MsgBox(v.Name)
+
+                ' '' ''    End If
+                ' '' ''Next v
+
+
+                ' '' '' '' '' neu ur
+
+
+
 
                 Dim anzTasks As Integer = msproj.Tasks.Count
                 anzTasks = msproj.NumberOfTasks
+
+           
                 Dim resPool As MSProject.Resources = msproj.Resources
 
                 Dim res(resPool.Count) As Object
@@ -2541,6 +2604,9 @@ Public Module awinGeneralModules
 
 
                     msTask = msproj.Tasks.Item(i)
+
+                  
+
 
                     ' hier: evt. Prüfung ob eine VISBO Projekt-Tafel relevante Task
                     ' oder: ob eine Task auf dem kritischen Pfad liegt
@@ -11366,9 +11432,20 @@ Public Module awinGeneralModules
 
             Dim serializer = New DataContractSerializer(GetType(clsReport))
 
-            Dim file As New FileStream(xmlfilename, FileMode.Create)
-            serializer.WriteObject(file, profil)
-            file.Close()
+            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
+            ' ''serializer.WriteObject(file, profil)
+            ' ''file.Close()
+
+            Dim settings As New XmlWriterSettings()
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, profil)
+            writer.Flush()
+            writer.Close()
+
         Catch ex As Exception
 
             Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
@@ -11426,8 +11503,7 @@ Public Module awinGeneralModules
             ' Datumsangaben zurücksichern
             reportProfil.CalendarVonDate = PPTvondate_sav
             reportProfil.CalendarBisDate = PPTbisdate_sav
-            reportProfil.VonDate = vondate_sav
-            reportProfil.BisDate = bisdate_sav
+            reportProfil.calcRepVonBis(vondate_sav, bisdate_sav)
 
             ' für BHTC immer true
             reportProfil.ExtendedMode = True
@@ -11678,9 +11754,19 @@ Public Module awinGeneralModules
 
             Dim serializer = New DataContractSerializer(GetType(clsLicences))
 
-            Dim file As New FileStream(xmlfilename, FileMode.Create)
-            serializer.WriteObject(file, lic)
-            file.Close()
+            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
+            ' ''serializer.WriteObject(file, lic)
+            ' ''file.Close()
+
+            Dim settings As New XmlWriterSettings()
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, lic)
+            writer.Flush()
+            writer.Close()
         Catch ex As Exception
 
             Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
