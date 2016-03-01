@@ -12,7 +12,7 @@
       <Value Profile="(Default)">Demo</Value>
     </Setting>
     <Setting Name="globalPath" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">\\KOYTEK-NAS\backup\Projekt-Tafel Folder\BHTC\</Value>
+      <Value Profile="(Default)">C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\BHTC\</Value>
     </Setting>
   </Settings>
 </SettingsFile>

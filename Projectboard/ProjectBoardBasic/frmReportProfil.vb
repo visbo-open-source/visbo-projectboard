@@ -27,7 +27,7 @@ Public Class frmReportProfil
      
 
     Private Sub RepProfilListbox_load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Dim i As Integer
+        'Dim i As Integer
 
         '' ''Dim minDate As Date = Date.MaxValue
         '' ''Dim maxDate As Date = Date.MinValue
