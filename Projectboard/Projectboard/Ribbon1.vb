@@ -809,17 +809,18 @@ Imports System.Drawing
 
         If returnValue = DialogResult.OK Then
             With ProjektEingabe
-
+                Dim buName As String = CStr(.businessUnitDropBox.SelectedItem)
                 If request.pingMongoDb() Then
 
                     If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="") Then
 
                         ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
 
+
                         Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
                                            CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
                                            CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
-                                           CStr(""))
+                                           CStr(""), buName)
                     Else
                         Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
                     End If
@@ -833,7 +834,7 @@ Imports System.Drawing
                     Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
                                            CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
                                            CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
-                                           CStr(""))
+                                           CStr(""), buName)
 
                 End If
 

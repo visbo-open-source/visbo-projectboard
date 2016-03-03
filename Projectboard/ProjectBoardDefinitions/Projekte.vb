@@ -7083,7 +7083,7 @@ Public Module Projekte
     Public Sub TrageivProjektein(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, _
                                  ByVal endedate As Date, ByVal erloes As Double, _
                                  ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal volume As Double, _
-                                 ByVal kurzBeschreibung As String)
+                                 ByVal kurzBeschreibung As String, ByVal buName As String)
         Dim newprojekt As Boolean
         Dim hproj As clsProjekt
         Dim pStatus As String = ProjektStatus(0)
@@ -7122,6 +7122,7 @@ Public Module Projekte
                 .name = pname
                 .VorlagenName = vorlagenName
                 .startDate = startdate
+                .businessUnit = buName
                 .Erloes = erloes
                 .earliestStartDate = .startDate.AddMonths(.earliestStart)
                 .latestStartDate = .startDate.AddMonths(.latestStart)
@@ -7178,7 +7179,12 @@ Public Module Projekte
         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
         ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
         Dim tmpCollection As New Collection
-        Call ZeichneProjektinPlanTafel(tmpCollection, pname, 0, tmpCollection, tmpCollection)
+
+        '
+        Call awinClearPlanTafel()
+        Call awinZeichnePlanTafel(True)
+
+        'Call ZeichneProjektinPlanTafel(tmpCollection, pname, 0, tmpCollection, tmpCollection)
 
 
         '
@@ -15501,7 +15507,7 @@ Public Module Projekte
 
 
             CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
-            CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2 * 0.5
+            CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2
             CType(.Range(.Cells(1, 3), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = awinSettings.spaltenbreite
 
 
