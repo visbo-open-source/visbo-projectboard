@@ -11246,7 +11246,6 @@ Public Module testModule
 
 
 
-        Dim isMissingDefinition As Boolean = MilestoneDefinitions.Contains(MS.name)
         ' Änderung tk 26.11.15
 
         If MilestoneDefinitions.Contains(MS.name) Then
@@ -11339,9 +11338,6 @@ Public Module testModule
                 End If
             End If
 
-            If isMissingDefinition Then
-                .Fill.ForeColor.RGB = CInt(MS.farbe)
-            End If
 
         End With
 
@@ -11417,8 +11413,6 @@ Public Module testModule
 
         Dim phDescription As String = hproj.hierarchy.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames, _
                                                                 awinSettings.mppUseAbbreviation, swimlaneID)
-
-        Dim isMissingDefinition As Boolean = Not PhaseDefinitions.Contains(phaseName)
 
         If PhaseDefinitions.Contains(phaseName) Then
             phaseTypShape = PhaseDefinitions.getShape(phaseName)
@@ -11517,10 +11511,6 @@ Public Module testModule
                 .Title = phaseName
                 .AlternativeText = phStartDate.ToShortDateString & " - " & phEndDate.ToShortDateString
 
-                If isMissingDefinition Then
-                    .Fill.ForeColor.RGB = CInt(cphase.farbe)
-                End If
-
                 ' jetzt wird die Option gezogen, wenn keine Phasen-Beschriftung stattfinden sollte ... 
                 If awinSettings.mppUseInnerText Then
 
@@ -11576,7 +11566,6 @@ Public Module testModule
 
 
         Dim msBeschriftung As String
-        Dim isMissingDefinition As Boolean = Not MilestoneDefinitions.Contains(milestoneName)
 
         If MilestoneDefinitions.Contains(milestoneName) Then
             milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
@@ -11667,10 +11656,6 @@ Public Module testModule
                 .Name = .Name & .Id
                 .Title = milestoneName
                 .AlternativeText = msDate.ToShortDateString
-
-                If isMissingDefinition Then
-                    .Fill.ForeColor.RGB = CInt(cMilestone.farbe)
-                End If
 
                 If awinSettings.mppShowAmpel Then
                     .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)

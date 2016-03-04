@@ -1452,6 +1452,9 @@ Public Module awinGeneralModules
 
                 Try
                     awinSettings.missingDefinitionColor = CLng(.Range("MissingDefinitionColor").Interior.Color)
+                    ' ''If awinSettings.missingDefinitionColor = XlRgbColor.rgbWhite Then
+                    ' ''    Call MsgBox("leeres missingDefinitionColor - Feld in customizationfile " & awinSettings.missingDefinitionColor.ToString)
+                    ' ''End If
                 Catch ex As Exception
 
                 End Try
@@ -2409,6 +2412,9 @@ Public Module awinGeneralModules
 
         ' hier wird eingetragen, welches vordefinierte Flag das customized Field VISBO repräsentiert
         Dim visboflag As MSProject.PjField = Nothing
+        Dim visbo_taskclass As MSProject.PjField = Nothing
+        Dim visbo_abbrev As MSProject.PjField = Nothing
+        Dim visbo_ampel As MSProject.PjField = Nothing
 
         ' Liste, die aufgebaut wird beim Einlesen der Tasks. Hier wird vermerkt, welche Task das Visbo-Flag mit YES und welche mit NO
         ' gesetzt hat d.h. berücksichtigt werden soll
@@ -2457,8 +2463,27 @@ Public Module awinGeneralModules
                     visboflag = 0
                 End Try
 
+                Try
+                    visbo_taskclass = CType(prj.FieldNameToFieldConstant(awinSettings.visboTaskClass, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_taskclass = 0
+                End Try
+                Try
+                    visbo_abbrev = CType(prj.FieldNameToFieldConstant(awinSettings.visboAbbreviation, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_abbrev = 0
+                End Try
+                Try
+                    visbo_ampel = CType(prj.FieldNameToFieldConstant(awinSettings.visboAmpel, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_ampel = 0
+                End Try
                
                 If modus = "BHTC" Then
+                    ' In Missing..Definitions sind noch die Definitionen des vorausgegangenen Projekts definiert.
+                    ' Diese sollen nicht mehr aktiv sein.
+                    missingPhaseDefinitions.Clear()
+                    missingMilestoneDefinitions.Clear()
                     '' Einlesen des aktiven Projekts
                     msproj = prj.ActiveProject
                 Else
@@ -2607,7 +2632,19 @@ Public Module awinGeneralModules
                         If Not PhaseDefinitions.Contains(msTask.Name) Then
                             Dim newPhaseDef As New clsPhasenDefinition
                             newPhaseDef.name = msTask.Name
-                            newPhaseDef.shortName = msTask.Name
+                            ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                            If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                                newPhaseDef.shortName = msTask.GetField(visbo_abbrev)
+                            Else
+                                newPhaseDef.shortName = msTask.Name
+                            End If
+                            ' Task Class, falls Customfield visbo_taskclass definiert ist
+                            If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                newPhaseDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                            Else
+                                newPhaseDef.darstellungsKlasse = ""
+                            End If
+
                             newPhaseDef.UID = PhaseDefinitions.Count + 1
                             'PhaseDefinitions.Add(newPhaseDef)
                             If Not missingPhaseDefinitions.Contains(newPhaseDef.name) Then
@@ -2895,13 +2932,26 @@ Public Module awinGeneralModules
 
                         Dim cmilestone As New clsMeilenstein(msPhase)
 
+
                         ' prüfen, ob MeilensteinDefinition bereits vorhanden
                         If Not MilestoneDefinitions.Contains(msTask.Name) Then
                             Dim msDef As New clsMeilensteinDefinition
                             msDef.belongsTo = msPhase.name
                             msDef.name = msTask.Name
+                            ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                            If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                                msDef.shortName = msTask.GetField(visbo_abbrev)
+                            Else
+                                msDef.shortName = ""
+                            End If
+                            ' Task Class, falls Customfield visbo_taskclass definiert ist
+                            If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                msDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                            Else
+                                msDef.darstellungsKlasse = ""
+                            End If
+
                             msDef.schwellWert = 0
-                            msDef.shortName = ""
                             msDef.UID = MilestoneDefinitions.Count + 1
                             'MilestoneDefinitions.Add(msDef)
                             Try
@@ -2915,10 +2965,34 @@ Public Module awinGeneralModules
                         ' MeilensteinDefinition vorhanden?
                         If MilestoneDefinitions.Contains(msTask.Name) _
                             Or missingMilestoneDefinitions.Contains(msTask.Name) Then
+
                             Dim msBewertung As New clsBewertung
                             cmilestone.setDate = CType(msTask.Start, Date)
                             cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, True)
                             msBewertung.description = msTask.Notes
+                            If visbo_ampel <> 0 Then
+
+                                Dim visboAmpel As String = msTask.GetField(visbo_ampel)
+
+                                Select Case visboAmpel
+
+                                    Case "none"
+                                        msBewertung.colorIndex = PTfarbe.none
+                                    Case "red"
+                                        msBewertung.colorIndex = PTfarbe.red
+                                    Case "green"
+                                        msBewertung.colorIndex = PTfarbe.green
+                                    Case "yellow"
+                                        msBewertung.colorIndex = PTfarbe.yellow
+                                    Case Else
+                                        msBewertung.colorIndex = PTfarbe.none
+
+                                End Select
+
+                            Else
+                                msBewertung.colorIndex = PTfarbe.none
+                            End If
+
                             cmilestone.addBewertung(msBewertung)
 
 

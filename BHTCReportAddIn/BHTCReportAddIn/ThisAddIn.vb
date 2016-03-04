@@ -28,6 +28,10 @@ Public Class ThisAddIn
         Try
             awinSettings.globalPath = My.Settings.globalPath
             awinSettings.awinPath = My.Settings.awinPath
+            awinSettings.visboTaskClass = My.Settings.TaskClass
+            awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+            awinSettings.visboAmpel = My.Settings.VISBOAmpel
+
 
             Call awinsetTypenNEW("BHTC")
 
