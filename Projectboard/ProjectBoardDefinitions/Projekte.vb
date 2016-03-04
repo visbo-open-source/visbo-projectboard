@@ -12853,12 +12853,13 @@ Public Module Projekte
 
             If isMissingDefinition Then
 
-                .Line.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
-                .Line.Transparency = 0
-                .Line.Weight = 2
-
-                .Fill.ForeColor.RGB = CInt(myphase.farbe)
+                If awinSettings.missingDefinitionColor <> XlRgbColor.rgbWhite Then
+                    .Line.Visible = MsoTriState.msoTrue
+                    .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+                    .Line.Transparency = 0
+                    .Line.Weight = 2
+                    .Fill.ForeColor.RGB = CInt(myphase.farbe)
+                End If
 
             End If
 
@@ -12892,11 +12893,12 @@ Public Module Projekte
 
             If isMissingDefinition Then
 
-                .Line.Visible = MsoTriState.msoTrue
-                .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
-                .Line.Weight = 2
-
-                .Fill.ForeColor.RGB = CInt(farbe)
+                If awinSettings.missingDefinitionColor <> XlRgbColor.rgbWhite Then
+                    .Line.Visible = MsoTriState.msoTrue
+                    .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+                    .Line.Weight = 2
+                    .Fill.ForeColor.RGB = CInt(farbe)
+                End If
 
             End If
 

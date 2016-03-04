@@ -806,7 +806,11 @@
                             Dim msDef As clsMeilensteinDefinition
                             msDef = MilestoneDefinitions.getMilestoneDef(description2)
                             If IsNothing(msDef) Then
-                                'description2 = "-"
+                                msDef = missingMilestoneDefinitions.getMilestoneDef(description2)
+                            End If
+
+                            If IsNothing(msDef) Then
+                                ' nichts zu tun
                             Else
                                 If IsNothing(msDef.shortName) Then
                                     'description2 = "-"
@@ -824,7 +828,12 @@
 
                             phDef = PhaseDefinitions.getPhaseDef(description2)
                             If IsNothing(phDef) Then
-                                'description2 = "-"
+                                
+                                phDef = missingPhaseDefinitions.getPhaseDef(description2)
+                            End If
+
+                            If IsNothing(phDef) Then
+                                ' nichts zu tun
                             Else
 
                                 If IsNothing(phDef.shortName) Then
@@ -840,13 +849,17 @@
                             End If
 
                         End If
-                    Else
-                        description1 = ""
+                Else
+                    description1 = ""
 
                         If isMilestone Then
 
                             Dim msDef As clsMeilensteinDefinition
                             msDef = MilestoneDefinitions.getMilestoneDef(description2)
+                            If IsNothing(msDef) Then
+                                msDef = missingMilestoneDefinitions.getMilestoneDef(description2)
+                            End If
+
                             If IsNothing(msDef) Then
                                 'description2 = "-"
                             Else
@@ -864,7 +877,13 @@
                             End If
 
                         Else
+
                             phDef = PhaseDefinitions.getPhaseDef(description2)
+                            If IsNothing(phDef) Then
+
+                                phDef = missingPhaseDefinitions.getPhaseDef(description2)
+                            End If
+
                             If IsNothing(phDef) Then
                                 'description2 = "-"
                             Else
@@ -884,34 +903,34 @@
                         End If
 
 
-                    End If
-                Else
-
-                    Call splitHryFullnameTo2(tmpName, description2, description1)
-                    Dim tmpStr() As String = description1.Split(New Char() {CChar("#")}, 20)
-
-                    ' jetzt den Std-Name zusammensetzen 
-                    Dim newDesc1 As String = ""
-                    For i As Integer = 1 To tmpStr.Length
-                        Dim tmpPhName As String = tmpStr(i - 1)
-
-                        If i = 1 Then
-                            If tmpPhName = elemNameOfElemID(rootPhaseName) Then
-                                ' nichts tun
-                            Else
-                                newDesc1 = tmpPhName
-                            End If
-                        ElseIf i > 1 Then
-                            newDesc1 = newDesc1 & "-" & tmpPhName
-                        End If
-
-                    Next
-                    description1 = newDesc1
-
-
                 End If
             Else
-                description2 = Me.nodeItem(nameID).origName
+
+                Call splitHryFullnameTo2(tmpName, description2, description1)
+                Dim tmpStr() As String = description1.Split(New Char() {CChar("#")}, 20)
+
+                ' jetzt den Std-Name zusammensetzen 
+                Dim newDesc1 As String = ""
+                For i As Integer = 1 To tmpStr.Length
+                    Dim tmpPhName As String = tmpStr(i - 1)
+
+                    If i = 1 Then
+                        If tmpPhName = elemNameOfElemID(rootPhaseName) Then
+                            ' nichts tun
+                        Else
+                            newDesc1 = tmpPhName
+                        End If
+                    ElseIf i > 1 Then
+                        newDesc1 = newDesc1 & "-" & tmpPhName
+                    End If
+
+                Next
+                description1 = newDesc1
+
+
+            End If
+            Else
+            description2 = Me.nodeItem(nameID).origName
             End If
 
             Dim description As String = ""

@@ -1,4 +1,5 @@
-﻿Public Class clsPhase
+﻿Imports Microsoft.Office.Interop.Excel
+Public Class clsPhase
 
     ' earliestStart und latestStart sind absolute Werte im "koordinaten-System" des Projektes
     ' von daher ist es anders gelöst als in clsProjekt, wo earlieststart und latestStart relative Angaben sind 
@@ -429,21 +430,23 @@
         Get
             Try
                 Dim itemName As String = elemNameOfElemID(_name)
+
                 If _name = rootPhaseName Then
                     farbe = Me.Parent.farbe             ' Farbe der Projektes, da Projekt der Parent der RootPhase ist
                 Else
-                    Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(elemNameOfElemID(_name))
-                    If IsNothing(tmpPhaseDef) Then
-                        farbe = _alternativeColor
+                    If PhaseDefinitions.Contains(itemName) Then
+                        farbe = CLng(PhaseDefinitions.getShape(itemName).Fill.ForeColor.RGB)
+                    ElseIf missingPhaseDefinitions.Contains(elemNameOfElemID(_name)) Then
+                        farbe = CLng(missingPhaseDefinitions.getShape(itemName).Fill.ForeColor.RGB)
                     Else
-                        farbe = tmpPhaseDef.farbe
+                        farbe = _alternativeColor
                     End If
 
                 End If
 
             Catch ex As Exception
                 ' in diesem Fall wird ein Standard Farbe genommen 
-                farbe = awinSettings.AmpelNichtBewertet
+                farbe = _alternativeColor
             End Try
 
         End Get
@@ -483,7 +486,7 @@
         Set(value As Integer)
             If value <= 0 Then
                 ' tk 17.11.15: hier muss noch eine Konsistenzprüfung rein ...
-                    _earliestStart = value
+                _earliestStart = value
 
             ElseIf value = -999 Then ' die undefiniert Bedingung
                 _earliestStart = value
@@ -508,7 +511,7 @@
             If value >= 0 Then
                 ' tk 17.11.15 hier muss noch eine Konsistenzprüfung rein ... 
                 _latestStart = value
-                
+
             ElseIf value = -999 Then ' die undefiniert Bedingung
                 _latestStart = value
             Else
@@ -1349,7 +1352,7 @@
         _Parent = parent
         _vorlagenParent = Nothing
 
-        _alternativeColor = awinSettings.AmpelNichtBewertet
+        _alternativeColor = XlRgbColor.rgbGrey
 
 
     End Sub
@@ -1370,8 +1373,8 @@
         _Parent = Nothing
         _vorlagenParent = parent
 
-        _alternativeColor = awinSettings.AmpelNichtBewertet
-        
+        _alternativeColor = XlRgbColor.rgbGrey
+
 
 
 
@@ -1404,7 +1407,7 @@
 
     End Sub
 
-    
+
     ''' <summary>
     ''' berechnet die Bedarfe (Rollen,Kosten) der Phase gemäß Startdate und endedate, und corrFakt neu
     ''' </summary>

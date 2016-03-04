@@ -1,4 +1,6 @@
-﻿Public Class clsMeilenstein
+﻿
+Imports Microsoft.Office.Interop.Excel
+Public Class clsMeilenstein
 
     Private bewertungen As SortedList(Of String, clsBewertung)
     Private _Parent As clsPhase
@@ -18,12 +20,21 @@
     ''' <remarks></remarks>
     Public ReadOnly Property farbe As Long
         Get
-            Dim msName As String = elemNameOfElemID(_name)
-            If MilestoneDefinitions.Contains(msName) Then
-                farbe = CLng(MilestoneDefinitions.getShape(msName).Fill.ForeColor.RGB)
-            Else
+            Try
+
+                Dim msName As String = elemNameOfElemID(_name)
+                If MilestoneDefinitions.Contains(msName) Then
+                    farbe = CLng(MilestoneDefinitions.getShape(msName).Fill.ForeColor.RGB)
+                ElseIf missingMilestoneDefinitions.Contains(msName) Then
+                    farbe = CLng(missingMilestoneDefinitions.getShape(msName).Fill.ForeColor.RGB)
+                Else
+                    farbe = _alternativeColor
+                End If
+
+            Catch ex As Exception
                 farbe = _alternativeColor
-            End If
+            End Try
+
         End Get
     End Property
 
@@ -365,8 +376,8 @@
         bewertungen = New SortedList(Of String, clsBewertung)
         _offset = 0
         _Parent = parent
-        _alternativeColor = awinSettings.AmpelNichtBewertet
-        
+        _alternativeColor = XlRgbColor.rgbGrey
+
     End Sub
 
 End Class
