@@ -10087,6 +10087,14 @@ Public Module testModule
             shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
             shapeGruppe.ZOrder(MsoZOrderCmd.msoBringToFront)
 
+        ElseIf anzElements = 1 Then
+            Try
+                Dim msShape As pptNS.Shape = rds.pptSlide.Shapes.Item(swlMilestoneCollection.Item(1))
+                msShape.ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
+            
         End If
 
         'Dim slideShapes As pptNS.Shapes = rds.pptSlide.Shapes
