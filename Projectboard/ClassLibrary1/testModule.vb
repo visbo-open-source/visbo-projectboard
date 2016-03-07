@@ -426,7 +426,7 @@ Public Module testModule
             pptTemplatePresentation.Close()
 
         Catch ex As Exception
-            Throw New Exception("Probleme mit Powerpoint Template")
+            Throw New Exception("bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen")
         End Try
 
         Dim reportObj As xlNS.ChartObject

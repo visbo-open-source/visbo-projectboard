@@ -476,7 +476,7 @@ Public Class frmReportProfil
 
 
         Catch ex As Exception
-            Call MsgBox("Fehler " & ex.Message)
+            Call MsgBox("Fehler: " & vbLf & ex.Message)
         End Try
 
     End Sub
