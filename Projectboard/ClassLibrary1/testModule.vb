@@ -10470,6 +10470,8 @@ Public Module testModule
 
                             If zeichnen Then
 
+                                Dim missingPhaseDefinition As Boolean = PhaseDefinitions.Contains(phaseName)
+
                                 If awinSettings.mppExtendedMode Then
                                     'phasenName = cphase.name
                                     If Not IsNothing(lastPhase) Then
@@ -10713,6 +10715,11 @@ Public Module testModule
                                     .Width = CSng(x2 - x1)
                                     .Height = phaseVorlagenShape.Height
                                     .Name = .Name & .Id
+
+                                    If missingPhaseDefinition Then
+                                        .Fill.ForeColor.RGB = cphase.farbe
+                                    End If
+
                                 End With
 
                                 phShapeNames.Add(copiedShape.Name)
@@ -11240,6 +11247,7 @@ Public Module testModule
 
 
         ' Änderung tk 26.11.15
+
         If MilestoneDefinitions.Contains(MS.name) Then
             milestoneTypShape = MilestoneDefinitions.getShape(MS.name)
         Else
@@ -11329,6 +11337,8 @@ Public Module testModule
                     .Glow.Radius = 5
                 End If
             End If
+
+
         End With
 
         msShapeNames.Add(copiedShape.Name)

@@ -14,5 +14,14 @@
     <Setting Name="globalPath" Type="System.String" Scope="Application">
       <Value Profile="(Default)">C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\BHTC\</Value>
     </Setting>
+    <Setting Name="TaskClass" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Task Class</Value>
+    </Setting>
+    <Setting Name="VISBOAbbreviation" Type="System.String" Scope="User">
+      <Value Profile="(Default)">VISBO Abbreviation</Value>
+    </Setting>
+    <Setting Name="VISBOAmpel" Type="System.String" Scope="User">
+      <Value Profile="(Default)">VISBO Ampel</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -27,115 +27,114 @@ Public Class frmReportProfil
      
 
     Private Sub RepProfilListbox_load(sender As Object, e As EventArgs) Handles MyBase.Load
-        'Dim i As Integer
 
-        '' ''Dim minDate As Date = Date.MaxValue
-        '' ''Dim maxDate As Date = Date.MinValue
+        Try
 
-        '' ''Dim anzproj As Integer = ShowProjekte.Count
-        ' '' '' alle geladenen Projekte in ReportProfil aufnehmen
-        '' ''For i = 1 To anzproj
+            '' ''Dim i As Integer
 
-        '' ''    Dim hhproj As clsProjekt = ShowProjekte.getProject(i)
+            '' ''Dim minDate As Date = Date.MaxValue
+            '' ''Dim maxDate As Date = Date.MinValue
 
-        '' ''    If DateDiff(DateInterval.Day, minDate, hhproj.startDate) < 0 Then
-        '' ''        minDate = hhproj.startDate
+            '' ''Dim anzproj As Integer = ShowProjekte.Count
+            ' '' '' alle geladenen Projekte in ReportProfil aufnehmen
+            '' ''For i = 1 To anzproj
 
-        '' ''        If minDate < StartofCalendar Then
-        '' ''            minDate = StartofCalendar
-        '' ''        End If
-        '' ''    End If
+            '' ''    Dim hhproj As clsProjekt = ShowProjekte.getProject(i)
 
-        '' ''    If DateDiff(DateInterval.Day, maxDate, hhproj.endeDate) > 0 Then
-        '' ''        maxDate = hhproj.endeDate
-        '' ''    End If
+            '' ''    If DateDiff(DateInterval.Day, minDate, hhproj.startDate) < 0 Then
+            '' ''        minDate = hhproj.startDate
 
-        '' ''Next
+            '' ''        If minDate < StartofCalendar Then
+            '' ''            minDate = StartofCalendar
+            '' ''        End If
+            '' ''    End If
 
-        vonDate.Value = hproj.startDate
-        bisDate.Value = hproj.endeDate
+            '' ''    If DateDiff(DateInterval.Day, maxDate, hhproj.endeDate) > 0 Then
+            '' ''        maxDate = hhproj.endeDate
+            '' ''    End If
 
-        ' hier müssen die ReportProfile aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
+            '' ''Next
 
-        Dim dirName As String
-        Dim dateiName As String
-        Dim profilName As String = ""
+            vonDate.Value = hproj.startDate
+            bisDate.Value = hproj.endeDate
 
-        dirName = awinPath & ReportProfileOrdner
+            ' hier müssen die ReportProfile aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
 
+            Dim dirName As String
+            Dim dateiName As String
+            Dim profilName As String = ""
 
-        If My.Computer.FileSystem.DirectoryExists(dirName) Then
-
-
-            Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
+            dirName = awinPath & ReportProfileOrdner
 
 
-            ' Existiert kein ReportProfil.XML, so wird ein Dummy.xml erzeugt und anschließend eingelesen
+            If My.Computer.FileSystem.DirectoryExists(dirName) Then
 
-            If listofFiles.count < 1 Then
 
-                ' erzeuge ein Dummy-ReportPRofil
+                Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
 
-                Dim dmyRepProfil As New clsreport
-                '' 'Call createDummyReportProfil(dmyRepProfil)
 
-                dmyRepProfil.Projects.Clear()
-                dmyRepProfil.Projects.Add(1, hproj.name)
+                ' Existiert kein ReportProfil.XML, so wird ein Dummy.xml erzeugt und anschließend eingelesen
 
-                dmyRepProfil.VonDate = vonDate.Value
-                dmyRepProfil.BisDate = bisDate.Value
+                If listOfFiles.Count < 1 Then
 
-                ' Schreiben des Dummy ReportProfils
-                Call XMLExportReportProfil(dmyRepProfil)
+                    ' erzeuge ein Dummy-ReportPRofil
 
-                'erneut Files auf Directory lesen
-                listOfFiles = My.Computer.FileSystem.GetFiles(dirName)
+                    Dim dmyRepProfil As New clsReport
+                    '' 'Call createDummyReportProfil(dmyRepProfil)
 
-            End If
+                    dmyRepProfil.Projects.Clear()
+                    dmyRepProfil.Projects.Add(1, hproj.name)
 
-            For k As Integer = 1 To listOfFiles.Count
+                    dmyRepProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
 
-                dateiName = listOfFiles.Item(k - 1)
-                If dateiName.Contains(".xml") Then
 
-                    Try
+                    ' Schreiben des Dummy ReportProfils
+                    Call XMLExportReportProfil(dmyRepProfil)
 
-                        Dim hstr() As String
-                        hstr = Split(dateiName, ".xml", 2)
-                        Dim hhstr() As String
-                        hhstr = Split(hstr(0), "\")
-                        profilName = hhstr(hhstr.Length - 1)
-                        RepProfilListbox.Items.Add(profilName)
-
-                    Catch ex As Exception
-
-                    End Try
+                    'erneut Files auf Directory lesen
+                    listOfFiles = My.Computer.FileSystem.GetFiles(dirName)
 
                 End If
 
-            Next k
+                For k As Integer = 1 To listOfFiles.Count
 
-            If listofFiles.count > 0 Then
-                RepProfilListbox.SelectedIndex = 0
+                    dateiName = listOfFiles.Item(k - 1)
+                    If dateiName.Contains(".xml") Then
+
+                        Try
+
+                            Dim hstr() As String
+                            hstr = Split(dateiName, ".xml", 2)
+                            Dim hhstr() As String
+                            hhstr = Split(hstr(0), "\")
+                            profilName = hhstr(hhstr.Length - 1)
+                            RepProfilListbox.Items.Add(profilName)
+
+                        Catch ex As Exception
+
+                        End Try
+
+                    End If
+
+                Next k
+
+                If listOfFiles.Count > 0 Then
+                    RepProfilListbox.SelectedIndex = 0
+                End If
+
+
+            Else
+                Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
+
             End If
 
+            Me.statusLabel.Visible = False
 
-        Else
-            Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
-
-        End If
-        'For i = 0 To 30
-
-        '    Try
-
-        '        RepProfilListbox.Items.Add("aaa" & CStr(i))
-
-        '    Catch ex As Exception
-
-        '    End Try
-
-        '    RepProfilListbox.SelectedItem = RepProfilListbox.Items.Count
-        'Next i
+        Catch ex As Exception
+            'Call MsgBox(ex.Message)
+            Me.statusLabel.Text = ex.Message
+            Me.statusLabel.Visible = True
+        End Try
 
     End Sub
     Private Sub RepProfilListbox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles RepProfilListbox.SelectedIndexChanged
@@ -147,186 +146,205 @@ Public Class frmReportProfil
 
         ' '' Einlesen des ausgewählten ReportProfils
         reportProfil = XMLImportReportProfil(reportProfilName)
-        '' ''If Not IsNothing(reportProfil) Then
-        '' ''    vonDate.Value = reportProfil.VonDate
-        '' ''    bisDate.Value = reportProfil.BisDate
-        '' ''End If
+    
+        If Not IsNothing(reportProfil) Then
 
 
-        reportProfil.Projects.Clear()
-        reportProfil.Projects.Add(1, hproj.name)
+            reportProfil.Projects.Clear()
+            reportProfil.Projects.Add(1, hproj.name)
 
 
-        ' für BHTC immer true
-        reportProfil.ExtendedMode = True
-        ' für BHTC immer false
-        reportProfil.Ampeln = False
-        reportProfil.AllIfOne = False
-        reportProfil.FullyContained = False
-        reportProfil.SortedDauer = False
-        reportProfil.ProjectLine = False
-        reportProfil.UseOriginalNames = False
+            ' für BHTC immer true
+            reportProfil.ExtendedMode = True
+            ' für BHTC immer false
+            reportProfil.Ampeln = False
+            reportProfil.AllIfOne = False
+            reportProfil.FullyContained = False
+            reportProfil.SortedDauer = False
+            reportProfil.ProjectLine = False
+            reportProfil.UseOriginalNames = False
 
+        End If
 
     End Sub
 
     Private Sub vonDate_ValueChanged(sender As Object, e As EventArgs) Handles vonDate.ValueChanged
 
-        If Not IsNothing(reportProfil) Then
-            reportProfil.VonDate = vonDate.Value
-            reportProfil.BisDate = bisDate.Value
-        End If
+        
     End Sub
 
     Private Sub bisDate_ValueChanged(sender As Object, e As EventArgs) Handles bisDate.ValueChanged
 
-        If Not IsNothing(reportProfil) Then
-            reportProfil.VonDate = vonDate.Value
-            reportProfil.BisDate = bisDate.Value
-        End If
-
-        'Call MsgBox("Fehler: Endedatum des Reports liegt von dem BeginnDatum" & vbLf & "Bitte korrigieren Sie das")
 
     End Sub
 
     Private Sub ReportErstellen_Click(sender As Object, e As EventArgs) Handles ReportErstellen.Click
 
+        Try
 
-        Dim tmpSortedList As New SortedList(Of String, String)
+            Dim tmpSortedList As New SortedList(Of String, String)
 
-        If RepProfilListbox.Text <> "" Then
+            If RepProfilListbox.Text <> "" Then
 
-            Dim reportProfilName As String = RepProfilListbox.Text
+                Dim reportProfilName As String = RepProfilListbox.Text
 
-            'Call MsgBox("Lesen des XML-Files " & reportProfilName & ".xml")
+                'Call MsgBox("Lesen des XML-Files " & reportProfilName & ".xml")
 
-            ' Einlesen des ausgewählten ReportProfils
-            reportProfil = XMLImportReportProfil(reportProfilName)
+                ' Einlesen des ausgewählten ReportProfils
+                reportProfil = XMLImportReportProfil(reportProfilName)
 
-            If Not IsNothing(reportProfil) Then
+                If Not IsNothing(reportProfil) Then
 
-                'Call MsgBox("ReportErstellen")
-
-                reportProfil.VonDate = vonDate.Value
-                reportProfil.BisDate = bisDate.Value
-
-                Dim anzproj As Integer = ShowProjekte.Count
-                ' alle geladenen Projekte in ReportProfil aufnehmen
-                ' ''For i = 1 To anzproj
-
-                ' ''    Dim hilfsproj As clsProjekt = ShowProjekte.getProject(i)
-                ' ''    reportProfil.Projects.Add(i, hilfsproj.name)
-
-                ' ''Next
-
-                'Call MsgBox("Es wurden " & CStr(anzproj) & " Projekte in  ShowProjekte eingelesen." & vbLf _
-                '        & "Report wird für das aktuell geladene Projekt erstellt: " & hproj.name)
-
-                reportProfil.Projects.Clear()
-                reportProfil.Projects.Add(1, hproj.name)
-
-                ' für BHTC immer true
-                reportProfil.ExtendedMode = True
-                ' für BHTC immer false
-                reportProfil.Ampeln = False
-                reportProfil.AllIfOne = False
-                reportProfil.FullyContained = False
-                reportProfil.SortedDauer = False
-                reportProfil.ProjectLine = False
-                reportProfil.UseOriginalNames = False
+                    'Call MsgBox("ReportErstellen")
+                    Try
+                        reportProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
+                    Catch ex As Exception
+                        Throw New ArgumentException(ex.Message)
+                    End Try
 
 
+                    Dim anzproj As Integer = ShowProjekte.Count
+                    ' alle geladenen Projekte in ReportProfil aufnehmen
+                    ' ''For i = 1 To anzproj
 
-                'Call MsgBox("Report erstellen mit Projekt " & hproj.name & "von " & vonDate.Value.ToString & " bis " & bisDate.Value.ToString & " Reportprofil " & reportProfilName)
-                Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
+                    ' ''    Dim hilfsproj As clsProjekt = ShowProjekte.getProject(i)
+                    ' ''    reportProfil.Projects.Add(i, hilfsproj.name)
 
-                Me.statusLabel.Visible = True
-                Me.statusLabel.Text = "...started"
+                    ' ''Next
+
+                    'Call MsgBox("Es wurden " & CStr(anzproj) & " Projekte in  ShowProjekte eingelesen." & vbLf _
+                    '        & "Report wird für das aktuell geladene Projekt erstellt: " & hproj.name)
+
+                    reportProfil.Projects.Clear()
+                    reportProfil.Projects.Add(1, hproj.name)
+
+                    ' für BHTC immer true
+                    reportProfil.ExtendedMode = True
+                    ' für BHTC immer false
+                    reportProfil.Ampeln = False
+                    reportProfil.AllIfOne = False
+                    reportProfil.FullyContained = False
+                    reportProfil.SortedDauer = False
+                    reportProfil.ProjectLine = False
+                    reportProfil.UseOriginalNames = False
 
 
-                BGworkerReportBHTC.RunWorkerAsync(reportProfil)
+
+                    'Call MsgBox("Report erstellen mit Projekt " & hproj.name & "von " & vonDate.Value.ToString & " bis " & bisDate.Value.ToString & " Reportprofil " & reportProfilName)
+                    Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
+
+                    Me.statusLabel.Visible = True
+                    Me.statusLabel.Text = "...started"
+
+
+                    BGworkerReportBHTC.RunWorkerAsync(reportProfil)
+
+                Else
+                    Call MsgBox("ausgewähltes Report-Profil enthält Fehler !")
+                End If
 
             Else
-                Call MsgBox("ausgewähltes Report-Profil enthält Fehler !")
+                Call MsgBox("Es wurde noch kein Report-Profil ausgewählt !")
+
             End If
 
-        Else
-            Call MsgBox("Es wurde noch kein Report-Profil ausgewählt !")
-        End If
+        Catch ex As Exception
+            'Call MsgBox(ex.Message)
+            Me.statusLabel.Text = ex.Message
+            Me.statusLabel.Visible = True
+        End Try
     End Sub
 
     Private Sub changeProfil_Click(sender As Object, e As EventArgs) Handles changeProfil.Click
 
-
-        ''ist bereits erfolgt ''
-        '' '' Einlesen des ausgewählten ReportProfils 
-        '' '' ''reportProfil = XMLImportReportProfil(RepProfilListbox.Text)
-
-        If Not IsNothing(reportProfil) Then
-
-            reportProfil.Projects.Clear()
-            reportProfil.Projects.Add(1, hproj.name)
-
-            reportProfil.VonDate = vonDate.Value
-            reportProfil.BisDate = bisDate.Value
-
-        End If
+        Try
 
 
-        Me.statusLabel.Visible = False
+            ''ist bereits erfolgt ''
+            '' '' Einlesen des ausgewählten ReportProfils 
+            '' '' ''reportProfil = XMLImportReportProfil(RepProfilListbox.Text)
 
-        ' frmHierarchySelection aufrufen für BHTC
-        Call PBBBHTCHierarchySelAction("BHTC", reportProfil)
+            If Not IsNothing(reportProfil) Then
 
+                reportProfil.Projects.Clear()
+                reportProfil.Projects.Add(1, hproj.name)
 
-        'RepVorlagenListBox neu aufbauen, falls ein oder mehrere ReportProfile gespeichert wurden.
-        ' hier müssen die ReportProfile erneut aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
-
-        Dim selectedItem As Object = RepProfilListbox.SelectedItem
-
-        RepProfilListbox.Items.Clear()  ' entfernt alle elemente aus Listbox um sie dann neu aufzubauen
-
-        Dim dirName As String
-        Dim dateiName As String
-        Dim profilName As String = ""
-
-        dirName = awinPath & ReportProfileOrdner
-
-
-        If My.Computer.FileSystem.DirectoryExists(dirName) Then
+                Try
+                    reportProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
+                Catch ex As Exception
+                    'Call MsgBox(ex.Message)
+                    Me.statusLabel.Text = ex.Message
+                    Me.statusLabel.Visible = True
+                    Exit Sub
+                End Try
 
 
-            Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
 
-            For k As Integer = 1 To listOfFiles.Count
 
-                dateiName = listOfFiles.Item(k - 1)
-                If dateiName.Contains(".xml") Then
+                Me.statusLabel.Visible = False
 
-                    Try
+                ' frmHierarchySelection aufrufen für BHTC
+                Call PBBBHTCHierarchySelAction("BHTC", reportProfil)
 
-                        Dim hstr() As String
-                        hstr = Split(dateiName, ".xml", 2)
-                        Dim hhstr() As String
-                        hhstr = Split(hstr(0), "\")
-                        profilName = hhstr(hhstr.Length - 1)
-                        RepProfilListbox.Items.Add(profilName)
 
-                    Catch ex As Exception
+                'RepVorlagenListBox neu aufbauen, falls ein oder mehrere ReportProfile gespeichert wurden.
+                ' hier müssen die ReportProfile erneut aus dem Directory ausgelesen werden und zur Auswahl angeboten werden
 
-                    End Try
+                Dim selectedItem As Object = RepProfilListbox.SelectedItem
+
+                RepProfilListbox.Items.Clear()  ' entfernt alle elemente aus Listbox um sie dann neu aufzubauen
+
+                Dim dirName As String
+                Dim dateiName As String
+                Dim profilName As String = ""
+
+                dirName = awinPath & ReportProfileOrdner
+
+
+                If My.Computer.FileSystem.DirectoryExists(dirName) Then
+
+
+                    Dim listOfFiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirName)
+
+                    For k As Integer = 1 To listOfFiles.Count
+
+                        dateiName = listOfFiles.Item(k - 1)
+                        If dateiName.Contains(".xml") Then
+
+                            Try
+
+                                Dim hstr() As String
+                                hstr = Split(dateiName, ".xml", 2)
+                                Dim hhstr() As String
+                                hhstr = Split(hstr(0), "\")
+                                profilName = hhstr(hhstr.Length - 1)
+                                RepProfilListbox.Items.Add(profilName)
+
+                            Catch ex As Exception
+
+                            End Try
+
+                        End If
+
+                    Next k
+                    RepProfilListbox.SelectedItem = selectedItem
+
+                Else
+                    Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
 
                 End If
+                'RepVorlagenListBox ist nun  neu aufgebaut
 
-            Next k
-            RepProfilListbox.SelectedItem = selectedItem
+            Else
+                Throw New ArgumentException("Fehler: es ist kein ReportProfil geladen")
 
-        Else
-            Throw New ArgumentException("Fehler: es existiert kein ReportProfil")
+            End If    ' von if not isnothing(reportProfil)
 
-        End If
-        'RepVorlagenListBox ist nun  neu aufgebaut
-
+        Catch ex As Exception
+            'Call MsgBox(ex.Message)
+            Me.statusLabel.Text = ex.Message
+            Me.statusLabel.Visible = True
+        End Try
     End Sub
 
 

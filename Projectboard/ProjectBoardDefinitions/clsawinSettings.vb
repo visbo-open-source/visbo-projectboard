@@ -136,6 +136,10 @@ Public Class clsawinSettings
     Public Property mppKwInMilestone As Boolean
     Public Property mppUseInnerText As Boolean ' steuert, ob der Beschriftungstext im Balken stattfinden soll 
 
+    ' Settings für MSProject-AddIn und ImportMSProject
+    Public Property visboTaskClass As String
+    Public Property visboAbbreviation As String
+    Public Property visboAmpel As String
 
     ' Settings für Einzelprojekt-Reports
     ' tk 7.2.16 ist überflüssig

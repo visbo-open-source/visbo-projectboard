@@ -16,6 +16,7 @@ Imports System.Runtime.Serialization
 Imports System.Xml
 Imports System.Xml.Serialization
 Imports System.IO
+Imports System.Drawing
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
 Imports System.Security.Principal
@@ -707,47 +708,48 @@ Public Module awinGeneralModules
         ReDim exportOrdnerNames(4)
 
 
-        ' hier werden die Ordner Namen für den Import wie Export festgelegt ... 
-        'awinPath = appInstance.ActiveWorkbook.Path & "\"
-
-        '' ''If (Dir(awinSettings.globalPath, vbDirectory) <> "") Then
-        '' ''    globalPath = awinSettings.globalPath
-        '' ''Else
-
-        '' ''    Throw New ArgumentException("Globaler Requirementsordner " & awinSettings.globalPath & " existiert nicht")
-
-        '' ''End If
-
-        '' ''If (Dir(awinSettings.awinPath, vbDirectory) <> "") Then
-        '' ''    awinPath = awinSettings.awinPath
-        '' ''Else
-
-        '' ''    Throw New ArgumentException("Lokaler Requirementsordner " & awinSettings.awinPath & " existiert nicht")
-
-        '' ''End If
-
 
         globalPath = awinSettings.globalPath
-        awinPath = awinSettings.awinPath
+
+        ' awinPath kann relativ oder absolut angegeben sein, beides möglich
+
+        Dim curUserDir As String = My.Computer.FileSystem.SpecialDirectories.MyDocuments
+
+        awinPath = My.Computer.FileSystem.CombinePath(curUserDir, awinSettings.awinPath)
+
+        If Not awinPath.EndsWith("\") Then
+            awinPath = awinPath & "\"
+        End If
 
 
-        If awinPath = "" And globalPath <> "" Then
+        If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
             awinPath = globalPath
-        ElseIf globalPath = "" And awinPath <> "" Then
+        ElseIf globalPath = "" And (awinPath <> "" And My.Computer.FileSystem.DirectoryExists(awinPath)) Then
             globalPath = awinPath
-        ElseIf globalPath = "" And awinPath = "" Then
-            Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " wurden nicht angegeben")
+        ElseIf globalPath = "" Or awinPath = "" Then
+            Throw New ArgumentException("Globaler Ordner " & awinSettings.globalPath & " und Lokaler Ordner " & awinSettings.awinPath & " existieren nicht")
         End If
 
-        If (Dir(globalPath, vbDirectory) = "") Then
-            If (Dir(awinPath, vbDirectory) = "") Then
-                Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
-            Else
+        If My.Computer.FileSystem.DirectoryExists(globalPath) And (Dir(globalPath, vbDirectory) = "") Then
+            Throw New ArgumentException("Requirementsordner " & awinSettings.globalPath & " existiert nicht")
+        End If
+
+        ' Synchronization von Globalen und Lokalen Pfad
+
+        If awinPath <> globalPath And My.Computer.FileSystem.DirectoryExists(globalPath) Then
+
+            Call synchronizeGlobalToLocalFolder()
+
+        Else
+            If My.Computer.FileSystem.DirectoryExists(awinPath) And (Dir(awinPath, vbDirectory) = "") Then
+                Throw New ArgumentException("Requirementsordner " & awinSettings.awinPath & " existiert nicht")
             End If
+
         End If
 
 
-        ' Erzeugen des Report Ordners, wenn er nicht schon existiert .. 
+        ' Erzeugen des Report Ordners, wenn er nicht schon existiert ..
+
         reportOrdnerName = awinPath & "Reports\"
         Try
             My.Computer.FileSystem.CreateDirectory(reportOrdnerName)
@@ -768,11 +770,6 @@ Public Module awinGeneralModules
         exportOrdnerNames(PTImpExp.msproject) = awinPath & "Export\MSProject"
         exportOrdnerNames(PTImpExp.simpleScen) = awinPath & "Export\einfache Szenarien"
         exportOrdnerNames(PTImpExp.modulScen) = awinPath & "Export\modulare Szenarien"
-
-
-        If globalPath <> awinPath Then
-            Call synchronizeGlobalToLocalFolder()
-        End If
 
 
         StartofCalendar = StartofCalendar.Date
@@ -1618,6 +1615,9 @@ Public Module awinGeneralModules
 
                 Try
                     awinSettings.missingDefinitionColor = CLng(.Range("MissingDefinitionColor").Interior.Color)
+                    ' ''If awinSettings.missingDefinitionColor = XlRgbColor.rgbWhite Then
+                    ' ''    Call MsgBox("leeres missingDefinitionColor - Feld in customizationfile " & awinSettings.missingDefinitionColor.ToString)
+                    ' ''End If
                 Catch ex As Exception
 
                 End Try
@@ -2581,6 +2581,9 @@ Public Module awinGeneralModules
 
         ' hier wird eingetragen, welches vordefinierte Flag das customized Field VISBO repräsentiert
         Dim visboflag As MSProject.PjField = Nothing
+        Dim visbo_taskclass As MSProject.PjField = Nothing
+        Dim visbo_abbrev As MSProject.PjField = Nothing
+        Dim visbo_ampel As MSProject.PjField = Nothing
 
         ' Liste, die aufgebaut wird beim Einlesen der Tasks. Hier wird vermerkt, welche Task das Visbo-Flag mit YES und welche mit NO
         ' gesetzt hat d.h. berücksichtigt werden soll
@@ -2629,8 +2632,27 @@ Public Module awinGeneralModules
                     visboflag = 0
                 End Try
 
+                Try
+                    visbo_taskclass = CType(prj.FieldNameToFieldConstant(awinSettings.visboTaskClass, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_taskclass = 0
+                End Try
+                Try
+                    visbo_abbrev = CType(prj.FieldNameToFieldConstant(awinSettings.visboAbbreviation, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_abbrev = 0
+                End Try
+                Try
+                    visbo_ampel = CType(prj.FieldNameToFieldConstant(awinSettings.visboAmpel, MSProject.PjFieldType.pjTask), MSProject.PjField)
+                Catch ex As Exception
+                    visbo_ampel = 0
+                End Try
                
                 If modus = "BHTC" Then
+                    ' In Missing..Definitions sind noch die Definitionen des vorausgegangenen Projekts definiert.
+                    ' Diese sollen nicht mehr aktiv sein.
+                    missingPhaseDefinitions.Clear()
+                    missingMilestoneDefinitions.Clear()
                     '' Einlesen des aktiven Projekts
                     msproj = prj.ActiveProject
                 Else
@@ -2642,7 +2664,7 @@ Public Module awinGeneralModules
                 ' '' '' Einlesen der diversen Projekte, die geladen wurden (gilt nur für BHTC), sonst immer nur das zuletzt geladene
                 '' ''For proj_i = beginnProjekt To endeProjekt
 
-          
+            
 
                 hproj = New clsProjekt(CDate(msproj.ProjectStart), CDate(msproj.ProjectStart), CDate(msproj.ProjectStart))
 
@@ -2691,9 +2713,53 @@ Public Module awinGeneralModules
                     Throw New ArgumentException("Fehler in awinImportMSProject, Erzeugen ProjektPhase")
                 End Try
 
+                '' '' neu ur
+
+                ' Call MsgBox(prj.ActiveProject.GetObjectMatchingID(MSProject.PjOrganizer.pjViews, "BHTC Gantt Chart"))
+
+                ' '' ''Dim alltables As MSProject.Tables = prj.ActiveProject.TaskTables
+                ' '' ''Dim allviews As MSProject.Views = prj.ActiveProject.Views
+                ' '' ''Dim alllist As MSProject.List = prj.ActiveProject.TaskViewList
+
+
+                '' '' '' 
+                ' '' ''Dim t As MSProject.Table
+                ' '' ''Dim f As MSProject.TableField
+
+
+                ' '' ''For Each t In alltables
+                ' '' ''    If Not t Is Nothing Then
+                ' '' ''        Call MsgBox(t.Name, t.Index, t.RowHeight.ToString)
+
+                ' '' ''      
+                ' '' ''        If t.TableType = MSProject.PjItemType.pjResourceItem Then
+                ' '' ''            Call MsgBox("resource")
+                ' '' ''        ElseIf t.TableType = MSProject.PjItemType.pjTaskItem Then
+                ' '' ''            Call MsgBox("task")
+                ' '' ''        End If
+
+                ' '' ''    End If
+                ' '' ''Next t
+
+                ' '' ''Dim v As MSProject.View
+
+                ' '' ''For Each v In allviews
+                ' '' ''    If Not v Is Nothing Then
+                ' '' ''        Call MsgBox(v.Name)
+
+                ' '' ''    End If
+                ' '' ''Next v
+
+
+                ' '' '' '' '' neu ur
+
+
+
 
                 Dim anzTasks As Integer = msproj.Tasks.Count
                 anzTasks = msproj.NumberOfTasks
+
+           
                 Dim resPool As MSProject.Resources = msproj.Resources
 
                 Dim res(resPool.Count) As Object
@@ -2710,6 +2776,9 @@ Public Module awinGeneralModules
 
 
                     msTask = msproj.Tasks.Item(i)
+
+                  
+
 
                     ' hier: evt. Prüfung ob eine VISBO Projekt-Tafel relevante Task
                     ' oder: ob eine Task auf dem kritischen Pfad liegt
@@ -2737,7 +2806,19 @@ Public Module awinGeneralModules
                         If Not PhaseDefinitions.Contains(msTask.Name) Then
                             Dim newPhaseDef As New clsPhasenDefinition
                             newPhaseDef.name = msTask.Name
-                            newPhaseDef.shortName = msTask.Name
+                            ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                            If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                                newPhaseDef.shortName = msTask.GetField(visbo_abbrev)
+                            Else
+                                newPhaseDef.shortName = msTask.Name
+                            End If
+                            ' Task Class, falls Customfield visbo_taskclass definiert ist
+                            If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                newPhaseDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                            Else
+                                newPhaseDef.darstellungsKlasse = ""
+                            End If
+
                             newPhaseDef.UID = PhaseDefinitions.Count + 1
                             'PhaseDefinitions.Add(newPhaseDef)
                             missingPhaseDefinitions.Add(newPhaseDef)
@@ -3030,13 +3111,26 @@ Public Module awinGeneralModules
 
                         Dim cmilestone As New clsMeilenstein(msPhase)
 
+
                         ' prüfen, ob MeilensteinDefinition bereits vorhanden
                         If Not MilestoneDefinitions.Contains(msTask.Name) Then
                             Dim msDef As New clsMeilensteinDefinition
                             msDef.belongsTo = msPhase.name
                             msDef.name = msTask.Name
+                            ' Abbreviation, falls Customfield visbo_abbrev definiert ist
+                            If visbo_abbrev <> 0 Then          ' VISBO-Abbrev ist definiert
+                                msDef.shortName = msTask.GetField(visbo_abbrev)
+                            Else
+                                msDef.shortName = ""
+                            End If
+                            ' Task Class, falls Customfield visbo_taskclass definiert ist
+                            If visbo_taskclass <> 0 Then          ' VISBO-TaskClass ist definiert
+                                msDef.darstellungsKlasse = msTask.GetField(visbo_taskclass)
+                            Else
+                                msDef.darstellungsKlasse = ""
+                            End If
+
                             msDef.schwellWert = 0
-                            msDef.shortName = ""
                             msDef.UID = MilestoneDefinitions.Count + 1
                             'MilestoneDefinitions.Add(msDef)
                             Try
@@ -3050,10 +3144,34 @@ Public Module awinGeneralModules
                         ' MeilensteinDefinition vorhanden?
                         If MilestoneDefinitions.Contains(msTask.Name) _
                             Or missingMilestoneDefinitions.Contains(msTask.Name) Then
+
                             Dim msBewertung As New clsBewertung
                             cmilestone.setDate = CType(msTask.Start, Date)
                             cmilestone.nameID = hproj.hierarchy.findUniqueElemKey(msTask.Name, True)
                             msBewertung.description = msTask.Notes
+                            If visbo_ampel <> 0 Then
+
+                                Dim visboAmpel As String = msTask.GetField(visbo_ampel)
+
+                                Select Case visboAmpel
+
+                                    Case "none"
+                                        msBewertung.colorIndex = PTfarbe.none
+                                    Case "red"
+                                        msBewertung.colorIndex = PTfarbe.red
+                                    Case "green"
+                                        msBewertung.colorIndex = PTfarbe.green
+                                    Case "yellow"
+                                        msBewertung.colorIndex = PTfarbe.yellow
+                                    Case Else
+                                        msBewertung.colorIndex = PTfarbe.none
+
+                                End Select
+
+                            Else
+                                msBewertung.colorIndex = PTfarbe.none
+                            End If
+
                             cmilestone.addBewertung(msBewertung)
 
 
@@ -11545,9 +11663,20 @@ Public Module awinGeneralModules
 
             Dim serializer = New DataContractSerializer(GetType(clsReport))
 
-            Dim file As New FileStream(xmlfilename, FileMode.Create)
-            serializer.WriteObject(file, profil)
-            file.Close()
+            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
+            ' ''serializer.WriteObject(file, profil)
+            ' ''file.Close()
+
+            Dim settings As New XmlWriterSettings()
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, profil)
+            writer.Flush()
+            writer.Close()
+
         Catch ex As Exception
 
             Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
@@ -11605,8 +11734,7 @@ Public Module awinGeneralModules
             ' Datumsangaben zurücksichern
             reportProfil.CalendarVonDate = PPTvondate_sav
             reportProfil.CalendarBisDate = PPTbisdate_sav
-            reportProfil.VonDate = vondate_sav
-            reportProfil.BisDate = bisdate_sav
+            reportProfil.calcRepVonBis(vondate_sav, bisdate_sav)
 
             ' für BHTC immer true
             reportProfil.ExtendedMode = True
@@ -11857,9 +11985,19 @@ Public Module awinGeneralModules
 
             Dim serializer = New DataContractSerializer(GetType(clsLicences))
 
-            Dim file As New FileStream(xmlfilename, FileMode.Create)
-            serializer.WriteObject(file, lic)
-            file.Close()
+            ' ''Dim file As New FileStream(xmlfilename, FileMode.Create)
+            ' ''serializer.WriteObject(file, lic)
+            ' ''file.Close()
+
+            Dim settings As New XmlWriterSettings()
+            settings.Indent = True
+            settings.IndentChars = (ControlChars.Tab)
+            settings.OmitXmlDeclaration = True
+
+            Dim writer As XmlWriter = XmlWriter.Create(xmlfilename, settings)
+            serializer.WriteObject(writer, lic)
+            writer.Flush()
+            writer.Close()
         Catch ex As Exception
 
             Call MsgBox("Beim Schreiben der XML-Datei '" & xmlfilename & "' ist ein Fehler aufgetreten !")
