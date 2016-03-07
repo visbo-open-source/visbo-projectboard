@@ -57,7 +57,7 @@ Public Class ThisAddIn
                     ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
                     appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False)    ' CustomizationFile wird ohne Abspeichern von Änderungen geschlossen
                 End If
-
+                appInstance.ScreenUpdating = True
             End If
         Catch ex As Exception
             Throw New ArgumentException("Fehler beim Schließen des Customization-Files")
