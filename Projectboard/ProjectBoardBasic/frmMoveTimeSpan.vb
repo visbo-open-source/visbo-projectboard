@@ -20,7 +20,7 @@ Public Class frmMoveTimeSpan
     Private Sub moveToRight_Click(sender As Object, e As EventArgs) Handles moveToRight.Click
         Dim von As Integer, bis As Integer
 
-        If showRangeRight < 240 Then
+        If showRangeRight < 2400 Then
             von = showRangeLeft + 1
             bis = showRangeRight + 1
             Call awinChangeTimeSpan(von, bis)

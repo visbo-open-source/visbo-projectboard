@@ -5539,7 +5539,7 @@ Public Module testModule
         Dim nrOfZeilen(neededSpalten - 1) As Integer
 
 
-        If showRangeRight = 0 Or showRangeLeft = 0 Or showRangeRight - showRangeLeft = 0 Then
+        If showRangeRight = 0 Or showRangeLeft = 0 Or showRangeRight - showRangeLeft < 0 Then
             Throw New Exception("kein Zeitraum in Tabelle Anzeigen der Elemente angegeben ")
         End If
 
@@ -8370,7 +8370,7 @@ Public Module testModule
         currentFilter = New clsFilter("temp", selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
                                       selectedRoles, selectedCosts)
 
-        If Not ((showRangeLeft > 0) And (showRangeRight > showRangeLeft)) Then
+        If Not ((showRangeLeft > 0) And (showRangeRight >= showRangeLeft)) Then
             noTimespanDefined = True
         Else
             noTimespanDefined = False
@@ -9550,7 +9550,7 @@ Public Module testModule
 
 
         ' jetzt das CalendarMark zeichnen 
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        If showRangeLeft > 0 And showRangeRight >= showRangeLeft Then
             Dim startOfZeitraum As Integer = showRangeLeft - getColumnOfDate(rds.PPTStartOFCalendar)
             Dim zeitraumDauer As Integer = showRangeRight - showRangeLeft + 1
 
