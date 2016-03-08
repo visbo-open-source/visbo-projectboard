@@ -8555,7 +8555,7 @@ Public Module testModule
         Dim linksDatum As Date
         Dim rechtsDatum As Date
 
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        If showRangeLeft > 0 And showRangeRight >= showRangeLeft Then
             linksDatum = StartofCalendar.AddMonths(showRangeLeft - 1)
             rechtsDatum = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
         Else
