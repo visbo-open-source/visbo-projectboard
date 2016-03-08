@@ -426,7 +426,7 @@ Public Module testModule
             pptTemplatePresentation.Close()
 
         Catch ex As Exception
-            Throw New Exception("Probleme mit Powerpoint Template")
+            Throw New Exception("bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen")
         End Try
 
         Dim reportObj As xlNS.ChartObject
@@ -10087,6 +10087,14 @@ Public Module testModule
             shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
             shapeGruppe.ZOrder(MsoZOrderCmd.msoBringToFront)
 
+        ElseIf anzElements = 1 Then
+            Try
+                Dim msShape As pptNS.Shape = rds.pptSlide.Shapes.Item(swlMilestoneCollection.Item(1))
+                msShape.ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
+            
         End If
 
         'Dim slideShapes As pptNS.Shapes = rds.pptSlide.Shapes

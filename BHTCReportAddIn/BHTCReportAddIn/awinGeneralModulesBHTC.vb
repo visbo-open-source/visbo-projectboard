@@ -278,6 +278,7 @@ Module awinGeneralModulesBHTC
 
 
             Try
+
                 ' prüft, ob bereits Excel geöffnet ist 
                 'excelObj = GetObject(, "Excel.Application")
                 appInstance = CType(GetObject(, "Excel.Application"), Microsoft.Office.Interop.Excel.Application)
@@ -291,6 +292,9 @@ Module awinGeneralModulesBHTC
                 End Try
 
             End Try
+
+            ' screeenUpdating auf false setzen, damit Excel nicht aufpoppt
+            appInstance.ScreenUpdating = False
 
             Dim customizationFile As String = "requirements\Project Board Customization.xlsx"
             ' hier muss jetzt das Customization File aufgemacht werden ...
@@ -404,7 +408,7 @@ Module awinGeneralModulesBHTC
                     '' '' ''Call readInitConstellations()
 
                 Catch ex As Exception
-                    'appInstance.ScreenUpdating = formerSU
+
                     appInstance.EnableEvents = True
                     Throw New ArgumentException(ex.Message)
                 End Try
@@ -526,6 +530,7 @@ Module awinGeneralModulesBHTC
                 '' ''End If  ' von "if Login erfolgt"
 
             End If ' von "if special="BHTC"
+
 
         Catch ex As Exception
             Call MsgBox("Fehler beim Laden des VISBO AddIn")
