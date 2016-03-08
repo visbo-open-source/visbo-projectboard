@@ -10094,7 +10094,7 @@ Public Module testModule
             Catch ex As Exception
 
             End Try
-            
+
         End If
 
         'Dim slideShapes As pptNS.Shapes = rds.pptSlide.Shapes
@@ -13308,7 +13308,7 @@ Public Module testModule
         Dim isBHTCSchema As Boolean = (kennzeichnung = "Swimlanes2")
 
         Dim rds As New clsPPTShapes
-        Dim considerZeitraum As Boolean = (showRangeLeft > 0 And showRangeRight > showRangeLeft)
+        Dim considerZeitraum As Boolean = (showRangeLeft > 0 And showRangeRight >= showRangeLeft)
         Dim cphase As clsPhase
 
         ' mit disem Befehl werden auch die ganzen Hilfsshapes in der Klasse gesetzt 
