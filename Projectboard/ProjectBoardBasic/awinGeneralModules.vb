@@ -11738,11 +11738,11 @@ Public Module awinGeneralModules
                     destFile = destdir & "\" & hstr(hstr.Length - 1)
 
                     ' Test ob globales File neuer als lokales
-                    Dim srcDate As Date = My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime.Date
-                    Dim destDate As Date = My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime.Date
+                    Dim srcDate As Date = My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime
+                    Dim destDate As Date = My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime
                     Dim ddiff As Long = DateDiff(DateInterval.Second, _
-                                                 My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime.Date, _
-                                                 My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime.Date)
+                                                 My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime, _
+                                                 My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime)
 
                     ' Wenn globales neuer als lokales, dann von globalPath nach awinPath kopieren
                     If ddiff < 0 Then
@@ -11770,11 +11770,11 @@ Public Module awinGeneralModules
                         destFile = destdir & "\" & hstr(hstr.Length - 1)
 
                         ' Test ob globales File neuer als lokales
-                        Dim srcDate As Date = My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime.Date
-                        Dim destDate As Date = My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime.Date
+                        Dim srcDate As Date = My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime
+                        Dim destDate As Date = My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime
                         Dim ddiff As Long = DateDiff(DateInterval.Second, _
-                                                     My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime.Date, _
-                                                     My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime.Date)
+                                                     My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime, _
+                                                     My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime)
 
                         ' Wenn globales neuer als lokales, dann von globalPath nach awinPath kopieren
                         If ddiff < 0 Then

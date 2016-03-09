@@ -84,6 +84,7 @@ Module awinGeneralModulesBHTC
                 awinPath = awinPath & "\"
             End If
 
+            'Call MsgBox(awinPath)
 
             If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
                 awinPath = globalPath
@@ -105,6 +106,8 @@ Module awinGeneralModulesBHTC
                 End If
 
             End If
+
+            'Call MsgBox(awinPath)
 
             ' Benutzer arbeitet auf dem awinPath-Directories ohne Synchronisation
 
