@@ -770,7 +770,7 @@ Public Module awinGeneralModules
         arrWsNames(9) = "Tabelle3"
         arrWsNames(10) = "Meilenstein-Mappings"
         arrWsNames(11) = "Projekt editieren"
-        arrWsNames(12) = "Projektdefinition Erloese"
+        arrWsNames(12) = "Lizenzen"
         arrWsNames(13) = "Projekt iErloese"
         arrWsNames(14) = "Objekte"
         arrWsNames(15) = "Portfolio Vorlage"
