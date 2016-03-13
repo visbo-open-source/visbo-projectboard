@@ -84,6 +84,7 @@ Module awinGeneralModulesBHTC
                 awinPath = awinPath & "\"
             End If
 
+            'Call MsgBox(awinPath)
 
             If awinPath = "" And (globalPath <> "" And My.Computer.FileSystem.DirectoryExists(globalPath)) Then
                 awinPath = globalPath
@@ -105,6 +106,8 @@ Module awinGeneralModulesBHTC
                 End If
 
             End If
+
+            'Call MsgBox(awinPath)
 
             ' Benutzer arbeitet auf dem awinPath-Directories ohne Synchronisation
 
@@ -210,7 +213,7 @@ Module awinGeneralModulesBHTC
             arrWsNames(9) = "Tabelle3"
             arrWsNames(10) = "Meilenstein-Mappings"
             arrWsNames(11) = "Projekt editieren"
-            arrWsNames(12) = "Projektdefinition Erloese"
+            arrWsNames(12) = "Lizenzen"
             arrWsNames(13) = "Projekt iErloese"
             arrWsNames(14) = "Objekte"
             arrWsNames(15) = "Portfolio Vorlage"
@@ -293,21 +296,49 @@ Module awinGeneralModulesBHTC
 
             End Try
 
-            ' screeenUpdating auf false setzen, damit Excel nicht aufpoppt
-            appInstance.ScreenUpdating = False
-
+         
             Dim customizationFile As String = "requirements\Project Board Customization.xlsx"
             ' hier muss jetzt das Customization File aufgemacht werden ...
             Try
                 xlsCustomization = appInstance.Workbooks.Open(awinPath & customizationFile)
                 myCustomizationFile = appInstance.ActiveWorkbook.Name
             Catch ex As Exception
-                'appInstance.ScreenUpdating = formerSU
                 Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
             End Try
 
+            ' Excel mit offenem Customizationfile minimieren
+            appInstance.WindowState = XlWindowState.xlMinimized
+
+            ' es muss immer das Tabellenblatt "Lizenzen" vorhanden sein
+            Dim wsLizenzen As Excel.Worksheet
+            Try
+                wsLizenzen = CType(appInstance.ActiveWorkbook.Worksheets(arrWsNames(12)), _
+                       Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Catch ex As Exception
+                wsLizenzen = Nothing
+            End Try
+
+            If IsNothing(wsLizenzen) Then
+                wsLizenzen = appInstance.Worksheets.Add()
+                wsLizenzen.Name = arrWsNames(12)
+            End If
+
+            '  Tabellenblätter des CustomizationFiles unsichtbar machen 
+            '
+            ' arrWsNames(4) = "Einstellungen"
+            appInstance.Worksheets(arrWsNames(4)).visible = XlSheetVisibility.xlSheetVeryHidden
+            ' arrWsNames(7) = "Darstellungsklassen" 
+            appInstance.Worksheets(arrWsNames(7)).visible = XlSheetVisibility.xlSheetVeryHidden
+            ' arrWsNames(8) = "Phasen-Mappings"
+            appInstance.Worksheets(arrWsNames(8)).visible = XlSheetVisibility.xlSheetVeryHidden
+            ' arrWsNames(10) = "Meilenstein-Mappings"
+            appInstance.Worksheets(arrWsNames(10)).visible = XlSheetVisibility.xlSheetVeryHidden
+
+
+
             Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
                                                     Global.Microsoft.Office.Interop.Excel.Worksheet)
+
 
             ' '' '' hier muss Datenbank aus Customization-File gelesen werden, damit diese für den Login bekannt ist
             '' ''Try
