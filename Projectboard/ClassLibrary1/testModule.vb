@@ -11826,6 +11826,8 @@ Public Module testModule
         Dim buColor As Long
         Dim maxDelta As Double = 0.0
 
+
+
         Dim tmpDbl(3) As Double
         tmpDbl(0) = legendTextVorlagenShape.Height
         tmpDbl(1) = legendMilestoneVorlagenShape.Height
@@ -11992,13 +11994,15 @@ Public Module testModule
         For i = 1 To uniqueElemClasses.Count
 
             phaseName = CStr(uniqueElemClasses(i))
-            Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName)
+            Dim phShortname As String
 
             ' Änderung tk 26.11.15
             If PhaseDefinitions.Contains(phaseName) Then
                 phaseShape = PhaseDefinitions.getShape(phaseName)
+                phShortname = PhaseDefinitions.getAbbrev(phaseName)
             Else
                 phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                phShortname = missingPhaseDefinitions.getAbbrev(phaseName)
             End If
 
             ' Phasen-Shape 
@@ -12072,13 +12076,15 @@ Public Module testModule
 
             msName = CStr(uniqueElemClasses.Item(i))
 
-            msShortname = MilestoneDefinitions.getAbbrev(msName)
+
 
             ' Änderung tk 26.11.15
             If MilestoneDefinitions.Contains(msName) Then
                 meilensteinShape = MilestoneDefinitions.getShape(msName)
+                msShortname = MilestoneDefinitions.getAbbrev(msName)
             Else
                 meilensteinShape = missingMilestoneDefinitions.getShape(msName)
+                msShortname = missingMilestoneDefinitions.getAbbrev(msName)
             End If
 
 
@@ -12267,7 +12273,7 @@ Public Module testModule
 
     ''' <summary>
     ''' Änderung tk: das wird in zeichnepptProjects verwendet 
-    ''' sollte im 1. HJ 2016 ersetzt werden durch die Art und Weise, wie bei zeichneSwimlanes gearbeitet wird ...  
+    ''' sollte im 1. HJ 2016 ersetzt werden durch die Art und Weise, wie bei zeichneSwimlane gearbeitet wird ...  
     ''' </summary>
     ''' <param name="pptStartOfCalendar"></param>
     ''' <param name="pptEndOfCalendar"></param>
@@ -13655,9 +13661,57 @@ Public Module testModule
                 If awinSettings.mppShowLegend Then
                     Try
 
+                        ' Änderung tk: noch überprüfen, ob ob considerAll = true , dann sollen die selectedPhase entsprechend aufgebaut werden ...
+                        Dim tmpphases As New Collection
+                        Dim tmpMilestones As New Collection
+
+                        If considerAll Then
+
+                            Try
+                                For Each cphase In hproj.AllPhases
+
+                                    Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                    If tmpstr <> "" Then
+                                        tmpstr = tmpstr & "#" & cphase.name
+                                        If Not tmpphases.Contains(tmpstr) Then
+                                            tmpphases.Add(tmpstr, tmpstr)
+                                        End If
+
+                                    End If
+
+
+                                Next
+
+
+
+                                ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
+                                Dim mSList As SortedList(Of Date, String)
+
+                                mSList = hproj.getMilestones        ' holt alle Meilensteine in Form ihrer nameID sortiert nach Datum
+
+                                If mSList.Count > 0 Then
+                                    For Each kvp As KeyValuePair(Of Date, String) In mSList
+
+                                        Dim tmpstr = hproj.hierarchy.getBreadCrumb(kvp.Value) & "#" & hproj.getMilestoneByID(kvp.Value).name
+                                        If Not tmpMilestones.Contains(tmpstr) Then
+                                            tmpMilestones.Add(tmpstr, tmpstr)
+                                        End If
+
+                                    Next
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+                            ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
+                            
+                        Else
+                            tmpphases = selectedPhases
+                            tmpMilestones = selectedMilestones
+                        End If
+
                         With rds
                             Call zeichnePPTlegende(pptslide, _
-                                            selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                            tmpphases, tmpMilestones, selectedRoles, selectedCosts, _
                                             .legendAreaTop, .legendAreaLeft, .legendAreaRight, .legendAreaBottom, _
                                             .legendLineShape, .legendStartShape, _
                                             .legendTextVorlagenShape, .legendPhaseVorlagenShape, .legendMilestoneVorlagenShape, _
