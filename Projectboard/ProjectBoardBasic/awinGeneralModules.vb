@@ -851,7 +851,7 @@ Public Module awinGeneralModules
         arrWsNames(9) = "Tabelle3"
         arrWsNames(10) = "Meilenstein-Mappings"
         arrWsNames(11) = "Projekt editieren"
-        arrWsNames(12) = "Projektdefinition Erloese"
+        arrWsNames(12) = "Lizenzen"
         arrWsNames(13) = "Projekt iErloese"
         arrWsNames(14) = "Objekte"
         arrWsNames(15) = "missing Definitions"
@@ -3105,6 +3105,13 @@ Public Module awinGeneralModules
                         ElseIf tasklevel = 1 And tasklevel < lastlevel Then
                             parentID = rootPhaseName
 
+                        ElseIf lastlevel - tasklevel >= 1 Then
+                            Dim hilfselemID As String = lastelemID
+                            For l As Integer = 1 To lastlevel - tasklevel
+                                hilfselemID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+                            Next l
+                            parentID = hproj.hierarchy.getParentIDOfID(hilfselemID)
+
                         End If
 
                         msPhase = hproj.getPhaseByID(parentID)
@@ -3315,45 +3322,51 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="elemID"></param>
     ''' <param name="hproj"></param>
-    ''' <value></value>
+    ''' <param name="liste"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property isRemovable(ByVal elemID As String, ByVal hproj As clsProjekt, ByVal liste As SortedList(Of String, Boolean)) As Boolean
-        Get
-            Dim ind As Integer = 1
-            Dim hrchynode As clsHierarchyNode = Nothing
+    '''
+    Public Function isRemovable(ByVal elemID As String, ByVal hproj As clsProjekt, ByVal liste As SortedList(Of String, Boolean)) As Boolean
 
-            isRemovable = True
+        Dim ind As Integer = 1
+        Dim hrchynode As clsHierarchyNode = Nothing
+        Dim result As Boolean
 
-            Try
+        result = True
 
-                hrchynode = hproj.hierarchy.nodeItem(elemID)
-                If hrchynode.childCount = 0 Then
-                    isRemovable = isRemovable And True
-                End If
-                If hrchynode.childCount > 0 Then
-                    For ind = 1 To hrchynode.childCount
-                        Dim nodeID As String = hrchynode.getChild(ind)
-                        isRemovable = isRemovable And liste.ContainsKey(nodeID)
-                        isRemovable = isRemovable And isRemovable(hrchynode.getChild(ind), hproj, liste)
-                    Next
+        Try
 
-                End If
+            hrchynode = hproj.hierarchy.nodeItem(elemID)
+            If hrchynode.childCount = 0 Then
+                result = result And Not liste(elemID)
+            End If
+            If hrchynode.childCount > 0 And result Then
 
-            Catch ex As Exception
-                Call MsgBox("Fehler bei der Prüfung, ob das Element elemID= " & elemID & " entfernt werden kann")
-                Throw New ArgumentException("Fehler bei der Prüfung, ob das Element elemID entfernt werden kann")
-            End Try
+                While result And ind <= hrchynode.childCount
 
-        End Get
+                    Dim nodeID As String = hrchynode.getChild(ind)
+                    result = result And liste.ContainsKey(nodeID) And Not liste(nodeID)
+                    result = result And isRemovable(nodeID, hproj, liste)
+                    ind = ind + 1
 
-    End Property
+                End While
 
-    ''' <summary>
-    ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
-    ''' </summary>
-    ''' <param name="myCollection"></param>
-    ''' <remarks></remarks>
+            End If
+
+        Catch ex As Exception
+            Call MsgBox("Fehler bei der Prüfung, ob das Element elemID= " & elemID & " entfernt werden kann")
+            Throw New ArgumentException("Fehler bei der Prüfung, ob das Element elemID entfernt werden kann")
+        End Try
+
+        isRemovable = result
+        
+    End Function
+
+        ''' <summary>
+        ''' erzeugt die Projekte, die in der Batch-Datei angegeben sind
+        ''' </summary>
+        ''' <param name="myCollection"></param>
+        ''' <remarks></remarks>
     Public Sub awinImportProjektInventur(ByRef myCollection As Collection)
         Dim zeile As Integer, spalte As Integer
         Dim pName As String = ""
@@ -11917,11 +11930,11 @@ Public Module awinGeneralModules
                     destFile = destdir & "\" & hstr(hstr.Length - 1)
 
                     ' Test ob globales File neuer als lokales
-                    Dim srcDate As Date = My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime.Date
-                    Dim destDate As Date = My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime.Date
+                    Dim srcDate As Date = My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime
+                    Dim destDate As Date = My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime
                     Dim ddiff As Long = DateDiff(DateInterval.Second, _
-                                                 My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime.Date, _
-                                                 My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime.Date)
+                                                 My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime, _
+                                                 My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime)
 
                     ' Wenn globales neuer als lokales, dann von globalPath nach awinPath kopieren
                     If ddiff < 0 Then
@@ -11949,11 +11962,11 @@ Public Module awinGeneralModules
                         destFile = destdir & "\" & hstr(hstr.Length - 1)
 
                         ' Test ob globales File neuer als lokales
-                        Dim srcDate As Date = My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime.Date
-                        Dim destDate As Date = My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime.Date
+                        Dim srcDate As Date = My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime
+                        Dim destDate As Date = My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime
                         Dim ddiff As Long = DateDiff(DateInterval.Second, _
-                                                     My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime.Date, _
-                                                     My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime.Date)
+                                                     My.Computer.FileSystem.GetFileInfo(srcFile).LastWriteTime, _
+                                                     My.Computer.FileSystem.GetFileInfo(destFile).LastWriteTime)
 
                         ' Wenn globales neuer als lokales, dann von globalPath nach awinPath kopieren
                         If ddiff < 0 Then
