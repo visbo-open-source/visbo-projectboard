@@ -7,7 +7,7 @@ Imports WPFPieChart
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
-Imports MSProject = Microsoft.Office.Interop.MSProject
+'Imports MSProject = Microsoft.Office.Interop.MSProject
 Imports System.Security.Principal
 Imports System.Diagnostics
 Imports System.Drawing

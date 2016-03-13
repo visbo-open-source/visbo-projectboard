@@ -475,13 +475,9 @@
                         End With
 
                         If Not isMissing Then
-                            If Not MilestoneDefinitions.Contains(newMSDef.name) Then
-                                MilestoneDefinitions.Add(newMSDef)
-                            End If
+                            MilestoneDefinitions.Add(newMSDef)
                         Else
-                            If Not missingMilestoneDefinitions.Contains(newMSDef.name) Then
-                                missingMilestoneDefinitions.Add(newMSDef)
-                            End If
+                            missingMilestoneDefinitions.Add(newMSDef)
                         End If
 
 
@@ -508,13 +504,9 @@
                         End With
 
                         If Not isMissing Then
-                            If Not PhaseDefinitions.Contains(newPhDef.name) Then
-                                PhaseDefinitions.Add(newPhDef)
-                            End If
+                            PhaseDefinitions.Add(newPhDef)
                         Else
-                            If Not missingPhaseDefinitions.Contains(newPhDef.name) Then
-                                missingPhaseDefinitions.Add(newPhDef)
-                            End If
+                            missingPhaseDefinitions.Add(newPhDef)
                         End If
 
 

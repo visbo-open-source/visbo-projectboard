@@ -823,9 +823,8 @@ Public Class frmEditWoerterbuch
                     If ok Then
                         Dim tmpMsDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(itemText)
 
-                        If Not missingMilestoneDefinitions.Contains(tmpMsDef.name) Then
-                            missingMilestoneDefinitions.Add(tmpMsDef)
-                        End If
+                        ' wird bereits im Add auf Existenz abgefragt; 
+                        missingMilestoneDefinitions.Add(tmpMsDef)
 
                         unknownList.Items.Add(itemText)
 
