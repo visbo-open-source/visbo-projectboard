@@ -9679,6 +9679,30 @@ Public Module testModule
 
         End If
 
+
+        ' jetzt muss ggf die Heute Linie gezeichnet werden 
+        If Not IsNothing(rds.todayLineShape) And _
+            Date.Now.Date >= rds.PPTStartOFCalendar And _
+            Date.Now.Date <= rds.PPTEndOFCalendar Then
+
+            rds.todayLineShape.Copy()
+            newShapes = rds.pptSlide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = rds.calendarLineShape.Left + _
+                        DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, Date.Now.Date) * rasterDayWidth - rds.todayLineShape.Width / 2
+                .Top = rds.calendarLineShape.Top
+                .Height = rds.drawingAreaBottom - rds.calendarLineShape.Top
+
+                .Name = .Name & .Id
+                .AlternativeText = ""
+                .Title = ""
+
+                .TextFrame2.TextRange.Text = beschriftung
+                nameCollection.Add(.Name, .Name)
+            End With
+
+        End If
+
         ' jetzt sollen alle gezeichneten Shapes gruppiert werden 
         Dim shapeGruppe As pptNS.ShapeRange
         Dim slideShapes As pptNS.Shapes = rds.pptSlide.Shapes
@@ -13644,7 +13668,7 @@ Public Module testModule
                 Try
 
                     With rds
-                        ' das demnächst abändern auf 
+
                         Call zeichne3RowsCalendar(rds, calendargroup)
 
                     End With
