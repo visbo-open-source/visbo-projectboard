@@ -181,7 +181,8 @@ Public Class frmReportProfil
     Private Sub ReportErstellen_Click(sender As Object, e As EventArgs) Handles ReportErstellen.Click
 
         Try
-
+            Dim noPhExist As Boolean = True
+            Dim noMSExist As Boolean = True
             Dim tmpSortedList As New SortedList(Of String, String)
 
             If RepProfilListbox.Text <> "" Then
@@ -192,6 +193,18 @@ Public Class frmReportProfil
 
                 ' Einlesen des ausgewählten ReportProfils
                 reportProfil = XMLImportReportProfil(reportProfilName)
+
+                ' Test, ob die in reportProfil definierten Meilenstein und Phasen in hproj enthalten sind
+                For Each kvp As KeyValuePair(Of String, String) In reportProfil.Phases
+                    'noPhExist = noPhExist and Not hproj.containsphase(kvp.key)
+                Next
+                For Each kvp As KeyValuePair(Of String, String) In reportProfil.Milestones
+                    'noMSExist = noMSExist and Not hproj.containsmilestone(kvp.key)
+                Next
+
+                If noPhExist And noMSExist Then
+                    Call MsgBox("")
+                End If
 
                 If Not IsNothing(reportProfil) Then
 

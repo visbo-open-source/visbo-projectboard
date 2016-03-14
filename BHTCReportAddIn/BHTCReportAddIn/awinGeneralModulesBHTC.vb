@@ -50,7 +50,7 @@ Module awinGeneralModulesBHTC
         budget = 7
     End Enum
 
- 
+
 
     ''' <summary>
     ''' liest das Customization File aus und initialisiert die globalen Variablen entsprechend
@@ -280,59 +280,64 @@ Module awinGeneralModulesBHTC
             '' ''Call logfileOpen()
 
 
-            Try
+            ' '' ''ur: 13032016 Try
 
-                ' prüft, ob bereits Excel geöffnet ist 
-                'excelObj = GetObject(, "Excel.Application")
-                appInstance = CType(GetObject(, "Excel.Application"), Microsoft.Office.Interop.Excel.Application)
-            Catch ex As Exception
-                Try
-                    'excelObj = GetObject(, "Excel.Application")
-                    appInstance = CType(CreateObject("Excel.Application"), Microsoft.Office.Interop.Excel.Application)
-                Catch ex1 As Exception
-                    Call MsgBox("Excel konnte nicht gestartet werden ..." & ex1.Message)
-                    Exit Sub
-                End Try
+            ' '' ''    ' prüft, ob bereits Excel geöffnet ist 
+            ' '' ''    'excelObj = GetObject(, "Excel.Application")
+            ' '' ''    appInstance = CType(GetObject(, "Excel.Application"), Microsoft.Office.Interop.Excel.Application)
+            ' '' ''Catch ex As Exception
+            ' '' ''    Try
+            ' '' ''        'excelObj = GetObject(, "Excel.Application")
+            ' '' ''        appInstance = CType(CreateObject("Excel.Application"), Microsoft.Office.Interop.Excel.Application)
+            ' '' ''    Catch ex1 As Exception
+            ' '' ''        Call MsgBox("Excel konnte nicht gestartet werden ..." & ex1.Message)
+            ' '' ''        Exit Sub
+            ' '' ''    End Try
 
-            End Try
+            ' '' ''End Try
 
+            appInstance = New Excel.Application
          
             Dim customizationFile As String = "requirements\Project Board Customization.xlsx"
             ' hier muss jetzt das Customization File aufgemacht werden ...
             Try
-                xlsCustomization = appInstance.Workbooks.Open(awinPath & customizationFile)
+                '' ''appInstance = GetObject(awinPath & customizationFile)
+                '' ''appInstance.Application.Visible = False
+
+                xlsCustomization = appInstance.Workbooks.Open(Filename:=awinPath & customizationFile, ReadOnly:=True, Editable:=False)
                 myCustomizationFile = appInstance.ActiveWorkbook.Name
             Catch ex As Exception
                 Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
             End Try
 
-            ' Excel mit offenem Customizationfile minimieren
-            appInstance.WindowState = XlWindowState.xlMinimized
+            
+            '' '' '' '' Excel mit offenem Customizationfile minimieren
+            ' '' '' ''appInstance.WindowState = XlWindowState.xlMinimized
 
-            ' es muss immer das Tabellenblatt "Lizenzen" vorhanden sein
-            Dim wsLizenzen As Excel.Worksheet
-            Try
-                wsLizenzen = CType(appInstance.ActiveWorkbook.Worksheets(arrWsNames(12)), _
-                       Global.Microsoft.Office.Interop.Excel.Worksheet)
-            Catch ex As Exception
-                wsLizenzen = Nothing
-            End Try
+            '' '' '' '' es muss immer das Tabellenblatt "Lizenzen" vorhanden sein
+            ' '' '' ''Dim wsLizenzen As Excel.Worksheet
+            ' '' '' ''Try
+            ' '' '' ''    wsLizenzen = CType(appInstance.ActiveWorkbook.Worksheets(arrWsNames(12)), _
+            ' '' '' ''           Global.Microsoft.Office.Interop.Excel.Worksheet)
+            ' '' '' ''Catch ex As Exception
+            ' '' '' ''    wsLizenzen = Nothing
+            ' '' '' ''End Try
 
-            If IsNothing(wsLizenzen) Then
-                wsLizenzen = appInstance.Worksheets.Add()
-                wsLizenzen.Name = arrWsNames(12)
-            End If
+            ' '' '' ''If IsNothing(wsLizenzen) Then
+            ' '' '' ''    wsLizenzen = appInstance.Worksheets.Add()
+            ' '' '' ''    wsLizenzen.Name = arrWsNames(12)
+            ' '' '' ''End If
 
-            '  Tabellenblätter des CustomizationFiles unsichtbar machen 
-            '
-            ' arrWsNames(4) = "Einstellungen"
-            appInstance.Worksheets(arrWsNames(4)).visible = XlSheetVisibility.xlSheetVeryHidden
-            ' arrWsNames(7) = "Darstellungsklassen" 
-            appInstance.Worksheets(arrWsNames(7)).visible = XlSheetVisibility.xlSheetVeryHidden
-            ' arrWsNames(8) = "Phasen-Mappings"
-            appInstance.Worksheets(arrWsNames(8)).visible = XlSheetVisibility.xlSheetVeryHidden
-            ' arrWsNames(10) = "Meilenstein-Mappings"
-            appInstance.Worksheets(arrWsNames(10)).visible = XlSheetVisibility.xlSheetVeryHidden
+            '' '' '' ''  Tabellenblätter des CustomizationFiles unsichtbar machen 
+            '' '' '' ''
+            '' '' '' '' arrWsNames(4) = "Einstellungen"
+            ' '' '' ''appInstance.Worksheets(arrWsNames(4)).visible = XlSheetVisibility.xlSheetVeryHidden
+            '' '' '' '' arrWsNames(7) = "Darstellungsklassen" 
+            ' '' '' ''appInstance.Worksheets(arrWsNames(7)).visible = XlSheetVisibility.xlSheetVeryHidden
+            '' '' '' '' arrWsNames(8) = "Phasen-Mappings"
+            ' '' '' ''appInstance.Worksheets(arrWsNames(8)).visible = XlSheetVisibility.xlSheetVeryHidden
+            '' '' '' '' arrWsNames(10) = "Meilenstein-Mappings"
+            ' '' '' ''appInstance.Worksheets(arrWsNames(10)).visible = XlSheetVisibility.xlSheetVeryHidden
 
 
 
@@ -414,7 +419,8 @@ Module awinGeneralModulesBHTC
 
 
                     ' jetzt werden die ggf vorhandenen detaillierten Ressourcen Kapazitäten ausgelesen 
-                    Call readRessourcenDetails()
+                    '' ''ur:13032016 : 
+                    '' ''Call readRessourcenDetails()
 
 
                     ' '' '' '' jetzt werden die Modul-Vorlagen ausgelesen 
