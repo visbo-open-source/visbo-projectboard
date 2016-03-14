@@ -201,6 +201,71 @@
     End Sub
 
     ''' <summary>
+    ''' gibt zu einer als als voller Name (Breadcrumb + Elemename) übergebenen Phase zurück, ob die so im Projekt existiert 
+    ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
+    ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
+    '''  
+    ''' </summary>
+    ''' <param name="fullName">der volle Name, das heisst Breadcrum plus Name</param>
+    ''' <param name="strict">gibt an, ob der volle Breadcrumb berücksichtigt werden soll oder nur der Name</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsPhase(ByVal fullName As String, ByVal strict As Boolean) As Boolean
+        Get
+            Dim elemName As String = ""
+            Dim breadcrumb As String = ""
+
+            Call splitHryFullnameTo2(fullName, elemName, breadcrumb)
+            If strict Then
+                ' breadcrumb soll unverändert beachtet werden 
+            Else
+                breadcrumb = ""
+            End If
+
+            Dim cphase As clsPhase = Me.getPhase(elemName, breadcrumb, 1)
+            If IsNothing(cphase) Then
+                containsPhase = False
+            Else
+                containsPhase = True
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zu einem als als voller Name (Breadcrumb + Elemename) übergebenen Meilenstein zurück, ob der so im Projekt existiert 
+    ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
+    ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
+    ''' </summary>
+    ''' <param name="fullName"></param>
+    ''' <param name="strict"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsMilestone(ByVal fullName As String, ByVal strict As Boolean) As Boolean
+        Get
+            Dim elemName As String = ""
+            Dim breadcrumb As String = ""
+
+            Call splitHryFullnameTo2(fullName, elemName, breadcrumb)
+            If strict Then
+                ' breadcrumb soll unverändert beachtet werden 
+            Else
+                breadcrumb = ""
+            End If
+
+            Dim cMilestone As clsMeilenstein = Me.getMilestone(elemName, breadcrumb, 1)
+            If IsNothing(cMilestone) Then
+                containsMilestone = False
+            Else
+                containsMilestone = True
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' entfernt den Meilenstein mit der übergebenen nameID 
     ''' </summary>
     ''' <param name="nameID"></param>
