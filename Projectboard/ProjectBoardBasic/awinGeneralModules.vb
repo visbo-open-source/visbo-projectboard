@@ -298,19 +298,6 @@ Public Module awinGeneralModules
     ''' <remarks></remarks>
     Public Sub awinWritePhaseMilestoneDefinitions(Optional ByVal writeMappings As Boolean = False)
 
-        Dim phaseDefs As Excel.Range
-        Dim milestoneDefs As Excel.Range
-        'Dim foundRow As Integer
-        Dim phName As String
-        Dim lastrow As Excel.Range
-        Dim firstrow As Excel.Range
-        Dim tmpAnzahl As Integer
-
-        Dim msName As String
-        Dim shortName As String
-
-        Dim darstellungsKlasse As String
-
         Dim formerSU As Boolean = appInstance.ScreenUpdating
         appInstance.ScreenUpdating = False
         appInstance.EnableEvents = False
@@ -330,165 +317,14 @@ Public Module awinGeneralModules
         End Try
 
         appInstance.Workbooks(myCustomizationFile).Activate()
-        ' (4) ist Registerblatt Einstellungen 
-        Dim wsName4 As Excel.Worksheet = CType(appInstance.Worksheets(arrWsNames(4)), _
-                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
 
-        phaseDefs = wsName4.Range("awin_Phasen_Definition")
-
-        ' diese Range sollte auf alle Fälle mindestens eine Zeile haben 
-        Dim anzZeilen As Integer = phaseDefs.Rows.Count
-        lastrow = CType(phaseDefs.Rows(anzZeilen), Excel.Range)
-        firstrow = CType(phaseDefs.Rows(1), Excel.Range)
-
-
-        ' jetzt wird geprüft, ob die missingPhaseDefinitions in PhaseDefinitions übertragen werden 
-        If awinSettings.addMissingPhaseMilestoneDef Then
-
-            For ix As Integer = 1 To missingPhaseDefinitions.Count
-                Try
-                    PhaseDefinitions.Add(missingPhaseDefinitions.getPhaseDef(ix))
-                Catch ex As Exception
-
-                End Try
-
-            Next
-
-            missingPhaseDefinitions.Clear()
-
-            ' jetzt die Meilensteine
-            For ix As Integer = 1 To missingMilestoneDefinitions.Count
-                Try
-                    MilestoneDefinitions.Add(missingMilestoneDefinitions.getMilestoneDef(ix))
-                Catch ex As Exception
-
-                End Try
-
-            Next
-
-            missingMilestoneDefinitions.Clear()
-
+        ' schreibe die Phase- und MilestoneDefinitions
+        Call WriteDefinitions(False)
+        ' schreibe - in Abhängigkeit von dem Parameter . die MissingPhase- und MissingMilestone-Definitions
+        If awinSettings.readWriteMissingDefinitions Then
+            Call WriteDefinitions(True)
         End If
 
-        ' jetzt können erst diue PhaseDefinitions, dann die MilestoneDefiitions geschrieben werden 
-
-
-
-        ' hier muss erst mal geprüft werden, ob Zeilen eingefügt oder gelöscht werden müssen 
-        ' anzZeilen muss immer um 2 größer sein als die Anzahl der Definitionen ; 
-        ' die erste und letzte Zeile des Bereichs sind leer  
-        Dim anzDefinitions As Integer = PhaseDefinitions.Count
-        If anzZeilen = anzDefinitions + 2 Then
-        ElseIf anzZeilen < anzDefinitions + 2 Then
-            ' Zeilen einfügen 
-
-            tmpAnzahl = anzDefinitions + 2 - anzZeilen
-            For ix As Integer = 1 To tmpAnzahl
-                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-            Next
-
-            ' anzZeilen und phaseDefinitions.count müssen jetzt genau gleich sein 
-            anzZeilen = phaseDefs.Rows.Count
-
-        Else
-            ' Zeilen löschen
-            tmpAnzahl = anzZeilen - (anzDefinitions + 2)
-            
-            For ix As Integer = 1 To tmpAnzahl
-                CType(phaseDefs.Rows(2).EntireRow, Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
-            Next
-
-            ' jetzt sind mindestens zwei Zeilen übrig , und zwar genau dann wenn phaseDefinitions.count = 0 
-            anzZeilen = phaseDefs.Rows.Count
-
-        End If
-
-        ' jetzt können die Phase-Definitions in den Range geschrieben werden 
-        ' und zwar so, dass sie mit der 2. Zeile beginnen 
-        
-
-        For ix As Integer = 1 To anzDefinitions
-
-            With PhaseDefinitions.getPhaseDef(ix)
-                phName = .name
-                shortName = .shortName
-                darstellungsKlasse = .darstellungsKlasse
-            End With
-
-            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 0).Value = phName.ToString
-            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
-            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6).Value = darstellungsKlasse
-
-
-        Next ix
-
-
-
-
-        '
-        ' jetzt werden die Meilensteine geschrieben 
-        '
-
-        ' erste , letzte Zeile des Meilenstein Ranges setzen 
-        ' diese Range sollte auf alle Fälle mindestens eine Zeile haben 
-
-        milestoneDefs = wsName4.Range("awin_Meilenstein_Definition")
-        anzZeilen = milestoneDefs.Rows.Count
-        lastrow = CType(milestoneDefs.Rows(anzZeilen), Excel.Range)
-        firstrow = CType(milestoneDefs.Rows(1), Excel.Range)
-
-
-        ' hier muss erst mal geprüft werden, ob Zeilen eingefügt oder gelöscht werden müssen 
-        anzDefinitions = MilestoneDefinitions.Count
-        If anzZeilen = anzDefinitions + 2 Then
-        ElseIf anzZeilen < anzDefinitions + 2 Then
-            ' Zeilen einfügen 
-
-            tmpAnzahl = anzDefinitions + 2 - anzZeilen
-
-            For ix As Integer = 1 To tmpAnzahl
-                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
-            Next
-
-            ' anzZeilen und phaseDefinitions.count müssen jetzt genau gleich sein 
-            anzZeilen = milestoneDefs.Rows.Count
-
-
-        Else
-            ' Zeilen löschen
-            tmpAnzahl = anzZeilen - (anzDefinitions + 2)
-            
-            For ix As Integer = 1 To tmpAnzahl
-                CType(milestoneDefs.Rows(2).EntireRow, Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
-            Next
-
-            ' jetzt sind mindestens zwei Zeilen übrig , und zwar genau dann wenn phaseDefinitions.count = 0 
-            anzZeilen = milestoneDefs.Rows.Count
-
-        End If
-
-        ' jetzt können die Meilenstein-Definitions in den Range geschrieben werden 
-        
-
-        For ix As Integer = 1 To anzDefinitions
-
-            With MilestoneDefinitions.getMilestoneDef(ix)
-                msName = .name
-                shortName = .shortName
-                darstellungsKlasse = .darstellungsKlasse
-            End With
-
-            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 0).Value = msName.ToString
-            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
-            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6).Value = darstellungsKlasse
-
-
-        Next ix
-
-
-
-        '
-        ' Ende der Behandlung der Phasen-/Meilenstein Behandlung 
 
         ' prüfen , ob die Mappings-Behandlung auch gemacht werden soll ...
         If writeMappings Then
@@ -612,6 +448,251 @@ Public Module awinGeneralModules
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = formerSU
 
+    End Sub
+
+    ''' <summary>
+    ''' schreibt die Phase-/MilestoneDefinitions bzw. die missingPhase- Milestone-Definitions
+    ''' missingDefinitions werden in WorkSheet MissingDefinitions geschrieben 
+    ''' </summary>
+    ''' <param name="writeMissingDefinitions"></param>
+    ''' <remarks></remarks>
+    Private Sub WriteDefinitions(Optional ByVal writeMissingDefinitions As Boolean = False)
+
+        Dim phaseDefs As Excel.Range
+        Dim milestoneDefs As Excel.Range
+        'Dim foundRow As Integer
+        Dim phName As String
+        Dim lastrow As Excel.Range
+        Dim firstrow As Excel.Range
+        Dim tmpAnzahl As Integer
+
+        Dim msName As String
+        Dim shortName As String
+
+        Dim darstellungsKlasse As String
+
+        Dim wsName4 As Excel.Worksheet 
+
+        ' beim Starten der Projekt-Tafel wird sichergestellt, dass auch das Worksheet MissingDefinitions = arrwsnames(15) existiert ...
+        ' inkl der Namen der Phase- und MilestoneDefinitions
+        If writeMissingDefinitions Then
+            Try
+                wsName4 = CType(appInstance.Worksheets(arrWsNames(15)), _
+                                               Global.Microsoft.Office.Interop.Excel.Worksheet)
+            Catch ex As Exception
+                Exit Sub
+            End Try
+            
+        Else
+            wsName4 = CType(appInstance.Worksheets(arrWsNames(4)), _
+                                                Global.Microsoft.Office.Interop.Excel.Worksheet)
+        End If
+
+        If writeMissingDefinitions Then
+            Try
+                phaseDefs = wsName4.Range("Missing_Phasen_Definition")
+            Catch ex As Exception
+                Exit Sub
+            End Try
+
+        Else
+            phaseDefs = wsName4.Range("awin_Phasen_Definition")
+        End If
+
+
+        ' diese Range sollte auf alle Fälle mindestens eine Zeile haben 
+        Dim anzZeilen As Integer = phaseDefs.Rows.Count
+        lastrow = CType(phaseDefs.Rows(anzZeilen), Excel.Range)
+        firstrow = CType(phaseDefs.Rows(1), Excel.Range)
+
+
+        ' das folgende muss nur gemacht werden, wenn die PhaseDefinitions geschrieben werden ... 
+        ' jetzt wird geprüft, ob die missingPhaseDefinitions in PhaseDefinitions übertragen werden 
+        If awinSettings.addMissingPhaseMilestoneDef Then
+
+            For ix As Integer = 1 To missingPhaseDefinitions.Count
+                Try
+                    PhaseDefinitions.Add(missingPhaseDefinitions.getPhaseDef(ix))
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+            missingPhaseDefinitions.Clear()
+
+            ' jetzt die Meilensteine
+            For ix As Integer = 1 To missingMilestoneDefinitions.Count
+                Try
+                    MilestoneDefinitions.Add(missingMilestoneDefinitions.getMilestoneDef(ix))
+                Catch ex As Exception
+
+                End Try
+
+            Next
+
+            missingMilestoneDefinitions.Clear()
+
+        End If
+
+        ' jetzt können erst die PhaseDefinitions, dann die MilestoneDefinitions geschrieben werden 
+
+
+
+        ' hier muss erst mal geprüft werden, ob Zeilen eingefügt oder gelöscht werden müssen 
+        ' anzZeilen muss immer um 2 größer sein als die Anzahl der Definitionen ; 
+        ' die erste und letzte Zeile des Bereichs sind leer  
+
+        Dim anzDefinitions As Integer = PhaseDefinitions.Count
+
+        If writeMissingDefinitions Then
+            anzDefinitions = missingPhaseDefinitions.Count
+        Else
+            anzDefinitions = PhaseDefinitions.Count
+        End If
+
+
+        If anzZeilen = anzDefinitions + 2 Then
+        ElseIf anzZeilen < anzDefinitions + 2 Then
+            ' Zeilen einfügen 
+
+            tmpAnzahl = anzDefinitions + 2 - anzZeilen
+            For ix As Integer = 1 To tmpAnzahl
+                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+            Next
+
+            ' anzZeilen und phaseDefinitions.count müssen jetzt genau gleich sein 
+            anzZeilen = phaseDefs.Rows.Count
+
+        Else
+            ' Zeilen löschen
+            tmpAnzahl = anzZeilen - (anzDefinitions + 2)
+
+            For ix As Integer = 1 To tmpAnzahl
+                CType(phaseDefs.Rows(2).EntireRow, Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
+            Next
+
+            ' jetzt sind mindestens zwei Zeilen übrig , und zwar genau dann wenn phaseDefinitions.count = 0 
+            anzZeilen = phaseDefs.Rows.Count
+
+        End If
+
+        ' jetzt können die Phase-Definitions in den Range geschrieben werden 
+        ' und zwar so, dass sie mit der 2. Zeile beginnen 
+
+
+        For ix As Integer = 1 To anzDefinitions
+
+            If writeMissingDefinitions Then
+                With missingPhaseDefinitions.getPhaseDef(ix)
+                    phName = .name
+                    shortName = .shortName
+                    darstellungsKlasse = .darstellungsKlasse
+                End With
+            Else
+                With PhaseDefinitions.getPhaseDef(ix)
+                    phName = .name
+                    shortName = .shortName
+                    darstellungsKlasse = .darstellungsKlasse
+                End With
+            End If
+            
+
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 0).Value = phName.ToString
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6).Value = darstellungsKlasse
+
+
+        Next ix
+
+        '
+        ' jetzt werden die Meilensteine geschrieben 
+        '
+
+        ' erste , letzte Zeile des Meilenstein Ranges setzen 
+        ' diese Range sollte auf alle Fälle mindestens eine Zeile haben 
+
+        If writeMissingDefinitions Then
+            Try
+                milestoneDefs = wsName4.Range("Missing_Meilenstein_Definition")
+            Catch ex As Exception
+                Exit Sub
+            End Try
+
+        Else
+            milestoneDefs = wsName4.Range("awin_Meilenstein_Definition")
+        End If
+
+        anzZeilen = milestoneDefs.Rows.Count
+        lastrow = CType(milestoneDefs.Rows(anzZeilen), Excel.Range)
+        firstrow = CType(milestoneDefs.Rows(1), Excel.Range)
+
+
+        ' hier muss erst mal geprüft werden, ob Zeilen eingefügt oder gelöscht werden müssen 
+        If writeMissingDefinitions Then
+            anzDefinitions = missingMilestoneDefinitions.Count
+        Else
+            anzDefinitions = MilestoneDefinitions.Count
+        End If
+
+        If anzZeilen = anzDefinitions + 2 Then
+        ElseIf anzZeilen < anzDefinitions + 2 Then
+            ' Zeilen einfügen 
+
+            tmpAnzahl = anzDefinitions + 2 - anzZeilen
+
+            For ix As Integer = 1 To tmpAnzahl
+                CType(lastrow.EntireRow, Excel.Range).Insert(Excel.XlInsertShiftDirection.xlShiftDown)
+            Next
+
+            ' anzZeilen und phaseDefinitions.count müssen jetzt genau gleich sein 
+            anzZeilen = milestoneDefs.Rows.Count
+
+
+        Else
+            ' Zeilen löschen
+            tmpAnzahl = anzZeilen - (anzDefinitions + 2)
+
+            For ix As Integer = 1 To tmpAnzahl
+                CType(milestoneDefs.Rows(2).EntireRow, Excel.Range).Delete(Excel.XlDeleteShiftDirection.xlShiftUp)
+            Next
+
+            ' jetzt sind mindestens zwei Zeilen übrig , und zwar genau dann wenn phaseDefinitions.count = 0 
+            anzZeilen = milestoneDefs.Rows.Count
+
+        End If
+
+        ' jetzt können die Meilenstein-Definitions in den Range geschrieben werden 
+
+
+        For ix As Integer = 1 To anzDefinitions
+
+            If writeMissingDefinitions Then
+                With missingMilestoneDefinitions.getMilestoneDef(ix)
+                    msName = .name
+                    shortName = .shortName
+                    darstellungsKlasse = .darstellungsKlasse
+                End With
+            Else
+                With MilestoneDefinitions.getMilestoneDef(ix)
+                    msName = .name
+                    shortName = .shortName
+                    darstellungsKlasse = .darstellungsKlasse
+                End With
+            End If
+            
+
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 0).Value = msName.ToString
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 5).Value = shortName
+            CType(firstrow.Cells(ix, 1), Excel.Range).Offset(1, 6).Value = darstellungsKlasse
+
+
+        Next ix
+
+
+
+        '
+        ' Ende der Behandlung der Phasen-/Meilenstein Behandlung 
     End Sub
 
     ''' <summary>
@@ -773,7 +854,7 @@ Public Module awinGeneralModules
         arrWsNames(12) = "Lizenzen"
         arrWsNames(13) = "Projekt iErloese"
         arrWsNames(14) = "Objekte"
-        arrWsNames(15) = "Portfolio Vorlage"
+        arrWsNames(15) = "missing Definitions"
 
 
         awinSettings.applyFilter = False
@@ -903,6 +984,7 @@ Public Module awinGeneralModules
                 ' Auslesen der Meilenstein Definitionen 
                 Call readMilestoneDefinitions(wsName4)
 
+
                 ' Auslesen der Rollen Definitionen 
                 Call readRoleDefinitions(wsName4)
 
@@ -911,6 +993,49 @@ Public Module awinGeneralModules
 
                 ' auslesen der anderen Informationen 
                 Call readOtherDefinitions(wsName4)
+
+                ' sollen die missingDefinitions gelesen / geschrieben werden 
+                Dim needToBeSaved As Boolean = False
+                If awinSettings.readWriteMissingDefinitions Then
+                    Try
+                        Dim wsName15 As Excel.Worksheet
+                        Try
+
+                            wsName15 = CType(appInstance.Worksheets(arrWsNames(15)), _
+                                                        Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                            ' Auslesen der MissingPhase Definitionen 
+                            Call readPhaseDefinitions(wsName15, True)
+
+                            ' Auslesen der Meilenstein Definitionen 
+                            Call readMilestoneDefinitions(wsName15, True)
+                        Catch ex1 As Exception
+
+                            ' wenn das Sheet nicht existiert, muss es angelegt werden 
+                            needToBeSaved = True
+                            wsName15 = appInstance.Worksheets.Add(Count:=appInstance.Worksheets.Count + 1)
+                            wsName15.Name = arrWsNames(15)
+                            With wsName15
+
+                                Dim tmpRange As Excel.Range = .Range(.Cells(1, 2), .Cells(2, 2))
+                                tmpRange.Offset(0, -1).Value = "unbekannte Phasen-/Vorgangs-Namen"
+                                .Names.Add(Name:="Missing_Phasen_Definition", RefersToR1C1:=tmpRange)
+
+                                tmpRange = .Range(.Cells(4, 2), .Cells(5, 2))
+                                tmpRange.Offset(0, -1).Value = "unbekannte Meilenstein-Namen"
+                                .Names.Add(Name:="Missing_Meilenstein_Definition", RefersToR1C1:=tmpRange)
+                            End With
+
+                        End Try
+
+
+                       
+                    Catch ex As Exception
+
+                    End Try
+                End If
+
+
 
                 ' hier muss jetzt das Worksheet Phasen-Mappings aufgemacht werden, das ist in arrwsnames(8) abgelegt 
                 wsName7810 = CType(appInstance.Worksheets(arrWsNames(8)), _
@@ -931,7 +1056,7 @@ Public Module awinGeneralModules
                 Global.Microsoft.Office.Interop.Excel.Worksheet).Copy(After:=projectBoardSheet)
 
                 ' hier wird die Datei Projekt Tafel Customizations als aktives workbook wieder geschlossen ....
-                appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=False) ' ur: 6.5.2014 savechanges hinzugefügt
+                appInstance.Workbooks(myCustomizationFile).Close(SaveChanges:=needToBeSaved) ' ur: 6.5.2014 savechanges hinzugefügt; tk 1.3.16 needtobesaved hinzugefügt
                 appInstance.EnableEvents = True
 
 
@@ -1040,7 +1165,7 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="wsname">Name des Worksheets, aus dem die Infos ausgelesen werden</param>
     ''' <remarks></remarks>
-    Private Sub readPhaseDefinitions(ByVal wsname As Excel.Worksheet)
+    Private Sub readPhaseDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
 
         Dim hphase As clsPhasenDefinition
         Dim tmpStr As String = ""
@@ -1049,7 +1174,19 @@ Public Module awinGeneralModules
 
             With wsname
 
-                Dim phaseRange As Excel.Range = .Range("awin_Phasen_Definition")
+                Dim phaseRange As Excel.Range
+
+                If missingDefinitions Then
+                    Try
+                        phaseRange = .Range("Missing_Phasen_Definition")
+                    Catch ex As Exception
+                        Exit Sub
+                    End Try
+
+                Else
+                    phaseRange = .Range("awin_Phasen_Definition")
+                End If
+
                 Dim anzZeilen As Integer = phaseRange.Rows.Count
                 Dim c As Excel.Range
 
@@ -1121,7 +1258,16 @@ Public Module awinGeneralModules
                             End With
 
                             Try
-                                PhaseDefinitions.Add(hphase)
+                                If missingDefinitions Then
+
+                                    missingPhaseDefinitions.Add(hphase)
+
+                                Else
+
+                                    PhaseDefinitions.Add(hphase)
+
+                                End If
+
                             Catch ex As Exception
 
                             End Try
@@ -1151,7 +1297,7 @@ Public Module awinGeneralModules
     ''' </summary>
     ''' <param name="wsname">Name des Worksheets, aus dem die Infos ausgelesen werden</param>
     ''' <remarks></remarks>
-    Private Sub readMilestoneDefinitions(ByVal wsname As Excel.Worksheet)
+    Private Sub readMilestoneDefinitions(ByVal wsname As Excel.Worksheet, Optional ByVal missingDefinitions As Boolean = False)
 
         Dim i As Integer = 0
         Dim hMilestone As clsMeilensteinDefinition
@@ -1162,7 +1308,19 @@ Public Module awinGeneralModules
 
             With wsname
 
-                Dim milestoneRange As Excel.Range = .Range("awin_Meilenstein_Definition")
+                Dim milestoneRange As Excel.Range
+
+                If missingDefinitions Then
+                    Try
+                        milestoneRange = .Range("Missing_Meilenstein_Definition")
+                    Catch ex As Exception
+                        Exit Sub
+                    End Try
+
+                Else
+                    milestoneRange = .Range("awin_Meilenstein_Definition")
+                End If
+
                 Dim anzZeilen As Integer = milestoneRange.Rows.Count
                 Dim c As Excel.Range
 
@@ -1237,7 +1395,12 @@ Public Module awinGeneralModules
                             End With
 
                             Try
-                                MilestoneDefinitions.Add(hMilestone)
+                                If missingDefinitions Then
+                                    missingMilestoneDefinitions.Add(hMilestone)
+                                Else
+                                    MilestoneDefinitions.Add(hMilestone)
+                                End If
+
                             Catch ex As Exception
 
                             End Try
@@ -1522,6 +1685,12 @@ Public Module awinGeneralModules
                 awinSettings.createUniqueSiblingNames = True
             End Try
 
+            ' Einstellung, um das Lesen / Schreiben von MissingDefinitions zu steuern 
+            Try
+                awinSettings.readWriteMissingDefinitions = CBool(.Range("RW_MissingDefinitions").Value)
+            Catch ex As Exception
+                awinSettings.readWriteMissingDefinitions = False
+            End Try
 
 
             StartofCalendar = awinSettings.kalenderStart
@@ -2628,6 +2797,11 @@ Public Module awinGeneralModules
                         Or _
                         (CType(msTask.Milestone, Boolean) And CType(msTask.Summary, Boolean)) Then
 
+                        ' Ergänzung tk für Demo BHTC 
+                        ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                        Dim origPhName As String = msTask.Name
+                        msTask.Name = phaseMappings.mapToStdName("", msTask.Name)
+
                         ' nachsehen, ob msTask.Name in PhaseDefinitions definiert ist
                         If Not PhaseDefinitions.Contains(msTask.Name) Then
                             Dim newPhaseDef As New clsPhasenDefinition
@@ -2647,10 +2821,7 @@ Public Module awinGeneralModules
 
                             newPhaseDef.UID = PhaseDefinitions.Count + 1
                             'PhaseDefinitions.Add(newPhaseDef)
-                            If Not missingPhaseDefinitions.Contains(newPhaseDef.name) Then
-                                missingPhaseDefinitions.Add(newPhaseDef)
-                            End If
-
+                            missingPhaseDefinitions.Add(newPhaseDef)
                         End If
 
                         With cphase
@@ -2890,7 +3061,7 @@ Public Module awinGeneralModules
                                 Throw New ArgumentException("Fehler beim Import! Hierarchie kann nicht richtig aufgebaut werden")
                             End If
 
-                            hproj.AddPhase(cphase, parentID:=hrchynode.parentNodeKey)
+                            hproj.AddPhase(cphase, origName:=origPhName, parentID:=hrchynode.parentNodeKey)
 
                             ' '' ''hproj.hierarchy.addNode(hrchynode, cphase.nameID)
                             hrchynode.indexOfElem = hproj.AllPhases.Count
@@ -2905,8 +3076,16 @@ Public Module awinGeneralModules
                         Dim oBreadCrumb As String = hproj.hierarchy.getBreadCrumb(lastelemID)
 
                     Else
-
                         ' mstask ist ein Meilenstein und kein Summary-Meilenstein
+
+
+                        ' Ergänzung tk für Demo BHTC 
+                        ' falls Synonyme definiert sind, ersetzen durch Std-Name, sonst bleibt Name unverändert 
+                        Dim origMsName As String = msTask.Name
+                        msTask.Name = milestoneMappings.mapToStdName("", msTask.Name)
+                        '
+
+
                         Dim hierarchy As String = msTask.WBS
                         'Dim oBreadCrumb As String = hproj.hierarchy.getBreadCrumb(lastelemID)
                         Dim msPhase As clsPhase = Nothing
@@ -3012,7 +3191,7 @@ Public Module awinGeneralModules
 
                             Try
                                 With msPhase
-                                    .addMilestone(cmilestone)
+                                    .addMilestone(cmilestone, origName:=origMsName)
                                 End With
                             Catch ex1 As Exception
                                 Throw New Exception(ex1.Message)
@@ -10669,9 +10848,9 @@ Public Module awinGeneralModules
                                 newPhaseDef.darstellungsKlasse = mapToAppearance(aktTask_j.taskType.Value, False)
                                 newPhaseDef.UID = PhaseDefinitions.Count + 1
                                 ' muss in missingPhaseDefinitions noch eingetragen werden
-                                If Not missingPhaseDefinitions.Contains(newPhaseDef.name) Then
-                                    missingPhaseDefinitions.Add(newPhaseDef)
-                                End If
+                                ' in add wird abgefragt, ob der Name schon existiert, wenn ja, wird nix gemacht 
+                                missingPhaseDefinitions.Add(newPhaseDef)
+
 
                                 ' Änderung tk: wird auskommentiert, das steht ja im Protokoll
                                 'Call logfileSchreiben(("Achtung, RXFImport: Phase '" & aktTask_j.name & "' existiert im CustomizationFile nicht!"), hproj.name, anzFehler)

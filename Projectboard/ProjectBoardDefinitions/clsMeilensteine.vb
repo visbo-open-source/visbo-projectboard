@@ -16,14 +16,16 @@ Public Class clsMeilensteine
         If Not IsNothing(milestone) Then
             Dim key As String = milestone.name
             If allMilestones.ContainsKey(key) Then
-                Throw New ArgumentException("Identifier " & key & _
-                                            " existiert bereits!")
+                ' einfach nichts machen 
+                'Throw New ArgumentException("Identifier " & key & _
+                '                            " existiert bereits!")
             Else
                 allMilestones.Add(key, milestone)
             End If
 
         Else
-            Throw New ArgumentException("Meilenstein Definition ist Nothing")
+            ' nichts machen
+            'Throw New ArgumentException("Meilenstein Definition ist Nothing")
         End If
         
 

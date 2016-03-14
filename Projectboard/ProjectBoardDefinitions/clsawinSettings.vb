@@ -107,6 +107,8 @@ Public Class clsawinSettings
     ' für gleichlautende Geschwisternamen generiert werden  
     Public Property createUniqueSiblingNames As Boolean
 
+    Public Property readWriteMissingDefinitions As Boolean = False
+
     ' Settings für ToleranzKorridor TimeCost
     Public Property timeToleranzRel As Double
     Public Property timeToleranzAbs As Double
@@ -212,6 +214,10 @@ Public Class clsawinSettings
         _eliminateDuplicates = True
         _importUnknownNames = True
         _createUniqueSiblingNames = True
+
+        ' sollen die MissingDefinitions rausgeschrieben werden ...
+        _readWriteMissingDefinitions = False
+
 
         ' Settings für Besser/Schlechter Diagramm 
         _timeToleranzRel = 0.02
