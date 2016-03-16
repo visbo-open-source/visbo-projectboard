@@ -2579,7 +2579,7 @@ Public Module awinGeneralModules
         Dim Xwerte() As Double
         Dim active_proj As String = ""      ' Name des aktuell aktiven Projektes
 
-        ' hier wird eingetragen, welches vordefinierte Flag das customized Field VISBO repräsentiert
+        ' hier wird eingetragen, welches vordefinierte Flag das customized Field VISBO usw. repräsentiert
         Dim visboflag As MSProject.PjField = Nothing
         Dim visbo_taskclass As MSProject.PjField = Nothing
         Dim visbo_abbrev As MSProject.PjField = Nothing
@@ -2625,9 +2625,12 @@ Public Module awinGeneralModules
                 ' in die Projekt-Tafel
 
                 ' Ist dieses VISBO-Flag definiert?
+                Dim pjFlag As String = ""
 
                 Try
                     visboflag = CType(prj.FieldNameToFieldConstant("VISBO", MSProject.PjFieldType.pjTask), MSProject.PjField)
+                    pjFlag = prj.FieldConstantToFieldName(visboflag)
+
                 Catch ex As Exception
                     visboflag = 0
                 End Try
@@ -2713,46 +2716,6 @@ Public Module awinGeneralModules
                     Throw New ArgumentException("Fehler in awinImportMSProject, Erzeugen ProjektPhase")
                 End Try
 
-                '' '' neu ur
-
-                ' Call MsgBox(prj.ActiveProject.GetObjectMatchingID(MSProject.PjOrganizer.pjViews, "BHTC Gantt Chart"))
-
-                ' '' ''Dim alltables As MSProject.Tables = prj.ActiveProject.TaskTables
-                ' '' ''Dim allviews As MSProject.Views = prj.ActiveProject.Views
-                ' '' ''Dim alllist As MSProject.List = prj.ActiveProject.TaskViewList
-
-
-                '' '' '' 
-                ' '' ''Dim t As MSProject.Table
-                ' '' ''Dim f As MSProject.TableField
-
-
-                ' '' ''For Each t In alltables
-                ' '' ''    If Not t Is Nothing Then
-                ' '' ''        Call MsgBox(t.Name, t.Index, t.RowHeight.ToString)
-
-                ' '' ''      
-                ' '' ''        If t.TableType = MSProject.PjItemType.pjResourceItem Then
-                ' '' ''            Call MsgBox("resource")
-                ' '' ''        ElseIf t.TableType = MSProject.PjItemType.pjTaskItem Then
-                ' '' ''            Call MsgBox("task")
-                ' '' ''        End If
-
-                ' '' ''    End If
-                ' '' ''Next t
-
-                ' '' ''Dim v As MSProject.View
-
-                ' '' ''For Each v In allviews
-                ' '' ''    If Not v Is Nothing Then
-                ' '' ''        Call MsgBox(v.Name)
-
-                ' '' ''    End If
-                ' '' ''Next v
-
-
-                ' '' '' '' '' neu ur
-
 
 
 
@@ -2832,8 +2795,11 @@ Public Module awinGeneralModules
 
                             If visboflag <> 0 Then          ' VISBO-Flag ist definiert
 
+                                Dim hflag As Boolean = readCustomflag(msTask, visboflag)
+                               
                                 ' Liste, ob Task in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
-                                visboFlagListe.Add(.nameID, msTask.GetField(visboflag) = "Yes")
+                                'visboFlagListe.Add(.nameID, msTask.GetField(visboflag) = pbYes)
+                                visboFlagListe.Add(.nameID, hflag)
 
                             End If
 
@@ -3184,9 +3150,9 @@ Public Module awinGeneralModules
 
                             If visboflag <> 0 Then        ' Ist VISBO-flag definiert?
 
+                                Dim hflag As Boolean = readCustomflag(msTask, visboflag)
                                 ' Liste, ob Meilenstein in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
-                                visboFlagListe.Add(cmilestone.nameID, msTask.GetField(visboflag) = "Yes")
-
+                                visboFlagListe.Add(cmilestone.nameID, hflag)
                             End If
 
                             Try
@@ -3315,6 +3281,62 @@ Public Module awinGeneralModules
 
 
     End Sub
+
+    ''' <summary>
+    ''' liest den Wert einen Cusomized Flag
+    ''' </summary>
+    ''' <param name="msTask"></param>
+    ''' <param name="visboflag"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function readCustomflag(ByVal msTask As MSProject.Task, ByVal visboflag As MSProject.PjField) As Boolean
+
+        Dim tskflag As Boolean = True
+        Select Case visboflag
+            Case MSProject.PjField.pjTaskFlag1
+                tskflag = msTask.Flag1
+            Case MSProject.PjField.pjTaskFlag2
+                tskflag = msTask.Flag2
+            Case MSProject.PjField.pjTaskFlag3
+                tskflag = msTask.Flag3
+            Case MSProject.PjField.pjTaskFlag4
+                tskflag = msTask.Flag4
+            Case MSProject.PjField.pjTaskFlag5
+                tskflag = msTask.Flag5
+            Case MSProject.PjField.pjTaskFlag6
+                tskflag = msTask.Flag6
+            Case MSProject.PjField.pjTaskFlag7
+                tskflag = msTask.Flag7
+            Case MSProject.PjField.pjTaskFlag8
+                tskflag = msTask.Flag8
+            Case MSProject.PjField.pjTaskFlag9
+                tskflag = msTask.Flag9
+            Case MSProject.PjField.pjTaskFlag10
+                tskflag = msTask.Flag10
+            Case MSProject.PjField.pjTaskFlag11
+                tskflag = msTask.Flag11
+            Case MSProject.PjField.pjTaskFlag12
+                tskflag = msTask.Flag12
+            Case MSProject.PjField.pjTaskFlag13
+                tskflag = msTask.Flag13
+            Case MSProject.PjField.pjTaskFlag14
+                tskflag = msTask.Flag14
+            Case MSProject.PjField.pjTaskFlag15
+                tskflag = msTask.Flag15
+            Case MSProject.PjField.pjTaskFlag16
+                tskflag = msTask.Flag16
+            Case MSProject.PjField.pjTaskFlag17
+                tskflag = msTask.Flag17
+            Case MSProject.PjField.pjTaskFlag18
+                tskflag = msTask.Flag18
+            Case MSProject.PjField.pjTaskFlag19
+                tskflag = msTask.Flag19
+            Case MSProject.PjField.pjTaskFlag20
+                tskflag = msTask.Flag230
+
+        End Select
+        readCustomflag = tskflag
+    End Function
 
     ''' <summary>
     ''' Prüft, ob eine Phase (elemID) aus dem Projekt hproj gelöscht werden kann, 
