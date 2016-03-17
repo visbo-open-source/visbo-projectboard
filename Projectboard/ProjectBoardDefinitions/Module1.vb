@@ -157,8 +157,6 @@ Public Module Module1
 
 
 
-
-
     Public Enum PTbubble
         strategicFit = 0
         depencencies = 1

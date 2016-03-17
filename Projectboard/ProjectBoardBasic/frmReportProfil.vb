@@ -181,7 +181,8 @@ Public Class frmReportProfil
     Private Sub ReportErstellen_Click(sender As Object, e As EventArgs) Handles ReportErstellen.Click
 
         Try
-
+            Dim noPhExist As Boolean = True
+            Dim noMSExist As Boolean = True
             Dim tmpSortedList As New SortedList(Of String, String)
 
             If RepProfilListbox.Text <> "" Then
@@ -193,56 +194,78 @@ Public Class frmReportProfil
                 ' Einlesen des ausgewählten ReportProfils
                 reportProfil = XMLImportReportProfil(reportProfilName)
 
-                If Not IsNothing(reportProfil) Then
 
-                    'Call MsgBox("ReportErstellen")
-                    Try
-                        reportProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
-                    Catch ex As Exception
-                        Throw New ArgumentException(ex.Message)
-                    End Try
+                ' Test, ob die in reportProfil definierten Meilenstein und Phasen in hproj enthalten sind
 
+                If Not (reportProfil.Phases.Count = 0 And reportProfil.Milestones.Count = 0) Then
 
-                    Dim anzproj As Integer = ShowProjekte.Count
-                    ' alle geladenen Projekte in ReportProfil aufnehmen
-                    ' ''For i = 1 To anzproj
+                    For Each kvp As KeyValuePair(Of String, String) In reportProfil.Phases
+                        noPhExist = noPhExist And Not hproj.containsPhase(kvp.Key, True)
+                    Next
 
-                    ' ''    Dim hilfsproj As clsProjekt = ShowProjekte.getProject(i)
-                    ' ''    reportProfil.Projects.Add(i, hilfsproj.name)
-
-                    ' ''Next
-
-                    'Call MsgBox("Es wurden " & CStr(anzproj) & " Projekte in  ShowProjekte eingelesen." & vbLf _
-                    '        & "Report wird für das aktuell geladene Projekt erstellt: " & hproj.name)
-
-                    reportProfil.Projects.Clear()
-                    reportProfil.Projects.Add(1, hproj.name)
-
-                    ' für BHTC immer true
-                    reportProfil.ExtendedMode = True
-                    ' für BHTC immer false
-                    reportProfil.Ampeln = False
-                    reportProfil.AllIfOne = False
-                    reportProfil.FullyContained = False
-                    reportProfil.SortedDauer = False
-                    reportProfil.ProjectLine = False
-                    reportProfil.UseOriginalNames = False
-
-
-
-                    'Call MsgBox("Report erstellen mit Projekt " & hproj.name & "von " & vonDate.Value.ToString & " bis " & bisDate.Value.ToString & " Reportprofil " & reportProfilName)
-                    Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
-
-                    Me.statusLabel.Visible = True
-                    Me.statusLabel.Text = "...started"
-
-
-                    BGworkerReportBHTC.RunWorkerAsync(reportProfil)
-
+                    For Each kvp As KeyValuePair(Of String, String) In reportProfil.Milestones
+                        noMSExist = noMSExist And Not hproj.containsMilestone(kvp.Key, True)
+                    Next
                 Else
-                    Call MsgBox("ausgewähltes Report-Profil enthält Fehler !")
+                    noPhExist = False
+                    noMSExist = False
                 End If
+             
 
+                If noPhExist And noMSExist Then
+                    Call MsgBox("Achtung: Projekt '" & hproj.name & "' enthält die ausgewählten Phasen und Meilensteine nicht!")
+                Else
+
+                    If Not IsNothing(reportProfil) Then
+
+                        'Call MsgBox("ReportErstellen")
+                        Try
+                            reportProfil.calcRepVonBis(vonDate.Value, bisDate.Value)
+                        Catch ex As Exception
+                            Throw New ArgumentException(ex.Message)
+                        End Try
+
+
+                        Dim anzproj As Integer = ShowProjekte.Count
+                        ' alle geladenen Projekte in ReportProfil aufnehmen
+                        ' ''For i = 1 To anzproj
+
+                        ' ''    Dim hilfsproj As clsProjekt = ShowProjekte.getProject(i)
+                        ' ''    reportProfil.Projects.Add(i, hilfsproj.name)
+
+                        ' ''Next
+
+                        'Call MsgBox("Es wurden " & CStr(anzproj) & " Projekte in  ShowProjekte eingelesen." & vbLf _
+                        '        & "Report wird für das aktuell geladene Projekt erstellt: " & hproj.name)
+
+                        reportProfil.Projects.Clear()
+                        reportProfil.Projects.Add(1, hproj.name)
+
+                        ' für BHTC immer true
+                        reportProfil.ExtendedMode = True
+                        ' für BHTC immer false
+                        reportProfil.Ampeln = False
+                        reportProfil.AllIfOne = False
+                        reportProfil.FullyContained = False
+                        reportProfil.SortedDauer = False
+                        reportProfil.ProjectLine = False
+                        reportProfil.UseOriginalNames = False
+
+
+
+                        'Call MsgBox("Report erstellen mit Projekt " & hproj.name & "von " & vonDate.Value.ToString & " bis " & bisDate.Value.ToString & " Reportprofil " & reportProfilName)
+                        Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
+
+                        Me.statusLabel.Visible = True
+                        Me.statusLabel.Text = "...started"
+
+
+                        BGworkerReportBHTC.RunWorkerAsync(reportProfil)
+
+                    Else
+                        Call MsgBox("ausgewähltes Report-Profil enthält Fehler !")
+                    End If
+                End If
             Else
                 Call MsgBox("Es wurde noch kein Report-Profil ausgewählt !")
 
