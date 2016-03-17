@@ -1,40 +1,21 @@
-﻿Imports Microsoft.Office.Tools.Ribbon
+﻿
+Imports Microsoft.Office.Tools.Ribbon
 Imports Microsoft.Office.Interop.Excel
 Imports System.Windows.Forms
 Imports ProjectBoardBasic
 Imports ProjectBoardDefinitions
 
+Public Class Ribbon1
 
-Public Class VisboReportRibbon
-
-
-    Private Sub VisboReportRibbon_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
-        ' ''Call MsgBox("VisboReportLoad")
-
-        ' ''Try
-
-
-
-        ' ''    awinSettings.awinPath = My.Settings.awinPath
-
-        ' ''    Call awinsetTypenNEW("BHTC")
-
-        ' ''Catch ex As Exception
-
-        ' ''    Call MsgBox(ex.Message)
-
-        ' ''Finally
-
-        ' ''End Try
-
+    Private Sub Ribbon1_Load(ByVal sender As System.Object, ByVal e As RibbonUIEventArgs) Handles MyBase.Load
 
     End Sub
 
-    Private Sub EPReport_Click(sender As Object, e As RibbonControlEventArgs) Handles EPReport.Click
+    Private Sub EinzelprojektReport_Click(sender As Object, e As RibbonControlEventArgs) Handles EinzelprojektReport.Click
 
         Try
             If fehlerBeimLoad Then
-                Call MsgBox("Einzelprojekt Report kann nicht ausgeführt werden,  " & vbLf & "da der 'MS Project VISBO AddIn' nicht korrekt geladen wurde!")
+                Call MsgBox("Einzelprojekt Report kann nicht ausgeführt werden,  " & vbLf & "da der 'VISBO 1Click-PPT AddIn' nicht korrekt geladen wurde!")
             Else
 
                 Dim reportAuswahl As New frmReportProfil
@@ -98,4 +79,5 @@ Public Class VisboReportRibbon
             Call MsgBox(" Bitte kontaktieren Sie ihren Systemadministrator")
         End Try
     End Sub
+
 End Class

@@ -2796,7 +2796,7 @@ Public Module awinGeneralModules
                             If visboflag <> 0 Then          ' VISBO-Flag ist definiert
 
                                 Dim hflag As Boolean = readCustomflag(msTask, visboflag)
-                               
+
                                 ' Liste, ob Task in Projekt für die Projekt-Tafel aufgenommen werden soll, oder nicht
                                 'visboFlagListe.Add(.nameID, msTask.GetField(visboflag) = pbYes)
                                 visboFlagListe.Add(.nameID, hflag)
@@ -3283,7 +3283,7 @@ Public Module awinGeneralModules
     End Sub
 
     ''' <summary>
-    ''' liest den Wert einen Cusomized Flag
+    ''' liest den Wert eines Cusomized Flag. Das Ergebnis ist True oder False
     ''' </summary>
     ''' <param name="msTask"></param>
     ''' <param name="visboflag"></param>

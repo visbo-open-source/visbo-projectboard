@@ -20,7 +20,8 @@ Imports System.Security.Principal
 
 
 
-Module awinGeneralModulesBHTC
+Module oneClickGeneralModules
+
 
     Private Enum ptInventurSpalten
         Name = 0
@@ -297,7 +298,7 @@ Module awinGeneralModulesBHTC
             ' '' ''End Try
 
             appInstance = New Excel.Application
-         
+
             Dim customizationFile As String = "requirements\Project Board Customization.xlsx"
             ' hier muss jetzt das Customization File aufgemacht werden ...
             Try
@@ -310,7 +311,7 @@ Module awinGeneralModulesBHTC
                 Throw New ArgumentException("Customization File nicht gefunden - Abbruch")
             End Try
 
-            
+
             '' '' '' '' Excel mit offenem Customizationfile minimieren
             ' '' '' ''appInstance.WindowState = XlWindowState.xlMinimized
 
@@ -624,10 +625,10 @@ Module awinGeneralModulesBHTC
         Catch ex As Exception
             Throw New ArgumentException("Fehler im Customization-File: BU Definition")
         End Try
-        
+
 
     End Sub
-    
+
     ''' <summary>
     ''' liest die Phasen Definitionen aus 
     ''' baut die globale Variable PhaseDefinitions auf 
@@ -850,7 +851,7 @@ Module awinGeneralModulesBHTC
             Throw New ArgumentException("Fehler in Customization File: Meilensteine")
 
         End Try
-        
+
 
     End Sub
 
@@ -934,7 +935,7 @@ Module awinGeneralModulesBHTC
             Throw New ArgumentException("Fehler im Customization-File: Rolle")
         End Try
 
-        
+
 
     End Sub
 
@@ -990,7 +991,7 @@ Module awinGeneralModulesBHTC
         Catch ex As Exception
             Throw New ArgumentException("Fehler in Customization File: Kosten")
         End Try
-        
+
 
     End Sub
 
@@ -1132,7 +1133,7 @@ Module awinGeneralModulesBHTC
             '
             ' ende Auslesen Einstellungen in Sheet "Einstellungen"
         End With
-        
+
 
     End Sub
 
@@ -1307,7 +1308,7 @@ Module awinGeneralModulesBHTC
                 Throw New ArgumentException("der Vorlagen Ordner fehlt:" & vbLf & dirName)
             End If
         End If
-        
+
 
     End Sub
 
@@ -1627,7 +1628,7 @@ Module awinGeneralModulesBHTC
 
     End Sub
 
-  
+
 
     ''' <summary>
     ''' liest die Name-Mapping Definitionen der Phasen bzw Meilensteine ein
@@ -2027,5 +2028,6 @@ Module awinGeneralModulesBHTC
     ' '' ''    file.Close()
 
     ' '' ''End Sub
+
 
 End Module

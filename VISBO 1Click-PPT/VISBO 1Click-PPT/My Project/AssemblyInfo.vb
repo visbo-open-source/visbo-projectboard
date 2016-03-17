@@ -9,20 +9,20 @@ Imports System.Security
 
 ' Die Werte der Assemblyattribute überprüfen
 
-<Assembly: AssemblyTitle("BHTCReportAddIn")> 
+<Assembly: AssemblyTitle("VISBO 1Click-PPT")> 
 <Assembly: AssemblyDescription("")> 
 <Assembly: AssemblyCompany("")> 
-<Assembly: AssemblyProduct("BHTCReportAddIn")> 
+<Assembly: AssemblyProduct("VISBO 1Click-PPT")> 
 <Assembly: AssemblyCopyright("Copyright ©  2016")> 
 <Assembly: AssemblyTrademark("")> 
 
 ' Durch Festlegen von ComVisible auf "false" werden die Typen in dieser Assembly unsichtbar 
 ' für COM-Komponenten.  Wenn Sie auf einen Zugriffstyp in dieser Assembly aus 
 ' COM zugreifen müssen, legen Sie das ComVisible-Attribut für diesen Typ auf "true" fest.
-<Assembly: ComVisible(True)> 
+<Assembly: ComVisible(False)>
 
 'Die folgende GUID ist für die ID der typelib, wenn dieses Projekt für COM verfügbar gemacht wird
-<Assembly: Guid("44958265-8415-4883-93b1-328c50bfe110")> 
+<Assembly: Guid("235c73e8-2286-47a7-9fb9-a9061c85fdca")> 
 
 ' Versionsinformationen für eine Assembly bestehen aus den folgenden vier Werten:
 '

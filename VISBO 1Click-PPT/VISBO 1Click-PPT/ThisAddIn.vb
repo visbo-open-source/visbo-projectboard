@@ -5,10 +5,11 @@ Imports System.IO
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
 Imports ProjectBoardDefinitions
+
+
 Public Class ThisAddIn
 
     Private Sub ThisAddIn_Startup() Handles Me.Startup
-
 
         ' war nur zu Testzwecken
 
@@ -62,7 +63,6 @@ Public Class ThisAddIn
         Catch ex As Exception
             Throw New ArgumentException("Fehler beim Schließen des Customization-Files")
         End Try
-      
     End Sub
 
 End Class
