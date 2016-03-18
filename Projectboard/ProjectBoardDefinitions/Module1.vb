@@ -19,6 +19,8 @@ Public Module Module1
     Public dbPasswort As String = ""
     Public loginErfolgreich As Boolean = False
 
+    Public myWindowsName As String
+
     Public awinSettings As New clsawinSettings
     Public visboZustaende As New clsVisboZustaende
     Public magicBoardCmdBar As New clsCommandBarEvents
@@ -94,7 +96,8 @@ Public Module Module1
     ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
     Public missingPhaseDefinitions As New clsPhasen
     Public missingMilestoneDefinitions As New clsMeilensteine
-
+    Public missingRoleDefinitions As New clsRollen
+    Public missingCostDefinitions As New clsKostenarten
 
     ' diese Collection nimmt alle Filter Definitionen auf 
     Public filterDefinitions As New clsFilterDefinitions
@@ -151,8 +154,6 @@ Public Module Module1
     Public Const summentitel10 As String = "Details zur Über-Auslastung"
     Public Const summentitel11 As String = "Details zur Unter-Auslastung"
     Public Const maxProjektdauer As Integer = 60
-
-
 
 
 
@@ -281,6 +282,11 @@ Public Module Module1
         rplan = 7
         meilensteinTrendanalyse = 8
         filterAuswahl = 9
+        reportBHTC = 10
+    End Enum
+    Public Enum PTlicense
+        swimlanes = 0
+       
     End Enum
 
 
@@ -350,12 +356,26 @@ Public Module Module1
         rplanrxf = 6
     End Enum
 
+    ' SoftwareKomponenten für die Lizensierung
+    Public Enum PTSWKomp
+        ProjectAdmin = 0
+        Swimlanes2 = 1
+        SWkomp2 = 2
+        SWkomp3 = 3
+        SWkomp4 = 4
+    End Enum
+
 
     Public StartofCalendar As Date = #1/1/2012# ' wird in Customization File gesetzt - dies hier ist nur die Default Einstellung 
 
     Public weightStrategicFit As Double
 
     '
+    '
+    ' Lizenzkomponente kann sein:
+    ' ProjectAdmin
+    ' Swimlanes2
+    Public LizenzKomponenten(4) As String '
     '
     ' Projektstatus kann sein:
     ' beendet
@@ -402,9 +422,11 @@ Public Module Module1
     Public appInstance As _Application
 
     ' nimmt den Pfad Namen auf - also wo liegen Customization File und Projekt-Details
+    Public globalPath As String
     Public awinPath As String
     Public importOrdnerNames() As String
     Public exportOrdnerNames() As String
+    Public reportOrdnerName As String
 
     'Public projektFilesOrdner As String = "ProjectFiles"
     'Public rplanimportFilesOrdner As String = "RPLANImport"
@@ -412,6 +434,7 @@ Public Module Module1
 
     Public excelExportVorlage As String = "export Vorlage.xlsx"
     Public requirementsOrdner As String = "requirements\"
+    Public licFileName As String = requirementsOrdner & "License.xml"
     Public logFileName As String = requirementsOrdner & "logFile.xlsx"                               ' für Fehlermeldung aus Import und Export
     Public customizationFile As String = requirementsOrdner & "Project Board Customization.xlsx" ' Projekt Tafel Customization.xlsx
     Public cockpitsFile As String = requirementsOrdner & "Project Board Cockpits.xlsx"
@@ -421,6 +444,7 @@ Public Module Module1
     Public projektRessOrdner As String = requirementsOrdner & "Ressource Manager"
     Public RepProjectVorOrdner As String = requirementsOrdner & "ReportTemplatesProject"
     Public RepPortfolioVorOrdner As String = requirementsOrdner & "ReportTemplatesPortfolio"
+    Public ReportProfileOrdner As String = requirementsOrdner & "ReportProfile"
     Public demoModusHistory As Boolean = False
     Public historicDate As Date
 
@@ -429,6 +453,8 @@ Public Module Module1
     Public LastX As Double = -1.0
     Public LastY As Double = -1.0
     Public firstPress As Boolean = True
+
+    Public fehlerBeimLoad As Boolean = False
 
 
 
@@ -2766,6 +2792,5 @@ Public Module Module1
 
     End Sub
    
-
 
 End Module

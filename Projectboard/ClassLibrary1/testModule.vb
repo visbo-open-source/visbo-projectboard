@@ -179,6 +179,7 @@ Public Module testModule
                                                         worker, e)
 
                     Else
+
                         Call createPPTSlidesFromProject(hproj, vorlagenDateiName, _
                                                         selectedPhases, selectedMilestones, _
                                                         selectedRoles, selectedCosts, _
@@ -236,6 +237,7 @@ Public Module testModule
         Dim shapeRange As pptNS.ShapeRange = Nothing
         Dim presentationFile As String = awinPath & requirementsOrdner & "projektdossier.pptx"
         Dim presentationFileH As String = awinPath & requirementsOrdner & "projektdossier_Hochformat.pptx"
+        Dim newFileName As String = reportOrdnerName & "Report.pptx"
         Dim pptShape As pptNS.Shape
         Dim pname As String = hproj.name
         Dim fullName As String = hproj.getShapeText
@@ -265,6 +267,11 @@ Public Module testModule
         Dim fallendShape As pptNS.Shape = Nothing
         Dim ampelShape As pptNS.Shape = Nothing
         Dim sternShape As pptNS.Shape = Nothing
+
+
+        ' Änderung tk 1.2.16
+        ' wird benötigt, um in Ergänzung zu pptLasttime im Falle von nur einem Projekt / vielen Swimlanes die bereits erstellte Folie zu löschen 
+        'Dim swimlaneMode As Boolean = False
 
         Try
             lastElem = projekthistorie.Count - 1
@@ -333,6 +340,7 @@ Public Module testModule
             If pptApp.Presentations.Count = 0 Then
 
                 pptTemplatePresentation = pptApp.Presentations.Open(pptTemplateName)
+
                 If pptTemplatePresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
                     pptCurrentPresentation = pptApp.Presentations.Open(presentationFile)
                 Else
@@ -393,14 +401,32 @@ Public Module testModule
         Dim anzahlCurrentSlides As Integer
         Dim currentInsert As Integer = 1
 
+        ' jetzt wird das CurrentPresentation File unter einem Dummy Namen gespeichert ..
+
+
         Try
+
+            ' löschen, wenn der Name bereits existiert ...
+            If My.Computer.FileSystem.FileExists(newFileName) And _
+                pptCurrentPresentation.Name <> "Report.pptx" Then
+
+                Try
+                    My.Computer.FileSystem.DeleteFile(newFileName)
+                Catch ex1 As Exception
+
+                End Try
+
+            End If
+            ' speichern unter .. , damit Projektdossier nicht überschrieben werden kann 
+            pptCurrentPresentation.SaveAs(newFileName)
+
             anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
             anzSlidesToAdd = pptTemplatePresentation.Slides.Count
             pptTemplatePresentation.Saved = True
             pptTemplatePresentation.Close()
 
         Catch ex As Exception
-            Throw New Exception("Probleme mit Powerpoint Template")
+            Throw New Exception("bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen")
         End Try
 
         Dim reportObj As xlNS.ChartObject
@@ -433,15 +459,19 @@ Public Module testModule
             Dim tmpslideID As Integer
 
             'If Not pptFirstTime And kennzeichnung = "Multivariantensicht" Multiprojektsicht Then
-            If pptFirstTime Or _
-                Not (kennzeichnung = "Multivariantensicht" _
-                Or kennzeichnung = "Multiprojektsicht" _
-                Or kennzeichnung = "AllePlanElemente") Then
+            'If pptFirstTime Or _
+            '    Not (kennzeichnung = "Multivariantensicht" _
+            '    Or kennzeichnung = "Multiprojektsicht" _
+            '    Or kennzeichnung = "AllePlanElemente" _
+            '    Or kennzeichnung = "Swimlanes1" _
+            '    Or kennzeichnung = "Swimlanes2") Then
+            If pptFirstTime Then
+
                 anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
                 tmpIX = pptCurrentPresentation.Slides.InsertFromFile(FileName:=pptTemplateName, Index:=anzahlCurrentSlides, _
                                                                               SlideStart:=folieIX, SlideEnd:=folieIX)
             Else
-                'pptSlide.Delete()
+
                 pptCurrentPresentation.Slides("tmpSav").Copy()
                 tmpslideID = pptCurrentPresentation.Slides("tmpSav").SlideID
                 pptCurrentPresentation.Slides.Paste(pptCurrentPresentation.Slides.Count + 1)
@@ -502,6 +532,8 @@ Public Module testModule
                         kennzeichnung = "Soll-Ist & Prognose" Or _
                         kennzeichnung = "Multivariantensicht" Or _
                         kennzeichnung = "AllePlanElemente" Or _
+                        kennzeichnung = "Swimlanes" Or _
+                        kennzeichnung = "Swimlanes2" Or _
                         kennzeichnung = "Legenden-Tabelle" Or _
                         kennzeichnung = "Projekt-Grafik" Or _
                         kennzeichnung = "Meilenstein Trendanalyse" Or _
@@ -683,7 +715,7 @@ Public Module testModule
                                         And selectedRoles.Count = 0 _
                                         And selectedCosts.Count = 0 _
                                         And selectedBUs.Count = 0 _
-                                        And awinSettings.eppExtendedMode Then
+                                        Then
                                         Dim i As Integer = 0
                                         Dim tmpphases As New Collection
                                         Dim tmpMilestones As New Collection
@@ -775,7 +807,7 @@ Public Module testModule
                                                                   tmpphases, tmpMilestones, _
                                                                   selectedRoles, selectedCosts, _
                                                                   selectedBUs, selectedTyps, _
-                                                                  worker, e, False, hproj)
+                                                                  worker, e, False, hproj, kennzeichnung)
                                     .TextFrame2.TextRange.Text = ""
                                     .ZOrder(MsoZOrderCmd.msoSendToBack)
                                 Catch ex As Exception
@@ -783,7 +815,7 @@ Public Module testModule
                                     objectsDone = objectsToDo
 
                                 End Try
-                                
+
 
                             Case "Multivariantensicht"
 
@@ -795,10 +827,61 @@ Public Module testModule
                                                                       selectedPhases, selectedMilestones, _
                                                                       selectedRoles, selectedCosts, _
                                                                       selectedBUs, selectedTyps, _
-                                                                      worker, e, False, hproj)
+                                                                      worker, e, False, hproj, kennzeichnung)
                                     .TextFrame2.TextRange.Text = ""
                                     .ZOrder(MsoZOrderCmd.msoSendToBack)
                                 Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                    objectsDone = objectsToDo
+                                End Try
+
+
+                            Case "Swimlanes"
+
+                                Try
+
+
+                                    Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide, _
+                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                                      selectedPhases, selectedMilestones, _
+                                                                      selectedRoles, selectedCosts, _
+                                                                      selectedBUs, selectedTyps, _
+                                                                      worker, e, False, hproj, kennzeichnung)
+
+                                    .TextFrame2.TextRange.Text = ""
+                                    .ZOrder(MsoZOrderCmd.msoSendToBack)
+
+                                    ' sonst wird pptLasttime benötigt, um bei mehreren PRojekten 
+                                    ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
+                                    'swimlaneMode = True
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                    objectsDone = objectsToDo
+                                End Try
+
+
+                            Case "Swimlanes2"
+                                Dim formerSetting As Boolean = awinSettings.mppExtendedMode
+                                Try
+
+                                    'awinSettings.mppExtendedMode = True
+
+                                    
+                                    Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide, _
+                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                                      selectedPhases, selectedMilestones, _
+                                                                      selectedRoles, selectedCosts, _
+                                                                      selectedBUs, selectedTyps, _
+                                                                      worker, e, False, hproj, kennzeichnung)
+                                    awinSettings.mppExtendedMode = formerSetting
+                                    .TextFrame2.TextRange.Text = ""
+                                    .ZOrder(MsoZOrderCmd.msoSendToBack)
+
+                                    ' sonst wird pptLasttime benötigt, um bei mehreren Projekten 
+                                    ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
+                                    'swimlaneMode = True
+                                Catch ex As Exception
+                                    awinSettings.mppExtendedMode = formerSetting
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
                                 End Try
@@ -883,7 +966,7 @@ Public Module testModule
                                             .TextFrame2.TextRange.Text = "zum Projekt" & hproj.name & vbLf & "gibt es noch keine Trend-Analyse," & vbLf & _
                                                                         "da es noch nicht begonnen hat"
                                         End Try
-                                        
+
                                     Else
                                         .TextFrame2.TextRange.Text = "es gibt keine Meilensteine im Projekt" & vbLf & hproj.name
                                     End If
@@ -1440,8 +1523,8 @@ Public Module testModule
                                     End If
 
 
-                                        reportObj = obj
-                                        notYetDone = True
+                                    reportObj = obj
+                                    notYetDone = True
 
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Personal-Kosten sind Null"
@@ -2166,6 +2249,7 @@ Public Module testModule
 
         End While
 
+        'If pptLastTime Or swimlaneMode Then
         If pptLastTime Then
             Try
                 If Not IsNothing(pptCurrentPresentation.Slides("tmpSav")) Then
@@ -2208,6 +2292,8 @@ Public Module testModule
         Dim shapeRange As pptNS.ShapeRange = Nothing
         Dim presentationFile As String = awinPath & requirementsOrdner & "boarddossier.pptx"
         Dim presentationFileH As String = awinPath & requirementsOrdner & "boarddossier_Hochformat.pptx"
+        Dim newFileName As String = reportOrdnerName & "MP Report.pptx"
+
         Dim pptShape As pptNS.Shape
         Dim portfolioName As String = currentConstellation
         Dim top As Double, left As Double, width As Double, height As Double
@@ -2310,6 +2396,21 @@ Public Module testModule
         Dim currentInsert As Integer = 1
 
         Try
+
+            ' löschen, wenn der Name bereits existiert ...
+            If My.Computer.FileSystem.FileExists(newFileName) And _
+                pptCurrentPresentation.Name <> "MP Report.pptx" Then
+
+                Try
+                    My.Computer.FileSystem.DeleteFile(newFileName)
+                Catch ex1 As Exception
+
+                End Try
+
+            End If
+            ' speichern unter .. , damit Projektdossier nicht überschrieben werden kann 
+            pptCurrentPresentation.SaveAs(newFileName)
+
             anzahlCurrentSlides = pptCurrentPresentation.Slides.Count
             anzSlidesToAdd = pptTemplatePresentation.Slides.Count
             pptTemplatePresentation.Saved = True
@@ -2328,8 +2429,10 @@ Public Module testModule
         Dim anzShapes As Integer
         Dim tatsErstellt As Integer = 0
         Dim folieIX As Integer = 1
-        Dim projToDo As Integer = 0
-        Dim projDone As Integer = 0
+
+        ' bei den objectsToDo kann es sich um Swimlanes oder Projekte handeln 
+        Dim objectsToDo As Integer = 0
+        Dim objectsDone As Integer = 0
 
         While folieIX <= anzSlidesToAdd
 
@@ -2529,16 +2632,16 @@ Public Module testModule
                             Try
                                 Dim tmpProjekt As New clsProjekt
                                 Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
-                                                              projToDo, projDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                              objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
                                                               selectedPhases, selectedMilestones, _
                                                               selectedRoles, selectedCosts, _
                                                               selectedBUs, selectedTyps, _
-                                                              worker, e, True, tmpProjekt)
+                                                              worker, e, True, tmpProjekt, kennzeichnung)
                                 .TextFrame2.TextRange.Text = ""
                                 .ZOrder(MsoZOrderCmd.msoSendToBack)
                             Catch ex As Exception
                                 .TextFrame2.TextRange.Text = ex.Message
-                                projDone = projToDo
+                                objectsDone = objectsToDo
                             End Try
 
                         Case "Szenario-Projekt-Tabelle"
@@ -3874,11 +3977,11 @@ Public Module testModule
             Next
 
             listofShapes.Clear()
-            If projDone >= projToDo Or awinSettings.mppOnePage Then
+            If objectsDone >= objectsToDo Or awinSettings.mppOnePage Then
                 folieIX = folieIX + 1
                 pptFirstTime = True         ' für die LegendenVorlage
-                projToDo = 0
-                projDone = 0
+                objectsToDo = 0
+                objectsDone = 0
 
             End If
             ' Next 
@@ -5437,7 +5540,7 @@ Public Module testModule
         Dim nrOfZeilen(neededSpalten - 1) As Integer
 
 
-        If showRangeRight = 0 Or showRangeLeft = 0 Or showRangeRight - showRangeLeft = 0 Then
+        If showRangeRight = 0 Or showRangeLeft = 0 Or showRangeRight - showRangeLeft < 0 Then
             Throw New Exception("kein Zeitraum in Tabelle Anzeigen der Elemente angegeben ")
         End If
 
@@ -8268,7 +8371,7 @@ Public Module testModule
         currentFilter = New clsFilter("temp", selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
                                       selectedRoles, selectedCosts)
 
-        If showRangeRight - showRangeLeft = 0 Then
+        If Not ((showRangeLeft > 0) And (showRangeRight >= showRangeLeft)) Then
             noTimespanDefined = True
         Else
             noTimespanDefined = False
@@ -8312,10 +8415,22 @@ Public Module testModule
         Else
             ' Multivarianten Sicht 
             ' in diesem Fall soll der selektierte Zeitraum nicht betrachtet werden 
-            von = 0
-            bis = 0
-            tmpMinimum = AlleProjekte.getMinDate(pName:=projMitVariants.name)
-            tmpMaximum = AlleProjekte.getMaxDate(pName:=projMitVariants.name)
+
+
+            ' Änderung tk: 
+            ' auch in den Einzelprojekt-Sichten soll der gewählte Zeitraum betrachtet werden 
+            ' das ist insbesondere für die Swimlanes wichtig ... 
+            If noTimespanDefined Then
+                von = 0
+                bis = 0
+                tmpMinimum = AlleProjekte.getMinDate(pName:=projMitVariants.name)
+                tmpMaximum = AlleProjekte.getMaxDate(pName:=projMitVariants.name)
+            Else
+                tmpMinimum = StartofCalendar.AddMonths(von - 1)
+                tmpMaximum = StartofCalendar.AddMonths(bis).AddDays(-1)
+            End If
+
+            
 
             Dim variantNames As Collection = AlleProjekte.getVariantNames(projMitVariants.name, False)
             For i As Integer = 1 To variantNames.Count
@@ -8438,6 +8553,7 @@ Public Module testModule
     ''' <summary>
     ''' bestimmt für die angegebenen Phasen und Meilensteine den Kalender-Start und das Kalender-Ende für 
     ''' für den Kalender der PPT Multiprojekt sicht  
+    ''' dabei wird berücksichtigt, ob der Kalender mehr anzeigen soll als das ausgewählte Zeitfenster: ist dann der Fall, wenn fullyContained oder ShowAllIfOne gewählt wurde
     ''' </summary>
     ''' <param name="minDate">erstes, linkes Datum</param>
     ''' <param name="maxDate">zweites, rechtes Datum</param>
@@ -8452,7 +8568,7 @@ Public Module testModule
         Dim linksDatum As Date
         Dim rechtsDatum As Date
 
-        If showRangeRight - showRangeLeft > 5 Then
+        If showRangeLeft > 0 And showRangeRight >= showRangeLeft Then
             linksDatum = StartofCalendar.AddMonths(showRangeLeft - 1)
             rechtsDatum = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
         Else
@@ -8461,33 +8577,31 @@ Public Module testModule
         End If
 
         ' Änderung tk: es soll nicht mehr links und rechts ein zusätzlicher Bereich aufgespannt werden 
-        'If Not awinSettings.mppFullyContained And Not awinSettings.mppShowAllIfOne Then
-        '    firstDate = StartofCalendar.AddMonths(showRangeLeft - 1 - 3)
-        '    lastdate = StartofCalendar.AddMonths(showRangeRight - 1 + 3)
-        'Else
-        '    firstDate = minDate
-        '    lastdate = maxDate
-        'End If
+        If Not awinSettings.mppFullyContained And Not awinSettings.mppShowAllIfOne Then
+            firstDate = linksDatum
+            lastdate = rechtsDatum
+        Else
+            firstDate = minDate
+            lastdate = maxDate
+        End If
 
         If DateDiff(DateInterval.Day, linksDatum, firstDate) < 0 Then
-            ' \ 
-            pptKalenderStart = firstDate.AddDays(-1 * firstDate.DayOfYear + 1).AddMonths(((firstDate.Month - 1) \ 3) * 3)
+            pptKalenderStart = firstDate.AddDays(-1 * firstDate.Day + 1)
         Else
-            pptKalenderStart = linksDatum.AddDays(-1 * linksDatum.DayOfYear + 1).AddMonths(((linksDatum.Month - 1) \ 3) * 3)
+            pptKalenderStart = linksDatum.AddDays(-1 * linksDatum.Day + 1)
         End If
 
 
         If DateDiff(DateInterval.Day, rechtsDatum, lastdate) > 0 Then
-            'pptKalenderEnde = lastdate.AddYears(1).AddDays(-1 * lastdate.AddYears(1).DayOfYear)
-            pptKalenderEnde = lastdate.AddDays(-1 * lastdate.DayOfYear + 1).AddMonths(((lastdate.Month - 1) \ 3 + 1) * 3).AddDays(-1)
+            pptKalenderEnde = lastdate.AddDays(-1 * lastdate.Day + 1).AddMonths(1).AddDays(-1)
         Else
-            'pptKalenderEnde = rechtsDatum.AddYears(1).AddDays(-1 * lastdate.AddYears(1).DayOfYear)
-            pptKalenderEnde = rechtsDatum.AddDays(-1 * rechtsDatum.DayOfYear + 1).AddMonths(((rechtsDatum.Month - 1) \ 3 + 1) * 3).AddDays(-1)
+            pptKalenderEnde = rechtsDatum.AddDays(-1 * rechtsDatum.Day + 1).AddMonths(1).AddDays(-1)
         End If
 
 
 
     End Sub
+
 
 
     ''' <summary>
@@ -8565,19 +8679,30 @@ Public Module testModule
         End If
 
 
+        ' den unteren Rand des Kalenders zeichnen 
+        calendarLineShape.Copy()
+        newShapes = pptslide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = calendarLineShape.Left
+            .Top = calendarLineShape.Top
+            ' den Namen für PPT 2013 eindeutig machen 
+            .Name = .Name & .Id
+            nameCollection.Add(.Name, .Name)
+        End With
+
         If Not IsNothing(calendarMark) Then
-            With calendarMark
+            calendarMark.Copy()
+            newShapes = pptslide.Shapes.Paste
+            With newShapes.Item(1)
                 .Left = calendarLineShape.Left + startOfZeitraum * monthWidth
                 .Top = calendarLineShape.Top - calendarHeightShape.Height
                 .Width = zeitraumDauer * monthWidth
                 .Height = calendarHeightShape.Height
+                ' den Namen für PPT 2013 eindeutig machen 
+                .Name = .Name & .Id
+                nameCollection.Add(.Name, .Name)
             End With
         End If
-
-
-        nameCollection.Add(calendarLineShape.Name, calendarLineShape.Name)
-        nameCollection.Add(calendarHeightShape.Name, calendarHeightShape.Name)
-        nameCollection.Add(calendarMark.Name, calendarMark.Name)
 
 
         Dim lfdNr As Integer = 1
@@ -8713,7 +8838,16 @@ Public Module testModule
         lfdNr = StartofPPTCalendar.Year
 
         ' den linken Rand des Kalenders zeichnen 
-        calendarHeightShape.Left = calendarLineShape.Left
+        calendarHeightShape.Copy()
+        newShapes = pptslide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = calendarLineShape.Left
+            .Top = calendarLineShape.Top - calendarHeightShape.Height
+            ' den Namen für PPT 2013 eindeutig machen 
+            .Name = .Name & .Id
+            nameCollection.Add(.Name, .Name)
+        End With
+
 
         ' Änderung tk Zeichnen der 
         Dim ix As Integer = StartofPPTCalendar.Month
@@ -8873,6 +9007,1165 @@ Public Module testModule
 
 
     End Sub
+
+
+
+    ''' <summary>
+    ''' zeichnet einen Kalender mit drei Reihen: Jahre, Quartale oder Monate, Monate oder Kalenderwochen; 
+    ''' es wird also entweder y/q/m gezeichnet oder y/m/w Monate oder 
+    ''' </summary>
+    ''' <param name="rds">die Powerpoint Klasse, die das Slide und alle Hilfsshapes enthält; mit deren Hilfe wird dann gezeichnet</param>
+    ''' <param name="calendargroup">die Kalendergruppe, die zurückgegeben wird</param>
+    ''' <remarks></remarks>
+    Sub zeichne3RowsCalendar(ByRef rds As clsPPTShapes, ByRef calendargroup As pptNS.Shape)
+
+        'Sub zeichne3RowsCalendar(ByRef pptslide As pptNS.Slide, ByRef calendargroup As pptNS.Shape, _
+        '                               ByVal StartofPPTCalendar As Date, ByVal endOFPPTCalendar As Date, _
+        '                                   ByVal calendarLineShape As pptNS.Shape, ByVal calendarHeightShape As pptNS.Shape, _
+        '                                   ByVal calendarStepShape As pptNS.Shape, ByVal calendarMark As pptNS.Shape, _
+        '                                   ByVal yearShape As pptNS.Shape, ByVal qmShape As pptNS.Shape, _
+        '                                   ByVal yearSeparatorLine As pptNS.Shape, ByVal quartalSeparatorLine As pptNS.Shape, ByVal drawingAreaBottom As Double)
+        Dim monthName(11) As String
+        monthName(0) = "Jan"
+        monthName(1) = "Feb"
+        monthName(2) = "Mar"
+        monthName(3) = "Apr"
+        monthName(4) = "May"
+        monthName(5) = "Jun"
+        monthName(6) = "Jul"
+
+        monthName(7) = "Aug"
+        monthName(8) = "Sep"
+        monthName(9) = "Oct"
+        monthName(10) = "Nov"
+        monthName(11) = "Dec"
+
+        Dim QuartalsName() As String = {"QI", "QII", "QIII", "QIV"}
+
+
+        Dim newShapes As pptNS.ShapeRange
+
+        ' nimmt die Namen aller erzeugten Shapes auf: daraus wird später die Gruppe erzeugt 
+        Dim nameCollection As New Collection
+
+        ' wieviele Tage auf dem Kalender?
+        Dim anzahlTage As Integer = DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar)
+
+        ' wie breit ist ein Tg auf dem Kalender? 
+        Dim rasterDayWidth As Double = rds.calendarLineShape.Width / anzahlTage
+
+        ' bestimmt ein proportionales Aussehen der Kalenderleiste 
+        ' es sollte sichergestellt sein, dass die Shapes für Year und Q/M/W jeweils genügend Margin nach oben und unten haben 
+        Dim KalenderHoehe As Double = (2 * rds.quarterMonthVorlagenShape.Height + rds.yearVorlagenShape.Height) * 1.05
+        Dim yyHeightfaktor As Double = rds.yearVorlagenShape.Height / KalenderHoehe
+        Dim qmHeightfaktor As Double = rds.quarterMonthVorlagenShape.Height / KalenderHoehe
+
+        Dim drawKWs As Boolean
+        Dim drawQuartale As Boolean
+        If rds.calendarLineShape.Width >= (1 + anzahlTage / 7) * 2 * rds.quarterMonthVorlagenShape.Width Then
+            drawKWs = True
+            drawQuartale = False
+        Else
+            drawKWs = False
+            drawQuartale = True
+        End If
+
+        ' ####---------------------------------------
+        ' jetzt wird der Aussen-Rand gezeichnet
+        ' ... die unterste horizontale Line zeichnen
+        rds.calendarLineShape.Copy()
+        newShapes = rds.pptSlide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = rds.calendarLineShape.Left
+            .Top = rds.calendarLineShape.Top
+            .Name = .Name & .Id
+            .AlternativeText = ""
+            .Title = ""
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        ' ... die oberste horizontale Line zeichnen
+        rds.calendarLineShape.Copy()
+        newShapes = rds.pptSlide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = rds.calendarLineShape.Left
+            .Top = rds.calendarLineShape.Top - (KalenderHoehe + rds.calendarLineShape.Height / 2)
+            .AlternativeText = ""
+            .Title = ""
+            .Name = .Name & .Id
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        ' ... die Trennlinie1 (Jahre) zeichnen
+        rds.calendarLineShape.Copy()
+        newShapes = rds.pptSlide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = rds.calendarLineShape.Left
+            .Top = rds.calendarLineShape.Top - (KalenderHoehe + rds.calendarLineShape.Height / 2) + _
+                    yyHeightfaktor * KalenderHoehe
+            .AlternativeText = ""
+            .Title = ""
+            .Name = .Name & .Id
+
+            ' das Format von StepShape übernehmen
+            rds.calendarStepShape.PickUp()
+            .Apply()
+
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        ' ... die Trennlinie2 (Q/M) zeichnen
+        rds.calendarLineShape.Copy()
+        newShapes = rds.pptSlide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = rds.calendarLineShape.Left
+            .Top = rds.calendarLineShape.Top - (KalenderHoehe + rds.calendarLineShape.Height / 2) + _
+                    yyHeightfaktor * KalenderHoehe + qmHeightfaktor * KalenderHoehe
+            .Name = .Name & .Id
+            .AlternativeText = ""
+            .Title = ""
+
+            ' das Format von StepShape übernehmen
+            rds.calendarStepShape.PickUp()
+            .Apply()
+
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        ' den linken und den rechten Rand zeichnen 
+        rds.calendarHeightShape.Copy()
+        newShapes = rds.pptSlide.Shapes.Paste
+        With newShapes.Item(1)
+            .Left = rds.calendarLineShape.Left
+            .Top = rds.calendarLineShape.Top - (KalenderHoehe + rds.calendarLineShape.Height / 2)
+            .Height = KalenderHoehe
+            .Name = .Name & .Id
+            .AlternativeText = ""
+            .Title = ""
+
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        rds.calendarHeightShape.Copy()
+        newShapes = rds.pptSlide.Shapes.Paste
+        With newShapes.Item(1)
+            '.Left = calendarLineShape.Left + calendarLineShape.Width - .Width / 2
+            .Left = rds.calendarLineShape.Left + rds.calendarLineShape.Width
+            .Top = rds.calendarLineShape.Top - (KalenderHoehe + rds.calendarLineShape.Height / 2)
+            .Height = KalenderHoehe
+            .Name = .Name & .Id
+            .AlternativeText = ""
+            .Title = ""
+
+            nameCollection.Add(.Name, .Name)
+        End With
+
+        ' Ende Aussen-Box für KAlender schreiben 
+        ' ##########################################
+
+        Dim curDatePtr As Date = rds.PPTStartOFCalendar
+        Dim curLeft As Double, curTop As Double, curRight As Double
+        Dim rowHeight As Double
+
+
+
+        Dim atleastOne As Boolean = False
+        Dim beschriftung As String = ""
+
+        ' ###########################################
+        ' zeichne die Jahres-Trennlinien, schreibe die Jahreszahlen
+        Dim dimension As Integer = DateDiff(DateInterval.Year, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar) + 5
+        Dim positionY() As Double
+        ReDim positionY(dimension)
+        Dim positionYPtr = 0
+
+        rowHeight = yyHeightfaktor * KalenderHoehe
+
+        curTop = rds.calendarLineShape.Top - (KalenderHoehe + rds.calendarLineShape.Height / 2)
+        curLeft = rds.calendarLineShape.Left
+        curRight = rds.calendarLineShape.Left + rds.calendarLineShape.Width
+
+        curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.DayOfYear).AddYears(1)
+
+        Do While curDatePtr < rds.PPTEndOFCalendar
+            curRight = rds.calendarLineShape.Left + DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, curDatePtr) * rasterDayWidth
+            positionY(positionYPtr) = curRight
+            positionYPtr = positionYPtr + 1
+
+            rds.calendarStepShape.Copy()
+            newShapes = rds.pptSlide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = curRight
+                .Top = curTop
+                .Height = rowHeight
+                .Name = .Name & .Id
+                .AlternativeText = ""
+                .Title = ""
+
+                nameCollection.Add(.Name, .Name)
+            End With
+
+            ' jetzt die Jahreszahl schreiben 
+            If curRight - curLeft >= rds.yearVorlagenShape.Width Then
+
+                beschriftung = curDatePtr.AddMonths(-1).Year.ToString
+                rds.yearVorlagenShape.Copy()
+                newShapes = rds.pptSlide.Shapes.Paste
+                With newShapes.Item(1)
+                    .Left = curLeft + (curRight - curLeft - rds.yearVorlagenShape.Width) / 2
+                    .Top = curTop + (rowHeight - rds.yearVorlagenShape.Height) / 2
+                    .Name = .Name & .Id
+                    .AlternativeText = ""
+                    .Title = ""
+
+                    .TextFrame2.TextRange.Text = beschriftung
+                    nameCollection.Add(.Name, .Name)
+                End With
+
+            End If
+
+            curLeft = curRight
+            curDatePtr = curDatePtr.AddYears(1)
+
+        Loop
+
+        ' jetzt muss noch die Behandlung kommen, ob das Teil-Jahr beschriftet werden muss
+        curRight = rds.calendarLineShape.Left + rds.calendarLineShape.Width
+        If curRight - curLeft > 2 * rds.yearVorlagenShape.Width Then
+
+            beschriftung = curDatePtr.AddMonths(-1).Year.ToString
+            rds.yearVorlagenShape.Copy()
+            newShapes = rds.pptSlide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = curLeft + (curRight - curLeft - rds.yearVorlagenShape.Width) / 2
+                .Top = curTop + (rowHeight - rds.yearVorlagenShape.Height) / 2
+                .Name = .Name & .Id
+                .AlternativeText = ""
+                .Title = ""
+
+                .TextFrame2.TextRange.Text = beschriftung
+                nameCollection.Add(.Name, .Name)
+            End With
+
+        End If
+
+        ' Ende Jahres-Zeile zeichnen 
+        ' ###########################################
+        '
+
+        '
+        ' ###########################################
+        ' zeichne die Quartals bzw. Monats-Reihe 
+        rowHeight = qmHeightfaktor * KalenderHoehe
+
+        curTop = curTop + yyHeightfaktor * KalenderHoehe
+        curLeft = rds.calendarLineShape.Left
+        curRight = rds.calendarLineShape.Left + rds.calendarLineShape.Width
+
+        ' StartofPPTCalendar beginnt immer am 1. eines Monats 
+
+        Dim position2() As Double
+        dimension = DateDiff(DateInterval.Month, rds.PPTStartOFCalendar, rds.PPTEndOFCalendar) + 5
+        ReDim position2(dimension)
+        Dim position2Ptr = 0
+
+        Dim monthKennzahl As Integer = rds.PPTStartOFCalendar.Month Mod 3
+        Dim curQuartal As Integer
+
+        If drawQuartale Then
+            ' das erste Quartal berechnen  
+            Select Case monthKennzahl
+                Case 1
+                    ' bringt es auf den 1. des Monats, addiert 3 Monate, geht auf den letzten Tag davor 
+                    curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.Day + 1).AddMonths(3).AddDays(-1)
+
+                Case 2
+                    ' bringt es auf den 1. des Monats, addiert 2 Monate, geht auf den letzten Tag davor 
+                    curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.Day + 1).AddMonths(2).AddDays(-1)
+
+                Case 0
+                    ' bringt es auf den 1. des Monats, addiert 1 Monat, geht auf den letzten Tag davor 
+                    curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.Day + 1).AddMonths(1).AddDays(-1)
+
+            End Select
+
+            curQuartal = curDatePtr.Month / 3
+
+        Else
+            ' den ersten Monat berechnen
+            curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.Day + 1).AddMonths(1).AddDays(-1)
+        End If
+
+        ' ggf müssen die Schriftgrößen angepasst werden
+
+        ' bestimmt ob die vertical Linien in der zweiten sufen gezeichnet werden sollen
+        ' nur zeichnen wenn auch genügend Platz da ist
+        ' Entschediung: Überprüfung beim ersten Auftreten 
+
+        Dim beschrifteLevel2 As Boolean = True
+
+        Do While curDatePtr <= rds.PPTEndOFCalendar
+
+            curRight = rds.calendarLineShape.Left + DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, curDatePtr) * rasterDayWidth
+
+            beschrifteLevel2 = beschrifteLevel2 And (curRight - curLeft >= rds.quarterMonthVorlagenShape.Width)
+
+            ' Merken, an dieser Stelle werden ggf nachher die vertikalen Linien gezeichnet , aber nur, wenn nicht eine Dezember Linie
+            ' und nur wenn nicht = endofPPTCalendar
+            If curDatePtr.Month <> 12 And curDatePtr < rds.PPTEndOFCalendar Then
+                position2(position2Ptr) = curRight
+                position2Ptr = position2Ptr + 1
+            End If
+
+            rds.calendarStepShape.Copy()
+            newShapes = rds.pptSlide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = curRight
+                .Top = curTop
+                .Height = rowHeight
+                .Name = .Name & .Id
+                .AlternativeText = ""
+                .Title = ""
+
+                nameCollection.Add(.Name, .Name)
+            End With
+
+
+
+
+
+            ' jetzt die Quartals- bzw. Monatszahl  schreiben 
+            If beschrifteLevel2 Then
+
+                If drawQuartale Then
+                    beschriftung = QuartalsName(curQuartal - 1)
+                Else
+                    beschriftung = monthName(curDatePtr.Month - 1)
+                End If
+
+                rds.quarterMonthVorlagenShape.Copy()
+                newShapes = rds.pptSlide.Shapes.Paste
+                With newShapes.Item(1)
+                    .Left = curLeft + (curRight - curLeft - rds.quarterMonthVorlagenShape.Width) / 2
+                    .Top = curTop + (rowHeight - rds.quarterMonthVorlagenShape.Height) / 2
+                    .Name = .Name & .Id
+                    .AlternativeText = ""
+                    .Title = ""
+
+                    .TextFrame2.TextRange.Text = beschriftung
+                    nameCollection.Add(.Name, .Name)
+                End With
+
+            Else
+                ' hier muss gekennzeichnet werden, dass keine Beschriftung mehr stattfinden konnte. 
+                ' Dann sollen auf diesem Granularitätslevel auch keine vertikalen Linien gezeichnet werden  
+                beschriftung = ""
+            End If
+
+
+            curLeft = curRight
+            If drawQuartale Then
+                ' dieses scheinbare Nullsummenspiel bei den Tagen ist entscheidend, damit immer der letzte Tag des betreffenden Monats rauskommt
+                ' und das kann nur sichergestellt werden, wenn man vom 1. eines Monats ausgeht und eins abzieht 
+                curDatePtr = curDatePtr.AddDays(1).AddMonths(3).AddDays(-1)
+                curQuartal = curQuartal + 1
+                If curQuartal > 4 Then
+                    curQuartal = 1
+                End If
+            Else
+                curDatePtr = curDatePtr.AddDays(1).AddMonths(1).AddDays(-1)
+            End If
+
+
+        Loop
+
+        ' jetzt muss noch die Behandlung kommen, ob das Teil-Quartal / Monat beschriftet werden muss
+        ' jetzt die Quartals- bzw. Monatszahl  schreiben 
+        curRight = rds.calendarLineShape.Left + rds.calendarLineShape.Width
+
+        If curRight - curLeft > rds.quarterMonthVorlagenShape.Width Then
+
+            If beschrifteLevel2 Then
+
+                If drawQuartale Then
+                    beschriftung = QuartalsName(curQuartal - 1)
+                Else
+                    beschriftung = monthName(curDatePtr.Month - 1)
+                End If
+
+                rds.quarterMonthVorlagenShape.Copy()
+                newShapes = rds.pptSlide.Shapes.Paste
+                With newShapes.Item(1)
+                    .Left = curLeft + (curRight - curLeft - rds.quarterMonthVorlagenShape.Width) / 2
+                    .Top = curTop + (rowHeight - rds.quarterMonthVorlagenShape.Height) / 2
+                    .Name = .Name & .Id
+                    .AlternativeText = ""
+                    .Title = ""
+
+                    .TextFrame2.TextRange.Text = beschriftung
+                    nameCollection.Add(.Name, .Name)
+                End With
+
+            Else
+                beschriftung = ""
+            End If
+
+        End If
+
+
+
+
+        ' Ende Quartals bzw. Monats-Zeile zeichnen 
+        ' ###########################################
+        '
+
+        '
+        ' ###########################################
+        ' zeichne die Monats- bzw. Kalenderwochen Reihe
+        rowHeight = qmHeightfaktor * KalenderHoehe
+
+        curTop = curTop + rowHeight
+        curLeft = rds.calendarLineShape.Left
+        curRight = rds.calendarLineShape.Left + rds.calendarLineShape.Width
+
+        Dim position() As Double
+        ' Play it safe - einfach Puffer von 5 daruf geben 
+        dimension = anzahlTage / 7 + 5
+        ReDim position(dimension)
+        Dim positionPtr = 0
+
+        If drawKWs Then
+            ' die erste KW berechnen 
+            curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.DayOfWeek + 1)
+            If DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, curDatePtr) < 0 Then
+                curDatePtr = curDatePtr.AddDays(7)
+            End If
+        Else
+            curDatePtr = rds.PPTStartOFCalendar.AddDays(-1 * rds.PPTStartOFCalendar.Day + 1).AddMonths(1).AddDays(-1)
+        End If
+
+        Dim beschrifteLevel3 As Boolean = False
+
+        Do While curDatePtr <= rds.PPTEndOFCalendar
+            curRight = rds.calendarLineShape.Left + DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, curDatePtr) * rasterDayWidth
+
+            If curDatePtr < rds.PPTEndOFCalendar Then
+                beschrifteLevel3 = beschrifteLevel3 Or (curRight - curLeft >= rds.quarterMonthVorlagenShape.Width)
+            Else
+                beschrifteLevel3 = (curRight - curLeft >= rds.quarterMonthVorlagenShape.Width)
+            End If
+
+
+            ' Merken, an dieser Stelle werden ggf nachher die vertikalen Linien gezeichnet , aber nur, wenn nicht eine Dezember Linie
+            ' und nur wenn nicht = endofPPTCalendar
+            If (drawKWs Or (curDatePtr.Month <> 12)) And curDatePtr < rds.PPTEndOFCalendar Then
+                position(positionPtr) = curRight
+                positionPtr = positionPtr + 1
+            End If
+
+            ' auch das StepShape muss nur gezeichnet werden, wenn kleiner als endofPPTCalendar
+            If curDatePtr < rds.PPTEndOFCalendar Then
+                rds.calendarStepShape.Copy()
+                newShapes = rds.pptSlide.Shapes.Paste
+                With newShapes.Item(1)
+                    .Left = curRight
+                    .Top = curTop
+                    .Height = rowHeight
+                    .Name = .Name & .Id
+                    .AlternativeText = ""
+                    .Title = ""
+
+                    nameCollection.Add(.Name, .Name)
+                End With
+            End If
+
+
+            ' jetzt die KW bzw. Monatszahl  schreiben 
+            If beschrifteLevel3 Then
+
+                If drawKWs Then
+                    If curDatePtr.DayOfWeek = 1 Then
+                        beschriftung = calcKW(curDatePtr.AddDays(-7)).ToString("0#")
+                    Else
+                        beschriftung = calcKW(curDatePtr).ToString("0#")
+                    End If
+
+                Else
+
+                    beschriftung = monthName(curDatePtr.Month - 1)
+
+                End If
+
+
+                rds.quarterMonthVorlagenShape.Copy()
+                newShapes = rds.pptSlide.Shapes.Paste
+                With newShapes.Item(1)
+                    .Left = curLeft + (curRight - curLeft - rds.quarterMonthVorlagenShape.Width) / 2
+                    .Top = curTop + (rowHeight - rds.quarterMonthVorlagenShape.Height) / 2
+                    .Name = .Name & .Id
+                    .AlternativeText = ""
+                    .Title = ""
+
+                    .TextFrame2.TextRange.Text = beschriftung
+                    nameCollection.Add(.Name, .Name)
+                End With
+            Else
+                beschriftung = ""
+                ' Kennzeichnen , dass diese Stufe nicht als vertikale Linie dargestellt werden soll 
+            End If
+
+            curLeft = curRight
+            If drawKWs Then
+                curDatePtr = curDatePtr.AddDays(7)
+            Else
+                curDatePtr = curDatePtr.AddDays(1).AddMonths(1).AddDays(-1)
+            End If
+
+
+        Loop
+
+        ' jetzt muss noch die Behandlung kommen, ob der Rest noch beschriftet werden soll 
+
+        If curDatePtr > rds.PPTEndOFCalendar Then
+            curDatePtr = rds.PPTEndOFCalendar
+        End If
+
+        curRight = rds.calendarLineShape.Left + rds.calendarLineShape.Width
+        If curRight - curLeft > rds.quarterMonthVorlagenShape.Width Then
+            If beschrifteLevel3 Then
+
+                If drawKWs Then
+                    If curDatePtr.DayOfWeek = 1 Then
+                        beschriftung = calcKW(curDatePtr.AddDays(-7)).ToString("0#")
+                    Else
+                        beschriftung = calcKW(curDatePtr).ToString("0#")
+                    End If
+                Else
+                    beschriftung = monthName(curDatePtr.Month - 1)
+                End If
+
+                rds.quarterMonthVorlagenShape.Copy()
+                newShapes = rds.pptSlide.Shapes.Paste
+                With newShapes.Item(1)
+                    .Left = curLeft + (curRight - curLeft - rds.quarterMonthVorlagenShape.Width) / 2
+                    .Top = curTop + (rowHeight - rds.quarterMonthVorlagenShape.Height) / 2
+                    .Name = .Name & .Id
+                    .AlternativeText = ""
+                    .Title = ""
+
+                    .TextFrame2.TextRange.Text = beschriftung
+                    nameCollection.Add(.Name, .Name)
+                End With
+
+
+            End If
+        End If
+
+
+        ' jetzt das CalendarMark zeichnen 
+        If showRangeLeft > 0 And showRangeRight >= showRangeLeft Then
+            Dim startOfZeitraum As Integer = showRangeLeft - getColumnOfDate(rds.PPTStartOFCalendar)
+            Dim zeitraumDauer As Integer = showRangeRight - showRangeLeft + 1
+
+            If Not IsNothing(rds.calendarMarkShape) Then
+
+                rds.calendarMarkShape.Copy()
+                newShapes = rds.pptSlide.Shapes.Paste
+
+                With newShapes.Item(1)
+                    .Left = rds.calendarLineShape.Left + _
+                        DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, StartofCalendar.AddMonths(showRangeLeft - 1)) * rasterDayWidth
+                    .Top = rds.calendarLineShape.Top - KalenderHoehe
+                    .Width = DateDiff(DateInterval.Day, StartofCalendar.AddMonths(showRangeLeft - 1), StartofCalendar.AddMonths(showRangeRight).AddDays(-1)) * rasterDayWidth
+                    .Height = KalenderHoehe
+                    .Name = .Name & .Id
+                    .AlternativeText = ""
+                    .Title = ""
+                    nameCollection.Add(.Name, .Name)
+                End With
+
+            End If
+
+        End If
+
+
+        ' zeichne die vertikalen Linien, wenn gewünscht ... 
+
+        If awinSettings.mppVertikalesRaster And _
+            Not IsNothing(rds.calendarYearSeparator) And Not IsNothing(rds.calendarQuartalSeparator) Then
+
+            ' zeichne die Monats- bzw. Kalenderwochen Linien
+
+            ' als erstes wird die linke Begrenzung gezeichnet
+
+            rds.calendarQuartalSeparator.Copy()
+            newShapes = rds.pptSlide.Shapes.Paste
+            With newShapes.Item(1)
+                '.Left = position(i) - .Width / 2
+                .Left = rds.calendarLineShape.Left
+                .Top = rds.calendarLineShape.Top
+                .Height = rds.drawingAreaBottom - rds.calendarLineShape.Top
+                .Name = .Name & .Id
+                .AlternativeText = ""
+                .Title = ""
+
+                nameCollection.Add(.Name, .Name)
+            End With
+
+
+            ' dann wird die rechte Begrenzung gezeichnet
+            rds.calendarQuartalSeparator.Copy()
+            newShapes = rds.pptSlide.Shapes.Paste
+            With newShapes.Item(1)
+                '.Left = position(i) - .Width / 2
+                .Left = rds.calendarLineShape.Left + rds.calendarLineShape.Width
+                .Top = rds.calendarLineShape.Top
+                .Height = rds.drawingAreaBottom - rds.calendarLineShape.Top
+                .Name = .Name & .Id
+                .AlternativeText = ""
+                .Title = ""
+
+                nameCollection.Add(.Name, .Name)
+            End With
+
+
+            If beschrifteLevel3 Then
+                For i As Integer = 0 To positionPtr - 1
+
+                    rds.calendarQuartalSeparator.Copy()
+                    newShapes = rds.pptSlide.Shapes.Paste
+                    With newShapes.Item(1)
+                        '.Left = position(i) - .Width / 2
+                        .Left = position(i)
+                        .Top = rds.calendarLineShape.Top
+                        .Height = rds.drawingAreaBottom - rds.calendarLineShape.Top
+                        .Name = .Name & .Id
+                        .AlternativeText = ""
+                        .Title = ""
+
+                        nameCollection.Add(.Name, .Name)
+                    End With
+
+                Next
+            ElseIf beschrifteLevel2 Then
+
+                For i As Integer = 0 To position2Ptr - 1
+
+                    rds.calendarQuartalSeparator.Copy()
+                    newShapes = rds.pptSlide.Shapes.Paste
+                    With newShapes.Item(1)
+                        '.Left = position(i) - .Width / 2
+                        .Left = position2(i)
+                        .Top = rds.calendarLineShape.Top
+                        .Height = rds.drawingAreaBottom - rds.calendarLineShape.Top
+                        .Name = .Name & .Id
+                        .AlternativeText = ""
+                        .Title = ""
+
+                        nameCollection.Add(.Name, .Name)
+                    End With
+
+                Next
+
+            End If
+
+
+            ' zeichne die Jahres Linien - die werden auf alle fälle gezeichnet
+            For i As Integer = 0 To positionYPtr - 1
+
+                rds.calendarYearSeparator.Copy()
+                newShapes = rds.pptSlide.Shapes.Paste
+                With newShapes.Item(1)
+                    '.Left = positionY(i) - .Width / 2
+                    .Left = positionY(i)
+                    .Top = rds.calendarLineShape.Top
+                    .Height = rds.drawingAreaBottom - rds.calendarLineShape.Top
+                    .Name = .Name & .Id
+                    .AlternativeText = ""
+                    .Title = ""
+
+                    nameCollection.Add(.Name, .Name)
+                End With
+
+            Next
+
+
+        End If
+
+
+        ' jetzt muss ggf die Heute Linie gezeichnet werden 
+        If Not IsNothing(rds.todayLineShape) And _
+            Date.Now.Date >= rds.PPTStartOFCalendar And _
+            Date.Now.Date <= rds.PPTEndOFCalendar Then
+
+            rds.todayLineShape.Copy()
+            newShapes = rds.pptSlide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = rds.calendarLineShape.Left + _
+                        DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, Date.Now.Date) * rasterDayWidth - rds.todayLineShape.Width / 2
+                .Top = rds.calendarLineShape.Top
+                .Height = rds.drawingAreaBottom - rds.calendarLineShape.Top
+
+                .Name = .Name & .Id
+                .AlternativeText = ""
+                .Title = ""
+
+                .TextFrame2.TextRange.Text = beschriftung
+                nameCollection.Add(.Name, .Name)
+            End With
+
+        End If
+
+        ' jetzt sollen alle gezeichneten Shapes gruppiert werden 
+        Dim shapeGruppe As pptNS.ShapeRange
+        Dim slideShapes As pptNS.Shapes = rds.pptSlide.Shapes
+
+        Dim arrayOFNames() As String
+
+
+        Dim anzElements As Integer = nameCollection.Count
+        If anzElements = 0 Then
+
+            calendargroup = Nothing
+
+        ElseIf anzElements = 1 Then
+
+            calendargroup = rds.pptSlide.Shapes.Item(nameCollection.Item(1))
+
+        Else
+
+            ReDim arrayOFNames(anzElements - 1)
+
+            For i = 1 To anzElements
+                arrayOFNames(i - 1) = CStr(nameCollection.Item(i))
+            Next
+
+            shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
+            calendargroup = shapeGruppe.Group
+
+
+        End If
+
+
+    End Sub
+
+
+
+
+    ''' <summary>
+    ''' zeichnet die Swimlanes 
+    ''' </summary>
+    ''' <param name="rds"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="swimlaneNameID">die NameID der Phase, die als Swimlnae gezeichnet werden soll</param>
+    ''' <param name="considerAll">sollen alle Pan-Elemente in der Swimlane gezeichnet werden </param>
+    ''' <param name="breadCrumbArray">enthält ggf die Liste der BreadCrumbs aller ausgewählten Phasen bzw. Meilensteine </param>
+    ''' <param name="selectedPhaseIDs">die NameIDs, die in diesem Projekt der Liste der gewählten Phasen entspricht </param>
+    ''' <param name="selectedMilestoneIDs">die NameIDs, die in diesem Projekt der Liste der gewählten Meilensteine entspricht</param>
+    ''' <param name="selectedRoles">für später: die ausgewählten Rollen</param>
+    ''' <param name="selectedCosts">für später: die ausgewählten Kostearten</param>
+    ''' <remarks></remarks>
+    Sub zeichneSwimlaneOfProject(ByRef rds As clsPPTShapes, ByRef curYPosition As Double, _
+                                 ByRef toggleRowDifferentiator As Boolean, _
+                                 ByVal hproj As clsProjekt, swimlaneNameID As String, _
+                                 ByVal considerAll As Boolean, ByVal breadCrumbArray As String(),
+                                 ByVal considerZeitraum As Boolean, ByVal zeitraumGrenzeL As Integer, ByVal zeitraumGrenzeR As Integer, _
+                                 ByVal selectedPhaseIDs As Collection, ByVal selectedMilestoneIDs As Collection, _
+                                 ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                                 ByVal kontrolleAnzZeilen As Integer)
+
+
+
+
+        ' nimmt die Namen aller erzeugten Shapes auf: daraus wird später die Gruppe erzeugt 
+        Dim shapeNameCollection As New Collection
+
+        Dim swlMilestoneCollection As New Collection
+
+        Dim extended As Boolean = awinSettings.mppExtendedMode
+
+        ' x1, x2 sind die Anfangs- und End-Koordinaten eines Shapes auf der Zeichenfläche 
+        Dim x1 As Double, x2 As Double
+
+        ' startNr, endNr sind die Anfangs- und End-Indices der Kind-Phasen der Swimlane
+        Dim startNr As Integer = 0
+        Dim endNr As Integer = 0
+
+        ' wird benutzt, um mal oben und mal unten in der Swimlane zeichnen zu können 
+        Dim aktuelleYPosition As Double = curYPosition
+
+        ' in startNr ist nachher die Phasen-Nummer der swimlane, in startNr +1 die Phasen-Nummer des ersten Kindes 
+        ' in endNr ist die Phasen-Nummer des letzten Kindes 
+        Call hproj.calcStartEndChildNrs(swimlaneNameID, startNr, endNr)
+
+        'Dim fullSwlBreadCrumb As String = hproj.getBcElemName(swimlaneNameID)
+
+        Dim copiedShape As pptNS.ShapeRange
+
+        Dim childPhaseIDs As New Collection
+        Dim childMilestoneIDs As New Collection
+
+        If Not considerAll Then
+            childPhaseIDs = hproj.schnittmengeChilds(swimlaneNameID, selectedPhaseIDs)
+            childMilestoneIDs = hproj.schnittmengeChilds(swimlaneNameID, selectedMilestoneIDs)
+        End If
+
+
+
+        ' ###########################################################
+        ' zeichnen des Swimlane-Namens
+        '
+        rds.projectNameVorlagenShape.Copy()
+        copiedShape = rds.pptSlide.Shapes.Paste()
+
+        Dim swlNameShape As pptNS.Shape = copiedShape.Item(1)
+
+        With copiedShape.Item(1)
+            .Top = CSng(curYPosition) + rds.YprojectName
+            .Left = rds.projectListLeft
+            .TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
+            .Name = .Name & .Id
+            .AlternativeText = elemNameOfElemID(swimlaneNameID)
+
+            shapeNameCollection.Add(.Name, .Name)
+        End With
+
+
+        ' ###########################################################
+        ' wenn diese Phase nicht existiert , dann Fehler schreiben ...  
+        '
+        Dim cphase As clsPhase = hproj.getPhaseByID(swimlaneNameID)
+
+        If IsNothing(cphase) Then
+
+            rds.projectNameVorlagenShape.Copy()
+            copiedShape = rds.pptSlide.Shapes.Paste()
+
+
+            With copiedShape.Item(1)
+                .Top = CSng(curYPosition) + rds.YprojectName
+                .Left = rds.drawingAreaLeft
+                .TextFrame2.TextRange.Text = " ... existiert in diesem Projekt nicht ..."
+                .Name = .Name & .Id
+                .AlternativeText = "Swimlane " & elemNameOfElemID(swimlaneNameID)
+
+                shapeNameCollection.Add(.Name, .Name)
+            End With
+        Else
+            ' weiter mit Zeichnen der Swimlane ...
+
+            ' ###########################################################
+            ' optionales Zeichnen der Swimlane-Linie 
+            '
+            If awinSettings.mppShowProjectLine Then
+
+                Call rds.calculatePPTx1x2(cphase.getStartDate, cphase.getEndDate, x1, x2)
+
+                ' jetzt muss überprüft werden, ob projectName zu lang ist - dann wird der Name entsprechend abgekürzt ...
+                With swlNameShape
+                    If .Left + .Width > x1 Then
+                        ' jetzt muss der Name entsprechend gekürzt werden 
+                        Dim longName As String = .TextFrame2.TextRange.Text
+                        Dim shortName As String = ""
+
+                        .TextFrame2.TextRange.Text = shortName
+                        Dim stringIX As Integer = 0
+                        Do While .Left + .Width < x1 And stringIX <= longName.Length - 1
+                            shortName = shortName & longName.Chars(stringIX)
+                            stringIX = stringIX + 1
+                            .TextFrame2.TextRange.Text = shortName
+                        Loop
+
+                    End If
+                End With
+
+                rds.projectVorlagenShape.Copy()
+                copiedShape = rds.pptSlide.Shapes.Paste()
+                With copiedShape(1)
+                    .Top = CSng(curYPosition) + rds.YProjectLine
+                    .Left = CSng(x1)
+                    .Width = CSng(x2 - x1)
+                    .Name = .Name & .Id
+                    .AlternativeText = cphase.name & " von " & cphase.getStartDate.ToShortDateString & " bis " & _
+                                            cphase.getEndDate.ToShortDateString
+                    ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
+                    If DateDiff(DateInterval.Day, hproj.startDate, rds.PPTStartOFCalendar) > 0 Then
+                        .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+                    End If
+
+                    ' wenn Projektende nach dem Kalender-Ende liegt: kein Projektende Symbol zeichnen
+                    If DateDiff(DateInterval.Day, hproj.endeDate, rds.PPTEndOFCalendar) < 0 Then
+                        .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+                    End If
+
+
+                    shapeNameCollection.Add(.Name, .Name)
+                End With
+
+
+
+            End If
+
+
+            ' ###########################################################
+            ' optionales zeichnen der horizontalen Zeilen - es wird immer nur die Zeile oben gezeichnet ... andernfalls hätte man 
+            ' Doppelzeichnungen 
+            ' bei der ersten Swimlane auf einer Seite wird die horizontale nicht gezeichnet ... 
+            '
+            If awinSettings.mppShowHorizontals Then
+
+                rds.horizontalLineShape.Copy()
+                copiedShape = rds.pptSlide.Shapes.Paste()
+
+                With copiedShape.Item(1)
+                    .Top = CSng(curYPosition)
+                    .Left = rds.drawingAreaLeft
+                    .Width = rds.drawingAreaWidth
+                    .Name = .Name & .Id
+                    .AlternativeText = "horizontal line" & elemNameOfElemID(swimlaneNameID)
+
+                    shapeNameCollection.Add(.Name, .Name)
+                End With
+
+            End If
+
+        End If
+
+
+
+
+        ' ###########################################################
+        ' optionales zeichnen der Zeilen-Markierung
+        '
+        If (Not IsNothing(rds.rowDifferentiatorShape)) And toggleRowDifferentiator Then
+            ' zeichnen des RowDifferentiators 
+            rds.rowDifferentiatorShape.Copy()
+            copiedShape = rds.pptSlide.Shapes.Paste()
+            With copiedShape.Item(1)
+                .Top = CSng(curYPosition)
+                .Left = rds.projectListLeft
+                .Height = kontrolleAnzZeilen * rds.zeilenHoehe
+                .Width = rds.drawingAreaRight - .Left
+                .Name = .Name & .Id
+                .AlternativeText = ""
+                .Title = ""
+
+                .ZOrder(MsoZOrderCmd.msoSendToBack)
+                shapeNameCollection.Add(.Name, .Name)
+            End With
+        End If
+
+
+        ' ###########################################################
+        ' jetzt werden die Phasen und Meilensteine gezeichnet, 
+        ' beginnend mit Phase <startNr+1> .. <endNr>
+
+        ' zum Bestimmen der optimierten Zeilenanzahl 
+        ' es kann in dieser Swimlane nicht mehr als endNr-startNr Zeilen geben 
+        Dim dimension As Integer = endNr - startNr
+        Dim lastEndDates(dimension) As Date
+        For i As Integer = 0 To dimension
+            lastEndDates(i) = StartofCalendar.AddDays(-1)
+        Next
+
+        Dim maxOffsetZeile As Integer = 1
+        Dim curOffsetZeile As Integer = 1
+
+
+        Dim zeilenoffset As Integer = 1
+        Dim curPhase As clsPhase
+
+        ' beginne mit den Meilensteinen, die direkt der Swimlane zugeordnet sind 
+        curPhase = hproj.getPhase(startNr)
+        If Not IsNothing(curPhase) Then
+
+            ' für jeden Meilenstein dieser Phase untersuchen, ob er gezeigt werden soll 
+
+            For msIX As Integer = 1 To curPhase.countMilestones
+                Dim curMs As clsMeilenstein = curPhase.getMilestone(msIX)
+
+                If Not IsNothing(curMs) Then
+
+                    If considerAll Or childMilestoneIDs.Contains(curMs.nameID) Then
+                        If Not considerZeitraum _
+                                    Or _
+                                    (considerZeitraum And milestoneWithinTimeFrame(curMs.getDate, _
+                                                                                zeitraumGrenzeL, zeitraumGrenzeR)) Then
+                            ' zeichne den Meilenstein 
+                            Dim tmpCollection As New Collection
+                            Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, _
+                                                              swimlaneNameID, curMs.nameID, curYPosition)
+
+                            ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
+                            For Each tmpName As String In tmpCollection
+                                shapeNameCollection.Add(tmpName, tmpName)
+                                ' die Milestones werden nachher alle in den Vordergrund geholt ...
+                                swlMilestoneCollection.Add(tmpName, tmpName)
+                            Next
+                        End If
+
+                    End If
+
+                End If
+
+            Next
+
+        End If
+
+
+        ' hier werden jetzt alle Phasen-Kinder inkl ihrer Meilensteine untersucht, ob sie gezeichnet werden sollen ... 
+        For swlIX As Integer = startNr + 1 To endNr
+            curPhase = hproj.getPhase(swlIX)
+
+
+            If Not IsNothing(curPhase) Then
+
+                If considerAll Or childPhaseIDs.Contains(curPhase.nameID) Then
+                    If Not considerZeitraum _
+                                Or _
+                                (considerZeitraum And phaseWithinTimeFrame(hproj.Start, curPhase.relStart, curPhase.relEnde, _
+                                                                            zeitraumGrenzeL, zeitraumGrenzeR)) Then
+
+                        Dim requiredZeilen As Integer = hproj.calcNeededLinesSwl(curPhase.nameID, _
+                                                                                           selectedPhaseIDs, _
+                                                                                           selectedMilestoneIDs, _
+                                                                                           extended, _
+                                                                                           considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+                                                                                           considerAll)
+
+                        ' zeichne die Phase
+                        zeilenoffset = findeBesteZeile(lastEndDates, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
+                        'maxOffsetZeile = System.Math.Max(zeilenoffset + requiredZeilen - 1, maxOffsetZeile)
+                        ' tk: da das nicht rekursiv aufgerufen wird, sollte sich das nur auf das tatsächlich gezeichnete und deren Zeilennummer beschränken 
+                        maxOffsetZeile = System.Math.Max(zeilenoffset, maxOffsetZeile)
+
+                        If DateDiff(DateInterval.Day, lastEndDates(zeilenoffset - 1), curPhase.getEndDate) > 0 Then
+                            lastEndDates(zeilenoffset - 1) = curPhase.getEndDate
+                        End If
+
+                        aktuelleYPosition = curYPosition + (zeilenoffset - 1) * rds.zeilenHoehe
+
+                        Call zeichnePhaseinSwimlane(rds, shapeNameCollection, hproj, swimlaneNameID, _
+                                                    curPhase.nameID, aktuelleYPosition)
+                        'lastEndDate = curPhase.getEndDate
+                    End If
+
+                End If
+
+                ' für jeden Meilenstein dieser Phase untersuchen, ob er gezeigt werden soll 
+
+                For msIX As Integer = 1 To curPhase.countMilestones
+                    Dim curMs As clsMeilenstein = curPhase.getMilestone(msIX)
+
+                    If Not IsNothing(curMs) Then
+
+                        If considerAll Or childMilestoneIDs.Contains(curMs.nameID) Then
+                            If Not considerZeitraum _
+                                        Or _
+                                        (considerZeitraum And milestoneWithinTimeFrame(curMs.getDate, _
+                                                                                    zeitraumGrenzeL, zeitraumGrenzeR)) Then
+
+
+                                ' zeichne den Meilenstein 
+                                ' die aktuelle Y-Position muss nicht bestimmt werden, weil das ja bereits mit der Phase geschehen ist 
+                                ' es muss nur sichergestellt sein, dass aktuelleYPosition initial auf CurYPosition gesetzt wird
+                                Dim tmpCollection As New Collection
+                                Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, _
+                                                                  swimlaneNameID, curMs.nameID, aktuelleYPosition)
+
+                                ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
+                                For Each tmpName As String In tmpCollection
+                                    shapeNameCollection.Add(tmpName, tmpName)
+                                    ' die Milestones werden nachher alle in den Vordergrund geholt ...
+                                    swlMilestoneCollection.Add(tmpName, tmpName)
+                                Next
+
+                            End If
+
+                        End If
+
+                    End If
+
+                Next
+
+            End If
+
+        Next
+
+        
+
+
+
+
+        ' ###########################################################
+        ' Weiterschalten der CurYPosition 
+        ' Umschalten des toggleRowDifferentiators: dadurch wird die Zeilen - bzw. Projekt - Markierung 
+        ' nur bei jedem zweiten Mal gezeichnet ... 
+        '
+        toggleRowDifferentiator = Not toggleRowDifferentiator
+
+        ' eine Zeile für die nächste Swimlane weiterschalten ...
+        'curYPosition = curYPosition + rds.zeilenHoehe
+        curYPosition = curYPosition + maxOffsetZeile * rds.zeilenHoehe
+
+
+        ' ###########################################################
+        ' alle Milestones in den Vordergrund holen 
+        '
+        Dim anzElements As Integer = swlMilestoneCollection.Count
+        Dim arrayOFNames() As String
+        Dim shapeGruppe As pptNS.ShapeRange
+
+        If anzElements > 1 Then
+
+            ReDim arrayOFNames(anzElements - 1)
+
+            For i = 1 To anzElements
+                arrayOFNames(i - 1) = CStr(swlMilestoneCollection.Item(i))
+            Next
+
+            shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
+            shapeGruppe.ZOrder(MsoZOrderCmd.msoBringToFront)
+
+        ElseIf anzElements = 1 Then
+            Try
+                Dim msShape As pptNS.Shape = rds.pptSlide.Shapes.Item(swlMilestoneCollection.Item(1))
+                msShape.ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
+
+        End If
+
+        'Dim slideShapes As pptNS.Shapes = rds.pptSlide.Shapes
+
+        ' ###########################################################
+        ' Zusammenfassen aller shapes in einer Gruppe 
+        ' jetzt sollen alle gezeichneten Shapes gruppiert werden 
+        '
+        
+
+
+
+        anzElements = shapeNameCollection.Count
+        If anzElements > 1 Then
+
+            ReDim arrayOFNames(anzElements - 1)
+
+            For i = 1 To anzElements
+                arrayOFNames(i - 1) = CStr(shapeNameCollection.Item(i))
+            Next
+
+            shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
+            shapeGruppe.Group()
+
+        End If
+
+
+
+    End Sub
+
+
 
     ''' <summary>
     ''' zeichnet die Projekte der Multiprojekt Sicht ( auch für extended Mode )
@@ -9069,7 +10362,7 @@ Public Module testModule
                 ' zeichne den Projekt-Namen
                 projectNameVorlagenShape.Copy()
                 copiedShape = pptslide.Shapes.Paste()
-                Dim projectNameShape As pptNS.Shape = copiedShape(1)
+                Dim projectNameShape As pptNS.Shape = copiedShape.Item(1)
 
                 With copiedShape(1)
                     .Top = CSng(projektNamenYPos)
@@ -9121,7 +10414,7 @@ Public Module testModule
 
                 '
                 ' zeichne jetzt das Projekt 
-                Call calculatePPTx1x2OLD(StartofPPTCalendar, endOFPPTCalendar, hproj.startDate, hproj.endeDate, _
+                Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, hproj.startDate, hproj.endeDate, _
                                         drawingAreaLeft, drawingAreaWidth, x1, x2)
 
 
@@ -9225,6 +10518,8 @@ Public Module testModule
 
                             If zeichnen Then
 
+                                Dim missingPhaseDefinition As Boolean = PhaseDefinitions.Contains(phaseName)
+
                                 If awinSettings.mppExtendedMode Then
                                     'phasenName = cphase.name
                                     If Not IsNothing(lastPhase) Then
@@ -9284,7 +10579,8 @@ Public Module testModule
                                                     End If
 
                                                     If zeichnenMS Then
-                                                        Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, milestone, hproj, milestoneGrafikYPos, _
+                                                        Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2, _
+                                                                                          milestone, hproj, milestoneGrafikYPos, _
                                                                                             StartofPPTCalendar, endOFPPTCalendar, _
                                                                                             drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
                                                                                             MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
@@ -9329,9 +10625,10 @@ Public Module testModule
                                 'Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName).Trim
                                 ' erhänzt tk
                                 Dim phShortname As String = ""
-                                phShortname = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+                                phShortname = hproj.hierarchy.getBestNameOfID(cphase.nameID, Not awinSettings.mppUseOriginalNames, _
+                                                                              awinSettings.mppUseAbbreviation)
 
-                                Call calculatePPTx1x2OLD(StartofPPTCalendar, endOFPPTCalendar, phaseStart, phaseEnd, _
+                                Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, phaseStart, phaseEnd, _
                                                     drawingAreaLeft, drawingAreaWidth, x1, x2)
 
 
@@ -9467,6 +10764,11 @@ Public Module testModule
                                     .Width = CSng(x2 - x1)
                                     .Height = phaseVorlagenShape.Height
                                     .Name = .Name & .Id
+
+                                    If missingPhaseDefinition Then
+                                        .Fill.ForeColor.RGB = cphase.farbe
+                                    End If
+
                                 End With
 
                                 phShapeNames.Add(copiedShape.Name)
@@ -9546,7 +10848,8 @@ Public Module testModule
 
                                             If zeichnenMS Then
 
-                                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, ms, hproj, milestoneGrafikYPos, _
+                                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2, _
+                                                                                  ms, hproj, milestoneGrafikYPos, _
                                                                                                               StartofPPTCalendar, endOFPPTCalendar, _
                                                                                                               drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
                                                                                                               MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
@@ -9642,7 +10945,8 @@ Public Module testModule
                                 End If
 
                                 If zeichnenMS Then
-                                    Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, milestone, hproj, milestoneGrafikYPos, _
+                                    Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2, _
+                                                                      milestone, hproj, milestoneGrafikYPos, _
                                                                         StartofPPTCalendar, endOFPPTCalendar, _
                                                                         drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
                                                                         MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
@@ -9705,7 +11009,8 @@ Public Module testModule
                             End If
 
                             If zeichnenMS Then
-                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, milestone, hproj, milestoneGrafikYPos, _
+                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2, _
+                                                                  milestone, hproj, milestoneGrafikYPos, _
                                                                     StartofPPTCalendar, endOFPPTCalendar, _
                                                                     drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
                                                                     MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
@@ -9757,7 +11062,8 @@ Public Module testModule
                             End If
 
                             If zeichnenMS Then
-                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, milestone, hproj, milestoneGrafikYPos, _
+                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2, _
+                                                                  milestone, hproj, milestoneGrafikYPos, _
                                                                     StartofPPTCalendar, endOFPPTCalendar, _
                                                                     drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
                                                                     MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
@@ -9820,7 +11126,7 @@ Public Module testModule
                         .Left = CSng(projectListLeft)
                         '''''.Height = hproj.calcNeededLines(selectedPhases, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne) * zeilenhoehe
                         .Height = anzZeilenGezeichnet * zeilenhoehe
-                        .Width = drawingAreaRight + 5 - .Left
+                        .Width = drawingAreaRight - .Left
                         .Name = .Name & .Id
                         .ZOrder(MsoZOrderCmd.msoSendToBack)
                     End With
@@ -9947,10 +11253,12 @@ Public Module testModule
 
     End Sub
     ''' <summary>
-    ''' Zeichnet den Meilenstein MS im PPTslide an Posiiton MilestoneGrafikYPOs
+    ''' Zeichnet den Meilenstein MS im PPTslide an Position MilestoneGrafikYPOs
     ''' </summary> 
     ''' <param name="pptslide">Powerpoint Folie, in die gezeichnet werden soll</param>
     ''' <param name="msShapeNames">Name des Meilenstein -Shapes in der Powerpoint-Folie</param>
+    ''' <param name="minX1">kleinster X-wert: wird benötigt, um Dauer und Pfeil darzustellen</param>
+    ''' <param name="maxX2">größter X-Wert: wird benötigt, um Dauer und Pfeil darzustellen</param>
     ''' <param name="MS">zu zeichnender Meilenstein</param>
     ''' <param name="hproj">Projekt, zu dem der Meilenstein gehört</param>
     ''' <param name="milestoneGrafikYPos">Position des Meilenstein</param>
@@ -9969,6 +11277,7 @@ Public Module testModule
 
     Private Sub zeichneMeilensteininAktZeile(ByRef pptslide As pptNS.Slide, _
                                                  ByRef msShapeNames As Collection, _
+                                                 ByRef minX1 As Double, ByRef maxX2 As Double, _
                                                  ByVal MS As clsMeilenstein, _
                                                  ByVal hproj As clsProjekt, _
                                                  ByVal milestoneGrafikYPos As Double, _
@@ -9984,16 +11293,13 @@ Public Module testModule
         Dim copiedShape As pptNS.ShapeRange
 
 
-        ' notwendig für das Positionieren des Duration Pfeils bzw. des DurationTextes
-        Dim minX1 As Double
-        Dim maxX2 As Double
-
         Dim x1 As Double
         Dim x2 As Double
 
 
 
         ' Änderung tk 26.11.15
+
         If MilestoneDefinitions.Contains(MS.name) Then
             milestoneTypShape = MilestoneDefinitions.getShape(MS.name)
         Else
@@ -10009,7 +11315,7 @@ Public Module testModule
         End With
 
 
-        Call calculatePPTx1x2OLD(StartofPPTCalendar, endOFPPTCalendar, msdate, msdate, _
+        Call calculatePPTx1x2(StartofPPTCalendar, endOFPPTCalendar, msdate, msdate, _
                             drawingAreaLeft, drawingAreaRight - drawingAreaLeft, x1, x2)
 
 
@@ -10026,14 +11332,15 @@ Public Module testModule
         ' überdeckt werden soll 
         If awinSettings.mppShowMsName Then
 
-            Dim msShortname As String = MilestoneDefinitions.getAbbrev(MS.name)
-            msShortname = hproj.hierarchy.getBestNameOfID(MS.nameID, True, True)
+            Dim msBeschriftung As String
+            msBeschriftung = hproj.hierarchy.getBestNameOfID(MS.nameID, Not awinSettings.mppUseOriginalNames, _
+                                                             awinSettings.mppUseAbbreviation)
 
             MsDescVorlagenShape.Copy()
             copiedShape = pptslide.Shapes.Paste()
             With copiedShape(1)
 
-                .TextFrame2.TextRange.Text = msShortname
+                .TextFrame2.TextRange.Text = msBeschriftung
                 .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
                 '.Left = CSng(x1) - .Width / 2
                 .Left = CSng(x1) - .Width / 2
@@ -10070,7 +11377,7 @@ Public Module testModule
 
 
 
-        With copiedShape(1)
+        With copiedShape.Item(1)
             .Top = CSng(milestoneGrafikYPos)
             .Height = milestoneVorlagenShape.Height
             .Width = .Height / seitenverhaeltnis
@@ -10082,9 +11389,349 @@ Public Module testModule
                     .Glow.Radius = 5
                 End If
             End If
+
+
         End With
 
         msShapeNames.Add(copiedShape.Name)
+
+
+    End Sub
+
+    ''' <summary>
+    ''' zeichnet das aktuelle Segment; 
+    ''' optional kann ein Modus angegeben werden sowie das Projekt, um beispielsweise Darstellungsklasse der ein PRojekt gemäß Modus in di
+    ''' </summary>
+    ''' <param name="rds">enthält sowohl slide als auch die Hilfs-Shapes </param>
+    ''' <param name="curYPosition">gibt die aktuelle Y-Position wieder , ab der gezeichnet werden kann; ist am Ende wieder auf der nächsten freien Zeile  </param>
+    ''' <remarks></remarks>
+    Private Sub zeichneSwlSegmentinAktZeile(ByRef rds As clsPPTShapes, ByRef curYPosition As Double, ByVal segmentPhaseID As String, _
+                                     Optional ByVal modus As Integer = 0, Optional ByVal hproj As clsProjekt = Nothing)
+
+        Dim copiedShape As pptNS.ShapeRange
+
+        rds.segmentVorlagenShape.Copy()
+        copiedShape = rds.pptSlide.Shapes.Paste()
+
+        If modus = 0 Then
+            With copiedShape.Item(1)
+                .Top = CSng(curYPosition)
+                .Left = CSng(rds.drawingAreaLeft)
+                .Width = CSng(rds.drawingAreaWidth)
+                .TextFrame2.TextRange.Text = elemNameOfElemID(segmentPhaseID)
+                .Name = .Name & .Id
+                .AlternativeText = "Segment " & elemNameOfElemID(segmentPhaseID)
+
+                ' Current Y-Position aktualisieren 
+                curYPosition = curYPosition + .Height
+            End With
+        End If
+
+
+    End Sub
+
+
+
+    
+    ''' <summary>
+    ''' zeichnet eine Phase in der aktuellen Swimlane 
+    ''' </summary>
+    ''' <param name="rds"></param>
+    ''' <param name="shapeNames"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="phaseID"></param>
+    ''' <param name="yPosition"></param>
+    ''' <remarks></remarks>
+    Private Sub zeichnePhaseinSwimlane(ByRef rds As clsPPTShapes, ByRef shapeNames As Collection, _
+                                           ByVal hproj As clsProjekt, _
+                                           ByVal swimlaneID As String, _
+                                           ByVal phaseID As String, _
+                                           ByVal yPosition As Double)
+
+        Dim phaseTypShape As xlNS.Shape
+        Dim copiedShape As pptNS.ShapeRange
+        Dim phaseName As String = elemNameOfElemID(phaseID)
+        Dim cphase As clsPhase = hproj.getPhaseByID(phaseID)
+
+        If IsNothing(cphase) Then
+            Exit Sub ' nichts machen 
+        End If
+
+
+
+        Dim x1 As Double
+        Dim x2 As Double
+
+
+        Dim phDescription As String = hproj.hierarchy.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames, _
+                                                                awinSettings.mppUseAbbreviation, swimlaneID)
+
+        If PhaseDefinitions.Contains(phaseName) Then
+            phaseTypShape = PhaseDefinitions.getShape(phaseName)
+        Else
+            phaseTypShape = missingPhaseDefinitions.getShape(phaseName)
+        End If
+
+
+        ' jetzt wegen evtl innerer Beschriftung den Size-Faktor bestimmen 
+        Dim sizeFaktor As Double = 1.0
+
+        If awinSettings.mppUseInnerText Then
+
+            phaseTypShape.Copy()
+            copiedShape = rds.pptSlide.Shapes.Paste()
+
+            With copiedShape
+                If .Height > 0.0 Then
+                    sizeFaktor = rds.phaseVorlagenShape.Height / .Height
+                End If
+                .Delete()
+            End With
+
+        End If
+        
+
+
+
+        Dim phStartDate As Date = cphase.getStartDate
+        Dim phEndDate As Date = cphase.getEndDate
+        Dim phDateText As String = phStartDate.Day.ToString & "." & phStartDate.Month.ToString & " - " & _
+                                phEndDate.Day.ToString & "." & phEndDate.Month.ToString
+
+
+        Call rds.calculatePPTx1x2(phStartDate, phEndDate, x1, x2)
+
+        If x2 <= rds.drawingAreaLeft Or x1 >= rds.drawingAreaRight Then
+            ' Fertig 
+        Else
+
+            ' jetzt muss ggf die Beschriftung angebracht werden 
+            ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
+            ' überdeckt werden soll 
+            If awinSettings.mppShowPhName And (Not awinSettings.mppUseInnerText) Then
+
+                rds.PhDescVorlagenShape.Copy()
+                copiedShape = rds.pptSlide.Shapes.Paste()
+                With copiedShape(1)
+
+                    .TextFrame2.TextRange.Text = phDescription
+                    .Top = CSng(yPosition + rds.YPhasenText)
+                    .Left = CSng(x1)
+                    If .Left + .Width > rds.drawingAreaRight + 2 Then
+                        .Left = rds.drawingAreaRight - .Width + 2
+                    End If
+                    .Name = .Name & .Id
+
+                    shapeNames.Add(.Name, .Name)
+                End With
+
+
+            End If
+
+            ' jetzt muss ggf das Datum angebracht werden 
+            If awinSettings.mppShowPhDate And (Not awinSettings.mppUseInnerText) Then
+
+                rds.PhDateVorlagenShape.Copy()
+                copiedShape = rds.pptSlide.Shapes.Paste()
+                With copiedShape(1)
+
+                    .TextFrame2.TextRange.Text = phDateText
+                    .Top = CSng(yPosition + rds.YPhasenDatum)
+                    .Left = CSng(x1)
+                    If .Left + .Width > rds.drawingAreaRight + 2 Then
+                        .Left = rds.drawingAreaRight - .Width + 2
+                    End If
+
+                    .Name = .Name & .Id
+
+                    shapeNames.Add(.Name, .Name)
+                End With
+
+            End If
+
+
+            ' Erst jetzt wird die Phase gezeichnet 
+            phaseTypShape.Copy()
+            copiedShape = rds.pptSlide.Shapes.Paste()
+
+            With copiedShape.Item(1)
+                .Top = CSng(yPosition + rds.YPhase)
+                .Height = rds.phaseVorlagenShape.Height
+                .Width = CSng(x2 - x1)
+                .Left = CSng(x1)
+                .Name = .Name & .Id
+                .Title = phaseName
+                .AlternativeText = phStartDate.ToShortDateString & " - " & phEndDate.ToShortDateString
+
+                ' jetzt wird die Option gezogen, wenn keine Phasen-Beschriftung stattfinden sollte ... 
+                If awinSettings.mppUseInnerText Then
+
+                    If awinSettings.mppShowPhDate Then
+                        phDescription = phDescription & " " & phDateText
+                    End If
+
+                    If sizeFaktor * .TextFrame2.TextRange.Font.Size * sizeFaktor > 3.0 Then
+                        .TextFrame2.TextRange.Text = phDescription
+                        .TextFrame2.TextRange.Font.Size = CInt(.TextFrame2.TextRange.Font.Size * sizeFaktor)
+                    End If
+                End If
+
+                shapeNames.Add(.Name, .Name)
+            End With
+
+
+        End If
+
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' zeichnet den angegebenen Meilenstein in der Zeile mit YPosition
+    ''' es wird eine Größenanpassung gemäß Faktor im Vergleich zur Darstellungsklasse gemacht  
+    ''' </summary>
+    ''' <param name="rds"></param>
+    ''' <param name="shapeNames">die Namen der erzeugten Shapes</param>
+    ''' <param name="hproj">das Projekt selber </param>
+    ''' <param name="milestoneID">die ID des Meilensteins, der gezeichnet werden soll</param>
+    ''' <param name="yPosition">die yPosition auf der Zeichenfläche; die x-Position wird errechnet</param>
+    ''' <remarks></remarks>
+    Private Sub zeichneMeilensteinInSwimlane(ByRef rds As clsPPTShapes, ByRef shapeNames As Collection, _
+                                               ByVal hproj As clsProjekt, _
+                                               ByVal swimlaneID As String, _
+                                               ByVal milestoneID As String, _
+                                               ByVal yPosition As Double)
+
+        Dim milestoneTypShape As xlNS.Shape
+        Dim copiedShape As pptNS.ShapeRange
+        Dim milestoneName As String = elemNameOfElemID(milestoneID)
+        Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(milestoneID)
+
+        If IsNothing(cMilestone) Then
+            Exit Sub ' einfach nichts machen 
+        End If
+
+
+        Dim x1 As Double
+        Dim x2 As Double
+
+
+        Dim msBeschriftung As String
+
+        If MilestoneDefinitions.Contains(milestoneName) Then
+            milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
+        Else
+            milestoneTypShape = missingMilestoneDefinitions.getShape(milestoneName)
+        End If
+
+        Dim sizeFaktor As Double
+        milestoneTypShape.Copy()
+        copiedShape = rds.pptSlide.Shapes.Paste()
+
+        With copiedShape
+            If .Height <= 0.0 Then
+                sizeFaktor = 1.0
+            Else
+                sizeFaktor = rds.milestoneVorlagenShape.Height / .Height
+            End If
+            .Delete()
+        End With
+
+
+
+        Dim msDate As Date = cMilestone.getDate
+
+
+        Call rds.calculatePPTx1x2(msDate, msDate, x1, x2)
+
+        If x2 <= rds.drawingAreaLeft Or x1 >= rds.drawingAreaRight Then
+            ' Fertig 
+        Else
+
+            ' jetzt muss ggf die Beschriftung angebracht werden 
+            ' die muss vor der Phase angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
+            ' überdeckt werden soll 
+            If awinSettings.mppShowMsName Then
+
+
+                ' im Einzeile Modus fehlt der Kontext, deswegen die etwas aufwändigere Beschriftung  
+                msBeschriftung = hproj.hierarchy.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
+                                                                 awinSettings.mppUseAbbreviation, _
+                                                                 swimlaneID)
+
+                rds.MsDescVorlagenShape.Copy()
+                copiedShape = rds.pptSlide.Shapes.Paste()
+                With copiedShape(1)
+
+                    .TextFrame2.TextRange.Text = msBeschriftung
+                    .Top = CSng(yPosition + rds.YMilestoneText)
+                    .Left = CSng(x1) - .Width / 2
+                    .Name = .Name & .Id
+
+                    shapeNames.Add(.Name, .Name)
+                End With
+
+
+            End If
+
+            ' jetzt muss ggf das Datum angebracht werden 
+            Dim msDateText As String = ""
+            If awinSettings.mppShowMsDate Then
+
+                msDateText = msDate.Day.ToString & "." & msDate.Month.ToString
+
+                rds.MsDateVorlagenShape.Copy()
+                copiedShape = rds.pptSlide.Shapes.Paste()
+                With copiedShape(1)
+
+                    .TextFrame2.TextRange.Text = msDateText
+                    .Top = CSng(yPosition + rds.YMilestoneDate)
+                    .Left = CSng(x1) - .Width / 2
+                    .Name = .Name & .Id
+
+                    shapeNames.Add(.Name, .Name)
+                End With
+
+            End If
+
+
+            ' Erst jetzt wird der Meilenstein gezeichnet 
+            milestoneTypShape.Copy()
+            copiedShape = rds.pptSlide.Shapes.Paste()
+
+            With copiedShape.Item(1)
+                .Height = sizeFaktor * .Height
+                .Width = sizeFaktor * .Width
+                .Top = CSng(yPosition + rds.YMilestone)
+                .Left = CSng(x1) - .Width / 2
+                .Name = .Name & .Id
+                .Title = milestoneName
+                .AlternativeText = msDate.ToShortDateString
+
+                If awinSettings.mppShowAmpel Then
+                    .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)
+                    If .Glow.Radius = 0 Then
+                        .Glow.Radius = 5
+                    End If
+                End If
+
+                Dim msKwText As String = ""
+                If awinSettings.mppKwInMilestone Then
+
+                    msKwText = calcKW(msDate).ToString("0#")
+                    If CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size) >= 3 Then
+                        .TextFrame2.TextRange.Font.Size = CInt(sizeFaktor * .TextFrame2.TextRange.Font.Size)
+                        .TextFrame2.TextRange.Text = msKwText
+                    End If
+
+                End If
+
+                shapeNames.Add(.Name, .Name)
+            End With
+
+
+        End If
 
 
     End Sub
@@ -10210,6 +11857,7 @@ Public Module testModule
     Sub zeichnePPTlegende(ByRef pptslide As pptNS.Slide, _
                                 ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                 ByVal legendAreaTop As Double, ByVal legendAreaLeft As Double, legendAreaRight As Double, legendAreaBottom As Double, _
+                                ByVal legendLineShape As pptNS.Shape, ByVal legendStartShape As pptNS.Shape, _
                                 ByVal legendTextVorlagenShape As pptNS.Shape, ByVal legendPhaseVorlagenShape As pptNS.Shape, ByVal legendMilestoneVorlagenShape As pptNS.Shape, _
                                 ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape, ByVal buColorVorlagenShape As pptNS.Shape)
 
@@ -10221,6 +11869,8 @@ Public Module testModule
         Dim buName As String
         Dim buColor As Long
         Dim maxDelta As Double = 0.0
+
+
 
         Dim tmpDbl(3) As Double
         tmpDbl(0) = legendTextVorlagenShape.Height
@@ -10243,6 +11893,22 @@ Public Module testModule
 
         xCursor = legendAreaLeft
         yCursor = legendAreaTop
+
+        ' jetzt das LegendlineShape eintragen 
+        legendLineShape.Copy()
+        copiedShape = pptslide.Shapes.Paste()
+        With copiedShape.Item(1)
+            .Top = legendLineShape.Top
+            .Left = legendLineShape.Left
+        End With
+
+        ' jetzt das LegendlineShape eintragen 
+        legendStartShape.Copy()
+        copiedShape = pptslide.Shapes.Paste()
+        With copiedShape.Item(1)
+            .Top = legendStartShape.Top
+            .Left = legendStartShape.Left
+        End With
 
 
         If Not IsNothing(buColorVorlagenShape) Then
@@ -10282,7 +11948,7 @@ Public Module testModule
                 End If
 
             Next
-            buName = "undefiniert"
+            buName = "ohne Name"
             buColor = awinSettings.AmpelNichtBewertet
 
             ' jetzt das Shape eintragen 
@@ -10372,13 +12038,15 @@ Public Module testModule
         For i = 1 To uniqueElemClasses.Count
 
             phaseName = CStr(uniqueElemClasses(i))
-            Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName)
+            Dim phShortname As String
 
             ' Änderung tk 26.11.15
             If PhaseDefinitions.Contains(phaseName) Then
                 phaseShape = PhaseDefinitions.getShape(phaseName)
+                phShortname = PhaseDefinitions.getAbbrev(phaseName)
             Else
                 phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                phShortname = missingPhaseDefinitions.getAbbrev(phaseName)
             End If
 
             ' Phasen-Shape 
@@ -10452,13 +12120,15 @@ Public Module testModule
 
             msName = CStr(uniqueElemClasses.Item(i))
 
-            msShortname = MilestoneDefinitions.getAbbrev(msName)
+
 
             ' Änderung tk 26.11.15
             If MilestoneDefinitions.Contains(msName) Then
                 meilensteinShape = MilestoneDefinitions.getShape(msName)
+                msShortname = MilestoneDefinitions.getAbbrev(msName)
             Else
                 meilensteinShape = missingMilestoneDefinitions.getShape(msName)
+                msShortname = missingMilestoneDefinitions.getAbbrev(msName)
             End If
 
 
@@ -10606,7 +12276,8 @@ Public Module testModule
     ''' <summary>
     ''' berechnet die x1 und x2-Koordinaten , also den Start und das Ende des Elements in x-Koordinaten
     ''' im Gegensatz zu ...OLD werden hier die Koordinaten in Abhängigkeit von dem Abstand Tagen vom linken Rand gemessen. 
-    ''' bei ...OLD wurde gemessen, wieviel volle Monate Abstand waren plus wieviele Rest-Tage 
+    ''' bei der bisherigen ...OLD wurde gemessen, wieviel volle Monate Abstand waren plus wieviele Rest-Tage 
+    ''' das wird in der neuen Art als Methode in clsPPTShapes gemacht 
     ''' </summary>
     ''' <param name="pptStartOfCalendar">linker Rand es Kalenders</param>
     ''' <param name="pptEndOfCalendar">rechter Rand des Kalenders</param>
@@ -10645,8 +12316,8 @@ Public Module testModule
     End Sub
 
     ''' <summary>
-    ''' Änderung tk: das war die Routine bis 14.1
-    ''' das war unnötig kompliziert 
+    ''' Änderung tk: das wird in zeichnepptProjects verwendet 
+    ''' sollte im 1. HJ 2016 ersetzt werden durch die Art und Weise, wie bei zeichneSwimlane gearbeitet wird ...  
     ''' </summary>
     ''' <param name="pptStartOfCalendar"></param>
     ''' <param name="pptEndOfCalendar"></param>
@@ -10810,10 +12481,10 @@ Public Module testModule
                                          ByVal MsDescVorlagenShape As pptNS.Shape, ByVal MsDateVorlagenShape As pptNS.Shape, _
                                          ByVal PhDescVorlagenShape As pptNS.Shape, ByVal PhDateVorlagenShape As pptNS.Shape, _
                                          ByVal phaseVorlagenShape As pptNS.Shape, ByVal milestoneVorlagenShape As pptNS.Shape, _
-                                         ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape) As Single()
+                                         ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape, _
+                                         Optional ByVal segmentVorlagenShape As pptNS.Shape = Nothing) As Single()
 
-
-        Dim sizes(8) As Single
+        Dim sizes(9) As Single
 
         sizes(0) = projectNameVorlagenShape.TextFrame2.TextRange.Font.Size
         sizes(1) = MsDescVorlagenShape.TextFrame2.TextRange.Font.Size
@@ -10823,9 +12494,21 @@ Public Module testModule
         sizes(5) = phaseVorlagenShape.Height
         sizes(6) = milestoneVorlagenShape.Height
         sizes(7) = projectVorlagenShape.Line.Weight
-        sizes(8) = ampelVorlagenShape.Height
+
+        If IsNothing(ampelVorlagenShape) Then
+            sizes(8) = 0.0
+        Else
+            sizes(8) = ampelVorlagenShape.Height
+        End If
+
+        If IsNothing(segmentVorlagenShape) Then
+            sizes(9) = 0.0
+        Else
+            sizes(9) = segmentVorlagenShape.TextFrame2.TextRange.Font.Size
+        End If
 
         saveSizesOfElements = sizes
+
     End Function
 
     ''' <summary>
@@ -10877,7 +12560,9 @@ Public Module testModule
                                            ByRef projectNameVorlagenShape As pptNS.Shape, _
                                            ByRef MsDescVorlagenShape As pptNS.Shape, ByRef MsDateVorlagenShape As pptNS.Shape, _
                                            ByRef PhDescVorlagenShape As pptNS.Shape, ByRef PhDateVorlagenShape As pptNS.Shape, _
-                                           ByRef phaseVorlagenShape As pptNS.Shape, ByRef milestoneVorlagenShape As pptNS.Shape, ByRef projectVorlagenShape As pptNS.Shape, ByRef ampelVorlagenShape As pptNS.Shape)
+                                           ByRef phaseVorlagenShape As pptNS.Shape, ByRef milestoneVorlagenShape As pptNS.Shape, _
+                                           ByRef projectVorlagenShape As pptNS.Shape, ByRef ampelVorlagenShape As pptNS.Shape, _
+                                           Optional ByRef segmentVorlagenShape As pptNS.Shape = Nothing)
 
 
         projectNameVorlagenShape.TextFrame2.TextRange.Font.Size = sizes(0)
@@ -10888,90 +12573,76 @@ Public Module testModule
         phaseVorlagenShape.Height = sizes(5)
         milestoneVorlagenShape.Height = sizes(6)
         projectVorlagenShape.Line.Weight = sizes(7)
-        ampelVorlagenShape.Height = sizes(8)
+
+        If Not IsNothing(ampelVorlagenShape) Then
+            ampelVorlagenShape.Height = sizes(8)
+        End If
+
+        If (Not IsNothing(segmentVorlagenShape)) And (sizes.Length = 10) Then
+            segmentVorlagenShape.TextFrame2.TextRange.Font.Size = sizes(9)
+        End If
 
 
     End Sub
 
-    ''' <summary>
-    ''' ermittelt die Koordinaten für Kalender, linker Rand Projektbeschriftung, Projekt-Fläche, Legenden-Fläche
-    ''' </summary>
-    ''' <param name="multiprojektContainerShape"></param>
-    ''' <param name="calendarLineShape"></param>
-    ''' <param name="legendLineShape"></param>
-    ''' <param name="containerLeft"></param>
-    ''' <param name="containerRight"></param>
-    ''' <param name="containerTop"></param>
-    ''' <param name="containerBottom"></param>
-    ''' <param name="calendarLeft"></param>
-    ''' <param name="calendarRight"></param>
-    ''' <param name="calendarTop"></param>
-    ''' <param name="calendarBottom"></param>
-    ''' <param name="drawingAreaLeft"></param>
-    ''' <param name="drawingAreaRight"></param>
-    ''' <param name="drawingAreaTop"></param>
-    ''' <param name="drawingAreaBottom"></param>
-    ''' <param name="projectListLeft"></param>
-    ''' <param name="legendAreaLeft"></param>
-    ''' <param name="legendAreaRight"></param>
-    ''' <param name="legendAreaTop"></param>
-    ''' <param name="legendAreaBottom"></param>
-    ''' <remarks></remarks>
-    Private Sub bestimmeZeichenKoordinaten(ByVal multiprojektContainerShape As pptNS.Shape, _
-                                               ByVal calendarLineShape As pptNS.Shape, ByVal calendarHeightShape As pptNS.Shape, _
-                                               ByVal legendLineShape As pptNS.Shape, _
-                                               ByRef containerLeft As Single, ByRef containerRight As Single, ByRef containerTop As Single, ByRef containerBottom As Single, _
-                                               ByRef calendarLeft As Single, ByRef calendarRight As Single, ByRef calendarTop As Single, ByRef calendarBottom As Single, _
-                                               ByRef drawingAreaLeft As Single, ByRef drawingAreaRight As Single, ByRef drawingAreaTop As Single, ByRef drawingAreaBottom As Single, _
-                                               ByRef projectListLeft As Single, _
-                                               ByRef legendAreaLeft As Single, ByRef legendAreaRight As Single, ByRef legendAreaTop As Single, ByRef legendAreaBottom As Single)
+    ' Änderung tk - rausgenommen , ersetzt durch MEthode in Klasse clsPPTShapes
+    '
+    ' ermittelt die Koordinaten für Kalender, linker Rand Projektbeschriftung, Projekt-Fläche, Legenden-Fläche
+    ''Private Sub bestimmeZeichenKoordinaten(ByVal multiprojektContainerShape As pptNS.Shape, _
+    ''                                           ByVal calendarLineShape As pptNS.Shape, ByVal calendarHeightShape As pptNS.Shape, _
+    ''                                           ByVal legendLineShape As pptNS.Shape, _
+    ''                                           ByRef containerLeft As Single, ByRef containerRight As Single, ByRef containerTop As Single, ByRef containerBottom As Single, _
+    ''                                           ByRef calendarLeft As Single, ByRef calendarRight As Single, ByRef calendarTop As Single, ByRef calendarBottom As Single, _
+    ''                                           ByRef drawingAreaLeft As Single, ByRef drawingAreaRight As Single, ByRef drawingAreaTop As Single, ByRef drawingAreaBottom As Single, _
+    ''                                           ByRef projectListLeft As Single, _
+    ''                                           ByRef legendAreaLeft As Single, ByRef legendAreaRight As Single, ByRef legendAreaTop As Single, ByRef legendAreaBottom As Single)
 
-        ' bestimme Container Area ud linker Rand der Projektliste
-        With multiprojektContainerShape
-            containerLeft = .Left
-            containerRight = .Left + .Width
-            containerTop = .Top
-            containerBottom = .Top + .Height
-            projectListLeft = .Left + 10
-        End With
+    ''    ' bestimme Container Area ud linker Rand der Projektliste
+    ''    With multiprojektContainerShape
+    ''        containerLeft = .Left
+    ''        containerRight = .Left + .Width
+    ''        containerTop = .Top
+    ''        containerBottom = .Top + .Height
+    ''        projectListLeft = .Left + 10
+    ''    End With
 
-        ' bestimme KalenderArea
-        calendarLeft = calendarLineShape.Left
-        calendarRight = calendarLineShape.Left + calendarLineShape.Width
-        calendarTop = containerTop + 5
-        calendarBottom = calendarTop + calendarHeightShape.Height
+    ''    ' bestimme KalenderArea
+    ''    calendarLeft = calendarLineShape.Left
+    ''    calendarRight = calendarLineShape.Left + calendarLineShape.Width
+    ''    calendarTop = containerTop + 5
+    ''    calendarBottom = calendarTop + calendarHeightShape.Height
 
-        ' bestimme Drawing Area
-        drawingAreaLeft = calendarLeft
-        drawingAreaRight = calendarRight
-        drawingAreaTop = calendarBottom + 15
+    ''    ' bestimme Drawing Area
+    ''    drawingAreaLeft = calendarLeft
+    ''    drawingAreaRight = calendarRight
+    ''    drawingAreaTop = calendarBottom + 15
 
 
-        If awinSettings.mppShowLegend Then
-            drawingAreaBottom = legendLineShape.Top - 5
-        Else
-            drawingAreaBottom = containerBottom - 10
-        End If
+    ''    If awinSettings.mppShowLegend Then
+    ''        drawingAreaBottom = legendLineShape.Top - 5
+    ''    Else
+    ''        drawingAreaBottom = containerBottom - 10
+    ''    End If
 
 
 
-        ' bestimme Legend Drawing Area 
-        If awinSettings.mppShowLegend Then
-            legendAreaTop = legendLineShape.Top + (containerBottom - legendLineShape.Top) * 0.05
-            legendAreaBottom = containerBottom - (containerBottom - legendLineShape.Top) * 0.1
-        Else
-            legendLineShape.Top = containerBottom - 5
-            legendAreaTop = containerBottom - 5
-            legendAreaBottom = containerBottom
-        End If
+    ''    ' bestimme Legend Drawing Area 
+    ''    If awinSettings.mppShowLegend Then
+    ''        legendAreaTop = legendLineShape.Top + (containerBottom - legendLineShape.Top) * 0.05
+    ''        legendAreaBottom = containerBottom - (containerBottom - legendLineShape.Top) * 0.1
+    ''    Else
+    ''        legendLineShape.Top = containerBottom - 5
+    ''        legendAreaTop = containerBottom - 5
+    ''        legendAreaBottom = containerBottom
+    ''    End If
 
 
-        legendAreaLeft = drawingAreaLeft
-        legendAreaRight = System.Math.Min(legendLineShape.Left + legendLineShape.Width, containerRight - 5)
+    ''    legendAreaLeft = drawingAreaLeft
+    ''    legendAreaRight = System.Math.Min(legendLineShape.Left + legendLineShape.Width, containerRight - 5)
 
 
 
-    End Sub
+    ''End Sub
 
     ''' <summary>
     ''' berechnet die "Breite" für ein Jahr, für einen Monat, sowie die Anzahl Monate m Kalender 
@@ -11112,11 +12783,11 @@ Public Module testModule
     ''' <summary>
     ''' zeichnet den Multiprojekt Sicht Container
     ''' </summary>
-    ''' <param name="pptApp"></param>
-    ''' <param name="pptCurrentPresentation"></param>
+    ''' <param name="pptApp">ist die Powerpoint Applikation</param>
+    ''' <param name="pptCurrentPresentation">ist die aktuelle PPT Präsentation; das Format wird hier noch bestimmt</param>
     ''' <param name="pptslide"></param>
-    ''' <param name="projToDo"></param>
-    ''' <param name="projDone"></param>
+    ''' <param name="objectsToDo"></param>
+    ''' <param name="objectsDone"></param>
     ''' <param name="pptFirstTime"></param>
     ''' <param name="zeilenhoehe"></param>
     ''' <param name="selectedPhases"></param>
@@ -11132,116 +12803,23 @@ Public Module testModule
     ''' <param name="projMitVariants">das Projekt, dessen Varianten alle dargestellt werden sollen; nur besetzt wenn isMultiprojektSicht = false</param>
     ''' <remarks></remarks>
     Private Sub zeichneMultiprojektSicht(ByRef pptApp As pptNS.Application, ByRef pptCurrentPresentation As pptNS.Presentation, ByRef pptslide As pptNS.Slide, _
-                                             ByRef projToDo As Integer, ByRef projDone As Integer, ByRef pptFirstTime As Boolean, _
+                                             ByRef objectsToDo As Integer, ByRef objectsDone As Integer, ByRef pptFirstTime As Boolean, _
                                              ByRef zeilenhoehe As Double, ByRef legendFontSize As Double, _
                                              ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
                                              ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                              ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
                                              ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs, _
-                                             ByVal isMultiprojektSicht As Boolean, ByVal projMitVariants As clsProjekt)
+                                             ByVal isMultiprojektSicht As Boolean, ByVal projMitVariants As clsProjekt, _
+                                             ByVal kennzeichnung As String)
 
         ' ur:5.10.2015: ExtendedMode macht nur Sinn, wenn mindestens 1 Phase selektiert wurde. deshalb diese Code-Zeile
         awinSettings.mppExtendedMode = awinSettings.mppExtendedMode And (selectedPhases.Count > 0)
 
-        ' Vereinbarungen für Multiprojekt Sicht Erzeugung 
-        Dim multiprojektContainerShape As pptNS.Shape = Nothing
 
         ' Wichtig für Kalendar 
         Dim pptStartofCalendar As Date = Nothing, pptEndOfCalendar As Date = Nothing
-        Dim calendarLineShape As pptNS.Shape = Nothing
-        Dim calenderHeightShape As pptNS.Shape = Nothing
-        Dim calendarStepShape As pptNS.Shape = Nothing
-        Dim calendarMarkShape As pptNS.Shape = Nothing
-        Dim calendarYearSeparator As pptNS.Shape = Nothing
-        Dim calendarQuartalSeparator As pptNS.Shape = Nothing
-
-        Dim quarterMonthVorlagenShape As pptNS.Shape = Nothing
-        Dim quarterMonthShape As pptNS.Shape = Nothing
-
-        Dim yearVorlagenShape As pptNS.Shape = Nothing
-        Dim yearShape As pptNS.Shape = Nothing
-
-        ' Wichtig für Zeichenfläche
-        Dim MsDescVorlagenShape As pptNS.Shape = Nothing
-        Dim MsDateVorlagenShape As pptNS.Shape = Nothing
-        Dim PhDescVorlagenShape As pptNS.Shape = Nothing
-        Dim PhDateVorlagenShape As pptNS.Shape = Nothing
-        Dim projectNameVorlagenShape As pptNS.Shape = Nothing
-        Dim projectVorlagenShape As pptNS.Shape = Nothing
-        Dim phaseVorlagenShape As pptNS.Shape = Nothing
-        Dim milestoneVorlagenShape As pptNS.Shape = Nothing
-        Dim ampelVorlagenShape As pptNS.Shape = Nothing
-        Dim errorVorlagenShape As pptNS.Shape = Nothing
         Dim errorShape As pptNS.ShapeRange = Nothing
-        Dim rowDifferentiatorShape As pptNS.Shape = Nothing
-        Dim buColorShape As pptNS.Shape = Nothing
-        Dim legendBuColorShape As pptNS.Shape = Nothing
-        Dim phaseDelimiterShape As pptNS.Shape = Nothing
-        Dim durationArrowShape As pptNS.Shape = Nothing
-        Dim durationTextShape As pptNS.Shape = Nothing
 
-
-
-        ' Wichtig für Legende
-        Dim legendLineShape As pptNS.Shape = Nothing
-        Dim legendStartShape As pptNS.Shape = Nothing
-        Dim legendTextVorlagenShape As pptNS.Shape = Nothing
-
-        Dim legendPhaseVorlagenShape As pptNS.Shape = Nothing
-        Dim legendMilestoneVorlagenShape As pptNS.Shape = Nothing
-
-        '
-        ' Wichtige Variable, um den Kalender zeichnen zu können 
-        '
-        Dim calCursorX As Double = 0.0, calCursorY As Double = 0.0
-
-        ' offsetXqm entspricht dem horizontalen Abstand zwischen zwei Monaten / Quartalen
-        ' offsetXy entspricht dem vertikalen Abstand zwischen Monats- und Jahreslinie
-        Dim calOffsetXqm As Double = 0.0, calOffsetXy As Double = 0.0
-
-        ' gibt an, wieviele Elemente auf der Kalenderbreite gezeichnet werden können 
-        Dim anzQMelements As Integer = 0
-
-        ' gibt an, ob Monate oder Quartale gezeichnet werden sollen
-        Dim drawMonths As Boolean = False
-
-
-
-        ' Wichtige Variable , um die Phasen/Meilensteine in der Drawing Area zu zeichnen 
-        ' Offset zwischen Meilenstein und Phase
-        Dim dOffsetMtoP As Double = 0.1
-        ' vertikaler Offset zwischen Meilenstein und Meilenstein Beschriftung 
-        Dim dOffsetMtext As Double = 0.1
-        ' vertikaler Offset zwischen zwei Rows in der Drawing Area
-        Dim dOffsetRows As Double = 0.1
-
-        ' Übernommen ....
-        ' Koordinaten des Containers
-        Dim containerLeft As Double = 0.0
-        Dim containerTop As Double = 0.0
-        Dim containerRight As Double = 0.0
-        Dim containerBottom As Double = 0.0
-
-        ' Koordinaten des KAlenders
-        Dim calendarLeft As Double = 0.0
-        Dim calendarTop As Double = 0.0
-        Dim calendarRight As Double = 0.0
-        Dim calendarBottom As Double = 0.0
-
-        ' Koordinaten der Drawing Area
-        Dim drawingAreaLeft As Double = 0.0
-        Dim drawingAreaRight As Double = 0.0
-        Dim drawingAreaTop As Double = 0.0
-        Dim drawingAreaBottom As Double = 0.0
-
-        ' Koordinaten Projekt-NamenListe 
-        Dim projectListLeft As Double = 0.0
-
-        ' Koordinaten Legende
-        Dim legendAreaLeft As Double = 0.0
-        Dim legendAreaRight As Double = 0.0
-        Dim legendAreaTop As Double = 0.0
-        Dim legendAreaBottom As Double = 0.0
 
         Dim dinFormatA(4, 1) As Double
         Dim querFormat As Boolean
@@ -11268,170 +12846,19 @@ Public Module testModule
         Dim format As Integer = 4
         'Dim tmpslideID As Integer
 
-        ' mit completeMppDefinition wird überprüft , ob alle Informationen/Shapes für das Erstellen einer Multiprojektsicht vorhanden sind
-        Dim completeMppDefinition() As Integer
-        ReDim completeMppDefinition(18)
 
 
-        Dim anzShapes As Integer = pptslide.Shapes.Count
-        Dim pptShape As pptNS.Shape
-        ' jetzt wird die listofShapes aufgebaut - das sind alle Shapes, die ersetzt werden müssen ...
-        ' bzw. alle Shapes, die "gemerkt" werden müssen
-        For i = 1 To anzShapes
-            pptShape = pptslide.Shapes(i)
+        Dim rds As New clsPPTShapes
 
-            With pptShape
+        ' mit disem Befehl werden auch die ganzen Hilfsshapes in der Klasse gesetzt 
+        rds.pptSlide = pptslide
 
-                ' jetzt muss geprüft werden, ob es sich um ein definierendes Element für die Multiprojekt-Sichten handelt
-                If .Title.Length > 0 Then
-                    Select Case .Title
-
-                        Case "MilestoneDescription"
-                            MsDescVorlagenShape = pptShape
-                            'With MsDescVorlagenShape.TextFrame2
-                            '    .MarginTop = 0.0
-                            '    .MarginBottom = 0.0
-                            'End With
-                            completeMppDefinition(0) = 1
-
-                        Case "ProjectName"
-                            projectNameVorlagenShape = pptShape
-                            completeMppDefinition(1) = 1
-
-                        Case "CalendarLine"
-                            calendarLineShape = pptShape
-                            completeMppDefinition(2) = 1
-
-                        Case "QuarterMonthinCal"
-                            quarterMonthVorlagenShape = pptShape
-                            completeMppDefinition(3) = 1
-
-                        Case "YearInCal"
-                            yearVorlagenShape = pptShape
-                            completeMppDefinition(4) = 1
-
-                        Case "ProjectForm"
-                            projectVorlagenShape = pptShape
-                            completeMppDefinition(5) = 1
-
-                        Case "PhaseForm"
-                            phaseVorlagenShape = pptShape
-                            completeMppDefinition(6) = 1
-
-                        Case "MilestoneForm"
-                            milestoneVorlagenShape = pptShape
-                            completeMppDefinition(7) = 1
-
-                        Case "Ampel"
-                            ampelVorlagenShape = pptShape
-                            completeMppDefinition(8) = 1
-
-                        Case "Jahres-Trennstrich"
-                            calendarYearSeparator = pptShape
-
-                        Case "Quartals-Trennstrich"
-                            calendarQuartalSeparator = pptShape
-
-                        Case "LegendLine"
-                            legendLineShape = pptShape
-                            completeMppDefinition(9) = 1
-
-                        Case "LegendStart"
-                            legendStartShape = pptShape
-                            completeMppDefinition(10) = 1
-
-                        Case "LegendText"
-                            legendTextVorlagenShape = pptShape
-                            completeMppDefinition(11) = 1
-
-                        Case "LegendPhase"
-                            legendPhaseVorlagenShape = pptShape
-                            completeMppDefinition(12) = 1
-
-                        Case "LegendMilestone"
-                            legendMilestoneVorlagenShape = pptShape
-                            completeMppDefinition(13) = 1
-
-                        Case "Multiprojektsicht"
-                            multiprojektContainerShape = pptShape
-                            completeMppDefinition(14) = 1
-
-                        Case "Multivariantensicht"
-                            multiprojektContainerShape = pptShape
-                            completeMppDefinition(14) = 1
-
-                        Case "AllePlanElemente"
-                            multiprojektContainerShape = pptShape
-                            completeMppDefinition(14) = 1
-
-                        Case "CalendarHeight"
-                            calenderHeightShape = pptShape
-                            completeMppDefinition(15) = 1
-
-                        Case "MilestoneDate"
-                            MsDateVorlagenShape = pptShape
-                            completeMppDefinition(16) = 1
-
-                        Case "PhaseDescription"
-                            PhDescVorlagenShape = pptShape
-                            'With PhDescVorlagenShape.TextFrame2
-                            '    .MarginTop = 0.0
-                            '    .MarginBottom = 0.0
-                            'End With
-                            completeMppDefinition(17) = 1
-
-                        Case "PhaseDate"
-                            PhDateVorlagenShape = pptShape
-                            completeMppDefinition(18) = 1
-
-                        Case "CalendarStep"
-                            ' optional
-                            calendarStepShape = pptShape
-
-                        Case "CalendarMark"
-                            ' optional 
-                            calendarMarkShape = pptShape
-
-                        Case "Fehlermeldung"
-                            ' optional 
-                            errorVorlagenShape = pptShape
-
-                        Case "LegendBuColor"
-                            ' optional
-                            legendBuColorShape = pptShape
-
-                        Case "buColorShape"
-                            ' optional
-                            buColorShape = pptShape
-
-                        Case "rowDifferentiator"
-                            ' optional
-                            rowDifferentiatorShape = pptShape
-
-                        Case "PhaseDelimiter"
-                            ' optional 
-                            phaseDelimiterShape = pptShape
-
-                        Case "durationArrow"
-                            ' optional
-                            durationArrowShape = pptShape
-
-                        Case "durationText"
-                            ' optional 
-                            durationTextShape = pptShape
-
-                        Case Else
-
-
-                    End Select
-                End If
-
-
-            End With
-        Next
 
         ' jetzt muss geprüft werden, ob überhaupt alle Angaben gemacht wurden ... 
-        If completeMppDefinition.Sum = completeMppDefinition.Length Then
+        'If completeMppDefinition.Sum = completeMppDefinition.Length Then
+        Dim missingShapes As String = rds.getMissingShpNames(kennzeichnung)
+        If missingShapes.Length = 0 Then
+            ' es fehlt nichts ... andernfalls stehen hier die Namen mit den Shapes, die fehlen ...
 
             If pptCurrentPresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
                 querFormat = True
@@ -11493,46 +12920,16 @@ Public Module testModule
                 ' pptFirstTime war False, d.h. das Format wurde bereits angepasst
             End If
 
-            ' hier wird die eigentliche Arbeit gemacht 
-            ' Anfang bestimme Koordinaten der zeichenfelder
-            ' bestimme Container Area
-            With multiprojektContainerShape
-                containerLeft = .Left
-                containerRight = .Left + .Width
-                containerTop = .Top
-                containerBottom = .Top + .Height
-            End With
 
-            ' führe Plausibilitätsprüfungen durch
-            If calendarLineShape.Left < containerLeft Then
-                calendarLineShape.Left = containerLeft + 0.1 * (containerRight - containerLeft)
-            End If
+            ' wenn Kalenderlinie oder Legendenlinie über Container rausragt: anpassen ! 
+            Call rds.plausibilityAdjustments()
 
-            If calendarLineShape.Left + calendarLineShape.Width > containerRight Then
-                calendarLineShape.Width = 0.9 * (containerRight - calendarLineShape.Left)
-            End If
-
-            If legendLineShape.Left < containerLeft Then
-                legendLineShape.Left = containerLeft + 0.1 * (containerRight - containerLeft)
-            End If
-
-            If legendLineShape.Left + legendLineShape.Width > containerRight Then
-                legendLineShape.Width = 0.9 * (containerRight - legendLineShape.Left)
-            End If
-
-
-            Call bestimmeZeichenKoordinaten(multiprojektContainerShape, _
-                                                    calendarLineShape, calenderHeightShape, legendLineShape, _
-                                                    containerLeft, containerRight, containerTop, containerBottom, _
-                                                    calendarLeft, calendarRight, calendarTop, calendarBottom, _
-                                                    drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
-                                                    projectListLeft, _
-                                                    legendAreaLeft, legendAreaRight, legendAreaTop, legendAreaBottom)
-
-
+            Call rds.bestimmeZeichenKoordinaten()
 
             Dim projCollection As New SortedList(Of Double, String)
             Dim minDate As Date, maxDate As Date
+
+            Dim considerAll As Boolean = (selectedPhases.Count + selectedMilestones.Count = 0)
 
             ' bestimme die Projekte, die gezeichnet werden sollen
             ' und bestimme das kleinste / resp größte auftretende Datum 
@@ -11543,32 +12940,44 @@ Public Module testModule
                                                 projCollection, minDate, maxDate, _
                                                 isMultiprojektSicht, projMitVariants)
 
-            If projToDo <> projCollection.Count Then
-                projToDo = projCollection.Count
+
+            
+            If objectsToDo <> projCollection.Count Then
+                objectsToDo = projCollection.Count
             End If
+            
 
             '
             ' bestimme das Start und Ende Datum des PPT Kalenders
             Call calcStartEndePPTKalender(minDate, maxDate, _
                                           pptStartofCalendar, pptEndOfCalendar)
 
+            ' jetzt für Swimlanes Behandlung Kalender in der Klasse setzen 
+
+            Call rds.setCalendarDates(pptStartofCalendar, pptEndOfCalendar)
+
 
             ' bestimme die benötigte Höhe einer Zeile im Report ( nur wenn nicht schon bestimmt also zeilenhoehe <> 0
             If pptFirstTime And zeilenhoehe = 0.0 Then
-                zeilenhoehe = bestimmeMppZeilenHoehe(pptslide, phaseVorlagenShape, milestoneVorlagenShape,
+                With rds
+
+                    zeilenhoehe = bestimmeMppZeilenHoehe(.pptSlide, .phaseVorlagenShape, .milestoneVorlagenShape,
                                                         selectedPhases.Count, selectedMilestones.Count, _
-                                                        MsDescVorlagenShape, MsDateVorlagenShape, _
-                                                        PhDescVorlagenShape, PhDateVorlagenShape,
-                                                        projectNameVorlagenShape, _
-                                                        durationArrowShape, durationTextShape)
+                                                        .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                                        .PhDescVorlagenShape, .PhDateVorlagenShape,
+                                                        .projectNameVorlagenShape, _
+                                                        .durationArrowShape, .durationTextShape)
+                End With
+
             End If
+
 
             Dim hproj As New clsProjekt
             Dim hhproj As New clsProjekt
             Dim maxZeilen As Integer = 0
             Dim anzZeilen As Integer = 0
             Dim gesamtAnzZeilen As Integer = 0
-            Dim projekthoehe As Double
+            Dim projekthoehe As Double = zeilenhoehe
 
             If awinSettings.mppExtendedMode Then
 
@@ -11582,6 +12991,7 @@ Public Module testModule
                     End Try
 
                     anzZeilen = hproj.calcNeededLines(selectedPhases, selectedMilestones, awinSettings.mppExtendedMode, Not awinSettings.mppShowAllIfOne)
+
                     maxZeilen = System.Math.Max(maxZeilen, anzZeilen)
                     gesamtAnzZeilen = gesamtAnzZeilen + anzZeilen
 
@@ -11594,27 +13004,15 @@ Public Module testModule
 
             '
             ' bestimme die relativen Abstände der Text-Shapes zu ihrem Phase/Milestone Element
-            Dim yOffsetMsToText As Double
-            Dim yOffsetMsToDate As Double
-            yOffsetMsToText = MsDescVorlagenShape.Top - milestoneVorlagenShape.Top
-            yOffsetMsToDate = MsDateVorlagenShape.Top - milestoneVorlagenShape.Top
+            '
+            Call rds.calcRelDisTxtToElm()
 
-            Dim yOffsetPhToText As Double
-            Dim yOffsetPhToDate As Double
-            yOffsetPhToText = PhDescVorlagenShape.Top - phaseVorlagenShape.Top
-            yOffsetPhToDate = PhDateVorlagenShape.Top - phaseVorlagenShape.Top
-
-
-            Dim controlHoehe1 As Double = -1 * yOffsetPhToText + yOffsetPhToDate + PhDateVorlagenShape.Height
-            Dim controlHoehe2 As Double = -1 * yOffsetMsToText + yOffsetMsToDate + MsDateVorlagenShape.Height
-            Dim controlHoehe As Double = System.Math.Max(controlHoehe1, controlHoehe2)
 
             '
             ' bestimme das Format  
 
             Dim neededSpace As Double
 
-            neededSpace = (projCollection.Count + 1) * projekthoehe ' für normale Berichte hier: projekthoehe = zeilenhoehe
 
             If awinSettings.mppExtendedMode Then                    ' für Berichte im extendedMode
                 If awinSettings.mppOnePage Then
@@ -11622,13 +13020,15 @@ Public Module testModule
                 Else
                     neededSpace = maxZeilen * zeilenhoehe
                 End If
+            Else
+                neededSpace = (projCollection.Count + 1) * zeilenhoehe ' für normale Berichte hier: projekthoehe = zeilenhoehe
             End If
 
 
 
 
             Dim availableSpace As Double
-            availableSpace = drawingAreaBottom - drawingAreaTop
+            availableSpace = rds.drawingAreaBottom - rds.drawingAreaTop
 
             Dim oldHeight As Double
             Dim oldwidth As Double
@@ -11652,11 +13052,14 @@ Public Module testModule
                 Dim sizeMemory() As Single
                 Dim relativeSizeMemory As New SortedList(Of String, Double())
 
-                sizeMemory = saveSizesOfElements(projectNameVorlagenShape, _
-                                                 MsDescVorlagenShape, MsDateVorlagenShape, _
-                                                 PhDescVorlagenShape, PhDateVorlagenShape, _
-                                                 phaseVorlagenShape, milestoneVorlagenShape, _
-                                                 projectVorlagenShape, ampelVorlagenShape)
+                With rds
+                    sizeMemory = saveSizesOfElements(.projectNameVorlagenShape, _
+                                                 .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                                 .PhDescVorlagenShape, .PhDateVorlagenShape, _
+                                                 .phaseVorlagenShape, .milestoneVorlagenShape, _
+                                                 .projectVorlagenShape, .ampelVorlagenShape)
+                End With
+
 
                 If pptApp.Version = "14.0" Then
                     ' muss nichts machen
@@ -11699,15 +13102,17 @@ Public Module testModule
                     End If
 
                     ' jetzt wieder die Koordinaten neu berechnen 
-                    Call bestimmeZeichenKoordinaten(multiprojektContainerShape, _
-                                                    calendarLineShape, calenderHeightShape, legendLineShape, _
-                                                    containerLeft, containerRight, containerTop, containerBottom, _
-                                                    calendarLeft, calendarRight, calendarTop, calendarBottom, _
-                                                    drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
-                                                    projectListLeft, _
-                                                    legendAreaLeft, legendAreaRight, legendAreaTop, legendAreaBottom)
+                    Call rds.bestimmeZeichenKoordinaten()
 
-                    availableSpace = drawingAreaBottom - drawingAreaTop
+                    'Call bestimmeZeichenKoordinaten(containerShape, _
+                    '                                calendarLineShape, calenderHeightShape, legendLineShape, _
+                    '                                containerLeft, containerRight, containerTop, containerBottom, _
+                    '                                calendarLeft, calendarRight, calendarTop, calendarBottom, _
+                    '                                drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
+                    '                                projectListLeft, _
+                    '                                legendAreaLeft, legendAreaRight, legendAreaTop, legendAreaBottom)
+
+                    availableSpace = rds.drawingAreaBottom - rds.drawingAreaTop
 
                     If availableSpace < neededSpace Then
                         ix = ix - 1
@@ -11722,11 +13127,14 @@ Public Module testModule
 
                 ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
                 If pptApp.Version = "14.0" Then
-                    Call restoreSizesOfElements(sizeMemory, projectNameVorlagenShape, _
-                                            MsDescVorlagenShape, MsDateVorlagenShape, _
-                                            PhDescVorlagenShape, PhDateVorlagenShape, _
-                                            phaseVorlagenShape, milestoneVorlagenShape, _
-                                            projectVorlagenShape, ampelVorlagenShape)
+                    With rds
+                        Call restoreSizesOfElements(sizeMemory, .projectNameVorlagenShape, _
+                                            .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                            .PhDescVorlagenShape, .PhDateVorlagenShape, _
+                                            .phaseVorlagenShape, .milestoneVorlagenShape, _
+                                            .projectVorlagenShape, .ampelVorlagenShape)
+                    End With
+
 
                 End If
 
@@ -11739,29 +13147,24 @@ Public Module testModule
 
                 ' ur: 30.03.2015:jetzt alle Beschriftungen der Phasen und Meilensteine wieder im richtigen Abstand positionieren 
                 ' 
-                PhDescVorlagenShape.Top = phaseVorlagenShape.Top + yOffsetPhToText
-                PhDateVorlagenShape.Top = phaseVorlagenShape.Top + yOffsetPhToDate
+                With rds
+                    .PhDescVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToText
+                    .PhDateVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToDate
 
-                MsDescVorlagenShape.Top = milestoneVorlagenShape.Top + yOffsetMsToText
-                MsDateVorlagenShape.Top = milestoneVorlagenShape.Top + yOffsetMsToDate
+                    .MsDescVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToText
+                    .MsDateVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToDate
+                End With
+
             End If
 
 
             If pptFirstTime Then
 
-                '' '' '' ur: 30.03.2015:jetzt alle Beschriftungen der Phasen und Meilensteine wieder im richtigen Abstand positionieren 
-                '' '' '' 
-                ' '' ''PhDescVorlagenShape.Top = phaseVorlagenShape.Top + yOffsetPhToText
-                ' '' ''PhDateVorlagenShape.Top = phaseVorlagenShape.Top + yOffsetPhToDate
-
-                ' '' ''MsDescVorlagenShape.Top = milestoneVorlagenShape.Top + yOffsetMsToText
-                ' '' ''MsDateVorlagenShape.Top = milestoneVorlagenShape.Top + yOffsetMsToDate
-
                 'ur: 25.03.2015: sichern der im Format veränderten Folie
                 pptslide.Copy()
                 pptCurrentPresentation.Slides.Paste(1).Name = "tmpSav"
                 pptFirstTime = False
-                legendFontSize = projectNameVorlagenShape.TextFrame2.TextRange.Font.Size
+                legendFontSize = rds.projectNameVorlagenShape.TextFrame2.TextRange.Font.Size
 
             End If
 
@@ -11769,50 +13172,62 @@ Public Module testModule
             Dim calendargroup As pptNS.Shape = Nothing
 
             Try
-                Call zeichnePPTCalendar(pptslide, calendargroup, _
-                                    pptStartofCalendar, pptEndOfCalendar, _
-                                    calendarLineShape, calenderHeightShape, calendarStepShape, calendarMarkShape, _
-                                    yearVorlagenShape, quarterMonthVorlagenShape, calendarYearSeparator, calendarQuartalSeparator, _
-                                    drawingAreaBottom)
+
+                With rds
+
+
+                    ' das demnächst abändern auf 
+                    Call zeichne3RowsCalendar(rds, calendargroup)
+
+
+                    'Call zeichnePPTCalendar(pptslide, calendargroup, _
+                    '                    pptStartofCalendar, pptEndOfCalendar, _
+                    '                    .calendarLineShape, .calendarHeightShape, .calendarStepShape, .calendarMarkShape, _
+                    '                    .yearVorlagenShape, .quarterMonthVorlagenShape, .calendarYearSeparator, .calendarQuartalSeparator, _
+                    '                    .drawingAreaBottom)
+
+                End With
+
+
+
             Catch ex As Exception
 
             End Try
 
 
-            yearVorlagenShape.Delete()
-            quarterMonthVorlagenShape.Delete()
-            calendarStepShape.Delete()
-            calendarYearSeparator.Delete()
-            calendarQuartalSeparator.Delete()
-
-            calendargroup.Top = containerTop + 5
             ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
 
             ' zeichne die Projekte 
 
             Try
 
-                Call zeichnePPTprojects(pptslide, projCollection, projDone, _
-                                    pptStartofCalendar, pptEndOfCalendar, _
-                                    drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
-                                    zeilenhoehe, projectListLeft, _
-                                    selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
-                                    projectNameVorlagenShape, MsDescVorlagenShape, MsDateVorlagenShape, _
-                                    PhDescVorlagenShape, PhDateVorlagenShape, _
-                                    phaseVorlagenShape, milestoneVorlagenShape, projectVorlagenShape, ampelVorlagenShape,
-                                    rowDifferentiatorShape, buColorShape, phaseDelimiterShape, _
-                                    durationArrowShape, durationTextShape, _
-                                    yOffsetMsToText, yOffsetMsToDate, yOffsetPhToText, yOffsetPhToDate, _
-                                    worker, e)
+                With rds
+                    
+                        Call zeichnePPTprojects(pptslide, projCollection, objectsDone, _
+                                        pptStartofCalendar, pptEndOfCalendar, _
+                                        .drawingAreaLeft, .drawingAreaRight, .drawingAreaTop, .drawingAreaBottom, _
+                                        zeilenhoehe, .projectListLeft, _
+                                        selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                        .projectNameVorlagenShape, .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                        .PhDescVorlagenShape, .PhDateVorlagenShape, _
+                                        .phaseVorlagenShape, .milestoneVorlagenShape, .projectVorlagenShape, .ampelVorlagenShape,
+                                        .rowDifferentiatorShape, .buColorShape, .phaseDelimiterShape, _
+                                        .durationArrowShape, .durationTextShape, _
+                                        .yOffsetMsToText, .yOffsetMsToDate, .yOffsetPhToText, .yOffsetPhToDate, _
+                                        worker, e)
+
+                End With
+
+
 
 
 
             Catch ex As Exception
 
-                If Not IsNothing(errorVorlagenShape) Then
-                    errorVorlagenShape.Copy()
+                If Not IsNothing(rds.errorVorlagenShape) Then
+                    rds.errorVorlagenShape.Copy()
                     errorShape = pptslide.Shapes.Paste
-                    With errorShape(1)
+                    With errorShape.Item(1)
                         .TextFrame2.TextRange.Text = ex.Message
                     End With
                 Else
@@ -11822,83 +13237,699 @@ Public Module testModule
 
             End Try
 
-            If Not IsNothing(rowDifferentiatorShape) Then
-                rowDifferentiatorShape.Delete()
-            End If
-
-            If Not IsNothing(buColorShape) Then
-                buColorShape.Delete()
-            End If
-
-            If Not IsNothing(phaseDelimiterShape) Then
-                phaseDelimiterShape.Delete()
-            End If
-
-            If Not IsNothing(durationArrowShape) Then
-                durationArrowShape.Delete()
-            End If
-
-            If Not IsNothing(durationTextShape) Then
-                durationTextShape.Delete()
-            End If
-
-            projectNameVorlagenShape.Delete()
-            phaseVorlagenShape.Delete()
-            milestoneVorlagenShape.Delete()
-            MsDescVorlagenShape.Delete()
-            MsDateVorlagenShape.Delete()
-            PhDescVorlagenShape.Delete()
-            PhDateVorlagenShape.Delete()
 
             ' zeichne die Legende 
             If awinSettings.mppShowLegend Then
                 Try
-                    Call zeichnePPTlegende(pptslide, _
+
+                    With rds
+                        Call zeichnePPTlegende(pptslide, _
                                         selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
-                                        legendAreaTop, legendAreaLeft, legendAreaRight, legendAreaBottom, _
-                                        legendTextVorlagenShape, legendPhaseVorlagenShape, legendMilestoneVorlagenShape, _
-                                        projectVorlagenShape, ampelVorlagenShape, legendBuColorShape)
+                                        .legendAreaTop, .legendAreaLeft, .legendAreaRight, .legendAreaBottom, _
+                                        .legendLineShape, .legendStartShape, _
+                                        .legendTextVorlagenShape, .legendPhaseVorlagenShape, .legendMilestoneVorlagenShape, _
+                                        .projectVorlagenShape, .ampelVorlagenShape, .legendBuColorShape)
+
+                    End With
 
 
                 Catch ex As Exception
 
-                    If Not IsNothing(errorVorlagenShape) Then
-                        errorVorlagenShape.Copy()
+                    If Not IsNothing(rds.errorVorlagenShape) Then
+                        rds.errorVorlagenShape.Copy()
                         errorShape = pptslide.Shapes.Paste
-                        With errorShape(1)
+                        With errorShape.Item(1)
                             .TextFrame2.TextRange.Text = ex.Message
                         End With
                     End If
 
                 End Try
-            Else
-                legendStartShape.Delete()
-                legendLineShape.Delete()
+
             End If
 
-            If Not IsNothing(legendBuColorShape) Then
-                legendBuColorShape.Delete()
-            End If
-            legendTextVorlagenShape.Delete()
-            legendPhaseVorlagenShape.Delete()
-            legendMilestoneVorlagenShape.Delete()
-            ampelVorlagenShape.Delete()
-            projectVorlagenShape.Delete()
 
 
 
-        ElseIf Not IsNothing(errorVorlagenShape) Then
-            errorVorlagenShape.Copy()
+        ElseIf Not IsNothing(rds.errorVorlagenShape) Then
+            rds.errorVorlagenShape.Copy()
             errorShape = pptslide.Shapes.Paste
-            With errorShape(1)
-                .TextFrame2.TextRange.Text = "Unvollständige Vorlage"
+            With errorShape.Item(1)
+                .TextFrame2.TextRange.Text = missingShapes
+            End With
+        Else
+            Call MsgBox("es fehlen Shapes: " & vbLf & missingShapes)
+        End If
+
+        ' jetzt werden alle Shapes gelöscht ... 
+        Call rds.deleteShapes()
+
+
+    End Sub
+
+    ''' <summary>
+    ''' zeichnet sowohl Swimlanes im BHTC Modus als auch im Normal -Modus
+    ''' BHTC: Segmente customer Milestones, BHTC Milestones  
+    ''' normal: Swimlane ist alles auf Hierarchie-Ebene 1 (also die Kinder der rootphase Ebene) 
+    ''' es wird immer nur ein Projekt betrachtet 
+    ''' es können x Swimlanes sein - es muss unterschieden werden, ob alles auf eine Seite geht oder mehrere Seiten gemacht werden 
+    ''' Rahmenbedingung bei dieser Routine: es wird nur ein Project aufgerufen, ohne Varianten 
+    ''' es geht also nur darum , alle Swimlanes eines Projektes zu zeichnen bzw. die ausgewählten Swimlanes eines PRojektes zu zeichnen  
+    ''' </summary>
+    ''' <param name="pptApp"></param>
+    ''' <param name="pptCurrentPresentation"></param>
+    ''' <param name="pptslide"></param>
+    ''' <param name="swimLanesToDo"></param>
+    ''' <param name="swimLanesDone"></param>
+    ''' <param name="pptFirstTime"></param>
+    ''' <param name="zeilenhoehe"></param>
+    ''' <param name="legendFontSize"></param>
+    ''' <param name="selectedPhases"></param>
+    ''' <param name="selectedMilestones"></param>
+    ''' <param name="selectedRoles"></param>
+    ''' <param name="selectedCosts"></param>
+    ''' <param name="selectedBUs"></param>
+    ''' <param name="selectedTyps"></param>
+    ''' <param name="worker"></param>
+    ''' <param name="e"></param>
+    ''' <param name="isMultiprojektSicht"></param>
+    ''' <param name="hproj"></param>
+    ''' <param name="kennzeichnung"></param>
+    ''' <remarks></remarks>
+    Private Sub zeichneSwimlane2Sicht(ByRef pptApp As pptNS.Application, ByRef pptCurrentPresentation As pptNS.Presentation, ByRef pptslide As pptNS.Slide, _
+                                                 ByRef swimLanesToDo As Integer, ByRef swimLanesDone As Integer, ByRef pptFirstTime As Boolean, _
+                                                 ByRef zeilenhoehe As Double, ByRef legendFontSize As Double, _
+                                                 ByVal selectedPhases As Collection, ByVal selectedMilestones As Collection, _
+                                                 ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
+                                                 ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
+                                                 ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs, _
+                                                 ByVal isMultiprojektSicht As Boolean, ByVal hproj As clsProjekt, _
+                                                 ByVal kennzeichnung As String)
+
+
+
+        ' Wichtig für Kalendar 
+        Dim pptStartofCalendar As Date = Nothing, pptEndOfCalendar As Date = Nothing
+        Dim errorShape As pptNS.ShapeRange = Nothing
+
+
+        Dim dinFormatA(4, 1) As Double
+        Dim querFormat As Boolean
+        Dim curFormatSize(1) As Double
+
+        Dim maxZeilen As Integer = 0
+        Dim anzZeilen As Integer = 0
+        Dim gesamtAnzZeilen As Integer = 0
+
+
+
+        dinFormatA(0, 0) = 3120.0
+        dinFormatA(0, 1) = 2206.15
+
+        dinFormatA(1, 0) = 2206.15
+        dinFormatA(1, 1) = 1560.0
+
+        dinFormatA(2, 0) = 1560.0
+        dinFormatA(2, 1) = 1103.0
+
+        dinFormatA(3, 0) = 1103.0
+        dinFormatA(3, 1) = 780.0
+
+        dinFormatA(4, 0) = 780.0
+        dinFormatA(4, 1) = 540.0
+
+        ' Ende Übernahme
+
+        Dim format As Integer = 4
+        'Dim tmpslideID As Integer
+
+        ' an der Variablen lässt sich in der Folge erkennen, ob die Segmente BHTC Milestones gezeichnet werden müssen oder 
+        ' ob ganz allgemein nach Swimlanes gesucht wird ... 
+        Dim isBHTCSchema As Boolean = (kennzeichnung = "Swimlanes2")
+
+        Dim rds As New clsPPTShapes
+        Dim considerZeitraum As Boolean = (showRangeLeft > 0 And showRangeRight >= showRangeLeft)
+        Dim cphase As clsPhase
+
+        ' mit disem Befehl werden auch die ganzen Hilfsshapes in der Klasse gesetzt 
+        rds.pptSlide = pptslide
+
+
+        ' jetzt muss geprüft werden, ob überhaupt alle Angaben gemacht wurden ... 
+        'If completeMppDefinition.Sum = completeMppDefinition.Length Then
+        Dim missingShapes As String = rds.getMissingShpNames(kennzeichnung)
+        If missingShapes.Length = 0 Then
+            ' es fehlt nichts ... andernfalls stehen hier die Namen mit den Shapes, die fehlen ...
+
+            If pptCurrentPresentation.PageSetup.SlideOrientation = MsoOrientation.msoOrientationHorizontal Then
+                querFormat = True
+            Else
+                querFormat = False
+            End If
+
+
+            curFormatSize(0) = pptCurrentPresentation.PageSetup.SlideWidth
+            curFormatSize(1) = pptCurrentPresentation.PageSetup.SlideHeight
+
+            ' jetzt werden die DinA Formate gesetzt 
+            ' Voraussetzung ist allerdings, dass es sich bei der Vorlage um DIN A4 handelt 
+            Dim paperSizeRatio As Double
+
+            Dim considerAll As Boolean = (selectedPhases.Count + selectedMilestones.Count = 0)
+            Dim selectedPhaseIDs As New Collection
+            Dim selectedMilestoneIDs As New Collection
+            Dim breadcrumbArray As String() = Nothing
+
+            If Not considerAll Then
+                selectedPhaseIDs = hproj.getElemIdsOf(selectedPhases, False)
+                selectedMilestoneIDs = hproj.getElemIdsOf(selectedMilestones, True)
+                breadcrumbArray = hproj.getBreadCrumbArray(selectedPhaseIDs, selectedMilestoneIDs)
+            End If
+
+            ' Änderung tk 23.2.16: wenn mehrere Projekte mit swimlanes gezeichnet werden, so muss hier bestimmt werden
+            ' wieviele Swimlanes zu zeichnen sind; ab dem 2. Projekt kann man sich nicht mehr auf pptFirsttime abstützen ! 
+            ' wenn ein Projekt erstmalig hier reinkommt, ist swimlanestodo = 0, pptFirsttime kann true oder false sein   
+            If swimLanesToDo = 0 Then
+                swimLanesToDo = hproj.getSwimLanesCount(considerAll, breadcrumbArray, isBHTCSchema)
+            End If
+
+            If pptFirstTime Then
+
+                
+                If pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA4Paper Then
+
+                    If querFormat Then
+                        paperSizeRatio = curFormatSize(0) / curFormatSize(1)
+                        dinFormatA(4, 0) = curFormatSize(0)
+                        dinFormatA(4, 1) = curFormatSize(1)
+                    Else
+                        paperSizeRatio = curFormatSize(1) / curFormatSize(0)
+                        dinFormatA(4, 1) = curFormatSize(0)
+                        dinFormatA(4, 0) = curFormatSize(1)
+                    End If
+
+                    dinFormatA(3, 0) = dinFormatA(4, 0) * paperSizeRatio
+                    dinFormatA(3, 1) = dinFormatA(4, 1) * paperSizeRatio
+
+                ElseIf pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA3Paper Then
+                    If querFormat Then
+                        paperSizeRatio = curFormatSize(0) / curFormatSize(1)
+                        dinFormatA(3, 0) = curFormatSize(0)
+                        dinFormatA(3, 1) = curFormatSize(1)
+
+                    Else
+                        paperSizeRatio = curFormatSize(1) / curFormatSize(0)
+                        dinFormatA(3, 1) = curFormatSize(0)
+                        dinFormatA(3, 0) = curFormatSize(1)
+                    End If
+
+                    dinFormatA(4, 0) = dinFormatA(3, 0) / paperSizeRatio
+                    dinFormatA(4, 1) = dinFormatA(3, 1) / paperSizeRatio
+
+                Else
+                    Call MsgBox("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+                    'Throw New ArgumentException("Vorlage ist weder ein A4 noch ein A3 Format ... bitte verwenden Sie eine A4 oder A3 Vorlage")
+                End If
+
+
+                For i = 2 To 0 Step -1
+                    dinFormatA(i, 0) = dinFormatA(i + 1, 0) * paperSizeRatio
+                    dinFormatA(i, 1) = dinFormatA(i + 1, 1) * paperSizeRatio
+                Next
+            Else
+                ' pptFirstTime war False, d.h. das Format wurde bereits angepasst
+            End If
+
+
+            Call rds.plausibilityAdjustments()
+
+
+            Call rds.bestimmeZeichenKoordinaten()
+
+            Dim projCollection As New SortedList(Of Double, String)
+            Dim minDate As Date, maxDate As Date
+
+            ' bestimme die Projekte, die gezeichnet werden sollen
+            ' und bestimme das kleinste / resp größte auftretende Datum 
+            Call bestimmeProjekteAndMinMaxDates(selectedPhases, selectedMilestones, _
+                                                selectedRoles, selectedCosts, _
+                                                selectedBUs, selectedTyps, _
+                                                showRangeLeft, showRangeRight, awinSettings.mppSortiertDauer, _
+                                                projCollection, minDate, maxDate, _
+                                                isMultiprojektSicht, hproj)
+
+
+            ' wird benötigt für die Bestimmung der Anzahl zielen und das Zeichnen der Swimlane Phase / Meilensteine
+            ' wenn mppshowallIFOne = false, dann sollte zeitRaumGrenzeL = showrangeL und zeitRaumGrenzeR = showrangeR
+            ' andernfalls ist der Zeitraum ggf. deutlich größer als Showrange 
+            Dim zeitraumGrenzeL As Integer
+            Dim zeitraumGrenzeR As Integer
+
+            If awinSettings.mppShowAllIfOne Then
+
+                zeitraumGrenzeL = getColumnOfDate(minDate)
+                zeitraumGrenzeR = getColumnOfDate(maxDate)
+
+            Else
+
+                zeitraumGrenzeL = showRangeLeft
+                zeitraumGrenzeR = showRangeRight
+
+            End If
+
+            ' aktuell wird davon ausgegangen , dass in projMitVariants nur eine Variante ist
+            ' Swimlane wird aktuell nur für BHTC erstellt , da gibt es noch keine Varianten 
+
+
+
+            ' tk:1.2.16 ExtendedMode macht nur Sinn, wenn mindestens 1 Phase selektiert wurde. oder aber considerAll gilt: 
+            awinSettings.mppExtendedMode = (awinSettings.mppExtendedMode And (selectedPhases.Count > 0)) Or _
+                                            (awinSettings.mppExtendedMode And considerAll)
+
+
+
+            ' muss nur bestimmt werden, wenn zum ersten Mal reinkommt 
+
+
+            '
+            ' bestimme das Start und Ende Datum des PPT Kalenders
+            Call calcStartEndePPTKalender(minDate, maxDate, _
+                                          pptStartofCalendar, pptEndOfCalendar)
+
+            ' jetzt für Swimlanes Behandlung Kalender in der Klasse setzen 
+
+            Call rds.setCalendarDates(pptStartofCalendar, pptEndOfCalendar)
+
+            ' die neue Art Zeilenhöhe und die Offset Werte zu bestimmen 
+
+            Call rds.bestimmeZeilenHoehe(selectedPhases.Count, selectedMilestones.Count, considerAll)
+
+
+            ' tk 1.2.16
+            ' eigentlich muss er das Ganze nur machen, wenn pptFirsttime 
+            If pptFirstTime Then
+
+                If awinSettings.mppExtendedMode Then
+
+                    ' jetzt muss die Gesamt-Zahl an Zeilen ermittelt werden , die die einzelnen Swimlanes bentötigen 
+
+                    For i = 1 To swimLanesToDo
+
+                        cphase = hproj.getSwimlane(i, considerAll, breadcrumbArray, isBHTCSchema)
+
+                        Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwl(cphase.nameID, selectedPhaseIDs, selectedMilestoneIDs, _
+                                                                                 awinSettings.mppExtendedMode, _
+                                                                                 considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+                                                                                 considerAll)
+
+                        anzZeilen = anzZeilen + swimLaneZeilen
+                    Next
+
+
+                Else
+                    anzZeilen = swimLanesToDo
+                End If
+
+
+                '
+                ' bestimme das Format  
+
+                Dim neededSpace As Double
+
+
+                If isBHTCSchema Then
+                    ' jetzt müssen noch die Segment Höhen  berechnet werden 
+
+                    neededSpace = anzZeilen * rds.zeilenHoehe + _
+                                    hproj.getSegmentsCount(considerAll, breadcrumbArray, isBHTCSchema) * rds.segmentHoehe
+                Else
+
+                    neededSpace = anzZeilen * rds.zeilenHoehe
+
+                End If
+
+
+
+                Dim oldHeight As Double
+                Dim oldwidth As Double
+
+                oldHeight = pptCurrentPresentation.PageSetup.SlideHeight
+                oldwidth = pptCurrentPresentation.PageSetup.SlideWidth
+
+
+                Dim curHeight As Double = oldHeight
+                Dim curWidth As Double = oldwidth
+
+
+
+                If (rds.availableSpace < neededSpace And awinSettings.mppOnePage) Then
+
+                    ' es muss das Format angepasst werden ... 
+
+                    Dim ix As Integer = format
+                    Dim ok As Boolean = True
+                    ' jetzt erst mal die Schriftgrößen und Liniendicken merken ...
+
+                    Dim sizeMemory() As Single
+                    Dim relativeSizeMemory As New SortedList(Of String, Double())
+
+                    With rds
+                        sizeMemory = saveSizesOfElements(.projectNameVorlagenShape, _
+                                                     .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                                     .PhDescVorlagenShape, .PhDateVorlagenShape, _
+                                                     .phaseVorlagenShape, .milestoneVorlagenShape, _
+                                                     .projectVorlagenShape, .ampelVorlagenShape, _
+                                                     .segmentVorlagenShape)
+                    End With
+
+
+                    If pptApp.Version = "14.0" Then
+                        ' muss nichts machen
+
+                    Else
+
+                        relativeSizeMemory = saveRelSizesOfElements(pptslide, oldHeight, oldwidth)
+
+                    End If
+
+
+                    Do While rds.availableSpace < neededSpace And ix > 0
+
+                        With pptCurrentPresentation
+
+                            .PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeCustom
+
+                            If querFormat Then
+                                .PageSetup.SlideWidth = dinFormatA(ix - 1, 0)
+                                .PageSetup.SlideHeight = dinFormatA(ix - 1, 1)
+                            Else
+                                .PageSetup.SlideWidth = dinFormatA(ix - 1, 1)
+                                .PageSetup.SlideHeight = dinFormatA(ix - 1, 0)
+                            End If
+
+
+                        End With
+
+                        curHeight = pptCurrentPresentation.PageSetup.SlideHeight
+                        curWidth = pptCurrentPresentation.PageSetup.SlideWidth
+
+                        ' jetzt muss bestimmt werden , ob es sich um Powerpoint 2010 oder 2013 handelt 
+                        ' wenn ja, dann müssen die markierten Shapes entsprechend behandelt werden 
+
+                        If pptApp.Version = "14.0" Then
+                            ' muss nichts machen
+                        Else
+
+                            Call restoreRelSizesDuePPT2013(relativeSizeMemory, curHeight, curWidth, pptslide)
+                        End If
+
+                        ' jetzt wieder die Koordinaten neu berechnen 
+                        Call rds.bestimmeZeichenKoordinaten()
+
+
+                        If rds.availableSpace < neededSpace Then
+                            ix = ix - 1
+                        End If
+
+                    Loop
+
+                    ix = ix - 1
+                    If ix < 0 Then
+                        ix = 0
+                    End If
+
+                    ' jetzt die Schriftgrößen und Liniendicken wieder auf den ursprünglichen Wert setzen 
+                    If pptApp.Version = "14.0" Then
+                        With rds
+                            Call restoreSizesOfElements(sizeMemory, .projectNameVorlagenShape, _
+                                                .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                                .PhDescVorlagenShape, .PhDateVorlagenShape, _
+                                                .phaseVorlagenShape, .milestoneVorlagenShape, _
+                                                .projectVorlagenShape, .ampelVorlagenShape, _
+                                                .segmentVorlagenShape)
+                        End With
+
+
+                    End If
+
+
+                    ' jetzt alle Text Shapes, die auf der Folie ihre relative Größe behalten sollen 
+                    ' entsprechend um den errechneten Faktor anpassen
+
+                    Dim enlargeTxtFaktor As Double = curHeight / oldHeight
+                    Call enlargeTxtShapes(enlargeTxtFaktor, pptslide)
+
+                    ' ur: 30.03.2015:jetzt alle Beschriftungen der Phasen und Meilensteine wieder im richtigen Abstand positionieren 
+                    ' tk 2.2 braucht man nicht mehr ...
+                    'With rds
+                    '    .PhDescVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToText
+                    '    .PhDateVorlagenShape.Top = .phaseVorlagenShape.Top + .yOffsetPhToDate
+
+                    '    .MsDescVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToText
+                    '    .MsDateVorlagenShape.Top = .milestoneVorlagenShape.Top + .yOffsetMsToDate
+                    'End With
+
+                End If
+
+            End If
+
+
+
+            If pptFirstTime Then
+
+                ' jetzt erst mal den Kalender zeichnen 
+                ' zeichne den Kalender
+                Dim calendargroup As pptNS.Shape = Nothing
+
+                Try
+
+                    With rds
+
+                        Call zeichne3RowsCalendar(rds, calendargroup)
+
+                    End With
+
+
+
+                Catch ex As Exception
+
+                End Try
+
+                ' wenn Legende gezeichnet werden soll - die Legende zeichnen 
+
+                ' zeichne die Legende 
+                If awinSettings.mppShowLegend Then
+                    Try
+
+                        ' Änderung tk: noch überprüfen, ob ob considerAll = true , dann sollen die selectedPhase entsprechend aufgebaut werden ...
+                        Dim tmpphases As New Collection
+                        Dim tmpMilestones As New Collection
+
+                        If considerAll Then
+
+                            Try
+                                For Each cphase In hproj.AllPhases
+
+                                    Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                    If tmpstr <> "" Then
+                                        tmpstr = tmpstr & "#" & cphase.name
+                                        If Not tmpphases.Contains(tmpstr) Then
+                                            tmpphases.Add(tmpstr, tmpstr)
+                                        End If
+
+                                    End If
+
+
+                                Next
+
+
+
+                                ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
+                                Dim mSList As SortedList(Of Date, String)
+
+                                mSList = hproj.getMilestones        ' holt alle Meilensteine in Form ihrer nameID sortiert nach Datum
+
+                                If mSList.Count > 0 Then
+                                    For Each kvp As KeyValuePair(Of Date, String) In mSList
+
+                                        Dim tmpstr = hproj.hierarchy.getBreadCrumb(kvp.Value) & "#" & hproj.getMilestoneByID(kvp.Value).name
+                                        If Not tmpMilestones.Contains(tmpstr) Then
+                                            tmpMilestones.Add(tmpstr, tmpstr)
+                                        End If
+
+                                    Next
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+                            ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
+                            
+                        Else
+                            tmpphases = selectedPhases
+                            tmpMilestones = selectedMilestones
+                        End If
+
+                        With rds
+                            Call zeichnePPTlegende(pptslide, _
+                                            tmpphases, tmpMilestones, selectedRoles, selectedCosts, _
+                                            .legendAreaTop, .legendAreaLeft, .legendAreaRight, .legendAreaBottom, _
+                                            .legendLineShape, .legendStartShape, _
+                                            .legendTextVorlagenShape, .legendPhaseVorlagenShape, .legendMilestoneVorlagenShape, _
+                                            .projectVorlagenShape, .ampelVorlagenShape, .legendBuColorShape)
+
+                        End With
+
+
+                    Catch ex As Exception
+
+                        If Not IsNothing(rds.errorVorlagenShape) Then
+                            rds.errorVorlagenShape.Copy()
+                            errorShape = pptslide.Shapes.Paste
+                            With errorShape.Item(1)
+                                .Top = rds.legendLineShape.Top + 10
+                                .TextFrame2.TextRange.Text = ex.Message
+                            End With
+                        End If
+
+                    End Try
+
+                End If
+
+                'ur: 25.03.2015: sichern der im Format veränderten Folie
+                rds.pptSlide.Copy()
+                pptCurrentPresentation.Slides.Paste(1).Name = "tmpSav"
+                pptFirstTime = False
+                legendFontSize = rds.projectNameVorlagenShape.TextFrame2.TextRange.Font.Size
+
+            End If
+
+
+
+            ' hier ist die Schleife, die alle swimlanes von swimlanesdone+1 bis todo zeichnet 
+            ' jetzt wird das aufgerufen mit dem gesamten fertig gezeichneten Kalender, der fertig positioniert ist 
+
+            Dim curYPosition As Double = rds.drawingAreaTop
+            Dim curSwl As clsPhase
+            Dim prevSwl As clsPhase = Nothing
+
+            ' steuert im Wechsel, dass eine Zeilendifferenzierung gezeichnet wird / nicht gezeichnet wird 
+            ' hat nur dann einen Effekt, wenn rds.rowDifferentiator <> Nothing 
+
+            Dim toggleRow As Boolean = False
+
+            Dim curSwimlaneIndex As Integer = swimLanesDone + 1
+            curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isBHTCSchema)
+            prevSwl = hproj.getSwimlane(curSwimlaneIndex - 1, considerAll, breadcrumbArray, isBHTCSchema)
+
+
+            If Not IsNothing(curSwl) Then
+
+
+                Dim segmentChanged As Boolean = False
+                Dim curSegmentID As String = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+
+                If isBHTCSchema Then
+                    If Not IsNothing(prevSwl) Then
+                        segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <> _
+                                            hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                    End If
+
+                    If swimLanesDone = 0 Or segmentChanged Then
+                        Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
+                        segmentChanged = False
+                    End If
+                End If
+                
+                
+
+
+                ' jetzt werden soviele wie möglich Swimlanes gezeichnet ... 
+                Dim swimLaneZeilen As Integer = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs, _
+                                                                                 awinSettings.mppExtendedMode, _
+                                                                                 considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+                                                                                 considerAll)
+
+                Do While (curSwimlaneIndex <= swimLanesToDo) And _
+                        (swimLaneZeilen * rds.zeilenHoehe + curYPosition <= rds.drawingAreaBottom)
+
+
+                    ' Zwischen-Meldung ausgeben ...
+                    If worker.WorkerSupportsCancellation Then
+
+                        If worker.CancellationPending Then
+                            e.Cancel = True
+                            e.Result = "Berichterstellung abgebrochen ..."
+                            Exit Sub
+                        End If
+
+                    End If
+
+                    ' Zwischenbericht abgeben ...
+                    e.Result = "Swimlane '" & elemNameOfElemID(curSwl.nameID) & "' wird gezeichnet  ...."
+                    If worker.WorkerReportsProgress Then
+                        worker.ReportProgress(0, e)
+                    End If
+
+                    ' jetzt die Swimlane zeichnen
+                    ' hier ist ja gewährleistet, dass alle Phasen und Meilensteine dieser Swimlane Platz finden 
+                    Call zeichneSwimlaneOfProject(rds, curYPosition, toggleRow, _
+                                                  hproj, curSwl.nameID, considerAll, _
+                                                  breadcrumbArray, _
+                                                  considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+                                                  selectedPhaseIDs, selectedMilestoneIDs, _
+                                                  selectedRoles, selectedCosts, _
+                                                  swimLaneZeilen)
+
+
+                    prevSwl = curSwl
+
+                    curSwimlaneIndex = curSwimlaneIndex + 1
+                    curSwl = hproj.getSwimlane(curSwimlaneIndex, considerAll, breadcrumbArray, isBHTCSchema)
+
+                    If Not IsNothing(curSwl) Then
+
+                        If isBHTCSchema Then
+                            segmentChanged = hproj.hierarchy.getParentIDOfID(prevSwl.nameID) <> _
+                                        hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+
+                        End If
+                        
+                        swimLaneZeilen = hproj.calcNeededLinesSwl(curSwl.nameID, selectedPhaseIDs, selectedMilestoneIDs, _
+                                                                                 awinSettings.mppExtendedMode, _
+                                                                                 considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+                                                                                 considerAll)
+
+                        If isBHTCSchema Then
+                            If segmentChanged And _
+                                (swimLaneZeilen * rds.zeilenHoehe + curYPosition + rds.segmentVorlagenShape.Height <= rds.drawingAreaBottom) Then
+
+                                curSegmentID = hproj.hierarchy.getParentIDOfID(curSwl.nameID)
+                                Call zeichneSwlSegmentinAktZeile(rds, curYPosition, curSegmentID)
+                                segmentChanged = False
+                            End If
+                        End If
+                        
+                    Else
+                        segmentChanged = False
+                    End If
+
+
+                Loop
+
+                ' jetzt die Anzahl ..Done bestimmen
+                swimLanesDone = curSwimlaneIndex - 1
+
+            End If
+
+        ElseIf Not IsNothing(rds.errorVorlagenShape) Then
+            rds.errorVorlagenShape.Copy()
+            errorShape = pptslide.Shapes.Paste
+            With errorShape.Item(1)
+                .TextFrame2.TextRange.Text = missingShapes
             End With
         End If
 
-        If Not IsNothing(errorVorlagenShape) Then
-            errorVorlagenShape.Delete()
-        End If
-
+        ' jetzt werden alle Shapes gelöscht ... 
+        Call rds.deleteShapes()
 
 
     End Sub

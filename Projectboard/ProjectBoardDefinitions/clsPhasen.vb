@@ -5,8 +5,9 @@ Public Class clsPhasen
 
 
     ''' <summary>
-    ''' nimmt die Phase auf; wenn der Name bereits vergeben ist, wird Exception geworfen und nichts gemacht ...
-    ''' wenn PhaseDef = Nothing, wird auch Exception geworfen
+    ''' nimmt die Phase auf; wenn der Name bereits vergeben ist, wird nichts gemacht ...
+    ''' wenn PhaseDef = Nothing, wird auch nichts gemacht 
+    ''' es werden keine Exceptions geworfen; wenn man an der Aufruf Stelle wissen muss, ob der Name vergeben ist, muss über .contains geprüft werden 
     ''' </summary>
     ''' <param name="phaseDef"></param>
     ''' <remarks></remarks>
@@ -16,10 +17,10 @@ Public Class clsPhasen
             If Not AllPhasen.ContainsKey(phaseDef.name) Then
                 AllPhasen.Add(phaseDef.name, phaseDef)
             Else
-                Throw New ArgumentException("Name bereits vergeben")
+                ' nichts tun , ist ja schon da 
             End If
         Else
-            Throw New ArgumentException("übergebene Phasen-Defiition ist Nothing")
+            ' nichts tun , es ist ja nichts aufzunehmen  
         End If
         
 
@@ -77,7 +78,7 @@ Public Class clsPhasen
 
     ''' <summary>
     ''' gibt die Abkürzung, den Shortname für den Meilenstein zurück
-    ''' wenn er nicht gefunden wird: "-"
+    ''' wenn er nicht gefunden wird: 
     ''' </summary>
     ''' <param name="name">Langname Phase</param>
     ''' <value></value>
@@ -85,7 +86,7 @@ Public Class clsPhasen
     ''' <remarks></remarks>
     Public ReadOnly Property getAbbrev(ByVal name As String) As String
         Get
-            Dim msAbbrev As String = "-"
+            Dim msAbbrev As String = name
 
             'Dim key As String = calcKey(name, belongsTo)
 
@@ -155,9 +156,11 @@ Public Class clsPhasen
 
     End Sub
 
+
     Public Sub New()
 
         AllPhasen = New SortedList(Of String, clsPhasenDefinition)
+
 
     End Sub
 End Class

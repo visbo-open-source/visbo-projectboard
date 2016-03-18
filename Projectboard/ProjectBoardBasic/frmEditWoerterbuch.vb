@@ -785,12 +785,13 @@ Public Class frmEditWoerterbuch
 
                     Dim ok As Boolean = True
                     If anzEintraege > 0 Then
-                        Call MsgBox(itemText & " hat " & anzEintraege & " im Wörterbuch. Trotzdem fortfahren?", MsgBoxStyle.OkCancel)
-                        If MsgBoxResult.Ok Then
+                        Dim returnValue As Integer = MsgBox(itemText & " hat " & anzEintraege & " Einträge im Wörterbuch. Trotzdem fortfahren?", MsgBoxStyle.OkCancel)
+                        If returnValue = MsgBoxResult.Ok Then
                             phaseMappings.removeStdName(itemText)
                             ok = True
                         Else
                             ok = False
+                            anzahlElements = anzahlElements - 1
                         End If
                     End If
 
@@ -811,21 +812,22 @@ Public Class frmEditWoerterbuch
 
                     Dim ok As Boolean = True
                     If anzEintraege > 0 Then
-                        Call MsgBox(itemText & " hat " & anzEintraege & " Einträge im Wörterbuch. Trotzdem fortfahren?", MsgBoxStyle.OkCancel)
-                        If MsgBoxResult.Ok Then
+
+                        Dim returnValue As Integer = MsgBox(itemText & " hat " & anzEintraege & " Einträge im Wörterbuch. Trotzdem fortfahren?", MsgBoxStyle.OkCancel)
+                        If returnValue = MsgBoxResult.Ok Then
                             milestoneMappings.removeStdName(itemText)
                             ok = True
                         Else
                             ok = False
+                            anzahlElements = anzahlElements - 1
                         End If
                     End If
 
                     If ok Then
                         Dim tmpMsDef As clsMeilensteinDefinition = MilestoneDefinitions.getMilestoneDef(itemText)
 
-                        If Not missingMilestoneDefinitions.Contains(tmpMsDef.name) Then
-                            missingMilestoneDefinitions.Add(tmpMsDef)
-                        End If
+                        ' wird bereits im Add auf Existenz abgefragt; 
+                        missingMilestoneDefinitions.Add(tmpMsDef)
 
                         unknownList.Items.Add(itemText)
 
@@ -852,12 +854,13 @@ Public Class frmEditWoerterbuch
 
                     Dim ok As Boolean = True
                     If anzEintraege > 0 Then
-                        Call MsgBox(itemText & " hat " & anzEintraege & " Einträge im Wörterbuch. Trotzdem fortfahren?", MsgBoxStyle.OkCancel)
-                        If MsgBoxResult.Ok Then
+                        Dim returnValue As Integer = MsgBox(itemText & " hat " & anzEintraege & " Einträge im Wörterbuch. Trotzdem fortfahren?", MsgBoxStyle.OkCancel)
+                        If returnValue = MsgBoxResult.Ok Then
                             phaseMappings.removeStdName(itemText)
                             ok = True
                         Else
                             ok = False
+                            anzahlElements = anzahlElements - 1
                         End If
                     End If
 
@@ -879,12 +882,14 @@ Public Class frmEditWoerterbuch
 
                     Dim ok As Boolean = True
                     If anzEintraege > 0 Then
-                        Call MsgBox(itemText & " hat " & anzEintraege & " im Wörterbuch. Trotzdem fortfahren?", MsgBoxStyle.OkCancel)
-                        If MsgBoxResult.Ok Then
+                        Dim returnValue As Integer = MsgBox(itemText & " hat " & anzEintraege & " Einträge im Wörterbuch. Trotzdem fortfahren?", MsgBoxStyle.OkCancel)
+                        If returnValue = MsgBoxResult.Ok Then
+
                             milestoneMappings.removeStdName(itemText)
                             ok = True
                         Else
                             ok = False
+                            anzahlElements = anzahlElements - 1
                         End If
                     End If
 
@@ -916,6 +921,8 @@ Public Class frmEditWoerterbuch
             ToolStripStatusLabel1.Text = "ok, 1 Element aus Standard-Liste entfernt"
         ElseIf anzahlElements > 1 Then
             ToolStripStatusLabel1.Text = "ok, " & anzahlElements & " Elemente aus Standard-Liste entfernt"
+        Else
+            ToolStripStatusLabel1.Text = "abgebrochen ..."
         End If
 
 

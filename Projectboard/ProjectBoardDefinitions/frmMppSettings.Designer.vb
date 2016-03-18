@@ -35,12 +35,16 @@ Partial Class frmMppSettings
         Me.allOnOnePage = New System.Windows.Forms.CheckBox()
         Me.sortiertNachDauer = New System.Windows.Forms.CheckBox()
         Me.shwExtendedMode = New System.Windows.Forms.CheckBox()
+        Me.useAbbrev = New System.Windows.Forms.CheckBox()
+        Me.shwHorizontals = New System.Windows.Forms.CheckBox()
+        Me.KwInMilestone = New System.Windows.Forms.CheckBox()
+        Me.useOriginalNames = New System.Windows.Forms.CheckBox()
         Me.SuspendLayout()
         '
         'shwPhaseText
         '
         Me.shwPhaseText.AutoSize = True
-        Me.shwPhaseText.Location = New System.Drawing.Point(14, 86)
+        Me.shwPhaseText.Location = New System.Drawing.Point(14, 105)
         Me.shwPhaseText.Name = "shwPhaseText"
         Me.shwPhaseText.Size = New System.Drawing.Size(124, 17)
         Me.shwPhaseText.TabIndex = 0
@@ -50,7 +54,7 @@ Partial Class frmMppSettings
         'shwPhaseDate
         '
         Me.shwPhaseDate.AutoSize = True
-        Me.shwPhaseDate.Location = New System.Drawing.Point(14, 110)
+        Me.shwPhaseDate.Location = New System.Drawing.Point(14, 129)
         Me.shwPhaseDate.Name = "shwPhaseDate"
         Me.shwPhaseDate.Size = New System.Drawing.Size(96, 17)
         Me.shwPhaseDate.TabIndex = 1
@@ -70,7 +74,7 @@ Partial Class frmMppSettings
         'ShwMilestoneDate
         '
         Me.ShwMilestoneDate.AutoSize = True
-        Me.ShwMilestoneDate.Location = New System.Drawing.Point(181, 110)
+        Me.ShwMilestoneDate.Location = New System.Drawing.Point(181, 129)
         Me.ShwMilestoneDate.Name = "ShwMilestoneDate"
         Me.ShwMilestoneDate.Size = New System.Drawing.Size(113, 17)
         Me.ShwMilestoneDate.TabIndex = 5
@@ -80,7 +84,7 @@ Partial Class frmMppSettings
         'ShwMilestoneText
         '
         Me.ShwMilestoneText.AutoSize = True
-        Me.ShwMilestoneText.Location = New System.Drawing.Point(181, 86)
+        Me.ShwMilestoneText.Location = New System.Drawing.Point(181, 105)
         Me.ShwMilestoneText.Name = "ShwMilestoneText"
         Me.ShwMilestoneText.Size = New System.Drawing.Size(141, 17)
         Me.ShwMilestoneText.TabIndex = 4
@@ -100,7 +104,7 @@ Partial Class frmMppSettings
         'shwLegend
         '
         Me.shwLegend.AutoSize = True
-        Me.shwLegend.Location = New System.Drawing.Point(14, 180)
+        Me.shwLegend.Location = New System.Drawing.Point(14, 219)
         Me.shwLegend.Name = "shwLegend"
         Me.shwLegend.Size = New System.Drawing.Size(114, 17)
         Me.shwLegend.TabIndex = 8
@@ -110,7 +114,7 @@ Partial Class frmMppSettings
         'shwVerticals
         '
         Me.shwVerticals.AutoSize = True
-        Me.shwVerticals.Location = New System.Drawing.Point(14, 157)
+        Me.shwVerticals.Location = New System.Drawing.Point(14, 196)
         Me.shwVerticals.Name = "shwVerticals"
         Me.shwVerticals.Size = New System.Drawing.Size(98, 17)
         Me.shwVerticals.TabIndex = 7
@@ -129,7 +133,7 @@ Partial Class frmMppSettings
         '
         'okButton
         '
-        Me.okButton.Location = New System.Drawing.Point(132, 242)
+        Me.okButton.Location = New System.Drawing.Point(132, 281)
         Me.okButton.Name = "okButton"
         Me.okButton.RightToLeft = System.Windows.Forms.RightToLeft.No
         Me.okButton.Size = New System.Drawing.Size(75, 23)
@@ -140,7 +144,7 @@ Partial Class frmMppSettings
         'allOnOnePage
         '
         Me.allOnOnePage.AutoSize = True
-        Me.allOnOnePage.Location = New System.Drawing.Point(181, 157)
+        Me.allOnOnePage.Location = New System.Drawing.Point(181, 219)
         Me.allOnOnePage.Name = "allOnOnePage"
         Me.allOnOnePage.Size = New System.Drawing.Size(91, 17)
         Me.allOnOnePage.TabIndex = 11
@@ -150,7 +154,7 @@ Partial Class frmMppSettings
         'sortiertNachDauer
         '
         Me.sortiertNachDauer.AutoSize = True
-        Me.sortiertNachDauer.Location = New System.Drawing.Point(14, 203)
+        Me.sortiertNachDauer.Location = New System.Drawing.Point(14, 242)
         Me.sortiertNachDauer.Name = "sortiertNachDauer"
         Me.sortiertNachDauer.Size = New System.Drawing.Size(116, 17)
         Me.sortiertNachDauer.TabIndex = 12
@@ -160,19 +164,63 @@ Partial Class frmMppSettings
         'shwExtendedMode
         '
         Me.shwExtendedMode.AutoSize = True
-        Me.shwExtendedMode.Location = New System.Drawing.Point(181, 180)
+        Me.shwExtendedMode.Location = New System.Drawing.Point(181, 242)
         Me.shwExtendedMode.Name = "shwExtendedMode"
         Me.shwExtendedMode.Size = New System.Drawing.Size(101, 17)
         Me.shwExtendedMode.TabIndex = 13
         Me.shwExtendedMode.Text = "Extended Mode"
         Me.shwExtendedMode.UseVisualStyleBackColor = True
         '
+        'useAbbrev
+        '
+        Me.useAbbrev.AutoSize = True
+        Me.useAbbrev.Location = New System.Drawing.Point(14, 152)
+        Me.useAbbrev.Name = "useAbbrev"
+        Me.useAbbrev.Size = New System.Drawing.Size(133, 17)
+        Me.useAbbrev.TabIndex = 14
+        Me.useAbbrev.Text = "Abkürzung verwenden"
+        Me.useAbbrev.UseVisualStyleBackColor = True
+        '
+        'shwHorizontals
+        '
+        Me.shwHorizontals.AutoSize = True
+        Me.shwHorizontals.Location = New System.Drawing.Point(181, 196)
+        Me.shwHorizontals.Name = "shwHorizontals"
+        Me.shwHorizontals.Size = New System.Drawing.Size(110, 17)
+        Me.shwHorizontals.TabIndex = 15
+        Me.shwHorizontals.Text = "Horizontale Linien"
+        Me.shwHorizontals.UseVisualStyleBackColor = True
+        '
+        'KwInMilestone
+        '
+        Me.KwInMilestone.AutoSize = True
+        Me.KwInMilestone.Location = New System.Drawing.Point(181, 152)
+        Me.KwInMilestone.Name = "KwInMilestone"
+        Me.KwInMilestone.Size = New System.Drawing.Size(113, 17)
+        Me.KwInMilestone.TabIndex = 16
+        Me.KwInMilestone.Text = "KW im Meilenstein"
+        Me.KwInMilestone.UseVisualStyleBackColor = True
+        '
+        'useOriginalNames
+        '
+        Me.useOriginalNames.AutoSize = True
+        Me.useOriginalNames.Location = New System.Drawing.Point(14, 67)
+        Me.useOriginalNames.Name = "useOriginalNames"
+        Me.useOriginalNames.Size = New System.Drawing.Size(154, 17)
+        Me.useOriginalNames.TabIndex = 17
+        Me.useOriginalNames.Text = "Original-Namen verwenden"
+        Me.useOriginalNames.UseVisualStyleBackColor = True
+        '
         'frmMppSettings
         '
         Me.AcceptButton = Me.okButton
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(328, 277)
+        Me.ClientSize = New System.Drawing.Size(328, 329)
+        Me.Controls.Add(Me.useOriginalNames)
+        Me.Controls.Add(Me.KwInMilestone)
+        Me.Controls.Add(Me.shwHorizontals)
+        Me.Controls.Add(Me.useAbbrev)
         Me.Controls.Add(Me.shwExtendedMode)
         Me.Controls.Add(Me.sortiertNachDauer)
         Me.Controls.Add(Me.allOnOnePage)
@@ -187,7 +235,7 @@ Partial Class frmMppSettings
         Me.Controls.Add(Me.shwPhaseDate)
         Me.Controls.Add(Me.shwPhaseText)
         Me.Name = "frmMppSettings"
-        Me.Text = "Einstellungen Multiprojekt-Sichten"
+        Me.Text = "Einstellungen"
         Me.TopMost = True
         Me.ResumeLayout(False)
         Me.PerformLayout()
@@ -206,4 +254,8 @@ Partial Class frmMppSettings
     Friend WithEvents allOnOnePage As System.Windows.Forms.CheckBox
     Friend WithEvents sortiertNachDauer As System.Windows.Forms.CheckBox
     Friend WithEvents shwExtendedMode As System.Windows.Forms.CheckBox
+    Friend WithEvents useAbbrev As System.Windows.Forms.CheckBox
+    Friend WithEvents shwHorizontals As System.Windows.Forms.CheckBox
+    Friend WithEvents KwInMilestone As System.Windows.Forms.CheckBox
+    Friend WithEvents useOriginalNames As System.Windows.Forms.CheckBox
 End Class

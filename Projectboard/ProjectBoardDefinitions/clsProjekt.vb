@@ -290,7 +290,7 @@ Public Class clsProjekt
 
     ''' <summary>
     ''' setzt den Namen des Projektes fest oder gibt ihn zurück
-    ''' gleichzeitig wird auch der Name der Phase(1), sofern sie bereits existiert, auf diesen Namen festgesetzt 
+    ''' gleichzeitig wird auch der Name der Phase(1),  auf den Namen "rootPhaseName" festgesetzt 
     ''' </summary>
     ''' <value></value>
     ''' <returns></returns>
@@ -2496,7 +2496,6 @@ Public Class clsProjekt
     Public Sub calculateShapeCoord(ByVal phaseNr As Integer, ByRef zeilenOffset As Integer,
                                        ByRef top As Double, ByRef left As Double, ByRef width As Double, ByRef height As Double)
         Dim cphase As clsPhase
-        'Dim phasenNameID As String
         Dim lastEndDate As Date = StartofCalendar.AddDays(-1)
 
 
@@ -2543,17 +2542,9 @@ Public Class clsProjekt
                 ' Änderung 18.3.14 Zeilenoffset gibt an, in die wievielte Zeile das geschrieben werden soll 
                 If phaseNr = 1 Then
                     Me.CalculateShapeCoord(top, left, width, height)
-                    'top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.1 * boxHeight
-                    'left = (phasenStart / 365) * boxWidth * 12
-                    'width = ((phasenDauer) / 365) * boxWidth * 12
-                    'height = 0.8 * boxHeight
                 Else
                     cphase.calculatePhaseShapeCoord(top, left, width, height)
                     top = top + (zeilenOffset) * boxHeight
-                    'top = topOfMagicBoard + (Me.tfZeile - 1) * boxHeight + 0.5 * (1 - 0.33) * boxHeight + (zeilenOffset) * boxHeight
-                    'left = (phasenStart / 365) * boxWidth * 12
-                    'width = ((phasenDauer) / 365) * boxWidth * 12
-                    'height = 0.33 * boxHeight
                 End If
 
 
@@ -2953,6 +2944,240 @@ Public Class clsProjekt
         End Get
 
     End Property
+
+    ''' <summary>
+    ''' gibt die Anzahl Zeilen zurück, die die Swimlane phaseID im aktuellen Projekt im "Extended Drawing Mode" benötigt 
+    ''' Aktuell ist es so, dass nur Phasen Zeilenvorschub triggern, Meilensteine werden in der obersten Phase oder in der Phase gezeichnet, 
+    ''' die ihr Großvater, Ur-Großvater, etc ist 
+    ''' </summary>
+    ''' <param name="selectedPhaseIDs">die Liste mit den PhaseIDs, die gezeichnet werden sollen</param>
+    ''' <param name="selectedMilestoneIDs">die Liste mit den MilestoneIDs, die gezeichnet werden sollen</param>
+    ''' <param name="extended">wenn </param>
+    ''' <param name="considerTimespace">ist ein Zeitraum zu berücksichtigen? dann triggern Phasen nur dann einen Zeilenvorschub, wenn sie im Zeitraum liegen </param>
+    ''' <param name="zeitraumGrenzeL" >der linke Rand des Zeitraums; kann showRangeL sein, muss aber nicht wenn showallIfOne gesetzt ist</param>
+    ''' <param name="zeitraumGrenzeR" >der rechte Rand des Zeitraums; kann showRangeR sein, muss aber nicht wenn showallIfOne gesetzt ist</param>
+    ''' <param name="considerAll"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property calcNeededLinesSwl(ByVal swimlaneID As String, _
+                                                ByVal selectedPhaseIDs As Collection, ByVal selectedMilestoneIDs As Collection, _
+                                                ByVal extended As Boolean, ByVal considerTimespace As Boolean,
+                                                ByVal zeitraumGrenzeL As Integer, ByVal zeitraumGrenzeR As Integer, _
+                                                ByVal considerAll As Boolean) As Integer
+        Get
+
+
+            Dim tmpValue As Integer
+
+
+            ' jetzt wird erst mal bestimmt, von welcher Phase bis zu welcher Phase die Kind-Phasen der swimlaneID liegen
+            ' dabei wird der Umstand ausgenutzt, dass in der PhasenListe 1..PhasesCount alle Kind-Phasen 
+            ' unmittelbar nach der Eltern-Phase kommen ;
+            ' generell können Kind-Elemente, egal ob Meilensteine oder Phasen nur in den PhasenNummern start .. ende vorkommen
+
+            Dim startNr As Integer = 0
+            Dim endNr As Integer = 0
+
+
+            ' in startNr ist nachher die Phasen-Nummer der swimlane, in startNr +1 die Phasen-Nummer des ersten Kindes 
+            ' in endNr ist die Phasen-Nummer des letzten Kindes 
+            Call Me.calcStartEndChildNrs(swimlaneID, startNr, endNr)
+
+            ' zum Bestimmen der optimierten Zeilenanzahl 
+            ' es kann in dieser Swimlane nicht mehr als endNr-startNr Zeilen geben 
+            Dim dimension As Integer = endNr - startNr
+            Dim lastEndDates(dimension) As Date
+            For i As Integer = 0 To dimension
+                lastEndDates(i) = StartofCalendar.AddDays(-1)
+            Next
+            Dim maxOffsetZeile As Integer = 1
+            Dim curOffsetZeile As Integer = 1
+
+            ' jetzt wird bestimmt, wieviele der selectedPhaseIDs, selectedMilestoneIDs denn überhaupt (Kindes-)Kinder der betrachteten Swimlane sind 
+            ' es ist nicht notwendig, das bei considerAll zu machen 
+
+            Dim childPhaseIDs As New Collection
+            Dim childMilestoneIDs As New Collection
+
+            If Not considerAll Then
+                childPhaseIDs = Me.schnittmengeChilds(swimlaneID, selectedPhaseIDs)
+                childMilestoneIDs = Me.schnittmengeChilds(swimlaneID, selectedMilestoneIDs)
+            End If
+
+            Dim zeilenOffset As Integer = 1
+
+            If Not extended Then
+                ' es wird grundsätzlich nur eine Zeile benötigt 
+                tmpValue = 1
+
+            ElseIf childPhaseIDs.Count <= 1 And Not considerAll Then
+                ' es wird nur eine Zeile benötigt 
+                tmpValue = 1
+
+            Else
+                ' Schleife über alle Kind Phasen der Swimlane (startnr+1 bis zu endNr)
+                ' muss erst ab startnr + 1 beginnen, da phase(startNr) ja die swimlane selber ist ... 
+                For i = startNr + 1 To endNr
+                    Try
+                        Dim cPhase As clsPhase = Me.getPhase(i)
+                        Dim relevant As Boolean = False
+                        If Not IsNothing(cPhase) Then
+                            If considerAll Then
+                                relevant = True
+                            Else
+                                If childPhaseIDs.Contains(cPhase.nameID) Then
+                                    relevant = True
+                                Else
+                                    relevant = False
+                                End If
+                            End If
+
+                            If relevant Then           ' cphase ist eine der selektierten Phasen
+
+                                If Not considerTimespace _
+                                    Or _
+                                    (considerTimespace And phaseWithinTimeFrame(Me.Start, cPhase.relStart, cPhase.relEnde, _
+                                                                                zeitraumGrenzeL, zeitraumGrenzeR)) Then
+
+
+                                    Dim requiredZeilen As Integer = Me.calcNeededLinesSwl(cPhase.nameID, _
+                                                                                           selectedPhaseIDs, _
+                                                                                           selectedMilestoneIDs, _
+                                                                                           extended, _
+                                                                                           considerTimespace, zeitraumGrenzeL, zeitraumGrenzeR, _
+                                                                                           considerAll)
+                                    With cPhase
+
+                                        'If (zeilenOffset = 1) And (maxOffsetZeile = 1) Then
+                                        '    ' er muss sich so verhalten wie es bisher war 
+                                        '    ' old stuff
+
+
+                                        '    'phasenName = .name
+                                        '    If DateDiff(DateInterval.Day, lastEndDates(zeilenOffset - 1), .getStartDate) < 0 Then
+                                        '        zeilenOffset = zeilenOffset + 1
+                                        '        maxOffsetZeile = System.Math.Max(zeilenOffset, maxOffsetZeile)
+                                        '        lastEndDates(zeilenOffset - 1) = StartofCalendar.AddDays(-1)
+                                        '    End If
+
+                                        '    If DateDiff(DateInterval.Day, lastEndDates(zeilenOffset - 1), .getEndDate) > 0 Then
+                                        '        lastEndDates(zeilenOffset - 1) = .getEndDate
+                                        '    End If
+
+
+
+                                        'Else
+                                        ' man ist in der zweiten, dritten etc Zeile 
+                                        ' das im Folgenden gilt ebenso, wenn zeilenoffset = 1 and maxoffsetZeile = 1 
+                                        zeilenOffset = findeBesteZeile(lastEndDates, maxOffsetZeile, .getStartDate, requiredZeilen)
+                                        maxOffsetZeile = System.Math.Max(zeilenOffset + requiredZeilen - 1, maxOffsetZeile)
+
+                                        If DateDiff(DateInterval.Day, lastEndDates(zeilenOffset - 1), .getEndDate) > 0 Then
+                                            lastEndDates(zeilenOffset - 1) = .getEndDate
+                                        End If
+
+                                        'End If
+
+                                    End With
+
+
+
+                                Else
+                                    ' Phase ist nicht im Zeitraum, also kein Zeilenoffset notwendig, kein lastEndDate notwendig 
+                                End If
+                            End If
+
+
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
+                Next
+
+                tmpValue = maxOffsetZeile
+
+            End If
+
+            calcNeededLinesSwl = tmpValue
+
+        End Get
+
+    End Property
+
+    ''' <summary>
+    ''' berechnet für die gegebene Phasen-ID die Start und End-Nummer der Kind-Phasen
+    ''' in der Liste der Phasen in einem Projekt sind alle Kind-Phasen unmittelbar nach der Eltern-Phase
+    ''' </summary>
+    ''' <param name="phaseID"></param>
+    ''' <param name="startNr"></param>
+    ''' <param name="endNr"></param>
+    ''' <remarks></remarks>
+    Public Sub calcStartEndChildNrs(ByVal phaseID As String, _
+                                         ByRef startNr As Integer, ByRef endNr As Integer)
+
+        ' jetzt wird erst mal bestimmt, von welcher Phase bis zu welcher Phase die Kind-Phasen der swimlaneID liegen
+        ' dabei wird der Umstand ausgenutzt, dass in der PhasenListe 1..PhasesCount alle Kind-Phasen 
+        ' unmittelbar nach der Eltern-Phase kommen ;
+        ' generell können Kind-Elemente, egal ob Meilensteine oder Phasen nur in den PhasenNummern start .. ende vorkommen
+
+        Dim stillChild As Boolean = True
+        Dim fullSwlBreadCrumb As String = Me.getBcElemName(phaseID)
+
+        startNr = Me.hierarchy.getPMIndexOfID(phaseID)
+        endNr = startNr
+
+        Do While endNr + 1 <= Me.CountPhases And stillChild
+            Dim cPhase As clsPhase = Me.getPhase(endNr + 1)
+
+            If Not IsNothing(cPhase) Then
+                Dim curFullBreadCrumb As String = Me.getBcElemName(cPhase.nameID)
+                If curFullBreadCrumb.StartsWith(fullSwlBreadCrumb) Then
+                    ' is still Child
+                    endNr = endNr + 1
+                Else
+                    stillChild = False
+                End If
+            Else
+                stillChild = False
+            End If
+        Loop
+
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt eine Collection zurück, die die IDs der Elemente enthält, die in IDCollection enthalten sind 
+    ''' und ausserdem Kinder bzw Kindes-Kinder des Elements mit ID=phaseID  sind 
+    ''' </summary>
+    ''' <param name="phaseID"></param>
+    ''' <param name="IDCollection"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property schnittmengeChilds(ByVal phaseID As String, ByVal IDCollection As Collection) As Collection
+        Get
+            Dim fullSwlBreadCrumb As String = Me.getBcElemName(phaseID)
+            Dim childCollection As New Collection
+
+            For Each item As Object In IDCollection
+                If CStr(item) <> phaseID Then
+                    ' sich selber ausschließen ...
+                    Dim curFullBreadCrumb As String = Me.getBcElemName(CStr(item))
+
+                    If curFullBreadCrumb.StartsWith(fullSwlBreadCrumb) Then
+                        ' ist Kind Element, daher aufnehmen 
+                        childCollection.Add(CStr(item), CStr(item))
+                    End If
+                End If
+            Next
+
+            schnittmengeChilds = childCollection
+
+        End Get
+    End Property
+
     ''' <summary>
     ''' findet für das aktuelle Projekt heraus, wieviele zusätzliche Zeilen für die selektierten Meilensteine
     '''  (gezeichnet zur nächst höheren aber auch selektierten Phase) beim Report benötigt werden
@@ -3044,7 +3269,7 @@ Public Class clsProjekt
 
                     Next j
                 End If
-                
+
 
             Next mx
 
@@ -3104,9 +3329,9 @@ Public Class clsProjekt
             Next i      ' nächste Phase im Projekt betrachten
 
             If anzPhases > 1 Then
-                tmpValue = zeilenOffset ' kein +1, weil ja eh alle gezeichnet werden ...
+                tmpValue = zeilenOffset
             Else
-                tmpValue = 1 ' kein +1, weil ja eh alle gezeichnet werden 
+                tmpValue = 1
             End If
 
 
@@ -3208,6 +3433,6 @@ Public Class clsProjekt
 
     End Sub
 
-  
+
 
 End Class

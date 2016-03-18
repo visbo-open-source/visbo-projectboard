@@ -149,16 +149,31 @@
 
         If deleteAllChilds Then
 
-            ' jetzt alle Kinder löschen  
-            For i As Integer = 1 To elemNode.childCount
-                childNodeID = elemNode.getChild(i)
+            Dim k As Integer = 1
+
+
+            ' jetzt alle Kinder löschen
+            While elemNode.childCount > 0
+
+                childNodeID = elemNode.getChild(k)
                 If elemIDIstMeilenstein(childNodeID) Then
                     ' lösche Meilenstein 
                     Me.removeMeilenstein(childNodeID)
                 Else
                     Me.removePhase(childNodeID, True)
+
                 End If
-            Next
+            End While
+
+            '' '' ''For i As Integer = 1 To elemNode.childCount
+            '' '' ''    childNodeID = elemNode.getChild(i)
+            '' '' ''    If elemIDIstMeilenstein(childNodeID) Then
+            '' '' ''         lösche Meilenstein 
+            '' '' ''        Me.removeMeilenstein(childNodeID)
+            '' '' ''    Else
+            '' '' ''        Me.removePhase(childNodeID, True)
+            '' '' ''    End If
+            '' '' ''Next
         Else
             ' hier alle Kinder umhängen: die bekommen die ParentID statt nameID als ihren neuen Vater 
             For i As Integer = 1 To elemNode.childCount
@@ -184,6 +199,71 @@
 
 
     End Sub
+
+    ''' <summary>
+    ''' gibt zu einer als als voller Name (Breadcrumb + Elemename) übergebenen Phase zurück, ob die so im Projekt existiert 
+    ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
+    ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
+    '''  
+    ''' </summary>
+    ''' <param name="fullName">der volle Name, das heisst Breadcrum plus Name</param>
+    ''' <param name="strict">gibt an, ob der volle Breadcrumb berücksichtigt werden soll oder nur der Name</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsPhase(ByVal fullName As String, ByVal strict As Boolean) As Boolean
+        Get
+            Dim elemName As String = ""
+            Dim breadcrumb As String = ""
+
+            Call splitHryFullnameTo2(fullName, elemName, breadcrumb)
+            If strict Then
+                ' breadcrumb soll unverändert beachtet werden 
+            Else
+                breadcrumb = ""
+            End If
+
+            Dim cphase As clsPhase = Me.getPhase(elemName, breadcrumb, 1)
+            If IsNothing(cphase) Then
+                containsPhase = False
+            Else
+                containsPhase = True
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zu einem als als voller Name (Breadcrumb + Elemename) übergebenen Meilenstein zurück, ob der so im Projekt existiert 
+    ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
+    ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
+    ''' </summary>
+    ''' <param name="fullName"></param>
+    ''' <param name="strict"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsMilestone(ByVal fullName As String, ByVal strict As Boolean) As Boolean
+        Get
+            Dim elemName As String = ""
+            Dim breadcrumb As String = ""
+
+            Call splitHryFullnameTo2(fullName, elemName, breadcrumb)
+            If strict Then
+                ' breadcrumb soll unverändert beachtet werden 
+            Else
+                breadcrumb = ""
+            End If
+
+            Dim cMilestone As clsMeilenstein = Me.getMilestone(elemName, breadcrumb, 1)
+            If IsNothing(cMilestone) Then
+                containsMilestone = False
+            Else
+                containsMilestone = True
+            End If
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' entfernt den Meilenstein mit der übergebenen nameID 
@@ -223,7 +303,7 @@
         ' in der Hierarchie-Liste löschen 
         Me.hierarchy.removeAt(indexInHierarchy - 1)
 
-        Dim cPhase As clsPhase = Me.getPhase(parentID)
+        Dim cPhase As clsPhase = Me.getPhaseByID(parentID)
 
         ' in der Meilenstein-Liste der Phase löschen 
         cPhase.removeMilestoneAt(indexInMilestoneList - 1)
@@ -746,7 +826,7 @@
 
     ''' <summary>
     ''' in der namenListe können Elem-Namen oder Elem-IDs sein; wenn ein Elem-NAme gefunden wird, 
-    ''' so wird er ersetzt durch alle Elem-IDs, diesen Namen tragen 
+    ''' so wird er ersetzt durch alle Elem-IDs, die diesen Namen tragen 
     ''' es wird sichergestellt, dass jede ID tatsächlich nur einmal aufgeführt ist 
     ''' </summary>
     ''' <param name="namenListe"></param>
@@ -764,47 +844,43 @@
             Dim iDItem As String
             Dim phaseIndices() As Integer
             Dim milestoneIndices(,) As Integer
-            Dim tmpMS As clsMeilenstein
-            Dim tmpPhase As clsPhase
-
-            ' found wird benötigt, um festzustellen, ob es das Element überhaupt gibt; vorher gab es einen Fehler, der nicht abgefangen war
-            ' dann war die ganze Liste immer Null 
-            Dim found As Boolean
 
             For i As Integer = 1 To namenListe.Count
 
                 itemName = CStr(namenListe.Item(i))
-                found = False
 
                 If istElemID(itemName) Then
 
+                    Dim ok As Boolean = True
                     If namesAreMilestones Then
-                        tmpMS = Me.getMilestoneByID(itemName)
-                        If Not IsNothing(tmpMS) Then
-                            found = True
-                            sortDate = tmpMS.getDate
+                        Dim cMilestone As clsMeilenstein = Me.getMilestoneByID(itemName)
+                        If Not IsNothing(cMilestone) Then
+                            sortDate = cMilestone.getDate
+                        Else
+                            ok = False
                         End If
 
                     Else
-                        tmpPhase = Me.getPhaseByID(itemName)
-                        If Not IsNothing(tmpPhase) Then
-                            found = True
-                            sortDate = tmpPhase.getStartDate
+                        Dim cphase As clsPhase = Me.getPhaseByID(itemName)
+                        If Not IsNothing(cphase) Then
+                            sortDate = cphase.getStartDate
+                        Else
+                            ok = False
                         End If
+
                     End If
 
-                    If found Then
-                        If Not tmpSortList.ContainsValue(itemName) Then
+                    If ok And Not tmpSortList.ContainsValue(itemName) Then
 
-                            Do While tmpSortList.ContainsKey(sortDate)
-                                sortDate = sortDate.AddMilliseconds(1)
-                            Loop
+                        Do While tmpSortList.ContainsKey(sortDate)
+                            sortDate = sortDate.AddMilliseconds(1)
+                        Loop
 
-                            tmpSortList.Add(sortDate, itemName)
+                        tmpSortList.Add(sortDate, itemName)
 
-                        End If
                     End If
-                    
+
+
                 Else
                     Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb)
 
@@ -831,9 +907,6 @@
 
                                     End If
 
-                                    'If Not iDCollection.Contains(iDItem) Then
-                                    '    iDCollection.Add(iDItem, iDItem)
-                                    'End If
 
                                 Catch ex As Exception
 
@@ -1047,6 +1120,407 @@
 
 
     End Function
+
+    ''' <summary>
+    ''' gibt die Anzahl der Swimlanes zurück, die für das Projekt bei der gegebenen Menge von Phasen und Meilensteinen gezeichnet werden müssen; 
+    ''' dabei wird unterschieden, ob es sich um das BHTC Schema handelt oder um eine freie Swimlane Definition handelt  
+    ''' </summary>
+    ''' <param name="considerAll">sollen alle Swimlanes betrachtet werden</param>
+    ''' <param name="breadCrumbArray">enthält eine Liste der vollständigen Breadcrumbs aller gewählten Elemente </param>
+    ''' <param name="isBhtcSchema">gibt an, ob die Swimlanes dadurch bestimmt sind, dass sie auf der 2. Ebene sind oder ob alles als Swimlane behandelt wird, was erst bei der 2.Stufe (wie bei BHTC) 
+    ''' in einer ersten Implementierung wird Level2 betrachtet</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSwimLanesCount(ByVal considerAll As Boolean, _
+                                               ByVal breadCrumbArray() As String, _
+                                               ByVal isBhtcSchema As Boolean) As Integer
+        Get
+            Dim anzSwimlanes As Integer = 0
+            Dim parentNameID As String = rootPhaseName
+
+            Dim sptr As Integer
+            ' ein fullBreadCrumb enthält auch den ElemName am Schluss ...
+            Dim fullSwlBreadCrumb As String
+
+            If IsNothing(breadCrumbArray) Then
+                sptr = -1
+            Else
+                sptr = breadCrumbArray.Length - 1
+            End If
+
+            If Not isBhtcSchema Then
+                ' ist jetzt implementiert ...  
+                Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+
+                For Each childObj As Object In ChildCollection
+                    Dim swimlaneID As String = CStr(childObj)
+                    fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                    If considerAll Then
+                        anzSwimlanes = anzSwimlanes + 1
+                    Else
+                        ' ist eines der Elemente in der aktuellen Swimlane enthalten ? 
+                        Dim found As Boolean = False
+                        Dim index = 0
+                        Do While Not found And index <= sptr
+                            If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
+                                found = True
+                            Else
+                                index = index + 1
+                            End If
+                        Loop
+                        If found Then
+                            anzSwimlanes = anzSwimlanes + 1
+                        End If
+                    End If
+                    ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                Next
+
+            Else
+                Dim ankerName As String = "BHTC milestones"
+                Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
+
+
+                If Not IsNothing(ankerPhase) Then
+                    parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
+                End If
+
+                If parentNameID.Length > 1 Then
+
+                    Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(parentNameID, False)
+
+                    For Each obj As Object In segmentCollection
+                        Dim sgementNameID As String = CStr(obj)
+                        Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(sgementNameID, False)
+
+                        For Each childObj As Object In ChildCollection
+                            Dim swimlaneID As String = CStr(childObj)
+                            fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                            If considerAll Then
+                                anzSwimlanes = anzSwimlanes + 1
+                            Else
+                                ' ist eines der Elemente in der aktuellen Swimlane enthalten ? 
+                                Dim found As Boolean = False
+                                Dim index = 0
+                                Do While Not found And index <= sptr
+                                    If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
+                                        found = True
+                                    Else
+                                        index = index + 1
+                                    End If
+                                Loop
+                                If found Then
+                                    anzSwimlanes = anzSwimlanes + 1
+                                End If
+                            End If
+                            ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                        Next
+
+                    Next
+
+                End If
+
+
+
+            End If
+
+            getSwimLanesCount = anzSwimlanes
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Anzahl der Segmente, das heisst die Anzahl Phasen auf Hierarchie-Stufe 1 zurück 
+    ''' </summary>
+    ''' <param name="considerAll">sollen alle Elemente betrachtet werden </param>
+    ''' <param name="breadCrumbArray">es sollen nur die Elemente betrachtet werden, die </param>
+    ''' <param name="isBhtcSchema"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSegmentsCount(ByVal considerAll As Boolean, _
+                                                   ByVal breadCrumbArray() As String, _
+                                                   ByVal isBhtcSchema As Boolean) As Integer
+        Get
+
+            Dim ankerName As String = "BHTC milestones"
+            Dim anzSegments = 0
+            Dim sptr As Integer
+
+            If Not IsNothing(breadCrumbArray) Then
+                sptr = breadCrumbArray.Length - 1
+            Else
+                sptr = -1
+            End If
+
+            Dim fullSwlBreadCrumb As String
+
+
+            If Not isBhtcSchema Then
+                anzSegments = 0
+            Else
+                Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
+                Dim parentNameID As String = ""
+
+                If Not IsNothing(ankerPhase) Then
+                    parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
+                End If
+
+                If parentNameID.Length > 1 Then
+
+                    Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+
+                    For Each obj As Object In segmentCollection
+                        Dim segmentNameID As String = CStr(obj)
+                        fullSwlBreadCrumb = Me.getBcElemName(segmentNameID)
+
+                        If considerAll Then
+                            anzSegments = anzSegments + 1
+                        Else
+                            ' ist eines der Elemente im aktuellen Segment enthalten ? 
+                            Dim found As Boolean = False
+                            Dim index = 0
+                            Do While Not found And index <= sptr
+                                If breadCrumbArray(index).StartsWith(fullSwlBreadCrumb) Then
+                                    found = True
+                                Else
+                                    index = index + 1
+                                End If
+                            Loop
+                            If found Then
+                                anzSegments = anzSegments + 1
+                            End If
+                        End If
+
+                    Next
+
+                End If
+
+            End If
+
+            getSegmentsCount = anzSegments
+
+        End Get
+    End Property
+    
+
+    ''' <summary>
+    ''' gibt die Swimlane mit der Reihenfolge-Nr "index" zurück; index läuft von 1..Anzahl 
+    ''' Nothing, wenn es die entsprechende Swimlane gar nicht gibt  
+    ''' </summary>
+    ''' <param name="index"></param>
+    ''' <param name="considerAll">sollen alle betrachtet werden</param>
+    ''' <param name="breadCrumbArray">enthält die Breadcrumbs der zu betrachtenden Swimlanes</param>
+    ''' <param name="isBhtcSchema"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSwimlane(ByVal index As Integer, ByVal considerAll As Boolean, _
+                                               ByVal breadCrumbArray() As String, _
+                                               ByVal isBhtcSchema As Boolean) As clsPhase
+        Get
+
+            Dim tmpPhase As clsPhase = Nothing
+            Dim ankerName As String = "BHTC milestones"
+            Dim parentNameID As String = rootPhaseName
+
+            Dim anzSwimlanes As Integer = 0
+            Dim sptr As Integer = -1
+
+            If Not IsNothing(breadCrumbArray) Then
+                sptr = breadCrumbArray.Length - 1
+            End If
+
+
+
+            ' ein fullBreadCrumb enthält auch den ElemName am Schluss ...
+            Dim fullSwlBreadCrumb As String
+
+            If index > 0 Then
+
+                If Not isBhtcSchema Then
+
+                    Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+
+                    For Each childObj As Object In ChildCollection
+                        Dim swimlaneID As String = CStr(childObj)
+                        fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                        If considerAll Then
+                            anzSwimlanes = anzSwimlanes + 1
+                            If index = anzSwimlanes Then
+                                ' das ist jetzt die Phase 
+                                tmpPhase = Me.getPhaseByID(swimlaneID)
+                                Exit For
+                            End If
+                        Else
+                            ' ist eines der Elemente in der Swimlane enthalten ? 
+                            Dim found As Boolean = False
+                            Dim ix = 0
+                            Do While Not found And ix <= sptr
+                                If breadCrumbArray(ix).StartsWith(fullSwlBreadCrumb) Then
+                                    found = True
+                                Else
+                                    ix = ix + 1
+                                End If
+                            Loop
+                            If found Then
+                                anzSwimlanes = anzSwimlanes + 1
+                                If index = anzSwimlanes Then
+                                    ' das ist jetzt die Phase 
+                                    tmpPhase = Me.getPhaseByID(swimlaneID)
+                                    Exit For
+                                End If
+                            End If
+                        End If
+                        ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                    Next
+
+                Else
+                    Dim ankerPhase As clsPhase = Me.getPhase(ankerName)
+
+                    If Not IsNothing(ankerPhase) Then
+                        parentNameID = Me.hierarchy.getParentIDOfID(ankerPhase.nameID)
+                    End If
+
+                    If parentNameID.Length > 1 Then
+
+                        Dim segmentCollection As Collection = Me.hierarchy.getChildIDsOf(parentNameID, False)
+
+                        For Each obj As Object In segmentCollection
+                            Dim segmentNameID As String = CStr(obj)
+                            Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(segmentNameID, False)
+
+                            For Each childObj As Object In ChildCollection
+                                Dim swimlaneID As String = CStr(childObj)
+                                fullSwlBreadCrumb = Me.getBcElemName(swimlaneID)
+
+                                If considerAll Then
+                                    anzSwimlanes = anzSwimlanes + 1
+                                    If index = anzSwimlanes Then
+                                        ' das ist jetzt die Phase 
+                                        tmpPhase = Me.getPhaseByID(swimlaneID)
+                                        Exit For
+                                    End If
+                                Else
+                                    ' ist eines der Elemente in der Swimlane enthalten ? 
+                                    Dim found As Boolean = False
+                                    Dim ix = 0
+                                    Do While Not found And ix <= sptr
+                                        If breadCrumbArray(ix).StartsWith(fullSwlBreadCrumb) Then
+                                            found = True
+                                        Else
+                                            ix = ix + 1
+                                        End If
+                                    Loop
+                                    If found Then
+                                        anzSwimlanes = anzSwimlanes + 1
+                                        If index = anzSwimlanes Then
+                                            ' das ist jetzt die Phase 
+                                            tmpPhase = Me.getPhaseByID(swimlaneID)
+                                            Exit For
+                                        End If
+                                    End If
+                                End If
+                                ' wenn jetzt die Auswahl = 0 ist, dann sollen alle betrachtet werden ...
+
+                            Next
+
+                            If index = anzSwimlanes Then
+                                Exit For
+                            End If
+
+                        Next
+
+                    End If
+
+
+                End If
+
+            End If
+
+            getSwimlane = tmpPhase
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt für eine übergebene ID den vollen BreadCrum+ElemName zurück
+    ''' den Abschluss bildet stets ein #, damit über ..startwith festgestellt werden kann, ob ein Element Kind eines anderen ist 
+    ''' ?, wenn PhaseID nicht existiert 
+    ''' </summary>
+    ''' <param name="nameID"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBcElemName(ByVal nameID As String) As String
+        Get
+
+            Dim elemName As String = ""
+            Dim fullName As String = "?"
+
+            If istElemID(nameID) Then
+                elemName = elemNameOfElemID(nameID)
+                fullName = calcHryFullname(elemName, _
+                                              Me.hierarchy.getBreadCrumb(nameID)) & "#"
+            End If
+
+            getBcElemName = fullName
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' liefert einen Array zurück, der die Breadcrumbs inkl. der Namen der in selectedPhaseIDs und selectedMilestoneIDs übergebenen 
+    ''' Elemente enthält 
+    ''' </summary>
+    ''' <param name="selectedPhaseIDs">Liste der PhaseIDs</param>
+    ''' <param name="selectedMilestoneIDs">Liste der MilestoneIDs</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getBreadCrumbArray(ByVal selectedPhaseIDs As Collection, ByVal selectedMilestoneIDs As Collection) As String()
+        Get
+            ' im Array suchfeld sind die 
+            Dim suchDimension As Integer = selectedPhaseIDs.Count + selectedMilestoneIDs.Count - 1
+
+
+            If suchDimension >= 0 Then
+                Dim suchFeld(suchDimension) As String
+                Dim elemID As String = ""
+                Dim sptr As Integer = 0
+
+                ' suchfeld aufbauen 
+                For i As Integer = 1 To selectedPhaseIDs.Count
+                    elemID = CStr(selectedPhaseIDs.Item(i))
+                    suchFeld(sptr) = Me.getBcElemName(elemID)
+                    sptr = sptr + 1
+                Next
+
+                For i As Integer = 1 To selectedMilestoneIDs.Count
+                    elemID = CStr(selectedMilestoneIDs.Item(i))
+                    suchFeld(sptr) = Me.getBcElemName(elemID)
+                    sptr = sptr + 1
+                Next
+
+                sptr = sptr - 1
+                getBreadCrumbArray = suchFeld
+
+            Else
+                getBreadCrumbArray = Nothing
+            End If
+
+
+        End Get
+    End Property
+
+
     ''' <summary>
     ''' gibt alle Phasen bzw. Milestone ElemIDs in einer Collection zurück 
     ''' die Milestones gehen alle mit 1§ los, die Phasen alle mit 0§; 
@@ -2137,88 +2611,7 @@
 
     End Property
 
-    'Public Property Start() As Integer
-
-    '    Get
-    '        Start = _Start
-    '    End Get
-
-    '    Set(value As Integer)
-    '        If _Status = ProjektStatus(1) Or _Status = ProjektStatus(2) Or _
-    '                                         _Status = ProjektStatus(2) Then
-    '            Call MsgBox("der Startzeitpunkt kann nicht mehr verändert werden ... ")
-
-    '        ElseIf value < _Start + _earliestStart Then
-    '            Call MsgBox("der neue Startzeitpunkt liegt vor dem bisher zugelassenen frühestmöglichen Startzeitpunkt ...")
-
-    '        ElseIf value > _Start + _latestStart Then
-    '            Call MsgBox("der neue Startzeitpunkt liegt nach dem bisher zugelassenen spätestmöglichen Startzeitpunkt ...")
-
-    '        Else
-    '            Dim absEarliest As Integer
-    '            Dim absLatest As Integer
-    '            Dim earliestDate As Date
-    '            Dim newDate As Date = StartofCalendar.AddMonths(value - 1)
-    '            Dim Heute As Date = Now
-
-    '            If DateDiff(DateInterval.Month, newDate, Heute) < 0 Then
-    '                Call MsgBox("der neue Startzeitpunkt liegt in der Vergangenheit ...")
-    '            Else
-    '                absEarliest = _Start + _earliestStart
-    '                absLatest = _Start + _latestStart
-
-    '                earliestDate = StartofCalendar.AddMonths(absEarliest - 1)
-    '                Dim DifferenceInMonths As Long = DateDiff(DateInterval.Month, earliestDate, Heute)
-
-    '                If DifferenceInMonths < 0 Then
-    '                    ' frühestmöglicher Startzeitpunkt ist der aktuelle Monat
-    '                    absEarliest = DateDiff(DateInterval.Month, Heute, StartofCalendar) + 1
-    '                End If
-
-    '                _Start = value
-    '                _earliestStart = absEarliest - _Start
-    '                _latestStart = absLatest - _Start
-    '            End If
-
-
-    '        End If
-    '    End Set
-    'End Property
-
-    'Public Property Status() As String
-    '    Get
-    '        Status = _Status
-    '    End Get
-    '    Set(value As String)
-    '        If value = ProjektStatus(0) Then
-    '            _Status = value
-    '        ElseIf value = ProjektStatus(1) Or value = ProjektStatus(2) Or _
-    '                                           value = ProjektStatus(3) Then
-    '            _Status = value
-    '            _earliestStart = 0
-    '            _latestStart = 0
-    '        Else
-    '            Call MsgBox("unzulässiger Wert für Status")
-    '        End If
-    '    End Set
-    'End Property
-
-    'Public Property StartOffset As Integer
-    '    Get
-    '        StartOffset = _StartOffset
-    '    End Get
-
-    '    Set(value As Integer)
-    '        If value >= _earliestStart And value <= _latestStart Then
-    '            _StartOffset = value
-    '        Else
-    '            Call MsgBox("unzulässiger Wert für StartOffset ...")
-    '        End If
-    '    End Set
-
-    'End Property
-
-
+  
 
     Public Sub New()
 
@@ -2233,20 +2626,10 @@
         _earliestStart = 0
         _latestStart = 0
         '_Status = ProjektStatus(0)
-
+        Schrift = 12
+        Schriftfarbe = RGB(0, 0, 0)
     End Sub
 
-    'Public Sub New(ByVal projektStart As Integer, ByVal earliestValue As Integer, ByVal latestValue As Integer)
-
-    '    AllPhases = New List(Of clsPhase)
-    '    relStart = 1
-    '    iDauer = 0
-    '    _StartOffset = 0
-    '    _Start = projektStart
-    '    _earliestStart = earliestValue
-    '    _latestStart = latestValue
-    '    _Status = ProjektStatus(0)
-
-    'End Sub
+ 
 
 End Class

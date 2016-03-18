@@ -79,8 +79,11 @@ Public Class ThisWorkbook
 
             awinSettings.databaseURL = My.Settings.mongoDBURL
             awinSettings.databaseName = My.Settings.mongoDBname
+            awinSettings.globalPath = My.Settings.globalPath
             awinSettings.awinPath = My.Settings.awinPath
-
+            awinSettings.visboTaskClass = My.Settings.TaskClass
+            awinSettings.visboAbbreviation = My.Settings.VISBOAbbreviation
+            awinSettings.visboAmpel = My.Settings.VISBOAmpel
 
             Call awinsetTypen()
 

@@ -6,6 +6,8 @@ Imports xlNS = Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
 Imports Microsoft.VisualBasic.Constants
 
+Imports System.Globalization
+
 
 Public Module Projekte
 
@@ -890,7 +892,7 @@ Public Module Projekte
                         'valueColor(i - 1) = iProjektFarbe()
                     Else
                         Try
-                            valueColor(i - 1) = .Farbe
+                            valueColor(i - 1) = .farbe
                         Catch ex As Exception
                             ' dann ist es die Farbe des Projektes
                             valueColor(i - 1) = hproj.farbe
@@ -899,7 +901,7 @@ Public Module Projekte
                     End If
                 Else
                     Try
-                        valueColor(i - 1) = .Farbe
+                        valueColor(i - 1) = .farbe
                     Catch ex As Exception
                         ' dann ist es die Farbe des Projektes
                         valueColor(i - 1) = hproj.farbe
@@ -1224,7 +1226,7 @@ Public Module Projekte
                 tdatenreihe2(i - 1) = .dauerInDays
                 tdatenreihe3(i - 1) = 0
                 Try
-                    valueColor(i - 1) = .Farbe
+                    valueColor(i - 1) = .farbe
                 Catch ex As Exception
                     ' dann ist es die Farbe des Projektes
                     valueColor(i - 1) = hproj.farbe
@@ -7081,7 +7083,7 @@ Public Module Projekte
     Public Sub TrageivProjektein(ByVal pname As String, ByVal vorlagenName As String, ByVal startdate As Date, _
                                  ByVal endedate As Date, ByVal erloes As Double, _
                                  ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, ByVal volume As Double, _
-                                 ByVal kurzBeschreibung As String)
+                                 ByVal kurzBeschreibung As String, ByVal buName As String)
         Dim newprojekt As Boolean
         Dim hproj As clsProjekt
         Dim pStatus As String = ProjektStatus(0)
@@ -7120,6 +7122,7 @@ Public Module Projekte
                 .name = pname
                 .VorlagenName = vorlagenName
                 .startDate = startdate
+                .businessUnit = buName
                 .Erloes = erloes
                 .earliestStartDate = .startDate.AddMonths(.earliestStart)
                 .latestStartDate = .startDate.AddMonths(.latestStart)
@@ -7176,7 +7179,12 @@ Public Module Projekte
         ' wenn bestimmte Projekte beim Suchen nach einem Platz nicht berücksichtigt werden sollen,
         ' dann müssen sie in einer Collection an ZeichneProjektinPlanTafel übergeben werden 
         Dim tmpCollection As New Collection
-        Call ZeichneProjektinPlanTafel(tmpCollection, pname, 0, tmpCollection, tmpCollection)
+
+        '
+        Call awinClearPlanTafel()
+        Call awinZeichnePlanTafel(True)
+
+        'Call ZeichneProjektinPlanTafel(tmpCollection, pname, 0, tmpCollection, tmpCollection)
 
 
         '
@@ -10739,7 +10747,8 @@ Public Module Projekte
         Dim heute As Date = Date.Now
         Dim tmpShapeRange As Excel.ShapeRange
         Dim vorlagenShape As xlNS.Shape
-        Dim isMissingDefinition As Boolean = False
+        Dim isMissingPhaseDefinition As Boolean = False
+        Dim isMissingMilestoneDefinition As Boolean = False
 
         Dim shpExists As Boolean
         Dim oldAlternativeText As String = ""
@@ -10821,6 +10830,8 @@ Public Module Projekte
                     cphase = hproj.getPhase(i)
                     phasenNameID = cphase.nameID
 
+                    isMissingPhaseDefinition = Not PhaseDefinitions.Contains(cphase.name)
+
                     '''' tk/ur: 28.9.15 
                     '''' damit die Phase (1) gefunden werden kann.  muss bei Phase(1) der Name anders zusammengesetzt sein als bei den anderen 
                     If phasenNameID = rootPhaseName Then
@@ -10833,7 +10844,7 @@ Public Module Projekte
 
                     Try
                         phaseShape = worksheetShapes.Item(phaseShapeName)
-                        Call definePhaseAppearance(hproj, cphase, 0, phaseShape, False)
+                        Call definePhaseAppearance(hproj, cphase, 0, phaseShape, isMissingPhaseDefinition)
                     Catch ex As Exception
 
                     End Try
@@ -10846,12 +10857,14 @@ Public Module Projekte
                         cMilestone = cphase.getMilestone(r)
                         cBewertung = cMilestone.getBewertung(1)
 
+                        isMissingMilestoneDefinition = Not MilestoneDefinitions.Contains(cMilestone.name)
+
                         msShapeName = projectboardShapes.calcMilestoneShapeName(hproj.name, cMilestone.nameID)
 
                         ' existiert das schon ? 
                         Try
                             milestoneShape = worksheetShapes.Item(msShapeName)
-                            Call defineResultAppearance(hproj, 0, milestoneShape, cBewertung)
+                            Call defineResultAppearance(hproj, 0, milestoneShape, cBewertung, isMissingMilestoneDefinition, cMilestone.farbe)
                         Catch ex As Exception
 
                         End Try
@@ -10910,7 +10923,7 @@ Public Module Projekte
 
                     End With
 
-
+                    isMissingPhaseDefinition = Not PhaseDefinitions.Contains(cphase.name)
 
                     Try
                         zeilenOffset = 0
@@ -10933,10 +10946,8 @@ Public Module Projekte
                             Dim tmpName As String = elemNameOfElemID(phasenNameID)
                             If PhaseDefinitions.Contains(tmpName) Then
                                 vorlagenShape = PhaseDefinitions.getShape(tmpName)
-                                isMissingDefinition = False
                             Else
                                 vorlagenShape = missingPhaseDefinitions.getShape(tmpName)
-                                isMissingDefinition = True
                             End If
 
 
@@ -10963,7 +10974,7 @@ Public Module Projekte
                     If i = 1 Then
                         Call defineShapeAppearance(hproj, phaseShape)
                     Else
-                        Call definePhaseAppearance(hproj, cphase, 0, phaseShape, isMissingDefinition)
+                        Call definePhaseAppearance(hproj, cphase, 0, phaseShape, isMissingPhaseDefinition)
                     End If
 
 
@@ -10991,13 +11002,13 @@ Public Module Projekte
                             cMilestone = .getMilestone(r)
                             cBewertung = cMilestone.getBewertung(1)
 
+                            isMissingMilestoneDefinition = Not MilestoneDefinitions.Contains(cMilestone.name)
+
                             ' Änderung tk 26.11.15
                             If MilestoneDefinitions.Contains(cMilestone.name) Then
                                 vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
-                                isMissingDefinition = False
                             Else
                                 vorlagenShape = missingMilestoneDefinitions.getShape(cMilestone.name)
-                                isMissingDefinition = True
                             End If
 
 
@@ -11038,7 +11049,7 @@ Public Module Projekte
 
                                 msShape.Rotation = vorlagenShape.Rotation
 
-                                Call defineResultAppearance(hproj, 0, msShape, cBewertung, isMissingDefinition)
+                                Call defineResultAppearance(hproj, 0, msShape, cBewertung, isMissingMilestoneDefinition, cMilestone.farbe)
 
                                 ' jetzt der Liste der ProjectboardShapes hinzufügen
                                 projectboardShapes.add(msShape)
@@ -11665,7 +11676,7 @@ Public Module Projekte
                 For m As Integer = 1 To realNameList.Count
 
                     Dim cMilestone As clsMeilenstein = hproj.getMilestoneByID(CStr(realNameList.Item(m)))
-                    Dim isMissingDefinition As Boolean = False
+                    Dim isMissingDefinition As Boolean = Not MilestoneDefinitions.Contains(cMilestone.name)
 
                     If Not IsNothing(cMilestone) Then
                         Dim cBewertung As clsBewertung
@@ -11685,10 +11696,10 @@ Public Module Projekte
                                 ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
                                 If MilestoneDefinitions.Contains(cMilestone.name) Then
                                     vorlagenShape = MilestoneDefinitions.getShape(cMilestone.name)
-                                    isMissingDefinition = False
+
                                 Else
                                     vorlagenShape = missingMilestoneDefinitions.getShape(cMilestone.name)
-                                    isMissingDefinition = True
+
                                 End If
 
 
@@ -11731,10 +11742,10 @@ Public Module Projekte
 
                                     msNumber = msNumber + 1
                                     If numberIt Then
-                                        Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung, isMissingDefinition)
+                                        Call defineResultAppearance(hproj, msNumber, resultShape, cBewertung, isMissingDefinition, cMilestone.farbe)
 
                                     Else
-                                        Call defineResultAppearance(hproj, 0, resultShape, cBewertung, isMissingDefinition)
+                                        Call defineResultAppearance(hproj, 0, resultShape, cBewertung, isMissingDefinition, cMilestone.farbe)
                                     End If
 
                                     ' jetzt der Liste der ProjectboardShapes hinzufügen
@@ -12653,19 +12664,20 @@ Public Module Projekte
                 For p = 1 To todoListe.Count
 
                     Dim phaseNameID As String = CStr(todoListe(p))
-                    Dim isMissingDefinition As Boolean = False
+
 
                     If realNameList.Contains(phaseNameID) Then
 
                         cphase = hproj.getPhaseByID(phaseNameID)
+                        Dim isMissingDefinition As Boolean = Not PhaseDefinitions.Contains(cphase.name)
 
                         ' Änderung tk 25.11.15: sofern die Definition in definitions.. enthalten ist: auch berücksichtigen
                         If PhaseDefinitions.Contains(cphase.name) Then
                             vorlagenshape = PhaseDefinitions.getShape(cphase.name)
-                            isMissingDefinition = False
+
                         Else
                             vorlagenshape = missingPhaseDefinitions.getShape(cphase.name)
-                            isMissingDefinition = True
+
                         End If
 
 
@@ -12840,18 +12852,21 @@ Public Module Projekte
     ''' <param name="myShape"></param>
     ''' <remarks></remarks>
     Public Sub definePhaseAppearance(ByVal myproject As clsProjekt, ByVal myphase As clsPhase, ByVal lnumber As Integer, ByRef myShape As Excel.Shape, _
-                                     Optional ByVal isMissingDefinition As Boolean = False)
+                                      ByVal isMissingDefinition As Boolean)
 
 
         With myShape
 
             If isMissingDefinition Then
-                With .Line
-                    .Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                    .ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
-                    .Transparency = 0
-                    .Weight = 2
-                End With
+
+                If awinSettings.missingDefinitionColor <> XlRgbColor.rgbWhite Then
+                    .Line.Visible = MsoTriState.msoTrue
+                    .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+                    .Line.Transparency = 0
+                    .Line.Weight = 2
+                    .Fill.ForeColor.RGB = CInt(myphase.farbe)
+                End If
+
             End If
 
         End With
@@ -12871,16 +12886,8 @@ Public Module Projekte
     ''' <param name="isMissingDefinition"></param>
     ''' <remarks></remarks>
     Public Sub defineResultAppearance(ByVal myproject As clsProjekt, ByVal number As Integer, ByRef resultShape As Excel.Shape, ByVal bewertung As clsBewertung, _
-                                          Optional ByVal isMissingDefinition As Boolean = False)
-        'Dim pcolor As Object
-        'Dim status As String
-
-        'With myproject
-        '    pcolor = .farbe
-        '    status = .Status
-        'End With
-
-
+                                          ByVal isMissingDefinition As Boolean, ByVal farbe As Long)
+       
 
 
         With resultShape
@@ -12891,33 +12898,15 @@ Public Module Projekte
             End If
 
             If isMissingDefinition Then
-                With .Line
-                    .Visible = MsoTriState.msoTrue
-                    .ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
-                    .Weight = 2
-                End With
+
+                If awinSettings.missingDefinitionColor <> XlRgbColor.rgbWhite Then
+                    .Line.Visible = MsoTriState.msoTrue
+                    .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+                    .Line.Weight = 2
+                    .Fill.ForeColor.RGB = CInt(farbe)
+                End If
+
             End If
-
-
-            'With .Fill
-            '    .ForeColor.RGB = CInt(bewertung.color)
-            '    .ForeColor.TintAndShade = 0
-            '    '.ForeColor.Brightness = 0.25
-            '    .Transparency = 0.0
-
-            '    'If roentgenBlick.isOn Then
-            '    '    .Transparency = 0.8
-            '    'Else
-            '    '    If status = ProjektStatus(0) Then
-            '    '        .Transparency = 0.35
-            '    '    Else
-            '    '        .Transparency = 0.0
-            '    '    End If
-            '    'End If
-
-            '    .Solid()
-
-            'End With
 
 
             Try
@@ -13976,7 +13965,7 @@ Public Module Projekte
                     itemNameID = cphase.nameID
 
                     Try
-                        phasenFarbe = cphase.Farbe
+                        phasenFarbe = cphase.farbe
                     Catch ex As Exception
                         phasenFarbe = hproj.farbe
                     End Try
@@ -14710,7 +14699,7 @@ Public Module Projekte
                     itemNameID = cphase.nameID
 
                     Try
-                        phasenFarbe = cphase.Farbe
+                        phasenFarbe = cphase.farbe
                     Catch ex As Exception
                         phasenFarbe = hproj.farbe
                     End Try
@@ -15499,7 +15488,7 @@ Public Module Projekte
 
 
             CType(.Rows(1), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe1
-            CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2 * 0.5
+            CType(.Range(.Cells(2, 1), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).RowHeight = awinSettings.zeilenhoehe2
             CType(.Range(.Cells(1, 3), .Cells(maxRows, maxColumns)), Global.Microsoft.Office.Interop.Excel.Range).ColumnWidth = awinSettings.spaltenbreite
 
 
@@ -15572,7 +15561,7 @@ Public Module Projekte
                 itemName = cphase.name
 
                 Try
-                    phasenFarbe = cphase.Farbe
+                    phasenFarbe = cphase.farbe
                 Catch ex As Exception
                     phasenFarbe = hproj.farbe
                 End Try
@@ -17174,13 +17163,16 @@ Public Module Projekte
                 ok = True
 
                 If awinSettings.showOrigName Then
-                    Dim tmpNode As clsHierarchyNode
-                    tmpNode = hproj.hierarchy.nodeItem(milestoneNameID)
-                    If Not IsNothing(tmpNode) Then
-                        milestoneName = tmpNode.origName
-                    Else
-                        milestoneName = elemNameOfElemID(milestoneNameID)
-                    End If
+                    ' es gibt jetzt dazu eine Methode - siehe weiter unten 
+                    'Dim tmpNode As clsHierarchyNode
+                    'tmpNode = hproj.hierarchy.nodeItem(milestoneNameID)
+                    'If Not IsNothing(tmpNode) Then
+                    '    milestoneName = tmpNode.origName
+                    'Else
+                    '    milestoneName = elemNameOfElemID(milestoneNameID)
+                    'End If
+
+                    milestoneName = cMilestone.originalName
                 Else
                     milestoneName = elemNameOfElemID(milestoneNameID)
                 End If
@@ -17682,13 +17674,16 @@ Public Module Projekte
             If Not IsNothing(cPhase) Then
                 ok = True
                 If awinSettings.showOrigName Then
-                    Dim tmpNode As clsHierarchyNode
-                    tmpNode = hproj.hierarchy.nodeItem(cPhase.nameID)
-                    If Not IsNothing(tmpNode) Then
-                        phaseName = tmpNode.origName
-                    Else
-                        phaseName = elemNameOfElemID(phaseNameID)
-                    End If
+                    ' Änderung tk 6.2.16 es gibt dazu jetzt eine Methode - siehe weiter unten 
+                    'Dim tmpNode As clsHierarchyNode
+                    'tmpNode = hproj.hierarchy.nodeItem(cPhase.nameID)
+                    'If Not IsNothing(tmpNode) Then
+                    '    phaseName = tmpNode.origName
+                    'Else
+                    '    phaseName = elemNameOfElemID(phaseNameID)
+                    'End If
+                    phaseName = cPhase.originalName
+
                 Else
                     phaseName = elemNameOfElemID(phaseNameID)
                 End If
@@ -18774,6 +18769,81 @@ Public Module Projekte
 
     End Function
 
+
+
+    ''' <summary>
+    ''' kopiert eine sortierte Liste , die Strings enthält
+    ''' </summary>
+    ''' <param name="original"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function copyList(ByVal original As SortedList(Of String, String)) As SortedList(Of String, String)
+
+        Dim element As String
+        Dim kopie As New SortedList(Of String, String)
+
+        If Not IsNothing(original) Then
+            For Each kvp As KeyValuePair(Of String, String) In original
+                element = kvp.Key
+                If Not kopie.ContainsKey(element) Then
+                    kopie.Add(element, kvp.Value)
+                End If
+
+            Next
+        End If
+        copyList = kopie
+
+    End Function
+
+
+    ''' <summary>
+    ''' kopiert eine sortierte Liste , die Strings enthält
+    ''' </summary>
+    ''' <param name="original"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function copyColltoSortedList(ByVal original As Collection) As SortedList(Of String, String)
+        Dim i As Integer
+        Dim element As String
+        Dim kopie As New SortedList(Of String, String)
+
+        If Not IsNothing(original) Then
+            For i = 1 To original.Count
+                element = CStr(original.Item(i))
+                If Not kopie.ContainsKey(element) Then
+                    kopie.Add(element, element)
+                End If
+
+            Next
+        End If
+        copyColltoSortedList = kopie
+
+    End Function
+
+    ''' <summary>
+    ''' kopiert eine sortierte Liste , die Strings enthält in eine Collection mit Strings
+    ''' </summary>
+    ''' <param name="original"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function copySortedListtoColl(ByVal original As SortedList(Of String, String)) As Collection
+
+        Dim element As String
+        Dim kopie As New Collection
+
+        If Not IsNothing(original) Then
+            For Each kvp As KeyValuePair(Of String, String) In original
+                element = kvp.Value
+                If Not kopie.Contains(element) Then
+                    kopie.Add(element, element)
+                End If
+
+            Next
+        End If
+        copySortedListtoColl = kopie
+
+    End Function
+
     ''' <summary>
     ''' addiert die Hierarchie hry zur bereits existierenden Super-Hierarchie
     ''' wenn die Super Hierarchie noch leer ist, wird die Rootphase angelegt 
@@ -19294,4 +19364,77 @@ Public Module Projekte
         awinSettings.propAnpassRess = previousSetting
 
     End Sub
+
+    ''' <summary>
+    ''' Funktion, um die Kalenderwoche in aktuellen Länderset zu bestimmen 
+    ''' </summary>
+    ''' <param name="Datum"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function getKW(ByVal Datum As Date) As Integer
+        Dim CUI As New CultureInfo(CultureInfo.CurrentCulture.Name)
+        Return CUI.Calendar.GetWeekOfYear(Datum, _
+                CUI.DateTimeFormat.CalendarWeekRule, _
+                CUI.DateTimeFormat.FirstDayOfWeek)
+    End Function
+
+    ''' <summary>
+    ''' Funktion, um die Kalenderwoche zu bestimmen 
+    ''' </summary>
+    ''' <param name="datum"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcKW(ByVal datum As Date) As Integer
+
+        Dim kw As Integer
+
+        kw = DatePart(DateInterval.WeekOfYear, datum, FirstDayOfWeek.Monday, _
+          FirstWeekOfYear.FirstFourDays)
+
+        calcKW = kw
+
+    End Function
+
+    ''' <summary>
+    ''' wird benutzt, um die Anzahl Zeilen, die für die Darstellung einer Swimlane benötigt werden, zu minimieren
+    ''' </summary>
+    ''' <param name="matrix">ist so dimensioniert, dass es die maximale Anzahl Zeilen, die in einer Swimlane überhaupt vorkommen können, darstellen kann; 
+    ''' matrix(i) enthält das letzte Datum, das in Zeile i vorkam; i läuft von 0 an</param>
+    ''' <param name="maxZeile">das ist die bisher maximal aufgetretene Anzahl Zeilen, die notwendig war</param>
+    ''' <param name="startdate">das Startdatum der neuen Phase</param>
+    ''' <param name="requiredZeilen">die Anzahl Zeilen, die die Phase inkl ihrer Kinder benötigt</param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function findeBesteZeile(ByVal matrix() As Date, ByVal maxZeile As Integer, _
+                                        ByVal startdate As Date, _
+                                        ByVal requiredZeilen As Integer) As Integer
+
+        Dim bestStart As Integer = 0
+        Dim dimension As Integer = matrix.Length - 1
+        Dim found As Boolean
+
+        Do While bestStart <= dimension And Not found
+
+            found = True
+            For i As Integer = 1 To requiredZeilen
+                If bestStart + i - 1 <= dimension Then
+                    found = found And (matrix(bestStart + i - 1) <= startdate)
+                End If
+            Next
+
+            If Not found Then
+                bestStart = bestStart + 1
+            End If
+
+        Loop
+
+        If found Then
+            findeBesteZeile = bestStart + 1
+        Else
+            findeBesteZeile = maxZeile + 1
+        End If
+
+    End Function
+
+
 End Module

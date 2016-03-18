@@ -38,35 +38,42 @@ Public Class frmSelectRPlanImport
 
 
         ' jetzt werden die RPLANImportfiles ausgelesen 
-
-        Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
+        ' Änderung tk 18.3.16 es muss abgefragt werden, ob das Directory überhaupt existiert ... 
         Try
-            Dim i As Integer
-            For i = 1 To listOfImportfiles.Count
-                dateiName = Dir(listOfImportfiles.Item(i - 1))
-                If Not IsNothing(dateiName) Then
+            Dim listOfImportfiles As Collections.ObjectModel.ReadOnlyCollection(Of String) = My.Computer.FileSystem.GetFiles(dirname)
+            Try
+                Dim i As Integer
+                For i = 1 To listOfImportfiles.Count
+                    dateiName = Dir(listOfImportfiles.Item(i - 1))
+                    If Not IsNothing(dateiName) Then
 
-                    If menueAswhl = PTImpExp.rplanrxf Then
-                        If dateiName.Contains(".rxf") Then
-                            RPLANImportDropbox.Items.Add(dateiName)
-                        End If
-                    ElseIf menueAswhl = PTImpExp.msproject Then
-                        If dateiName.Contains(".mpp") Then
-                            RPLANImportDropbox.Items.Add(dateiName)
-                        End If
+                        If menueAswhl = PTImpExp.rplanrxf Then
+                            If dateiName.Contains(".rxf") Then
+                                RPLANImportDropbox.Items.Add(dateiName)
+                            End If
+                        ElseIf menueAswhl = PTImpExp.msproject Then
+                            If dateiName.Contains(".mpp") Then
+                                RPLANImportDropbox.Items.Add(dateiName)
+                            End If
 
-                    Else
-                        If dateiName.Contains(".xls") Then
-                            RPLANImportDropbox.Items.Add(dateiName)
+                        Else
+                            If dateiName.Contains(".xls") Then
+                                RPLANImportDropbox.Items.Add(dateiName)
+                            End If
                         End If
                     End If
-                End If
 
 
-            Next i
+                Next i
+            Catch ex As Exception
+                Call MsgBox(ex.Message & ": " & dateiName)
+            End Try
         Catch ex As Exception
-            Call MsgBox(ex.Message & ": " & dateiName)
+            Call MsgBox("Folder existiert nicht: " & dirname)
         End Try
+
+
+        
 
     End Sub
 

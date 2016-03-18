@@ -343,7 +343,7 @@
 
                 ' Änderung 18.6 , weil Querschnittsphasen Namen jetzt der Projekt-Name ist ...
                 Try
-                    Me.farbe = .Farbe
+                    Me.farbe = .farbe
                 Catch ex As Exception
                     Me.farbe = hfarbe
                 End Try
@@ -391,6 +391,7 @@
                 .latestStart = Me.latestStart
                 .minDauer = Me.minDauer
                 .maxDauer = Me.maxDauer
+                .setFarbe = CLng(Me.farbe)
                 ' Änderung 28.11. relstart , relende ist nur noch readonly ; jetzt wird exaktes Datum mitgeführt
                 '.relStart = Me.relStart
                 '.relEnde = Me.relEnde
@@ -574,6 +575,7 @@
         Public name As String
         Public verantwortlich As String
         Public offset As Long
+        Public alternativeColor As Long
 
         'Friend Property fileLink As Uri
 
@@ -607,12 +609,18 @@
 
                     .verantwortlich = Me.verantwortlich
                     .offset = Me.offset
+                    If Not IsNothing(Me.alternativeColor) Then
+                        .setFarbe = Me.alternativeColor
+                    Else
+                        .setFarbe = awinSettings.AmpelNichtBewertet
+                    End If
+
 
                     For i = 1 To Me.bewertungsCount
 
                         Dim newb As New clsBewertung
                         Try
-                            Me.getBewertung(i).copyto(newb)
+                            Me.getBewertung(i).CopyTo(newb)
                             .addBewertung(newb)
                         Catch ex1 As Exception
 
@@ -639,6 +647,7 @@
                 Me.name = .nameID
                 Me.verantwortlich = .verantwortlich
                 Me.offset = .offset
+                Me.alternativeColor = .farbe
 
                 Try
                     For i = 1 To .bewertungsCount

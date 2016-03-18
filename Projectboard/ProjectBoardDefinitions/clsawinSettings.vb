@@ -41,6 +41,7 @@ Public Class clsawinSettings
     Public Property kapaEinheit As String
     Public Property databaseName As String
     Public Property databaseURL As String
+    Public Property globalPath As String
     Public Property awinPath As String
     Public Property zeilenhoehe1 As Double
     Public Property zeilenhoehe2 As Double
@@ -83,7 +84,7 @@ Public Class clsawinSettings
 
     ' Settings für Import / Export
     Public Property EinzelRessExport As Integer
-    ' Settings ob die fehlenden Phase- und Meilenstein-Namen in die Customization eingetragen werden sollen
+    ' Settings ob die fehlenden Phase- und Meilenstein-Namen in die Liste der bekannten Definitionen  eingetragen werden sollen
     Public Property addMissingPhaseMilestoneDef As Boolean
     ' Setting, ob die NAmen eines Templates auf alle Fälle in die Phasedefinitions / MilestoneDefinitions aufgenommen werden soll oder nicht 
     Public Property alwaysAcceptTemplateNames As Boolean
@@ -106,6 +107,8 @@ Public Class clsawinSettings
     ' für gleichlautende Geschwisternamen generiert werden  
     Public Property createUniqueSiblingNames As Boolean
 
+    Public Property readWriteMissingDefinitions As Boolean = False
+
     ' Settings für ToleranzKorridor TimeCost
     Public Property timeToleranzRel As Double
     Public Property timeToleranzAbs As Double
@@ -127,9 +130,20 @@ Public Class clsawinSettings
     Public Property mppSortiertDauer As Boolean
     Public Property mppOnePage As Boolean
     Public Property mppExtendedMode As Boolean
+    Public Property mppShowHorizontals As Boolean
+    Public Property mppUseAbbreviation As Boolean
+    Public Property mppUseOriginalNames As Boolean
+    Public Property mppKwInMilestone As Boolean
+    Public Property mppUseInnerText As Boolean ' steuert, ob der Beschriftungstext im Balken stattfinden soll 
+
+    ' Settings für MSProject-AddIn und ImportMSProject
+    Public Property visboTaskClass As String
+    Public Property visboAbbreviation As String
+    Public Property visboAmpel As String
 
     ' Settings für Einzelprojekt-Reports
-    Public Property eppExtendedMode As Boolean
+    ' tk 7.2.16 ist überflüssig
+    'Public Property eppExtendedMode As Boolean
 
     ' Settings für Überprüfung, ob Formulare offen / aktiv sind 
     Public Property isHryNameFrmActive As Boolean
@@ -137,7 +151,7 @@ Public Class clsawinSettings
     ' Settings für Auswahl-Dialog 
     Public Property useHierarchy As Boolean
 
-   
+
 
     Sub New()
 
@@ -201,6 +215,10 @@ Public Class clsawinSettings
         _importUnknownNames = True
         _createUniqueSiblingNames = True
 
+        ' sollen die MissingDefinitions rausgeschrieben werden ...
+        _readWriteMissingDefinitions = False
+
+
         ' Settings für Besser/Schlechter Diagramm 
         _timeToleranzRel = 0.02
         _timeToleranzAbs = 3
@@ -221,9 +239,14 @@ Public Class clsawinSettings
         _mppSortiertDauer = False
         _mppOnePage = False
         _mppExtendedMode = False
+        _mppShowHorizontals = False
+        _mppUseAbbreviation = True
+        _mppUseOriginalNames = False
+        _mppKwInMilestone = False
+        _mppUseInnerText = False
 
         ' Settings für Einzelprojekt-Reports
-        _eppExtendedMode = True
+        '_eppExtendedMode = True
 
 
         If _mppSortiertDauer Then
@@ -233,7 +256,7 @@ Public Class clsawinSettings
         _useHierarchy = True
         _isHryNameFrmActive = False
 
-       
+
 
     End Sub
 End Class

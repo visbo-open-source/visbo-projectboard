@@ -1,4 +1,5 @@
-﻿Public Class clsPhase
+﻿Imports Microsoft.Office.Interop.Excel
+Public Class clsPhase
 
     ' earliestStart und latestStart sind absolute Werte im "koordinaten-System" des Projektes
     ' von daher ist es anders gelöst als in clsProjekt, wo earlieststart und latestStart relative Angaben sind 
@@ -18,6 +19,11 @@
     Private _dauerInDays As Integer
     Private _Parent As clsProjekt
     Private _vorlagenParent As clsProjektvorlage
+
+    ' Erweiterung tk 18.2.16
+    ' das wird verwendet . um eine Farbe Meilensteins, der nicht zur Liste der bekannten gehört 
+    ' aufzunehmen 
+    Private _alternativeColor As Long
 
 
     ''' <summary>
@@ -354,6 +360,34 @@
     End Property
 
     ''' <summary>
+    ''' gibt den Original Namen einer Phase zurück 
+    ''' wenn der leer ist, dann wird der Phasen Name zurück gegeben 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property originalName As String
+        Get
+
+            Dim tmpNode As clsHierarchyNode
+            Dim beschriftung As String = Me.name
+            tmpNode = _Parent.hierarchy.nodeItem(Me.nameID)
+
+            If Not IsNothing(tmpNode) Then
+                beschriftung = tmpNode.origName
+                If beschriftung = "" Then
+                    beschriftung = Me.name
+                End If
+            Else
+                beschriftung = Me.name
+            End If
+
+            originalName = beschriftung
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' liefert das StartDatum der Phase
     ''' </summary>
     ''' <value></value>
@@ -385,33 +419,56 @@
 
     End Property
 
-    Public ReadOnly Property Farbe As Object
+    ''' <summary>
+    ''' gibt die Farbe einer Phase zurück; das ist die Farbe der Darstellungsklasse, wenn die Phase zur Liste der
+    ''' bekannten Elemente gehört, sonst die AlternativeFare, die ggf beim auslesen z.b. aus MS Project ermittelt wird
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property farbe As Object
         Get
             Try
                 Dim itemName As String = elemNameOfElemID(_name)
-                If _name = rootPhaseName Then
-                    Farbe = Me.Parent.farbe             ' Farbe der Projektes, da Projekt der Parent der RootPhase ist
-                Else
-                    Dim tmpPhaseDef As clsPhasenDefinition = PhaseDefinitions.getPhaseDef(elemNameOfElemID(_name))
-                    If IsNothing(tmpPhaseDef) Then
-                        If appearanceDefinitions.ContainsKey("Phasen Default") Then
-                            Farbe = appearanceDefinitions.Item("Phasen Default").form.Fill.ForeColor.RGB
-                        Else
-                            Farbe = awinSettings.AmpelNichtBewertet
-                        End If
 
+                If _name = rootPhaseName Then
+                    farbe = Me.Parent.farbe             ' Farbe der Projektes, da Projekt der Parent der RootPhase ist
+                Else
+                    If PhaseDefinitions.Contains(itemName) Then
+                        farbe = CLng(PhaseDefinitions.getShape(itemName).Fill.ForeColor.RGB)
+                    ElseIf missingPhaseDefinitions.Contains(elemNameOfElemID(_name)) Then
+                        farbe = CLng(missingPhaseDefinitions.getShape(itemName).Fill.ForeColor.RGB)
                     Else
-                        Farbe = tmpPhaseDef.farbe
+                        farbe = _alternativeColor
                     End If
 
                 End If
 
             Catch ex As Exception
                 ' in diesem Fall wird ein Standard Farbe genommen 
-                Farbe = awinSettings.AmpelNichtBewertet
+                farbe = _alternativeColor
             End Try
 
         End Get
+    End Property
+
+
+    ''' <summary>
+    ''' setzt die Farbe eines Meilensteins; macht  dann Sinn, wenn der Meilenstein nicht zur 
+    ''' Liste der bekannten Meilensteine gehört 
+    ''' </summary>
+    ''' <value></value>
+    ''' <remarks></remarks>
+    Public WriteOnly Property setFarbe As Long
+        Set(value As Long)
+
+            If value >= RGB(0, 0, 0) And value <= RGB(255, 255, 255) Then
+                _alternativeColor = value
+            Else
+                ' unverändert lassen - wird ja auch im New initial gesetzt 
+            End If
+
+        End Set
     End Property
 
 
@@ -429,7 +486,7 @@
         Set(value As Integer)
             If value <= 0 Then
                 ' tk 17.11.15: hier muss noch eine Konsistenzprüfung rein ...
-                    _earliestStart = value
+                _earliestStart = value
 
             ElseIf value = -999 Then ' die undefiniert Bedingung
                 _earliestStart = value
@@ -454,7 +511,7 @@
             If value >= 0 Then
                 ' tk 17.11.15 hier muss noch eine Konsistenzprüfung rein ... 
                 _latestStart = value
-                
+
             ElseIf value = -999 Then ' die undefiniert Bedingung
                 _latestStart = value
             Else
@@ -857,7 +914,7 @@
         Else
             ok = False
         End If
-        
+
 
         If ok Then
             AllMilestones.RemoveAt(index)
@@ -1295,6 +1352,8 @@
         _Parent = parent
         _vorlagenParent = Nothing
 
+        _alternativeColor = XlRgbColor.rgbGrey
+
 
     End Sub
 
@@ -1302,7 +1361,7 @@
         ' Variable isVorlage dient lediglich dazu, eine weitere Signatur für einen Konstruktor zu bekommen 
         ' dieser Konstruktor wird für parent = Vorlage benutzt 
 
-
+        Dim defaultName As String = "Phasen Default"
         AllRoles = New List(Of clsRolle)
         AllCosts = New List(Of clsKostenart)
         AllMilestones = New List(Of clsMeilenstein)
@@ -1313,6 +1372,9 @@
         _latestStart = -999
         _Parent = Nothing
         _vorlagenParent = parent
+
+        _alternativeColor = XlRgbColor.rgbGrey
+
 
 
 
@@ -1345,7 +1407,7 @@
 
     End Sub
 
-    
+
     ''' <summary>
     ''' berechnet die Bedarfe (Rollen,Kosten) der Phase gemäß Startdate und endedate, und corrFakt neu
     ''' </summary>

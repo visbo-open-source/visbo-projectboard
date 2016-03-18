@@ -105,6 +105,8 @@
             <button id="PT1G1M2B1" label="Auswahl über Namen" onAction="NameHierarchySelAction" supertip="zu dem dargestellten Projekt-Szenario im ausgewählten Zeitraum Multiprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der selektierten Plan-Elemente erstellt"/>
             <button id="PT1G1M2B2" label="Auswahl über Hierarchie" onAction="NameHierarchySelAction" supertip="zu dem dargestellten Projekt-Szenario im ausgewählten Zeitraum Multiprojektberichte erstellen; hier ist eine vorherige Auswahl von Elementen im Vorfeld möglich. Der Report wird dann unter Berücksichtigung des aktuell eingestellten Zeitraums auf Basis der selektierten Plan-Elemente erstellt"/>
           </menu>
+          <separator id="PT1G1s3"/>
+          <button id="PT1G1B3" label="Temp BHTC Bericht" onAction="awinBHTCReport" supertip="TEST: zu den ausgewählten Projekten wird je ein BHTC Report erstellt "/>
         </group>
       </tab>
       <!--
