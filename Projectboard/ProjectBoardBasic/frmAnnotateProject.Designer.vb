@@ -28,6 +28,7 @@ Partial Class frmAnnotateProject
         Me.showOrigNames = New System.Windows.Forms.RadioButton()
         Me.OKButton = New System.Windows.Forms.Button()
         Me.showAbbrev = New System.Windows.Forms.CheckBox()
+        Me.deleteAnnotations = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'annotatePhases
@@ -95,11 +96,22 @@ Partial Class frmAnnotateProject
         Me.showAbbrev.Text = "nur Abkürzung zeigen"
         Me.showAbbrev.UseVisualStyleBackColor = True
         '
+        'deleteAnnotations
+        '
+        Me.deleteAnnotations.BackColor = System.Drawing.Color.FromArgb(CType(CType(255, Byte), Integer), CType(CType(128, Byte), Integer), CType(CType(128, Byte), Integer))
+        Me.deleteAnnotations.Location = New System.Drawing.Point(75, 176)
+        Me.deleteAnnotations.Name = "deleteAnnotations"
+        Me.deleteAnnotations.Size = New System.Drawing.Size(77, 23)
+        Me.deleteAnnotations.TabIndex = 6
+        Me.deleteAnnotations.Text = "Löschen"
+        Me.deleteAnnotations.UseVisualStyleBackColor = False
+        '
         'frmAnnotateProject
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(233, 182)
+        Me.ClientSize = New System.Drawing.Size(233, 214)
+        Me.Controls.Add(Me.deleteAnnotations)
         Me.Controls.Add(Me.showAbbrev)
         Me.Controls.Add(Me.OKButton)
         Me.Controls.Add(Me.showOrigNames)
@@ -119,4 +131,5 @@ Partial Class frmAnnotateProject
     Friend WithEvents showOrigNames As System.Windows.Forms.RadioButton
     Friend WithEvents OKButton As System.Windows.Forms.Button
     Friend WithEvents showAbbrev As System.Windows.Forms.CheckBox
+    Friend WithEvents deleteAnnotations As System.Windows.Forms.Button
 End Class

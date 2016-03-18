@@ -84,7 +84,7 @@ Public Class clsawinSettings
 
     ' Settings für Import / Export
     Public Property EinzelRessExport As Integer
-    ' Settings ob die fehlenden Phase- und Meilenstein-Namen in die Customization eingetragen werden sollen
+    ' Settings ob die fehlenden Phase- und Meilenstein-Namen in die Liste der bekannten Definitionen  eingetragen werden sollen
     Public Property addMissingPhaseMilestoneDef As Boolean
     ' Setting, ob die NAmen eines Templates auf alle Fälle in die Phasedefinitions / MilestoneDefinitions aufgenommen werden soll oder nicht 
     Public Property alwaysAcceptTemplateNames As Boolean

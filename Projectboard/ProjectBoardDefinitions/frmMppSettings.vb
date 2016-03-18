@@ -40,18 +40,17 @@
 
             With awinSettings
 
-                '.eppExtendedMode = True
 
-                ' was soll nicht visible sein 
-                notStrictly.Visible = False
-                sortiertNachDauer.Visible = False
-                allOnOnePage.Visible = False
-                shwExtendedMode.Visible = False
+                ' Änderung tk - es soll alles sichtbar sein 
+                'notStrictly.Visible = False
+                'sortiertNachDauer.Visible = False
+                'allOnOnePage.Visible = False
+                'shwExtendedMode.Visible = False
                 'ur: 21.04.2015: noch zu tun: zuvor alten Wert sichern
-                shwExtendedMode.Checked = True
+                'shwExtendedMode.Checked = True
 
                 ' den UseOriginal NAmes Button hochschieben 
-                useOriginalNames.Top = notStrictly.Top
+                'useOriginalNames.Top = notStrictly.Top
             End With
 
         ElseIf calledfrom = "frmBHTC" Then

@@ -35,15 +35,24 @@ Public Class clsNameMapping
         End Get
     End Property
 
-    Public ReadOnly Property getSynonymsOf(ByVal stdName As String, ByVal lfdNr As Integer)
+    ''' <summary>
+    ''' gibt das x.-te Synonym für den StdName zurück 
+    ''' x=lfdNr
+    ''' </summary>
+    ''' <param name="stdName"></param>
+    ''' <param name="lfdNr"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getSynonymsOf(ByVal stdName As String, ByVal lfdNr As Integer) As String
         Get
-            Dim summe As Integer = 0
+            Dim curNr As Integer = 0
             Dim erg As String = ""
             For Each kvp As KeyValuePair(Of String, String) In synonyms
 
                 If kvp.Value = stdName Then
-                    summe = summe + 1
-                    If summe = lfdNr Then
+                    curNr = curNr + 1
+                    If curNr = lfdNr Then
                         erg = kvp.Key
                         Exit For ' weil fertig 
                     End If

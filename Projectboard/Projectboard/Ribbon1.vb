@@ -811,17 +811,18 @@ Imports System.Windows
 
         If returnValue = DialogResult.OK Then
             With ProjektEingabe
-
+                Dim buName As String = CStr(.businessUnitDropBox.SelectedItem)
                 If request.pingMongoDb() Then
 
                     If Not request.projectNameAlreadyExists(projectname:=.projectName.Text, variantname:="") Then
 
                         ' Projekt existiert noch nicht in der DB, kann also eingetragen werden
 
+
                         Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
                                            CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
                                            CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
-                                           CStr(""))
+                                           CStr(""), buName)
                     Else
                         Call MsgBox(" Projekt '" & .projectName.Text & "' existiert bereits in der Datenbank!")
                     End If
@@ -835,7 +836,7 @@ Imports System.Windows
                     Call TrageivProjektein(.projectName.Text, .vorlagenDropbox.Text, CDate(.calcProjektStart), _
                                            CDate(.calcProjektEnde), CType(.Erloes.Text, Double), zeile, _
                                            CType(.sFit.Text, Double), CType(.risiko.Text, Double), CDbl(.volume.Text), _
-                                           CStr(""))
+                                           CStr(""), buName)
 
                 End If
 
@@ -2162,11 +2163,13 @@ Imports System.Windows
 
 
             ' sichern der awinSettings.mpp... Einstellungen
-          
-            Dim sav_mppShowAllIfOne As Boolean = awinSettings.mppShowAllIfOne
-            awinSettings.mppShowAllIfOne = True
-            Dim sav_mppExtendedMode As Boolean = awinSettings.mppExtendedMode
-            awinSettings.mppExtendedMode = True
+
+            ' Änderung tk 23.2.2016: das sollte nicht mehr explizit gesetzt werden - andernfalls kann man in Einzelprojekt-Reports 
+            ' keine Zeiraumbetrachtungen mehr machen , ausserdem würde es sich anbieten, in den Swimlane Reports Einzel-Zeilen zu zeichnen 
+            'Dim sav_mppShowAllIfOne As Boolean = awinSettings.mppShowAllIfOne
+            'awinSettings.mppShowAllIfOne = True
+            'Dim sav_mppExtendedMode As Boolean = awinSettings.mppExtendedMode
+            'awinSettings.mppExtendedMode = True
             ' Settings für Einzelprojekt-Reports
             'awinSettings.eppExtendedMode = True
 
@@ -2179,8 +2182,9 @@ Imports System.Windows
 
             ' Zurücksetzen der gesicherten und veränderten Einstellungen
 
-            awinSettings.mppExtendedMode = sav_mppExtendedMode
-            awinSettings.mppShowAllIfOne = sav_mppShowAllIfOne
+            ' Änderung tk 23.2.2016 
+            'awinSettings.mppExtendedMode = sav_mppExtendedMode
+            'awinSettings.mppShowAllIfOne = sav_mppShowAllIfOne
 
             appInstance.EnableEvents = True
             appInstance.ScreenUpdating = True

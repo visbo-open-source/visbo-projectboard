@@ -271,7 +271,7 @@ Public Module testModule
 
         ' Änderung tk 1.2.16
         ' wird benötigt, um in Ergänzung zu pptLasttime im Falle von nur einem Projekt / vielen Swimlanes die bereits erstellte Folie zu löschen 
-        Dim swimlaneMode As Boolean = False
+        'Dim swimlaneMode As Boolean = False
 
         Try
             lastElem = projekthistorie.Count - 1
@@ -853,7 +853,7 @@ Public Module testModule
 
                                     ' sonst wird pptLasttime benötigt, um bei mehreren PRojekten 
                                     ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
-                                    swimlaneMode = True
+                                    'swimlaneMode = True
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = ex.Message
                                     objectsDone = objectsToDo
@@ -864,7 +864,7 @@ Public Module testModule
                                 Dim formerSetting As Boolean = awinSettings.mppExtendedMode
                                 Try
 
-                                    awinSettings.mppExtendedMode = True
+                                    'awinSettings.mppExtendedMode = True
 
                                     
                                     Call zeichneSwimlane2Sicht(pptApp, pptCurrentPresentation, pptSlide, _
@@ -877,9 +877,9 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = ""
                                     .ZOrder(MsoZOrderCmd.msoSendToBack)
 
-                                    ' sonst wird pptLasttime benötigt, um bei mehreren PRojekten 
+                                    ' sonst wird pptLasttime benötigt, um bei mehreren Projekten 
                                     ' swimlaneMode wird erst nach Ende der While Schleife ausgewertet - in diesem Fall wird die tmpSav Folie gelöscht 
-                                    swimlaneMode = True
+                                    'swimlaneMode = True
                                 Catch ex As Exception
                                     awinSettings.mppExtendedMode = formerSetting
                                     .TextFrame2.TextRange.Text = ex.Message
@@ -2249,7 +2249,8 @@ Public Module testModule
 
         End While
 
-        If pptLastTime Or swimlaneMode Then
+        'If pptLastTime Or swimlaneMode Then
+        If pptLastTime Then
             Try
                 If Not IsNothing(pptCurrentPresentation.Slides("tmpSav")) Then
                     pptCurrentPresentation.Slides("tmpSav").Delete()   ' Vorlage in passender Größe wird nun nicht mehr benötigt
@@ -8414,10 +8415,22 @@ Public Module testModule
         Else
             ' Multivarianten Sicht 
             ' in diesem Fall soll der selektierte Zeitraum nicht betrachtet werden 
-            von = 0
-            bis = 0
-            tmpMinimum = AlleProjekte.getMinDate(pName:=projMitVariants.name)
-            tmpMaximum = AlleProjekte.getMaxDate(pName:=projMitVariants.name)
+
+
+            ' Änderung tk: 
+            ' auch in den Einzelprojekt-Sichten soll der gewählte Zeitraum betrachtet werden 
+            ' das ist insbesondere für die Swimlanes wichtig ... 
+            If noTimespanDefined Then
+                von = 0
+                bis = 0
+                tmpMinimum = AlleProjekte.getMinDate(pName:=projMitVariants.name)
+                tmpMaximum = AlleProjekte.getMaxDate(pName:=projMitVariants.name)
+            Else
+                tmpMinimum = StartofCalendar.AddMonths(von - 1)
+                tmpMaximum = StartofCalendar.AddMonths(bis).AddDays(-1)
+            End If
+
+            
 
             Dim variantNames As Collection = AlleProjekte.getVariantNames(projMitVariants.name, False)
             For i As Integer = 1 To variantNames.Count
@@ -10052,7 +10065,10 @@ Public Module testModule
                                         (considerZeitraum And milestoneWithinTimeFrame(curMs.getDate, _
                                                                                     zeitraumGrenzeL, zeitraumGrenzeR)) Then
 
+
                                 ' zeichne den Meilenstein 
+                                ' die aktuelle Y-Position muss nicht bestimmt werden, weil das ja bereits mit der Phase geschehen ist 
+                                ' es muss nur sichergestellt sein, dass aktuelleYPosition initial auf CurYPosition gesetzt wird
                                 Dim tmpCollection As New Collection
                                 Call zeichneMeilensteinInSwimlane(rds, tmpCollection, hproj, _
                                                                   swimlaneNameID, curMs.nameID, aktuelleYPosition)
@@ -10563,7 +10579,8 @@ Public Module testModule
                                                     End If
 
                                                     If zeichnenMS Then
-                                                        Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, milestone, hproj, milestoneGrafikYPos, _
+                                                        Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2, _
+                                                                                          milestone, hproj, milestoneGrafikYPos, _
                                                                                             StartofPPTCalendar, endOFPPTCalendar, _
                                                                                             drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
                                                                                             MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
@@ -10831,7 +10848,8 @@ Public Module testModule
 
                                             If zeichnenMS Then
 
-                                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, ms, hproj, milestoneGrafikYPos, _
+                                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2, _
+                                                                                  ms, hproj, milestoneGrafikYPos, _
                                                                                                               StartofPPTCalendar, endOFPPTCalendar, _
                                                                                                               drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
                                                                                                               MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
@@ -10927,7 +10945,8 @@ Public Module testModule
                                 End If
 
                                 If zeichnenMS Then
-                                    Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, milestone, hproj, milestoneGrafikYPos, _
+                                    Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2, _
+                                                                      milestone, hproj, milestoneGrafikYPos, _
                                                                         StartofPPTCalendar, endOFPPTCalendar, _
                                                                         drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
                                                                         MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
@@ -10990,7 +11009,8 @@ Public Module testModule
                             End If
 
                             If zeichnenMS Then
-                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, milestone, hproj, milestoneGrafikYPos, _
+                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2, _
+                                                                  milestone, hproj, milestoneGrafikYPos, _
                                                                     StartofPPTCalendar, endOFPPTCalendar, _
                                                                     drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
                                                                     MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
@@ -11042,7 +11062,8 @@ Public Module testModule
                             End If
 
                             If zeichnenMS Then
-                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, milestone, hproj, milestoneGrafikYPos, _
+                                Call zeichneMeilensteininAktZeile(pptslide, msShapeNames, minX1, maxX2, _
+                                                                  milestone, hproj, milestoneGrafikYPos, _
                                                                     StartofPPTCalendar, endOFPPTCalendar, _
                                                                     drawingAreaLeft, drawingAreaRight, drawingAreaTop, drawingAreaBottom, _
                                                                     MsDescVorlagenShape, MsDateVorlagenShape, milestoneVorlagenShape, _
@@ -11236,6 +11257,8 @@ Public Module testModule
     ''' </summary> 
     ''' <param name="pptslide">Powerpoint Folie, in die gezeichnet werden soll</param>
     ''' <param name="msShapeNames">Name des Meilenstein -Shapes in der Powerpoint-Folie</param>
+    ''' <param name="minX1">kleinster X-wert: wird benötigt, um Dauer und Pfeil darzustellen</param>
+    ''' <param name="maxX2">größter X-Wert: wird benötigt, um Dauer und Pfeil darzustellen</param>
     ''' <param name="MS">zu zeichnender Meilenstein</param>
     ''' <param name="hproj">Projekt, zu dem der Meilenstein gehört</param>
     ''' <param name="milestoneGrafikYPos">Position des Meilenstein</param>
@@ -11254,6 +11277,7 @@ Public Module testModule
 
     Private Sub zeichneMeilensteininAktZeile(ByRef pptslide As pptNS.Slide, _
                                                  ByRef msShapeNames As Collection, _
+                                                 ByRef minX1 As Double, ByRef maxX2 As Double, _
                                                  ByVal MS As clsMeilenstein, _
                                                  ByVal hproj As clsProjekt, _
                                                  ByVal milestoneGrafikYPos As Double, _
@@ -11268,10 +11292,6 @@ Public Module testModule
         Dim milestoneTypShape As xlNS.Shape
         Dim copiedShape As pptNS.ShapeRange
 
-
-        ' notwendig für das Positionieren des Duration Pfeils bzw. des DurationTextes
-        Dim minX1 As Double
-        Dim maxX2 As Double
 
         Dim x1 As Double
         Dim x2 As Double
@@ -12268,7 +12288,7 @@ Public Module testModule
     ''' <param name="x1Pos">Rückgabe Wert Start</param>
     ''' <param name="x2Pos">Rückgabe Wert Ende</param>
     ''' <remarks></remarks>
-    Private Sub calculatePPTx1x2New(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date, _
+    Private Sub calculatePPTx1x2(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date, _
                                      ByVal startdate As Date, ByVal enddate As Date, _
                                      ByVal linkerRand As Double, ByVal breite As Double, _
                                      ByRef x1Pos As Double, ByRef x2Pos As Double)
@@ -12308,7 +12328,7 @@ Public Module testModule
     ''' <param name="x1Pos"></param>
     ''' <param name="x2Pos"></param>
     ''' <remarks></remarks>
-    Private Sub calculatePPTx1x2(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date, _
+    Private Sub calculatePPTx1x2OLD(ByVal pptStartOfCalendar As Date, ByVal pptEndOfCalendar As Date, _
                                          ByVal startdate As Date, ByVal enddate As Date, _
                                          ByVal linkerRand As Double, ByVal breite As Double, _
                                          ByRef x1Pos As Double, ByRef x2Pos As Double)
@@ -12932,6 +12952,10 @@ Public Module testModule
             Call calcStartEndePPTKalender(minDate, maxDate, _
                                           pptStartofCalendar, pptEndOfCalendar)
 
+            ' jetzt für Swimlanes Behandlung Kalender in der Klasse setzen 
+
+            Call rds.setCalendarDates(pptStartofCalendar, pptEndOfCalendar)
+
 
             ' bestimme die benötigte Höhe einer Zeile im Report ( nur wenn nicht schon bestimmt also zeilenhoehe <> 0
             If pptFirstTime And zeilenhoehe = 0.0 Then
@@ -13150,12 +13174,17 @@ Public Module testModule
             Try
 
                 With rds
-                    
-                        Call zeichnePPTCalendar(pptslide, calendargroup, _
-                                            pptStartofCalendar, pptEndOfCalendar, _
-                                            .calendarLineShape, .calendarHeightShape, .calendarStepShape, .calendarMarkShape, _
-                                            .yearVorlagenShape, .quarterMonthVorlagenShape, .calendarYearSeparator, .calendarQuartalSeparator, _
-                                            .drawingAreaBottom)
+
+
+                    ' das demnächst abändern auf 
+                    Call zeichne3RowsCalendar(rds, calendargroup)
+
+
+                    'Call zeichnePPTCalendar(pptslide, calendargroup, _
+                    '                    pptStartofCalendar, pptEndOfCalendar, _
+                    '                    .calendarLineShape, .calendarHeightShape, .calendarStepShape, .calendarMarkShape, _
+                    '                    .yearVorlagenShape, .quarterMonthVorlagenShape, .calendarYearSeparator, .calendarQuartalSeparator, _
+                    '                    .drawingAreaBottom)
 
                 End With
 
@@ -13376,10 +13405,16 @@ Public Module testModule
                 breadcrumbArray = hproj.getBreadCrumbArray(selectedPhaseIDs, selectedMilestoneIDs)
             End If
 
+            ' Änderung tk 23.2.16: wenn mehrere Projekte mit swimlanes gezeichnet werden, so muss hier bestimmt werden
+            ' wieviele Swimlanes zu zeichnen sind; ab dem 2. Projekt kann man sich nicht mehr auf pptFirsttime abstützen ! 
+            ' wenn ein Projekt erstmalig hier reinkommt, ist swimlanestodo = 0, pptFirsttime kann true oder false sein   
+            If swimLanesToDo = 0 Then
+                swimLanesToDo = hproj.getSwimLanesCount(considerAll, breadcrumbArray, isBHTCSchema)
+            End If
+
             If pptFirstTime Then
 
-                swimLanesToDo = hproj.getSwimLanesCount(considerAll, breadcrumbArray, isBHTCSchema)
-
+                
                 If pptCurrentPresentation.PageSetup.SlideSize = PowerPoint.PpSlideSizeType.ppSlideSizeA4Paper Then
 
                     If querFormat Then
