@@ -5,8 +5,9 @@ Public Class clsPhasen
 
 
     ''' <summary>
-    ''' nimmt die Phase auf; wenn der Name bereits vergeben ist, wird Exception geworfen und nichts gemacht ...
-    ''' wenn PhaseDef = Nothing, wird auch Exception geworfen
+    ''' nimmt die Phase auf; wenn der Name bereits vergeben ist, wird nichts gemacht ...
+    ''' wenn PhaseDef = Nothing, wird auch nichts gemacht 
+    ''' es werden keine Exceptions geworfen; wenn man an der Aufruf Stelle wissen muss, ob der Name vergeben ist, muss über .contains geprüft werden 
     ''' </summary>
     ''' <param name="phaseDef"></param>
     ''' <remarks></remarks>
@@ -16,10 +17,10 @@ Public Class clsPhasen
             If Not AllPhasen.ContainsKey(phaseDef.name) Then
                 AllPhasen.Add(phaseDef.name, phaseDef)
             Else
-                Throw New ArgumentException("Name bereits vergeben")
+                ' nichts tun , ist ja schon da 
             End If
         Else
-            Throw New ArgumentException("übergebene Phasen-Defiition ist Nothing")
+            ' nichts tun , es ist ja nichts aufzunehmen  
         End If
         
 
@@ -155,9 +156,11 @@ Public Class clsPhasen
 
     End Sub
 
+
     Public Sub New()
 
         AllPhasen = New SortedList(Of String, clsPhasenDefinition)
+
 
     End Sub
 End Class

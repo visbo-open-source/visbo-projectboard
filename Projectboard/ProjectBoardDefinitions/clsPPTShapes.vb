@@ -145,6 +145,9 @@ Public Class clsPPTShapes
                         Case "Horizontale"
                             horizontalLineShape = pptShape
 
+                        Case "TodayLine"
+                            todayLineShape = pptShape
+
                         Case "LegendLine"
                             legendLineShape = pptShape
 
@@ -1732,6 +1735,9 @@ Public Class clsPPTShapes
     ' bestimmt Farbe, Transparenz der Markierung von ShowrangeLeft/showrangeRight im Kalender 
     Public Property calendarMarkShape As pptNS.Shape
 
+    ' bestimmt die Heute Linie, die in das PPT gezeichnet wird 
+    Public Property todayLineShape As pptNS.Shape
+
     ' bestimmt Farbe, Schriftart und -Größe der Fehlermeldung  
     Public Property errorVorlagenShape As pptNS.Shape
 
@@ -1753,7 +1759,7 @@ Public Class clsPPTShapes
     ' bestimmt Schriftart, Farbe, Größe der Dauer-Beschriftung 
     Public Property durationTextShape As pptNS.Shape
 
-    ' bestimmt Schriftart, Farbe, Größe der Segment Beschriftung (=Phasne der Hierarchie-Stude 1 eines Projektes)
+    ' bestimmt Schriftart, Farbe, Größe der Segment Beschriftung (=Phasen der Hierarchie-Stude 1 eines Projektes)
     Public Property segmentVorlagenShape As pptNS.Shape
 
     Public Sub deleteShapes(Optional ByVal whichOnes As String = "")
@@ -1785,6 +1791,7 @@ Public Class clsPPTShapes
             Call loescheShape(_MsDateVorlagenShape)
             Call loescheShape(_PhDescVorlagenShape)
             Call loescheShape(_PhDateVorlagenShape)
+            Call loescheShape(_todayLineShape)
             Call loescheShape(_calendarStepShape)
             Call loescheShape(_calendarMarkShape)
             Call loescheShape(_errorVorlagenShape)
@@ -1945,6 +1952,7 @@ Public Class clsPPTShapes
         _calendarStepShape = Nothing
         _calendarMarkShape = Nothing
         _errorVorlagenShape = Nothing
+        _todayLineShape = Nothing
         _legendBuColorShape = Nothing
         _buColorShape = Nothing
         _rowDifferentiatorShape = Nothing

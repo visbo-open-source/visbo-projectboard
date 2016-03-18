@@ -426,7 +426,7 @@ Public Module testModule
             pptTemplatePresentation.Close()
 
         Catch ex As Exception
-            Throw New Exception("Probleme mit Powerpoint Template")
+            Throw New Exception("bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen")
         End Try
 
         Dim reportObj As xlNS.ChartObject
@@ -5540,7 +5540,7 @@ Public Module testModule
         Dim nrOfZeilen(neededSpalten - 1) As Integer
 
 
-        If showRangeRight = 0 Or showRangeLeft = 0 Or showRangeRight - showRangeLeft = 0 Then
+        If showRangeRight = 0 Or showRangeLeft = 0 Or showRangeRight - showRangeLeft < 0 Then
             Throw New Exception("kein Zeitraum in Tabelle Anzeigen der Elemente angegeben ")
         End If
 
@@ -8371,7 +8371,7 @@ Public Module testModule
         currentFilter = New clsFilter("temp", selectedBUs, selectedTyps, selectedPhases, selectedMilestones, _
                                       selectedRoles, selectedCosts)
 
-        If Not ((showRangeLeft > 0) And (showRangeRight > showRangeLeft)) Then
+        If Not ((showRangeLeft > 0) And (showRangeRight >= showRangeLeft)) Then
             noTimespanDefined = True
         Else
             noTimespanDefined = False
@@ -8568,7 +8568,7 @@ Public Module testModule
         Dim linksDatum As Date
         Dim rechtsDatum As Date
 
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        If showRangeLeft > 0 And showRangeRight >= showRangeLeft Then
             linksDatum = StartofCalendar.AddMonths(showRangeLeft - 1)
             rechtsDatum = StartofCalendar.AddMonths(showRangeRight).AddDays(-1)
         Else
@@ -9563,7 +9563,7 @@ Public Module testModule
 
 
         ' jetzt das CalendarMark zeichnen 
-        If showRangeLeft > 0 And showRangeRight > showRangeLeft Then
+        If showRangeLeft > 0 And showRangeRight >= showRangeLeft Then
             Dim startOfZeitraum As Integer = showRangeLeft - getColumnOfDate(rds.PPTStartOFCalendar)
             Dim zeitraumDauer As Integer = showRangeRight - showRangeLeft + 1
 
@@ -9689,6 +9689,30 @@ Public Module testModule
 
             Next
 
+
+        End If
+
+
+        ' jetzt muss ggf die Heute Linie gezeichnet werden 
+        If Not IsNothing(rds.todayLineShape) And _
+            Date.Now.Date >= rds.PPTStartOFCalendar And _
+            Date.Now.Date <= rds.PPTEndOFCalendar Then
+
+            rds.todayLineShape.Copy()
+            newShapes = rds.pptSlide.Shapes.Paste
+            With newShapes.Item(1)
+                .Left = rds.calendarLineShape.Left + _
+                        DateDiff(DateInterval.Day, rds.PPTStartOFCalendar, Date.Now.Date) * rasterDayWidth - rds.todayLineShape.Width / 2
+                .Top = rds.calendarLineShape.Top
+                .Height = rds.drawingAreaBottom - rds.calendarLineShape.Top
+
+                .Name = .Name & .Id
+                .AlternativeText = ""
+                .Title = ""
+
+                .TextFrame2.TextRange.Text = beschriftung
+                nameCollection.Add(.Name, .Name)
+            End With
 
         End If
 
@@ -10102,6 +10126,14 @@ Public Module testModule
 
             shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
             shapeGruppe.ZOrder(MsoZOrderCmd.msoBringToFront)
+
+        ElseIf anzElements = 1 Then
+            Try
+                Dim msShape As pptNS.Shape = rds.pptSlide.Shapes.Item(swlMilestoneCollection.Item(1))
+                msShape.ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
 
         End If
 
@@ -11266,7 +11298,6 @@ Public Module testModule
 
 
 
-        Dim isMissingDefinition As Boolean = MilestoneDefinitions.Contains(MS.name)
         ' Änderung tk 26.11.15
 
         If MilestoneDefinitions.Contains(MS.name) Then
@@ -11359,9 +11390,6 @@ Public Module testModule
                 End If
             End If
 
-            If isMissingDefinition Then
-                .Fill.ForeColor.RGB = CInt(MS.farbe)
-            End If
 
         End With
 
@@ -11437,8 +11465,6 @@ Public Module testModule
 
         Dim phDescription As String = hproj.hierarchy.getBestNameOfID(phaseID, Not awinSettings.mppUseOriginalNames, _
                                                                 awinSettings.mppUseAbbreviation, swimlaneID)
-
-        Dim isMissingDefinition As Boolean = Not PhaseDefinitions.Contains(phaseName)
 
         If PhaseDefinitions.Contains(phaseName) Then
             phaseTypShape = PhaseDefinitions.getShape(phaseName)
@@ -11537,10 +11563,6 @@ Public Module testModule
                 .Title = phaseName
                 .AlternativeText = phStartDate.ToShortDateString & " - " & phEndDate.ToShortDateString
 
-                If isMissingDefinition Then
-                    .Fill.ForeColor.RGB = CInt(cphase.farbe)
-                End If
-
                 ' jetzt wird die Option gezogen, wenn keine Phasen-Beschriftung stattfinden sollte ... 
                 If awinSettings.mppUseInnerText Then
 
@@ -11596,7 +11618,6 @@ Public Module testModule
 
 
         Dim msBeschriftung As String
-        Dim isMissingDefinition As Boolean = Not MilestoneDefinitions.Contains(milestoneName)
 
         If MilestoneDefinitions.Contains(milestoneName) Then
             milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
@@ -11687,10 +11708,6 @@ Public Module testModule
                 .Name = .Name & .Id
                 .Title = milestoneName
                 .AlternativeText = msDate.ToShortDateString
-
-                If isMissingDefinition Then
-                    .Fill.ForeColor.RGB = CInt(cMilestone.farbe)
-                End If
 
                 If awinSettings.mppShowAmpel Then
                     .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)
@@ -11852,6 +11869,8 @@ Public Module testModule
         Dim buName As String
         Dim buColor As Long
         Dim maxDelta As Double = 0.0
+
+
 
         Dim tmpDbl(3) As Double
         tmpDbl(0) = legendTextVorlagenShape.Height
@@ -12019,13 +12038,15 @@ Public Module testModule
         For i = 1 To uniqueElemClasses.Count
 
             phaseName = CStr(uniqueElemClasses(i))
-            Dim phShortname As String = PhaseDefinitions.getAbbrev(phaseName)
+            Dim phShortname As String
 
             ' Änderung tk 26.11.15
             If PhaseDefinitions.Contains(phaseName) Then
                 phaseShape = PhaseDefinitions.getShape(phaseName)
+                phShortname = PhaseDefinitions.getAbbrev(phaseName)
             Else
                 phaseShape = missingPhaseDefinitions.getShape(phaseName)
+                phShortname = missingPhaseDefinitions.getAbbrev(phaseName)
             End If
 
             ' Phasen-Shape 
@@ -12099,13 +12120,15 @@ Public Module testModule
 
             msName = CStr(uniqueElemClasses.Item(i))
 
-            msShortname = MilestoneDefinitions.getAbbrev(msName)
+
 
             ' Änderung tk 26.11.15
             If MilestoneDefinitions.Contains(msName) Then
                 meilensteinShape = MilestoneDefinitions.getShape(msName)
+                msShortname = MilestoneDefinitions.getAbbrev(msName)
             Else
                 meilensteinShape = missingMilestoneDefinitions.getShape(msName)
+                msShortname = missingMilestoneDefinitions.getAbbrev(msName)
             End If
 
 
@@ -12294,7 +12317,7 @@ Public Module testModule
 
     ''' <summary>
     ''' Änderung tk: das wird in zeichnepptProjects verwendet 
-    ''' sollte im 1. HJ 2016 ersetzt werden durch die Art und Weise, wie bei zeichneSwimlanes gearbeitet wird ...  
+    ''' sollte im 1. HJ 2016 ersetzt werden durch die Art und Weise, wie bei zeichneSwimlane gearbeitet wird ...  
     ''' </summary>
     ''' <param name="pptStartOfCalendar"></param>
     ''' <param name="pptEndOfCalendar"></param>
@@ -13344,7 +13367,7 @@ Public Module testModule
         Dim isBHTCSchema As Boolean = (kennzeichnung = "Swimlanes2")
 
         Dim rds As New clsPPTShapes
-        Dim considerZeitraum As Boolean = (showRangeLeft > 0 And showRangeRight > showRangeLeft)
+        Dim considerZeitraum As Boolean = (showRangeLeft > 0 And showRangeRight >= showRangeLeft)
         Dim cphase As clsPhase
 
         ' mit disem Befehl werden auch die ganzen Hilfsshapes in der Klasse gesetzt 
@@ -13680,7 +13703,7 @@ Public Module testModule
                 Try
 
                     With rds
-                        ' das demnächst abändern auf 
+
                         Call zeichne3RowsCalendar(rds, calendargroup)
 
                     End With
@@ -13697,9 +13720,57 @@ Public Module testModule
                 If awinSettings.mppShowLegend Then
                     Try
 
+                        ' Änderung tk: noch überprüfen, ob ob considerAll = true , dann sollen die selectedPhase entsprechend aufgebaut werden ...
+                        Dim tmpphases As New Collection
+                        Dim tmpMilestones As New Collection
+
+                        If considerAll Then
+
+                            Try
+                                For Each cphase In hproj.AllPhases
+
+                                    Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                    If tmpstr <> "" Then
+                                        tmpstr = tmpstr & "#" & cphase.name
+                                        If Not tmpphases.Contains(tmpstr) Then
+                                            tmpphases.Add(tmpstr, tmpstr)
+                                        End If
+
+                                    End If
+
+
+                                Next
+
+
+
+                                ' alle Meilensteine-Namen des Projektes hproj in die collection tmpMilestones bringen
+                                Dim mSList As SortedList(Of Date, String)
+
+                                mSList = hproj.getMilestones        ' holt alle Meilensteine in Form ihrer nameID sortiert nach Datum
+
+                                If mSList.Count > 0 Then
+                                    For Each kvp As KeyValuePair(Of Date, String) In mSList
+
+                                        Dim tmpstr = hproj.hierarchy.getBreadCrumb(kvp.Value) & "#" & hproj.getMilestoneByID(kvp.Value).name
+                                        If Not tmpMilestones.Contains(tmpstr) Then
+                                            tmpMilestones.Add(tmpstr, tmpstr)
+                                        End If
+
+                                    Next
+                                End If
+                            Catch ex As Exception
+
+                            End Try
+                            ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
+                            
+                        Else
+                            tmpphases = selectedPhases
+                            tmpMilestones = selectedMilestones
+                        End If
+
                         With rds
                             Call zeichnePPTlegende(pptslide, _
-                                            selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                            tmpphases, tmpMilestones, selectedRoles, selectedCosts, _
                                             .legendAreaTop, .legendAreaLeft, .legendAreaRight, .legendAreaBottom, _
                                             .legendLineShape, .legendStartShape, _
                                             .legendTextVorlagenShape, .legendPhaseVorlagenShape, .legendMilestoneVorlagenShape, _

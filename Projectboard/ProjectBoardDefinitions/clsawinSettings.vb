@@ -41,6 +41,7 @@ Public Class clsawinSettings
     Public Property kapaEinheit As String
     Public Property databaseName As String
     Public Property databaseURL As String
+    Public Property globalPath As String
     Public Property awinPath As String
     Public Property zeilenhoehe1 As Double
     Public Property zeilenhoehe2 As Double
@@ -83,7 +84,7 @@ Public Class clsawinSettings
 
     ' Settings für Import / Export
     Public Property EinzelRessExport As Integer
-    ' Settings ob die fehlenden Phase- und Meilenstein-Namen in die Customization eingetragen werden sollen
+    ' Settings ob die fehlenden Phase- und Meilenstein-Namen in die Liste der bekannten Definitionen  eingetragen werden sollen
     Public Property addMissingPhaseMilestoneDef As Boolean
     ' Setting, ob die NAmen eines Templates auf alle Fälle in die Phasedefinitions / MilestoneDefinitions aufgenommen werden soll oder nicht 
     Public Property alwaysAcceptTemplateNames As Boolean
@@ -105,6 +106,8 @@ Public Class clsawinSettings
     ' wird beim Import verwendet; steuert, ob beim Import aus MS Project, RPLAN, Excel Files eindeutige Namen 
     ' für gleichlautende Geschwisternamen generiert werden  
     Public Property createUniqueSiblingNames As Boolean
+
+    Public Property readWriteMissingDefinitions As Boolean = False
 
     ' Settings für ToleranzKorridor TimeCost
     Public Property timeToleranzRel As Double
@@ -133,6 +136,10 @@ Public Class clsawinSettings
     Public Property mppKwInMilestone As Boolean
     Public Property mppUseInnerText As Boolean ' steuert, ob der Beschriftungstext im Balken stattfinden soll 
 
+    ' Settings für MSProject-AddIn und ImportMSProject
+    Public Property visboTaskClass As String
+    Public Property visboAbbreviation As String
+    Public Property visboAmpel As String
 
     ' Settings für Einzelprojekt-Reports
     ' tk 7.2.16 ist überflüssig
@@ -207,6 +214,10 @@ Public Class clsawinSettings
         _eliminateDuplicates = True
         _importUnknownNames = True
         _createUniqueSiblingNames = True
+
+        ' sollen die MissingDefinitions rausgeschrieben werden ...
+        _readWriteMissingDefinitions = False
+
 
         ' Settings für Besser/Schlechter Diagramm 
         _timeToleranzRel = 0.02

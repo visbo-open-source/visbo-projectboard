@@ -12859,12 +12859,13 @@ Public Module Projekte
 
             If isMissingDefinition Then
 
-                .Line.Visible = Microsoft.Office.Core.MsoTriState.msoTrue
-                .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
-                .Line.Transparency = 0
-                .Line.Weight = 2
-
-                .Fill.ForeColor.RGB = CInt(myphase.farbe)
+                If awinSettings.missingDefinitionColor <> XlRgbColor.rgbWhite Then
+                    .Line.Visible = MsoTriState.msoTrue
+                    .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+                    .Line.Transparency = 0
+                    .Line.Weight = 2
+                    .Fill.ForeColor.RGB = CInt(myphase.farbe)
+                End If
 
             End If
 
@@ -12898,11 +12899,12 @@ Public Module Projekte
 
             If isMissingDefinition Then
 
-                .Line.Visible = MsoTriState.msoTrue
-                .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
-                .Line.Weight = 2
-
-                .Fill.ForeColor.RGB = CInt(farbe)
+                If awinSettings.missingDefinitionColor <> XlRgbColor.rgbWhite Then
+                    .Line.Visible = MsoTriState.msoTrue
+                    .Line.ForeColor.RGB = CInt(awinSettings.missingDefinitionColor)
+                    .Line.Weight = 2
+                    .Fill.ForeColor.RGB = CInt(farbe)
+                End If
 
             End If
 
@@ -18764,6 +18766,81 @@ Public Module Projekte
             Next
         End If
         copyCollection = kopie
+
+    End Function
+
+
+
+    ''' <summary>
+    ''' kopiert eine sortierte Liste , die Strings enthält
+    ''' </summary>
+    ''' <param name="original"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function copyList(ByVal original As SortedList(Of String, String)) As SortedList(Of String, String)
+
+        Dim element As String
+        Dim kopie As New SortedList(Of String, String)
+
+        If Not IsNothing(original) Then
+            For Each kvp As KeyValuePair(Of String, String) In original
+                element = kvp.Key
+                If Not kopie.ContainsKey(element) Then
+                    kopie.Add(element, kvp.Value)
+                End If
+
+            Next
+        End If
+        copyList = kopie
+
+    End Function
+
+
+    ''' <summary>
+    ''' kopiert eine sortierte Liste , die Strings enthält
+    ''' </summary>
+    ''' <param name="original"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function copyColltoSortedList(ByVal original As Collection) As SortedList(Of String, String)
+        Dim i As Integer
+        Dim element As String
+        Dim kopie As New SortedList(Of String, String)
+
+        If Not IsNothing(original) Then
+            For i = 1 To original.Count
+                element = CStr(original.Item(i))
+                If Not kopie.ContainsKey(element) Then
+                    kopie.Add(element, element)
+                End If
+
+            Next
+        End If
+        copyColltoSortedList = kopie
+
+    End Function
+
+    ''' <summary>
+    ''' kopiert eine sortierte Liste , die Strings enthält in eine Collection mit Strings
+    ''' </summary>
+    ''' <param name="original"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function copySortedListtoColl(ByVal original As SortedList(Of String, String)) As Collection
+
+        Dim element As String
+        Dim kopie As New Collection
+
+        If Not IsNothing(original) Then
+            For Each kvp As KeyValuePair(Of String, String) In original
+                element = kvp.Value
+                If Not kopie.Contains(element) Then
+                    kopie.Add(element, element)
+                End If
+
+            Next
+        End If
+        copySortedListtoColl = kopie
 
     End Function
 

@@ -23,14 +23,39 @@ Public Module PBBModules
     ''' </summary>
     ''' <param name="controlID"></param>
     ''' <remarks></remarks>
-    Sub PBBBHTCHierarchySelAction(controlID As String)
+
+    Sub PBBBHTCHierarchySelAction(controlID As String, ByVal reportprofil As clsReport)
 
         Dim hryFormular As New frmHierarchySelection
         Dim returnValue As DialogResult
-
-        hryFormular.calledFrom = "MS-Project"
-
         Dim formerSettings(3) As Boolean
+
+        If controlID = "PT1G1B3" Then
+            hryFormular.calledFrom = "Multiprojekt-Tafel"
+
+            With awinSettings
+                formerSettings(0) = .mppExtendedMode
+                formerSettings(1) = .mppShowAllIfOne
+                formerSettings(2) = .mppShowAmpel
+                formerSettings(3) = .mppFullyContained
+            End With
+
+            With awinSettings
+                .mppExtendedMode = True
+                .mppShowAllIfOne = False
+                .mppShowAmpel = False
+                .mppFullyContained = False
+            End With
+
+        Else
+            hryFormular.calledFrom = "MS-Project"
+
+            hryFormular.repProfil = New clsReport
+            reportprofil.CopyTo(hryFormular.repProfil)
+        End If
+
+
+        ' Dim formerSettings(3) As Boolean
         With awinSettings
             formerSettings(0) = .mppExtendedMode
             formerSettings(1) = .mppShowAllIfOne
@@ -44,15 +69,9 @@ Public Module PBBModules
             .mppShowAmpel = False
             .mppFullyContained = False
         End With
-        
+
         awinSettings.useHierarchy = True
         With hryFormular
-
-            If controlID = "PT1G1B3" Then
-                .calledFrom = "Multiprojekt-Tafel"
-            Else
-                .calledFrom = "MS-Project"
-            End If
 
             .Text = "Projekt-Report erzeugen"
             .OKButton.Text = "Bericht erstellen"
@@ -77,9 +96,12 @@ Public Module PBBModules
             .chkbxOneChart.Checked = False
             .chkbxOneChart.Visible = False
 
+
             .hryStufenLabel.Visible = False
             .hryStufen.Value = 50
             .hryStufen.Visible = False
+
+
 
             ' Reports
             .repVorlagenDropbox.Visible = True
@@ -89,12 +111,45 @@ Public Module PBBModules
             ' Filter
             .filterDropbox.Visible = True
             .filterLabel.Visible = True
-            .filterLabel.Text = "Name des Report-Profils"
+            .filterLabel.Text = "Name Report-Profil"
+
+            If Not IsNothing(reportprofil) Then
+                .filterDropbox.Text = reportprofil.name
+            Else
+                .filterDropbox.Text = ""
+            End If
+
+
+
+            Try
+                If .calledFrom = "MS-Project" Then
+
+                    Dim lic As clsLicences = XMLImportLicences(licFileName)
+                    ' nur mit dem Recht für ProjectAdmin können ReportProfile gespeichert werden
+                    If lic.validLicence(myWindowsName, LizenzKomponenten(PTSWKomp.ProjectAdmin)) Then
+
+                        .auswSpeichern.Visible = True
+                        .filterDropbox.Enabled = True
+                    Else
+                        .auswSpeichern.Visible = False
+                        .filterDropbox.Enabled = False
+                    End If
+                Else
+
+                    .auswSpeichern.Visible = False
+                    .filterDropbox.Enabled = False
+                End If
+
+            Catch ex As Exception
+                .auswSpeichern.Visible = False
+                .filterDropbox.Enabled = False
+            End Try
 
 
             ' bei Verwendung Background Worker muss Aufruf so erfolgen: 
             returnValue = .ShowDialog
         End With
+
 
         With awinSettings
             .mppExtendedMode = formerSettings(0)

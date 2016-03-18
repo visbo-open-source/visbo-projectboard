@@ -149,16 +149,31 @@
 
         If deleteAllChilds Then
 
-            ' jetzt alle Kinder löschen  
-            For i As Integer = 1 To elemNode.childCount
-                childNodeID = elemNode.getChild(i)
+            Dim k As Integer = 1
+
+
+            ' jetzt alle Kinder löschen
+            While elemNode.childCount > 0
+
+                childNodeID = elemNode.getChild(k)
                 If elemIDIstMeilenstein(childNodeID) Then
                     ' lösche Meilenstein 
                     Me.removeMeilenstein(childNodeID)
                 Else
                     Me.removePhase(childNodeID, True)
+
                 End If
-            Next
+            End While
+
+            '' '' ''For i As Integer = 1 To elemNode.childCount
+            '' '' ''    childNodeID = elemNode.getChild(i)
+            '' '' ''    If elemIDIstMeilenstein(childNodeID) Then
+            '' '' ''         lösche Meilenstein 
+            '' '' ''        Me.removeMeilenstein(childNodeID)
+            '' '' ''    Else
+            '' '' ''        Me.removePhase(childNodeID, True)
+            '' '' ''    End If
+            '' '' ''Next
         Else
             ' hier alle Kinder umhängen: die bekommen die ParentID statt nameID als ihren neuen Vater 
             For i As Integer = 1 To elemNode.childCount
@@ -184,6 +199,71 @@
 
 
     End Sub
+
+    ''' <summary>
+    ''' gibt zu einer als als voller Name (Breadcrumb + Elemename) übergebenen Phase zurück, ob die so im Projekt existiert 
+    ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
+    ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
+    '''  
+    ''' </summary>
+    ''' <param name="fullName">der volle Name, das heisst Breadcrum plus Name</param>
+    ''' <param name="strict">gibt an, ob der volle Breadcrumb berücksichtigt werden soll oder nur der Name</param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsPhase(ByVal fullName As String, ByVal strict As Boolean) As Boolean
+        Get
+            Dim elemName As String = ""
+            Dim breadcrumb As String = ""
+
+            Call splitHryFullnameTo2(fullName, elemName, breadcrumb)
+            If strict Then
+                ' breadcrumb soll unverändert beachtet werden 
+            Else
+                breadcrumb = ""
+            End If
+
+            Dim cphase As clsPhase = Me.getPhase(elemName, breadcrumb, 1)
+            If IsNothing(cphase) Then
+                containsPhase = False
+            Else
+                containsPhase = True
+            End If
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt zu einem als als voller Name (Breadcrumb + Elemename) übergebenen Meilenstein zurück, ob der so im Projekt existiert 
+    ''' wenn strict = false: true , wenn der ElemName vorkommt, unabhängig wo in der Hierarchie
+    ''' wenn strict = true: true, wenn der ElemName genau in der angegebenen Hierarchie-Stufe vorkommt  
+    ''' </summary>
+    ''' <param name="fullName"></param>
+    ''' <param name="strict"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property containsMilestone(ByVal fullName As String, ByVal strict As Boolean) As Boolean
+        Get
+            Dim elemName As String = ""
+            Dim breadcrumb As String = ""
+
+            Call splitHryFullnameTo2(fullName, elemName, breadcrumb)
+            If strict Then
+                ' breadcrumb soll unverändert beachtet werden 
+            Else
+                breadcrumb = ""
+            End If
+
+            Dim cMilestone As clsMeilenstein = Me.getMilestone(elemName, breadcrumb, 1)
+            If IsNothing(cMilestone) Then
+                containsMilestone = False
+            Else
+                containsMilestone = True
+            End If
+
+        End Get
+    End Property
 
     ''' <summary>
     ''' entfernt den Meilenstein mit der übergebenen nameID 
@@ -223,7 +303,7 @@
         ' in der Hierarchie-Liste löschen 
         Me.hierarchy.removeAt(indexInHierarchy - 1)
 
-        Dim cPhase As clsPhase = Me.getPhase(parentID)
+        Dim cPhase As clsPhase = Me.getPhaseByID(parentID)
 
         ' in der Meilenstein-Liste der Phase löschen 
         cPhase.removeMilestoneAt(indexInMilestoneList - 1)
@@ -2531,88 +2611,7 @@
 
     End Property
 
-    'Public Property Start() As Integer
-
-    '    Get
-    '        Start = _Start
-    '    End Get
-
-    '    Set(value As Integer)
-    '        If _Status = ProjektStatus(1) Or _Status = ProjektStatus(2) Or _
-    '                                         _Status = ProjektStatus(2) Then
-    '            Call MsgBox("der Startzeitpunkt kann nicht mehr verändert werden ... ")
-
-    '        ElseIf value < _Start + _earliestStart Then
-    '            Call MsgBox("der neue Startzeitpunkt liegt vor dem bisher zugelassenen frühestmöglichen Startzeitpunkt ...")
-
-    '        ElseIf value > _Start + _latestStart Then
-    '            Call MsgBox("der neue Startzeitpunkt liegt nach dem bisher zugelassenen spätestmöglichen Startzeitpunkt ...")
-
-    '        Else
-    '            Dim absEarliest As Integer
-    '            Dim absLatest As Integer
-    '            Dim earliestDate As Date
-    '            Dim newDate As Date = StartofCalendar.AddMonths(value - 1)
-    '            Dim Heute As Date = Now
-
-    '            If DateDiff(DateInterval.Month, newDate, Heute) < 0 Then
-    '                Call MsgBox("der neue Startzeitpunkt liegt in der Vergangenheit ...")
-    '            Else
-    '                absEarliest = _Start + _earliestStart
-    '                absLatest = _Start + _latestStart
-
-    '                earliestDate = StartofCalendar.AddMonths(absEarliest - 1)
-    '                Dim DifferenceInMonths As Long = DateDiff(DateInterval.Month, earliestDate, Heute)
-
-    '                If DifferenceInMonths < 0 Then
-    '                    ' frühestmöglicher Startzeitpunkt ist der aktuelle Monat
-    '                    absEarliest = DateDiff(DateInterval.Month, Heute, StartofCalendar) + 1
-    '                End If
-
-    '                _Start = value
-    '                _earliestStart = absEarliest - _Start
-    '                _latestStart = absLatest - _Start
-    '            End If
-
-
-    '        End If
-    '    End Set
-    'End Property
-
-    'Public Property Status() As String
-    '    Get
-    '        Status = _Status
-    '    End Get
-    '    Set(value As String)
-    '        If value = ProjektStatus(0) Then
-    '            _Status = value
-    '        ElseIf value = ProjektStatus(1) Or value = ProjektStatus(2) Or _
-    '                                           value = ProjektStatus(3) Then
-    '            _Status = value
-    '            _earliestStart = 0
-    '            _latestStart = 0
-    '        Else
-    '            Call MsgBox("unzulässiger Wert für Status")
-    '        End If
-    '    End Set
-    'End Property
-
-    'Public Property StartOffset As Integer
-    '    Get
-    '        StartOffset = _StartOffset
-    '    End Get
-
-    '    Set(value As Integer)
-    '        If value >= _earliestStart And value <= _latestStart Then
-    '            _StartOffset = value
-    '        Else
-    '            Call MsgBox("unzulässiger Wert für StartOffset ...")
-    '        End If
-    '    End Set
-
-    'End Property
-
-
+  
 
     Public Sub New()
 
@@ -2627,20 +2626,10 @@
         _earliestStart = 0
         _latestStart = 0
         '_Status = ProjektStatus(0)
-
+        Schrift = 12
+        Schriftfarbe = RGB(0, 0, 0)
     End Sub
 
-    'Public Sub New(ByVal projektStart As Integer, ByVal earliestValue As Integer, ByVal latestValue As Integer)
-
-    '    AllPhases = New List(Of clsPhase)
-    '    relStart = 1
-    '    iDauer = 0
-    '    _StartOffset = 0
-    '    _Start = projektStart
-    '    _earliestStart = earliestValue
-    '    _latestStart = latestValue
-    '    _Status = ProjektStatus(0)
-
-    'End Sub
+ 
 
 End Class

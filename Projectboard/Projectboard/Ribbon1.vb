@@ -1,15 +1,17 @@
 ﻿Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
-Imports MongoDbAccess
 Imports ClassLibrary1
+Imports MongoDbAccess
 Imports WpfWindow
 Imports WPFPieChart
 Imports Microsoft.Office.Core
 Imports Microsoft.Office.Interop.Excel
 Imports Excel = Microsoft.Office.Interop.Excel
+'Imports MSProject = Microsoft.Office.Interop.MSProject
 Imports System.Security.Principal
 Imports System.Diagnostics
 Imports System.Drawing
+Imports System.Windows
 
 
 
@@ -63,7 +65,7 @@ Imports System.Drawing
 
         Call projektTafelInit()
 
-        
+
         '
         If AlleProjekte.Count > 0 Then
             returnValue = storeConstellationFrm.ShowDialog  ' Aufruf des Formulars zur Eingabe des Portfolios
@@ -1805,6 +1807,7 @@ Imports System.Drawing
         Call PBBAnalyseLeistbarkeit001(control.Id)
 
 
+
     End Sub
 
 
@@ -2121,7 +2124,7 @@ Imports System.Drawing
         ' Hierarchie auswählen, Einzelprojekt Berichte 
         appInstance.ScreenUpdating = False
 
-        Call PBBBHTCHierarchySelAction(control.Id)
+        Call PBBBHTCHierarchySelAction(control.Id, Nothing)
 
         appInstance.ScreenUpdating = True
         
@@ -2787,6 +2790,112 @@ Imports System.Drawing
         enableOnUpdate = True
         appInstance.EnableEvents = True
         appInstance.ScreenUpdating = True
+
+
+    End Sub
+
+    Public Sub Tom2G4M2ImportMSProject(control As IRibbonControl)
+
+        Dim request As New Request(awinSettings.databaseURL, awinSettings.databaseName, dbUsername, dbPasswort)
+        Dim hproj As New clsProjekt
+        Dim cproj As New clsProjekt
+        Dim vglName As String = " "
+        Dim outputString As String = ""
+        Dim dirName As String
+        Dim dateiName As String
+
+        Dim importDate As Date = Date.Now
+        'Dim importDate As Date = "31.10.2013"
+        Dim listOfVorlagen As Collections.ObjectModel.ReadOnlyCollection(Of String)
+        Dim projektInventurFile As String = "ProjektInventur.xlsm"
+
+        Call projektTafelInit()
+
+        appInstance.EnableEvents = False
+        appInstance.ScreenUpdating = False
+        enableOnUpdate = False
+
+        Dim myCollection As New Collection
+
+
+
+        'dirName = awinPath & msprojectFilesOrdner
+        dirName = importOrdnerNames(PTImpExp.msproject)
+        listOfVorlagen = My.Computer.FileSystem.GetFiles(dirName, FileIO.SearchOption.SearchTopLevelOnly, "*.mpp")
+
+        ' alle Import Projekte erstmal löschen
+        ImportProjekte.Clear()
+
+
+        ' jetzt müssen die Projekte ausgelesen werden, die in dateiListe stehen 
+        Dim i As Integer
+        For i = 1 To listOfVorlagen.Count
+            dateiName = listOfVorlagen.Item(i - 1)
+
+            If dateiName = projektInventurFile Then
+
+                ' nichts machen 
+
+            Else
+                ' '' ''Dim skip As Boolean = False
+
+
+                ' '' ''Try
+                ' '' ''    appInstance.Workbooks.Open(dateiName)
+                ' '' ''Catch ex1 As Exception
+                ' '' ''    'Call MsgBox("Fehler bei Öffnen der Datei " & dateiName)
+                ' '' ''    skip = True
+                ' '' ''End Try
+
+                ' '' ''If Not skip Then
+                ' '' ''    pname = ""
+                hproj = New clsProjekt
+                Try
+                    Call awinImportMSProject("", dateiName, hproj, importDate)
+
+                    Try
+                        Dim keyStr As String = calcProjektKey(hproj)
+                        ImportProjekte.Add(calcProjektKey(hproj), hproj)
+                        myCollection.Add(calcProjektKey(hproj))
+                    Catch ex2 As Exception
+                        Call MsgBox("Projekt kann nicht zweimal importiert werden ...")
+                    End Try
+
+                    ' ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+
+                Catch ex1 As Exception
+                    ''appInstance.ActiveWorkbook.Close(SaveChanges:=False)
+                    Call MsgBox(ex1.Message)
+                    Call MsgBox("Fehler bei Import von Projekt " & hproj.name)
+                End Try
+
+
+
+                ' '' ''End If
+
+
+
+            End If
+
+
+        Next i
+
+
+
+        Try
+            Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
+        Catch ex As Exception
+            Call MsgBox("Fehler bei Import : " & vbLf & ex.Message)
+        End Try
+
+
+
+
+        enableOnUpdate = True
+        appInstance.EnableEvents = True
+        appInstance.ScreenUpdating = True
+
+
 
 
     End Sub
@@ -7961,6 +8070,7 @@ Imports System.Drawing
 
     End Sub
 
+
     Public Sub PTTestFunktion4(control As IRibbonControl)
 
         Call projektTafelInit()
@@ -7975,6 +8085,88 @@ Imports System.Drawing
 
 
     End Sub
+
+    Public Sub PTCreateLicense(control As IRibbonControl)
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+
+        Dim frmLizenzen As New frmCreateLicences
+        ' ''Dim i As Integer
+        ' ''Dim k As Integer
+        ' ''Dim VisboLic As New clsLicences
+        ' ''Dim clientLic As New clsLicences
+        ' ''Dim komponenten() As String = {"Swimlanes2"}
+        ' ''Dim users() As String = {"matthias.kaufhold", "thomas.braeutigam", "Ingo.Hanschke", myWindowsName, "BHTC-Domain/thomas.braeutigam", "Ute-Dagmar.Rittinghaus-Koytek"}
+        ' ''Dim endDate As Date = DateAdd(DateInterval.Month, 1200, Date.Now)
+
+
+        Dim returnValue As DialogResult
+        returnValue = frmLizenzen.ShowDialog
+
+
+        ' ''For i = 0 To users.Length - 1
+
+        ' ''    For k = 0 To komponenten.Length - 1
+
+        ' ''        ' Lizenzkey berechnen
+        ' ''        Dim licString As String = VisboLic.berechneKey(endDate, users(i), komponenten(k))
+
+        ' ''        ' VsisboListe mit Angabe von username, komponente, endDate
+        ' ''        Dim visbokey As String = users(i) & "-" & komponenten(k) & "-" & endDate.ToString
+        ' ''        If VisboLic.Liste.ContainsKey(visbokey) Then
+        ' ''            Dim ok As Boolean = VisboLic.Liste.Remove(visbokey)
+        ' ''        End If
+        ' ''        VisboLic.Liste.Add(visbokey, licString)
+
+        ' ''        ' Liste von Lizenzen für den Kunden 
+        ' ''        If clientLic.Liste.ContainsKey(licString) Then
+        ' ''            Dim ok As Boolean = clientLic.Liste.Remove(licString)
+        ' ''        End If
+        ' ''        clientLic.Liste.Add(licString, licString)
+
+        ' ''    Next k               'nächste Komponente
+
+        ' ''Next i                   ' nächster User
+
+        '' '' Lizenzen in XML-Dateien speichern
+        ' ''Call XMLExportLicences(VisboLic, requirementsOrdner & "visboLicfile.xml")
+
+        ' ''Call XMLExportLicences(clientLic, licFileName)
+
+        enableOnUpdate = True
+
+
+
+    End Sub
+
+    Public Sub PTTestLicense(control As IRibbonControl)
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+
+        Dim Lic As New clsLicences
+
+        Lic = XMLImportLicences(licFileName)
+
+        Dim user As String = myWindowsName
+        Dim komponente As String = "Swimlanes2"
+        Dim testerg As Boolean = False
+
+        testerg = Lic.validLicence(user, komponente)
+
+
+
+
+        enableOnUpdate = True
+
+
+    End Sub
+
 
 
 #End Region
