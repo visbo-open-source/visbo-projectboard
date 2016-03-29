@@ -879,7 +879,7 @@
                         tmpSortList.Add(sortDate, itemName)
 
                     End If
-                    
+
 
                 Else
                     Call splitHryFullnameTo2(CStr(namenListe.Item(i)), itemName, itemBreadcrumb)
