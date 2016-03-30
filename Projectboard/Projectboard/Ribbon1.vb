@@ -8149,17 +8149,10 @@ Imports System.Windows
         enableOnUpdate = False
         appInstance.EnableEvents = True
 
-        Dim Lic As New clsLicences
+        Dim frmTestLizenzen As New frmTestLicences
 
-        Lic = XMLImportLicences(licFileName)
-
-        Dim user As String = myWindowsName
-        Dim komponente As String = "Swimlanes2"
-        Dim testerg As Boolean = False
-
-        testerg = Lic.validLicence(user, komponente)
-
-
+        Dim returnValue As DialogResult
+        returnValue = frmTestLizenzen.ShowDialog
 
 
         enableOnUpdate = True

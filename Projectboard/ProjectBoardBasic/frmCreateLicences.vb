@@ -1,5 +1,6 @@
 ﻿Imports ProjectBoardDefinitions
 Imports ProjectBoardBasic
+Imports Excel = Microsoft.Office.Interop.Excel
 
 Public Class frmCreateLicences
 
@@ -44,53 +45,119 @@ Public Class frmCreateLicences
 
     Private Sub AddLicences_Click(sender As Object, e As EventArgs) Handles AddLicences.Click
 
+        Dim lastrow As Integer
+        Dim lastcolumn As Integer
+        Dim rowOffset As Integer = 1
+        Dim columnOffset As Integer = 1
+        Dim UserRange As Excel.Range
+        Dim UserDomain As String = ""
+        Dim endDate As Date
+
         Dim i As Integer
         Dim k As Integer
+        Dim angabenOK As Boolean = True
 
-        Dim benutzer As String = UserName.Text
-        If benutzer = "" Then
-            Call MsgBox("Username muss angegeben werden!")
+        Dim komponenten(ListKomponenten.SelectedItems.Count - 1) As String
+        For i = 0 To ListKomponenten.SelectedItems.Count - 1
+            komponenten(i) = ListKomponenten.SelectedItems(i)
+        Next
+        If ListKomponenten.SelectedItems.Count < 1 Then
+            angabenOK = False
+            Call MsgBox("Bitte wählen Sie die Softwarekomponenten aus!")
+
         Else
+            endeDate = untilDate.Value
+            If DateDiff(DateInterval.Day, Date.Now, endDate) < 0 Then
+                angabenOK = False
+                Call MsgBox("Gültigkeitsdatum muss nach dem heutigen Datum liegen!")
+            End If
+        End If
 
-            Dim komponenten(ListKomponenten.SelectedItems.Count - 1) As String
+        If angabenOK Then
 
-            For i = 0 To ListKomponenten.SelectedItems.Count - 1
-                komponenten(i) = ListKomponenten.SelectedItems(i)
-            Next
-            If ListKomponenten.SelectedItems.Count < 1 Then
-                Call MsgBox("Bitte wählen Sie die Softwarekomponenten aus!")
+            If Not UserName.Enabled Then
+                ' Lizenzen werden über die Datei UserList.xlsx erzeugt
+                Dim UserListFile As Microsoft.Office.Interop.Excel.Workbook = appInstance.Workbooks.Open(FileNameUserList.Text)
+                Dim wsUserList As Microsoft.Office.Interop.Excel.Worksheet = CType(UserListFile.Worksheets(1), Global.Microsoft.Office.Interop.Excel.Worksheet)
+
+                With wsUserList
+
+                    lastrow = CInt(CType(.Cells(2000, columnOffset), Excel.Range).End(Excel.XlDirection.xlUp).Row)
+                    lastcolumn = CInt(CType(.Cells(rowOffset, 2000), Excel.Range).End(Excel.XlDirection.xlToLeft).Column)
+
+                    UserRange = .Range(.Cells(rowOffset, columnOffset + 2), .Cells(lastrow, lastcolumn))
+                    For Each UserDomain In UserRange
+
+                        ' Licensen erzeugen und in die Liste aufnehmen
+                        For k = 0 To komponenten.Length - 1
+
+                            ' Lizenzkey berechnen
+                            Dim licString As String = VisboLic.berechneKey(endDate, UserDomain, komponenten(k))
+
+                            ' VsisboListe mit Angabe von username, komponente, endDate
+                            Dim visbokey As String = UserDomain & "-" & komponenten(k) & "-" & endDate.ToString
+                            If VisboLic.Liste.ContainsKey(visbokey) Then
+                                Dim ok As Boolean = VisboLic.Liste.Remove(visbokey)
+                            End If
+                            VisboLic.Liste.Add(visbokey, licString)
+
+                            ' Liste von Lizenzen für den Kunden 
+                            If clientLic.Liste.ContainsKey(licString) Then
+                                Dim ok As Boolean = clientLic.Liste.Remove(licString)
+                            End If
+                            clientLic.Liste.Add(licString, licString)
+
+                        Next k               'nächste Komponente
+
+                    Next
+
+                End With
             Else
+                UserDomain = UserName.Text
 
-                Dim endDate As Date = untilDate.Value
-                If DateDiff(DateInterval.Day, Date.Now, endDate) < 0 Then
-                    Call MsgBox("Gültigkeitsdatum muss nach dem heutigen Datum liegen!")
-                Else
+                ' Licensen erzeugen und in die Liste aufnehmen
+                For k = 0 To komponenten.Length - 1
 
-                    ' Licensen erzeugen und in die Liste aufnehmen
-                    For k = 0 To komponenten.Length - 1
+                    ' Lizenzkey berechnen
+                    Dim licString As String = VisboLic.berechneKey(endDate, UserDomain, komponenten(k))
 
-                        ' Lizenzkey berechnen
-                        Dim licString As String = VisboLic.berechneKey(endDate, benutzer, komponenten(k))
+                    ' VsisboListe mit Angabe von username, komponente, endDate
+                    Dim visbokey As String = UserDomain & "-" & komponenten(k) & "-" & endDate.ToString
+                    If VisboLic.Liste.ContainsKey(visbokey) Then
+                        Dim ok As Boolean = VisboLic.Liste.Remove(visbokey)
+                    End If
+                    VisboLic.Liste.Add(visbokey, licString)
 
-                        ' VsisboListe mit Angabe von username, komponente, endDate
-                        Dim visbokey As String = benutzer & "-" & komponenten(k) & "-" & endDate.ToString
-                        If VisboLic.Liste.ContainsKey(visbokey) Then
-                            Dim ok As Boolean = VisboLic.Liste.Remove(visbokey)
-                        End If
-                        VisboLic.Liste.Add(visbokey, licString)
+                    ' Liste von Lizenzen für den Kunden 
+                    If clientLic.Liste.ContainsKey(licString) Then
+                        Dim ok As Boolean = clientLic.Liste.Remove(licString)
+                    End If
+                    clientLic.Liste.Add(licString, licString)
 
-                        ' Liste von Lizenzen für den Kunden 
-                        If clientLic.Liste.ContainsKey(licString) Then
-                            Dim ok As Boolean = clientLic.Liste.Remove(licString)
-                        End If
-                        clientLic.Liste.Add(licString, licString)
+                Next k               'nächste Komponente
 
-                    Next k               'nächste Komponente
+            End If     ' ende von If UserName.enabled
 
-                End If
+        End If   ' Ende if angabenOK
 
+       
+
+        FileNameUserList.Text = ""
+        UserName.Visible = True
+        UserName.Enabled = True
+        LabelUser.Visible = True
+    End Sub
+
+    Private Sub FileNameUserList_TextChanged(sender As Object, e As EventArgs) Handles FileNameUserList.TextChanged
+        Try
+            If My.Computer.FileSystem.FileExists(FileNameUserList.Text) Then
+                UserName.Visible = False
+                UserName.Enabled = False
+                LabelUser.Visible = False
             End If
 
-        End If
+        Catch ex As Exception
+
+        End Try
     End Sub
 End Class

@@ -99,6 +99,12 @@
     <Compile Include="frmReportProfil.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmTestLicences.Designer.vb">
+      <DependentUpon>frmTestLicences.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmTestLicences.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmWbListInfo.Designer.vb">
       <DependentUpon>frmWbListInfo.vb</DependentUpon>
     </Compile>
