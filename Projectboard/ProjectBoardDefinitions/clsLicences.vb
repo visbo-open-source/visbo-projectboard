@@ -66,7 +66,7 @@ Public Class clsLicences
             Dim hexvalidLicCode As String = Hex(validLicCode)
 
 
-            Call MsgBox("License: " & hexvalidLicCode & "-" & hexuserlicCode & "-" & hexcomplicCode)
+            ' Call MsgBox("License: " & hexvalidLicCode & "-" & hexuserlicCode & "-" & hexcomplicCode)
 
             berechneKey = hexvalidLicCode & "-" & hexuserlicCode & "-" & hexcomplicCode
 
@@ -216,6 +216,9 @@ Public Class clsLicences
         End Get
 
     End Property
+    Public Sub clear()
+        _allLicenceKeys.Clear()
+    End Sub
 
     Public Sub New()
         _allLicenceKeys = New SortedList(Of String, String)

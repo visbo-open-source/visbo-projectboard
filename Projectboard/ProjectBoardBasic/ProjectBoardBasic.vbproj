@@ -312,6 +312,9 @@
     <EmbeddedResource Include="frmStoreCockpit.resx">
       <DependentUpon>frmStoreCockpit.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmTestLicences.resx">
+      <DependentUpon>frmTestLicences.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmWbListInfo.resx">
       <DependentUpon>frmWbListInfo.vb</DependentUpon>
     </EmbeddedResource>
