@@ -156,6 +156,18 @@ Public Module Module1
     Public Const maxProjektdauer As Integer = 60
 
 
+    ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 
+    Public Enum ptRplanNamen
+        Name = 0
+        Anfang = 1
+        Ende = 2
+        Beschreibung = 3
+        Vorgangsklasse = 4
+        Produktlinie = 5
+        Protocol = 6
+        Dauer = 7
+    End Enum
+
 
     Public Enum PTbubble
         strategicFit = 0

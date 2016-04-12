@@ -2457,7 +2457,8 @@ Imports System.Windows
                 ' alle Import Projekte erstmal löschen
                 ImportProjekte.Clear()
                 'Call bmwImportProjektInventur(myCollection)
-                Call bmwImportProjekteITO15(myCollection, False)
+                Call rplanExcelImport(myCollection, False)
+                'Call bmwImportProjekteITO15(myCollection, False)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
                 Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
 

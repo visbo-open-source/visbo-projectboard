@@ -30,7 +30,7 @@
          <separator id="PTXG1s4"/> 
           <menu id="PTOPT" label="Optimieren">
             <button id="PTOPTB1" label ="optimale Varianten-Kombination" onAction ="PTOPTVariantenOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse die optimale Kombination von Projekt-Varianten ermitteln"/>
-            <button id="PTOPTB2" label ="Spielraum nutzen" enabled ="false" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>
+            <button id="PTOPTB2" label ="Spielraum nutzen" onAction ="PTOPTFreiraumOptimieren" supertip="zu einer gegebenen Leistbarkeitsanalyse und mit gegebenen Freiräumen für den Start eines Projektes bzw. einer Projektvariante eine möglichst optimierte Konstellation der jeweiligen Startzeitpunkte für die Projektvarianten suchen"/>
           </menu>    
           <separator id="PTXG1s5"/>
           <button id="PTXG1B8" label="Strategie/Risiko/Marge" onAction="PT0ShowStrategieRisiko" supertip ="Zu allen Projekten wird ein Bubble-Chart mit Einordnung Strategie, Risiko, Projekt-Marge gezeigt. Die Größe der Kugel entspricht der Höhe der Projekt-Marge. Wenn Ampelfarben gezeigt werden sollen (siehe Einstellungen), dann entspricht die Farbe der Kugel der Ampelfarbe. Ansonsten ist es die Farbe des Projekt-Typs"/>
@@ -129,7 +129,7 @@
           <menu id="PT2G1M2" label="Editieren">
             <button id="PT2G1M2B1" label="Ressourcen Bedarfe"  onAction="Tom2G1Resources" />
             <button id="PT2G1M2B2" label="Strategie/Risiko/Budget" onAction="Tom2G1Attribute" supertip ="die Attribute eines Projektes wie Budget Zuordnung, strateg. Fit und Risiko Einschätzung können hier verändert werden. Dieses Formular kann kundenspezifisch um weitere Attribute ergänzt werden"/>
-            <button id="PT2G1M2B3" label="Zeitspanne f. Projektstart" enabled ="false" onAction="Tom2G1EarliestLatestStart" supertip ="zu den gewählten Projekten kann angegeben werden, welchen Start-Spielraum, gerechnet in Monaten, das Projekt nach vorne bzw. nach hinten bekommen soll. Diese Werte werden in der Optimierungs-Analyse II verwendet"/>
+            <button id="PT2G1M2B3" label="Zeitspanne f. Projektstart" onAction="Tom2G1EarliestLatestStart" supertip ="zu den gewählten Projekten kann angegeben werden, welchen Start-Spielraum, gerechnet in Monaten, das Projekt nach vorne bzw. nach hinten bekommen soll. Diese Werte werden in der Optimierungs-Analyse II verwendet"/>
           </menu>
           <separator id="PT2G1s2"/>
           <!--<button id="PT2G1B1" label="Änderungen akzeptieren" onAction="Tom2G1Accept" />-->
@@ -203,7 +203,7 @@
           <separator id="PT4G1s1"/>-->
           <button id="PT4G1B2" label="Import RPLAN Excel" onAction="Tom2G4B1RPLANImport" supertip ="es kann eine ausgewählte RPLAN Excel Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
           <button id="PT4G1B3" label="Import RPLAN RXF" onAction ="Tom2G4B3RPLANRxfImport" supertip =" es kann eine ausgewählte RXF-Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt" />
-          <button id="PT4G1B4" label="Import MS Project" enabled ="false" onAction="Tom2G4B1MSProjectImport" supertip ="es kann eine Microsoft Project Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus."/>
+          <button id="PT4G1B4" label="Import MS Project" onAction="Tom2G4M2ImportMSProject" supertip ="es kann eine Microsoft Project Datei aus dem entsprechenden Unter-Ordner im Import-Ordner importiert werden; die Projekte werden den bereits in der Session vorhandenen Projekte hinzugefügt; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus."/>
           <button id="PT4G1M1B1" label="Import VISBO-Steckbriefe" onAction="Tom2G4M1Import" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: wenn ein Filter definiert und aktiviert ist, so filtert er die Projekte entsprechend aus. Wenn ein Wörterbuch aktiv ist, so werden die Plan-Elementnamen entsprechend Wörterbuch Definition behandelt"/>
         </group>
         
@@ -278,18 +278,18 @@
           <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
           <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
         </group>-->
-        <!--<group id ="PT6G5" label ="Testfunktionen">
+        <group id ="PT6G5" label ="Testfunktionen">
           <button id="Pt6G5B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
           <button id="Pt6G5B1" label="Aufbau Histories"  onAction="PTTestFunktion2" />
           <button id="PT6G5B2" label="Test-Funktionen"  onAction ="PTTestFunktion3" />
           <button id="PT6G5B3" label="Demo-Funktion Ampel"  onAction ="PTTestFunktion4" />
           <button id="PT6G5B4" label="Demo-Funktion Historie"  onAction ="PTTestFunktion5" />
           <button id="PT4G5B6" label="Import alte Projekt-Steckbriefe vor PT113" onAction="Tom2G4M1ImportOLD" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: Struktur von Feature PT113, Spalte Summe"/>
-        </group>-->
-        <group id ="PT6G6" label ="Licensierung">
+        </group>
+        <!--<group id ="PT6G6" label ="Licensierung">
           <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
           <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
-        </group>
+        </group>-->
      </tab>
     </tabs>
   </ribbon>

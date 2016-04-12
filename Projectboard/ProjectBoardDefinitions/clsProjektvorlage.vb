@@ -1122,6 +1122,76 @@
     End Function
 
     ''' <summary>
+    ''' gibt true zurück, wenn es sich um eine Phase der Gliederungsebene 1 handelt, also Kind-Phase der rootphase ist
+    ''' gibt false sonst zurück
+    ''' wenn BHTC Schema = true, dann muss es ein Kind der ersten oder zweiten Hierarchie Ebene handeln   
+    ''' </summary>
+    ''' <param name="elemName">Name der Phase</param>
+    ''' <param name="isBHTCSchema"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isSwimlaneOrSegment(ByVal elemName As String, Optional ByVal isBHTCSchema As Boolean = False) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+            Dim itemNameID As String
+            Dim childNameID As String
+            Dim fullBC As String
+            Dim fullChildBC As String
+
+            elemName = elemName & "#"
+
+            If isBHTCSchema Then
+                ' noch nicht implementiert 
+                Dim found As Boolean = False
+                Dim ix As Integer = 1
+
+                Do While ix <= ChildCollection.Count And Not found
+                    itemNameID = CStr(ChildCollection.Item(ix))
+                    fullBC = Me.getBcElemName(itemNameID)
+
+                    If fullBC.EndsWith(elemName) Then
+                        tmpResult = True
+                        found = True
+                    Else
+                        If Not elemIDIstMeilenstein(itemNameID) Then
+                            Dim childChildCollection As Collection = Me.hierarchy.getChildIDsOf(itemNameID, False)
+                            ' Schleife über das KindesKin
+                            For Each childNameID In childChildCollection
+                                fullChildBC = Me.getBcElemName(childNameID)
+                                If fullChildBC.EndsWith(elemName) Then
+                                    tmpResult = True
+                                    found = True
+                                    Exit For
+                                End If
+                            Next
+
+                        End If
+
+                    End If
+                    ix = ix + 1
+                Loop
+
+
+            Else
+
+                For Each itemNameID In ChildCollection
+                    fullBC = Me.getBcElemName(itemNameID)
+                    If fullBC.EndsWith(elemName) Then
+                        tmpResult = True
+                        Exit For
+                    End If
+                Next
+
+            End If
+
+            isSwimlaneOrSegment = tmpResult
+        End Get
+    End Property
+
+
+    ''' <summary>
     ''' gibt die Anzahl der Swimlanes zurück, die für das Projekt bei der gegebenen Menge von Phasen und Meilensteinen gezeichnet werden müssen; 
     ''' dabei wird unterschieden, ob es sich um das BHTC Schema handelt oder um eine freie Swimlane Definition handelt  
     ''' </summary>

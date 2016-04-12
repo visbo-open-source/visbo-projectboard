@@ -802,6 +802,9 @@ Public Module testModule
                                         Next
                                     End If
 
+
+
+
                                     Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
                                                                   objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
                                                                   tmpphases, tmpMilestones, _
@@ -9060,6 +9063,10 @@ Public Module testModule
         Dim yyHeightfaktor As Double = rds.yearVorlagenShape.Height / KalenderHoehe
         Dim qmHeightfaktor As Double = rds.quarterMonthVorlagenShape.Height / KalenderHoehe
 
+        ' jetzt muss calendartop neu gesetzt werden 
+        rds.setCalendarTop = rds.calendarLineShape.Top + KalenderHoehe
+
+
         Dim drawKWs As Boolean
         Dim drawQuartale As Boolean
         If rds.calendarLineShape.Width >= (1 + anzahlTage / 7) * 2 * rds.quarterMonthVorlagenShape.Width Then
@@ -9922,8 +9929,10 @@ Public Module testModule
                     .Left = rds.drawingAreaLeft
                     .Width = rds.drawingAreaWidth
                     .Name = .Name & .Id
-                    .AlternativeText = "horizontal line" & elemNameOfElemID(swimlaneNameID)
-
+                    ' Änderung tk: 11.4.
+                    '.AlternativeText = "horizontal line" & elemNameOfElemID(swimlaneNameID)
+                    .AlternativeText = ""
+                    .Title = ""
                     shapeNameCollection.Add(.Name, .Name)
                 End With
 
@@ -10033,8 +10042,20 @@ Public Module testModule
                                                                                            considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
                                                                                            considerAll)
 
-                        ' zeichne die Phase
-                        zeilenoffset = findeBesteZeile(lastEndDates, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
+                        ' ermittle den Zeilenoffset
+                        If extended Then
+                            requiredZeilen = hproj.calcNeededLinesSwl(curPhase.nameID, _
+                                                                                    selectedPhaseIDs, _
+                                                                                    selectedMilestoneIDs, _
+                                                                                    extended, _
+                                                                                    considerZeitraum, zeitraumGrenzeL, zeitraumGrenzeR, _
+                                                                                    considerAll)
+                            zeilenoffset = findeBesteZeile(lastEndDates, maxOffsetZeile, curPhase.getStartDate, requiredZeilen)
+                        Else
+                            requiredZeilen = 1
+                            zeilenoffset = 1
+                        End If
+
                         'maxOffsetZeile = System.Math.Max(zeilenoffset + requiredZeilen - 1, maxOffsetZeile)
                         ' tk: da das nicht rekursiv aufgerufen wird, sollte sich das nur auf das tatsächlich gezeichnete und deren Zeilennummer beschränken 
                         maxOffsetZeile = System.Math.Max(zeilenoffset, maxOffsetZeile)
@@ -10145,21 +10166,20 @@ Public Module testModule
         '
         
 
+        ' Änderung tk: wird jetzt nicht mehr in einer Gruppe zusammengefasst, damit InfoPPT wirken kann
+        'anzElements = shapeNameCollection.Count
+        'If anzElements > 1 Then
 
+        '    ReDim arrayOFNames(anzElements - 1)
 
-        anzElements = shapeNameCollection.Count
-        If anzElements > 1 Then
+        '    For i = 1 To anzElements
+        '        arrayOFNames(i - 1) = CStr(shapeNameCollection.Item(i))
+        '    Next
 
-            ReDim arrayOFNames(anzElements - 1)
+        '    shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
+        '    shapeGruppe.Group()
 
-            For i = 1 To anzElements
-                arrayOFNames(i - 1) = CStr(shapeNameCollection.Item(i))
-            Next
-
-            shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
-            shapeGruppe.Group()
-
-        End If
+        'End If
 
 
 
@@ -10448,6 +10468,10 @@ Public Module testModule
                         .Left = CSng(x1)
                         .Width = CSng(x2 - x1)
                         .Name = .Name & .Id
+
+                        .Title = hproj.getShapeText
+                        .AlternativeText = hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+
                         ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
                         If DateDiff(DateInterval.Day, hproj.startDate, StartofPPTCalendar) > 0 Then
                             .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
@@ -10764,6 +10788,9 @@ Public Module testModule
                                     .Width = CSng(x2 - x1)
                                     .Height = phaseVorlagenShape.Height
                                     .Name = .Name & .Id
+
+                                    .Title = phaseName
+                                    .AlternativeText = phaseStart.ToShortDateString & " - " & phaseEnd.ToShortDateString
 
                                     If missingPhaseDefinition Then
                                         .Fill.ForeColor.RGB = cphase.farbe
@@ -11390,6 +11417,9 @@ Public Module testModule
                 End If
             End If
 
+            .Title = MS.name
+            .AlternativeText = MS.getDate.ToShortDateString
+
 
         End With
 
@@ -11859,7 +11889,8 @@ Public Module testModule
                                 ByVal legendAreaTop As Double, ByVal legendAreaLeft As Double, legendAreaRight As Double, legendAreaBottom As Double, _
                                 ByVal legendLineShape As pptNS.Shape, ByVal legendStartShape As pptNS.Shape, _
                                 ByVal legendTextVorlagenShape As pptNS.Shape, ByVal legendPhaseVorlagenShape As pptNS.Shape, ByVal legendMilestoneVorlagenShape As pptNS.Shape, _
-                                ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape, ByVal buColorVorlagenShape As pptNS.Shape)
+                                ByVal projectVorlagenShape As pptNS.Shape, ByVal ampelVorlagenShape As pptNS.Shape, ByVal buColorVorlagenShape As pptNS.Shape, _
+                                Optional istEinzelprojektLegende As Boolean = False)
 
         Dim maxZeilen As Integer
         Dim mindestNettoHoehe As Double = System.Math.Max(legendMilestoneVorlagenShape.Height, legendPhaseVorlagenShape.Height)
@@ -11911,7 +11942,7 @@ Public Module testModule
         End With
 
 
-        If Not IsNothing(buColorVorlagenShape) Then
+        If Not IsNothing(buColorVorlagenShape) And Not istEinzelprojektLegende Then
 
             For i = 1 To businessUnitDefinitions.Count
                 buName = businessUnitDefinitions.ElementAt(i - 1).Value.name
@@ -12077,8 +12108,8 @@ Public Module testModule
             End With
 
             If i Mod maxZeilen = 0 And i < selectedPhases.Count Then
-                xCursor = xCursor + maxBreite + 10
-                If xCursor >= legendAreaRight Then
+                xCursor = xCursor + maxBreite - 5
+                If xCursor > legendAreaRight Then
                     Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                 End If
                 maxBreite = 0.0
@@ -12157,8 +12188,8 @@ Public Module testModule
             End With
 
             If i Mod maxZeilen = 0 And i < selectedMilestones.Count Then
-                xCursor = xCursor + maxBreite + 10
-                If xCursor >= legendAreaRight Then
+                xCursor = xCursor + maxBreite - 5
+                If xCursor > legendAreaRight Then
                     Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                 End If
                 yCursor = legendAreaTop
@@ -12172,7 +12203,7 @@ Public Module testModule
         Next
 
         If uniqueElemClasses.Count > 0 Then
-            xCursor = xCursor + maxBreite + 15
+            xCursor = xCursor + maxBreite - 5
             If xCursor >= legendAreaRight Then
                 Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
             End If
@@ -13729,15 +13760,21 @@ Public Module testModule
                             Try
                                 For Each cphase In hproj.AllPhases
 
-                                    Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
-                                    If tmpstr <> "" Then
-                                        tmpstr = tmpstr & "#" & cphase.name
-                                        If Not tmpphases.Contains(tmpstr) Then
-                                            tmpphases.Add(tmpstr, tmpstr)
+                                    If Not hproj.isSwimlaneOrSegment(cphase.name) Then
+
+                                        Dim tmpstr As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                        If tmpstr <> "" Then
+                                            tmpstr = tmpstr & "#" & cphase.name
+
+                                            If Not tmpphases.Contains(tmpstr) Then
+                                                tmpphases.Add(tmpstr, tmpstr)
+                                            End If
+
                                         End If
-
                                     End If
+                                    
 
+                                   
 
                                 Next
 
@@ -13764,7 +13801,15 @@ Public Module testModule
                             ' alle Phasennamen des Projektes hproj in die Collection tmpphases bringen
                             
                         Else
-                            tmpphases = selectedPhases
+
+                            For Each phaseItem As String In selectedPhases
+                                If Not hproj.isSwimlaneOrSegment(CStr(phaseItem)) Then
+                                    If Not tmpphases.Contains(CStr(phaseItem)) Then
+                                        tmpphases.Add(CStr(phaseItem), CStr(phaseItem))
+                                    End If
+                                End If
+                            Next
+
                             tmpMilestones = selectedMilestones
                         End If
 
@@ -13774,7 +13819,7 @@ Public Module testModule
                                             .legendAreaTop, .legendAreaLeft, .legendAreaRight, .legendAreaBottom, _
                                             .legendLineShape, .legendStartShape, _
                                             .legendTextVorlagenShape, .legendPhaseVorlagenShape, .legendMilestoneVorlagenShape, _
-                                            .projectVorlagenShape, .ampelVorlagenShape, .legendBuColorShape)
+                                            .projectVorlagenShape, .ampelVorlagenShape, .legendBuColorShape, True)
 
                         End With
 
