@@ -64,6 +64,8 @@ Public Class frmTestLicences
             Dim k As Integer
             Dim angabenOK As Boolean = True
 
+            VisboNoLic.clear()
+
             Dim komponenten(ListKomponenten.SelectedItems.Count - 1) As String
             For i = 0 To ListKomponenten.SelectedItems.Count - 1
                 komponenten(i) = ListKomponenten.SelectedItems(i)
