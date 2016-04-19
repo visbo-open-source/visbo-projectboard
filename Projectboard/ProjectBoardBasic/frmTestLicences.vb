@@ -105,7 +105,7 @@ Public Class frmTestLicences
                         lastrow = CInt(CType(.Cells(2000, columnOffset), Excel.Range).End(Excel.XlDirection.xlUp).Row)
                         lastcolumn = CInt(CType(.Cells(rowOffset, 2000), Excel.Range).End(Excel.XlDirection.xlToLeft).Column)
 
-                        UserRange = .Range(.Cells(rowOffset, columnOffset + 2), .Cells(lastrow, lastcolumn))
+                        UserRange = .Range(.Cells(rowOffset, columnOffset + 2), .Cells(lastrow, columnOffset + 2))
                         For Each zelle In UserRange
 
                             UserDomain = CType(CType(zelle, Excel.Range).Value, String).Trim
