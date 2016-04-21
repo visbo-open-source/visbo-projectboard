@@ -4,6 +4,7 @@ Imports System.Math
 Imports Microsoft.Office.Interop.Excel
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Core
+Imports System.Xml.Serialization
 
 
 
@@ -299,6 +300,11 @@ Public Module Module1
     Public Enum PTlicense
         swimlanes = 0
        
+    End Enum
+
+    Public Enum PTpptAnnotationType
+        text = 0
+        datum = 1
     End Enum
 
 
@@ -2265,6 +2271,24 @@ Public Module Module1
     End Function
 
     ''' <summary>
+    ''' bestimmt den eindeutigen Namen des Shapes für einen Meilenstin oder eine Phase 
+    ''' </summary>
+    ''' <param name="hproj"></param>
+    ''' <param name="elemID"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public Function calcPPTShapeName(ByVal hproj As clsProjekt, elemID As String) As String
+
+        Dim tmpName As String = elemID
+        If Not IsNothing(hproj) Then
+            tmpName = "(" & hproj.name & "#" & hproj.variantName & ")" & elemID
+        End If
+
+        calcPPTShapeName = tmpName
+
+    End Function
+
+    ''' <summary>
     ''' gibt den Elem-Name und Breadcrumb als einzelne Strings zurück
     ''' </summary>
     ''' <param name="fullname"></param>
@@ -2803,6 +2827,70 @@ Public Module Module1
         End If
 
     End Sub
-   
+
+    ''' <summary>
+    ''' fügt an ein Powerpoint Shape Informationen über Tags an, die vom PPT Add-In SmartPPT ausgelesen werden können
+    ''' </summary>
+    ''' <param name="pptShape"></param>
+    ''' <param name="bestName"></param>
+    ''' <param name="classifiedName"></param>
+    ''' <param name="shortName"></param>
+    ''' <param name="originalName"></param>
+    ''' <param name="startDate"></param>
+    ''' <param name="endDate"></param>
+    ''' <param name="ampelColor"></param>
+    ''' <param name="ampelErlaeuterung"></param>
+    ''' <remarks></remarks>
+    Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape, _
+                                          ByVal bestName As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String, _
+                                          ByVal startDate As Date, ByVal endDate As Date, _
+                                          ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String)
+
+        If Not IsNothing(pptShape) Then
+            With pptShape
+
+                If Not IsNothing(bestName) Then
+                    .Tags.Add("BN", bestName)
+                End If
+
+                If Not IsNothing(classifiedName) Then
+                    .Tags.Add("CN", classifiedName)
+                End If
+
+                If Not IsNothing(shortName) Then
+                    .Tags.Add("SN", shortName)
+                End If
+
+                If Not IsNothing(originalName) Then
+                    .Tags.Add("ON", originalName)
+                End If
+
+                If Not IsNothing(startDate) Then
+                    .Tags.Add("SD", startDate.ToShortDateString)
+                End If
+
+                If Not IsNothing(endDate) Then
+                    .Tags.Add("ED", endDate.ToShortDateString)
+                End If
+
+                If Not IsNothing(ampelColor) Then
+                    If ampelColor >= 0 And ampelColor <= 3 Then
+                        .Tags.Add("AC", ampelColor.ToString)
+                    Else
+                        .Tags.Add("AC", "0")
+                    End If
+                End If
+                
+                If Not IsNothing(ampelErlaeuterung) Then
+                    .Tags.Add("AE", ampelErlaeuterung)
+                End If
+
+
+            End With
+        End If
+
+
+
+    End Sub
 
 End Module

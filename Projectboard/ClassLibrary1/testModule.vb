@@ -6,6 +6,8 @@ Imports pptNS = Microsoft.Office.Interop.PowerPoint
 Imports xlNS = Microsoft.Office.Interop.Excel
 Imports System.ComponentModel
 Imports Microsoft.Office.Interop
+Imports System.Xml.Serialization
+Imports System.IO
 
 Public Module testModule
 
@@ -426,7 +428,14 @@ Public Module testModule
             pptTemplatePresentation.Close()
 
         Catch ex As Exception
-            Throw New Exception("bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen")
+
+            e.Result = "bitte schließen Sie die Report.pptx oder speichern Sie diese unter anderem Namen"
+            If worker.WorkerReportsProgress Then
+                worker.ReportProgress(0, e)
+            End If
+
+            Exit Sub
+
         End Try
 
         Dim reportObj As xlNS.ChartObject
@@ -9798,6 +9807,15 @@ Public Module testModule
         Dim startNr As Integer = 0
         Dim endNr As Integer = 0
 
+        ' ###########################################################
+        ' wenn diese Phase nicht existiert , dann Exit   
+        '
+        Dim cphase As clsPhase = hproj.getPhaseByID(swimlaneNameID)
+        If IsNothing(cphase) Then
+            Exit Sub
+        End If
+
+
         ' wird benutzt, um mal oben und mal unten in der Swimlane zeichnen zu können 
         Dim aktuelleYPosition As Double = curYPosition
 
@@ -9826,121 +9844,147 @@ Public Module testModule
         copiedShape = rds.pptSlide.Shapes.Paste()
 
         Dim swlNameShape As pptNS.Shape = copiedShape.Item(1)
+        ' Ergänzung 19.4.16
+        Dim swlShapeName As String = calcPPTShapeName(hproj, cphase.nameID)
 
         With copiedShape.Item(1)
             .Top = CSng(curYPosition) + rds.YprojectName
             .Left = rds.projectListLeft
             .TextFrame2.TextRange.Text = elemNameOfElemID(swimlaneNameID)
-            .Name = .Name & .Id
-            .AlternativeText = elemNameOfElemID(swimlaneNameID)
+            '.Name = .Name & .Id
+            .Name = swlShapeName & PTpptAnnotationType.text
+            '.Title = "Beschriftung"
+            '.AlternativeText = ""
 
-            shapeNameCollection.Add(.Name, .Name)
+
+            ' ohne Eindeutigkeit erzwingen aufnehmen, kann zu Schwierigkeiten bei eigentlich eindeutigen Namen mit unterschiedl. Groß-/Kleinschreibung führen 
+            shapeNameCollection.Add(.Name)
+            
+
+            If awinSettings.mppEnableSmartPPT Then
+
+                Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+                Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+                Dim originalName As String = cphase.originalName
+
+                If originalName = cphase.name Then
+                    originalName = Nothing
+                End If
+
+                Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                            longText, cphase.name, Nothing, originalName, _
+                                            cphase.getStartDate, cphase.getEndDate, _
+                                            Nothing, Nothing)
+
+            End If
+
+
         End With
 
 
+
+
+        ' weiter mit Zeichnen der Swimlane ...
+
         ' ###########################################################
-        ' wenn diese Phase nicht existiert , dann Fehler schreiben ...  
+        ' optionales Zeichnen der Swimlane-Linie 
         '
-        Dim cphase As clsPhase = hproj.getPhaseByID(swimlaneNameID)
 
-        If IsNothing(cphase) Then
+        Call rds.calculatePPTx1x2(cphase.getStartDate, cphase.getEndDate, x1, x2)
 
-            rds.projectNameVorlagenShape.Copy()
+        With swlNameShape
+            ' jetzt muss überprüft werden, ob SwimlaneName zu lang ist - dann wird der Name entsprechend abgekürzt ...
+            If .Left + .Width > x1 Then
+                ' jetzt muss der Name entsprechend gekürzt werden 
+                .TextFrame2.WordWrap = MsoTriState.msoTrue
+                .Width = x1 - .Left
+            End If
+
+            ' Änderung 20.4.16 
+            'If .Left + .Width > x1 Then
+
+            '    ' jetzt muss der Name entsprechend gekürzt werden 
+            '    Dim longName As String = .TextFrame2.TextRange.Text
+            '    Dim shortName As String = ""
+
+            '    .TextFrame2.TextRange.Text = shortName
+            '    Dim stringIX As Integer = 0
+            '    Do While .Left + .Width < x1 And stringIX <= longName.Length - 1
+            '        shortName = shortName & longName.Chars(stringIX)
+            '        stringIX = stringIX + 1
+            '        .TextFrame2.TextRange.Text = shortName
+            '    Loop
+
+            'End If
+        End With
+
+        If awinSettings.mppShowProjectLine Then
+
+            rds.projectVorlagenShape.Copy()
             copiedShape = rds.pptSlide.Shapes.Paste()
-
-
-            With copiedShape.Item(1)
-                .Top = CSng(curYPosition) + rds.YprojectName
-                .Left = rds.drawingAreaLeft
-                .TextFrame2.TextRange.Text = " ... existiert in diesem Projekt nicht ..."
+            With copiedShape(1)
+                .Top = CSng(curYPosition) + rds.YProjectLine
+                .Left = CSng(x1)
+                .Width = CSng(x2 - x1)
                 .Name = .Name & .Id
-                .AlternativeText = "Swimlane " & elemNameOfElemID(swimlaneNameID)
 
-                shapeNameCollection.Add(.Name, .Name)
+                shapeNameCollection.Add(.Name)
+
+                If awinSettings.mppEnableSmartPPT Then
+
+                    Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+                    Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+                    Dim originalName As String = cphase.originalName
+
+                    If originalName = cphase.name Then
+                        originalName = Nothing
+                    End If
+
+                    Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                                Nothing, cphase.name, Nothing, originalName, _
+                                                cphase.getStartDate, cphase.getEndDate, _
+                                                Nothing, Nothing)
+
+                End If
+
+
+                ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
+                If DateDiff(DateInterval.Day, hproj.startDate, rds.PPTStartOFCalendar) > 0 Then
+                    .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+                End If
+
+                ' wenn Projektende nach dem Kalender-Ende liegt: kein Projektende Symbol zeichnen
+                If DateDiff(DateInterval.Day, hproj.endeDate, rds.PPTEndOFCalendar) < 0 Then
+                    .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
+                End If
+
+
             End With
-        Else
-            ' weiter mit Zeichnen der Swimlane ...
-
-            ' ###########################################################
-            ' optionales Zeichnen der Swimlane-Linie 
-            '
-            If awinSettings.mppShowProjectLine Then
-
-                Call rds.calculatePPTx1x2(cphase.getStartDate, cphase.getEndDate, x1, x2)
-
-                ' jetzt muss überprüft werden, ob projectName zu lang ist - dann wird der Name entsprechend abgekürzt ...
-                With swlNameShape
-                    If .Left + .Width > x1 Then
-                        ' jetzt muss der Name entsprechend gekürzt werden 
-                        Dim longName As String = .TextFrame2.TextRange.Text
-                        Dim shortName As String = ""
-
-                        .TextFrame2.TextRange.Text = shortName
-                        Dim stringIX As Integer = 0
-                        Do While .Left + .Width < x1 And stringIX <= longName.Length - 1
-                            shortName = shortName & longName.Chars(stringIX)
-                            stringIX = stringIX + 1
-                            .TextFrame2.TextRange.Text = shortName
-                        Loop
-
-                    End If
-                End With
-
-                rds.projectVorlagenShape.Copy()
-                copiedShape = rds.pptSlide.Shapes.Paste()
-                With copiedShape(1)
-                    .Top = CSng(curYPosition) + rds.YProjectLine
-                    .Left = CSng(x1)
-                    .Width = CSng(x2 - x1)
-                    .Name = .Name & .Id
-                    .AlternativeText = cphase.name & " von " & cphase.getStartDate.ToShortDateString & " bis " & _
-                                            cphase.getEndDate.ToShortDateString
-                    ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
-                    If DateDiff(DateInterval.Day, hproj.startDate, rds.PPTStartOFCalendar) > 0 Then
-                        .Line.BeginArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
-                    End If
-
-                    ' wenn Projektende nach dem Kalender-Ende liegt: kein Projektende Symbol zeichnen
-                    If DateDiff(DateInterval.Day, hproj.endeDate, rds.PPTEndOFCalendar) < 0 Then
-                        .Line.EndArrowheadStyle = MsoArrowheadStyle.msoArrowheadNone
-                    End If
 
 
-                    shapeNameCollection.Add(.Name, .Name)
-                End With
-
-
-
-            End If
-
-
-            ' ###########################################################
-            ' optionales zeichnen der horizontalen Zeilen - es wird immer nur die Zeile oben gezeichnet ... andernfalls hätte man 
-            ' Doppelzeichnungen 
-            ' bei der ersten Swimlane auf einer Seite wird die horizontale nicht gezeichnet ... 
-            '
-            If awinSettings.mppShowHorizontals Then
-
-                rds.horizontalLineShape.Copy()
-                copiedShape = rds.pptSlide.Shapes.Paste()
-
-                With copiedShape.Item(1)
-                    .Top = CSng(curYPosition)
-                    .Left = rds.drawingAreaLeft
-                    .Width = rds.drawingAreaWidth
-                    .Name = .Name & .Id
-                    ' Änderung tk: 11.4.
-                    '.AlternativeText = "horizontal line" & elemNameOfElemID(swimlaneNameID)
-                    .AlternativeText = ""
-                    .Title = ""
-                    shapeNameCollection.Add(.Name, .Name)
-                End With
-
-            End If
 
         End If
 
 
+        ' ###########################################################
+        ' optionales zeichnen der horizontalen Zeilen - es wird immer nur die Zeile oben gezeichnet ... andernfalls hätte man 
+        ' Doppelzeichnungen 
+        ' bei der ersten Swimlane auf einer Seite wird die horizontale nicht gezeichnet ... 
+        '
+        If awinSettings.mppShowHorizontals Then
+
+            rds.horizontalLineShape.Copy()
+            copiedShape = rds.pptSlide.Shapes.Paste()
+
+            With copiedShape.Item(1)
+                .Top = CSng(curYPosition)
+                .Left = rds.drawingAreaLeft
+                .Width = rds.drawingAreaWidth
+                .Name = .Name & .Id
+                shapeNameCollection.Add(.Name)
+            End With
+
+        End If
 
 
         ' ###########################################################
@@ -9956,11 +10000,10 @@ Public Module testModule
                 .Height = kontrolleAnzZeilen * rds.zeilenHoehe
                 .Width = rds.drawingAreaRight - .Left
                 .Name = .Name & .Id
-                .AlternativeText = ""
-                .Title = ""
+                shapeNameCollection.Add(.Name)
 
                 .ZOrder(MsoZOrderCmd.msoSendToBack)
-                shapeNameCollection.Add(.Name, .Name)
+
             End With
         End If
 
@@ -10007,9 +10050,12 @@ Public Module testModule
 
                             ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
                             For Each tmpName As String In tmpCollection
-                                shapeNameCollection.Add(tmpName, tmpName)
+
+                                shapeNameCollection.Add(tmpName)
+
                                 ' die Milestones werden nachher alle in den Vordergrund geholt ...
-                                swlMilestoneCollection.Add(tmpName, tmpName)
+                                swlMilestoneCollection.Add(tmpName)
+
                             Next
                         End If
 
@@ -10066,8 +10112,13 @@ Public Module testModule
 
                         aktuelleYPosition = curYPosition + (zeilenoffset - 1) * rds.zeilenHoehe
 
-                        Call zeichnePhaseinSwimlane(rds, shapeNameCollection, hproj, swimlaneNameID, _
+                        Try
+                            Call zeichnePhaseinSwimlane(rds, shapeNameCollection, hproj, swimlaneNameID, _
                                                     curPhase.nameID, aktuelleYPosition)
+                        Catch ex As Exception
+                            'Dim a As Integer = 1
+                        End Try
+                        
                         'lastEndDate = curPhase.getEndDate
                     End If
 
@@ -10095,11 +10146,16 @@ Public Module testModule
                                                                   swimlaneNameID, curMs.nameID, aktuelleYPosition)
 
                                 ' Shape-Namen für spätere Gruppierung der gesamten Swimlane aufnehmen 
-                                For Each tmpName As String In tmpCollection
-                                    shapeNameCollection.Add(tmpName, tmpName)
-                                    ' die Milestones werden nachher alle in den Vordergrund geholt ...
-                                    swlMilestoneCollection.Add(tmpName, tmpName)
-                                Next
+                                Try
+                                    For Each tmpName As String In tmpCollection
+                                        shapeNameCollection.Add(tmpName)
+                                        ' die Milestones werden nachher alle in den Vordergrund geholt ...
+                                        swlMilestoneCollection.Add(tmpName)
+                                    Next
+                                Catch ex As Exception
+                                    Dim a As Integer = 1
+                                End Try
+                                
 
                             End If
 
@@ -10112,9 +10168,6 @@ Public Module testModule
             End If
 
         Next
-
-        
-
 
 
 
@@ -10145,8 +10198,13 @@ Public Module testModule
                 arrayOFNames(i - 1) = CStr(swlMilestoneCollection.Item(i))
             Next
 
-            shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
-            shapeGruppe.ZOrder(MsoZOrderCmd.msoBringToFront)
+            Try
+                shapeGruppe = rds.pptSlide.Shapes.Range(arrayOFNames)
+                shapeGruppe.ZOrder(MsoZOrderCmd.msoBringToFront)
+            Catch ex As Exception
+
+            End Try
+            
 
         ElseIf anzElements = 1 Then
             Try
@@ -10164,7 +10222,7 @@ Public Module testModule
         ' Zusammenfassen aller shapes in einer Gruppe 
         ' jetzt sollen alle gezeichneten Shapes gruppiert werden 
         '
-        
+
 
         ' Änderung tk: wird jetzt nicht mehr in einer Gruppe zusammengefasst, damit InfoPPT wirken kann
         'anzElements = shapeNameCollection.Count
@@ -10384,18 +10442,28 @@ Public Module testModule
                 copiedShape = pptslide.Shapes.Paste()
                 Dim projectNameShape As pptNS.Shape = copiedShape.Item(1)
 
+
+
                 With copiedShape(1)
                     .Top = CSng(projektNamenYPos)
                     .Left = CSng(projektNamenXPos)
                     If currentProjektIndex > 1 And lastProjectName = hproj.name Then
-                        '.TextFrame2.TextRange.Text = "... " & hproj.variantName & " " & hproj.VorlagenName
                         .TextFrame2.TextRange.Text = "... " & hproj.variantName
                     Else
-                        '.TextFrame2.TextRange.Text = hproj.getShapeText & " " & hproj.VorlagenName
                         .TextFrame2.TextRange.Text = hproj.getShapeText
                     End If
                     lastProjectName = hproj.name
                     .Name = .Name & .Id
+
+                    If awinSettings.mppEnableSmartPPT Then
+
+                        Call addSmartPPTShapeInfo(copiedShape(1), _
+                                                    Nothing, hproj.getShapeText, Nothing, Nothing, _
+                                                    hproj.startDate, hproj.endeDate, _
+                                                    hproj.ampelStatus, hproj.ampelErlaeuterung)
+
+                    End If
+
                 End With
 
                 projektNamenYPos = projektNamenYPos + zeilenhoehe
@@ -10440,20 +10508,28 @@ Public Module testModule
 
                 ' jetzt muss überprüft werden, ob projectName zu lang ist - dann wird der Name entsprechend abgekürzt ...
                 With projectNameShape
+                    ' alternative Behandlung: der Projekt-Name wird umgebrochen 
                     If .Left + .Width > x1 Then
                         ' jetzt muss der Name entsprechend gekürzt werden 
-                        Dim longName As String = .TextFrame2.TextRange.Text
-                        Dim shortName As String = ""
-
-                        .TextFrame2.TextRange.Text = shortName
-                        Dim stringIX As Integer = 0
-                        Do While .Left + .Width < x1 And stringIX <= longName.Length - 1
-                            shortName = shortName & longName.Chars(stringIX)
-                            stringIX = stringIX + 1
-                            .TextFrame2.TextRange.Text = shortName
-                        Loop
-
+                        .TextFrame2.WordWrap = MsoTriState.msoTrue
+                        .Width = x1 - .Left
                     End If
+
+
+                    'If .Left + .Width > x1 Then
+                    '    ' jetzt muss der Name entsprechend gekürzt werden 
+                    '    Dim longName As String = .TextFrame2.TextRange.Text
+                    '    Dim shortName As String = ""
+
+                    '    .TextFrame2.TextRange.Text = shortName
+                    '    Dim stringIX As Integer = 0
+                    '    Do While .Left + .Width < x1 And stringIX <= longName.Length - 1
+                    '        shortName = shortName & longName.Chars(stringIX)
+                    '        stringIX = stringIX + 1
+                    '        .TextFrame2.TextRange.Text = shortName
+                    '    Loop
+
+                    'End If
                 End With
 
 
@@ -10469,8 +10545,18 @@ Public Module testModule
                         .Width = CSng(x2 - x1)
                         .Name = .Name & .Id
 
-                        .Title = hproj.getShapeText
-                        .AlternativeText = hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+                        '.Title = hproj.getShapeText
+                        '.AlternativeText = hproj.startDate.ToShortDateString & " - " & hproj.endeDate.ToShortDateString
+
+                        If awinSettings.mppEnableSmartPPT Then
+
+                            Call addSmartPPTShapeInfo(copiedShape(1), _
+                                                   Nothing, hproj.getShapeText, Nothing, Nothing, _
+                                                   hproj.startDate, hproj.endeDate, _
+                                                   hproj.ampelStatus, hproj.ampelErlaeuterung)
+
+                        End If
+
 
                         ' wenn Projektstart vor dem Kalender-Start liegt: kein Projektstart Symbol zeichnen
                         If DateDiff(DateInterval.Day, hproj.startDate, StartofPPTCalendar) > 0 Then
@@ -10643,6 +10729,9 @@ Public Module testModule
                                     phaseShape = missingPhaseDefinitions.getShape(phaseName)
                                 End If
 
+                                ' Ergänzung 19.4.16
+                                Dim phShapeName As String = calcPPTShapeName(hproj, cphase.nameID)
+
 
                                 Dim phaseStart As Date = cphase.getStartDate
                                 Dim phaseEnd As Date = cphase.getEndDate
@@ -10676,7 +10765,11 @@ Public Module testModule
                                     copiedShape = pptslide.Shapes.Paste()
                                     With copiedShape(1)
 
-                                        .Name = .Name & .Id
+                                        '.Name = .Name & .Id
+                                        .Name = phShapeName & PTpptAnnotationType.text
+                                        .Title = "Beschriftung"
+                                        .AlternativeText = ""
+
                                         .TextFrame2.TextRange.Text = phShortname
                                         .TextFrame2.MarginLeft = 0.0
                                         .TextFrame2.MarginRight = 0.0
@@ -10693,17 +10786,24 @@ Public Module testModule
 
                                 End If
 
+                                Dim phDateText As String = ""
                                 ' jetzt muss ggf das Datum angebracht werden 
                                 If awinSettings.mppShowPhDate Then
                                     'Dim phDateText As String = phaseStart.ToShortDateString
-                                    Dim phDateText As String = phaseStart.Day.ToString & "." & phaseStart.Month.ToString
+                                    phDateText = phaseStart.Day.ToString & "." & phaseStart.Month.ToString & " - " & _
+                                                                phaseEnd.Day.ToString & "." & phaseEnd.Month.ToString
                                     Dim rightX As Double, addHeight As Double
 
                                     PhDateVorlagenShape.Copy()
                                     copiedShape = pptslide.Shapes.Paste()
                                     With copiedShape(1)
 
-                                        .Name = .Name & .Id
+                                        '.Name = .Name & .Id
+
+                                        .Name = phShapeName & PTpptAnnotationType.datum
+                                        .Title = "Datum"
+                                        .AlternativeText = ""
+
                                         .TextFrame2.TextRange.Text = phDateText
                                         .TextFrame2.MarginLeft = 0.0
                                         .TextFrame2.MarginRight = 0.0
@@ -10721,29 +10821,30 @@ Public Module testModule
                                     End With
 
 
-                                    ' Änderung tk 14.3.15 kein Voranstellen des Phasen Namens mehr ... 
-                                    phDateText = phaseEnd.Day.ToString & "." & phaseEnd.Month.ToString
+                                    ' Änderung tk 19.4.16 das wird jetzt in einem geschrieben 
 
-                                    PhDateVorlagenShape.Copy()
-                                    copiedShape = pptslide.Shapes.Paste()
-                                    With copiedShape(1)
+                                    'phDateText = phaseEnd.Day.ToString & "." & phaseEnd.Month.ToString
 
-                                        .Name = .Name & .Id
-                                        .TextFrame2.TextRange.Text = phDateText
-                                        .TextFrame2.MarginLeft = 0.0
-                                        .TextFrame2.MarginRight = 0.0
-                                        .Top = CSng(phasenGrafikYPos) + CSng(yOffsetPhToDate) + 1
-                                        .Left = CSng(x2) - .Width - 1
-                                        If .Left + .Width > drawingAreaRight Then
-                                            .Left = drawingAreaRight - (.Width + 1)
-                                        End If
-                                        .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignRight
+                                    'PhDateVorlagenShape.Copy()
+                                    'copiedShape = pptslide.Shapes.Paste()
+                                    'With copiedShape(1)
 
-                                        If rightX >= .Left Then
-                                            .Top = .Top + addHeight
-                                        End If
+                                    '    .Name = .Name & .Id
+                                    '    .TextFrame2.TextRange.Text = phDateText
+                                    '    .TextFrame2.MarginLeft = 0.0
+                                    '    .TextFrame2.MarginRight = 0.0
+                                    '    .Top = CSng(phasenGrafikYPos) + CSng(yOffsetPhToDate) + 1
+                                    '    .Left = CSng(x2) - .Width - 1
+                                    '    If .Left + .Width > drawingAreaRight Then
+                                    '        .Left = drawingAreaRight - (.Width + 1)
+                                    '    End If
+                                    '    .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignRight
 
-                                    End With
+                                    '    If rightX >= .Left Then
+                                    '        .Top = .Top + addHeight
+                                    '    End If
+
+                                    'End With
 
                                 End If
 
@@ -10787,10 +10888,11 @@ Public Module testModule
                                     .Left = CSng(x1)
                                     .Width = CSng(x2 - x1)
                                     .Height = phaseVorlagenShape.Height
-                                    .Name = .Name & .Id
+                                    '.Name = .Name & .Id
 
-                                    .Title = phaseName
-                                    .AlternativeText = phaseStart.ToShortDateString & " - " & phaseEnd.ToShortDateString
+                                    .Name = phShapeName
+                                    '.Title = phaseName
+                                    '.AlternativeText = phDateText
 
                                     If missingPhaseDefinition Then
                                         .Fill.ForeColor.RGB = cphase.farbe
@@ -10798,7 +10900,28 @@ Public Module testModule
 
                                 End With
 
-                                phShapeNames.Add(copiedShape.Name)
+                                If awinSettings.mppEnableSmartPPT Then
+                                    Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                                                                              True)
+                                    Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                                                                           False)
+                                    Dim originalName As String = cphase.originalName
+
+                                    If originalName = cphase.name Then
+                                        originalName = Nothing
+                                    End If
+
+                                    If longText = cphase.name Then
+                                        longText = Nothing
+                                    End If
+
+                                    Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                                                longText, cphase.name, shortText, originalName, _
+                                                                phaseStart, phaseEnd, _
+                                                                Nothing, Nothing)
+                                End If
+
+                                phShapeNames.Add(copiedShape(1).Name)
 
                                 '  Phase merken, damit bei der nächsten zu zeichnenden Phase nachgesehen werden
                                 '  kann, ob diese überlappt
@@ -11319,6 +11442,9 @@ Public Module testModule
         Dim milestoneTypShape As xlNS.Shape
         Dim copiedShape As pptNS.ShapeRange
 
+        Dim msShapeName As String = calcPPTShapeName(hproj, MS.nameID)
+        Dim msBeschriftung As String = hproj.hierarchy.getBestNameOfID(MS.nameID, Not awinSettings.mppUseOriginalNames, _
+                                                             awinSettings.mppUseAbbreviation)
 
         Dim x1 As Double
         Dim x2 As Double
@@ -11357,11 +11483,8 @@ Public Module testModule
         ' jetzt muss ggf die Beschriftung angebracht werden 
         ' die muss vor dem Meilenstein angebracht werden, weil der nicht von der Füllung des Schriftfeldes 
         ' überdeckt werden soll 
-        If awinSettings.mppShowMsName Then
 
-            Dim msBeschriftung As String
-            msBeschriftung = hproj.hierarchy.getBestNameOfID(MS.nameID, Not awinSettings.mppUseOriginalNames, _
-                                                             awinSettings.mppUseAbbreviation)
+        If awinSettings.mppShowMsName Then
 
             MsDescVorlagenShape.Copy()
             copiedShape = pptslide.Shapes.Paste()
@@ -11371,17 +11494,22 @@ Public Module testModule
                 .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToText)
                 '.Left = CSng(x1) - .Width / 2
                 .Left = CSng(x1) - .Width / 2
-                .Name = .Name & .Id
-
+                '.Name = .Name & .Id
+                .Name = msShapeName & PTpptAnnotationType.text
+                .Title = "Beschriftung"
+                .AlternativeText = ""
             End With
 
 
         End If
 
         ' jetzt muss ggf das Datum angebracht werden 
+
+        Dim msDateText As String
+
         If awinSettings.mppShowMsDate Then
-            'Dim msDateText As String = msDate.ToShortDateString
-            Dim msDateText As String
+
+
             msDateText = msdate.Day.ToString & "." & msdate.Month.ToString
 
             MsDateVorlagenShape.Copy()
@@ -11391,7 +11519,10 @@ Public Module testModule
                 .TextFrame2.TextRange.Text = msDateText
                 .Top = CSng(milestoneGrafikYPos) + CSng(yOffsetMsToDate)
                 .Left = CSng(x1) - .Width / 2
-                .Name = .Name & .Id
+                '.Name = .Name & .Id
+                .Name = msShapeName & PTpptAnnotationType.datum
+                .Title = "Datum"
+                .AlternativeText = ""
 
             End With
 
@@ -11409,7 +11540,8 @@ Public Module testModule
             .Height = milestoneVorlagenShape.Height
             .Width = .Height / seitenverhaeltnis
             .Left = CSng(x1) - .Width / 2
-            .Name = .Name & .Id
+            '.Name = .Name & .Id
+
             If awinSettings.mppShowAmpel Then
                 .Glow.Color.RGB = CInt(MS.getBewertung(1).color)
                 If .Glow.Radius = 0 Then
@@ -11417,13 +11549,33 @@ Public Module testModule
                 End If
             End If
 
-            .Title = MS.name
-            .AlternativeText = MS.getDate.ToShortDateString
+            .Name = msShapeName
+            '.Title = MS.name
+            '.AlternativeText = MS.getDate.ToShortDateString
 
 
         End With
 
-        msShapeNames.Add(copiedShape.Name)
+        If awinSettings.mppEnableSmartPPT Then
+            Dim longText As String = hproj.hierarchy.getBestNameOfID(MS.nameID, True, False)
+            Dim shortText As String = hproj.hierarchy.getBestNameOfID(MS.nameID, True, True)
+            Dim originalName As String = MS.originalName
+
+            If originalName = MS.name Then
+                originalName = Nothing
+            End If
+
+            If longText = MS.name Then
+                longText = Nothing
+            End If
+
+            Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                        longText, MS.name, shortText, originalName, _
+                                        Nothing, msdate, _
+                                        MS.getBewertung(1).colorIndex, MS.getBewertung(1).description)
+        End If
+
+        msShapeNames.Add(copiedShape.Item(1).Name)
 
 
     End Sub
@@ -11450,7 +11602,7 @@ Public Module testModule
                 .Width = CSng(rds.drawingAreaWidth)
                 .TextFrame2.TextRange.Text = elemNameOfElemID(segmentPhaseID)
                 .Name = .Name & .Id
-                .AlternativeText = "Segment " & elemNameOfElemID(segmentPhaseID)
+                '.AlternativeText = "Segment " & elemNameOfElemID(segmentPhaseID)
 
                 ' Current Y-Position aktualisieren 
                 curYPosition = curYPosition + .Height
@@ -11462,7 +11614,7 @@ Public Module testModule
 
 
 
-    
+
     ''' <summary>
     ''' zeichnet eine Phase in der aktuellen Swimlane 
     ''' </summary>
@@ -11477,6 +11629,8 @@ Public Module testModule
                                            ByVal swimlaneID As String, _
                                            ByVal phaseID As String, _
                                            ByVal yPosition As Double)
+
+        Dim phShapeName As String = calcPPTShapeName(hproj, phaseID)
 
         Dim phaseTypShape As xlNS.Shape
         Dim copiedShape As pptNS.ShapeRange
@@ -11519,7 +11673,7 @@ Public Module testModule
             End With
 
         End If
-        
+
 
 
 
@@ -11550,9 +11704,18 @@ Public Module testModule
                     If .Left + .Width > rds.drawingAreaRight + 2 Then
                         .Left = rds.drawingAreaRight - .Width + 2
                     End If
-                    .Name = .Name & .Id
 
-                    shapeNames.Add(.Name, .Name)
+                    '.Name = .Name & .Id
+
+                    .Name = phShapeName & PTpptAnnotationType.text
+                    .Title = "Beschriftung"
+                    .AlternativeText = ""
+
+
+                    shapeNames.Add(.Name)
+
+
+
                 End With
 
 
@@ -11572,9 +11735,15 @@ Public Module testModule
                         .Left = rds.drawingAreaRight - .Width + 2
                     End If
 
-                    .Name = .Name & .Id
+                    '.Name = .Name & .Id
+                    .Name = phShapeName & PTpptAnnotationType.datum
+                    .Title = "Datum"
+                    .AlternativeText = ""
 
-                    shapeNames.Add(.Name, .Name)
+
+                    shapeNames.Add(.Name)
+
+
                 End With
 
             End If
@@ -11589,9 +11758,11 @@ Public Module testModule
                 .Height = rds.phaseVorlagenShape.Height
                 .Width = CSng(x2 - x1)
                 .Left = CSng(x1)
-                .Name = .Name & .Id
-                .Title = phaseName
-                .AlternativeText = phStartDate.ToShortDateString & " - " & phEndDate.ToShortDateString
+                '.Name = .Name & .Id
+
+                .Name = phShapeName
+                '.Title = phaseName
+                '.AlternativeText = phDateText
 
                 ' jetzt wird die Option gezogen, wenn keine Phasen-Beschriftung stattfinden sollte ... 
                 If awinSettings.mppUseInnerText Then
@@ -11606,9 +11777,32 @@ Public Module testModule
                     End If
                 End If
 
-                shapeNames.Add(.Name, .Name)
+
+                shapeNames.Add(.Name)
+
+
             End With
 
+            If awinSettings.mppEnableSmartPPT Then
+                Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                                                          True)
+                Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                                                       False)
+                Dim originalName As String = cphase.originalName
+
+                If originalName = cphase.name Then
+                    originalName = Nothing
+                End If
+
+                If longText = cphase.name Then
+                    longText = Nothing
+                End If
+
+                Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                            longText, cphase.name, shortText, originalName, _
+                                            phStartDate, phEndDate, _
+                                            Nothing, Nothing)
+            End If
 
         End If
 
@@ -11646,8 +11840,9 @@ Public Module testModule
         Dim x1 As Double
         Dim x2 As Double
 
-
-        Dim msBeschriftung As String
+        Dim msShapeName As String = calcPPTShapeName(hproj, milestoneID)
+        Dim msBeschriftung As String = hproj.hierarchy.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
+                                                             awinSettings.mppUseAbbreviation)
 
         If MilestoneDefinitions.Contains(milestoneName) Then
             milestoneTypShape = MilestoneDefinitions.getShape(milestoneName)
@@ -11685,11 +11880,6 @@ Public Module testModule
             If awinSettings.mppShowMsName Then
 
 
-                ' im Einzeile Modus fehlt der Kontext, deswegen die etwas aufwändigere Beschriftung  
-                msBeschriftung = hproj.hierarchy.getBestNameOfID(milestoneID, Not awinSettings.mppUseOriginalNames, _
-                                                                 awinSettings.mppUseAbbreviation, _
-                                                                 swimlaneID)
-
                 rds.MsDescVorlagenShape.Copy()
                 copiedShape = rds.pptSlide.Shapes.Paste()
                 With copiedShape(1)
@@ -11697,9 +11887,13 @@ Public Module testModule
                     .TextFrame2.TextRange.Text = msBeschriftung
                     .Top = CSng(yPosition + rds.YMilestoneText)
                     .Left = CSng(x1) - .Width / 2
-                    .Name = .Name & .Id
+                    '.Name = .Name & .Id
+                    .Name = msShapeName & PTpptAnnotationType.text
+                    .Title = "Beschriftung"
+                    .AlternativeText = ""
 
-                    shapeNames.Add(.Name, .Name)
+                    shapeNames.Add(.Name)
+
                 End With
 
 
@@ -11718,9 +11912,12 @@ Public Module testModule
                     .TextFrame2.TextRange.Text = msDateText
                     .Top = CSng(yPosition + rds.YMilestoneDate)
                     .Left = CSng(x1) - .Width / 2
-                    .Name = .Name & .Id
+                    '.Name = .Name & .Id
+                    .Name = msShapeName & PTpptAnnotationType.datum
+                    .Title = "Datum"
+                    .AlternativeText = ""
 
-                    shapeNames.Add(.Name, .Name)
+                    shapeNames.Add(.Name)
                 End With
 
             End If
@@ -11735,9 +11932,14 @@ Public Module testModule
                 .Width = sizeFaktor * .Width
                 .Top = CSng(yPosition + rds.YMilestone)
                 .Left = CSng(x1) - .Width / 2
-                .Name = .Name & .Id
-                .Title = milestoneName
-                .AlternativeText = msDate.ToShortDateString
+
+                '.Name = .Name & .Id
+                '.Title = milestoneName
+                '.AlternativeText = msDate.ToShortDateString
+
+                .Name = msShapeName
+                '.Title = milestoneName
+                '.AlternativeText = msDate.ToShortDateString
 
                 If awinSettings.mppShowAmpel Then
                     .Glow.Color.RGB = CInt(cMilestone.getBewertung(1).color)
@@ -11757,7 +11959,26 @@ Public Module testModule
 
                 End If
 
-                shapeNames.Add(.Name, .Name)
+                If awinSettings.mppEnableSmartPPT Then
+                    Dim longText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, False)
+                    Dim shortText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, True)
+                    Dim originalName As String = cMilestone.originalName
+
+                    If originalName = cMilestone.name Then
+                        originalName = Nothing
+                    End If
+
+                    If longText = cMilestone.name Then
+                        longText = Nothing
+                    End If
+
+                    Call addSmartPPTShapeInfo(copiedShape.Item(1), _
+                                                longText, cMilestone.name, shortText, originalName, _
+                                                msDate, msDate, _
+                                                cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description)
+                End If
+
+                shapeNames.Add(.Name)
             End With
 
 
