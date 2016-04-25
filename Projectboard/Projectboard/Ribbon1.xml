@@ -304,6 +304,7 @@
         <group id ="PT6G6" label ="Licensierung">
           <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
           <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
+          <button id="Pt6G6B2" label="Create XML-ReportMessage-Files aus Excel-Datei" onAction="PTCreateReportMessages" supertip ="hiermit werden für die verschiedenen, unterstützen Sprachen die XML-Files erstellt"/>
         </group>
      </tab>
     </tabs>

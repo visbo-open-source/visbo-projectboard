@@ -805,20 +805,25 @@ Public Module Projekte
 
         Try
             If auswahl = PThis.vorlage Then
-                titelTeile(0) = "Vorlage " & hproj.VorlagenName & vbLf
+                'titelTeile(0) = "Vorlage " & hproj.VorlagenName & vbLf
+                titelTeile(0) = repMessages.getmsg(42) & hproj.VorlagenName & vbLf
                 titelTeile(1) = " "
                 'kennung = hproj.VorlagenName.Trim & "#Phasen#1"
 
 
 
             ElseIf auswahl = PThis.beauftragung Then
-                titelTeile(0) = "Beauftragung " & hproj.startDate.ToShortDateString & _
+                'titelTeile(0) = "Beauftragung " & hproj.startDate.ToShortDateString & _
+                '                     " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
+                titelTeile(0) = repMessages.getmsg(43) & hproj.startDate.ToShortDateString & _
                                      " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
                 'kennung = hproj.name.Trim & "Beauftragung" & "#Phasen#1"
 
             ElseIf auswahl = PThis.letzterStand Then
-                titelTeile(0) = "letzter Stand " & hproj.startDate.ToShortDateString & _
+                'titelTeile(0) = "letzter Stand " & hproj.startDate.ToShortDateString & _
+                '                     " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
+                titelTeile(0) = repMessages.getmsg(44) & hproj.startDate.ToShortDateString & _
                                      " - " & hproj.startDate.AddDays(hproj.dauerInDays - 1).ToShortDateString & vbLf
                 titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
                 'kennung = hproj.name.Trim & "letzter Stand" & "#Phasen#1"
@@ -1010,7 +1015,8 @@ Public Module Projekte
                                 If mdatenreihe(i - 1) <= 3 Then
                                     .DataLabel.Text = tdatenreihe2(i - 1).ToString
                                 Else
-                                    .DataLabel.Text = tdatenreihe2(i - 1).ToString & " Tage"
+                                    '.DataLabel.Text = tdatenreihe2(i - 1).ToString & " Tage"
+                                    .DataLabel.Text = tdatenreihe2(i - 1).ToString & repMessages.getmsg(45)
                                 End If
 
                             End With
@@ -1065,7 +1071,8 @@ Public Module Projekte
                         .MajorUnit = 12
 
                         With .AxisTitle
-                            .Characters.Text = "Monate"
+                            '.Characters.Text = "Monate"
+                            .Characters.Text = repMessages.getmsg(46)
                             .Font.Size = awinSettings.fontsizeItems + 4
                         End With
                     End With
@@ -1325,7 +1332,8 @@ Public Module Projekte
                         If mdatenreihe(i - 1) <= 3 Then
                             .DataLabel.Text = tdatenreihe2(i - 1).ToString
                         Else
-                            .DataLabel.Text = tdatenreihe2(i - 1).ToString & " Tage"
+                            '.DataLabel.Text = tdatenreihe2(i - 1).ToString & " Tage"
+                            .DataLabel.Text = tdatenreihe2(i - 1).ToString & repMessages.getmsg(45)
                         End If
                     End With
                 Next
@@ -2627,7 +2635,8 @@ Public Module Projekte
             Try
                 beauftragung = projekthistorie.beauftragung
             Catch ex As Exception
-                Throw New ArgumentException("es gibt keine Beauftragung")
+                'Throw New ArgumentException("es gibt keine Beauftragung")
+                Throw New ArgumentException(repMessages.getmsg(184))
             End Try
 
             abbruch = False
@@ -2642,7 +2651,8 @@ Public Module Projekte
             lastPlan = projekthistorie.ElementAtorBefore(vgl)
 
             If IsNothing(lastPlan) Then
-                Throw New ArgumentException("es gibt keinen Stand vorher")
+                'Throw New ArgumentException("es gibt keinen Stand vorher")
+                Throw New ArgumentException(repMessages.getmsg(185))
             End If
 
 
@@ -2785,7 +2795,8 @@ Public Module Projekte
                 beauftragung = projekthistorie.ElementAt(minIndex)
                 lastPlan = projekthistorie.ElementAt(maxIndex)
             Catch ex As Exception
-                Throw New ArgumentException("Fehler in Min-/Max Bestimmung " & ex.Message)
+                'Throw New ArgumentException("Fehler in Min-/Max Bestimmung " & ex.Message)
+                Throw New ArgumentException(repMessages.getmsg(186) & ex.Message)
             End Try
 
         End If
@@ -2819,9 +2830,11 @@ Public Module Projekte
             Case 1
                 ' Personalkosten
                 If isMinMax Then
-                    titelTeile(0) = "Min/Max Personalkosten (T€)" & vbLf
+                    'titelTeile(0) = "Min/Max Personalkosten (T€)" & vbLf
+                    titelTeile(0) = repMessages.getmsg(187) & vbLf
                 Else
-                    titelTeile(0) = "Soll/Ist Personalkosten (T€)" & vbLf
+                    'titelTeile(0) = "Soll/Ist Personalkosten (T€)" & vbLf
+                    titelTeile(0) = repMessages.getmsg(188) & vbLf
                 End If
 
                 kennung = "Soll/Ist Kurve Personalkosten"
@@ -2831,9 +2844,11 @@ Public Module Projekte
             Case 2
                 ' Sonstige Kosten
                 If isMinMax Then
-                    titelTeile(0) = "Min/Max Sonstige Kosten (T€)" & vbLf
+                    'titelTeile(0) = "Min/Max Sonstige Kosten (T€)" & vbLf
+                    titelTeile(0) = repMessages.getmsg(189) & vbLf
                 Else
-                    titelTeile(0) = "Soll/Ist Sonstige Kosten (T€)" & vbLf
+                    'titelTeile(0) = "Soll/Ist Sonstige Kosten (T€)" & vbLf
+                    titelTeile(0) = repMessages.getmsg(190) & vbLf
                 End If
 
                 kennung = "Soll/Ist Kurve Sonstige Kosten"
@@ -2844,9 +2859,11 @@ Public Module Projekte
             Case 3
                 ' Gesamt Kosten
                 If isMinMax Then
-                    titelTeile(0) = "Min/Max Gesamtkosten (T€)" & vbLf
+                    'titelTeile(0) = "Min/Max Gesamtkosten (T€)" & vbLf
+                    titelTeile(0) = repMessages.getmsg(191) & vbLf
                 Else
-                    titelTeile(0) = "Soll/Ist Gesamtkosten (T€)" & vbLf
+                    'titelTeile(0) = "Soll/Ist Gesamtkosten (T€)" & vbLf
+                    titelTeile(0) = repMessages.getmsg(192) & vbLf
                 End If
 
                 kennung = "Soll/Ist Kurve Gesamtkosten"
@@ -2863,7 +2880,8 @@ Public Module Projekte
                     werteL = lastPlan.getPersonalKosten(qualifier)
                     werteC = hproj.getPersonalKosten(qualifier)
                 Catch ex As Exception
-                    Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
+                    'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
+                    Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
                 End Try
 
             Case 5
@@ -2875,16 +2893,20 @@ Public Module Projekte
                     werteL = lastPlan.getKostenBedarf(qualifier)
                     werteC = hproj.getKostenBedarf(qualifier)
                 Catch ex As Exception
-                    Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
+                    'Throw New ArgumentException(ex.Message & vbLf & qualifier & " nicht gefunden")
+                    Throw New ArgumentException(ex.Message & vbLf & qualifier & repMessages.getmsg(193))
                 End Try
 
             Case Else
                 ' Gesamt Kosten
                 If isMinMax Then
-                    titelTeile(0) = "Min/Max Gesamtkosten (T€)" & vbLf
+                    'titelTeile(0) = "Min/Max Gesamtkosten (T€)" & vbLf
+                    titelTeile(0) = repMessages.getmsg(191) & vbLf
                 Else
-                    titelTeile(0) = "Soll/Ist Gesamtkosten (T€)" & vbLf
+                    'titelTeile(0) = "Soll/Ist Gesamtkosten (T€)" & vbLf
+                    titelTeile(0) = repMessages.getmsg(192) & vbLf
                 End If
+
 
                 kennung = "Soll/Ist Kurve Gesamtkosten"
                 werteB = beauftragung.getGesamtKostenBedarf
@@ -3083,7 +3105,8 @@ Public Module Projekte
                     ' dann muss jetzt die "Ist-Markierung gezeichnet werden 
 
                     With .SeriesCollection.NewSeries
-                        .name = "Istwerte"
+                        '.name = "Istwerte"
+                        .name = repMessages.getmsg(194)
                         .Interior.color = awinSettings.SollIstFarbeArea
                         .Values = gesterndatenreihe
                         '.XValues = Xgestern
@@ -3097,9 +3120,11 @@ Public Module Projekte
                 If isMinMax Or vglBaseline Then
                     With .SeriesCollection.NewSeries
                         If isMinMax Then
-                            .name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
+                            '.name = "Minimum (" & beauftragung.timeStamp.ToString("d") & ")"
+                            .name = repMessages.getmsg(195) & " (" & beauftragung.timeStamp.ToString("d") & ")"
                         Else
-                            .name = "Soll (" & beauftragung.timeStamp.ToString("d") & ")"
+                            '.name = "Soll (" & beauftragung.timeStamp.ToString("d") & ")"
+                            .name = repMessages.getmsg(196) & " (" & beauftragung.timeStamp.ToString("d") & ")"
                         End If
 
                         .Interior.color = awinSettings.SollIstFarbeB
@@ -3115,9 +3140,11 @@ Public Module Projekte
                 If isMinMax Or Not vglBaseline Then
                     With .SeriesCollection.NewSeries
                         If isMinMax Then
-                            .name = "Maximum (" & lastPlan.timeStamp.ToString("d") & ")"
+                            '.name = "Maximum (" & lastPlan.timeStamp.ToString("d") & ")"
+                            .name = repMessages.getmsg(197) & " (" & lastPlan.timeStamp.ToString("d") & ")"
                         Else
-                            .name = "Last (" & lastPlan.timeStamp.ToString("d") & ")"
+                            '.name = "Last (" & lastPlan.timeStamp.ToString("d") & ")"
+                            .name = repMessages.getmsg(198) & " (" & lastPlan.timeStamp.ToString("d") & ")"
                         End If
 
                         .Interior.color = awinSettings.SollIstFarbeL
@@ -3131,7 +3158,8 @@ Public Module Projekte
 
 
                 With .SeriesCollection.NewSeries
-                    .name = "Ist (" & hproj.timeStamp.ToString("d") & ")"
+                    '.name = "Ist (" & hproj.timeStamp.ToString("d") & ")"
+                    .name = repMessages.getmsg(199) & " (" & hproj.timeStamp.ToString("d") & ")"
                     .Interior.color = awinSettings.SollIstFarbeC
                     .Values = tdatenreiheC
                     .XValues = Xdatenreihe
@@ -3206,7 +3234,8 @@ Public Module Projekte
 
         Dim pname As String = hproj.name
 
-        titelTeile(0) = "Meilenstein Trend-Analyse " & hproj.getShapeText & vbLf
+        'titelTeile(0) = "Meilenstein Trend-Analyse " & hproj.getShapeText & vbLf
+        titelTeile(0) = repMessages.getmsg(21) & hproj.getShapeText & vbLf
         titelTeilLaengen(0) = titelTeile(0).Length
         titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
         titelTeilLaengen(1) = titelTeile(1).Length
@@ -3246,7 +3275,8 @@ Public Module Projekte
         ' wenn nicht mindestens zwei Elemente darstellbar sind, ist kein Trend darzustellen 
         If plen < 2 Then
             appInstance.EnableEvents = formerEE
-            Throw New Exception("Es gibt noch keinen Trend für das Projekt '" & hproj.name & "'")
+            'Throw New Exception("Es gibt noch keinen Trend für das Projekt '" & hproj.name & "'")
+            Throw New Exception(repMessages.getmsg(39) & hproj.name & "'")
         End If
 
         ' neu - neu - neu - neu 
@@ -3256,7 +3286,8 @@ Public Module Projekte
 
         If anzMilestones = 0 Then
             appInstance.EnableEvents = formerEE
-            Throw New Exception("keine Meilensteine angegeben!")
+            'Throw New Exception("keine Meilensteine angegeben!")
+            Throw New Exception(repMessages.getmsg(40))
         End If
 
 
@@ -3590,7 +3621,8 @@ Public Module Projekte
 
                 With CType(.Axes(Excel.XlAxisType.xlCategory), Excel.Axis)
                     .HasTitle = True
-                    .AxisTitle.Text = "Berichtszeiträume"
+                    '.AxisTitle.Text = "Berichtszeiträume"
+                    .AxisTitle.Text = repMessages.getmsg(41)
                     .AxisTitle.Format.TextFrame2.TextRange.Font.Size = 14
                     .BaseUnit = Excel.XlTimeUnit.xlMonths
                     .CategoryType = Excel.XlCategoryType.xlTimeScale
@@ -3703,14 +3735,16 @@ Public Module Projekte
         kennung = calcChartKennung("pr", PTprdk.PersonalBalken, tmpcollection)
 
         If auswahl = 1 Then
-            titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalbedarf " & zE & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(159) & zE & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
             diagramTitle = titelTeile(0) & titelTeile(1)
             'kennung = "Personalbedarf"
         ElseIf auswahl = 2 Then
-            titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Personalkosten (T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(160) & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -3741,7 +3775,8 @@ Public Module Projekte
         anzRollen = ErgebnisListeR.Count
 
         If anzRollen = 0 Then
-            Throw New Exception("keine Ressourcen Bedarfe definiert")
+            'Throw New Exception("keine Ressourcen Bedarfe definiert")
+            Throw New Exception(repMessages.getmsg(161))
         End If
 
 
@@ -4755,7 +4790,8 @@ Public Module Projekte
         anzRollen = RoleDefinitions.Count
 
         If anzRollen = 0 Then
-            MsgBox("keine Rollen-Bedarfe definiert")
+            'Call MsgBox("keine Rollen-Bedarfe definiert")
+            Call MsgBox(repMessages.getmsg(96))
             Exit Sub
         End If
 
@@ -5368,12 +5404,14 @@ Public Module Projekte
         Next k
 
         If auswahl = 2 Then
-            Xdatenreihe(anzKostenarten) = "Personal-Kosten"
+            'Xdatenreihe(anzKostenarten) = "Personal-Kosten"
+            Xdatenreihe(anzKostenarten) = repMessages.getmsg(164)
             tdatenreihe(anzKostenarten) = Math.Round(hproj.getAllPersonalKosten.Sum)
         End If
 
         If auswahl = 1 Then
-            titelTeile(0) = "Sonstige Kosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Sonstige Kosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(165) & "(" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5381,7 +5419,8 @@ Public Module Projekte
 
             'kennung = "Sonstige Kosten"
         Else
-            titelTeile(0) = "Gesamtkosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            'titelTeile(0) = "Gesamtkosten (" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
+            titelTeile(0) = repMessages.getmsg(166) & "(" & tdatenreihe.Sum.ToString("#####.") & " T€)" & vbLf & hproj.getShapeText & vbLf
             titelTeilLaengen(0) = titelTeile(0).Length
             titelTeile(1) = " (" & hproj.timeStamp.ToString & ") "
             titelTeilLaengen(1) = titelTeile(1).Length
@@ -5392,7 +5431,8 @@ Public Module Projekte
 
         If tdatenreihe.Sum = 0.0 Then
             appInstance.EnableEvents = formerEE
-            Throw New Exception("Summe sonstige Kosten ist Null")
+            'Throw New Exception("Summe sonstige Kosten ist Null")
+            Throw New Exception(repMessages.getmsg(167))
         Else
             With CType(appInstance.Worksheets(arrWsNames(3)), Excel.Worksheet)
                 anzDiagrams = CType(.ChartObjects, Excel.ChartObjects).Count
@@ -5441,7 +5481,8 @@ Public Module Projekte
 
                         For k = 0 To anzKostenarten - 1 + auswahl - 1
                             If k = anzKostenarten Then
-                                costname = "Personal-Kosten"
+                                'costname = "Personal-Kosten"
+                                costname = repMessages.getmsg(164)
                                 With .SeriesCollection(1).Points(k + 1)
                                     .Interior.color = CostDefinitions.getCostdef(pkIndex).farbe
                                     .DataLabel.Font.Size = 10
@@ -5729,7 +5770,8 @@ Public Module Projekte
 
         Dim pname As String = projekthistorie.Last.name
 
-        diagramTitle = "Planungs-Historie Kennzahlen " & vbLf & projekthistorie.Last.getShapeText
+        'diagramTitle = "Planungs-Historie Kennzahlen " & vbLf & projekthistorie.Last.getShapeText
+        diagramTitle = repMessages.getmsg(172) & vbLf & projekthistorie.Last.getShapeText
 
 
         ' jetzt werden die einzelnen Werte aufgefüllt
@@ -5853,7 +5895,8 @@ Public Module Projekte
                 ' Erloes
                 With .SeriesCollection.NewSeries
                     .ChartType = Excel.XlChartType.xlLine
-                    .name = "Budget"
+                    '.name = "Budget"
+                    .name = repMessages.getmsg(173)
                     .Values = erloes
                     .XValues = Xdatenreihe
                     .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleTriangle
@@ -5870,7 +5913,8 @@ Public Module Projekte
                 ' Personalkosten
                 With .SeriesCollection.NewSeries
                     .ChartType = Excel.XlChartType.xlLine
-                    .name = "Personalkosten"
+                    '.name = "Personalkosten"
+                    .name = repMessages.getmsg(164)
                     '.Interior.color = farbeExterne
                     .Values = personalKosten
                     .XValues = Xdatenreihe
@@ -5885,7 +5929,8 @@ Public Module Projekte
 
                 ' Sonstige Kosten
                 With .SeriesCollection.NewSeries
-                    .name = "Sonstige Kosten"
+                    '.name = "Sonstige Kosten"
+                    .name = repMessages.getmsg(165)
                     '.Interior.color = farbeInternOP
                     .Values = sonstKosten
                     .XValues = Xdatenreihe
@@ -5901,7 +5946,8 @@ Public Module Projekte
 
                 ' Risiko Kosten
                 With .SeriesCollection.NewSeries
-                    .name = "Risikokosten"
+                    '.name = "Risikokosten"
+                    .name = repMessages.getmsg(174)
                     '.Interior.color = iProjektFarbe
                     .Values = risikoKosten
                     .XValues = Xdatenreihe
@@ -5917,7 +5963,8 @@ Public Module Projekte
 
                 ' estim Profit
                 With .SeriesCollection.NewSeries
-                    .name = "progn.Ergebnis"
+                    '.name = "progn.Ergebnis"
+                    .name = repMessages.getmsg(175)
                     '.Interior.color = ergebnisfarbe2
                     .Values = estimProfit
                     .XValues = Xdatenreihe
@@ -6009,7 +6056,8 @@ Public Module Projekte
 
         Dim pname As String = projekthistorie.Last.name
 
-        diagramTitle = "Planungs-Historie strategischer Fit & Risiko: " & vbLf & projekthistorie.Last.getShapeText
+        'diagramTitle = "Planungs-Historie strategischer Fit & Risiko: " & vbLf & projekthistorie.Last.getShapeText
+        diagramTitle = repMessages.getmsg(169) & vbLf & projekthistorie.Last.getShapeText
 
 
         ' jetzt werden die einzelnen Werte aufgefüllt
@@ -6135,7 +6183,8 @@ Public Module Projekte
                 ' Erloes
                 With .SeriesCollection.NewSeries
                     .ChartType = Excel.XlChartType.xlLine
-                    .name = "Strategischer Fit"
+                    '.name = "Strategischer Fit"
+                    .name = repMessages.getmsg(170)
                     .Values = strategicFit
                     .XValues = Xdatenreihe
                     .MarkerStyle = Excel.XlMarkerStyle.xlMarkerStyleStar
@@ -6152,7 +6201,8 @@ Public Module Projekte
                 ' Personalkosten
                 With .SeriesCollection.NewSeries
                     .ChartType = Excel.XlChartType.xlLine
-                    .name = "Risiko"
+                    '.name = "Risiko"
+                    .name = repMessages.getmsg(77)
                     '.Interior.color = farbeExterne
                     .Values = risiko
                     .XValues = Xdatenreihe
@@ -6504,11 +6554,16 @@ Public Module Projekte
         End With
 
 
-        Xdatenreihe(0) = "Budget"
-        Xdatenreihe(1) = "Risiko-Abschlag"
-        Xdatenreihe(2) = "Personalkosten"
-        Xdatenreihe(3) = "Sonstige Kosten"
-        Xdatenreihe(4) = "Ergebnis-Prognose"
+        'Xdatenreihe(0) = "Budget"
+        'Xdatenreihe(1) = "Risiko-Abschlag"
+        'Xdatenreihe(2) = "Personalkosten"
+        'Xdatenreihe(3) = "Sonstige Kosten"
+        'Xdatenreihe(4) = "Ergebnis-Prognose"
+        Xdatenreihe(0) = repMessages.getmsg(49)
+        Xdatenreihe(1) = repMessages.getmsg(50)
+        Xdatenreihe(2) = repMessages.getmsg(51)
+        Xdatenreihe(3) = repMessages.getmsg(52)
+        Xdatenreihe(4) = repMessages.getmsg(53)
 
 
 
@@ -6538,9 +6593,11 @@ Public Module Projekte
 
 
         If auswahl = PThis.beauftragung Then
-            titelTeile(0) = hproj.getShapeText & " (Beauftragung)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            'titelTeile(0) = hproj.getShapeText & " (Beauftragung)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            titelTeile(0) = hproj.getShapeText & repMessages.getmsg(47) & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
         ElseIf auswahl = PThis.letzterStand Then
-            titelTeile(0) = hproj.getShapeText & " (letzter Stand)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            'titelTeile(0) = hproj.getShapeText & " (letzter Stand)" & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
+            titelTeile(0) = hproj.getShapeText & repMessages.getmsg(48) & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
         Else
             titelTeile(0) = hproj.getShapeText & vbLf & textZeitraum(pstart, pstart + plen - 1) & vbLf
         End If
@@ -6812,11 +6869,16 @@ Public Module Projekte
         End With
 
 
-        Xdatenreihe(0) = "Budget"
-        Xdatenreihe(1) = "Risiko-Abschlag"
-        Xdatenreihe(2) = "Personalkosten"
-        Xdatenreihe(3) = "Sonstige Kosten"
-        Xdatenreihe(4) = "Ergebnis-Prognose"
+        'Xdatenreihe(0) = "Budget"
+        'Xdatenreihe(1) = "Risiko-Abschlag"
+        'Xdatenreihe(2) = "Personalkosten"
+        'Xdatenreihe(3) = "Sonstige Kosten"
+        'Xdatenreihe(4) = "Ergebnis-Prognose"
+        Xdatenreihe(0) = repMessages.getmsg(49)
+        Xdatenreihe(1) = repMessages.getmsg(50)
+        Xdatenreihe(2) = repMessages.getmsg(51)
+        Xdatenreihe(3) = repMessages.getmsg(52)
+        Xdatenreihe(4) = repMessages.getmsg(53)
 
 
 
@@ -10445,7 +10507,7 @@ Public Module Projekte
                     Call MsgBox("Auswahl enthält  diese Meilensteine nicht")
                 ElseIf nameList.Count = 1 Then
                     Call MsgBox("Auswahl enthält keinen Meilenstein " & nameList.Item(1))
-
+                    
                 End If
             End If
 

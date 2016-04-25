@@ -93,6 +93,12 @@
     <Compile Include="frmCreateLicences.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmCreateReportMeldungen.Designer.vb">
+      <DependentUpon>frmCreateReportMeldungen.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmCreateReportMeldungen.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmReportProfil.Designer.vb">
       <DependentUpon>frmReportProfil.vb</DependentUpon>
     </Compile>
@@ -263,6 +269,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmCreateNewVariant.resx">
       <DependentUpon>frmCreateNewVariant.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmCreateReportMeldungen.resx">
+      <DependentUpon>frmCreateReportMeldungen.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmCreateRolloutProject.resx">
       <DependentUpon>frmCreateRolloutProject.vb</DependentUpon>

@@ -8161,6 +8161,23 @@ Imports System.Windows
     End Sub
 
 
+    Public Sub PTCreateReportMessages(control As IRibbonControl)
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+
+        Dim frmCreateReportMsg As New frmCreateReportMeldungen
+        Dim returnValue As DialogResult
+        returnValue = frmCreateReportMsg.ShowDialog
+
+
+        enableOnUpdate = True
+
+
+    End Sub
+
 
 #End Region
 

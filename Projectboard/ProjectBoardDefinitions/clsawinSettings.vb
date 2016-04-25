@@ -1,4 +1,5 @@
 ﻿Imports Microsoft.Office.Interop.Excel
+Imports System.Globalization
 
 Public Class clsawinSettings
     ' Chart Settings 
@@ -135,6 +136,9 @@ Public Class clsawinSettings
     Public Property mppUseOriginalNames As Boolean
     Public Property mppKwInMilestone As Boolean
     Public Property mppUseInnerText As Boolean ' steuert, ob der Beschriftungstext im Balken stattfinden soll 
+
+    ' Settings für Report-Message-Language
+    Public Property ReportLanguage As String = System.Globalization.CultureInfo.CurrentUICulture.ToString
 
     ' Settings für MSProject-AddIn und ImportMSProject
     Public Property visboTaskClass As String
