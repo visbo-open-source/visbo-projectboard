@@ -2832,7 +2832,7 @@ Public Module Module1
     ''' fügt an ein Powerpoint Shape Informationen über Tags an, die vom PPT Add-In SmartPPT ausgelesen werden können
     ''' </summary>
     ''' <param name="pptShape"></param>
-    ''' <param name="bestName"></param>
+    ''' <param name="fullBreadCrumb"></param>
     ''' <param name="classifiedName"></param>
     ''' <param name="shortName"></param>
     ''' <param name="originalName"></param>
@@ -2842,15 +2842,17 @@ Public Module Module1
     ''' <param name="ampelErlaeuterung"></param>
     ''' <remarks></remarks>
     Public Sub addSmartPPTShapeInfo(ByRef pptShape As PowerPoint.Shape, _
-                                          ByVal bestName As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String, _
+                                          ByVal fullBreadCrumb As String, ByVal classifiedName As String, ByVal shortName As String, ByVal originalName As String, _
                                           ByVal startDate As Date, ByVal endDate As Date, _
                                           ByVal ampelColor As Integer, ByVal ampelErlaeuterung As String)
+
+        Dim nullDate As Date = Nothing
 
         If Not IsNothing(pptShape) Then
             With pptShape
 
-                If Not IsNothing(bestName) Then
-                    .Tags.Add("BN", bestName)
+                If Not IsNothing(fullBreadCrumb) Then
+                    .Tags.Add("BC", fullBreadCrumb)
                 End If
 
                 If Not IsNothing(classifiedName) Then
@@ -2858,19 +2860,28 @@ Public Module Module1
                 End If
 
                 If Not IsNothing(shortName) Then
-                    .Tags.Add("SN", shortName)
+                    If shortName <> classifiedName And shortName <> "" Then
+                        .Tags.Add("SN", shortName)
+                    End If
                 End If
 
                 If Not IsNothing(originalName) Then
-                    .Tags.Add("ON", originalName)
+                    If originalName <> classifiedName And originalName <> "" Then
+                        .Tags.Add("ON", originalName)
+                    End If
                 End If
 
                 If Not IsNothing(startDate) Then
-                    .Tags.Add("SD", startDate.ToShortDateString)
+                    If Not startDate = nullDate Then
+                        .Tags.Add("SD", startDate.ToShortDateString)
+                    End If
                 End If
 
                 If Not IsNothing(endDate) Then
-                    .Tags.Add("ED", endDate.ToShortDateString)
+                    If Not endDate = nullDate Then
+                        .Tags.Add("ED", endDate.ToShortDateString)
+                    End If
+
                 End If
 
                 If Not IsNothing(ampelColor) Then
@@ -2880,11 +2891,10 @@ Public Module Module1
                         .Tags.Add("AC", "0")
                     End If
                 End If
-                
+
                 If Not IsNothing(ampelErlaeuterung) Then
                     .Tags.Add("AE", ampelErlaeuterung)
                 End If
-
 
             End With
         End If

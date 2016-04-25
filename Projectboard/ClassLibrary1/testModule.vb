@@ -9863,16 +9863,19 @@ Public Module testModule
 
             If awinSettings.mppEnableSmartPPT Then
 
-                Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, False)
-                Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+                'Dim fullBreadCrumb As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+                'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+                Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                Dim shortText As String = cphase.shortName
                 Dim originalName As String = cphase.originalName
+
 
                 If originalName = cphase.name Then
                     originalName = Nothing
                 End If
 
                 Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                            longText, cphase.name, Nothing, originalName, _
+                                            fullBreadCrumb, cphase.name, shortText, originalName, _
                                             cphase.getStartDate, cphase.getEndDate, _
                                             Nothing, Nothing)
 
@@ -9932,16 +9935,21 @@ Public Module testModule
 
                 If awinSettings.mppEnableSmartPPT Then
 
-                    Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, False)
-                    Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+                    'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, False)
+                    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, True)
+                    'Dim originalName As String = cphase.originalName
+
+                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                    Dim shortText As String = cphase.shortName
                     Dim originalName As String = cphase.originalName
+
 
                     If originalName = cphase.name Then
                         originalName = Nothing
                     End If
 
                     Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                                Nothing, cphase.name, Nothing, originalName, _
+                                                fullBreadCrumb, cphase.name, shortText, originalName, _
                                                 cphase.getStartDate, cphase.getEndDate, _
                                                 Nothing, Nothing)
 
@@ -10901,22 +10909,22 @@ Public Module testModule
                                 End With
 
                                 If awinSettings.mppEnableSmartPPT Then
-                                    Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
-                                                                              True)
-                                    Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
-                                                                           False)
+                                    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                                    '                                          True)
+                                    'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                                    '                                       False)
+                                    'Dim originalName As String = cphase.originalName
+
+                                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                                    Dim shortText As String = cphase.shortName
                                     Dim originalName As String = cphase.originalName
 
                                     If originalName = cphase.name Then
                                         originalName = Nothing
                                     End If
 
-                                    If longText = cphase.name Then
-                                        longText = Nothing
-                                    End If
-
                                     Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                                                longText, cphase.name, shortText, originalName, _
+                                                                fullBreadCrumb, cphase.name, shortText, originalName, _
                                                                 phaseStart, phaseEnd, _
                                                                 Nothing, Nothing)
                                 End If
@@ -11557,20 +11565,20 @@ Public Module testModule
         End With
 
         If awinSettings.mppEnableSmartPPT Then
-            Dim longText As String = hproj.hierarchy.getBestNameOfID(MS.nameID, True, False)
-            Dim shortText As String = hproj.hierarchy.getBestNameOfID(MS.nameID, True, True)
+            'Dim longText As String = hproj.hierarchy.getBestNameOfID(MS.nameID, True, False)
+            'Dim shortText As String = hproj.hierarchy.getBestNameOfID(MS.nameID, True, True)
+            'Dim originalName As String = MS.originalName
+
+            Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(MS.nameID)
+            Dim shortText As String = MS.shortName
             Dim originalName As String = MS.originalName
 
             If originalName = MS.name Then
                 originalName = Nothing
             End If
 
-            If longText = MS.name Then
-                longText = Nothing
-            End If
-
             Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                        longText, MS.name, shortText, originalName, _
+                                        fullBreadCrumb, MS.name, shortText, originalName, _
                                         Nothing, msdate, _
                                         MS.getBewertung(1).colorIndex, MS.getBewertung(1).description)
         End If
@@ -11784,22 +11792,22 @@ Public Module testModule
             End With
 
             If awinSettings.mppEnableSmartPPT Then
-                Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
-                                                          True)
-                Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
-                                                       False)
+                'Dim shortText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                '                                          True)
+                'Dim longText As String = hproj.hierarchy.getBestNameOfID(cphase.nameID, True, _
+                '                                       False)
+                'Dim originalName As String = cphase.originalName
+
+                Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(cphase.nameID)
+                Dim shortText As String = cphase.shortName
                 Dim originalName As String = cphase.originalName
 
                 If originalName = cphase.name Then
                     originalName = Nothing
                 End If
 
-                If longText = cphase.name Then
-                    longText = Nothing
-                End If
-
                 Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                            longText, cphase.name, shortText, originalName, _
+                                            fullBreadCrumb, cphase.name, shortText, originalName, _
                                             phStartDate, phEndDate, _
                                             Nothing, Nothing)
             End If
@@ -11960,21 +11968,21 @@ Public Module testModule
                 End If
 
                 If awinSettings.mppEnableSmartPPT Then
-                    Dim longText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, False)
-                    Dim shortText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, True)
+                    'Dim longText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, False)
+                    'Dim shortText As String = hproj.hierarchy.getBestNameOfID(milestoneID, True, True)
+                    'Dim originalName As String = cMilestone.originalName
+
+                    Dim fullBreadCrumb As String = hproj.hierarchy.getBreadCrumb(milestoneID)
+                    Dim shortText As String = cMilestone.shortName
                     Dim originalName As String = cMilestone.originalName
 
                     If originalName = cMilestone.name Then
                         originalName = Nothing
                     End If
 
-                    If longText = cMilestone.name Then
-                        longText = Nothing
-                    End If
-
                     Call addSmartPPTShapeInfo(copiedShape.Item(1), _
-                                                longText, cMilestone.name, shortText, originalName, _
-                                                msDate, msDate, _
+                                                fullBreadCrumb, cMilestone.name, shortText, originalName, _
+                                                Nothing, msDate, _
                                                 cMilestone.getBewertung(1).colorIndex, cMilestone.getBewertung(1).description)
                 End If
 

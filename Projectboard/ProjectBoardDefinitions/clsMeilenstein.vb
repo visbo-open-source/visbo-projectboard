@@ -97,6 +97,29 @@ Public Class clsMeilenstein
     End Property
 
     ''' <summary>
+    ''' gibt die Abkürzung des Meilensteins zurück 
+    ''' entweder als Abkürzung der phaseDefinitions, als Abkürzung der missingphaseDefinitions oder der leere String
+    ''' Später: alternativeAbbrev
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property shortName As String
+        Get
+            Dim abbrev As String = ""
+            Dim tmpName As String = Me.name
+            If MilestoneDefinitions.Contains(tmpName) Then
+                abbrev = MilestoneDefinitions.getAbbrev(tmpName)
+            ElseIf missingMilestoneDefinitions.Contains(tmpName) Then
+                abbrev = missingMilestoneDefinitions.getAbbrev(tmpName)
+            End If
+
+            shortName = abbrev
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' liest den Namensteil der NamensID 
     ''' </summary>
     ''' <value></value>

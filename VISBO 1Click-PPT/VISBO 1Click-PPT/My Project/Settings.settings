@@ -12,7 +12,7 @@
       <Value Profile="(Default)">VISBO Task Class</Value>
     </Setting>
     <Setting Name="VISBOAbbreviation" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Alias</Value>
+      <Value Profile="(Default)">VISBO Alias</Value>
     </Setting>
     <Setting Name="VISBOAmpel" Type="System.String" Scope="Application">
       <Value Profile="(Default)">VISBO Ampel</Value>

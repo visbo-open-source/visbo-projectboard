@@ -388,6 +388,29 @@ Public Class clsPhase
     End Property
 
     ''' <summary>
+    ''' gibt die Abkürzung der Phase zurück 
+    ''' entweder als Abkürzung der phaseDefinitions, als Abkürzung der missingphaseDefinitions oder der leere String
+    ''' Später: alternativeAbbrev
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property shortName As String
+        Get
+            Dim abbrev As String = ""
+            Dim tmpName As String = Me.name
+            If PhaseDefinitions.Contains(tmpName) Then
+                abbrev = PhaseDefinitions.getAbbrev(tmpName)
+            ElseIf missingPhaseDefinitions.Contains(tmpName) Then
+                abbrev = missingPhaseDefinitions.getAbbrev(tmpName)
+            End If
+
+            shortName = abbrev
+
+        End Get
+    End Property
+
+    ''' <summary>
     ''' liefert das StartDatum der Phase
     ''' </summary>
     ''' <value></value>
@@ -454,8 +477,8 @@ Public Class clsPhase
 
 
     ''' <summary>
-    ''' setzt die Farbe eines Meilensteins; macht  dann Sinn, wenn der Meilenstein nicht zur 
-    ''' Liste der bekannten Meilensteine gehört 
+    ''' setzt die Farbe einer Phase; macht  dann Sinn, wenn die Phase nicht zur 
+    ''' Liste der bekannten/missing Phasen gehört 
     ''' </summary>
     ''' <value></value>
     ''' <remarks></remarks>

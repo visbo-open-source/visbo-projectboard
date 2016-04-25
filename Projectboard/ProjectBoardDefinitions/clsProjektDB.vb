@@ -391,11 +391,14 @@
                 .latestStart = Me.latestStart
                 .minDauer = Me.minDauer
                 .maxDauer = Me.maxDauer
-                .setFarbe = CLng(Me.farbe)
-                ' Änderung 28.11. relstart , relende ist nur noch readonly ; jetzt wird exaktes Datum mitgeführt
-                '.relStart = Me.relStart
-                '.relEnde = Me.relEnde
 
+                Try
+                    .setFarbe = CLng(Me.farbe)
+                Catch ex As Exception
+
+                End Try
+
+                
                 ' Änderung tk 20.4.2015
                 ' damit alte Datenbank Einträge ohne Hierarchie auch noch gelesen werden können ..
                 If Not istElemID(Me.name) Then
@@ -609,11 +612,17 @@
 
                     .verantwortlich = Me.verantwortlich
                     .offset = Me.offset
-                    If Not IsNothing(Me.alternativeColor) Then
-                        .setFarbe = Me.alternativeColor
-                    Else
-                        .setFarbe = awinSettings.AmpelNichtBewertet
-                    End If
+
+                    Try
+                        If Not IsNothing(Me.alternativeColor) Then
+                            .setFarbe = Me.alternativeColor
+                        Else
+                            .setFarbe = awinSettings.AmpelNichtBewertet
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+                    
 
 
                     For i = 1 To Me.bewertungsCount
