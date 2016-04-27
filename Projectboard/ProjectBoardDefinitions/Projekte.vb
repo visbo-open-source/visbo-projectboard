@@ -2964,7 +2964,7 @@ Public Module Projekte
         sumL = 0.0
         sumC = 0.0
         For i = minColumn To maxColumn
-            Xdatenreihe(i - minColumn) = StartofCalendar.AddMonths(i - 1).ToString("MMM yy")
+            Xdatenreihe(i - minColumn) = StartofCalendar.AddMonths(i - 1).ToString("MMM yy", repCult)
             With beauftragung
                 If i >= .Start And i <= .Start + .anzahlRasterElemente - 1 Then
                     tdatenreiheB(i - minColumn) = sumB + werteB(i - .Start)
@@ -3299,7 +3299,7 @@ Public Module Projekte
 
 
         For i = 1 To plen
-            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(von + i - 2).ToString("MMM yy")
+            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(von + i - 2).ToString("MMM yy", repCult)
         Next i
 
 
@@ -3788,7 +3788,7 @@ Public Module Projekte
 
 
         For i = 1 To plen
-            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy")
+            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy", repCult)
         Next i
 
         gesamt_summe = 0
@@ -4038,7 +4038,7 @@ Public Module Projekte
 
 
         For i = 1 To plen
-            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy")
+            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy", repCult)
         Next i
 
         'gesamt_summe = 0
@@ -4229,7 +4229,7 @@ Public Module Projekte
 
 
         For i = 1 To plen
-            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy")
+            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy", repCult)
         Next i
 
 
@@ -4621,7 +4621,7 @@ Public Module Projekte
 
 
         For i = 1 To plen
-            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy")
+            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy", repCult)
         Next i
 
 
@@ -6295,7 +6295,7 @@ Public Module Projekte
 
 
         For i = 1 To plen
-            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy")
+            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy", repCult)
         Next i
 
 
@@ -8860,7 +8860,7 @@ Public Module Projekte
         'Next m
 
         For i = 1 To plen
-            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy")
+            Xdatenreihe(i - 1) = StartofCalendar.AddMonths(pstart + i - 2).ToString("MMM yy", repCult)
         Next i
 
 
@@ -16412,11 +16412,11 @@ Public Module Projekte
                 von = CDate(.cells(1, start).value)
                 bis = CDate(.cells(1, ende).value)
                 If start < ende Then
-                    htxt = von.ToString("MMM yy") & " - " & bis.ToString("MMM yy")
+                    htxt = von.ToString("MMM yy", repCult) & " - " & bis.ToString("MMM yy", repCult)
                 ElseIf start = ende Then
-                    htxt = von.ToString("MMM yy")
+                    htxt = von.ToString("MMM yy", repCult)
                 Else
-                    htxt = bis.ToString("MMM yy") & " - " & von.ToString("MMM yy")
+                    htxt = bis.ToString("MMM yy", repCult) & " - " & von.ToString("MMM yy", repCult)
                 End If
             End With
         Catch ex As Exception

@@ -672,11 +672,18 @@ Public Module testModule
                         height = .Height
                         width = .Width
 
-                        Try
+                        ' ur:27.04.2016
+                        ' ''Try
+                        ' ''    boxName = .TextFrame2.TextRange.Text
+                        ' ''Catch ex As Exception
+                        ' ''    boxName = " "
+                        ' ''End Try
+
+                        If .TextFrame2.HasText Then
                             boxName = .TextFrame2.TextRange.Text
-                        Catch ex As Exception
-                            boxName = " "
-                        End Try
+                        Else
+                            boxName = ""
+                        End If
 
 
                         notYetDone = False
@@ -982,6 +989,10 @@ Public Module testModule
 
                             Case "Projektphasen"
 
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(239)
+                                End If
+
                                 Dim scale As Integer
                                 Dim continueWork As Boolean = True
                                 Dim cproj As clsProjekt = Nothing
@@ -1037,6 +1048,11 @@ Public Module testModule
 
 
                             Case "Vergleich mit Vorlage"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(238)
+                                End If
+
 
                                 Dim vproj As clsProjektvorlage
                                 Dim cproj As New clsProjekt
@@ -1164,6 +1180,10 @@ Public Module testModule
 
                             Case "Vergleich mit Beauftragung"
 
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(237)
+                                End If
+
 
                                 Dim cproj As clsProjekt
                                 Dim scale As Double
@@ -1268,6 +1288,10 @@ Public Module testModule
 
 
                             Case "Vergleich mit letztem Stand"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(236)
+                                End If
 
 
                                 Dim cproj As clsProjekt
@@ -1405,6 +1429,7 @@ Public Module testModule
 
                             Case "Tabelle OneGlance Beauftragung"
 
+
                                 Try
                                     Call zeichneProjektTabelleOneGlance(pptSlide, pptShape, gleichShape, steigendShape, fallendShape, ampelShape, sternShape, hproj, bproj)
                                 Catch ex As Exception
@@ -1413,6 +1438,7 @@ Public Module testModule
 
                             Case "Tabelle Veränderungen"
 
+                            
                                 Try
                                     Call zeichneProjektTerminAenderungen(pptShape, hproj, bproj, lproj)
                                 Catch ex As Exception
@@ -1420,6 +1446,7 @@ Public Module testModule
                                 End Try
 
                             Case "Tabelle Projektstatus"
+
 
                                 Try
                                     Call zeichneProjektTabelleStatus(pptShape, hproj)
@@ -1429,6 +1456,10 @@ Public Module testModule
 
                             Case "Soll-Ist & Prognose"
 
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(235)
+                                End If
+
                                 If istWerteexistieren Then
                                 Else
                                     '.TextFrame2.TextRange.Text = "Prognose"
@@ -1436,6 +1467,11 @@ Public Module testModule
                                 End If
 
                             Case "Ergebnis"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(212)
+                                End If
+
 
 
                                 Try
@@ -1469,6 +1505,11 @@ Public Module testModule
 
                             Case "Strategie/Risiko"
 
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(234)
+                                End If
+
+
                                 Dim mycollection As New Collection
 
                                 'deleteStack.Add(.Name, .Name)
@@ -1482,6 +1523,11 @@ Public Module testModule
                                 End Try
 
                             Case "Strategie/Risiko/Ausstrahlung"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(214)
+                                End If
+
 
                                 Dim mycollection As New Collection
 
@@ -1497,6 +1543,11 @@ Public Module testModule
 
 
                             Case "Personalbedarf"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(159)
+                                End If
+
 
                                 Try
                                     auswahl = 1
@@ -1514,11 +1565,16 @@ Public Module testModule
                                     reportObj = obj
                                     notYetDone = True
                                 Catch ex As Exception
-                                    .TextFrame2.TextRange.Text = "Personal-Bedarf ist Null"
+                                    .TextFrame2.TextRange.Text = repMessages.getmsg(233)
                                 End Try
 
 
                             Case "Personalkosten"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(164)
+                                End If
+
 
                                 Try
                                     auswahl = 2
@@ -1546,7 +1602,9 @@ Public Module testModule
 
                             Case "Sonstige Kosten"
 
-
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(165)
+                                End If
 
                                 Try
                                     auswahl = 1
@@ -1577,6 +1635,11 @@ Public Module testModule
 
                             Case "Gesamtkosten"
 
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(166)
+                                End If
+
+
                                 'htop = 100
                                 'hleft = 100
                                 'hwidth = boxWidth * 14
@@ -1596,6 +1659,10 @@ Public Module testModule
 
                             Case "Trend Strategischer Fit/Risiko"
 
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(232)
+                                End If
+
                                 Dim nrSnapshots As Integer = projekthistorie.Count
 
                                 If nrSnapshots > 0 Then
@@ -1613,6 +1680,10 @@ Public Module testModule
 
 
                             Case "Trend Kennzahlen"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(231)
+                                End If
 
                                 Dim nrSnapshots As Integer = projekthistorie.Count
 
@@ -1633,6 +1704,10 @@ Public Module testModule
                                 End If
 
                             Case "Fortschritt Personalkosten"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(205)
+                                End If
 
                                 Dim nrSnapshots As Integer = projekthistorie.Count
                                 Dim PListe As New Collection
@@ -1674,6 +1749,10 @@ Public Module testModule
                                 End If
 
                             Case "Fortschritt Sonstige Kosten"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(206)
+                                End If
                                 Dim nrSnapshots As Integer = projekthistorie.Count
                                 Dim PListe As New Collection
                                 compareToID = 1
@@ -1713,6 +1792,10 @@ Public Module testModule
                                 End If
 
                             Case "Fortschritt Gesamtkosten"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(207)
+                                End If
                                 Dim nrSnapshots As Integer = projekthistorie.Count
                                 Dim PListe As New Collection
                                 compareToID = 1
@@ -1919,7 +2002,8 @@ Public Module testModule
                                     reportObj = Nothing
                                     Call createSollIstOfProject(hproj, reportObj, Date.Now, 2, qualifier, vglBaseline, htop, hleft, hheight, hwidth)
 
-                                    boxName = "Sonstige Kosten" & ke
+                                    'boxName = "Sonstige Kosten" & ke
+                                    boxName = repMessages.getmsg(165) & ke
                                     notYetDone = True
                                 Catch ex As Exception
                                     .TextFrame2.TextRange.Text = "Soll-Ist Sonstige Kosten nicht möglich ..."
@@ -2204,6 +2288,10 @@ Public Module testModule
 
                             Case "Ampel-Farbe"
 
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(230)
+                                End If
+
                                 Select Case hproj.ampelStatus
                                     Case 0
                                         .Fill.ForeColor.RGB = CInt(awinSettings.AmpelNichtBewertet)
@@ -2217,21 +2305,45 @@ Public Module testModule
                                 End Select
 
                             Case "Ampel-Text"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(225)
+                                End If
                                 .TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
 
                             Case "Business-Unit:"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(226)
+                                End If
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.businessUnit
 
                             Case "Beschreibung"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(227)
+                                End If
                                 .TextFrame2.TextRange.Text = hproj.description
 
                             Case "Stand:"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(223)
+                                End If
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.timeStamp.ToShortDateString
 
                             Case "Laufzeit:"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(228)
+                                End If
                                 .TextFrame2.TextRange.Text = boxName & " " & textZeitraum(hproj.Start, hproj.Start + hproj.anzahlRasterElemente - 1)
 
                             Case "Verantwortlich:"
+
+                                If boxName = kennzeichnung Then
+                                    boxName = repMessages.getmsg(229)
+                                End If
                                 .TextFrame2.TextRange.Text = boxName & " " & hproj.leadPerson
                             Case Else
                         End Select
@@ -3117,6 +3229,10 @@ Public Module testModule
                             Dim compareToID As Integer = 1
                             Dim auswahl As Integer = 1
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(205)
+                            End If
+
                             Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
 
@@ -3124,6 +3240,10 @@ Public Module testModule
 
                             Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
                             Dim auswahl As Integer = 2 ' Sonstige Kosten 
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(206)
+                            End If
 
                             Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
@@ -3133,6 +3253,10 @@ Public Module testModule
                             Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
                             Dim auswahl As Integer = 3 ' Gesamt Kosten 
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(207)
+                            End If
+
                             Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
 
@@ -3140,6 +3264,10 @@ Public Module testModule
 
                             Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
                             Dim auswahl As Integer = 4 ' Rolle ; in qualifier steht welche Rolle  
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(208)
+                            End If
 
                             Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
@@ -3149,11 +3277,19 @@ Public Module testModule
                             Dim compareToID As Integer = 1 ' Vergleich mit Beauftragung
                             Dim auswahl As Integer = 5 ' Kostenart ; in qualifier steht welche Kostenart  
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(209)
+                            End If
+
                             Call zeichneFortschrittDiagramm(boxName, compareToID, auswahl, qualifier, pptShape, reportObj, notYetDone)
 
 
                         Case "Ergebnis Verbesserungspotential"
 
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(210)
+                            End If
 
                             boxName = boxName & " (T€)"
                             pptSize = .TextFrame2.TextRange.Font.Size
@@ -3192,6 +3328,11 @@ Public Module testModule
 
                         Case "Übersicht Budget"
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(211)
+                            End If
+
+
                             boxName = boxName & " (T€)"
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -3228,6 +3369,11 @@ Public Module testModule
                             End Try
 
                         Case "Ergebnis"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(212)
+                            End If
+
 
                             boxName = boxName & " (T€)"
                             pptSize = .TextFrame2.TextRange.Font.Size
@@ -3266,6 +3412,10 @@ Public Module testModule
 
 
                         Case "Strategie/Risiko/Marge"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(213)
+                            End If
 
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -3317,6 +3467,11 @@ Public Module testModule
                             End Try
 
                         Case "Strategie/Risiko/Ausstrahlung"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(214)
+                            End If
+
 
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -3414,6 +3569,11 @@ Public Module testModule
 
                         Case "Zeit/Risiko/Volumen"
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(215)
+                            End If
+
+
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
 
@@ -3433,7 +3593,7 @@ Public Module testModule
                             'Call awinCreateZeitRiskVolumeDiagramm(myCollection, obj, False, False, True, True, htop, hleft, hwidth, hheight)
 
                             reportObj = obj
-                            '?????
+
                             With reportObj
                                 .Chart.ChartTitle.Text = boxName
                                 .Chart.ChartTitle.Font.Size = pptSize
@@ -3460,6 +3620,11 @@ Public Module testModule
 
 
                         Case "Übersicht Besser/Schlechter"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(216)
+                            End If
+
 
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -3574,7 +3739,11 @@ Public Module testModule
 
                         Case "Übersicht Auslastung"
 
-                            boxName = boxName & " (PT)"
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(217)
+                            End If
+
+                            boxName = boxName & repMessages.getmsg(218)
 
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -3614,7 +3783,12 @@ Public Module testModule
 
                         Case "Details Unterauslastung"
 
-                            boxName = boxName & " (PT)"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(219)
+                            End If
+
+                            boxName = boxName & repMessages.getmsg(218)
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
 
@@ -3654,7 +3828,12 @@ Public Module testModule
 
                         Case "Details Überauslastung"
 
-                            boxName = boxName & " (PT)"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(220)
+                            End If
+
+                            boxName = boxName & repMessages.getmsg(218)
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
 
@@ -3694,6 +3873,12 @@ Public Module testModule
 
 
                         Case "Bisherige Zielerreichung"
+
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(221)
+                            End If
+
 
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
@@ -3745,6 +3930,11 @@ Public Module testModule
 
                         Case "Prognose Zielerreichung"
 
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(222)
+                            End If
+
                             pptSize = .TextFrame2.TextRange.Font.Size
                             .TextFrame2.TextRange.Text = " "
 
@@ -3793,6 +3983,10 @@ Public Module testModule
 
 
                         Case "Phase"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(110)
+                            End If
 
 
                             myCollection.Clear()
@@ -3856,6 +4050,11 @@ Public Module testModule
 
                         Case "Meilenstein"
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(121)
+                            End If
+
+
                             myCollection.Clear()
                             myCollection = buildNameCollection(PTpfdk.Meilenstein, qualifier, selectedMilestones)
 
@@ -3913,6 +4112,9 @@ Public Module testModule
 
                         Case "Rolle"
 
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(200)
+                            End If
 
                             myCollection.Clear()
                             myCollection = buildNameCollection(PTpfdk.Rollen, qualifier, selectedRoles)
@@ -3963,7 +4165,9 @@ Public Module testModule
 
                         Case "Kostenart"
 
-
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(203)
+                            End If
                             myCollection.Clear()
                             myCollection = buildNameCollection(PTpfdk.Kosten, qualifier, selectedCosts)
 
@@ -4012,10 +4216,18 @@ Public Module testModule
 
 
                         Case "Stand:"
-                            .TextFrame2.TextRange.Text = Date.Now.ToString("d")
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(223)
+                            End If
+                            .TextFrame2.TextRange.Text = Date.Now.ToString("d", repCult)
 
 
                         Case "Zeitraum:"
+
+                            If boxName = kennzeichnung Then
+                                boxName = repMessages.getmsg(224)
+                            End If
                             .TextFrame2.TextRange.Text = textZeitraum(showRangeLeft, showRangeRight)
 
                         Case Else
@@ -5463,7 +5675,8 @@ Public Module testModule
                     .Fill.ForeColor.RGB = tmpBU.color
                 End With
                 ' jetzt den Business Unit Name eintragen 
-                CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie " & tmpBU.name
+                'CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = "Produktlinie " & tmpBU.name
+                CType(tabelle.Cell(curZeile, curSpalte + 2), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(240) & tmpBU.name
 
                 curSpalte = curSpalte + 3
                 If curSpalte > anzSpalten Then
@@ -5800,7 +6013,7 @@ Public Module testModule
         For m As Integer = showRangeLeft To showRangeRight
             With tabelle
                 CType(.Cell(neededZeilen, m - showRangeLeft + 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
-                            startDate.AddMonths(m).ToString("MMM yy")
+                            startDate.AddMonths(m).ToString("MMM yy", repCult)
             End With
         Next m
 
@@ -10578,7 +10791,7 @@ Public Module testModule
                     If currentProjektIndex > 1 And lastProjectName = hproj.name Then
                         '.TextFrame2.TextRange.Text = "... " & hproj.variantName & " " & hproj.VorlagenName
                         ''.TextFrame2.TextRange.Text = "... " & hproj.variantName
-                        .TextFrame2.TextRange.Text = repMessages.getmsg(11) & hproj.variantName
+                        .TextFrame2.TextRange.Text = "... " & hproj.variantName
                     Else
                         '.TextFrame2.TextRange.Text = hproj.getShapeText & " " & hproj.VorlagenName
                         .TextFrame2.TextRange.Text = hproj.getShapeText

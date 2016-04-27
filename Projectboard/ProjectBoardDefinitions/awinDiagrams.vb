@@ -202,7 +202,7 @@ Public Module awinDiagrams
         startdate = StartofCalendar.AddMonths(diff)
 
         For m = von To bis
-            Xdatenreihe(m - von) = startdate.AddMonths(m).ToString("MMM yy")
+            Xdatenreihe(m - von) = startdate.AddMonths(m).ToString("MMM yy", repCult)
         Next m
 
 
@@ -1021,7 +1021,7 @@ Public Module awinDiagrams
 
 
         For m = von To bis
-            Xdatenreihe(m - von) = startdate.AddMonths(m).ToString("MMM yy")
+            Xdatenreihe(m - von) = startdate.AddMonths(m).ToString("MMM yy", repCult)
         Next m
 
         If myCollection.Count > 1 Then
@@ -3660,8 +3660,8 @@ Public Module awinDiagrams
         itemColor(1) = awinSettings.AmpelGelb
 
 
-        diagramTitle = summentitel5 & " (T€) " & vbLf & StartofCalendar.AddMonths(showRangeLeft - 1).ToString("MMM yy") & " - " & _
-                                                 StartofCalendar.AddMonths(showRangeRight - 1).ToString("MMM yy")
+        diagramTitle = summentitel5 & " (T€) " & vbLf & StartofCalendar.AddMonths(showRangeLeft - 1).ToString("MMM yy", repCult) & " - " & _
+                                                 StartofCalendar.AddMonths(showRangeRight - 1).ToString("MMM yy", repCult)
 
 
         Dim formerEE As Boolean = appInstance.EnableEvents

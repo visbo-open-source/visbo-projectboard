@@ -1,4 +1,5 @@
 ﻿Imports ProjectBoardDefinitions
+Imports System.Globalization
 Imports System.Collections.Generic
 Imports System.Math
 Imports Microsoft.Office.Interop.Excel
@@ -35,7 +36,8 @@ Public Module Module1
 
     'Definition der Klasse für die ReportMessages ( müssen in awinSettypen gelesen werden aus xml-File)
     Public repMessages As clsReportMessages
-
+   
+    
     'Definitionen zum Schreiben eines Logfiles
     Public xlsLogfile As Excel.Workbook = Nothing
     Public logmessage As String = ""
@@ -400,8 +402,12 @@ Public Module Module1
     ' englisch
     ' französisch
     ' spanisch
-    Public ReportLang(4) As String
+    Public ReportLang() As CultureInfo = {New CultureInfo("de-DE"), _
+                                         New CultureInfo("en-US"), _
+                                         New CultureInfo("fr-FR"), _
+                                         New CultureInfo("es-ES")}
 
+    Public repCult As CultureInfo
 
     '
     '

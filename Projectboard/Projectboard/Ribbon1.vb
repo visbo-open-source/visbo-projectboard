@@ -4565,7 +4565,7 @@ Imports System.Windows
         Dim hproj As clsProjekt
         Dim awinSelection As Excel.ShapeRange
         Dim top As Double, left As Double, width As Double, height As Double
-        Dim reportObj As Excel.ChartObject
+        Dim reportobj As Excel.ChartObject
         Dim heute As Date = Date.Now
         Dim vglName As String = " "
         Dim pName As String = ";"
@@ -8177,6 +8177,25 @@ Imports System.Windows
 
 
     End Sub
+
+
+    Public Sub PTSpracheinstellung(control As IRibbonControl)
+
+        Call projektTafelInit()
+
+        enableOnUpdate = False
+        appInstance.EnableEvents = True
+
+        Dim frmReportSprache As New frmSelectRepSprache
+        Dim returnValue As DialogResult
+        returnValue = frmReportSprache.ShowDialog
+
+
+        enableOnUpdate = True
+
+
+    End Sub
+
 
 
 #End Region

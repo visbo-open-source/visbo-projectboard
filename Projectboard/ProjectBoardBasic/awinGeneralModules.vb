@@ -17,6 +17,8 @@ Imports System.Xml
 Imports System.Xml.Serialization
 Imports System.IO
 Imports System.Drawing
+Imports System.Globalization
+
 Imports Microsoft.VisualBasic
 Imports ProjectBoardBasic
 Imports System.Security.Principal
@@ -787,11 +789,11 @@ Public Module awinGeneralModules
         ProjektStatus(3) = "beendet" ' ein Projekt wurde in seinem Verlauf beendet, ohne es plangemäß abzuschliessen
         ProjektStatus(4) = "abgeschlossen"
 
-        ReportLang(PTSprache.deutsch) = "de"
-        ReportLang(PTSprache.englisch) = "en"
-        ReportLang(PTSprache.französisch) = "fr"
-        ReportLang(PTSprache.spanisch) = "es"
-
+        ''ReportLang(PTSprache.deutsch) = "de"
+        ''ReportLang(PTSprache.englisch) = "en"
+        ''ReportLang(PTSprache.französisch) = "fr"
+        ''ReportLang(PTSprache.spanisch) = "es"
+        
 
         DiagrammTypen(0) = "Phase"
         DiagrammTypen(1) = "Rolle"
@@ -802,63 +804,73 @@ Public Module awinGeneralModules
         DiagrammTypen(6) = "Meilenstein Trendanalyse"
 
         Try
-            repMessages = XMLImportReportMsg(repMsgFileName, ReportLang(PTSprache.deutsch))
-       
+            repCult = CultureInfo.CurrentCulture
+            ''repCult = ReportLang(PTSprache.englisch)
 
-        'ergebnisChartName(0) = "Earned Value"
-        'ergebnisChartName(1) = "Earned Value - gewichtet"
-        'ergebnisChartName(2) = "Verbesserungs-Potential"
-        'ergebnisChartName(3) = "Risiko-Abschlag"
+            repMessages = XMLImportReportMsg(repMsgFileName, repCult.Name)
 
-        ergebnisChartName(0) = repMessages.getmsg(54)
-        ergebnisChartName(1) = repMessages.getmsg(55)
-        ergebnisChartName(2) = repMessages.getmsg(56)
-        ergebnisChartName(3) = repMessages.getmsg(57)
 
-        ReDim portfolioDiagrammtitel(21)
-        'portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
-        'portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
-        'portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
-        'portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
-        'portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
-        'portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
-        'portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
-        'portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
-        'portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
-        'portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
-        'portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
-        'portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
-        'portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
-        'portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
-        'portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
-        'portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
-        'portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
-        'portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
-        'portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
-        'portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
-        'portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = "strategischer Fit, Risiko & Ausstrahlung"
 
-        portfolioDiagrammtitel(PTpfdk.Phasen) = repMessages.getmsg(58)
-        portfolioDiagrammtitel(PTpfdk.Rollen) = repMessages.getmsg(59)
-        portfolioDiagrammtitel(PTpfdk.Kosten) = repMessages.getmsg(60)
-        portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
-        portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
-        portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
-        portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
-        portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
-        portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
-        portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
-        portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = repMessages.getmsg(61)
-        portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = repMessages.getmsg(62)
-        portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
-        portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
-        portfolioDiagrammtitel(PTpfdk.Meilenstein) = repMessages.getmsg(63)
-        portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = repMessages.getmsg(64)
-        portfolioDiagrammtitel(PTpfdk.Dependencies) = repMessages.getmsg(65)
-        portfolioDiagrammtitel(PTpfdk.betterWorseL) = repMessages.getmsg(66)
-        portfolioDiagrammtitel(PTpfdk.betterWorseB) = repMessages.getmsg(67)
-        portfolioDiagrammtitel(PTpfdk.Budget) = repMessages.getmsg(69)
-        portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = repMessages.getmsg(69)
+            ' ''Dim Datum As Date = DateAdd(DateInterval.Month, 6, Date.Now)
+            ' ''Dim hstr As String = Datum.ToString("MMM yy", repCult)
+
+
+
+            'ergebnisChartName(0) = "Earned Value"
+            'ergebnisChartName(1) = "Earned Value - gewichtet"
+            'ergebnisChartName(2) = "Verbesserungs-Potential"
+            'ergebnisChartName(3) = "Risiko-Abschlag"
+
+            ergebnisChartName(0) = repMessages.getmsg(54)
+            'Call MsgBox(ergebnisChartName(0))
+            ergebnisChartName(1) = repMessages.getmsg(55)
+            ergebnisChartName(2) = repMessages.getmsg(56)
+            ergebnisChartName(3) = repMessages.getmsg(57)
+
+            ReDim portfolioDiagrammtitel(21)
+            'portfolioDiagrammtitel(PTpfdk.Phasen) = "Phasen - Übersicht"
+            'portfolioDiagrammtitel(PTpfdk.Rollen) = "Rollen - Übersicht"
+            'portfolioDiagrammtitel(PTpfdk.Kosten) = "Kosten - Übersicht"
+            'portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
+            'portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
+            'portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
+            'portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
+            'portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
+            'portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
+            'portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
+            'portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = "Komplexität, Risiko und Volumen"
+            'portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = "Zeit, Risiko und Volumen"
+            'portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
+            'portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
+            'portfolioDiagrammtitel(PTpfdk.Meilenstein) = "Meilenstein - Übersicht"
+            'portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = "strategischer Fit, Risiko & Volumen"
+            'portfolioDiagrammtitel(PTpfdk.Dependencies) = "Abhängigkeiten: Aktive bzw passive Beeinflussung"
+            'portfolioDiagrammtitel(PTpfdk.betterWorseL) = "Abweichungen zum letztem Stand"
+            'portfolioDiagrammtitel(PTpfdk.betterWorseB) = "Abweichungen zur Beauftragung"
+            'portfolioDiagrammtitel(PTpfdk.Budget) = "Budget Übersicht"
+            'portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = "strategischer Fit, Risiko & Ausstrahlung"
+
+            portfolioDiagrammtitel(PTpfdk.Phasen) = repMessages.getmsg(58)
+            portfolioDiagrammtitel(PTpfdk.Rollen) = repMessages.getmsg(59)
+            portfolioDiagrammtitel(PTpfdk.Kosten) = repMessages.getmsg(60)
+            portfolioDiagrammtitel(PTpfdk.ErgebnisWasserfall) = summentitel1
+            portfolioDiagrammtitel(PTpfdk.FitRisiko) = summentitel2
+            portfolioDiagrammtitel(PTpfdk.Auslastung) = summentitel9
+            portfolioDiagrammtitel(PTpfdk.UeberAuslastung) = summentitel10
+            portfolioDiagrammtitel(PTpfdk.Unterauslastung) = summentitel11
+            portfolioDiagrammtitel(PTpfdk.ZieleV) = summentitel6
+            portfolioDiagrammtitel(PTpfdk.ZieleF) = summentitel7
+            portfolioDiagrammtitel(PTpfdk.ComplexRisiko) = repMessages.getmsg(61)
+            portfolioDiagrammtitel(PTpfdk.ZeitRisiko) = repMessages.getmsg(62)
+            portfolioDiagrammtitel(PTpfdk.AmpelFarbe) = ""
+            portfolioDiagrammtitel(PTpfdk.ProjektFarbe) = ""
+            portfolioDiagrammtitel(PTpfdk.Meilenstein) = repMessages.getmsg(63)
+            portfolioDiagrammtitel(PTpfdk.FitRisikoVol) = repMessages.getmsg(64)
+            portfolioDiagrammtitel(PTpfdk.Dependencies) = repMessages.getmsg(65)
+            portfolioDiagrammtitel(PTpfdk.betterWorseL) = repMessages.getmsg(66)
+            portfolioDiagrammtitel(PTpfdk.betterWorseB) = repMessages.getmsg(67)
+            portfolioDiagrammtitel(PTpfdk.Budget) = repMessages.getmsg(69)
+            portfolioDiagrammtitel(PTpfdk.FitRisikoDependency) = repMessages.getmsg(69)
 
         Catch ex As Exception
 

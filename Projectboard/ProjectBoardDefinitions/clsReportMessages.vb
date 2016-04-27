@@ -20,9 +20,24 @@ Public Class clsReportMessages
     Public ReadOnly Property getmsg(ByVal nr As Integer) As String
 
         Get
-
+            Dim hstr() As String
+            Dim hmsg As String
+            Dim ergmsg As String = ""
+            Dim i As Integer = 0
             If nr > 0 And _allReportMsg.Count > nr Then
-                getmsg = _allReportMsg.Item(nr)
+
+                hmsg = _allReportMsg.Item(nr)
+                hstr = Split(hmsg, "& vblf &", -1)
+                While i < hstr.Length
+                    If i = 0 Then
+                        ergmsg = hstr(i)
+                    Else
+                        ergmsg = ergmsg & vbLf & hstr(i)
+                    End If
+                    i = i + 1
+                End While
+
+                getmsg = ergmsg
             Else
                 getmsg = ""
             End If
