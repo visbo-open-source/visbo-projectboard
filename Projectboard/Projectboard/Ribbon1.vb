@@ -2785,7 +2785,7 @@ Imports System.Windows
 
 
         
-        'Schließen des LogFiles
+        'Schließen des LogFilesTom2G4M2ImportMSProject
         Call logfileSchliessen()
 
         enableOnUpdate = True

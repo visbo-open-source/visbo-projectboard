@@ -64,8 +64,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\Engineering Demo 201"& _ 
-        "6\")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("C:\Users\tom\Documents\TJKS\Sales und Marketing\Demo Systeme\Perlen\")>  _
     Public ReadOnly Property awinPath() As String
         Get
             Return CType(Me("awinPath"),String)
@@ -74,7 +73,7 @@ Partial Public NotInheritable Class MySettings
     
     <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("EngineeringDemo")>  _
+     Global.System.Configuration.DefaultSettingValueAttribute("Perlen")>  _
     Public ReadOnly Property mongoDBname() As String
         Get
             Return CType(Me("mongoDBname"),String)
@@ -99,28 +98,22 @@ Partial Public NotInheritable Class MySettings
         End Get
     End Property
     
-    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Abbreviation")>  _
-    Public Property VISBOAbbreviation() As String
+     Global.System.Configuration.DefaultSettingValueAttribute("VISBO Alias")>  _
+    Public ReadOnly Property VISBOAbbreviation() As String
         Get
             Return CType(Me("VISBOAbbreviation"),String)
         End Get
-        Set
-            Me("VISBOAbbreviation") = value
-        End Set
     End Property
     
-    <Global.System.Configuration.UserScopedSettingAttribute(),  _
+    <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Configuration.DefaultSettingValueAttribute("VISBO Ampel")>  _
-    Public Property VISBOAmpel() As String
+    Public ReadOnly Property VISBOAmpel() As String
         Get
             Return CType(Me("VISBOAmpel"),String)
         End Get
-        Set
-            Me("VISBOAmpel") = value
-        End Set
     End Property
 End Class
 

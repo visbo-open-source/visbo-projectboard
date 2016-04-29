@@ -1440,7 +1440,8 @@ Public Class clsPhase
     ''' <param name="corrFakt"></param>
     ''' <param name="newValues"></param>
     ''' <remarks></remarks>
-    Public Sub berechneBedarfe(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, ByVal corrFakt As Double, ByRef newValues() As Double)
+    Public Sub berechneBedarfe(ByVal startdate As Date, ByVal endedate As Date, ByVal oldXwerte() As Double, _
+                               ByVal corrFakt As Double, ByRef newValues() As Double)
         Dim k As Integer
         Dim newXwerte() As Double
         Dim gesBedarf As Double
@@ -1496,28 +1497,38 @@ Public Class clsPhase
 
             Else
 
-
+                Dim tmpSum As Double = 0
                 For k = 0 To newXwerte.Length - 1
 
                     If k = 0 Then
                         ' damit ist 00:00 des Startdates gemeint 
                         hDatum = startdate
-                        anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
-                        anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
+
+                        anzDaysthisMonth = DateDiff(DateInterval.Day, hDatum, hDatum.AddDays(-1 * hDatum.Day + 1).AddMonths(1))
+
+                        'anzDaysthisMonth = DateDiff("d", hDatum, DateSerial(hDatum.Year, hDatum.Month + 1, hDatum.Day))
+                        'anzDaysthisMonth = anzDaysthisMonth - DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum) - 1
 
                     ElseIf k = newXwerte.Length - 1 Then
                         ' damit hDatum das End-Datum um 23.00 Uhr
-                        hDatum = endedate.AddHours(23)
-                        anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
+
+                        anzDaysthisMonth = endedate.Day
+                        'hDatum = endedate.AddHours(23)
+                        'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month, 1), hDatum)
 
                     Else
                         hDatum = startdate
-                        anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
+                        anzDaysthisMonth = DateDiff(DateInterval.Day, startdate.AddMonths(k), startdate.AddMonths(k + 1))
+                        'anzDaysthisMonth = DateDiff("d", DateSerial(hDatum.Year, hDatum.Month + k, hDatum.Day), DateSerial(hDatum.Year, hDatum.Month + k + 1, hDatum.Day))
                     End If
 
                     newXwerte(k) = System.Math.Round(anzDaysthisMonth / (Me.dauerInDays * corrFakt) * gesBedarf)
-
+                    tmpSum = tmpSum + anzDaysthisMonth
                 Next k
+
+                ' Kontrolle für Test ... aChck muss immer Null sein !
+                'Dim aChck As Double = Me.dauerInDays - tmpSum
+
 
                 ' Rest wird auf alle newXwerte verteilt
 
