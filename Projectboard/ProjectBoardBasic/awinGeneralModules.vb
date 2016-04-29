@@ -1502,7 +1502,9 @@ Public Module awinGeneralModules
                 Dim anzZeilen As Integer = rolesRange.Rows.Count
                 Dim c As Excel.Range
 
+
                 For i = 2 To anzZeilen - 1
+
                     c = CType(rolesRange.Cells(i, 1), Excel.Range)
 
                     If CStr(c.Value) <> "" Then

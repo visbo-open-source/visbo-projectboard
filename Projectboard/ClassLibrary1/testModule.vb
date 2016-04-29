@@ -1440,6 +1440,10 @@ Public Module testModule
 
                             
                                 Try
+
+
+
+                                    ' Für englische Version muss Template auf Englisch sein
                                     Call zeichneProjektTerminAenderungen(pptShape, hproj, bproj, lproj)
                                 Catch ex As Exception
 
@@ -6807,6 +6811,8 @@ Public Module testModule
 
                             Case "Ergebnis"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(212)
+
                                 aktvalue = aktErgebnis
                                 vglValue = vglErgebnis
 
@@ -6834,6 +6840,8 @@ Public Module testModule
 
 
                             Case "Budget"
+
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(173)
 
                                 aktvalue = aktBudget
                                 vglValue = vglBudget
@@ -6863,6 +6871,8 @@ Public Module testModule
 
                             Case "Personalkosten"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(164)
+
                                 aktvalue = aktPersCost
                                 vglValue = vglPersCost
 
@@ -6891,6 +6901,8 @@ Public Module testModule
 
                             Case "Sonstige Kosten"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(165)
+
                                 aktvalue = aktSonstCost
                                 vglValue = vglSonstCost
 
@@ -6918,6 +6930,8 @@ Public Module testModule
 
 
                             Case "Termine Phasen"
+
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(241)
 
 
                                 If IsNothing(vglproj) Then
@@ -6980,6 +6994,7 @@ Public Module testModule
 
                             Case "Termine Meilensteine"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(242)
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7042,6 +7057,8 @@ Public Module testModule
 
                             Case "Einschätzung strategischer Fit"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(243)
+
                                 aktvalue = hproj.StrategicFit
                                 vglValue = vglproj.StrategicFit
 
@@ -7070,6 +7087,8 @@ Public Module testModule
 
                             Case "Einschätzung Risiko"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(244)
+
                                 aktvalue = hproj.Risiko
                                 vglValue = vglproj.Risiko
 
@@ -7097,6 +7116,8 @@ Public Module testModule
 
 
                             Case "Projekt-Ampel"
+
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(245)
 
                                 aktvalue = hproj.ampelStatus
                                 vglValue = vglproj.ampelStatus
@@ -7170,6 +7191,8 @@ Public Module testModule
 
 
                             Case "Projekt-Ampel Erläuterung"
+
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(246)
 
                                 CType(.Cell(zeile, 4), pptNS.Cell).Shape.TextFrame2.TextRange.Text = hproj.ampelErlaeuterung
                                 CType(.Cell(zeile, 3), pptNS.Cell).Shape.TextFrame2.TextRange.Text = vglproj.ampelErlaeuterung
@@ -7283,6 +7306,8 @@ Public Module testModule
 
                             Case "Gesamtkosten"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(166)
+
                                 aktvalue = aktPersCost + aktSonstCost
                                 vglValue = vglPersCost + aktSonstCost
 
@@ -7314,6 +7339,7 @@ Public Module testModule
 
                             Case "Termine"
 
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(247)
 
                                 If IsNothing(vglproj) Then
                                     Call zeichneTrendSymbol(pptslide, tabelle, zeile, 2, gleichShape, farbeNeutral)
@@ -7373,6 +7399,8 @@ Public Module testModule
 
 
                             Case "Erläuterung"
+
+                                CType(.Cell(zeile, 1), pptNS.Cell).Shape.TextFrame2.TextRange.Text = repMessages.getmsg(248)
 
                                 aktvalue = hproj.ampelStatus
                                 vglValue = vglproj.ampelStatus
