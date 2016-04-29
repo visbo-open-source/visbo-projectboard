@@ -4,7 +4,12 @@
     Public variantName As String
     Public Risiko As Double
     Public StrategicFit As Double
-    
+
+    ' Änderung tk: die CustomFields ergänzt ...
+    Public customDblFields As SortedList(Of String, Double)
+    Public customStringFields As SortedList(Of String, String)
+    Public customBoolFields As SortedList(Of String, Boolean)
+
     Public Erloes As Double
     Public leadPerson As String
     Public tfSpalte As Integer
@@ -93,6 +98,18 @@
                 AllPhases.Add(newPhase)
             Next
 
+            ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
+            For Each kvp As KeyValuePair(Of String, String) In projekt.customStringFields
+                Me.customStringFields.Add(kvp.Key, kvp.Value)
+            Next
+
+            For Each kvp As KeyValuePair(Of String, Double) In projekt.customDblFields
+                Me.customDblFields.Add(kvp.Key, kvp.Value)
+            Next
+
+            For Each kvp As KeyValuePair(Of String, Boolean) In projekt.customBoolFields
+                Me.customBoolFields.Add(kvp.Key, kvp.Value)
+            Next
 
 
         End With
@@ -178,7 +195,28 @@
             Next
 
 
+            ' jetzt werden die CustomFields rausgeschrieben, so fern es welche gibt ... 
 
+            If Not IsNothing(Me.customStringFields) Then
+                For Each kvp As KeyValuePair(Of String, String) In Me.customStringFields
+                    projekt.customStringFields.Add(kvp.Key, kvp.Value)
+                Next
+            End If
+            
+
+            If Not IsNothing(Me.customDblFields) Then
+                For Each kvp As KeyValuePair(Of String, Double) In Me.customDblFields
+                    projekt.customDblFields.Add(kvp.Key, kvp.Value)
+                Next
+            End If
+            
+
+            If Not IsNothing(Me.customBoolFields) Then
+                For Each kvp As KeyValuePair(Of String, Boolean) In Me.customBoolFields
+                    projekt.customBoolFields.Add(kvp.Key, kvp.Value)
+                Next
+            End If
+            
 
         End With
 
@@ -775,6 +813,10 @@
 
         AllPhases = New List(Of clsPhaseDB)
         hierarchy = New clsHierarchyDB
+
+        customDblFields = New SortedList(Of String, Double)
+        customStringFields = New SortedList(Of String, String)
+        customBoolFields = New SortedList(Of String, Boolean)
 
     End Sub
 
