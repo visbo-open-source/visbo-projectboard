@@ -7213,7 +7213,8 @@ Public Module Projekte
     Public Sub erstelleInventurProjekt(ByRef hproj As clsProjekt, ByVal pname As String, ByVal vorlagenName As String, ByVal variantName As String, _
                                        ByVal startdate As Date, ByVal endedate As Date, _
                                        ByVal erloes As Double, ByVal tafelZeile As Integer, ByVal sfit As Double, ByVal risk As Double, _
-                                       ByVal volume As Double, ByVal complexity As Double, ByVal businessUnit As String, ByVal description As String)
+                                       ByVal capacityNeeded As String, ByVal businessUnit As String, ByVal description As String, _
+                                       Optional ByVal listOfCustomFields As Collection = Nothing)
 
         Dim newprojekt As Boolean
         Dim pStatus As String = ProjektStatus(1) ' jedes Projekt soll zu Beginn als beauftragtes Projekt importiert werden 
@@ -7254,18 +7255,6 @@ Public Module Projekte
                 .StrategicFit = sfit
                 .Risiko = risk
 
-                If Not IsNothing(volume) Then
-                    .volume = volume
-                Else
-                    .volume = 0.0
-                End If
-
-                If Not IsNothing(complexity) Then
-                    .complexity = complexity
-                Else
-                    .complexity = 0.0
-                End If
-
                 .businessUnit = businessUnit
                 .description = description
                 .tfZeile = tafelZeile
@@ -7276,6 +7265,123 @@ Public Module Projekte
             Throw New Exception("in erstelle InventurProjekte: " & ex.Message)
         End Try
 
+        '
+        ' wenn benötigte Kapas angegeben sind, dann müssen die jetzt der phase(1) zugewiesen werden 
+        '
+        If Not IsNothing(capacityNeeded) Then
+            If capacityNeeded.Trim.Length > 0 Then
+
+                Dim completeStr() As String = capacityNeeded.Split(New Char() {CType("#", Char)}, 100)
+                Dim rk As Integer = 0
+                Dim Xwerte() As Double
+                Dim oldXwerte() As Double
+
+                Dim cphase As clsPhase = hproj.getPhase(1)
+
+                ' jetzt die ganzen Rollen bzw. Kosten abarbeiten 
+                For i As Integer = 1 To completeStr.Length
+
+                    Dim roleCostStr() As String = completeStr(i - 1).Split(New Char() {CType(":", Char)}, 2)
+                    Dim isRole As Boolean = False
+                    Dim isCost As Boolean = False
+
+                    If roleCostStr.Length > 1 Then
+                        Try
+                            If RoleDefinitions.Contains(roleCostStr(0)) Then
+                                isRole = True
+                                rk = CInt(RoleDefinitions.getRoledef(roleCostStr(0)).UID)
+
+                            ElseIf CostDefinitions.Contains(roleCostStr(0)) Then
+                                isCost = True
+                                rk = CInt(CostDefinitions.getCostdef(roleCostStr(0)).UID)
+                            End If
+
+                            Dim summeBedarfe As Double = CDbl(roleCostStr(1))
+
+                            If summeBedarfe > 0.0 Then
+
+                                ReDim oldXwerte(0)
+                                oldXwerte(0) = summeBedarfe
+
+                                Dim anfang As Integer, ende As Integer
+
+                                With cphase
+
+                                    anfang = .relStart
+                                    ende = .relEnde
+                                    ReDim Xwerte(ende - anfang)
+
+                                    .berechneBedarfe(.getStartDate, .getEndDate, oldXwerte, 1, Xwerte)
+
+                                End With
+
+                                If isRole Then
+                                    Dim crole As New clsRolle(ende - anfang + 1)
+                                    With crole
+                                        .RollenTyp = rk
+                                        .Xwerte = Xwerte
+                                    End With
+
+                                    With cphase
+                                        .addRole(crole)
+                                    End With
+
+                                ElseIf isCost Then
+                                    Dim ccost As New clsKostenart(ende - anfang + 1)
+                                    With ccost
+                                        .KostenTyp = rk
+                                        .Xwerte = Xwerte
+                                    End With
+
+                                    With cphase
+                                        .AddCost(ccost)
+                                    End With
+
+                                End If
+
+                            End If
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+
+                Next
+
+            End If
+        End If
+
+        ' jetzt ggf die Custom Fields eintragen 
+        If Not IsNothing(listOfCustomFields) Then
+
+            If listOfCustomFields.Count > 0 Then
+
+                For Each cfObj As clsCustomField In listOfCustomFields
+
+                    Try
+                        Dim uniqueID As Integer = CInt(cfObj.uid)
+                        Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
+
+                        Select Case cfType
+
+                            Case ptCustomFields.Str
+                                hproj.addSetCustomSField(uniqueID, CStr(cfObj.wert))
+                            Case ptCustomFields.Dbl
+                                hproj.addSetCustomDField(uniqueID, CDbl(cfObj.wert))
+                            Case ptCustomFields.bool
+                                hproj.addSetCustomBField(uniqueID, CBool(cfObj.wert))
+                            Case Else
+
+                        End Select
+                    Catch ex As Exception
+
+                    End Try
+                    
+                Next
+
+            End If
+
+        End If
+        
 
 
         '

@@ -538,6 +538,7 @@ Public Module testModule
                     End Try
 
                     If kennzeichnung = "Projekt-Name" Or _
+                        kennzeichnung = "Custom-Field" Or _
                         kennzeichnung = "Soll-Ist & Prognose" Or _
                         kennzeichnung = "Multivariantensicht" Or _
                         kennzeichnung = "AllePlanElemente" Or _
@@ -702,6 +703,58 @@ Public Module testModule
                                     .TextFrame2.TextRange.Text = fullName & ": " & qualifier
                                 Else
                                     .TextFrame2.TextRange.Text = fullName
+                                End If
+
+                            Case "Custom-Field"
+                                If qualifier.Length > 0 Then
+                                    ' existiert der überhaupt 
+                                    Dim uid As Integer = customFieldDefinitions.getUid(qualifier)
+
+                                    If uid <> -1 Then
+                                        Dim cftype As Integer = customFieldDefinitions.getTyp(uid)
+
+                                        Select Case cftype
+                                            Case ptCustomFields.Str
+                                                Dim wert As String = hproj.getCustomSField(uid)
+                                                If Not IsNothing(wert) Then
+                                                    .TextFrame2.TextRange.Text = qualifier & ": " & wert
+                                                Else
+                                                    .TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                                End If
+
+                                            Case ptCustomFields.Dbl
+                                                Dim wert As Double = hproj.getCustomDField(uid)
+                                                If Not IsNothing(wert) Then
+                                                    .TextFrame2.TextRange.Text = qualifier & ": " & wert.ToString("#0.##")
+                                                Else
+                                                    .TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                                End If
+
+                                            Case ptCustomFields.bool
+                                                Dim wert As Boolean = hproj.getCustomBField(uid)
+
+                                                If Not IsNothing(wert) Then
+                                                    If wert Then
+                                                        ' Sprache !
+                                                        .TextFrame2.TextRange.Text = qualifier & ": Yes"
+                                                    Else
+                                                        ' Sprache !
+                                                        .TextFrame2.TextRange.Text = qualifier & ": No"
+                                                    End If
+
+                                                Else
+                                                    .TextFrame2.TextRange.Text = qualifier & " : n.a"
+                                                End If
+
+                                        End Select
+                                    Else
+                                        .TextFrame2.TextRange.Text = "Custom-Field " & qualifier & _
+                                            " existiert nicht !"
+                                    End If
+
+                                Else
+                                    ' n.a"
+                                    .TextFrame2.TextRange.Text = "Custom-Field ohne Namen.."
                                 End If
 
                             Case "Projekt-Grafik"

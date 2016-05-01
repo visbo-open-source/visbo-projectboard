@@ -92,7 +92,10 @@ Public Module Module1
 
     Public CostDefinitions As New clsKostenarten
     ' Welche Business-Units gibt es ? 
-    Public businessUnitDefinitions As SortedList(Of Integer, clsBusinessUnit)
+    Public businessUnitDefinitions As New SortedList(Of Integer, clsBusinessUnit)
+
+    ' welche CustomFields gibt es ? 
+    Public customFieldDefinitions As New clsCustomFieldDefinitions
 
     ' wird benötigt, um aufzusammeln und auszugeben, welche Phasen -, Meilenstein Namen  im CustomizationFile noch nicht enthalten sind. 
     Public missingPhaseDefinitions As New clsPhasen
@@ -155,6 +158,15 @@ Public Module Module1
     Public Const summentitel10 As String = "Details zur Über-Auslastung"
     Public Const summentitel11 As String = "Details zur Unter-Auslastung"
     Public Const maxProjektdauer As Integer = 60
+
+    ' welche Art von CustomFields gibt es 
+    ' kann später ggf erweitert werden auf StrArray, DblArray, etc
+    ' muss dann auch in clsProjektVorlage und clsCustomField angepasst werden  
+    Public Enum ptCustomFields
+        Str = 0
+        Dbl = 1
+        bool = 2
+    End Enum
 
 
     ' die NAmen für die RPLAN Spaltenüberschriften in Rplan Excel Exports 

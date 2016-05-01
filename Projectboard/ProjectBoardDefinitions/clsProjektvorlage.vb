@@ -20,9 +20,9 @@
 
     ' Hinzufügen von Custom Feldern beliebiger Anzahl 
     ' ein CustomFeld eines bestimmten Typs darf nur einmal vorkommen 
-    Private _customDblFields As SortedList(Of String, Double)
-    Private _customStringFields As SortedList(Of String, String)
-    Private _customBoolFields As SortedList(Of String, Boolean)
+    Private _customDblFields As SortedList(Of Integer, Double)
+    Private _customStringFields As SortedList(Of Integer, String)
+    Private _customBoolFields As SortedList(Of Integer, Boolean)
 
 
     ''' <summary>
@@ -31,11 +31,11 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property customDblFields As SortedList(Of String, Double)
+    Public ReadOnly Property customDblFields As SortedList(Of Integer, Double)
         Get
 
             If IsNothing(_customDblFields) Then
-                _customDblFields = New SortedList(Of String, Double)
+                _customDblFields = New SortedList(Of Integer, Double)
             End If
 
             customDblFields = _customDblFields
@@ -49,11 +49,11 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property customStringFields As SortedList(Of String, String)
+    Public ReadOnly Property customStringFields As SortedList(Of Integer, String)
         Get
 
             If IsNothing(_customStringFields) Then
-                _customStringFields = New SortedList(Of String, String)
+                _customStringFields = New SortedList(Of Integer, String)
             End If
 
             customStringFields = _customStringFields
@@ -67,11 +67,11 @@
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property customBoolFields As SortedList(Of String, Boolean)
+    Public ReadOnly Property customBoolFields As SortedList(Of Integer, Boolean)
         Get
 
             If IsNothing(_customBoolFields) Then
-                _customBoolFields = New SortedList(Of String, Boolean)
+                _customBoolFields = New SortedList(Of Integer, Boolean)
             End If
 
             customBoolFields = _customBoolFields
@@ -80,18 +80,39 @@
     End Property
 
     ''' <summary>
-    ''' gibt den Wert für das Double Custom-Field mit Namen key zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
+    ''' gibt den Wert für das Double Custom-Field mit Identifier UID zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
     ''' </summary>
-    ''' <param name="key"></param>
+    ''' <param name="uid"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getCustomDField(ByVal key As String) As Double
+    Public ReadOnly Property getCustomDField(ByVal uid As Integer) As Double
         Get
             Dim tmpValue As Double = Nothing
 
-            If _customDblFields.ContainsKey(key) Then
-                tmpValue = _customDblFields.Item(key)
+            If _customDblFields.ContainsKey(uid) Then
+                tmpValue = _customDblFields.Item(uid)
+            End If
+
+            getCustomDField = tmpValue
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Wert des Double Custom-Fields mit NAme cfName zurück; Nothing, wenn es nicht existiert 
+    ''' </summary>
+    ''' <param name="cfName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomDField(ByVal cfName As String) As Double
+        Get
+            Dim tmpValue As Double = Nothing
+            Dim uid As Integer = customFieldDefinitions.getUid(cfName, ptCustomFields.Dbl)
+
+            If _customDblFields.ContainsKey(uid) Then
+                tmpValue = _customDblFields.Item(uid)
             End If
 
             getCustomDField = tmpValue
@@ -101,55 +122,80 @@
 
     ''' <summary>
     ''' fügt der Liste an Double CustomFields ein neues hinzu
+    ''' wenn das CustomField gar nicht definiert ist: Exception
     ''' wenn das Feld schon existiert, dann wird der Wert aktualisiert
     ''' wenn Nothing als Wert übergeben wird, wird der Default 0.0  angenommen 
     ''' </summary>
-    ''' <param name="key"></param>
+    ''' <param name="uid"></param>
     ''' <param name="value"></param>
     ''' <remarks></remarks>
-    Public Sub addSetCustomDField(ByVal key As String, ByVal value As Double)
+    Public Sub addSetCustomDField(ByVal uid As Integer, ByVal value As Double)
+
+
+        ' wenn etwas schief geht, bleibt es auf false
+        Dim ok As Boolean = False
 
         If IsNothing(value) Then
             value = 0.0
         End If
 
-        Try
-            If IsNothing(key) Then
-                ' nichts tun
-            Else
-                If key.Trim = "" Then
-                    ' nichts tun
+        ' ist es überhaupt eine gültige uid?  
+        If customFieldDefinitions.contains(uid) Then
+            ' wenn es das Custom field in dem Projekt schon gibt 
+            If customFieldDefinitions.getDef(uid).type = ptCustomFields.Dbl Then
+                ' nur dann soll das gesetzt werden ...
+                ok = True
+                If _customDblFields.ContainsKey(uid) Then
+                    _customDblFields.Item(uid) = value
                 Else
-                    If _customDblFields.ContainsKey(key) Then
-                        _customDblFields.Item(key) = value
-                    Else
-                        _customDblFields.Add(key, value)
-                    End If
+                    _customDblFields.Add(uid, value)
                 End If
-
             End If
-        Catch ex As Exception
+        End If
 
-        End Try
-
+        If Not ok Then
+            Throw New ArgumentException("uid nicht bekannt oder hat falschen Typ (nicht Dbl):" & uid.ToString)
+        End If
 
 
     End Sub
 
 
     ''' <summary>
-    ''' gbt den Wert für das String Custom-Field mit  Namen key zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
+    ''' gibt den Wert für das String Custom-Field mit Identifier UID zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
     ''' </summary>
-    ''' <param name="key"></param>
+    ''' <param name="uid"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getCustomSField(ByVal key As String) As String
+    Public ReadOnly Property getCustomSField(ByVal uid As Integer) As String
         Get
             Dim tmpValue As String = Nothing
 
-            If _customStringFields.ContainsKey(key) Then
-                tmpValue = _customStringFields.Item(key)
+            If _customStringFields.ContainsKey(uid) Then
+                tmpValue = _customStringFields.Item(uid)
+            End If
+
+            getCustomSField = tmpValue
+
+        End Get
+    End Property
+
+    
+    ''' <summary>
+    ''' gibt den Wert des String Custom-Fields mit Name cfName zurück; Nothing, wenn es nicht existiert
+    ''' </summary>
+    ''' <param name="cfName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomSField(ByVal cfName As String) As String
+        Get
+            Dim tmpValue As String = Nothing
+            Dim uid As Integer = customFieldDefinitions.getUid(cfName, ptCustomFields.Str)
+
+            If _customStringFields.ContainsKey(UID) Then
+                tmpValue = _customStringFields.Item(UID)
             End If
 
             getCustomSField = tmpValue
@@ -162,51 +208,73 @@
     ''' wenn das Feld schon existiert, dann wird der Wert aktualisiert
     ''' wenn Nothing als Wert übergeben wird, wird der Default "?"  angenommen 
     ''' </summary>
-    ''' <param name="key"></param>
+    ''' <param name="uid"></param>
     ''' <param name="value"></param>
     ''' <remarks></remarks>
-    Public Sub addSetCustomSField(ByVal key As String, ByVal value As String)
+    Public Sub addSetCustomSField(ByVal uid As Integer, ByVal value As String)
+
+        ' wenn etwas schief geht, bleibt es auf false
+        Dim ok As Boolean = False
 
         If IsNothing(value) Then
-            value = "?"
+            value = ""
         End If
 
-        Try
-            If IsNothing(key) Then
-                ' nichts tun
-            Else
-                If key.Trim = "" Then
-                    ' nichts tun
+        ' ist es überhaupt eine gültige uid?  
+        If customFieldDefinitions.contains(uid) Then
+            ' wenn es das Custom field in dem Projekt schon gibt 
+            If customFieldDefinitions.getDef(uid).type = ptCustomFields.Str Then
+                ' nur dann soll das gesetzt werden ...
+                ok = True
+                If _customStringFields.ContainsKey(uid) Then
+                    _customStringFields.Item(uid) = value
                 Else
-                    If _customStringFields.ContainsKey(key) Then
-                        _customStringFields.Item(key) = value
-                    Else
-                        _customStringFields.Add(key, value)
-                    End If
+                    _customStringFields.Add(uid, value)
                 End If
-
             End If
-        Catch ex As Exception
+        End If
 
-        End Try
-
-
+        If Not ok Then
+            Throw New ArgumentException("uid nicht bekannt oder hat falschen Typ (nicht String):" & uid.ToString)
+        End If
 
     End Sub
 
     ''' <summary>
     ''' gibt den Wert für das Bool Custom-Field mit  Namen key zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
     ''' </summary>
-    ''' <param name="key"></param>
+    ''' <param name="uid"></param>
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public ReadOnly Property getCustomBField(ByVal key As String) As Boolean
+    Public ReadOnly Property getCustomBField(ByVal uid As Integer) As Boolean
         Get
             Dim tmpValue As Boolean = Nothing
 
-            If _customBoolFields.ContainsKey(key) Then
-                tmpValue = _customBoolFields.Item(key)
+            If _customBoolFields.ContainsKey(uid) Then
+                tmpValue = _customBoolFields.Item(uid)
+            End If
+
+            getCustomBField = tmpValue
+
+        End Get
+    End Property
+
+
+    ''' <summary>
+    ''' gibt den Wert des Bool Custom-Fields mit NAme cfName zurück; Nothing, wenn es nicht existiert 
+    ''' </summary>
+    ''' <param name="cfName"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomBField(ByVal cfName As String) As Boolean
+        Get
+            Dim tmpValue As Boolean = Nothing
+            Dim uid As Integer = customFieldDefinitions.getUid(cfName, ptCustomFields.bool)
+
+            If _customBoolFields.ContainsKey(uid) Then
+                tmpValue = _customBoolFields.Item(uid)
             End If
 
             getCustomBField = tmpValue
@@ -216,37 +284,39 @@
 
     ''' <summary>
     ''' fügt der Liste an bool'schen CustomFields ein neues hinzu
+    ''' wenn das CustomField gar nicht definiert ist: Exception
     ''' wenn das Feld schon existiert, dann wird der Wert aktualisiert
     ''' wenn Nothing als Wert übergeben wird, wird der Default Wert false angenommen 
     ''' </summary>
-    ''' <param name="key"></param>
+    ''' <param name="uid"></param>
     ''' <param name="value"></param>
     ''' <remarks></remarks>
-    Public Sub addSetCustomBField(ByVal key As String, ByVal value As Boolean)
+    Public Sub addSetCustomBField(ByVal uid As Integer, ByVal value As Boolean)
+
+        ' wenn etwas schief geht, bleibt es auf false
+        Dim ok As Boolean = False
 
         If IsNothing(value) Then
             value = False
         End If
 
-        Try
-            If IsNothing(key) Then
-                ' nichts tun
-            Else
-                If key.Trim = "" Then
-                    ' nichts tun
+        ' ist es überhaupt eine gültige uid?  
+        If customFieldDefinitions.contains(uid) Then
+            ' wenn es das Custom field in dem Projekt schon gibt 
+            If customFieldDefinitions.getDef(uid).type = ptCustomFields.bool Then
+                ' nur dann soll das gesetzt werden ...
+                ok = True
+                If _customBoolFields.ContainsKey(uid) Then
+                    _customBoolFields.Item(uid) = value
                 Else
-                    If _customBoolFields.ContainsKey(key) Then
-                        _customBoolFields.Item(key) = value
-                    Else
-                        _customBoolFields.Add(key, value)
-                    End If
+                    _customBoolFields.Add(uid, value)
                 End If
-
             End If
-        Catch ex As Exception
+        End If
 
-        End Try
-
+        If Not ok Then
+            Throw New ArgumentException("uid nicht bekannt oder hat falschen Typ (nicht bool):" & uid.ToString)
+        End If
 
 
     End Sub
@@ -2935,9 +3005,9 @@
         Schriftfarbe = RGB(0, 0, 0)
 
         ' die CustomFields initialisieren 
-        _customDblFields = New SortedList(Of String, Double)
-        _customStringFields = New SortedList(Of String, String)
-        _customBoolFields = New SortedList(Of String, Boolean)
+        _customDblFields = New SortedList(Of Integer, Double)
+        _customStringFields = New SortedList(Of Integer, String)
+        _customBoolFields = New SortedList(Of Integer, Boolean)
 
 
     End Sub

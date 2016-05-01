@@ -37,10 +37,9 @@ Public Module awinGeneralModules
         Budget = 7
         Risiko = 8
         Strategie = 9
-        Volumen = 10
-        Komplexitaet = 11
-        Businessunit = 12
-        Beschreibung = 13
+        Kapazitaet = 10
+        Businessunit = 11
+        Beschreibung = 12
     End Enum
 
     Private Enum ptModuleSpalten
@@ -991,6 +990,14 @@ Public Module awinGeneralModules
                 ' Auslesen der Kosten Definitionen 
                 Call readCostDefinitions(wsName4)
 
+                ' Auslesen der Custom Field Definitions
+                Try
+                    Call readCustomFieldDefinitions(wsName4)
+                Catch ex As Exception
+
+                End Try
+
+
                 ' auslesen der anderen Informationen 
                 Call readOtherDefinitions(wsName4)
 
@@ -1506,6 +1513,86 @@ Public Module awinGeneralModules
 
 
     End Sub
+
+
+    ''' <summary>
+    ''' liest die optional vorhandenen Custom Field Definitionen aus 
+    ''' </summary>
+    ''' <param name="wsname"></param>
+    ''' <remarks></remarks>
+    Private Sub readCustomFieldDefinitions(wsname As Excel.Worksheet)
+
+        '
+        ' Custom Field Definitions Definitionen auslesen - im bereich awin_CustomField_Definitions
+        '
+
+        Try
+
+
+            With wsname
+
+                Dim customFieldRange As Excel.Range = .Range("awin_CustomField_Definitions")
+                Dim anzZeilen As Integer = customFieldRange.Rows.Count
+                Dim c As Excel.Range
+
+
+                For i = 2 To anzZeilen - 1
+                    c = CType(customFieldRange.Cells(i, 1), Excel.Range)
+
+                    Dim uid As Integer = i - 1
+                    Dim cfType As Integer = -1
+                    Dim cfName As String = ""
+                    Dim ok As Boolean = False
+                    Try
+                        cfName = CStr(CType(customFieldRange.Cells(i, 1), Excel.Range).Value)
+                        cfType = CInt(CType(customFieldRange.Cells(i, 2), Excel.Range).Value)
+                        ok = True
+                    Catch ex As Exception
+
+                    End Try
+
+                    If ok And cfName <> "" And isValidCustomField(cfType) Then
+
+                        ' jetzt die CustomField Definition hinzufügen 
+                        Try
+                            customFieldDefinitions.add(cfName, cfType, uid)
+                        Catch ex As Exception
+                            Call MsgBox(ex.Message)
+                        End Try
+
+
+                    End If
+
+                Next
+
+            End With
+
+        Catch ex As Exception
+            Throw New ArgumentException("Fehler im Customization-File: Custom Field Definitions")
+        End Try
+
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt zurück, ob die übergebene Zahl ein gültiger CustomField Typ ist
+    ''' </summary>
+    ''' <param name="id"></param>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Private Function isValidCustomField(ByVal id As Integer) As Boolean
+
+        If id = ptCustomFields.bool Or _
+            id = ptCustomFields.Str Or
+            id = ptCustomFields.Dbl Then
+            isValidCustomField = True
+        Else
+            isValidCustomField = False
+        End If
+
+    End Function
 
 
     ''' <summary>
@@ -3420,6 +3507,7 @@ Public Module awinGeneralModules
     Public Sub awinImportProjektInventur(ByRef myCollection As Collection)
         Dim zeile As Integer, spalte As Integer
         Dim pName As String = ""
+        Dim variantName As String = ""
         Dim vorlageName As String = ""
         Dim start As Date, inputStart As Date
         Dim startElem As String = ""
@@ -3428,10 +3516,17 @@ Public Module awinGeneralModules
         Dim budget As Double
         Dim dauer As Integer = 0
         Dim sfit As Double, risk As Double
-        Dim volume As Double, complexity As Double
+        Dim capacityNeeded As String = ""
+        'Dim volume As Double, complexity As Double
         Dim description As String = ""
         Dim businessUnit As String = ""
+
+        Dim custFields As New Collection
+        ' wieviele Spalten müssen mindesten drin sein ... also was ist der standard 
+        Dim nrOfStdColumns As Integer = 13
+
         Dim lastRow As Integer
+        Dim lastColumn As Integer
         'Dim startSpalte As Integer
         Dim vglName As String = ""
         Dim hproj As clsProjekt
@@ -3451,7 +3546,7 @@ Public Module awinGeneralModules
         Dim scenarioName As String = appInstance.ActiveWorkbook.Name
         Dim tmpName As String = ""
 
-        ' bestimme den Namen des Szenarios - das ist gleich der NAme der Excel Datei 
+        ' bestimme den Namen des Szenarios - das ist gleich der Name der Excel Datei 
         Dim positionIX As Integer = scenarioName.IndexOf(".xls") - 1
         tmpName = ""
         For ih As Integer = 0 To positionIX
@@ -3465,7 +3560,7 @@ Public Module awinGeneralModules
         spalte = 1
         geleseneProjekte = 0
 
-        Dim suchstr(13) As String
+        Dim suchstr(12) As String
         suchstr(ptInventurSpalten.Name) = "Name"
         suchstr(ptInventurSpalten.Vorlage) = "Vorlage"
         suchstr(ptInventurSpalten.Start) = "Start-Datum"
@@ -3476,14 +3571,14 @@ Public Module awinGeneralModules
         suchstr(ptInventurSpalten.Budget) = "Budget [T€]"
         suchstr(ptInventurSpalten.Risiko) = "Risiko"
         suchstr(ptInventurSpalten.Strategie) = "Strategie"
-        suchstr(ptInventurSpalten.Volumen) = "Volumen"
-        suchstr(ptInventurSpalten.Komplexitaet) = "Komplexität"
+        suchstr(ptInventurSpalten.Kapazitaet) = "benötigte Kapazität"
         suchstr(ptInventurSpalten.Businessunit) = "Business Unit"
         suchstr(ptInventurSpalten.Beschreibung) = "Beschreibung"
 
 
         Dim inputColumns(11) As Integer
 
+       
 
 
         Try
@@ -3502,7 +3597,10 @@ Public Module awinGeneralModules
 
                 End Try
 
-
+                'lastColumn = firstZeile.End(XlDirection.xlToLeft).Column
+                lastColumn = firstZeile.Columns.Count
+                lastColumn = CType(firstZeile, Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
+                lastColumn = CType(.Cells(1, 2000), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlToLeft).Column
                 lastRow = CType(.Cells(2000, 1), Global.Microsoft.Office.Interop.Excel.Range).End(XlDirection.xlUp).Row
 
                 While zeile <= lastRow
@@ -3511,6 +3609,18 @@ Public Module awinGeneralModules
                     Dim eMilestone As clsMeilenstein = Nothing
 
                     pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                    ' falls ein Varianten-Name mit angegeben wurde: pname#variantNAme 
+                    Try
+                        Dim tmpStr() As String = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value).Split(New Char() {CChar("#")}, 2)
+                        If tmpStr.Length > 1 Then
+                            pName = tmpStr(0)
+                            variantName = tmpStr(1).Trim
+                        End If
+                    Catch ex As Exception
+
+                    End Try
+
                     vorlageName = CStr(CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value)
 
                     If Projektvorlagen.Liste.ContainsKey(vorlageName) Then
@@ -3528,14 +3638,56 @@ Public Module awinGeneralModules
                             endElem = CStr(CType(.Cells(zeile, spalte + 5), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             dauer = CInt(CType(.Cells(zeile, spalte + 6), Global.Microsoft.Office.Interop.Excel.Range).Value)
                             budget = CDbl(CType(.Cells(zeile, spalte + 7), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            risk = CDbl(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            sfit = CDbl(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            volume = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            complexity = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            businessUnit = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            description = CStr(CType(.Cells(zeile, spalte + 13), Global.Microsoft.Office.Interop.Excel.Range).Value)
-                            'vglName = pName.Trim & "#" & ""
-                            vglName = calcProjektKey(pName.Trim, scenarioName)
+                            capacityNeeded = CStr(CType(.Cells(zeile, spalte + 8), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            risk = CDbl(CType(.Cells(zeile, spalte + 9), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            sfit = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                            'volume = CDbl(CType(.Cells(zeile, spalte + 10), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            'complexity = CDbl(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                            businessUnit = CStr(CType(.Cells(zeile, spalte + 11), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                            description = CStr(CType(.Cells(zeile, spalte + 12), Global.Microsoft.Office.Interop.Excel.Range).Value)
+
+                            If lastColumn > nrOfStdColumns Then
+                                ' es gibt evtl Custom fields 
+                                For i As Integer = nrOfStdColumns To lastColumn - 1
+
+                                    Try
+                                        Dim cfName As String = CStr(CType(.Cells(1, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                        Dim uniqueID As Integer = customFieldDefinitions.getUid(cfName)
+                                        
+                                        If uniqueID > 0 Then
+                                            ' es ist eine Custom Field
+
+                                            Dim cfType As Integer = customFieldDefinitions.getTyp(uniqueID)
+                                            Dim cfValue As Object = Nothing
+                                            Dim tstStr As String
+
+                                            Select Case cfType
+                                                Case ptCustomFields.Str
+                                                    cfValue = CStr(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                Case ptCustomFields.Dbl
+                                                    cfValue = CDbl(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                                Case ptCustomFields.bool
+                                                    cfValue = CBool(CType(.Cells(zeile, spalte + i), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                                            End Select
+
+                                            Dim cfObj As New clsCustomField
+                                            With cfObj
+                                                .uid = uniqueID
+                                                .wert = cfValue
+                                                tstStr = CStr(.wert)
+                                            End With
+                                            custFields.Add(cfObj)
+                                        End If
+                                    Catch ex As Exception
+
+                                    End Try
+
+                                Next
+                            End If
+
+                            vglName = calcProjektKey(pName.Trim, variantName)
                             inputStart = start
                             inputEnde = ende
 
@@ -3661,15 +3813,9 @@ Public Module awinGeneralModules
                             'Projekt anlegen ,Verschiebung um 
                             hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
 
-                            Dim variantName As String
-                            If scenarioName = "Init" Then
-                                variantName = ""
-                            Else
-                                variantName = scenarioName
-                            End If
                             Call erstelleInventurProjekt(hproj, pName, vorlageName, variantName, _
                                                          start, ende, budget, zeile, sfit, risk, _
-                                                         volume, complexity, businessUnit, description)
+                                                         capacityNeeded, businessUnit, description, custFields)
 
                             'prüfen ob Rundungsfehler bei Setzen Meilenstein passiert sind ... 
                             If Not IsNothing(sMilestone) Then
@@ -3711,7 +3857,7 @@ Public Module awinGeneralModules
 
             End With
         Catch ex As Exception
-            Throw New Exception("Fehler in Szenario-Datei")
+            Throw New Exception("Fehler in Szenario-Datei" & ex.Message)
         End Try
 
         ' jetzt noch ein Szenario anlegen, wenn ImportProjekte was enthält 
@@ -3938,9 +4084,10 @@ Public Module awinGeneralModules
                             'Projekt anlegen ,Verschiebung um 
                             hproj = New clsProjekt(start, start.AddMonths(-1), start.AddMonths(1))
 
+                            Dim capacityNeeded As String = ""
                             Call erstelleInventurProjekt(hproj, pName, vorlagenName, scenarioName, _
                                                          start, ende, budget, zeile, sfit, risk, _
-                                                         volume, complexity, businessUnit, description)
+                                                         capacityNeeded, businessUnit, description)
                             projectStartDate = start
                             projectEndDate = ende
 
