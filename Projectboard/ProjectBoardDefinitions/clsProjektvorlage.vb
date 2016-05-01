@@ -7,6 +7,8 @@
     ' Änderung tk 31.3.15 Hierachie Klasse ergänzt 
     Public hierarchy As clsHierarchy
 
+    
+
     Private relStart As Integer
     Private uuid As Long
     ' als Friend deklariert, damit sie aus der Klasse clsProjekt, die von clsProjektvorlage erbt , erreichbar ist
@@ -15,6 +17,239 @@
     Private _latestStart As Integer
     Private _budgetWerte() As Double
 
+
+    ' Hinzufügen von Custom Feldern beliebiger Anzahl 
+    ' ein CustomFeld eines bestimmten Typs darf nur einmal vorkommen 
+    Private _customDblFields As SortedList(Of String, Double)
+    Private _customStringFields As SortedList(Of String, String)
+    Private _customBoolFields As SortedList(Of String, Boolean)
+
+
+    ''' <summary>
+    ''' gibt die sortierte Liste der Double Customfields zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property customDblFields As SortedList(Of String, Double)
+        Get
+
+            If IsNothing(_customDblFields) Then
+                _customDblFields = New SortedList(Of String, Double)
+            End If
+
+            customDblFields = _customDblFields
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die sortierte Liste der String Customfields zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property customStringFields As SortedList(Of String, String)
+        Get
+
+            If IsNothing(_customStringFields) Then
+                _customStringFields = New SortedList(Of String, String)
+            End If
+
+            customStringFields = _customStringFields
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die sortierte Liste der bool'schen Customfields zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property customBoolFields As SortedList(Of String, Boolean)
+        Get
+
+            If IsNothing(_customBoolFields) Then
+                _customBoolFields = New SortedList(Of String, Boolean)
+            End If
+
+            customBoolFields = _customBoolFields
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt den Wert für das Double Custom-Field mit Namen key zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomDField(ByVal key As String) As Double
+        Get
+            Dim tmpValue As Double = Nothing
+
+            If _customDblFields.ContainsKey(key) Then
+                tmpValue = _customDblFields.Item(key)
+            End If
+
+            getCustomDField = tmpValue
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt der Liste an Double CustomFields ein neues hinzu
+    ''' wenn das Feld schon existiert, dann wird der Wert aktualisiert
+    ''' wenn Nothing als Wert übergeben wird, wird der Default 0.0  angenommen 
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <param name="value"></param>
+    ''' <remarks></remarks>
+    Public Sub addSetCustomDField(ByVal key As String, ByVal value As Double)
+
+        If IsNothing(value) Then
+            value = 0.0
+        End If
+
+        Try
+            If IsNothing(key) Then
+                ' nichts tun
+            Else
+                If key.Trim = "" Then
+                    ' nichts tun
+                Else
+                    If _customDblFields.ContainsKey(key) Then
+                        _customDblFields.Item(key) = value
+                    Else
+                        _customDblFields.Add(key, value)
+                    End If
+                End If
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+
+    End Sub
+
+
+    ''' <summary>
+    ''' gbt den Wert für das String Custom-Field mit  Namen key zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomSField(ByVal key As String) As String
+        Get
+            Dim tmpValue As String = Nothing
+
+            If _customStringFields.ContainsKey(key) Then
+                tmpValue = _customStringFields.Item(key)
+            End If
+
+            getCustomSField = tmpValue
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt der Liste an String CustomFields ein neues hinzu
+    ''' wenn das Feld schon existiert, dann wird der Wert aktualisiert
+    ''' wenn Nothing als Wert übergeben wird, wird der Default "?"  angenommen 
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <param name="value"></param>
+    ''' <remarks></remarks>
+    Public Sub addSetCustomSField(ByVal key As String, ByVal value As String)
+
+        If IsNothing(value) Then
+            value = "?"
+        End If
+
+        Try
+            If IsNothing(key) Then
+                ' nichts tun
+            Else
+                If key.Trim = "" Then
+                    ' nichts tun
+                Else
+                    If _customStringFields.ContainsKey(key) Then
+                        _customStringFields.Item(key) = value
+                    Else
+                        _customStringFields.Add(key, value)
+                    End If
+                End If
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+
+    End Sub
+
+    ''' <summary>
+    ''' gibt den Wert für das Bool Custom-Field mit  Namen key zurück; wenn das Custom Field nicht existiert, wird Nothing zurückgegeben
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property getCustomBField(ByVal key As String) As Boolean
+        Get
+            Dim tmpValue As Boolean = Nothing
+
+            If _customBoolFields.ContainsKey(key) Then
+                tmpValue = _customBoolFields.Item(key)
+            End If
+
+            getCustomBField = tmpValue
+
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' fügt der Liste an bool'schen CustomFields ein neues hinzu
+    ''' wenn das Feld schon existiert, dann wird der Wert aktualisiert
+    ''' wenn Nothing als Wert übergeben wird, wird der Default Wert false angenommen 
+    ''' </summary>
+    ''' <param name="key"></param>
+    ''' <param name="value"></param>
+    ''' <remarks></remarks>
+    Public Sub addSetCustomBField(ByVal key As String, ByVal value As Boolean)
+
+        If IsNothing(value) Then
+            value = False
+        End If
+
+        Try
+            If IsNothing(key) Then
+                ' nichts tun
+            Else
+                If key.Trim = "" Then
+                    ' nichts tun
+                Else
+                    If _customBoolFields.ContainsKey(key) Then
+                        _customBoolFields.Item(key) = value
+                    Else
+                        _customBoolFields.Add(key, value)
+                    End If
+                End If
+
+            End If
+        Catch ex As Exception
+
+        End Try
+
+
+
+    End Sub
 
     ''' <summary>
     ''' gibt die Budgetwerte des Projekts zurück
@@ -307,7 +542,7 @@
 
         ' in der Meilenstein-Liste der Phase löschen 
         cPhase.removeMilestoneAt(indexInMilestoneList - 1)
-        
+
         ' jetzt in der Hierarchie alle Meilenstein-Verweise, die größer als indexInMilestoneList sind, um eins erniedrigen 
         Me.hierarchy.updateMeilensteinVerweise(indexInMilestoneList, parentID, -1)
 
@@ -670,7 +905,7 @@
             Catch ex As Exception
                 Dim a = 2
             End Try
-            
+
 
 
 
@@ -1122,6 +1357,76 @@
     End Function
 
     ''' <summary>
+    ''' gibt true zurück, wenn es sich um eine Phase der Gliederungsebene 1 handelt, also Kind-Phase der rootphase ist
+    ''' gibt false sonst zurück
+    ''' wenn BHTC Schema = true, dann muss es ein Kind der ersten oder zweiten Hierarchie Ebene handeln   
+    ''' </summary>
+    ''' <param name="elemName">Name der Phase</param>
+    ''' <param name="isBHTCSchema"></param>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property isSwimlaneOrSegment(ByVal elemName As String, Optional ByVal isBHTCSchema As Boolean = False) As Boolean
+        Get
+            Dim tmpResult As Boolean = False
+            Dim ChildCollection As Collection = Me.hierarchy.getChildIDsOf(rootPhaseName, False)
+            Dim itemNameID As String
+            Dim childNameID As String
+            Dim fullBC As String
+            Dim fullChildBC As String
+
+            elemName = elemName & "#"
+
+            If isBHTCSchema Then
+                ' noch nicht implementiert 
+                Dim found As Boolean = False
+                Dim ix As Integer = 1
+
+                Do While ix <= ChildCollection.Count And Not found
+                    itemNameID = CStr(ChildCollection.Item(ix))
+                    fullBC = Me.getBcElemName(itemNameID)
+
+                    If fullBC.EndsWith(elemName) Then
+                        tmpResult = True
+                        found = True
+                    Else
+                        If Not elemIDIstMeilenstein(itemNameID) Then
+                            Dim childChildCollection As Collection = Me.hierarchy.getChildIDsOf(itemNameID, False)
+                            ' Schleife über das KindesKin
+                            For Each childNameID In childChildCollection
+                                fullChildBC = Me.getBcElemName(childNameID)
+                                If fullChildBC.EndsWith(elemName) Then
+                                    tmpResult = True
+                                    found = True
+                                    Exit For
+                                End If
+                            Next
+
+                        End If
+
+                    End If
+                    ix = ix + 1
+                Loop
+
+
+            Else
+
+                For Each itemNameID In ChildCollection
+                    fullBC = Me.getBcElemName(itemNameID)
+                    If fullBC.EndsWith(elemName) Then
+                        tmpResult = True
+                        Exit For
+                    End If
+                Next
+
+            End If
+
+            isSwimlaneOrSegment = tmpResult
+        End Get
+    End Property
+
+
+    ''' <summary>
     ''' gibt die Anzahl der Swimlanes zurück, die für das Projekt bei der gegebenen Menge von Phasen und Meilensteinen gezeichnet werden müssen; 
     ''' dabei wird unterschieden, ob es sich um das BHTC Schema handelt oder um eine freie Swimlane Definition handelt  
     ''' </summary>
@@ -1306,7 +1611,7 @@
 
         End Get
     End Property
-    
+
 
     ''' <summary>
     ''' gibt die Swimlane mit der Reihenfolge-Nr "index" zurück; index läuft von 1..Anzahl 
@@ -2611,7 +2916,7 @@
 
     End Property
 
-  
+
 
     Public Sub New()
 
@@ -2628,8 +2933,15 @@
         '_Status = ProjektStatus(0)
         Schrift = 12
         Schriftfarbe = RGB(0, 0, 0)
+
+        ' die CustomFields initialisieren 
+        _customDblFields = New SortedList(Of String, Double)
+        _customStringFields = New SortedList(Of String, String)
+        _customBoolFields = New SortedList(Of String, Boolean)
+
+
     End Sub
 
- 
+
 
 End Class

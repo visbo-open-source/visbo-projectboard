@@ -3,18 +3,6 @@ Imports Excel = Microsoft.Office.Interop.Excel
 Public Module BMWItOModul
 
 
-    Private Enum ptNamen
-        Name = 0
-        Anfang = 1
-        Ende = 2
-        Beschreibung = 3
-        Vorgangsklasse = 4
-        Produktlinie = 5
-        Protocol = 6
-        Dauer = 7
-    End Enum
-
-
     ' spezifisch für BMW Export 
 
     Friend bmwFC52Vorlage As String = "FC52 Vorlage.xlsx"
@@ -102,14 +90,14 @@ Public Module BMWItOModul
 
 
         Dim suchstr(7) As String
-        suchstr(ptNamen.Name) = "Name"
-        suchstr(ptNamen.Anfang) = "Anfang"
-        suchstr(ptNamen.Ende) = "Ende"
-        suchstr(ptNamen.Beschreibung) = "Beschreibung"
-        suchstr(ptNamen.Vorgangsklasse) = "Vorgangsklasse"
-        suchstr(ptNamen.Produktlinie) = "Spalte A"
-        suchstr(ptNamen.Protocol) = "Übernommen als"
-        suchstr(ptNamen.Dauer) = "Dauer"
+        suchstr(ptRplanNamen.Name) = "Name"
+        suchstr(ptRplanNamen.Anfang) = "Anfang"
+        suchstr(ptRplanNamen.Ende) = "Ende"
+        suchstr(ptRplanNamen.Beschreibung) = "Beschreibung"
+        suchstr(ptRplanNamen.Vorgangsklasse) = "Vorgangsklasse"
+        suchstr(ptRplanNamen.Produktlinie) = "Spalte A"
+        suchstr(ptRplanNamen.Protocol) = "Übernommen als"
+        suchstr(ptRplanNamen.Dauer) = "Dauer"
 
 
         zeile = 2
@@ -149,31 +137,31 @@ Public Module BMWItOModul
 
         ' diese Daten müssen vorhanden sein - andernfalls Abbruch 
         Try
-            colName = firstZeile.Find(What:=suchstr(ptNamen.Name)).Column
-            colAnfang = firstZeile.Find(What:=suchstr(ptNamen.Anfang)).Column
-            colEnde = firstZeile.Find(What:=suchstr(ptNamen.Ende)).Column
+            colName = firstZeile.Find(What:=suchstr(ptRplanNamen.Name), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colAnfang = firstZeile.Find(What:=suchstr(ptRplanNamen.Anfang), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colEnde = firstZeile.Find(What:=suchstr(ptRplanNamen.Ende), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
 
         Catch ex As Exception
             Throw New ArgumentException("Fehler im Datei Aufbau ..." & vbLf & ex.Message)
         End Try
 
         Try
-            colDauer = firstZeile.Find(What:=suchstr(ptNamen.Dauer)).Column
+            colDauer = firstZeile.Find(What:=suchstr(ptRplanNamen.Dauer), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
         Catch ex As Exception
             colDauer = -1
         End Try
 
 
         Try
-            colProduktlinie = firstZeile.Find(What:=suchstr(ptNamen.Produktlinie)).Column
+            colProduktlinie = firstZeile.Find(What:=suchstr(ptRplanNamen.Produktlinie), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
         Catch ex As Exception
             colProduktlinie = -1
         End Try
 
         ' diese Daten können vorhanden sein - wenn nicht, weitermachen ...  
         Try
-            colAbbrev = firstZeile.Find(What:=suchstr(ptNamen.Beschreibung)).Column
-            colVorgangsKlasse = firstZeile.Find(What:=suchstr(ptNamen.Vorgangsklasse)).Column
+            colAbbrev = firstZeile.Find(What:=suchstr(ptRplanNamen.Beschreibung), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
+            colVorgangsKlasse = firstZeile.Find(What:=suchstr(ptRplanNamen.Vorgangsklasse), LookAt:=Microsoft.Office.Interop.Excel.XlLookAt.xlWhole).Column
         Catch ex As Exception
 
         End Try
@@ -244,7 +232,7 @@ Public Module BMWItOModul
             End If
 
             ' wird immer geschrieben 
-            CType(.Cells(1, colProtocol + 6), Excel.Range).Value = suchstr(ptNamen.Protocol)
+            CType(.Cells(1, colProtocol + 6), Excel.Range).Value = suchstr(ptRplanNamen.Protocol)
             CType(.Cells(1, colProtocol + 7), Excel.Range).Value = "Grund"
 
         End With
@@ -1015,11 +1003,11 @@ Public Module BMWItOModul
 
                                 End If
 
-                                Else
-                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = logMessage
-                                    CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelRot
-                                    anzIgnored = anzIgnored + 1
-                                End If
+                            Else
+                                CType(aktivesSheet.Cells(curZeile, colProtocol + 7), Excel.Range).Value = logMessage
+                                CType(aktivesSheet.Cells(curZeile, colProtocol + 6), Excel.Range).Interior.Color = awinSettings.AmpelRot
+                                anzIgnored = anzIgnored + 1
+                            End If
 
                         Next
 
@@ -1260,6 +1248,7 @@ Public Module BMWItOModul
 
 
     End Sub
+
 
     ''' <summary>
     ''' exportiert das angegebene Projekt in die bereits geöffnete Datei 

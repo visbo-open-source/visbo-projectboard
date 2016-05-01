@@ -99,6 +99,12 @@
     <Compile Include="frmReportProfil.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="frmTestLicences.Designer.vb">
+      <DependentUpon>frmTestLicences.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmTestLicences.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmWbListInfo.Designer.vb">
       <DependentUpon>frmWbListInfo.vb</DependentUpon>
     </Compile>
@@ -305,6 +311,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="frmStoreCockpit.resx">
       <DependentUpon>frmStoreCockpit.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmTestLicences.resx">
+      <DependentUpon>frmTestLicences.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmWbListInfo.resx">
       <DependentUpon>frmWbListInfo.vb</DependentUpon>
