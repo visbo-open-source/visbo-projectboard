@@ -12330,6 +12330,17 @@ Public Module testModule
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor + legendPhaseVorlagenShape.Width + 3
 
+                ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
+                If .Left + .Width > legendAreaRight Then
+                    Dim tmpWidth As Double = legendAreaRight - .Left
+                    If tmpWidth > 0.3 * .Width Then
+                        .TextFrame.WordWrap = MsoTriState.msoTrue
+                        .Width = tmpWidth
+                        .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
+                        yCursor = yCursor + .Height - zeilenHoehe + 2
+
+                    End If
+                End If
 
                 If maxBreite < legendPhaseVorlagenShape.Width + 3 + .Width Then
                     maxBreite = legendPhaseVorlagenShape.Width + 3 + .Width
@@ -12337,7 +12348,7 @@ Public Module testModule
             End With
 
             If i Mod maxZeilen = 0 And i < selectedPhases.Count Then
-                xCursor = xCursor + maxBreite - 5
+                xCursor = xCursor + maxBreite
                 If xCursor > legendAreaRight Then
                     Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                 End If
@@ -12345,6 +12356,16 @@ Public Module testModule
                 yCursor = legendAreaTop
             Else
                 yCursor = yCursor + zeilenHoehe
+                If yCursor > legendAreaBottom + 5 Then
+                    yCursor = legendAreaTop
+                    xCursor = xCursor + maxBreite
+                    maxBreite = 0.0
+                    If xCursor > legendAreaRight Then
+                        Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                    End If
+
+                End If
+
             End If
 
 
@@ -12411,13 +12432,24 @@ Public Module testModule
                 .Top = CSng(yCursor + 0.5 * (zeilenHoehe - .Height))
                 .Left = xCursor + legendMilestoneVorlagenShape.Width + 3
 
+                ' überprüfen, ob der rechte Rand jetzt überschrieben wird 
+                If .Left + .Width > legendAreaRight Then
+                    Dim tmpWidth As Double = legendAreaRight - .Left
+                    If tmpWidth > 0.3 * .Width Then
+                        .TextFrame2.WordWrap = MsoTriState.msoTrue
+                        .Width = tmpWidth
+                        .TextFrame2.TextRange.ParagraphFormat.Alignment = MsoParagraphAlignment.msoAlignLeft
+                        yCursor = yCursor + .Height - zeilenHoehe + 2
+                    End If
+                End If
+
                 If maxBreite < legendMilestoneVorlagenShape.Width + 3 + .Width Then
                     maxBreite = legendMilestoneVorlagenShape.Width + 3 + .Width
                 End If
             End With
 
             If i Mod maxZeilen = 0 And i < selectedMilestones.Count Then
-                xCursor = xCursor + maxBreite - 5
+                xCursor = xCursor + maxBreite
                 If xCursor > legendAreaRight Then
                     Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
                 End If
@@ -12425,6 +12457,15 @@ Public Module testModule
                 maxBreite = 0.0
             Else
                 yCursor = yCursor + zeilenHoehe
+                If yCursor > legendAreaBottom + 5 Then
+                    yCursor = legendAreaTop
+                    xCursor = xCursor + maxBreite
+                    maxBreite = 0.0
+                    If xCursor > legendAreaRight Then
+                        Throw New ArgumentException("Platz für die Legende reicht nicht aus. Evt.muss eine neue Vorlage definiert werden!")
+                    End If
+
+                End If
             End If
 
 

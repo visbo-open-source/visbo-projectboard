@@ -269,24 +269,15 @@
           <button id="Pt6G3B4" label="Wörterbuch editieren" onAction="PT5editDictionary" supertip ="mit diesem Formular können unbekannte Bezeichnungen auf Standardbezeichnungen abgebildet werden; es können darüber hinaus Standardbezeichnungen gelöscht bzw. geändert werden"/>
           <!--<checkBox id="PT6G1B7" label="Missing Definitions hinzufügen" getPressed="PTAddMissingInit" onAction ="PTAddMissingDefinitions" supertip ="fehlende Phasen- oder Meilenstein-Namen werden im CustomizationFile ergänzt"/>-->   
         </group>
-        <!--<group id ="PT6G4" label ="Multiprojekt Sichten">
-          <checkBox id="PT6G4B1" label="Strikte Zeitraum-Orientierung" getPressed="PT6StriktPressed" onAction ="PT6SetStrict"/>
-          <checkBox id="PT6G4B2" label="Phasen komplett darstellen" getPressed="PT6fullyContainedPressed" onAction ="PT6SetfullyContained"/>
-          <checkBox id="PT6G4B3" label="Meilenstein Datum anzeigen" getPressed="PT6DateTextPressed" onAction ="PT6SetShowDate"/>
-          <checkBox id="PT6G4B4" label="Meilenstein Kurzname anzeigen" getPressed="PT6NameTextPressed" onAction ="PT6SetShowName"/>
-          <checkBox id="PT6G4B5" label="Projekt-Linie anzeigen" getPressed="PT6ProjectLinePressed" onAction ="PT6SetShowProjectLine"/>
-          <checkBox id="PT6G4B6" label="Ampeln anzeigen" getPressed="PT6AmpelnPressed" onAction ="PT6SetShowAmpeln"/>
-          <checkBox id="PT6G4B7" label="Vertikales Raster" getPressed="PT6RasterPressed" onAction ="PT6SetRaster"/>
-        </group>
         <group id ="PT6G5" label ="Testfunktionen">
           <button id="Pt6G5B0" label="Enable Event aktiv?"  onAction="PTTestFunktion1" />
           <button id="Pt6G5B1" label="Aufbau Histories"  onAction="PTTestFunktion2" />
           <button id="PT6G5B2" label="Test-Funktionen"  onAction ="PTTestFunktion3" />
           <button id="PT6G5B3" label="Demo-Funktion Ampel"  onAction ="PTTestFunktion4" />
           <button id="PT6G5B4" label="Demo-Funktion Historie"  onAction ="PTTestFunktion5" />
-          <button id="PT4G5B6" label="Import alte Projekt-Steckbriefe vor PT113" onAction="Tom2G4M1ImportOLD" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: Struktur von Feature PT113, Spalte Summe"/>
+          <!--<button id="PT4G5B6" label="Import alte Projekt-Steckbriefe vor PT113" onAction="Tom2G4M1ImportOLD" supertip ="alle Projekte, die als VISBO Steckbrief beschrieben im Folder ProjectFiles liegen, werden importiert; Achtung: Struktur von Feature PT113, Spalte Summe"/>-->
         </group>
-        <group id ="PT6G6" label ="Licensierung">
+        <!--<group id ="PT6G6" label ="Licensierung">
           <button id="Pt6G6B0" label="Create Licenses"  onAction="PTCreateLicense" />
           <button id="Pt6G6B1" label="Test Licenses"  onAction="PTTestLicense" />
         </group>-->

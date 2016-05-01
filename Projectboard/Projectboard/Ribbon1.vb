@@ -8078,9 +8078,19 @@ Imports System.Windows
 
         enableOnUpdate = False
         appInstance.EnableEvents = True
-        Dim yellows As Double = 0.1
-        Dim reds As Double = 0.04
-        Call createInitialRandomBewertungen(yellows, reds, Date.Now)
+        Dim yellows As Double = 0.09
+        Dim reds As Double = 0.025
+
+        If demoModusHistory And historicDate > StartofCalendar And historicDate < Date.Now Then
+            ' es werden nur die Meilensteine verändert, die nach dem historicdate liegen 
+            ' oder die, vorher liegen und noch keine Bewertung haben
+            Call createInitialRandomBewertungen(yellows, reds, historicDate)
+        Else
+            ' es werden nur die Meilensteine verändert, die nach dem heutigen Datum  
+            ' oder die, die vorher liegen und noch keine Bewertung haben
+            Call createInitialRandomBewertungen(yellows, reds, Date.Now)
+        End If
+
 
         enableOnUpdate = True
 
