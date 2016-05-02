@@ -13933,8 +13933,13 @@ Public Module Projekte
                 .range("Projektleiter").value = hproj.leadPerson
 
                 ' Budget
-
+                rng = CType(.range("Budget"), Excel.Range)
                 .range("Budget").value = hproj.Erloes.ToString("#####.#")
+                Try
+
+                Catch ex As Exception
+
+                End Try
 
                 'Kurzbeschreibung'
 
@@ -14206,7 +14211,7 @@ Public Module Projekte
                 ' ----------------------------------------- 
                 ' Schreiben der Projektvorlagen
                 '
-                .cells(zeile, spalte).value = "Project-Vorlagen"
+                .cells(zeile, spalte).value = "Projekt-Vorlagen"
                 .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
 
                 zeile = zeile + 1
@@ -14953,7 +14958,7 @@ Public Module Projekte
                 ' ----------------------------------------- 
                 ' Schreiben der Projektvorlagen
                 '
-                .cells(zeile, spalte).value = "Project-Vorlagen"
+                .cells(zeile, spalte).value = "Projekt-Vorlagen"
                 .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
 
                 zeile = zeile + 1
@@ -14980,6 +14985,65 @@ Public Module Projekte
                 ' Schreiben des Delimiters
                 .cells(zeile, spalte).value = delimiter
                 zeile = zeile + 1
+
+
+                ' -----------------------------------------
+                ' Schreiben der Business Units 
+                '
+                .cells(zeile, spalte).value = "Business Units"
+                .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
+
+                zeile = zeile + 1
+                startZeile = zeile
+
+                For Each kvp As KeyValuePair(Of Integer, clsBusinessUnit) In businessUnitDefinitions
+                    .cells(zeile, spalte).value = kvp.Value.name
+                    zeile = zeile + 1
+                Next
+
+                endZeile = zeile - 1
+
+                If endZeile >= startZeile Then
+
+                    If endZeile = startZeile Then
+                        rng = CType(.cells(startZeile, spalte), Excel.Range)
+                    Else
+                        rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
+                    End If
+                    appInstance.ActiveWorkbook.Names.Add(Name:="BusinessUnits", RefersTo:=rng)
+
+                End If
+
+
+                ' -----------------------------------------
+                ' Schreiben der Projekt-Stati 
+                '
+                .cells(zeile, spalte).value = "Projekt-Stati"
+                .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
+
+                zeile = zeile + 1
+                startZeile = zeile
+
+                Dim anzahlS As Integer = ProjektStatus.Length
+                For i = 1 To ProjektStatus.Length
+                    .cells(zeile, spalte).value = ProjektStatus(i - 1)
+                    zeile = zeile + 1
+                Next
+
+                endZeile = zeile - 1
+
+                If endZeile >= startZeile Then
+
+                    If endZeile = startZeile Then
+                        rng = CType(.cells(startZeile, spalte), Excel.Range)
+                    Else
+                        rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
+                    End If
+                    appInstance.ActiveWorkbook.Names.Add(Name:="ProjektStatus", RefersTo:=rng)
+
+                End If
+
+
 
                 ' ----------------------------------------- 
                 ' Schreiben der Phasen
@@ -15139,6 +15203,37 @@ Public Module Projekte
                 If endZeile >= startZeile Then
                     rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
                     appInstance.ActiveWorkbook.Names.Add(Name:="AmpelFarben", RefersTo:=rng)
+
+                End If
+
+                ' Schreiben des Delimiters
+                .cells(zeile, spalte).value = delimiter
+                zeile = zeile + 1
+
+                ' ----------------------------------------- 
+                ' Schreiben der Custom Field Namen
+                '
+                .cells(zeile, spalte).value = "Custom Fields"
+                .cells(zeile, spalte).interior.color = RGB(180, 180, 180)
+
+                zeile = zeile + 1
+                startZeile = zeile
+
+                For Each kvp As KeyValuePair(Of Integer, clsCustomFieldDefinition) In customFieldDefinitions.liste
+                    .cells(zeile, spalte).value = kvp.Value.name
+                    zeile = zeile + 1
+                Next
+                endZeile = zeile - 1
+
+                If endZeile >= startZeile Then
+
+                    If endZeile = startZeile Then
+                        rng = CType(.cells(startZeile, spalte), Excel.Range)
+                    Else
+                        rng = CType(.range(.cells(startZeile, spalte), .cells(endZeile, spalte)), Excel.Range)
+                    End If
+
+                    appInstance.ActiveWorkbook.Names.Add(Name:="Custom_Fields", RefersTo:=rng)
 
                 End If
 
@@ -15357,7 +15452,20 @@ Public Module Projekte
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                     .IndentLevel = 1
                     .WrapText = False
+
+                    Try
+                        .Validation.Delete()
+                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="=ProjektVorlagen")
+                        .Validation.InputMessage = "bitte nicht ändern! Dient nur als Hinweis, mit welcher Vorlage das Projekt verglichen werden soll."
+                    Catch ex As Exception
+
+                    End Try
+                   
                 End With
+
+
+
 
                 ' Status
 
@@ -15367,6 +15475,16 @@ Public Module Projekte
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     .IndentLevel = 1
                     .WrapText = False
+
+                    Try
+                        .Validation.Delete()
+                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="=ProjektStatus")
+                        .Validation.InputMessage = ""
+                    Catch ex As Exception
+
+                    End Try
+
                 End With
 
                 ' Business_Unit
@@ -15377,6 +15495,16 @@ Public Module Projekte
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft
                     .IndentLevel = 1
                     .WrapText = False
+
+                    Try
+                        .Validation.Delete()
+                        .Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="=BusinessUnits")
+                        .Validation.InputMessage = ""
+                    Catch ex As Exception
+
+                    End Try
+
                 End With
 
                 ' Strategischer Fit
@@ -15387,6 +15515,16 @@ Public Module Projekte
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     .IndentLevel = 1
                     .WrapText = False
+
+                    Try
+                        .Validation.Delete()
+                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="0,1", Formula2:="9,9", [Operator]:=XlFormatConditionOperator.xlBetween)
+                        .Validation.InputMessage = "Werte zwischen 0.1 und 9.9"
+                    Catch ex As Exception
+
+                    End Try
+
                 End With
 
                 ' Risiko
@@ -15397,6 +15535,16 @@ Public Module Projekte
                     .HorizontalAlignment = Excel.XlHAlign.xlHAlignRight
                     .IndentLevel = 1
                     .WrapText = False
+
+                    Try
+                        .Validation.Delete()
+                        .Validation.Add(Type:=XlDVType.xlValidateDecimal, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                           Formula1:="0,1", Formula2:="9,9", [Operator]:=XlFormatConditionOperator.xlBetween)
+                        .Validation.InputMessage = "Werte zwischen 0.1 und 9.9"
+                    Catch ex As Exception
+
+                    End Try
+
                 End With
 
                 ' ur: 13.01.2015: Varianten_Name wird hier in das Tabellenblatt Attribute des Projekt-Steckbriefes eingetragen
@@ -15413,8 +15561,93 @@ Public Module Projekte
 
                 End If
 
+                ' jetzt werden die weiteren Custom Fields weggeschrieben ....
+                ' und zwar immer in der Form <name> <Wert> <type>
+
+                rng = .Range("IndivName2")
+                Dim startZeileOfCFs As Integer = rng.Row
+                Dim zeilenoffset As Integer = 0
+
+                If customFieldDefinitions.count > 0 Then
+                    ' nur dann kann es Custom Fields geben 
+
+
+
+                    With hproj
+
+                        ' jetzt alle String Fields rausschreiben 
+                        For i As Integer = 1 To .customStringFields.Count
+                            Dim uid As Integer = .customStringFields.ElementAt(i - 1).Key
+                            Dim cfValue As String = .customStringFields.ElementAt(i - 1).Value
+
+                            ' Name und Typ muss über uid aus Definitions ausgelesen werden 
+                            Dim cfName As String = customFieldDefinitions.getName(uid)
+                            Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
+
+                            rng.Offset(zeilenoffset, -1).Value = cfName
+                            rng.Offset(zeilenoffset, 0).Value = cfValue
+                            rng.Offset(zeilenoffset, 0).NumberFormat = "@"
+                            rng.Offset(zeilenoffset, 2).Value = "String"
+
+
+                            zeilenoffset = zeilenoffset + 1
+                        Next
+
+                        ' jetzt alle Double Fields rausschreiben 
+                        For i As Integer = 1 To .customDblFields.Count
+                            Dim uid As Integer = .customDblFields.ElementAt(i - 1).Key
+                            Dim cfValue As Double = .customDblFields.ElementAt(i - 1).Value
+
+                            ' Name und Typ muss über uid aus Definitions ausgelesen werden 
+                            Dim cfName As String = customFieldDefinitions.getName(uid)
+                            Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
+
+                            rng.Offset(zeilenoffset, -1).Value = cfName
+                            rng.Offset(zeilenoffset, 0).Value = cfValue.ToString
+                            rng.Offset(zeilenoffset, 0).NumberFormat = "#0.00"
+                            rng.Offset(zeilenoffset, 2).Value = "Zahl"
+
+                            zeilenoffset = zeilenoffset + 1
+                        Next
+
+                        ' jetzt alle Flag Fields rausschreiben 
+                        For i As Integer = 1 To .customBoolFields.Count
+                            Dim uid As Integer = .customBoolFields.ElementAt(i - 1).Key
+                            Dim cfValue As Boolean = .customBoolFields.ElementAt(i - 1).Value
+
+                            ' Name und Typ muss über uid aus Definitions ausgelesen werden 
+                            Dim cfName As String = customFieldDefinitions.getName(uid)
+                            Dim cfType As Integer = customFieldDefinitions.getTyp(uid)
+
+                            rng.Offset(zeilenoffset, -1).Value = cfName
+                            rng.Offset(zeilenoffset, 0).Value = cfValue.ToString
+                            rng.Offset(zeilenoffset, 2).Value = "Flag"
+
+                            zeilenoffset = zeilenoffset + 1
+                        Next
+
+                    End With
+                    
+
+                End If
+
+                ' jetzt werden noch die Validation. also Auswahl aus Liste gesetzt ...
+                For iz As Integer = startZeileOfCFs To startZeileOfCFs + zeilenoffset + customFieldDefinitions.count
+                    Try
+                        rng.Validation.Add(Type:=XlDVType.xlValidateList, AlertStyle:=XlDVAlertStyle.xlValidAlertStop, _
+                                       Formula1:="=Custom_Fields")
+                    Catch ex As Exception
+
+                    End Try
+                Next
+                
+
+
                 '' Blattschutz setzen
                 '.Protect(Password:="x", UserInterfaceOnly:=True, DrawingObjects:=True, Contents:=True, Scenarios:=True)
+
+
+
 
             End With
         Catch ex As Exception

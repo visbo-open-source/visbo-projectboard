@@ -37,6 +37,19 @@
     End Sub
 
     ''' <summary>
+    ''' gibt die sortierte Liste der Custom Fields zurück
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property liste As SortedList(Of Integer, clsCustomFieldDefinition)
+        Get
+            liste = listOfDefinitions
+        End Get
+    End Property
+
+
+    ''' <summary>
     ''' prüft, ob der es ein Custom Field mit der angegebenen uid gibt
     ''' </summary>
     ''' <param name="uid"></param>
@@ -46,6 +59,18 @@
     Public ReadOnly Property contains(ByVal uid As Integer) As Boolean
         Get
             contains = listOfDefinitions.ContainsKey(uid)
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' gibt die Anzahl an Custom Fields zurück 
+    ''' </summary>
+    ''' <value></value>
+    ''' <returns></returns>
+    ''' <remarks></remarks>
+    Public ReadOnly Property count As Integer
+        Get
+            count = listOfDefinitions.Count
         End Get
     End Property
 

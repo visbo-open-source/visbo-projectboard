@@ -5660,7 +5660,7 @@ Public Module testModule
         Try
             tabelle = pptshape.Table
         Catch ex As Exception
-            Throw New Exception("Shape für hat keine Tabelle")
+            Throw New Exception("Shape hat keine Tabelle")
         End Try
 
         Dim anzSpalten As Integer
@@ -5847,8 +5847,11 @@ Public Module testModule
 
                 For ize As Integer = 1 To nrOfZeilen(isp - 1)
 
-                    CType(.Cell(neededZeilen - ize, isp), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
-                                    ergebnisListe(isp - 1, ize - 1)
+                    If Not IsNothing(ergebnisListe(isp - 1, ize - 1)) Then
+                        CType(.Cell(neededZeilen - ize, isp), pptNS.Cell).Shape.TextFrame2.TextRange.Text = _
+                                                            ergebnisListe(isp - 1, ize - 1)
+                    End If
+                    
 
                 Next
 

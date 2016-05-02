@@ -901,19 +901,23 @@ Public Class clsProjekte
                                 Catch ex As Exception
 
                                 End Try
+                            End If
 
+                            If tempArray.Sum > 0 Then
+
+                                For al As Integer = 1 To anzLoops
+                                    If ixZeitraum + al - 1 > zeitraum Then
+                                        ' Fehlerprotokoll schreiben ...  
+                                    ElseIf tempArray(ix + al - 1) > 0 Then
+                                        ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & CInt(tempArray(ix + al - 1)).ToString
+                                        curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
+                                    End If
+
+                                Next
 
                             End If
 
-                            For al As Integer = 1 To anzLoops
-                                If ixZeitraum + al - 1 > zeitraum Then
-                                    ' Fehlerprotokoll schreiben ...  
-                                Else
-                                    ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & CInt(tempArray(ix + al - 1)).ToString
-                                    curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
-                                End If
-
-                            Next
+                            
 
 
                         Next
@@ -940,7 +944,6 @@ Public Class clsProjekte
                             Call awinIntersectZeitraum(prAnfang, prEnde, ixZeitraum, ix, anzLoops)
 
                             If anzLoops > 0 Then
-
                                 Try
 
                                     tempArray = hproj.getKostenBedarf(elemName)
@@ -948,19 +951,24 @@ Public Class clsProjekte
                                 Catch ex As Exception
 
                                 End Try
+                            End If
 
+                            If tempArray.Sum > 0 Then
+                                ' andernfalls kein Kostenbedarf 
+
+                                For al As Integer = 1 To anzLoops
+                                    If ixZeitraum + al - 1 > zeitraum Then
+                                        ' Fehlerprotokoll schreiben ...  
+                                    ElseIf tempArray(ix + al - 1) > 0 Then
+                                        ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & CInt(tempArray(ix + al - 1)).ToString
+                                        curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
+                                    End If
+
+                                Next
 
                             End If
 
-                            For al As Integer = 1 To anzLoops
-                                If ixZeitraum + al - 1 > zeitraum Then
-                                    ' Fehlerprotokoll schreiben ...  
-                                Else
-                                    ergebnisListe(ixZeitraum + al - 1, curElemIX(ixZeitraum + al - 1)) = hproj.getShapeText & ":" & CInt(tempArray(ix + al - 1)).ToString
-                                    curElemIX(ixZeitraum + al - 1) = curElemIX(ixZeitraum + al - 1) + 1
-                                End If
-
-                            Next
+                            
 
 
                         Next

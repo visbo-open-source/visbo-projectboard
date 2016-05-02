@@ -3608,7 +3608,12 @@ Public Module awinGeneralModules
                     Dim sMilestone As clsMeilenstein = Nothing
                     Dim eMilestone As clsMeilenstein = Nothing
 
+                    ' hier muss jetzt alles zurückgesetzt werden 
+                    ' ansonsten könnten alte Werte übernommen werden aus der Projekt-Information von vorher ..
                     pName = CStr(CType(.Cells(zeile, spalte), Global.Microsoft.Office.Interop.Excel.Range).Value)
+                    variantName = ""
+                    custFields.Clear()
+                    capacityNeeded = ""
 
                     ' falls ein Varianten-Name mit angegeben wurde: pname#variantNAme 
                     Try
@@ -3739,8 +3744,10 @@ Public Module awinGeneralModules
                             End If
 
                         Catch ex As Exception
-                            CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
+
                             ok = False
+                            CType(.Cells(zeile, spalte + 1), Global.Microsoft.Office.Interop.Excel.Range).Value = ".?."
+
                         End Try
 
                         ' jetzt die Daten richtig berechnen, falls Bezug Start , Bezug Ende angegeben ist 
