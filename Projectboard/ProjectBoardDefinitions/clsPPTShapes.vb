@@ -1173,6 +1173,13 @@ Public Class clsPPTShapes
         Get
             calendarTop = _calendarTop
         End Get
+
+    End Property
+
+    Public WriteOnly Property setCalendarTop As Double
+        Set(value As Double)
+            _calendarTop = value
+        End Set
     End Property
 
     Public ReadOnly Property calendarBottom As Double
@@ -1558,17 +1565,23 @@ Public Class clsPPTShapes
 
         End If
 
-        _calendarTop = _containerTop + 5
+        ' _calendarTop = _containerTop + 5
 
         If Not IsNothing(_calendarHeightShape) Then
-            _calendarBottom = _calendarTop + _calendarHeightShape.Height
+            _calendarTop = _calendarLineShape.Top - _calendarHeightShape.Height
+        End If
+
+
+        If Not IsNothing(_calendarHeightShape) Then
+            _calendarBottom = _calendarLineShape.Top + _calendarLineShape.Height
         End If
 
 
         ' bestimme Drawing Area
         _drawingAreaLeft = _calendarLeft
         _drawingAreaRight = _calendarRight
-        _drawingAreaTop = _calendarBottom + 2
+        '_drawingAreaTop = _calendarBottom + 2
+        _drawingAreaTop = _calendarLineShape.Top + _calendarLineShape.Height + 2
 
 
         If awinSettings.mppShowLegend And Not IsNothing(_legendLineShape) Then

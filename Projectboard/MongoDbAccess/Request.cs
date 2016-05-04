@@ -52,6 +52,7 @@ namespace MongoDbAccess
             }
             else
             {
+                // mongodb://<dbuser>:<dbpassword>@ds021701.mlab.com:21701/visbomahle
                 var connectionString = "mongodb://" + username + ":" + dbPasswort + "@" + databaseURL;  /*Aufruf mit MongoDB mit Authentication  */
                 //var connectionString = "mongodb://" + username + ":" + dbPasswort + "@ds034198.mongolab.com:34198";
                 Client = new MongoClient(connectionString);

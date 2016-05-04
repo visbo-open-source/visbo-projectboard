@@ -2457,7 +2457,8 @@ Imports System.Windows
                 ' alle Import Projekte erstmal löschen
                 ImportProjekte.Clear()
                 'Call bmwImportProjektInventur(myCollection)
-                Call bmwImportProjekteITO15(myCollection, False)
+                Call rplanExcelImport(myCollection, False)
+                'Call bmwImportProjekteITO15(myCollection, False)
                 appInstance.ActiveWorkbook.Close(SaveChanges:=True)
                 Call importProjekteEintragen(myCollection, importDate, ProjektStatus(1))
 
@@ -2784,7 +2785,7 @@ Imports System.Windows
 
 
         
-        'Schließen des LogFiles
+        'Schließen des LogFilesTom2G4M2ImportMSProject
         Call logfileSchliessen()
 
         enableOnUpdate = True
@@ -8077,9 +8078,19 @@ Imports System.Windows
 
         enableOnUpdate = False
         appInstance.EnableEvents = True
-        Dim yellows As Double = 0.1
-        Dim reds As Double = 0.04
-        Call createInitialRandomBewertungen(yellows, reds, Date.Now)
+        Dim yellows As Double = 0.09
+        Dim reds As Double = 0.025
+
+        If demoModusHistory And historicDate > StartofCalendar And historicDate < Date.Now Then
+            ' es werden nur die Meilensteine verändert, die nach dem historicdate liegen 
+            ' oder die, vorher liegen und noch keine Bewertung haben
+            Call createInitialRandomBewertungen(yellows, reds, historicDate)
+        Else
+            ' es werden nur die Meilensteine verändert, die nach dem heutigen Datum  
+            ' oder die, die vorher liegen und noch keine Bewertung haben
+            Call createInitialRandomBewertungen(yellows, reds, Date.Now)
+        End If
+
 
         enableOnUpdate = True
 

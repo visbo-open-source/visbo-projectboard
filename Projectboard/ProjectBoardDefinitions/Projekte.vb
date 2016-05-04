@@ -19126,6 +19126,8 @@ Public Module Projekte
 
     ''' <summary>
     ''' wird nur zum Aufsetzen von zufälligen Bewertungen in Demo-Szenarien benötigt ... 
+    ''' alle nach dem übergebenen Datum liegenden Meilensteine werden neu auf Zufallsbasis bewertet 
+    ''' alle vor dem Datum liegenden nur dann, wenn sie noch keine Bewertung haben 
     ''' 
     ''' </summary>
     ''' <param name="yellowPercentage">gibt an wieviele Meilensteine gelb bewertet werden sollen</param>
@@ -19173,7 +19175,7 @@ Public Module Projekte
 
                             Dim msColumn As Integer = getColumnOfDate(milestone.getDate)
 
-                            If msColumn <= heuteColumn + 6 Then
+                            If msColumn > heuteColumn Then
 
 
 
@@ -19186,18 +19188,20 @@ Public Module Projekte
 
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
-                                            b.description = "Erläuterung für die rote Ampel ..."
+                                            b.description = "Termin und Lieferumfänge nicht zu erreichen; " & vbLf & _
+                                                "Gründe:  ... " & vbLf & "Massnahmen: ...."
                                             b.color = awinSettings.AmpelRot
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
-                                            b.description = "Erläuterung für die rote Ampel ..."
+                                            b.description = "Termin und Lieferumfänge nicht zu erreichen; " & vbLf & _
+                                                "Gründe:  ... " & vbLf & "Massnahmen: ...."
                                             b.color = awinSettings.AmpelRot
                                         End If
 
-                                        If msColumn > heuteColumn Then
-                                            redMilestones = redMilestones + 1
-                                        End If
+
+                                        redMilestones = redMilestones + 1
+
 
 
 
@@ -19207,19 +19211,20 @@ Public Module Projekte
 
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
-                                            b.description = "Erläuterung für die gelbe Ampel ..."
+                                            b.description = "es gibt Risiken, Termin und Lieferumfänge zu erreichen;" & vbLf & _
+                                                "Risiken: ... " & vbLf & "Massnahmen: ..."
                                             b.color = awinSettings.AmpelGelb
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
-                                            b.description = "Erläuterung für die gelbe Ampel ..."
+                                            b.description = "es gibt Risiken, Termin und Lieferumfänge zu erreichen;" & vbLf & _
+                                                "Risiken: ... " & vbLf & "Massnahmen: ..."
                                             b.color = awinSettings.AmpelGelb
                                         End If
 
-                                        If msColumn > heuteColumn Then
-                                            yellowMilestones = yellowMilestones + 1
-                                        End If
 
+                                        yellowMilestones = yellowMilestones + 1
+                                    
 
 
                                     Else
@@ -19227,25 +19232,93 @@ Public Module Projekte
 
                                         If .bewertungsCount = 0 Then
                                             b = New clsBewertung
-                                            b.description = "aktuell alles i.O.  ..."
+                                            b.description = "Forecast für Termin / Qualität aktuell grün"
                                             b.color = awinSettings.AmpelGruen
                                             .addBewertung(b)
                                         Else
                                             b = .getBewertung(1)
-                                            b.description = "aktuell alles i.O.  ..."
+                                            b.description = "Forecast für Termin / Qualität aktuell grün"
                                             b.color = awinSettings.AmpelGruen
                                         End If
 
-                                        If msColumn > heuteColumn Then
-                                            greenMilestones = greenMilestones + 1
-                                        End If
+
+                                        greenMilestones = greenMilestones + 1
+
 
                                     End If
 
 
                                 End With
                             Else
-                                ' nichts tun, alles unverändert lassen 
+                                ' hier sind wir in der Vergangenheit : nur dann etwas tun, wenn der Meilenstein noch keine Bewertung hat 
+                                ' oder aber eine graue Bewertung hat 
+                                Dim b As clsBewertung
+                                Dim notYetDone As Boolean = False
+                                If milestone.bewertungsCount = 0 Then
+                                    b = New clsBewertung
+                                    notYetDone = True
+                                Else
+                                    b = milestone.getBewertung(1)
+                                    If b.color = awinSettings.AmpelNichtBewertet Then
+                                        notYetDone = True
+                                    End If
+                                End If
+
+                                If notYetDone Then
+                                    ' jetzt muss eine zufallsgesteuerte Bewertung her ...
+                                    currentValue = zufall.NextDouble
+
+                                    With milestone
+                                        If currentValue >= redBaseValue And _
+                                            currentValue <= redBaseValue + redPercentage Then
+
+                                            If .bewertungsCount = 0 Then
+                                                b.description = "abgeschlossen: Ziele wurden in wesentlichen Umfängen reduziert, weil ..."
+                                                b.color = awinSettings.AmpelRot
+                                                .addBewertung(b)
+                                            Else
+                                                b.description = "abgeschlossen: Ziele wurden in wesentlichen Umfängen reduziert, weil ..."
+                                                b.color = awinSettings.AmpelRot
+                                            End If
+
+
+                                        ElseIf currentValue >= yellowBaseValue And _
+                                            currentValue <= yellowBaseValue + yellowPercentage Then
+
+                                            If .bewertungsCount = 0 Then
+                                                b.description = "abgeschlossen: Lieferumfänge/Ziele wurden in Absprache etwas reduziert, und zwar: ...."
+                                                b.color = awinSettings.AmpelGelb
+                                                .addBewertung(b)
+                                            Else
+                                                b = .getBewertung(1)
+                                                b.description = "abgeschlossen: Lieferumfänge/Ziele wurden in Absprache etwas reduziert, und zwar: ...."
+                                                b.color = awinSettings.AmpelGelb
+                                            End If
+
+
+
+                                        Else
+
+                                            If .bewertungsCount = 0 Then
+                                                b.description = "abgeschlossen: alle Lieferumfänge / Ziele erfüllt"
+                                                b.color = awinSettings.AmpelGruen
+                                                .addBewertung(b)
+                                            Else
+                                                b = .getBewertung(1)
+                                                b.description = "abgeschlossen: alle Lieferumfänge / Ziele erfüllt"
+                                                b.color = awinSettings.AmpelGruen
+                                            End If
+
+
+                                            greenMilestones = greenMilestones + 1
+
+
+                                        End If
+
+
+                                    End With
+                                End If
+
                             End If
                         Else
                             ' Test-Stelle/Break Punkt setzen für Debug , hat sonst keine Bedeutung 
@@ -19260,30 +19333,48 @@ Public Module Projekte
 
                 ' jetzt noch die Ampel-Farbe setzen 
                 If redMilestones > 0 Then
-                    If redMilestones / greenMilestones > 0.02 Then
-                        .ampelErlaeuterung = "Erläuterung des Projektleiters ... "
-                        .ampelStatus = 3
+
+                    If greenMilestones > 0 Then
+                        If redMilestones / greenMilestones > 0.02 Then
+                            .ampelErlaeuterung = "aktuell sehr kritische Lage des Projektes" & vbLf & _
+                                "Gründe: ...." & _
+                                "Massnahmen: ...."
+                            .ampelStatus = 3
+                        Else
+                            .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
+                                "Risiken: ...." & _
+                                "Massnahmen: ...."
+                            .ampelStatus = 2
+                        End If
                     Else
-                        .ampelErlaeuterung = "Erläuterung für gelbe Bewertung (u.a mind. eine rote Ampel) ..."
+                        ' in diesem Fall wird es unmittelbar vor Projekt-Abschluss sein ... 
+                        .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
+                                "Risiken: ...." & _
+                                "Massnahmen: ...."
                         .ampelStatus = 2
                     End If
+                    
 
                 ElseIf yellowMilestones > 0 Then
                     If greenMilestones > 0 Then
 
                         If yellowMilestones / greenMilestones > 0.05 Then
-                            .ampelErlaeuterung = "Erläuterung des Projektleiters ... "
+                            .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
+                            "Risiken: ...." & _
+                            "Massnahmen: ...."
                             .ampelStatus = 2
                         Else
-                            .ampelErlaeuterung = "aktuell alles i.O ..."
+                            .ampelErlaeuterung = "aktuell alles plangemäß"
                             .ampelStatus = 1
                         End If
                     Else
-                        .ampelErlaeuterung = "Erläuterung des Projektleiters ... "
+                        .ampelErlaeuterung = "es gibt Risiken im weiteren Projektverlauf" & vbLf & _
+                            "Risiken: ...." & _
+                            "Massnahmen: ...."
                         .ampelStatus = 2
                     End If
                 Else
-                    .ampelErlaeuterung = "aktuell alles i.O ..."
+                    .ampelErlaeuterung = "aktuell alles plangemäß"
                     .ampelStatus = 1
                 End If
 

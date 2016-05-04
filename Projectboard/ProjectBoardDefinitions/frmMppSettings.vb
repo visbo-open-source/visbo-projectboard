@@ -60,35 +60,35 @@
                 ' die folgenden werden im MS Project AddIn gar nicht gezeigt 
                 ' sie müssen auch entsprechend auf die für den Project AddIn sinnvllen werte gesetzt werden 
                 '
-                shwProjectLine.Visible = False
-                shwAmpeln.Visible = False
-                notStrictly.Visible = False
-                useOriginalNames.Visible = False
-                sortiertNachDauer.Visible = False
-                shwExtendedMode.Visible = False
+                'shwProjectLine.Visible = False
+                'shwAmpeln.Visible = False
+                'notStrictly.Visible = False
+                'useOriginalNames.Visible = False
+                'sortiertNachDauer.Visible = False
+                'shwExtendedMode.Visible = False
                 
 
                 ' jetzt müssen die Checkboxes und der OK-Button noch hochgeschoben werden 
                 ' ausserdem die Höhe des Formulars verändert werden 
-                Dim offset As Integer = shwPhaseText.Top - shwProjectLine.Top
-                shwPhaseText.Top = shwPhaseText.Top - offset
-                shwPhaseDate.Top = shwPhaseDate.Top - offset
+                'Dim offset As Integer = shwPhaseText.Top - shwProjectLine.Top
+                'shwPhaseText.Top = shwPhaseText.Top - offset
+                'shwPhaseDate.Top = shwPhaseDate.Top - offset
 
-                ShwMilestoneText.Top = ShwMilestoneText.Top - offset
-                ShwMilestoneDate.Top = ShwMilestoneDate.Top - offset
-                KwInMilestone.Top = KwInMilestone.Top - offset
+                'ShwMilestoneText.Top = ShwMilestoneText.Top - offset
+                'ShwMilestoneDate.Top = ShwMilestoneDate.Top - offset
+                'KwInMilestone.Top = KwInMilestone.Top - offset
 
-                useAbbrev.Top = useAbbrev.Top - offset
+                'useAbbrev.Top = useAbbrev.Top - offset
 
-                shwVerticals.Top = shwVerticals.Top - offset
-                shwHorizontals.Top = shwHorizontals.Top - offset
+                'shwVerticals.Top = shwVerticals.Top - offset
+                'shwHorizontals.Top = shwHorizontals.Top - offset
 
-                shwLegend.Top = shwLegend.Top - offset
-                allOnOnePage.Top = allOnOnePage.Top - offset
+                'shwLegend.Top = shwLegend.Top - offset
+                'allOnOnePage.Top = allOnOnePage.Top - offset
 
-                okButton.Top = okButton.Top - offset
+                'okButton.Top = okButton.Top - offset
 
-                Me.Height = Me.Height - offset
+                'Me.Height = Me.Height - offset
 
 
             End With
