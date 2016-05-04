@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MongoDbAccess</RootNamespace>
     <AssemblyName>MongoDbAccess</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +31,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
@@ -39,6 +42,15 @@
     <Reference Include="MongoDB.Driver, Version=1.7.0.4714, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>CSharp-Driver\MongoDB.Driver.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Driver.Core">
+      <HintPath>CSharp-Driver\MongoDB.Driver.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Driver.GridFS">
+      <HintPath>CSharp-Driver\MongoDB.Driver.GridFS.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Driver.Legacy">
+      <HintPath>CSharp-Driver\MongoDB.Driver.Legacy.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -63,29 +75,37 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="ClassDiagram1.cd" />
-    <None Include="CSharp-Driver\CSharpDriverDocs.chm" />
+    <None Include="CSharpDriver\CSharpDriver-2.2.3.chm" />
+    <None Include="CSharpDriver\CSharpDriver-2.2.3.zip" />
+    <None Include="CSharpDriver\Release Notes v2.2.3.md" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="CSharp-Driver\License.txt" />
-    <Content Include="CSharp-Driver\MongoDB.Bson.dll" />
-    <Content Include="CSharp-Driver\MongoDB.Bson.pdb" />
-    <Content Include="CSharp-Driver\MongoDB.Bson.xml" />
-    <Content Include="CSharp-Driver\MongoDB.Driver.dll" />
-    <Content Include="CSharp-Driver\MongoDB.Driver.pdb" />
-    <Content Include="CSharp-Driver\MongoDB.Driver.XML">
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="CSharp-Driver\Release Notes v1.7.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\ProjectBoardDefinitions\ProjectBoardDefinitions.vbproj">
       <Project>{b833e439-5c8b-41b3-8526-c8300e50d8da}</Project>
       <Name>ProjectBoardDefinitions</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="CSharpDriver\License.txt" />
+    <Content Include="CSharpDriver\MongoDB.Bson.dll" />
+    <Content Include="CSharpDriver\MongoDB.Bson.pdb" />
+    <Content Include="CSharpDriver\MongoDB.Bson.xml" />
+    <Content Include="CSharpDriver\MongoDB.Driver.Core.dll" />
+    <Content Include="CSharpDriver\MongoDB.Driver.Core.pdb" />
+    <Content Include="CSharpDriver\MongoDB.Driver.Core.xml" />
+    <Content Include="CSharpDriver\MongoDB.Driver.dll" />
+    <Content Include="CSharpDriver\MongoDB.Driver.GridFS.dll" />
+    <Content Include="CSharpDriver\MongoDB.Driver.GridFS.pdb" />
+    <Content Include="CSharpDriver\MongoDB.Driver.GridFS.xml" />
+    <Content Include="CSharpDriver\MongoDB.Driver.Legacy.dll" />
+    <Content Include="CSharpDriver\MongoDB.Driver.Legacy.pdb" />
+    <Content Include="CSharpDriver\MongoDB.Driver.Legacy.xml" />
+    <Content Include="CSharpDriver\MongoDB.Driver.pdb" />
+    <Content Include="CSharpDriver\MongoDB.Driver.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

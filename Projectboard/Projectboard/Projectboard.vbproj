@@ -9,7 +9,7 @@
     <RootNamespace>ExcelWorkbook1</RootNamespace>
     <AssemblyName>Projectboard</AssemblyName>
     <VSTO_HostDocumentName>Projectboard.xlsx</VSTO_HostDocumentName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <DefineConstants>VSTO40</DefineConstants>
     <OfficeApplication>Excel</OfficeApplication>
     <ProjectGuid>{3CDE9F31-6693-4AF9-AF7F-81FAC9D0A600}</ProjectGuid>
@@ -35,6 +35,7 @@
     <SupportUrl />
     <FriendlyName>Projectboard</FriendlyName>
     <OfficeApplicationDescription />
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -90,6 +91,7 @@
     <NoWarn>42017,42018,42019,42032,42036,42353,42354,42355</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DefineConstants>
@@ -105,6 +107,7 @@
     <NoWarn>42017,42018,42019,42032,42036,42353,42354,42355</NoWarn>
     <WarningsAsErrors>
     </WarningsAsErrors>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <!--
     This section specifies references for the project.
