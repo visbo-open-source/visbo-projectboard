@@ -541,6 +541,7 @@ Public Module testModule
                         kennzeichnung = "Custom-Field" Or _
                         kennzeichnung = "Soll-Ist & Prognose" Or _
                         kennzeichnung = "Multivariantensicht" Or _
+                        kennzeichnung = "Einzelprojektsicht" Or _
                         kennzeichnung = "AllePlanElemente" Or _
                         kennzeichnung = "Swimlanes" Or _
                         kennzeichnung = "Swimlanes2" Or _
@@ -872,7 +873,7 @@ Public Module testModule
                                                                   tmpphases, tmpMilestones, _
                                                                   selectedRoles, selectedCosts, _
                                                                   selectedBUs, selectedTyps, _
-                                                                  worker, e, False, hproj, kennzeichnung)
+                                                                  worker, e, False, False, hproj, kennzeichnung)
                                     .TextFrame2.TextRange.Text = ""
                                     .ZOrder(MsoZOrderCmd.msoSendToBack)
                                 Catch ex As Exception
@@ -881,6 +882,22 @@ Public Module testModule
 
                                 End Try
 
+                            Case "Einzelprojektsicht"
+
+                                Try
+
+                                    Call zeichneMultiprojektSicht(pptApp, pptCurrentPresentation, pptSlide, _
+                                                                      objectsToDo, objectsDone, pptFirstTime, zeilenhoehe, legendFontSize, _
+                                                                      selectedPhases, selectedMilestones, _
+                                                                      selectedRoles, selectedCosts, _
+                                                                      selectedBUs, selectedTyps, _
+                                                                      worker, e, False, False, hproj, kennzeichnung)
+                                    .TextFrame2.TextRange.Text = ""
+                                    .ZOrder(MsoZOrderCmd.msoSendToBack)
+                                Catch ex As Exception
+                                    .TextFrame2.TextRange.Text = ex.Message
+                                    objectsDone = objectsToDo
+                                End Try
 
                             Case "Multivariantensicht"
 
@@ -892,7 +909,7 @@ Public Module testModule
                                                                       selectedPhases, selectedMilestones, _
                                                                       selectedRoles, selectedCosts, _
                                                                       selectedBUs, selectedTyps, _
-                                                                      worker, e, False, hproj, kennzeichnung)
+                                                                      worker, e, False, True, hproj, kennzeichnung)
                                     .TextFrame2.TextRange.Text = ""
                                     .ZOrder(MsoZOrderCmd.msoSendToBack)
                                 Catch ex As Exception
@@ -2701,7 +2718,7 @@ Public Module testModule
                                                               selectedPhases, selectedMilestones, _
                                                               selectedRoles, selectedCosts, _
                                                               selectedBUs, selectedTyps, _
-                                                              worker, e, True, tmpProjekt, kennzeichnung)
+                                                              worker, e, True, False, tmpProjekt, kennzeichnung)
                                 .TextFrame2.TextRange.Text = ""
                                 .ZOrder(MsoZOrderCmd.msoSendToBack)
                             Catch ex As Exception
@@ -4634,6 +4651,9 @@ Public Module testModule
                             ' mit Beauftragung vergleichen 
 
                             vglProj = projekthistorie.beauftragung
+                            If IsNothing(vglProj) Then
+                                vglProj = projekthistorie.ElementAt(0)
+                            End If
 
                         Case 2
                             ' mit letzter Freigabe vergleichen
@@ -5094,11 +5114,12 @@ Public Module testModule
 
                 Case 1
                     ' mit Beauftragung vergleichen 
-                    Try
-                        vglProj = projekthistorie.beauftragung
-                    Catch ex As Exception
+
+                    vglProj = projekthistorie.beauftragung
+                    If IsNothing(vglProj) Then
                         vglProj = projekthistorie.ElementAt(0)
-                    End Try
+                    End If
+                    
 
 
                 Case 2
@@ -7724,6 +7745,11 @@ Public Module testModule
                         vproj = projekthistorie.Last
                     Else
                         vproj = projekthistorie.beauftragung
+                        If IsNothing(vproj) Then
+                            If projekthistorie.liste.Count > 0 Then
+                                vproj = projekthistorie.First
+                            End If
+                        End If
                     End If
                 Else
                     Call MsgBox("Datenbank-Verbindung ist unterbrochen!" & vbLf & "Projekthistorie konnte nicht geladen werden")
@@ -8419,7 +8445,8 @@ Public Module testModule
                                               ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
                                               ByVal von As Integer, ByVal bis As Integer, ByVal sortiertNachDauer As Boolean, _
                                                   ByRef projektListe As SortedList(Of Double, String), ByRef minDate As Date, ByRef maxDate As Date, _
-                                                  ByVal isMultiprojektSicht As Boolean, ByVal projMitVariants As clsProjekt)
+                                                  ByVal isMultiprojektSicht As Boolean, _
+                                                  ByVal isMultivariantenSicht As Boolean, ByVal projMitVariants As clsProjekt)
 
         Dim tmpMinimum As Date
         Dim tmpMaximum As Date
@@ -8481,7 +8508,7 @@ Public Module testModule
 
             Next
         Else
-            ' Multivarianten Sicht 
+            ' Multivarianten Sicht oder Einzelprojektsicht 
             ' in diesem Fall soll der selektierte Zeitraum nicht betrachtet werden 
 
 
@@ -8489,22 +8516,35 @@ Public Module testModule
             ' auch in den Einzelprojekt-Sichten soll der gewählte Zeitraum betrachtet werden 
             ' das ist insbesondere für die Swimlanes wichtig ... 
             If noTimespanDefined Then
-                von = 0
-                bis = 0
-                tmpMinimum = AlleProjekte.getMinDate(pName:=projMitVariants.name)
-                tmpMaximum = AlleProjekte.getMaxDate(pName:=projMitVariants.name)
+                If isMultivariantenSicht Then
+                    von = 0
+                    bis = 0
+                    tmpMinimum = AlleProjekte.getMinDate(pName:=projMitVariants.name)
+                    tmpMaximum = AlleProjekte.getMaxDate(pName:=projMitVariants.name)
+                Else
+                    von = 0
+                    bis = 0
+                    tmpMinimum = projMitVariants.startDate
+                    tmpMaximum = projMitVariants.endeDate
+                End If
+                
             Else
                 tmpMinimum = StartofCalendar.AddMonths(von - 1)
                 tmpMaximum = StartofCalendar.AddMonths(bis).AddDays(-1)
             End If
 
-            
 
-            Dim variantNames As Collection = AlleProjekte.getVariantNames(projMitVariants.name, False)
-            For i As Integer = 1 To variantNames.Count
-                key = i
-                projektListe.Add(key, calcProjektKey(projMitVariants.name, CStr(variantNames.Item(i))))
-            Next
+            If isMultivariantenSicht Then
+                Dim variantNames As Collection = AlleProjekte.getVariantNames(projMitVariants.name, False)
+                For i As Integer = 1 To variantNames.Count
+                    key = i
+                    projektListe.Add(key, calcProjektKey(projMitVariants.name, CStr(variantNames.Item(i))))
+                Next
+            Else
+                key = 1
+                projektListe.Add(key, calcProjektKey(projMitVariants.name, projMitVariants.variantName))
+            End If
+            
         End If
 
 
@@ -9401,9 +9441,6 @@ Public Module testModule
 
                 nameCollection.Add(.Name, .Name)
             End With
-
-
-
 
 
             ' jetzt die Quartals- bzw. Monatszahl  schreiben 
@@ -13157,6 +13194,8 @@ Public Module testModule
     ''' <param name="e"></param>
     ''' <param name="isMultiprojektSicht">gibt an, ob es sich um eine Einzelprojekt/Varianten Sicht oder 
     ''' um eine Multiprojektsicht handelt </param>
+    ''' <param name="isMultivariantenSicht">nur relevant, wenn multiprojektsicht = false; gibt an ob es sich um eine Multivariantensicht oder 
+    ''' eine Einzelprojeksicht handelt </param>
     ''' <param name="projMitVariants">das Projekt, dessen Varianten alle dargestellt werden sollen; nur besetzt wenn isMultiprojektSicht = false</param>
     ''' <remarks></remarks>
     Private Sub zeichneMultiprojektSicht(ByRef pptApp As pptNS.Application, ByRef pptCurrentPresentation As pptNS.Presentation, ByRef pptslide As pptNS.Slide, _
@@ -13166,7 +13205,8 @@ Public Module testModule
                                              ByVal selectedRoles As Collection, ByVal selectedCosts As Collection, _
                                              ByVal selectedBUs As Collection, ByVal selectedTyps As Collection, _
                                              ByVal worker As BackgroundWorker, ByVal e As DoWorkEventArgs, _
-                                             ByVal isMultiprojektSicht As Boolean, ByVal projMitVariants As clsProjekt, _
+                                             ByVal isMultiprojektSicht As Boolean, _
+                                             ByVal isMultivariantenSicht As Boolean, ByVal projMitVariants As clsProjekt, _
                                              ByVal kennzeichnung As String)
 
         ' ur:5.10.2015: ExtendedMode macht nur Sinn, wenn mindestens 1 Phase selektiert wurde. deshalb diese Code-Zeile
@@ -13295,14 +13335,14 @@ Public Module testModule
                                                 selectedBUs, selectedTyps, _
                                                 showRangeLeft, showRangeRight, awinSettings.mppSortiertDauer, _
                                                 projCollection, minDate, maxDate, _
-                                                isMultiprojektSicht, projMitVariants)
+                                                isMultiprojektSicht, isMultivariantenSicht, projMitVariants)
 
 
-            
+
             If objectsToDo <> projCollection.Count Then
                 objectsToDo = projCollection.Count
             End If
-            
+
 
             '
             ' bestimme das Start und Ende Datum des PPT Kalenders
@@ -13559,19 +13599,19 @@ Public Module testModule
             Try
 
                 With rds
-                    
-                        Call zeichnePPTprojects(pptslide, projCollection, objectsDone, _
-                                        pptStartofCalendar, pptEndOfCalendar, _
-                                        .drawingAreaLeft, .drawingAreaRight, .drawingAreaTop, .drawingAreaBottom, _
-                                        zeilenhoehe, .projectListLeft, _
-                                        selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
-                                        .projectNameVorlagenShape, .MsDescVorlagenShape, .MsDateVorlagenShape, _
-                                        .PhDescVorlagenShape, .PhDateVorlagenShape, _
-                                        .phaseVorlagenShape, .milestoneVorlagenShape, .projectVorlagenShape, .ampelVorlagenShape,
-                                        .rowDifferentiatorShape, .buColorShape, .phaseDelimiterShape, _
-                                        .durationArrowShape, .durationTextShape, _
-                                        .yOffsetMsToText, .yOffsetMsToDate, .yOffsetPhToText, .yOffsetPhToDate, _
-                                        worker, e)
+
+                    Call zeichnePPTprojects(pptslide, projCollection, objectsDone, _
+                                    pptStartofCalendar, pptEndOfCalendar, _
+                                    .drawingAreaLeft, .drawingAreaRight, .drawingAreaTop, .drawingAreaBottom, _
+                                    zeilenhoehe, .projectListLeft, _
+                                    selectedPhases, selectedMilestones, selectedRoles, selectedCosts, _
+                                    .projectNameVorlagenShape, .MsDescVorlagenShape, .MsDateVorlagenShape, _
+                                    .PhDescVorlagenShape, .PhDateVorlagenShape, _
+                                    .phaseVorlagenShape, .milestoneVorlagenShape, .projectVorlagenShape, .ampelVorlagenShape,
+                                    .rowDifferentiatorShape, .buColorShape, .phaseDelimiterShape, _
+                                    .durationArrowShape, .durationTextShape, _
+                                    .yOffsetMsToText, .yOffsetMsToDate, .yOffsetPhToText, .yOffsetPhToDate, _
+                                    worker, e)
 
                 End With
 
@@ -13832,7 +13872,7 @@ Public Module testModule
                                                 selectedBUs, selectedTyps, _
                                                 showRangeLeft, showRangeRight, awinSettings.mppSortiertDauer, _
                                                 projCollection, minDate, maxDate, _
-                                                isMultiprojektSicht, hproj)
+                                                isMultiprojektSicht, False, hproj)
 
 
             ' wird benötigt für die Bestimmung der Anzahl zielen und das Zeichnen der Swimlane Phase / Meilensteine

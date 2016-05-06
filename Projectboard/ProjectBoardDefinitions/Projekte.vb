@@ -1924,11 +1924,15 @@ Public Module Projekte
             ' Soll-Ist Vergleich
             isMinMax = False
 
-            Try
-                beauftragung = projekthistorie.beauftragung
-            Catch ex As Exception
-                Throw New ArgumentException("es gibt keine Beauftragung")
-            End Try
+
+            beauftragung = projekthistorie.beauftragung
+            If IsNothing(beauftragung) Then
+                If projekthistorie.Count >= 1 Then
+                    beauftragung = projekthistorie.First
+                Else
+                    Throw New ArgumentException("es gibt weder Beauftragung noch ersten Stand")
+                End If
+            End If
 
 
             ' finde in der Projekt-Historie das Projekt, das direkt vor hproj gespeichert wurde
@@ -2626,8 +2630,15 @@ Public Module Projekte
 
             Try
                 beauftragung = projekthistorie.beauftragung
+                If IsNothing(beauftragung) Then
+                    If projekthistorie.Count >= 1 Then
+                        beauftragung = projekthistorie.First
+                    Else
+                        Throw New ArgumentException("es gibt weder Beauftragung noch ersten Stand")
+                    End If
+                End If
             Catch ex As Exception
-                Throw New ArgumentException("es gibt keine Beauftragung")
+
             End Try
 
             abbruch = False
@@ -3222,13 +3233,14 @@ Public Module Projekte
         '
         ' bestimme den seit Beauftragung frühesten Start-Monat 
         '
-        Try
+
+
+        If IsNothing(projekthistorie.beauftragung) Then
+            earliestStart = projekthistorie.First.timeStamp
+        Else
             earliestStart = projekthistorie.beauftragung.startDate
-        Catch ex As Exception
-            ' wenn es noch keine Beauftragung gibt, wird das erste Element der Liste verwendet 
-            earliestStart = projekthistorie.ElementAt(0).timeStamp
-            projekthistorie.currentIndex = 0
-        End Try
+        End If
+
 
 
         ' es beginnt entweder mit dem Monat, wo die Aufzeichnung begann oder mit dem Projekt-Start : nimm das größere von beidem 

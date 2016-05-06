@@ -449,7 +449,8 @@ Public Module Module1
     Public nrOfDaysMonth As Double
 
     ' so werden in Visual Basic die Worksheets der aktuell geladenen Excel Applikation zugänglich gemacht   
-    Public appInstance As _Application
+    'Public appInstance As _Application
+    Public appInstance As Microsoft.Office.Interop.Excel.Application
 
     ' nimmt den Pfad Namen auf - also wo liegen Customization File und Projekt-Details
     Public globalPath As String

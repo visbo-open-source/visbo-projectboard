@@ -2305,7 +2305,8 @@
                 Next p
 
             Else
-                Throw New Exception("es gibt keine Meilensteine")
+                ReDim tmpvalues(0)
+                tmpvalues(0) = 0
             End If
 
             getMilestoneColors = tmpvalues

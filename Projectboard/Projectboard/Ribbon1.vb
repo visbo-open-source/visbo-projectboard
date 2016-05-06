@@ -7216,6 +7216,10 @@ Imports System.Windows
 
                         Try
                             cproj = projekthistorie.beauftragung
+                            If IsNothing(cproj) Then
+                                cproj = projekthistorie.First
+                            End If
+
                             top = singleShp1.Top + boxHeight + 2
                             left = singleShp1.Left - 5
                             If left <= 0 Then
